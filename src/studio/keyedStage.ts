@@ -222,6 +222,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     if (app.workspaceMode === 'design') e.stopPropagation();
   });
   aside.addEventListener('click', (e) => {
+    if (app.blockPointerClick) return;
     if (app.workspaceMode !== 'design') return;
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
@@ -734,6 +735,10 @@ function createNodeElement(node: DiagramNode): HTMLElement {
 
     triggerEl.addEventListener('pointerup', (e) => {
       e.stopPropagation();
+      if (app.blockPointerClick || app.multiPointer) {
+        endMove();
+        return;
+      }
       const wasMoved = hasMoved;
       lastPointerWasDrag = wasMoved;
       endMove();
@@ -753,6 +758,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
 
   selectBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (app.blockPointerClick) return;
     if (lastPointerWasDrag) {
       lastPointerWasDrag = false;
       return;

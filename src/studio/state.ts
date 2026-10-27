@@ -52,6 +52,10 @@ export const app = {
   autosaveTimer: null as number | null,
   hasPendingAutosave: false,
   activeWireDraft: null as ActiveWireDraft | null,
+  /** True while two touch or pen pointers are on the canvas. */
+  multiPointer: false,
+  /** Swallow the click that a pinch or two-finger pan would otherwise trigger. */
+  blockPointerClick: false,
 };
 
 const MAX_HISTORY = 60;

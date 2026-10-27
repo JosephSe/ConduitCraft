@@ -454,6 +454,32 @@ ${colorSchemeBoot}
       }
 
       let dragStart = null;
+      const contacts = new Map();
+      let pinch = null;
+      let blockClick = false;
+      function localOf(e) {
+        const r = viewport.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+      }
+      function pinchFrom(pts) {
+        const midX = (pts[0].x + pts[1].x) / 2;
+        const midY = (pts[0].y + pts[1].y) / 2;
+        const distance = Math.max(Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y), 1);
+        return { scale: scale, panX: panX, panY: panY, distance: distance, midX: midX, midY: midY };
+      }
+      function applyPinch(pts) {
+        if (!pinch) return;
+        const midX = (pts[0].x + pts[1].x) / 2;
+        const midY = (pts[0].y + pts[1].y) / 2;
+        const distance = Math.max(Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y), 1);
+        const next = Math.min(1.85, Math.max(0.38, pinch.scale * (distance / pinch.distance)));
+        const worldX = (pinch.midX - pinch.panX) / pinch.scale;
+        const worldY = (pinch.midY - pinch.panY) / pinch.scale;
+        scale = next;
+        panX = midX - worldX * scale;
+        panY = midY - worldY * scale;
+        applyTransform();
+      }
       viewport.addEventListener('pointerdown', (e) => {
         if (e.button !== 0 || e.target.closest('.arch-node, button')) return;
         dragStart = { x: e.clientX - panX, y: e.clientY - panY };
@@ -461,15 +487,54 @@ ${colorSchemeBoot}
         viewport.setPointerCapture(e.pointerId);
       });
       viewport.addEventListener('pointermove', (e) => {
-        if (!dragStart || !viewport.hasPointerCapture(e.pointerId)) return;
+        if (pinch || !dragStart || !viewport.hasPointerCapture(e.pointerId)) return;
         panX = e.clientX - dragStart.x;
         panY = e.clientY - dragStart.y;
         applyTransform();
       });
-      const endDrag = () => { dragStart = null; viewport.classList.remove('is-dragging'); };
+      const endDrag = () => {
+        if (pinch) return;
+        dragStart = null;
+        viewport.classList.remove('is-dragging');
+      };
       viewport.addEventListener('pointerup', endDrag);
       viewport.addEventListener('pointercancel', endDrag);
       viewport.addEventListener('lostpointercapture', endDrag);
+
+      viewport.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || (e.pointerType !== 'touch' && e.pointerType !== 'pen')) return;
+        const target = e.target;
+        if (target.closest && target.closest('button, a, input, textarea, select') && !target.closest('.arch-node')) return;
+        contacts.set(e.pointerId, localOf(e));
+        if (contacts.size < 2) return;
+        pinch = pinchFrom([...contacts.values()]);
+        blockClick = true;
+        dragStart = null;
+        for (const id of contacts.keys()) {
+          try { viewport.setPointerCapture(id); } catch (err) { /* pointer already ended */ }
+        }
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
+      viewport.addEventListener('pointermove', (e) => {
+        if (!contacts.has(e.pointerId)) return;
+        contacts.set(e.pointerId, localOf(e));
+        if (pinch && contacts.size >= 2) applyPinch([...contacts.values()]);
+      }, true);
+      function forgetContact(e) {
+        if (!contacts.has(e.pointerId)) return;
+        contacts.delete(e.pointerId);
+        if (contacts.size >= 2) pinch = pinchFrom([...contacts.values()]);
+        else pinch = null;
+        if (contacts.size === 0) window.setTimeout(() => { blockClick = false; }, 0);
+      }
+      viewport.addEventListener('pointerup', forgetContact, true);
+      viewport.addEventListener('pointercancel', forgetContact, true);
+      document.addEventListener('click', (e) => {
+        if (!blockClick) return;
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
 
       viewport.addEventListener('wheel', (e) => {
         e.preventDefault();

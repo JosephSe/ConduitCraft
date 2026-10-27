@@ -19,6 +19,7 @@ describe('shared export stylesheet and tone metadata', () => {
     assert.match(html, /id="arrow-blue"/);
     assert.match(html, /fill="var\(--wl-blue\)"/);
     assert.match(html, /window\.conduitBindColorScheme/);
+    assert.match(html, /e\.pointerType !== 'touch' && e\.pointerType !== 'pen'/);
     assert.match(html, /"blue":\["var\(--wl-blue\)","var\(--wl-blue-soft\)"\]/);
     assert.equal(html.includes('${'), false);
   });

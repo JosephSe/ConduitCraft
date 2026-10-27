@@ -130,6 +130,7 @@ import {
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { renderDiagramSvg } from '../exporter/diagramSvg';
+import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
@@ -278,7 +279,24 @@ export function beginPortWireDrag(
   draftWire.setAttribute('d', `M ${startPt[0]} ${startPt[1]} L ${startPt[0]} ${startPt[1]}`);
   captureEl.setPointerCapture(e.pointerId);
 
+  const onLost = () => {
+    captureEl.removeEventListener('pointermove', onMove);
+    captureEl.removeEventListener('pointerup', onUp);
+    captureEl.removeEventListener('pointercancel', onCancel);
+    captureEl.removeEventListener('lostpointercapture', onLost);
+    if (app.activeWireDraft?.hoveredPortBtn) {
+      app.activeWireDraft.hoveredPortBtn.classList.remove('is-target-port');
+    }
+    app.activeWireDraft = null;
+    delete workspace.dataset.wiring;
+    draftWire.setAttribute('hidden', '');
+  };
+
   const onMove = (moveEv: PointerEvent) => {
+    if (app.multiPointer) {
+      onLost();
+      return;
+    }
     if (!app.activeWireDraft) return;
     const [wx, wy] = screenToWorld(moveEv.clientX, moveEv.clientY);
 
@@ -315,6 +333,7 @@ export function beginPortWireDrag(
     app.activeWireDraft = null;
     delete workspace.dataset.wiring;
     draftWire.setAttribute('hidden', '');
+    captureEl.removeEventListener('lostpointercapture', onLost);
 
     if (!commit || !draft) return;
 
@@ -340,6 +359,7 @@ export function beginPortWireDrag(
   captureEl.addEventListener('pointermove', onMove);
   captureEl.addEventListener('pointerup', onUp);
   captureEl.addEventListener('pointercancel', onCancel);
+  captureEl.addEventListener('lostpointercapture', onLost);
 }
 
 export function createEdgeConnection(
@@ -1258,7 +1278,9 @@ export function initEvents(): void {
   };
   viewport.addEventListener('pointerup', endPan);
   viewport.addEventListener('pointercancel', endPan);
-  viewport.addEventListener('lostpointercapture', () => {
+  viewport.addEventListener('lostpointercapture', (e) => {
+    if (app.multiPointer) return;
+    if (panPointerId !== null && e.pointerId !== panPointerId) return;
     panDragStart = null;
     marqueeStartWorld = null;
     panPointerId = null;
@@ -1266,6 +1288,101 @@ export function initEvents(): void {
     if (marqueeBox) marqueeBox.hidden = true;
     viewport.classList.remove('is-dragging');
   });
+
+  // Touch and pen: pinch to zoom, or slide two pointers together to pan.
+  const contacts = new Map<number, PinchSample>();
+  let pinch: ReturnType<typeof pinchBaseline> | null = null;
+
+  const viewportLocal = (e: PointerEvent): PinchSample => {
+    const rect = viewport.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const isLooseControl = (target: EventTarget | null): boolean => {
+    if (!(target instanceof Element)) return false;
+    if (target.closest('.arch-node, .zone-banner, .blueprint-spec, .conduit-hit, .conduit-waypoint-handle')) {
+      return false;
+    }
+    return !!target.closest('button, a, input, textarea, select, label');
+  };
+
+  const engagePinch = () => {
+    const pts = [...contacts.values()];
+    if (pts.length < 2) return;
+    pinch = pinchBaseline(app.scale, app.panX, app.panY, pts[0], pts[1]);
+    app.multiPointer = true;
+    app.blockPointerClick = true;
+    panDragStart = null;
+    marqueeStartWorld = null;
+    panPointerId = null;
+    panMoved = false;
+    if (marqueeBox) marqueeBox.hidden = true;
+    viewport.classList.add('is-dragging');
+    for (const id of contacts.keys()) {
+      try {
+        viewport.setPointerCapture(id);
+      } catch {
+        /* The pointer is no longer active. */
+      }
+    }
+  };
+
+  const applyPinch = () => {
+    if (!pinch) return;
+    const pts = [...contacts.values()];
+    if (pts.length < 2) return;
+    const next = pinchTransform(pinch, pts[0], pts[1], 0.35, 1.9);
+    app.scale = next.scale;
+    app.panX = next.panX;
+    app.panY = next.panY;
+    applyTransform();
+  };
+
+  const releaseContact = (e: PointerEvent) => {
+    if (!contacts.has(e.pointerId)) return;
+    contacts.delete(e.pointerId);
+    if (contacts.size >= 2) {
+      engagePinch();
+      return;
+    }
+    pinch = null;
+    if (app.multiPointer && contacts.size < 2) app.multiPointer = false;
+    if (contacts.size === 0) {
+      viewport.classList.remove('is-dragging');
+      window.setTimeout(() => {
+        app.blockPointerClick = false;
+      }, 0);
+    }
+  };
+
+  viewport.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (e.button !== 0) return;
+      if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+      if (isLooseControl(e.target)) return;
+      contacts.set(e.pointerId, viewportLocal(e));
+      if (contacts.size >= 2) {
+        engagePinch();
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    },
+    true,
+  );
+  viewport.addEventListener(
+    'pointermove',
+    (e) => {
+      if (!contacts.has(e.pointerId)) return;
+      contacts.set(e.pointerId, viewportLocal(e));
+      if (!pinch) return;
+      applyPinch();
+      e.stopPropagation();
+    },
+    true,
+  );
+  viewport.addEventListener('pointerup', releaseContact, true);
+  viewport.addEventListener('pointercancel', releaseContact, true);
 
   // Wheel Zoom & HUD Zoom Controls
   viewport.addEventListener(

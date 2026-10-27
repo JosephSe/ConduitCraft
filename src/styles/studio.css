@@ -1256,6 +1256,44 @@
     box-shadow: 0 0 0 4px var(--wl-blue-soft);
   }
 
+  @media (pointer: coarse) {
+    .workspace[data-mode="design"] .node-port {
+      opacity: 1;
+      inline-size: 2.75rem;
+      block-size: 2.75rem;
+    }
+
+    .node-port[data-port="top"] {
+      top: -1.375rem;
+      left: calc(50% - 1.375rem);
+    }
+
+    .node-port[data-port="right"] {
+      right: -1.375rem;
+      top: calc(50% - 1.375rem);
+    }
+
+    .node-port[data-port="bottom"] {
+      bottom: -1.375rem;
+      left: calc(50% - 1.375rem);
+    }
+
+    .node-port[data-port="left"] {
+      left: -1.375rem;
+      top: calc(50% - 1.375rem);
+    }
+
+    .arch-node[data-kind="actor"] .node-port[data-port="left"] {
+      left: 0.35rem;
+      top: 2.6rem;
+    }
+
+    .arch-node[data-kind="actor"] .node-port[data-port="right"] {
+      right: 0.35rem;
+      top: 2.6rem;
+    }
+  }
+
   /* Component Kind Variations */
   .arch-node[data-kind="core"] .node-select-hit,
   .arch-node[data-kind="gate"] .node-select-hit,
