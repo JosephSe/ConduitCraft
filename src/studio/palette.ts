@@ -10,6 +10,16 @@ import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
 import { simulationPlayback } from './simulationPlayback';
+import {
+  bringToFront,
+  sendToBack,
+  bringForward,
+  sendBackward,
+  toggleSelectionLock,
+  canGroupSelection,
+  groupSelection,
+  ungroupSelection,
+} from './zOrderLockGroup';
 
 export interface PaletteCommand {
   id: string;
@@ -369,6 +379,108 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: 'Del',
       keywords: ['delete', 'remove', 'trash'],
       run: deps.deleteSelected,
+    },
+    {
+      id: 'edit-lock',
+      title: 'Lock / Unlock Selection',
+      subtitle: 'Toggle lock to prevent moving or deleting',
+      category: 'Edit & History',
+      shortcut: `${mod}L`,
+      keywords: ['lock', 'unlock', 'freeze', 'protect'],
+      run: () => {
+        pushHistory();
+        const locked = toggleSelectionLock(app.doc, app.selection);
+        renderAll(true);
+        notify(locked ? 'Locked selection' : 'Unlocked selection');
+      },
+    },
+    {
+      id: 'edit-group',
+      title: 'Group Components',
+      subtitle: 'Group selected components to move together',
+      category: 'Edit & History',
+      shortcut: `${mod}G`,
+      keywords: ['group', 'combine', 'cluster'],
+      run: () => {
+        if (canGroupSelection(app.selection)) {
+          pushHistory();
+          groupSelection(app.doc, app.selection);
+          renderAll(true);
+          notify('Grouped components');
+        } else {
+          notify('Select 2 or more components to group');
+        }
+      },
+    },
+    {
+      id: 'edit-ungroup',
+      title: 'Ungroup Components',
+      subtitle: 'Separate grouped components',
+      category: 'Edit & History',
+      shortcut: isMac() ? '⌘⇧G' : 'Ctrl+Shift+G',
+      keywords: ['ungroup', 'separate', 'break'],
+      run: () => {
+        pushHistory();
+        const ungrouped = ungroupSelection(app.doc, app.selection);
+        renderAll(true);
+        notify(ungrouped ? 'Ungrouped components' : 'No group to ungroup');
+      },
+    },
+    {
+      id: 'edit-bring-to-front',
+      title: 'Bring to Front',
+      subtitle: 'Move selection to the topmost visual layer',
+      category: 'Edit & History',
+      shortcut: ']',
+      keywords: ['front', 'top', 'layer', 'z-index', 'order'],
+      run: () => {
+        pushHistory();
+        bringToFront(app.doc, app.selection);
+        renderAll(true);
+        notify('Brought to front');
+      },
+    },
+    {
+      id: 'edit-send-to-back',
+      title: 'Send to Back',
+      subtitle: 'Move selection to the bottom visual layer',
+      category: 'Edit & History',
+      shortcut: '[',
+      keywords: ['back', 'bottom', 'layer', 'z-index', 'order'],
+      run: () => {
+        pushHistory();
+        sendToBack(app.doc, app.selection);
+        renderAll(true);
+        notify('Sent to back');
+      },
+    },
+    {
+      id: 'edit-bring-forward',
+      title: 'Bring Forward',
+      subtitle: 'Move selection one layer up',
+      category: 'Edit & History',
+      shortcut: `${mod}]`,
+      keywords: ['forward', 'up', 'layer', 'z-index'],
+      run: () => {
+        pushHistory();
+        bringForward(app.doc, app.selection);
+        renderAll(true);
+        notify('Brought forward');
+      },
+    },
+    {
+      id: 'edit-send-backward',
+      title: 'Send Backward',
+      subtitle: 'Move selection one layer down',
+      category: 'Edit & History',
+      shortcut: `${mod}[`,
+      keywords: ['backward', 'down', 'layer', 'z-index'],
+      run: () => {
+        pushHistory();
+        sendBackward(app.doc, app.selection);
+        renderAll(true);
+        notify('Sent backward');
+      },
     },
     {
       id: 'edit-select-all',

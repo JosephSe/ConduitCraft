@@ -38,8 +38,8 @@ A review of the app as it stands today, with ideas for look and feel and for new
 | 9 | Polished motion: node drop-in, port glow, smoother selection | Look and feel | Medium | S | [x] Done |
 | 10 | Presentation mode for Data View | Feature | High | M | [x] Done |
 | 11 | Simulation playback controls (step, scrub, speed) | Feature | High | M | [x] Done |
-| 12 | Z-order, lock, and group commands | Feature | Medium | M | In Progress |
-| 13 | Responsive and compact toolbar | Look and feel | Medium | M | Todo |
+| 12 | Z-order, lock, and group commands | Feature | Medium | M | [x] Done |
+| 13 | Responsive and compact toolbar | Look and feel | Medium | M | In Progress |
 | 14 | Mermaid import coverage (`classDef`, styles, more shapes) | Feature | Medium | M | Todo |
 | 15 | Edge and node comments, plus status badges | Feature | Medium | M | Todo |
 | 16 | PWA install and offline support | Feature | Medium | S | Todo |

@@ -98,6 +98,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     if (!current) return;
     e.stopPropagation();
     applySelection({ type: 'zone', id: current.id }, { refreshIfUnchanged: true });
+    if (current.locked) return;
     dragStartX = e.clientX;
     origX = current.x;
     moved = false;
@@ -143,7 +144,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
   resizeHandle.addEventListener('pointerdown', (e) => {
     if (app.workspaceMode !== 'design' || e.button !== 0) return;
     const current = liveZone(banner.dataset.zoneId || '');
-    if (!current) return;
+    if (!current || current.locked) return;
     e.stopPropagation();
     applySelection({ type: 'zone', id: current.id });
     resizeStartX = e.clientX;
@@ -254,7 +255,18 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
-    applySelection({ type: 'notes', id: current.id });
+    if (current.groupId && !e.altKey) {
+      const gNodeIds = app.doc.nodes.filter((n) => n.groupId === current.groupId).map((n) => n.id);
+      const gNoteIds = app.doc.notesCards.filter((c) => c.groupId === current.groupId).map((c) => c.id);
+      if (gNodeIds.length + gNoteIds.length > 1) {
+        applySelection({ type: 'multi', ids: gNodeIds, notesIds: gNoteIds });
+      } else {
+        applySelection({ type: 'notes', id: current.id });
+      }
+    } else {
+      applySelection({ type: 'notes', id: current.id });
+    }
+    if (current.locked) return;
     startX = e.clientX;
     startY = e.clientY;
     origX = current.x;
@@ -656,9 +668,23 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       }
 
       if (!isSelectedNode(current.id)) {
-        applySelection({ type: 'node', id: current.id });
+        if (current.groupId && !e.altKey) {
+          const gNodeIds = app.doc.nodes.filter((n) => n.groupId === current.groupId).map((n) => n.id);
+          const gNoteIds = app.doc.notesCards.filter((c) => c.groupId === current.groupId).map((c) => c.id);
+          if (gNodeIds.length + gNoteIds.length > 1) {
+            applySelection({ type: 'multi', ids: gNodeIds, notesIds: gNoteIds });
+          } else {
+            applySelection({ type: 'node', id: current.id });
+          }
+        } else {
+          applySelection({ type: 'node', id: current.id });
+        }
       } else if (app.selection.type === 'node' && propPanelHeading.textContent !== 'COMPONENT PROPERTIES') {
         requestInspectorRefresh();
+      }
+
+      if (current.locked) {
+        return;
       }
 
       startClientX = e.clientX;
@@ -938,6 +964,21 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.style.setProperty('--nh', String(node.height));
   const hit = wrapper.querySelector<HTMLElement>('.node-select-hit');
   if (hit) paintShapePlate(hit, node);
+
+  const isLocked = Boolean(node.locked);
+  wrapper.dataset.locked = String(isLocked);
+  let lockBadge = wrapper.querySelector<HTMLElement>('.node-lock-badge');
+  if (isLocked) {
+    if (!lockBadge) {
+      lockBadge = document.createElement('span');
+      lockBadge.className = 'node-lock-badge';
+      lockBadge.setAttribute('aria-label', 'Locked component');
+      lockBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+      wrapper.appendChild(lockBadge);
+    }
+  } else {
+    lockBadge?.remove();
+  }
 
   const title = wrapper.querySelector('.node-title');
   if (title) title.textContent = node.title;

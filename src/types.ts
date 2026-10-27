@@ -49,6 +49,9 @@ export interface DiagramNotesCard {
   x: number;
   y: number;
   items: NotesCheckItem[];
+  locked?: boolean;
+  z?: number;
+  groupId?: string;
 }
 
 export interface DiagramZone {
@@ -58,6 +61,8 @@ export interface DiagramZone {
   subtitle: string;
   x: number;
   width: number;
+  locked?: boolean;
+  z?: number;
 }
 
 export interface DiagramNode {
@@ -83,6 +88,9 @@ export interface DiagramNode {
   y: number;
   width: number;
   height: number;
+  locked?: boolean;
+  z?: number;
+  groupId?: string;
 }
 
 export interface DiagramEdge {

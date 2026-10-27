@@ -35,6 +35,8 @@ import {
   btnOpenShortcuts,
   btnPaletteCode,
   btnPaletteImport,
+  btnPropLock,
+  btnPropGroup,
   btnPropDelete,
   btnPropDuplicate,
   btnQuickStarter,
@@ -166,6 +168,16 @@ import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
+import {
+  bringToFront,
+  sendToBack,
+  bringForward,
+  sendBackward,
+  toggleSelectionLock,
+  canGroupSelection,
+  groupSelection,
+  ungroupSelection,
+} from './zOrderLockGroup';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -562,41 +574,87 @@ export function runSimulation(simId: string): void {
 export function deleteSelected(): void {
   const sel = app.selection;
   if (sel.type === 'none') return;
-  pushHistory();
 
-  let desc = 'element';
   if (sel.type === 'node') {
     const targetId = sel.id;
     const node = app.doc.nodes.find((n) => n.id === targetId);
-    desc = node ? `"${node.title}"` : 'component';
+    if (node?.locked) {
+      notify(`Cannot delete locked component "${node.title}"`);
+      return;
+    }
+    pushHistory();
+    const desc = node ? `"${node.title}"` : 'component';
     app.doc.nodes = app.doc.nodes.filter((n) => n.id !== targetId);
     app.doc.edges = app.doc.edges.filter((e) => e.from !== targetId && e.to !== targetId);
     dropNodesFromSimulations(new Set([targetId]));
-  } else if (sel.type === 'multi') {
-    const count = sel.ids.length + (sel.zoneIds?.length ?? 0) + (sel.notesIds?.length ?? 0);
-    desc = `${count} ${count === 1 ? 'item' : 'items'}`;
-    const idSet = new Set(sel.ids);
-    const zoneIds = new Set(sel.zoneIds ?? []);
-    const notesIds = new Set(sel.notesIds ?? []);
+    setSelection({ type: 'none' });
+    renderAll(true);
+    notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
+    return;
+  }
+
+  if (sel.type === 'zone') {
+    const zone = app.doc.zones.find((z) => z.id === sel.id);
+    if (zone?.locked) {
+      notify(`Cannot delete locked swimlane "${zone.title}"`);
+      return;
+    }
+    pushHistory();
+    app.doc.zones = app.doc.zones.filter((z) => z.id !== sel.id);
+    setSelection({ type: 'none' });
+    renderAll(true);
+    notify('Deleted swimlane', { action: { label: 'Undo', onClick: () => performUndo() } });
+    return;
+  }
+
+  if (sel.type === 'notes') {
+    const card = app.doc.notesCards.find((c) => c.id === sel.id);
+    if (card?.locked) {
+      notify(`Cannot delete locked notes card "${card.title}"`);
+      return;
+    }
+    pushHistory();
+    app.doc.notesCards = app.doc.notesCards.filter((c) => c.id !== sel.id);
+    setSelection({ type: 'none' });
+    renderAll(true);
+    notify('Deleted note card', { action: { label: 'Undo', onClick: () => performUndo() } });
+    return;
+  }
+
+  if (sel.type === 'multi') {
+    const unlockedNodeIds = sel.ids.filter((id) => !app.doc.nodes.find((n) => n.id === id)?.locked);
+    const unlockedZoneIds = (sel.zoneIds ?? []).filter((id) => !app.doc.zones.find((z) => z.id === id)?.locked);
+    const unlockedNoteIds = (sel.notesIds ?? []).filter((id) => !app.doc.notesCards.find((c) => c.id === id)?.locked);
+
+    if (unlockedNodeIds.length + unlockedZoneIds.length + unlockedNoteIds.length === 0) {
+      notify('Selected items are locked');
+      return;
+    }
+
+    pushHistory();
+    const count = unlockedNodeIds.length + unlockedZoneIds.length + unlockedNoteIds.length;
+    const desc = `${count} ${count === 1 ? 'item' : 'items'}`;
+    const idSet = new Set(unlockedNodeIds);
+    const zoneIds = new Set(unlockedZoneIds);
+    const notesIds = new Set(unlockedNoteIds);
     app.doc.nodes = app.doc.nodes.filter((n) => !idSet.has(n.id));
     app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to));
     if (zoneIds.size > 0) app.doc.zones = app.doc.zones.filter((zone) => !zoneIds.has(zone.id));
     if (notesIds.size > 0) app.doc.notesCards = app.doc.notesCards.filter((card) => !notesIds.has(card.id));
     dropNodesFromSimulations(idSet);
-  } else if (sel.type === 'edge') {
-    desc = 'stream';
-    app.doc.edges = app.doc.edges.filter((e) => e.id !== sel.id);
-  } else if (sel.type === 'zone') {
-    desc = 'swimlane';
-    app.doc.zones = app.doc.zones.filter((z) => z.id !== sel.id);
-  } else if (sel.type === 'notes') {
-    desc = 'note card';
-    app.doc.notesCards = app.doc.notesCards.filter((c) => c.id !== sel.id);
+    setSelection({ type: 'none' });
+    renderAll(true);
+    notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
+    return;
   }
 
-  setSelection({ type: 'none' });
-  renderAll(true);
-  notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
+  if (sel.type === 'edge') {
+    pushHistory();
+    app.doc.edges = app.doc.edges.filter((e) => e.id !== sel.id);
+    setSelection({ type: 'none' });
+    renderAll(true);
+    notify('Deleted stream', { action: { label: 'Undo', onClick: () => performUndo() } });
+  }
 }
 
 function dropNodesFromSimulations(ids: Set<string>): void {
@@ -1170,6 +1228,30 @@ export function initEvents(): void {
   });
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);
+
+  btnPropLock?.addEventListener('click', () => {
+    pushHistory();
+    const locked = toggleSelectionLock(app.doc, app.selection);
+    renderAll(true);
+    requestInspectorRefresh();
+    notify(locked ? 'Locked component' : 'Unlocked component');
+  });
+
+  btnPropGroup?.addEventListener('click', () => {
+    if (canGroupSelection(app.selection)) {
+      pushHistory();
+      groupSelection(app.doc, app.selection);
+      renderAll(true);
+      requestInspectorRefresh();
+      notify('Grouped components');
+    } else {
+      pushHistory();
+      const ungrouped = ungroupSelection(app.doc, app.selection);
+      renderAll(true);
+      requestInspectorRefresh();
+      notify(ungrouped ? 'Ungrouped components' : 'Select 2 or more items to group');
+    }
+  });
 
   // Add Swimlane & Notes Card
   btnAddZone.setAttribute('data-tip', 'Create a swimlane stage banner');
@@ -2035,9 +2117,69 @@ export function initEvents(): void {
         }
         return;
       }
+      if (e.key.toLowerCase() === 'l' && app.workspaceMode === 'design') {
+        e.preventDefault();
+        pushHistory();
+        const locked = toggleSelectionLock(app.doc, app.selection);
+        renderAll(true);
+        requestInspectorRefresh();
+        notify(locked ? 'Locked selection' : 'Unlocked selection');
+        return;
+      }
+      if (e.key.toLowerCase() === 'g' && app.workspaceMode === 'design') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          pushHistory();
+          const ungrouped = ungroupSelection(app.doc, app.selection);
+          renderAll(true);
+          requestInspectorRefresh();
+          notify(ungrouped ? 'Ungrouped components' : 'No group to ungroup');
+        } else if (canGroupSelection(app.selection)) {
+          pushHistory();
+          groupSelection(app.doc, app.selection);
+          renderAll(true);
+          requestInspectorRefresh();
+          notify('Grouped components');
+        } else {
+          notify('Select 2 or more components to group');
+        }
+        return;
+      }
+      if (e.key === ']' && app.workspaceMode === 'design') {
+        e.preventDefault();
+        pushHistory();
+        bringForward(app.doc, app.selection);
+        renderAll(true);
+        notify('Brought forward');
+        return;
+      }
+      if (e.key === '[' && app.workspaceMode === 'design') {
+        e.preventDefault();
+        pushHistory();
+        sendBackward(app.doc, app.selection);
+        renderAll(true);
+        notify('Sent backward');
+        return;
+      }
     }
 
     if (!inEditable && app.workspaceMode === 'design') {
+      if (e.key === ']' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        pushHistory();
+        bringToFront(app.doc, app.selection);
+        renderAll(true);
+        notify('Brought to front');
+        return;
+      }
+      if (e.key === '[' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        pushHistory();
+        sendToBack(app.doc, app.selection);
+        renderAll(true);
+        notify('Sent to back');
+        return;
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (app.selection.type !== 'none') {
           e.preventDefault();

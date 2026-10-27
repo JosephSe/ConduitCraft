@@ -2,6 +2,8 @@
 import {
   SVG_NS,
   btnPropDuplicate,
+  btnPropLock,
+  btnPropGroup,
   docStatusLabelEl,
   docSystemTagEl,
   docTitleHeadingEl,
@@ -41,6 +43,7 @@ import {
   renderSimButtons,
   runSimulation,
 } from './interactions';
+import { isSelectionLocked, canGroupSelection } from './zOrderLockGroup';
 import type {
   DiagramNode,
   EdgeRouteMode,
@@ -51,6 +54,7 @@ import type {
   SimulationScenario,
   SimulationStep,
   StreamTone,
+  SelectionTarget,
 } from '../types';
 import {
   STENCIL_CATALOG,
@@ -365,12 +369,48 @@ export function makeCollapsibleSection(
   return details;
 }
 
+function updateSelectionActionButtons(sel: SelectionTarget): void {
+  if (sel.type === 'none') {
+    propSelectionActions.hidden = true;
+    return;
+  }
+  propSelectionActions.hidden = false;
+  if (btnPropLock) {
+    const locked = isSelectionLocked(app.doc, sel);
+    btnPropLock.textContent = locked ? 'Unlock' : 'Lock';
+    btnPropLock.hidden = sel.type === 'edge';
+  }
+  if (btnPropGroup) {
+    if (sel.type === 'node') {
+      const node = app.doc.nodes.find((n) => n.id === sel.id);
+      btnPropGroup.hidden = !node?.groupId;
+      btnPropGroup.textContent = 'Ungroup';
+    } else if (sel.type === 'multi') {
+      const hasGroup =
+        sel.ids.some((id) => app.doc.nodes.find((n) => n.id === id)?.groupId) ||
+        (sel.notesIds ?? []).some((id) => app.doc.notesCards.find((c) => c.id === id)?.groupId);
+      if (hasGroup) {
+        btnPropGroup.hidden = false;
+        btnPropGroup.textContent = 'Ungroup';
+      } else if (canGroupSelection(sel)) {
+        btnPropGroup.hidden = false;
+        btnPropGroup.textContent = 'Group';
+      } else {
+        btnPropGroup.hidden = true;
+      }
+    } else {
+      btnPropGroup.hidden = true;
+    }
+  }
+}
+
 export function renderPropertyEditor(): void {
   closeIconMenus();
   propFormContainer.replaceChildren();
   const form = document.createElement('div');
   form.className = 'prop-form';
   const sel = app.selection;
+  updateSelectionActionButtons(sel);
 
   if (sel.type === 'node') {
     const node = app.doc.nodes.find((n) => n.id === sel.id);
