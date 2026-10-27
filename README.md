@@ -17,7 +17,7 @@
 - **Bidirectional Mermaid (`.mmd`) & Blueprint (`.md`) Compiler**
   - Edit or paste standard Mermaid flowcharts or YAML-frontmatter Blueprint documents with line-numbered validation diagnostics.
 - **Zero-Dependency Exports**
-  - Export a round-trippable **Blueprint JSON (`.blueprint.json`)** file that keeps the whole document, a short looping **GIF** of the telemetry animation, self-contained **Interactive Animated HTML (`.html`)** pages, **SVG** and **PNG** pictures, a readable **Blueprint Markdown (`.md`)** copy, or standard **Mermaid (`.mmd`)**.
+  - Export a round-trippable **Blueprint JSON (`.blueprint.json`)** file that keeps the whole document, a short looping **GIF** of the telemetry animation, self-contained **Interactive Animated HTML (`.html`)** pages, **SVG** and **PNG** pictures, or standard **Mermaid (`.mmd`)**.
 
 ## Documentation
 

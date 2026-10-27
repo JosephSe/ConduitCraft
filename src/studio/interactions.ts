@@ -11,7 +11,6 @@ import {
   btnEmptyImport,
   btnExportHtml,
   btnExportJson,
-  btnExportMd,
   btnExportMmd,
   btnExportGif,
   btnExportPng,
@@ -1138,11 +1137,6 @@ export function initEvents(): void {
   btnExportHtml.addEventListener('click', () => {
     const html = generateStandaloneHtml(app.doc);
     downloadBlob(html, `${getSafeFilenameSlug()}.html`, 'text/html;charset=utf-8');
-    void closeDialogSmoothly(exportDialog);
-  });
-  btnExportMd.addEventListener('click', () => {
-    const md = serializeToBlueprintMarkdown(app.doc);
-    downloadBlob(md, `${getSafeFilenameSlug()}.md`, 'text/markdown;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
   });
   btnExportMmd.addEventListener('click', () => {

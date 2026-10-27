@@ -147,7 +147,6 @@ export const btnApplyCode = document.getElementById('btn-apply-code') as HTMLBut
 
 export const exportDialog = document.getElementById('export-dialog') as HTMLDialogElement;
 export const btnExportHtml = document.getElementById('btn-export-html') as HTMLButtonElement;
-export const btnExportMd = document.getElementById('btn-export-md') as HTMLButtonElement;
 export const btnExportMmd = document.getElementById('btn-export-mmd') as HTMLButtonElement;
 export const btnExportSvg = document.getElementById('btn-export-svg') as HTMLButtonElement;
 export const btnExportPng = document.getElementById('btn-export-png') as HTMLButtonElement;
