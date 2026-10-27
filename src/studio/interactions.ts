@@ -9,8 +9,11 @@ import {
   btnEmptyCode,
   btnEmptyImport,
   btnExportHtml,
+  btnExportJson,
   btnExportMd,
   btnExportMmd,
+  btnExportPng,
+  btnExportSvg,
   btnFocusDocTitle,
   btnImportFile,
   btnNewCanvas,
@@ -120,6 +123,8 @@ import {
   serializeToMermaid,
 } from '../core/parser';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
+import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
+import { renderDiagramSvg } from '../exporter/diagramSvg';
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
@@ -645,6 +650,28 @@ export function pasteSelection(): void {
 // File Import, Drag-and-Drop, Code Sync, and Export
 // ---------------------------------------------------------------------------
 export function applyImportedText(rawText: string, fallbackTitle?: string): boolean {
+  const trimmed = rawText.trim();
+  if (trimmed.startsWith('{')) {
+    const parsed = parseBlueprintJson(trimmed);
+    if (!parsed.ok) {
+      codeSyncDiagnostics.dataset.tone = 'warn';
+      codeSyncDiagnostics.textContent = parsed.error;
+      hudStatusTip.textContent = parsed.error;
+      return false;
+    }
+    pushHistory();
+    if (fallbackTitle && parsed.doc.title === 'Untitled Architecture') parsed.doc.title = fallbackTitle;
+    app.doc = parsed.doc;
+    setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
+    clearSimulation();
+    renderAll(true);
+    requestAnimationFrame(fitToViewport);
+    codeSyncDiagnostics.dataset.tone = 'ok';
+    codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components from Blueprint JSON.`;
+    hudStatusTip.textContent = `Imported Blueprint JSON (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    return true;
+  }
+
   const { doc: importedDoc, warnings, issues } = importMermaidOrBlueprint(rawText);
   const formatIssue = (idx = 0): string => {
     const issue = issues[idx];
@@ -694,16 +721,54 @@ export async function handleUploadedFile(file: File): Promise<void> {
   applyImportedText(text, titleFromFile);
 }
 
-export function downloadBlob(content: string, filename: string, mimeType: string): void {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
+function downloadUrl(url: string, filename: string): void {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
+}
+
+export function downloadBlob(content: string, filename: string, mimeType: string): void {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  downloadUrl(url, filename);
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function downloadDiagramPng(svg: string, width: number, height: number, filename: string): void {
+  const scale = Math.min(2, 4096 / Math.max(width, height, 1));
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const image = new Image();
+  image.onload = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(width * scale));
+    canvas.height = Math.max(1, Math.round(height * scale));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      URL.revokeObjectURL(url);
+      hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
+      return;
+    }
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((png) => {
+      URL.revokeObjectURL(url);
+      if (!png) {
+        hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
+        return;
+      }
+      const pngUrl = URL.createObjectURL(png);
+      downloadUrl(pngUrl, filename);
+      window.setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+    }, 'image/png');
+  };
+  image.onerror = () => {
+    URL.revokeObjectURL(url);
+    hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
+  };
+  image.src = url;
 }
 
 export function getSafeFilenameSlug(): string {
@@ -974,6 +1039,23 @@ export function initEvents(): void {
   btnExportMmd.addEventListener('click', () => {
     const mmd = serializeToMermaid(app.doc);
     downloadBlob(mmd, `${getSafeFilenameSlug()}.mmd`, 'text/plain;charset=utf-8');
+    void closeDialogSmoothly(exportDialog);
+  });
+  btnExportSvg.addEventListener('click', () => {
+    downloadBlob(renderDiagramSvg(app.doc), `${getSafeFilenameSlug()}.svg`, 'image/svg+xml;charset=utf-8');
+    void closeDialogSmoothly(exportDialog);
+  });
+  btnExportPng.addEventListener('click', () => {
+    const svg = renderDiagramSvg(app.doc);
+    downloadDiagramPng(svg, app.doc.stageWidth, app.doc.stageHeight, `${getSafeFilenameSlug()}.png`);
+    void closeDialogSmoothly(exportDialog);
+  });
+  btnExportJson.addEventListener('click', () => {
+    downloadBlob(
+      serializeBlueprintJson(app.doc),
+      `${getSafeFilenameSlug()}.blueprint.json`,
+      'application/json;charset=utf-8',
+    );
     void closeDialogSmoothly(exportDialog);
   });
 

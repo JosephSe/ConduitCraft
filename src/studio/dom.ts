@@ -139,6 +139,9 @@ export const exportDialog = document.getElementById('export-dialog') as HTMLDial
 export const btnExportHtml = document.getElementById('btn-export-html') as HTMLButtonElement;
 export const btnExportMd = document.getElementById('btn-export-md') as HTMLButtonElement;
 export const btnExportMmd = document.getElementById('btn-export-mmd') as HTMLButtonElement;
+export const btnExportSvg = document.getElementById('btn-export-svg') as HTMLButtonElement;
+export const btnExportPng = document.getElementById('btn-export-png') as HTMLButtonElement;
+export const btnExportJson = document.getElementById('btn-export-json') as HTMLButtonElement;
 
 export const matrixDialog = document.getElementById('matrix-dialog') as HTMLDialogElement;
 export const matrixTbody = document.getElementById('matrix-tbody') as HTMLTableSectionElement;

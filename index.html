@@ -105,7 +105,7 @@
     </div>
 
     <div class="toolbar-actions" role="toolbar" aria-label="Document actions">
-      <input type="file" id="file-upload" name="blueprint-file" accept=".mmd,.mermaid,.md,.markdown,.txt" class="visually-hidden">
+      <input type="file" id="file-upload" name="blueprint-file" accept=".mmd,.mermaid,.md,.markdown,.txt,.json" class="visually-hidden">
       <button type="button" class="btn" id="btn-new-canvas">New</button>
       <button type="button" class="btn" id="btn-import-file">Import</button>
       <button type="button" class="btn" id="btn-open-code">Mermaid / MD</button>
@@ -150,7 +150,7 @@
         <div class="palette-section">
           <h3 class="section-heading">FILE IMPORT</h3>
           <div class="upload-card" id="palette-dropzone">
-            <p class="upload-card-text">Drop a <code>.mmd</code> or <code>.md</code> Blueprint file anywhere, or browse from disk.</p>
+            <p class="upload-card-text">Drop a <code>.mmd</code>, <code>.md</code>, or <code>.blueprint.json</code> file anywhere, or browse from disk.</p>
             <div class="palette-import-actions">
               <button type="button" class="btn btn-compact" id="btn-palette-import">Choose File…</button>
               <button type="button" class="btn btn-compact" id="btn-palette-code">Paste Code</button>
@@ -166,7 +166,7 @@
       <div class="window-drop-veil" id="window-drop-veil" hidden>
         <div class="drop-veil-card">
           <span class="drop-veil-icon" aria-hidden="true">⇪</span>
-          <strong>Drop Mermaid (.mmd) or Blueprint (.md) File</strong>
+          <strong>Drop Mermaid (.mmd), Blueprint (.md), or .blueprint.json</strong>
           <span>Nodes, swimlanes, and animated telemetry conduits will be built automatically</span>
         </div>
       </div>
@@ -181,7 +181,7 @@
           </p>
           <div class="empty-stage-actions">
             <button type="button" class="btn btn-primary-export" id="btn-quick-starter">+ Add Starter Pair</button>
-            <button type="button" class="btn" id="btn-empty-import">Import .mmd / .md</button>
+            <button type="button" class="btn" id="btn-empty-import">Import .mmd / .md / .json</button>
             <button type="button" class="btn" id="btn-empty-code">Paste Mermaid</button>
             <button type="button" class="btn" id="btn-restore-session" hidden>↺ Restore Previous Session</button>
           </div>
@@ -384,7 +384,7 @@
       </div>
       <div class="dialog-body">
         <p class="guide-lead">
-          Export your diagram as a zero-dependency interactive animated HTML page, a round-trippable Blueprint Markdown file, or standard Mermaid syntax.
+          Export an interactive HTML page, a picture, Mermaid, Blueprint Markdown, or a single-file Blueprint JSON document.
         </p>
         <div class="export-cards">
           <button type="button" class="export-option-card" id="btn-export-html">
@@ -398,6 +398,18 @@
           <button type="button" class="export-option-card" id="btn-export-mmd">
             <strong>Mermaid Flowchart (.mmd)</strong>
             <span>Clean standard Mermaid syntax compatible with GitHub, Notion, GitLab, and documentation sites.</span>
+          </button>
+          <button type="button" class="export-option-card" id="btn-export-svg">
+            <strong>Vector Picture (.svg)</strong>
+            <span>A standalone drawing of the stage, wires, and component outlines. Opens in browsers and design tools.</span>
+          </button>
+          <button type="button" class="export-option-card" id="btn-export-png">
+            <strong>Image (.png)</strong>
+            <span>A raster picture of the same drawing, at up to twice the stage resolution.</span>
+          </button>
+          <button type="button" class="export-option-card" id="btn-export-json">
+            <strong>Blueprint File (.blueprint.json)</strong>
+            <span>One JSON file with the whole document. Import it later from the file picker or by dropping it on the window.</span>
           </button>
         </div>
       </div>
