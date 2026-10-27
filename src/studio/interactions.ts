@@ -831,6 +831,8 @@ function rasterizeSvg(svg: string, width: number, height: number): Promise<Uint8
         reject(new Error('canvas'));
         return;
       }
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(image, 0, 0, width, height);
       resolve(ctx.getImageData(0, 0, width, height).data);
     };

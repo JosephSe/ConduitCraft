@@ -12,8 +12,9 @@ import { createBlankDocument, createNodeFromStencil } from '../src/templates/pre
 
 describe('gif export', () => {
   it('keeps a short picture inside the size cap and steps the dash across one loop', () => {
-    assert.deepEqual(gifPixelSize(1680, 920), { width: 720, height: 394 });
+    assert.deepEqual(gifPixelSize(1680, 920), { width: 1680, height: 920 });
     assert.deepEqual(gifPixelSize(400, 200), { width: 400, height: 200 });
+    assert.deepEqual(gifPixelSize(3000, 1500), { width: 2048, height: 1024 });
     assert.equal(gifFrameCount(0), 1);
     assert.equal(gifFrameCount(2), GIF_FRAME_COUNT);
     const offsets = new Set(Array.from({ length: GIF_FRAME_COUNT }, (_, index) => gifFrameDashOffset(index)));
@@ -67,4 +68,63 @@ describe('gif export', () => {
     assert.ok(Buffer.from(gif).includes(Buffer.from('NETSCAPE2.0')));
     assert.ok(gif.length < width * height * frames.length);
   });
+
+  it('keeps later frames to the pixels that moved', () => {
+    const width = 16;
+    const height = 8;
+    const paint = (step: number) => {
+      const rgba = new Uint8ClampedArray(width * height * 4);
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const i = (y * width + x) * 4;
+          const moved = x === 12 && y === 3 + step;
+          rgba[i] = moved ? 220 : 16;
+          rgba[i + 1] = moved ? 48 : 24;
+          rgba[i + 2] = moved ? 64 : 36;
+          rgba[i + 3] = 255;
+        }
+      }
+      return rgba;
+    };
+    const gif = encodeGif({ width, height, frames: [paint(0), paint(1)], delayCs: 8, maxColors: 16 });
+    const images = gifImageBounds(gif);
+    assert.equal(images.length, 2);
+    assert.deepEqual(images[0], { left: 0, top: 0, width, height });
+    assert.ok(images[1].width < width);
+    assert.ok(images[1].height < height);
+    assert.ok(images[1].left > 0);
+  });
 });
+
+function gifImageBounds(gif: Uint8Array): Array<{ left: number; top: number; width: number; height: number }> {
+  let offset = 6;
+  const packed = gif[10];
+  offset = 13;
+  if (packed & 0x80) offset += 3 * (2 << (packed & 7));
+  const images: Array<{ left: number; top: number; width: number; height: number }> = [];
+  while (offset < gif.length) {
+    const marker = gif[offset];
+    if (marker === 0x3b) break;
+    if (marker === 0x21) {
+      offset += 2;
+      offset = skipSubBlocks(gif, offset);
+      continue;
+    }
+    if (marker !== 0x2c) break;
+    const left = gif[offset + 1] | (gif[offset + 2] << 8);
+    const top = gif[offset + 3] | (gif[offset + 4] << 8);
+    const width = gif[offset + 5] | (gif[offset + 6] << 8);
+    const height = gif[offset + 7] | (gif[offset + 8] << 8);
+    images.push({ left, top, width, height });
+    offset += 10;
+    if (gif[offset - 1] & 0x80) offset += 3 * (2 << (gif[offset - 1] & 7));
+    offset += 1;
+    offset = skipSubBlocks(gif, offset);
+  }
+  return images;
+}
+
+function skipSubBlocks(gif: Uint8Array, offset: number): number {
+  while (offset < gif.length && gif[offset] !== 0) offset += 1 + gif[offset];
+  return offset + 1;
+}

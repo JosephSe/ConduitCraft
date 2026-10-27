@@ -1,10 +1,19 @@
 /** Short looping GIF of the telemetry dash, plus the encoder that writes it. */
 
-export const GIF_MAX_EDGE = 720;
+/** Longest edge. Diagrams smaller than this export at their stage size. */
+export const GIF_MAX_EDGE = 2048;
 export const GIF_FRAME_COUNT = 8;
 export const GIF_FRAME_DELAY_CS = 12;
 export const GIF_DASH_PERIOD = 18;
-export const GIF_MAX_COLORS = 64;
+export const GIF_MAX_COLORS = 256;
+
+/** Ordered dither added only when a pixel is far from the palette. */
+const DITHER_LIMIT = 12;
+const BAYER_8 = [
+  0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52,
+  20, 62, 30, 54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5,
+  37, 63, 31, 55, 23, 61, 29, 53, 21,
+];
 
 export function gifPixelSize(width: number, height: number): { width: number; height: number } {
   const longest = Math.max(width, height, 1);
@@ -111,27 +120,37 @@ function sampleFrames(frames: Uint8ClampedArray[], maxSamples: number): number[]
   return samples;
 }
 
-function padPalette(colors: Array<[number, number, number]>): Array<[number, number, number]> {
+/** Power-of-two palette with the last entry reserved for unchanged pixels. */
+function paletteWithTransparent(colors: Array<[number, number, number]>): Array<[number, number, number]> {
+  const usable = colors.slice(0, 255);
+  const palette = usable.slice();
   let size = 2;
-  while (size < colors.length) size *= 2;
-  const palette = colors.slice(0, size);
-  while (palette.length < size) palette.push([0, 0, 0]);
+  while (size < usable.length + 1) size *= 2;
+  const fill = palette[palette.length - 1] ?? [0, 0, 0];
+  while (palette.length < size - 1) palette.push([fill[0], fill[1], fill[2]]);
+  palette.push([0, 0, 0]);
   return palette;
 }
 
+function colorDistance(r: number, g: number, b: number, color: [number, number, number]): number {
+  const dr = r - color[0];
+  const dg = g - color[1];
+  const db = b - color[2];
+  return dr * dr * 2 + dg * dg * 4 + db * db * 3;
+}
+
+/** 6-bit lookup. The last palette entry is reserved and never chosen. */
 function buildLookup(palette: Array<[number, number, number]>): Uint8Array {
-  const lut = new Uint8Array(32 * 32 * 32);
+  const usable = Math.max(1, palette.length - 1);
+  const lut = new Uint8Array(64 * 64 * 64);
   for (let i = 0; i < lut.length; i += 1) {
-    const r = (((i >> 10) & 31) << 3) + 4;
-    const g = (((i >> 5) & 31) << 3) + 4;
-    const b = ((i & 31) << 3) + 4;
+    const r = (i >> 12) << 2;
+    const g = ((i >> 6) & 63) << 2;
+    const b = (i & 63) << 2;
     let best = 0;
     let bestDist = Number.POSITIVE_INFINITY;
-    for (let p = 0; p < palette.length; p += 1) {
-      const dr = r - palette[p][0];
-      const dg = g - palette[p][1];
-      const db = b - palette[p][2];
-      const dist = dr * dr + dg * dg + db * db;
+    for (let p = 0; p < usable; p += 1) {
+      const dist = colorDistance(r, g, b, palette[p]);
       if (dist < bestDist) {
         bestDist = dist;
         best = p;
@@ -142,13 +161,84 @@ function buildLookup(palette: Array<[number, number, number]>): Uint8Array {
   return lut;
 }
 
-function indexFrame(frame: Uint8ClampedArray, lut: Uint8Array): Uint8Array {
+function clampByte(value: number): number {
+  if (value < 0) return 0;
+  if (value > 255) return 255;
+  return value;
+}
+
+function lookupKey(r: number, g: number, b: number): number {
+  return ((r >> 2) << 12) | ((g >> 2) << 6) | (b >> 2);
+}
+
+function indexFrame(
+  frame: Uint8ClampedArray,
+  width: number,
+  lut: Uint8Array,
+  palette: Array<[number, number, number]>,
+): Uint8Array {
   const indexed = new Uint8Array(frame.length / 4);
+  const limit = DITHER_LIMIT * DITHER_LIMIT;
   for (let pixel = 0, i = 0; i < frame.length; i += 4, pixel += 1) {
-    const key = ((frame[i] >> 3) << 10) | ((frame[i + 1] >> 3) << 5) | (frame[i + 2] >> 3);
-    indexed[pixel] = lut[key];
+    const r = frame[i];
+    const g = frame[i + 1];
+    const b = frame[i + 2];
+    let index = lut[lookupKey(r, g, b)];
+    if (colorDistance(r, g, b, palette[index]) > limit) {
+      const x = pixel % width;
+      const y = (pixel - x) / width;
+      const jitter = ((BAYER_8[(y & 7) * 8 + (x & 7)] + 0.5) / 64 - 0.5) * DITHER_LIMIT * 2;
+      index = lut[lookupKey(
+        clampByte(Math.round(r + jitter)),
+        clampByte(Math.round(g + jitter)),
+        clampByte(Math.round(b + jitter)),
+      )];
+    }
+    indexed[pixel] = index;
   }
   return indexed;
+}
+
+function diffRect(
+  prev: Uint8Array,
+  next: Uint8Array,
+  width: number,
+  height: number,
+): { x: number; y: number; width: number; height: number } | null {
+  let minX = width;
+  let minY = height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < height; y += 1) {
+    const row = y * width;
+    for (let x = 0; x < width; x += 1) {
+      if (prev[row + x] === next[row + x]) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (maxX < 0) return null;
+  return { x: minX, y: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+function cropChanged(
+  prev: Uint8Array,
+  next: Uint8Array,
+  width: number,
+  rect: { x: number; y: number; width: number; height: number },
+  transparent: number,
+): Uint8Array {
+  const cropped = new Uint8Array(rect.width * rect.height);
+  let target = 0;
+  for (let y = 0; y < rect.height; y += 1) {
+    let source = (rect.y + y) * width + rect.x;
+    for (let x = 0; x < rect.width; x += 1, source += 1, target += 1) {
+      cropped[target] = prev[source] === next[source] ? transparent : next[source];
+    }
+  }
+  return cropped;
 }
 
 function lzwEncode(indices: Uint8Array, minCodeSize: number): number[] {
@@ -248,10 +338,12 @@ export function encodeGif(options: {
   }
 
   const maxColors = Math.min(256, Math.max(2, options.maxColors ?? GIF_MAX_COLORS));
+  const colorSlots = Math.max(1, maxColors - 1);
   const firstPixels = options.frames[0].length / 4;
-  const palette = padPalette(
-    medianCut(sampleFrames(options.frames, Math.max(firstPixels, maxColors * 200)), maxColors),
+  const palette = paletteWithTransparent(
+    medianCut(sampleFrames(options.frames, Math.max(firstPixels, colorSlots * 200)), colorSlots),
   );
+  const transparent = palette.length - 1;
   const lut = buildLookup(palette);
   let minCodeSize = 2;
   while (1 << minCodeSize < palette.length) minCodeSize += 1;
@@ -267,18 +359,43 @@ export function encodeGif(options: {
   out.push(3, 1, 0, 0, 0);
 
   const delay = Math.max(1, Math.min(65535, Math.round(options.delayCs)));
-  for (const frame of options.frames) {
-    out.push(0x21, 0xf9, 0x04, 0x04);
+  const indexed = options.frames.map((frame) => indexFrame(frame, width, lut, palette));
+  const writeImage = (
+    pixels: Uint8Array,
+    left: number,
+    top: number,
+    imageWidth: number,
+    imageHeight: number,
+    transparentIndex: number | null,
+  ) => {
+    out.push(0x21, 0xf9, 0x04, transparentIndex === null ? 0x04 : 0x09);
     word(out, delay);
-    out.push(0, 0);
+    out.push(transparentIndex === null ? 0 : transparentIndex, 0);
     out.push(0x2c);
-    word(out, 0);
-    word(out, 0);
-    word(out, width);
-    word(out, height);
+    word(out, left);
+    word(out, top);
+    word(out, imageWidth);
+    word(out, imageHeight);
     out.push(0);
     out.push(minCodeSize);
-    subBlocks(out, lzwEncode(indexFrame(frame, lut), minCodeSize));
+    subBlocks(out, lzwEncode(pixels, minCodeSize));
+  };
+
+  writeImage(indexed[0], 0, 0, width, height, null);
+  for (let frame = 1; frame < indexed.length; frame += 1) {
+    const rect = diffRect(indexed[frame - 1], indexed[frame], width, height);
+    if (!rect) {
+      writeImage(Uint8Array.of(transparent), 0, 0, 1, 1, transparent);
+      continue;
+    }
+    writeImage(
+      cropChanged(indexed[frame - 1], indexed[frame], width, rect, transparent),
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      transparent,
+    );
   }
   out.push(0x3b);
   return Uint8Array.from(out);
