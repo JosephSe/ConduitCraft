@@ -1,5 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { SHORTCUTS, renderShortcutsHtml, getModifierKey } from '../src/studio/commands.ts';
 
 describe('commands and keyboard shortcuts registry', () => {
@@ -29,5 +31,40 @@ describe('commands and keyboard shortcuts registry', () => {
   it('returns a valid modifier key for platform', () => {
     const mod = getModifierKey();
     assert.ok(mod === '⌘' || mod === 'Ctrl');
+  });
+
+  it('elevates tooltip stacking context and defines all 4 directional positions in studio.css', () => {
+    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
+    const css = readFileSync(cssPath, 'utf8');
+
+    // Elevate stacking context on hover/focus so tooltips never render behind subsequent sibling elements
+    assert.ok(
+      css.includes('[data-tip]:hover,\n[data-tip]:focus-visible {\n  z-index: 100;'),
+      'elevates [data-tip] stacking context on hover and focus',
+    );
+    assert.ok(
+      css.includes('.stencil-card {\n    position: relative;'),
+      'ensures stencil card has position relative for stacking and absolute containment',
+    );
+    assert.ok(
+      css.includes('.stencil-card:hover {') && css.includes('z-index: 100;'),
+      'elevates hovered stencil card to z-index 100 above subsequent cards in grid',
+    );
+
+    // Directional positioning coverage
+    assert.ok(css.includes('[data-tip-pos="top"]::after'), 'defines data-tip-pos="top"');
+    assert.ok(css.includes('[data-tip-pos="bottom"]::after'), 'defines data-tip-pos="bottom"');
+    assert.ok(css.includes('[data-tip-pos="right"]::after'), 'defines data-tip-pos="right"');
+    assert.ok(css.includes('[data-tip-pos="left"]::after'), 'defines data-tip-pos="left"');
+
+    // Collapsed rail tooltips & overflow visibility
+    assert.ok(
+      css.includes('.palette-rail-content [data-tip]::after'),
+      'defines palette rail tooltip styling',
+    );
+    assert.ok(
+      css.includes('.workspace[data-palette-collapsed="true"] .palette-sidebar {\n    overflow: visible;'),
+      'keeps collapsed palette sidebar overflow visible for rail tooltips',
+    );
   });
 });

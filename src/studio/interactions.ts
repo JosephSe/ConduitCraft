@@ -250,7 +250,7 @@ export function initStencilPalette(): void {
     sub.textContent = stencil.paletteSub;
 
     btn.setAttribute('data-tip', `${stencil.paletteTitle} — ${stencil.paletteSub}`);
-    btn.setAttribute('data-tip-pos', 'right');
+    btn.setAttribute('data-tip-pos', 'top');
 
     btn.append(preview, title, sub);
 
@@ -1350,7 +1350,7 @@ export function initEvents(): void {
 
   // Add Swimlane & Notes Card
   btnAddZone.setAttribute('data-tip', 'Create a swimlane stage banner');
-  btnAddZone.setAttribute('data-tip-pos', 'right');
+  btnAddZone.setAttribute('data-tip-pos', 'top');
   btnAddZone.addEventListener('click', () => {
     pushHistory();
     const nextX =
@@ -1365,7 +1365,7 @@ export function initEvents(): void {
   });
 
   btnAddNotes.setAttribute('data-tip', 'Add a checklist specification card');
-  btnAddNotes.setAttribute('data-tip-pos', 'right');
+  btnAddNotes.setAttribute('data-tip-pos', 'top');
   btnAddNotes.addEventListener('click', () => {
     pushHistory();
     const [cx, cy] = getViewportWorldCenter();

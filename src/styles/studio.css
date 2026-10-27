@@ -318,7 +318,7 @@
   }
 
   .workspace[data-palette-collapsed="true"] .palette-sidebar {
-    overflow: hidden;
+    overflow: visible;
   }
 
   .workspace[data-palette-collapsed="true"] .palette-header,
@@ -335,6 +335,19 @@
     padding-inline: 0.25rem;
   }
 
+  .palette-rail-content [data-tip]::after {
+    top: 50%;
+    bottom: auto;
+    left: calc(100% + 8px);
+    right: auto;
+    transform: translateY(-50%) translateX(-2px);
+  }
+
+  .palette-rail-content [data-tip]:hover::after,
+  .palette-rail-content [data-tip]:focus-visible::after {
+    transform: translateY(-50%) translateX(0);
+  }
+
   .rail-divider {
     inline-size: 1.5rem;
     block-size: 1px;
@@ -343,6 +356,7 @@
   }
 
   .rail-stencil-btn {
+    position: relative;
     inline-size: 2.2rem;
     block-size: 2.2rem;
     display: grid;
@@ -359,10 +373,15 @@
     background: var(--wl-surface-elevated);
     border-color: var(--wl-border-subtle);
     color: var(--wl-ink);
+    z-index: 100;
+  }
+
+  .rail-stencil-btn:focus-visible {
+    z-index: 100;
   }
 
   .workspace[data-inspector-collapsed="true"] .inspector {
-    overflow: hidden;
+    overflow: visible;
   }
 
   .workspace[data-inspector-collapsed="true"] .inspector-mode-pane {
@@ -378,6 +397,19 @@
     padding-inline: 0.25rem;
     cursor: pointer;
     block-size: 100%;
+  }
+
+  .inspector-rail-content [data-tip]::after {
+    top: 50%;
+    bottom: auto;
+    right: calc(100% + 8px);
+    left: auto;
+    transform: translateY(-50%) translateX(2px);
+  }
+
+  .inspector-rail-content [data-tip]:hover::after,
+  .inspector-rail-content [data-tip]:focus-visible::after {
+    transform: translateY(-50%) translateX(0);
   }
 
   .rail-vertical-label {
@@ -524,6 +556,7 @@
   }
 
   .stencil-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -546,16 +579,19 @@
     background: var(--wl-surface-elevated);
     transform: translateY(-1px);
     box-shadow: var(--wl-shadow-card);
+    z-index: 100;
   }
 
   .stencil-card:active {
     cursor: grabbing;
     transform: scale(0.98);
+    z-index: 100;
   }
 
   .stencil-card:focus-visible {
     outline: 2px solid var(--wl-blue);
     outline-offset: 2px;
+    z-index: 100;
   }
 
   .stencil-preview {
@@ -598,6 +634,7 @@
   }
 
   .stencil-aux-btn {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 0.65rem;
@@ -615,11 +652,13 @@
   .stencil-aux-btn:hover {
     border-color: var(--wl-blue);
     background: var(--wl-surface-elevated);
+    z-index: 100;
   }
 
   .stencil-aux-btn:focus-visible {
     outline: 2px solid var(--wl-blue);
     outline-offset: 2px;
+    z-index: 100;
   }
 
   .stencil-aux-icon {
@@ -3175,6 +3214,11 @@
   position: relative;
 }
 
+[data-tip]:hover,
+[data-tip]:focus-visible {
+  z-index: 100;
+}
+
 [data-tip]::after {
   content: attr(data-tip);
   position: absolute;
@@ -3203,15 +3247,60 @@
   transform: translateX(-50%) translateY(0);
 }
 
+/* Explicit Top Position */
 [data-tip-pos="top"]::after {
   top: auto;
   bottom: calc(100% + 7px);
+  left: 50%;
+  right: auto;
   transform: translateX(-50%) translateY(2px);
 }
 
 [data-tip-pos="top"]:hover::after,
 [data-tip-pos="top"]:focus-visible::after {
   transform: translateX(-50%) translateY(0);
+}
+
+/* Explicit Bottom Position */
+[data-tip-pos="bottom"]::after {
+  top: calc(100% + 7px);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+[data-tip-pos="bottom"]:hover::after,
+[data-tip-pos="bottom"]:focus-visible::after {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Explicit Right Position */
+[data-tip-pos="right"]::after {
+  top: 50%;
+  bottom: auto;
+  left: calc(100% + 8px);
+  right: auto;
+  transform: translateY(-50%) translateX(-2px);
+}
+
+[data-tip-pos="right"]:hover::after,
+[data-tip-pos="right"]:focus-visible::after {
+  transform: translateY(-50%) translateX(0);
+}
+
+/* Explicit Left Position */
+[data-tip-pos="left"]::after {
+  top: 50%;
+  bottom: auto;
+  left: auto;
+  right: calc(100% + 8px);
+  transform: translateY(-50%) translateX(2px);
+}
+
+[data-tip-pos="left"]:hover::after,
+[data-tip-pos="left"]:focus-visible::after {
+  transform: translateY(-50%) translateX(0);
 }
 
 /* Shortcuts Dialog Styling */
