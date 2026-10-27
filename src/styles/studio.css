@@ -3798,6 +3798,112 @@ body[data-presenting="true"] .canvas-hud .minimap-panel {
   }
 }
 
+/* ==========================================================================
+   Simulation Playback Deck & Active Wire Glow
+   ========================================================================== */
+.sim-playback-deck {
+  margin-block: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  background: var(--wl-surface-elevated);
+  border: 1px solid var(--wl-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sim-playback-deck[hidden] {
+  display: none !important;
+}
+
+.sim-playback-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sim-playback-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--wl-ink);
+  letter-spacing: -0.01em;
+}
+
+.sim-playback-step-badge {
+  font-family: var(--wl-font-mono, monospace);
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: var(--wl-ink-secondary);
+  background: var(--wl-panel);
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--wl-border-subtle);
+}
+
+.sim-playback-scrubber-row {
+  width: 100%;
+}
+
+.sim-scrubber {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--wl-border-subtle);
+  outline: none;
+  cursor: pointer;
+  accent-color: var(--wl-blue);
+}
+
+.sim-playback-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-sim-play {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-inline: 0.75rem;
+}
+
+.sim-deck-spacer {
+  flex: 1;
+}
+
+.sim-speed-btn {
+  font-family: var(--wl-font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding-inline: 0.5rem;
+}
+
+/* Trace item interactive styles & active step highlight */
+.trace-item {
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.trace-item:hover {
+  background: var(--wl-surface-elevated);
+}
+
+.trace-item.is-active-step {
+  background: var(--wl-surface-elevated);
+  border-inline-start: 3px solid var(--sim-accent, var(--wl-blue));
+  padding-inline-start: calc(0.75rem - 3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Active Conduit Wire Glow in Simulations */
+.conduit-group[data-sim-active="true"] path.conduit-wire-flow {
+  stroke-width: 4px !important;
+  stroke: var(--sim-accent, var(--wl-emerald)) !important;
+  filter: drop-shadow(0 0 6px var(--sim-accent, var(--wl-emerald))) !important;
+}
+
 
 
 

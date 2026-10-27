@@ -76,7 +76,6 @@ import {
   btnClearSearch,
   marqueeBox,
   matrixDialog,
-  nodesLayer,
   panelInspector,
   panelSimulations,
   panelTrace,
@@ -84,9 +83,6 @@ import {
   shortcutsDialog,
   shortcutsDialogBody,
   simButtonsSlot,
-  simPacket,
-  simPacketDot,
-  simPacketLabel,
   stencilGrid,
   tabInspector,
   tabSimulations,
@@ -169,6 +165,7 @@ import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
+import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -497,10 +494,7 @@ export function clearSimulation(): void {
     window.clearTimeout(app.simTimer);
     app.simTimer = null;
   }
-  simPacket.hidden = true;
-  for (const w of nodesLayer.querySelectorAll<HTMLElement>('.arch-node')) {
-    delete w.dataset.simActive;
-  }
+  simulationPlayback.clear();
 }
 
 export function appendTraceEntry(stepLabel: string, message: string, tone: StreamTone): void {
@@ -558,47 +552,8 @@ export function runSimulation(simId: string): void {
   );
   if (allFlowRadio) allFlowRadio.checked = true;
 
-  const nodeMap = new Map(app.doc.nodes.map((n) => [n.id, n]));
-  const wrappers = Array.from(nodesLayer.querySelectorAll<HTMLElement>('.arch-node'));
-  let idx = 0;
-
-  const stepNext = () => {
-    if (idx >= scenario.steps.length) {
-      app.simTimer = window.setTimeout(clearSimulation, 1100);
-      return;
-    }
-
-    const step = scenario.steps[idx];
-    const [accent, soft] = TONE_CSS[step.tone] || TONE_CSS.emerald;
-
-    for (const w of wrappers) {
-      const nid = w.dataset.node || '';
-      if (step.nodes.includes(nid)) {
-        w.dataset.simActive = 'true';
-        w.style.setProperty('--sim-accent', accent);
-        w.style.setProperty('--sim-accent-soft', soft);
-      } else {
-        delete w.dataset.simActive;
-      }
-    }
-
-    const anchorNode = nodeMap.get(step.nodes[0]);
-    if (anchorNode) {
-      const [cx, cy] = getNodeCenter(anchorNode);
-      simPacket.hidden = false;
-      simPacket.dataset.tone = step.tone;
-      simPacketDot.style.background = accent;
-      simPacketLabel.textContent = step.label;
-      simPacket.style.setProperty('--px', String(cx));
-      simPacket.style.setProperty('--py', String(cy - 62));
-    }
-
-    appendTraceEntry(`STEP 0${idx + 1} · ${scenario.name.toUpperCase()}`, step.trace, step.tone);
-    idx += 1;
-    app.simTimer = window.setTimeout(stepNext, 950);
-  };
-
-  stepNext();
+  populateTraceRows(scenario);
+  simulationPlayback.loadScenario(scenario, true);
 }
 
 // ---------------------------------------------------------------------------
@@ -1676,6 +1631,9 @@ export function initEvents(): void {
     });
   }
 
+  // Simulation Playback Deck & Trace Scrubbing
+  initSimulationPlaybackUi();
+
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
   if (shortcutsDialog) allDialogs.push(shortcutsDialog);
@@ -1745,7 +1703,10 @@ export function initEvents(): void {
   btnResetSelection.addEventListener('click', () => {
     applySelection({ type: 'none' }, { refreshIfUnchanged: true });
   });
-  btnClearTrace.addEventListener('click', () => traceList.replaceChildren());
+  btnClearTrace.addEventListener('click', () => {
+    clearSimulation();
+    traceList.replaceChildren();
+  });
 
   // Canvas Background Pan, Shift-Marquee Multi-Select & Deselect
   let panDragStart: { x: number; y: number } | null = null;

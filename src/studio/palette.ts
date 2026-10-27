@@ -9,6 +9,7 @@ import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
+import { simulationPlayback } from './simulationPlayback';
 
 export interface PaletteCommand {
   id: string;
@@ -288,6 +289,47 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['presentation', 'present', 'tour', 'clean', 'fullscreen', 'slides'],
       run: () => {
         togglePresentation(app.doc);
+      },
+    },
+    {
+      id: 'sim-toggle-play',
+      title: 'Simulation: Play / Pause',
+      subtitle: 'Toggle active packet flow playback',
+      category: 'Mode & View',
+      keywords: ['play', 'pause', 'simulation', 'step', 'playback'],
+      run: () => {
+        simulationPlayback.togglePlay();
+      },
+    },
+    {
+      id: 'sim-step-forward',
+      title: 'Simulation: Step Forward',
+      subtitle: 'Advance to the next packet hop',
+      category: 'Mode & View',
+      keywords: ['step', 'next', 'forward', 'simulation'],
+      run: () => {
+        simulationPlayback.stepForward();
+      },
+    },
+    {
+      id: 'sim-step-backward',
+      title: 'Simulation: Step Backward',
+      subtitle: 'Go back to previous packet hop',
+      category: 'Mode & View',
+      keywords: ['step', 'prev', 'back', 'simulation'],
+      run: () => {
+        simulationPlayback.stepBackward();
+      },
+    },
+    {
+      id: 'sim-toggle-loop',
+      title: 'Simulation: Toggle Loop',
+      subtitle: 'Repeat simulation packet scenario continuously',
+      category: 'Mode & View',
+      keywords: ['loop', 'repeat', 'continuous', 'simulation'],
+      run: () => {
+        const looping = simulationPlayback.toggleLoop();
+        notify(looping ? 'Simulation loop enabled' : 'Simulation loop disabled');
       },
     },
 

@@ -372,7 +372,40 @@
               <span class="tier-badge">EXECUTION TRACE</span>
               <button type="button" class="btn btn-compact" id="btn-clear-trace" style="flex: 0 0 auto;">Clear</button>
             </div>
-            <p class="inspector-summary">
+
+            <!-- Simulation Playback Controls Deck -->
+            <div class="sim-playback-deck" id="sim-playback-deck" hidden>
+              <div class="sim-playback-header">
+                <span class="sim-playback-title" id="sim-playback-title">Active Simulation</span>
+                <span class="sim-playback-step-badge" id="sim-playback-step-badge">Step 1 of 4</span>
+              </div>
+
+              <div class="sim-playback-scrubber-row">
+                <input type="range" class="sim-scrubber" id="sim-scrubber" min="0" max="0" value="0" step="1" aria-label="Simulation step scrubber">
+              </div>
+
+              <div class="sim-playback-controls-row">
+                <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-prev" aria-label="Previous step" data-tip="Previous step">
+                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+                </button>
+                <button type="button" class="btn btn-compact btn-sim-play" id="btn-sim-play" aria-label="Play or pause simulation" data-tip="Play/Pause">
+                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+                  <span id="btn-sim-play-label">Play</span>
+                </button>
+                <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-next" aria-label="Next step" data-tip="Next step">
+                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+                </button>
+
+                <div class="sim-deck-spacer"></div>
+
+                <button type="button" class="btn btn-compact sim-speed-btn" id="btn-sim-speed" aria-label="Simulation speed (click to toggle)" data-tip="Playback speed">1.0×</button>
+                <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-loop" aria-label="Toggle loop" data-tip="Loop simulation" aria-pressed="false">
+                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <p class="inspector-summary" id="sim-trace-hint">
               Trigger a simulation from the toolbar or the Scenarios tab to watch live packets traverse your architecture.
             </p>
             <ol class="trace-list" id="trace-list" aria-live="polite"></ol>
