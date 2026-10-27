@@ -8,7 +8,8 @@ import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
 
-function escapeHtml(value: string): string {
+function escapeHtml(value?: string | null): string {
+  if (!value) return '';
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -292,6 +293,7 @@ ${colorSchemeBoot}
       ${filterPillsMarkup}
       ${simButtonsMarkup}
       <button type="button" class="btn" id="btn-toggle-motion" aria-pressed="false">Pause</button>
+      <button type="button" class="btn" id="btn-enter-presentation" aria-label="Presentation mode (P)" data-tip="Present (P)">Present</button>
       <button type="button" class="btn" id="btn-open-matrix">Matrix</button>
       <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings">⚙</button>
     </div>
@@ -375,6 +377,26 @@ ${colorSchemeBoot}
       </div>
     </aside>
   </main>
+
+  <div class="presentation-bar" id="presentation-bar" hidden>
+    <button type="button" class="btn btn-icon-only" id="btn-pres-prev" aria-label="Previous step">←</button>
+    <div class="presentation-pill-info" id="pres-pill-info">Overview</div>
+    <button type="button" class="btn btn-icon-only" id="btn-pres-next" aria-label="Next step">→</button>
+    <div class="presentation-bar-divider" aria-hidden="true"></div>
+    <button type="button" class="btn btn-icon-only" id="btn-pres-play" aria-label="Auto-play tour">▶</button>
+    <button type="button" class="btn btn-pres-exit" id="btn-pres-exit" aria-label="Exit presentation">Exit</button>
+  </div>
+  <aside class="presentation-caption" id="presentation-caption" aria-live="polite" hidden>
+    <div class="presentation-caption-header">
+      <div class="presentation-caption-badge-row">
+        <span class="presentation-caption-badge" id="pres-caption-badge">OVERVIEW</span>
+        <span class="presentation-caption-step" id="pres-caption-step">0 of 0</span>
+      </div>
+      <h2 class="presentation-caption-title" id="pres-caption-title"></h2>
+      <div class="presentation-caption-subtitle" id="pres-caption-subtitle"></div>
+    </div>
+    <p class="presentation-caption-body" id="pres-caption-body"></p>
+  </aside>
 
   <dialog id="matrix-dialog" closedby="any" aria-labelledby="matrix-dialog-title">
     <div class="dialog-shell">
@@ -760,6 +782,121 @@ ${colorSchemeBoot}
           d.addEventListener('pointerup', (e) => { if (downOut && outside(e, d)) d.close(); });
         }
       }
+
+      // Presentation Mode & Guided Tour
+      const presBar = document.getElementById('presentation-bar');
+      const presCaption = document.getElementById('presentation-caption');
+      const presPill = document.getElementById('pres-pill-info');
+      const presBadge = document.getElementById('pres-caption-badge');
+      const presStep = document.getElementById('pres-caption-step');
+      const presTitle = document.getElementById('pres-caption-title');
+      const presSubtitle = document.getElementById('pres-caption-subtitle');
+      const presBody = document.getElementById('pres-caption-body');
+      const btnPresPlay = document.getElementById('btn-pres-play');
+
+      const tourNodes = Object.entries(DATA.nodes);
+      let presActive = false;
+      let presIndex = 0;
+      let presAutoPlayTimer = null;
+
+      function updatePresUi() {
+        if (!presActive) return;
+        presBar.hidden = false;
+        presCaption.hidden = false;
+        if (presIndex === 0) {
+          presPill.textContent = 'Overview (' + tourNodes.length + ' nodes)';
+          presBadge.textContent = 'ARCHITECTURE';
+          presStep.textContent = 'System Overview';
+          presTitle.textContent = ${serializeScriptJson(doc.title || 'Architecture Overview')};
+          presSubtitle.textContent = 'System Architecture';
+          presBody.textContent = ${serializeScriptJson(doc.overviewSummary || 'Comprehensive view of system components, boundaries, and real-time event telemetry.')};
+          showOverview();
+          fitToViewport();
+        } else {
+          const entry = tourNodes[presIndex - 1];
+          const nId = entry[0];
+          const n = entry[1];
+          presPill.textContent = presIndex + ' of ' + tourNodes.length;
+          presBadge.textContent = 'COMPONENT';
+          presStep.textContent = 'Step ' + presIndex + ' of ' + tourNodes.length;
+          presTitle.textContent = n.title || nId;
+          presSubtitle.textContent = n.subtitle || ('Component 0' + presIndex);
+          presBody.textContent = n.summary || ('Active component in system architecture transmitting ' + n.tone + ' telemetry.');
+          selectNode(nId);
+          const r = viewport.getBoundingClientRect();
+          scale = 1.05;
+          panX = Math.round((r.width / 2) - n.center[0] * scale);
+          panY = Math.round((r.height / 2) - n.center[1] * scale - 40);
+          applyTransform();
+        }
+      }
+
+      function enterPresentation(idx) {
+        presActive = true;
+        document.body.dataset.presenting = 'true';
+        presIndex = idx || 0;
+        updatePresUi();
+      }
+
+      function exitPresentation() {
+        presActive = false;
+        delete document.body.dataset.presenting;
+        presBar.hidden = true;
+        presCaption.hidden = true;
+        if (presAutoPlayTimer) { clearInterval(presAutoPlayTimer); presAutoPlayTimer = null; }
+        fitToViewport();
+      }
+
+      function presNext() {
+        if (!presActive) return;
+        presIndex = (tourNodes.length === 0) ? 0 : (presIndex + 1) % (tourNodes.length + 1);
+        updatePresUi();
+      }
+
+      function presPrev() {
+        if (!presActive) return;
+        presIndex = (tourNodes.length === 0) ? 0 : (presIndex - 1 + tourNodes.length + 1) % (tourNodes.length + 1);
+        updatePresUi();
+      }
+
+      function togglePresAutoPlay() {
+        if (presAutoPlayTimer) {
+          clearInterval(presAutoPlayTimer);
+          presAutoPlayTimer = null;
+          btnPresPlay.textContent = '▶';
+        } else {
+          btnPresPlay.textContent = '⏸';
+          presAutoPlayTimer = setInterval(presNext, 4500);
+        }
+      }
+
+      document.getElementById('btn-enter-presentation')?.addEventListener('click', () => {
+        if (presActive) exitPresentation(); else enterPresentation(0);
+      });
+      document.getElementById('btn-pres-exit')?.addEventListener('click', exitPresentation);
+      document.getElementById('btn-pres-next')?.addEventListener('click', () => {
+        if (presAutoPlayTimer) togglePresAutoPlay();
+        presNext();
+      });
+      document.getElementById('btn-pres-prev')?.addEventListener('click', () => {
+        if (presAutoPlayTimer) togglePresAutoPlay();
+        presPrev();
+      });
+      btnPresPlay?.addEventListener('click', togglePresAutoPlay);
+
+      window.addEventListener('keydown', (e) => {
+        if (presActive) {
+          if (e.key === 'Escape' || e.key.toLowerCase() === 'p') { e.preventDefault(); exitPresentation(); return; }
+          if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); presNext(); return; }
+          if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); presPrev(); return; }
+          if (e.key === 'Home') { e.preventDefault(); presIndex = 0; updatePresUi(); return; }
+        } else if (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey) {
+          const activeTag = (document.activeElement || {}).tagName;
+          if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return;
+          e.preventDefault();
+          enterPresentation(0);
+        }
+      });
 
       window.conduitBindColorScheme(document.querySelector('meta[name="color-scheme"]'));
 

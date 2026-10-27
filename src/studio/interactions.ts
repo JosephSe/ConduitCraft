@@ -29,6 +29,7 @@ import {
   btnNewCanvas,
   btnOpenCode,
   btnOpenExport,
+  btnEnterPresentation,
   btnOpenMatrix,
   btnOpenSettings,
   btnOpenShortcuts,
@@ -167,6 +168,7 @@ import { renderShortcutsHtml } from './commands';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
+import { presentationManager } from './presentation';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -1542,6 +1544,11 @@ export function initEvents(): void {
     void updateShareLinkPreview();
   });
 
+  // Presentation Mode Trigger
+  btnEnterPresentation?.addEventListener('click', () => {
+    presentationManager.toggle(app.doc);
+  });
+
   // Export Modal & Actions
   btnOpenExport.addEventListener('click', () => {
     resetGifChoices();
@@ -1986,6 +1993,41 @@ export function initEvents(): void {
     if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey && !inEditable) {
       e.preventDefault();
       openShortcutsDialog();
+      return;
+    }
+
+    // Presentation Mode Navigation & Toggle
+    if (presentationManager.isPresenting) {
+      if (e.key === 'Escape' || (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey)) {
+        e.preventDefault();
+        presentationManager.exit();
+        return;
+      }
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        presentationManager.next();
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        presentationManager.prev();
+        return;
+      }
+      if (e.key === 'Home') {
+        e.preventDefault();
+        presentationManager.goTo(0);
+        return;
+      }
+      if (e.key === 'End') {
+        e.preventDefault();
+        presentationManager.goTo(presentationManager.totalSteps - 1);
+        return;
+      }
+    }
+
+    if (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey && !e.altKey && !inEditable) {
+      e.preventDefault();
+      presentationManager.toggle(app.doc);
       return;
     }
 

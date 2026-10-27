@@ -67,6 +67,7 @@ export const btnNewCanvas = document.getElementById('btn-new-canvas') as HTMLBut
 export const btnImportFile = document.getElementById('btn-import-file') as HTMLButtonElement;
 export const btnOpenCode = document.getElementById('btn-open-code') as HTMLButtonElement;
 export const btnOpenMatrix = document.getElementById('btn-open-matrix') as HTMLButtonElement;
+export const btnEnterPresentation = document.getElementById('btn-enter-presentation') as HTMLButtonElement | null;
 export const btnOpenExport = document.getElementById('btn-open-export') as HTMLButtonElement;
 export const btnOpenSettings = document.getElementById('btn-open-settings') as HTMLButtonElement;
 

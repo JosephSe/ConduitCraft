@@ -298,3 +298,175 @@
   .theme-option-sub { font-size: 0.78rem; color: var(--wl-ink-secondary); display: block; }
 }
 
+/* ==========================================================================
+   Presentation Mode (Standalone Viewer)
+   ========================================================================== */
+body[data-presenting="true"] .topbar {
+  display: none !important;
+}
+
+body[data-presenting="true"] .workspace {
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+  block-size: 100vh !important;
+  max-block-size: 100vh !important;
+  overflow: hidden !important;
+}
+
+body[data-presenting="true"] .inspector,
+body[data-presenting="true"] .canvas-hud {
+  display: none !important;
+}
+
+.presentation-bar {
+  position: fixed;
+  top: 1.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--wl-panel);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--wl-border);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  z-index: 1000;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.presentation-bar[hidden] {
+  display: none !important;
+}
+
+.presentation-pill-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 0.6rem;
+  font-family: var(--wl-font-mono, monospace);
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--wl-ink);
+  min-width: 8rem;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.presentation-bar-divider {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--wl-border-subtle);
+  margin-inline: 0.15rem;
+}
+
+.btn-pres-exit {
+  background: var(--wl-surface-elevated);
+  color: var(--wl-ink);
+  border-radius: 999px;
+  padding-inline: 0.75rem;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.btn-pres-exit:hover {
+  background: var(--wl-rose-soft);
+  color: var(--wl-rose);
+}
+
+.presentation-caption {
+  position: fixed;
+  bottom: 1.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(46rem, calc(100vw - 3rem));
+  width: 100%;
+  background: var(--wl-panel);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--wl-border);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.38);
+  border-radius: 1.125rem;
+  padding: 1.15rem 1.4rem;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  animation: captionFadeIn 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.presentation-caption[hidden] {
+  display: none !important;
+}
+
+.presentation-caption-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.presentation-caption-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-block-end: 0.15rem;
+}
+
+.presentation-caption-badge {
+  font-family: var(--wl-font-mono, monospace);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding-inline: 0.45rem;
+  padding-block: 0.15rem;
+  border-radius: 999px;
+  background: var(--badge-accent, var(--wl-emerald));
+  color: #ffffff;
+}
+
+.presentation-caption-step {
+  font-family: var(--wl-font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--wl-ink-secondary);
+}
+
+.presentation-caption-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--wl-ink);
+  line-height: 1.2;
+}
+
+.presentation-caption-subtitle {
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--wl-ink-secondary);
+}
+
+.presentation-caption-body {
+  font-size: 0.8875rem;
+  line-height: 1.55;
+  color: var(--wl-ink);
+  margin-block-start: 0.25rem;
+  border-block-start: 1px solid var(--wl-border-subtle);
+  padding-block-start: 0.5rem;
+}
+
+@keyframes captionFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+

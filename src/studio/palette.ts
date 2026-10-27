@@ -8,6 +8,7 @@ import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
+import { togglePresentation } from './presentation';
 
 export interface PaletteCommand {
   id: string;
@@ -276,6 +277,17 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
           radio.checked = true;
           radio.dispatchEvent(new Event('change'));
         }
+      },
+    },
+    {
+      id: 'mode-presentation',
+      title: 'Toggle Presentation Mode',
+      subtitle: 'Clean fullscreen canvas with guided node tour',
+      category: 'Mode & View',
+      shortcut: 'P',
+      keywords: ['presentation', 'present', 'tour', 'clean', 'fullscreen', 'slides'],
+      run: () => {
+        togglePresentation(app.doc);
       },
     },
 

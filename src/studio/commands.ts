@@ -31,6 +31,7 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Esc'], description: 'Clear selection or Connect mode', category: 'Drafting & Selection' },
 
   // Navigation & View
+  { keys: ['P'], description: 'Toggle presentation mode & guided tour', category: 'Navigation & View' },
   { keys: ['⌘', 'F'], description: 'Find & focus node on canvas', category: 'Navigation & View' },
   { keys: ['⌘', 'K'], description: 'Open command palette', category: 'Navigation & View' },
   { keys: ['Wheel / Trackpad'], description: 'Zoom into pointer position', category: 'Navigation & View' },
