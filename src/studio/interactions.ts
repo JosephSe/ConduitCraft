@@ -26,6 +26,7 @@ import {
   btnOpenExport,
   btnOpenMatrix,
   btnOpenSettings,
+  btnOpenShortcuts,
   btnPaletteCode,
   btnPaletteImport,
   btnPropDelete,
@@ -57,6 +58,8 @@ import {
   gifExportPanel,
   gifScenarioEmpty,
   gifScenarioList,
+  hudCoachCard,
+  btnDismissHudCoach,
   hudStatusTip,
   marqueeBox,
   matrixDialog,
@@ -65,6 +68,8 @@ import {
   panelSimulations,
   panelTrace,
   settingsDialog,
+  shortcutsDialog,
+  shortcutsDialogBody,
   simButtonsSlot,
   simPacket,
   simPacketDot,
@@ -147,6 +152,7 @@ import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
+import { renderShortcutsHtml } from './commands';
 
 export function initStencilPalette(): void {
   stencilGrid.replaceChildren();
@@ -176,6 +182,9 @@ export function initStencilPalette(): void {
     const sub = document.createElement('span');
     sub.className = 'stencil-sub';
     sub.textContent = stencil.paletteSub;
+
+    btn.setAttribute('data-tip', `${stencil.paletteTitle} — ${stencil.paletteSub}`);
+    btn.setAttribute('data-tip-pos', 'right');
 
     btn.append(preview, title, sub);
 
@@ -1059,6 +1068,14 @@ export function openCodeDialog(): void {
 // ---------------------------------------------------------------------------
 // Event Wiring
 // ---------------------------------------------------------------------------
+export function openShortcutsDialog(): void {
+  if (!shortcutsDialog) return;
+  if (shortcutsDialogBody) {
+    shortcutsDialogBody.innerHTML = renderShortcutsHtml();
+  }
+  shortcutsDialog.showModal();
+}
+
 export function initEvents(): void {
   // Workspace Mode Switcher (Design vs Data View)
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="workspace-mode"]')) {
@@ -1136,6 +1153,8 @@ export function initEvents(): void {
   btnPropDuplicate.addEventListener('click', duplicateSelected);
 
   // Add Swimlane & Notes Card
+  btnAddZone.setAttribute('data-tip', 'Create a swimlane stage banner');
+  btnAddZone.setAttribute('data-tip-pos', 'right');
   btnAddZone.addEventListener('click', () => {
     pushHistory();
     const nextX =
@@ -1149,6 +1168,8 @@ export function initEvents(): void {
     renderAll(true);
   });
 
+  btnAddNotes.setAttribute('data-tip', 'Add a checklist specification card');
+  btnAddNotes.setAttribute('data-tip-pos', 'right');
   btnAddNotes.addEventListener('click', () => {
     pushHistory();
     const [cx, cy] = getViewportWorldCenter();
@@ -1376,9 +1397,28 @@ export function initEvents(): void {
     matrixDialog.showModal();
   });
   btnOpenSettings.addEventListener('click', () => settingsDialog.showModal());
+  btnOpenShortcuts?.addEventListener('click', openShortcutsDialog);
+
+  // Dismissible Coach Mark Card
+  try {
+    if (localStorage.getItem('conduitcraft-coach-dismissed') === '1' && hudCoachCard) {
+      hudCoachCard.hidden = true;
+    }
+  } catch {
+    // Ignore storage issues
+  }
+  btnDismissHudCoach?.addEventListener('click', () => {
+    if (hudCoachCard) hudCoachCard.hidden = true;
+    try {
+      localStorage.setItem('conduitcraft-coach-dismissed', '1');
+    } catch {
+      // Ignore storage issues
+    }
+  });
 
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
+  if (shortcutsDialog) allDialogs.push(shortcutsDialog);
   for (const dlg of allDialogs) {
     dlg.addEventListener('close', () => {
       dlg.returnValue = '';
@@ -1686,6 +1726,12 @@ export function initEvents(): void {
     const activeTag = (document.activeElement as HTMLElement | null)?.tagName;
     const inEditable =
       activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+
+    if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey && !inEditable) {
+      e.preventDefault();
+      openShortcutsDialog();
+      return;
+    }
 
     if ((e.metaKey || e.ctrlKey) && !inEditable) {
       if (e.key.toLowerCase() === 'z' && e.shiftKey) {

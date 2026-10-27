@@ -167,3 +167,9 @@ export const matrixTbody = document.getElementById('matrix-tbody') as HTMLTableS
 
 export const settingsDialog = document.getElementById('settings-dialog') as HTMLDialogElement;
 export const chkSnapGrid = document.getElementById('chk-snap-grid') as HTMLInputElement;
+
+export const btnOpenShortcuts = document.getElementById('btn-open-shortcuts') as HTMLButtonElement | null;
+export const shortcutsDialog = document.getElementById('shortcuts-dialog') as HTMLDialogElement | null;
+export const shortcutsDialogBody = document.getElementById('shortcuts-dialog-body') as HTMLElement | null;
+export const btnDismissHudCoach = document.getElementById('btn-dismiss-hud-coach') as HTMLButtonElement | null;
+export const hudCoachCard = document.getElementById('hud-coach-card') as HTMLElement | null;

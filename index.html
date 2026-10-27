@@ -65,9 +65,9 @@
           </label>
         </fieldset>
 
-        <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" disabled>↶</button>
-        <button type="button" class="btn btn-icon-only" id="btn-redo" aria-label="Redo (Cmd/Ctrl+Shift+Z)" disabled>↷</button>
-        <button type="button" class="btn" id="btn-auto-layout">Auto-Layout</button>
+        <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" data-tip="Undo (⌘Z)" disabled>↶</button>
+        <button type="button" class="btn btn-icon-only" id="btn-redo" aria-label="Redo (Cmd/Ctrl+Shift+Z)" data-tip="Redo (⌘⇧Z)" disabled>↷</button>
+        <button type="button" class="btn" id="btn-auto-layout" data-tip="Auto-arrange diagram flow">Auto-Layout</button>
       </div>
 
       <!-- Data View Stream Filters (Data View Mode) -->
@@ -113,7 +113,8 @@
       <button type="button" class="btn" id="btn-open-code">Mermaid / MD</button>
       <button type="button" class="btn" id="btn-open-matrix">Matrix</button>
       <button type="button" class="btn btn-primary-export" id="btn-open-export">Export</button>
-      <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings">⚙</button>
+      <button type="button" class="btn btn-icon-only" id="btn-open-shortcuts" aria-label="Keyboard shortcuts (?)" data-tip="Shortcuts (?)">?</button>
+      <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings" data-tip="Settings">⚙</button>
     </div>
   </header>
 
@@ -249,16 +250,17 @@
           ></canvas>
         </div>
 
-        <div class="hud-card">
+        <div class="hud-card hud-coach-card" id="hud-coach-card">
           <span class="hud-tip" id="hud-status-tip">Drag stencils onto grid · Drag from any port dot to wire animated streams</span>
+          <button type="button" class="coach-dismiss-btn" id="btn-dismiss-hud-coach" aria-label="Dismiss hint" data-tip="Dismiss hint" data-tip-pos="top">&times;</button>
         </div>
 
         <div class="hud-card" role="group" aria-label="Zoom controls">
-          <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out">−</button>
+          <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">−</button>
           <span class="zoom-readout" id="zoom-readout" aria-live="polite">100%</span>
-          <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in">+</button>
-          <button type="button" class="btn" id="btn-zoom-fit">Fit</button>
-          <button type="button" class="btn" id="btn-zoom-fit-selection">Fit selection</button>
+          <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in" data-tip="Zoom in (+)" data-tip-pos="top">+</button>
+          <button type="button" class="btn" id="btn-zoom-fit" data-tip="Fit diagram to viewport" data-tip-pos="top">Fit</button>
+          <button type="button" class="btn" id="btn-zoom-fit-selection" data-tip="Fit selection to view" data-tip-pos="top">Fit selection</button>
         </div>
       </div>
     </section>
@@ -270,8 +272,8 @@
         <div class="inspector-tabs">
           <span class="section-heading" id="prop-panel-heading" style="margin-block-end: 0;">DOCUMENT PROPERTIES</span>
           <div class="prop-header-actions" id="prop-selection-actions" hidden>
-            <button type="button" class="btn btn-compact" id="btn-prop-duplicate">Duplicate</button>
-            <button type="button" class="btn btn-compact btn-reject" id="btn-prop-delete">Delete</button>
+            <button type="button" class="btn btn-compact" id="btn-prop-duplicate" data-tip="Duplicate selection (⌘D)">Duplicate</button>
+            <button type="button" class="btn btn-compact btn-reject" id="btn-prop-delete" data-tip="Delete selection (Del)">Delete</button>
           </div>
         </div>
         <div class="inspector-scroll" id="prop-form-container"></div>
@@ -470,6 +472,19 @@
           <tbody id="matrix-tbody"></tbody>
         </table>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Keyboard Shortcuts Cheat-Sheet Dialog -->
+  <dialog id="shortcuts-dialog" closedby="any" aria-labelledby="shortcuts-dialog-title">
+    <div class="dialog-shell" style="max-inline-size: 52rem;">
+      <div class="dialog-header">
+        <h2 id="shortcuts-dialog-title">Keyboard Shortcuts</h2>
+        <form method="dialog">
+          <button type="submit" class="btn" autofocus>Done</button>
+        </form>
+      </div>
+      <div class="dialog-body" id="shortcuts-dialog-body" style="padding: 1.25rem;"></div>
     </div>
   </dialog>
 
