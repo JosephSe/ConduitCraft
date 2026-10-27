@@ -17,6 +17,7 @@ import { normalizeBrand } from '../core/brand';
 import { createBlankDocument } from '../templates/presets';
 import {
   resolveSelectionUpdate,
+  selectionOfStage,
   type SelectionChange,
 } from './selection';
 import { selectionWorldBounds, frameRectInViewport } from './viewportFrame';
@@ -216,13 +217,12 @@ export function validateSelection(): void {
   if (sel.type === 'node' && !app.doc.nodes.some((n) => n.id === sel.id)) {
     setSelection({ type: 'none' });
   } else if (sel.type === 'multi') {
-    const validIds = sel.ids.filter((id) => app.doc.nodes.some((n) => n.id === id));
     setSelection(
-      validIds.length > 1
-        ? { type: 'multi', ids: validIds }
-        : validIds.length === 1
-          ? { type: 'node', id: validIds[0] }
-          : { type: 'none' },
+      selectionOfStage({
+        nodes: sel.ids.filter((id) => app.doc.nodes.some((node) => node.id === id)),
+        zones: (sel.zoneIds ?? []).filter((id) => app.doc.zones.some((zone) => zone.id === id)),
+        notes: (sel.notesIds ?? []).filter((id) => app.doc.notesCards.some((card) => card.id === id)),
+      }),
     );
   } else if (sel.type === 'edge' && !app.doc.edges.some((e) => e.id === sel.id)) {
     setSelection({ type: 'none' });

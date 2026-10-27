@@ -93,6 +93,20 @@ describe('viewport framing', () => {
       width: 240,
       height: 120,
     });
+    const withStage = blank({
+      stageHeight: 400,
+      nodes: [node({ id: 'a', x: 40, y: 80, width: 100, height: 40 })],
+      zones: [{ id: 'lane', number: '01', title: 'Lane', subtitle: '', x: 0, width: 300 }],
+      notesCards: [{ id: 'card', title: 'Note', code: 'N', x: 420, y: 200, items: [{ title: 'A', text: 'B' }] }],
+    });
+    const framed = selectionWorldBounds(withStage, {
+      type: 'multi',
+      ids: ['a'],
+      zoneIds: ['lane'],
+      notesIds: ['card'],
+    });
+    assert.equal(framed?.x, 0);
+    assert.ok((framed?.x ?? 0) + (framed?.width ?? 0) >= 420 + NOTES_CARD_WIDTH);
     const edge = selectionWorldBounds(doc, { type: 'edge', id: 'e' });
     assert.ok(edge);
     assert.equal(edge.x, 10);

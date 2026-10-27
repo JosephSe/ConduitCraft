@@ -855,12 +855,19 @@ export function renderPropertyEditor(): void {
     }
   } else if (sel.type === 'multi') {
     const selectedNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
-    if (selectedNodes.length <= 1) {
+    const zoneCount = sel.zoneIds?.length ?? 0;
+    const notesCount = sel.notesIds?.length ?? 0;
+    if (selectedNodes.length <= 1 && zoneCount === 0 && notesCount === 0) {
       setSelection(selectedNodes.length === 1 ? { type: 'node', id: selectedNodes[0].id } : { type: 'none' });
       return;
     }
 
-    propPanelHeading.textContent = `MULTI-SELECT (${selectedNodes.length} NODES)`;
+    const counts = [
+      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'NODE' : 'NODES'}` : '',
+      zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'SWIMLANE' : 'SWIMLANES'}` : '',
+      notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'NOTE' : 'NOTES'}` : '',
+    ].filter(Boolean);
+    propPanelHeading.textContent = `MULTI-SELECT (${counts.join(', ')})`;
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -929,6 +936,7 @@ export function renderPropertyEditor(): void {
       }),
     );
 
+    if (selectedNodes.length > 1) {
     alignSection.appendChild(grid);
     form.appendChild(alignSection);
 
@@ -946,6 +954,7 @@ export function renderPropertyEditor(): void {
       }),
     );
     form.appendChild(toneWrap);
+    }
   } else if (sel.type === 'zone') {
     const zone = app.doc.zones.find((z) => z.id === sel.id);
     if (!zone) {

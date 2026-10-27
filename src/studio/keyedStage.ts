@@ -615,6 +615,8 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     let origX = 0;
     let origY = 0;
     let groupStartPositions: Map<string, [number, number]> | null = null;
+    let groupZonePositions: Map<string, number> | null = null;
+    let groupNotesPositions: Map<string, [number, number]> | null = null;
     let hasMoved = false;
 
     triggerEl.addEventListener('pointerdown', (e) => {
@@ -664,8 +666,22 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         groupStartPositions = new Map(
           app.doc.nodes.filter((n) => ids.includes(n.id)).map((n) => [n.id, [n.x, n.y] as [number, number]]),
         );
+        const zoneIds = app.selection.zoneIds ?? [];
+        groupZonePositions = zoneIds.length
+          ? new Map(app.doc.zones.filter((zone) => zoneIds.includes(zone.id)).map((zone) => [zone.id, zone.x]))
+          : null;
+        const notesIds = app.selection.notesIds ?? [];
+        groupNotesPositions = notesIds.length
+          ? new Map(
+              app.doc.notesCards
+                .filter((card) => notesIds.includes(card.id))
+                .map((card) => [card.id, [card.x, card.y] as [number, number]]),
+            )
+          : null;
       } else {
         groupStartPositions = null;
+        groupZonePositions = null;
+        groupNotesPositions = null;
       }
       hasMoved = false;
       triggerEl.setPointerCapture(e.pointerId);
@@ -689,7 +705,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       }
 
       if (!hasMoved) return;
-      if (groupStartPositions && groupStartPositions.size > 1) {
+      const groupSize =
+        (groupStartPositions?.size ?? 0) + (groupZonePositions?.size ?? 0) + (groupNotesPositions?.size ?? 0);
+      if (groupStartPositions && groupSize > 1) {
         const stepDx = app.snapToGrid ? Math.round(dx / 16) * 16 : Math.round(dx);
         const stepDy = app.snapToGrid ? Math.round(dy / 16) * 16 : Math.round(dy);
         for (const [id, [sx, sy]] of groupStartPositions.entries()) {
@@ -704,6 +722,34 @@ function createNodeElement(node: DiagramNode): HTMLElement {
           if (el) {
             el.style.setProperty('--nx', String(member.x));
             el.style.setProperty('--ny', String(member.y));
+          }
+        }
+        if (groupZonePositions) {
+          for (const [id, sx] of groupZonePositions) {
+            const zone = liveZone(id);
+            if (!zone) continue;
+            zone.x = Math.max(16, sx + stepDx);
+            const banner = Array.from(zonesLayer.children).find(
+              (child): child is HTMLElement =>
+                child instanceof HTMLElement && child.dataset.zoneId === id,
+            );
+            banner?.style.setProperty('--zx', String(zone.x));
+          }
+        }
+        if (groupNotesPositions) {
+          for (const [id, [sx, sy]] of groupNotesPositions) {
+            const card = liveNotes(id);
+            if (!card) continue;
+            card.x = Math.max(16, sx + stepDx);
+            card.y = Math.max(16, sy + stepDy);
+            const el = Array.from(notesLayer.children).find(
+              (child): child is HTMLElement =>
+                child instanceof HTMLElement && child.dataset.notesId === id,
+            );
+            if (el) {
+              el.style.setProperty('--bx', String(card.x));
+              el.style.setProperty('--by', String(card.y));
+            }
           }
         }
       } else {
@@ -723,6 +769,8 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       const movedDuringDrag = hasMoved;
       hasMoved = false;
       groupStartPositions = null;
+      groupZonePositions = null;
+      groupNotesPositions = null;
       alignGuideX.hidden = true;
       alignGuideY.hidden = true;
       wrapper.classList.remove('is-dragging-node');
@@ -992,10 +1040,16 @@ export function updateVisualSelectionHighlights(): void {
   const notesCards = Array.from(notesLayer.querySelectorAll<HTMLElement>('.blueprint-spec'));
 
   for (const zb of zoneBanners) {
-    zb.classList.toggle('is-selected', app.selection.type === 'zone' && zb.dataset.zoneId === app.selection.id);
+    const zoneSelected =
+      (app.selection.type === 'zone' && zb.dataset.zoneId === app.selection.id) ||
+      (app.selection.type === 'multi' && (app.selection.zoneIds ?? []).includes(zb.dataset.zoneId || ''));
+    zb.classList.toggle('is-selected', zoneSelected);
   }
   for (const nc of notesCards) {
-    nc.classList.toggle('is-selected', app.selection.type === 'notes' && nc.dataset.notesId === app.selection.id);
+    const notesSelected =
+      (app.selection.type === 'notes' && nc.dataset.notesId === app.selection.id) ||
+      (app.selection.type === 'multi' && (app.selection.notesIds ?? []).includes(nc.dataset.notesId || ''));
+    nc.classList.toggle('is-selected', notesSelected);
   }
 
   if (app.workspaceMode === 'data' && app.selection.type === 'node') {

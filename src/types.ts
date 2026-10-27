@@ -154,7 +154,7 @@ export interface DiagramDocument {
 export type SelectionTarget =
   | { type: 'none' }
   | { type: 'node'; id: string }
-  | { type: 'multi'; ids: string[] }
+  | { type: 'multi'; ids: string[]; zoneIds?: string[]; notesIds?: string[] }
   | { type: 'edge'; id: string }
   | { type: 'zone'; id: string }
   | { type: 'notes'; id: string };

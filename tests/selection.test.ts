@@ -4,6 +4,7 @@ import {
   normalizeSelection,
   resolveSelectionUpdate,
   selectionKey,
+  selectionOfStage,
 } from '../src/studio/selection.ts';
 import type { SelectionTarget } from '../src/types.ts';
 
@@ -24,6 +25,22 @@ describe('selection controller', () => {
     const update = resolveSelectionUpdate({ type: 'node', id: 'a' }, { type: 'multi', ids: ['a', 'b'] });
     assert.equal(update.changed, true);
     assert.equal(selectionKey(update.selection), 'multi:a\u0000b');
+  });
+
+  it('selects swimlanes and notes together with components', () => {
+    assert.deepEqual(selectionOfStage({ nodes: [], zones: ['lane'], notes: [] }), { type: 'zone', id: 'lane' });
+    assert.deepEqual(selectionOfStage({ nodes: [], zones: [], notes: ['card'] }), { type: 'notes', id: 'card' });
+    const mixed = selectionOfStage({ nodes: ['core'], zones: ['lane'], notes: ['card'] });
+    assert.equal(mixed.type, 'multi');
+    if (mixed.type !== 'multi') return;
+    assert.deepEqual(mixed.ids, ['core']);
+    assert.deepEqual(mixed.zoneIds, ['lane']);
+    assert.deepEqual(mixed.notesIds, ['card']);
+    const copied = normalizeSelection(mixed);
+    mixed.zoneIds?.push('other');
+    assert.deepEqual(copied.type === 'multi' ? copied.zoneIds : [], ['lane']);
+    assert.equal(selectionKey(mixed), 'multi:core|lane\u0000other|card');
+    assert.equal(selectionKey({ type: 'multi', ids: ['core'] }), 'multi:core');
   });
 
   it('collapses identical single targets and distinguishes kinds', () => {

@@ -102,7 +102,18 @@ export function contentWorldBounds(doc: DiagramDocument): WorldRect | null {
 export function selectionWorldBounds(doc: DiagramDocument, selection: SelectionTarget): WorldRect | null {
   if (selection.type === 'none') return contentWorldBounds(doc);
   if (selection.type === 'node') return unionRects(nodesByIds(doc, [selection.id]));
-  if (selection.type === 'multi') return unionRects(nodesByIds(doc, selection.ids));
+  if (selection.type === 'multi') {
+    const rects = nodesByIds(doc, selection.ids);
+    for (const id of selection.zoneIds ?? []) {
+      const zone = doc.zones.find((candidate) => candidate.id === id);
+      if (zone) rects.push(zoneWorldBounds(zone, doc.stageHeight, doc.nodes));
+    }
+    for (const id of selection.notesIds ?? []) {
+      const card = doc.notesCards.find((candidate) => candidate.id === id);
+      if (card) rects.push(notesRect(card));
+    }
+    return unionRects(rects);
+  }
   if (selection.type === 'notes') {
     const card = doc.notesCards.find((candidate) => candidate.id === selection.id);
     return card ? notesRect(card) : null;

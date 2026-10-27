@@ -141,6 +141,7 @@ import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import showcaseBlueprint from '../../public/examples/lumen-relay.blueprint.json?raw';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
+import { selectionOfStage } from './selection';
 import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
@@ -559,8 +560,12 @@ export function deleteSelected(): void {
     dropNodesFromSimulations(new Set([targetId]));
   } else if (sel.type === 'multi') {
     const idSet = new Set(sel.ids);
+    const zoneIds = new Set(sel.zoneIds ?? []);
+    const notesIds = new Set(sel.notesIds ?? []);
     app.doc.nodes = app.doc.nodes.filter((n) => !idSet.has(n.id));
     app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to));
+    if (zoneIds.size > 0) app.doc.zones = app.doc.zones.filter((zone) => !zoneIds.has(zone.id));
+    if (notesIds.size > 0) app.doc.notesCards = app.doc.notesCards.filter((card) => !notesIds.has(card.id));
     dropNodesFromSimulations(idSet);
   } else if (sel.type === 'edge') {
     app.doc.edges = app.doc.edges.filter((e) => e.id !== sel.id);
@@ -599,7 +604,9 @@ export function duplicateSelected(): void {
     renderAll(true);
   } else if (sel.type === 'multi') {
     const origNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
-    if (origNodes.length === 0) return;
+    const origZones = app.doc.zones.filter((zone) => sel.zoneIds?.includes(zone.id));
+    const origNotes = app.doc.notesCards.filter((card) => sel.notesIds?.includes(card.id));
+    if (origNodes.length + origZones.length + origNotes.length === 0) return;
     pushHistory();
     const idMap = new Map<string, string>();
     const newIds: string[] = [];
@@ -624,8 +631,25 @@ export function duplicateSelected(): void {
         app.doc.edges.push(edgeCopy);
       }
     }
+    const newZoneIds: string[] = [];
+    for (const orig of origZones) {
+      const copy: DiagramZone = structuredClone(orig);
+      copy.id = nextUid('zone');
+      copy.x += orig.width + 24;
+      newZoneIds.push(copy.id);
+      app.doc.zones.push(copy);
+    }
+    const newNoteIds: string[] = [];
+    for (const orig of origNotes) {
+      const copy: DiagramNotesCard = structuredClone(orig);
+      copy.id = nextUid('notes');
+      copy.x += 32;
+      copy.y += 32;
+      newNoteIds.push(copy.id);
+      app.doc.notesCards.push(copy);
+    }
     expandStageToFit(app.doc);
-    setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
+    setSelection(selectionOfStage({ nodes: newIds, zones: newZoneIds, notes: newNoteIds }));
     renderAll(true);
   } else if (sel.type === 'zone') {
     const orig = app.doc.zones.find((z) => z.id === sel.id);
@@ -1637,13 +1661,14 @@ export function initEvents(): void {
         return;
       }
       if (e.key.toLowerCase() === 'a' && app.workspaceMode === 'design') {
-        if (app.doc.nodes.length > 0) {
+        const next = selectionOfStage({
+          nodes: app.doc.nodes.map((node) => node.id),
+          zones: app.doc.zones.map((zone) => zone.id),
+          notes: app.doc.notesCards.map((card) => card.id),
+        });
+        if (next.type !== 'none') {
           e.preventDefault();
-          applySelection(
-            app.doc.nodes.length > 1
-              ? { type: 'multi', ids: app.doc.nodes.map((n) => n.id) }
-              : { type: 'node', id: app.doc.nodes[0].id },
-          );
+          applySelection(next);
         }
         return;
       }
