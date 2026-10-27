@@ -178,6 +178,7 @@ import {
   groupSelection,
   ungroupSelection,
 } from './zOrderLockGroup';
+import { responsiveToolbar } from './responsiveToolbar';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -2163,21 +2164,37 @@ export function initEvents(): void {
       }
     }
 
+    if (!inEditable) {
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        responsiveToolbar.togglePalette();
+        return;
+      }
+    }
+
     if (!inEditable && app.workspaceMode === 'design') {
       if (e.key === ']' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        pushHistory();
-        bringToFront(app.doc, app.selection);
-        renderAll(true);
-        notify('Brought to front');
+        if (app.selection.type !== 'none') {
+          pushHistory();
+          bringToFront(app.doc, app.selection);
+          renderAll(true);
+          notify('Brought to front');
+        } else {
+          responsiveToolbar.toggleInspector();
+        }
         return;
       }
       if (e.key === '[' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        pushHistory();
-        sendToBack(app.doc, app.selection);
-        renderAll(true);
-        notify('Sent to back');
+        if (app.selection.type !== 'none') {
+          pushHistory();
+          sendToBack(app.doc, app.selection);
+          renderAll(true);
+          notify('Sent to back');
+        } else {
+          responsiveToolbar.togglePalette();
+        }
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -2197,6 +2214,7 @@ export function initEvents(): void {
 
 export function bootStudio(): void {
   initStencilPalette();
+  responsiveToolbar.init();
   initEvents();
   renderAll(true);
   requestAnimationFrame(fitToViewport);

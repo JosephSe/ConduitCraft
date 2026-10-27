@@ -27,6 +27,8 @@ const ALL_UI_ICONS: UiIconName[] = [
   'play',
   'pause',
   'help',
+  'sidebarLeft',
+  'sidebarRight',
 ];
 
 describe('UI and node SVG icons', () => {

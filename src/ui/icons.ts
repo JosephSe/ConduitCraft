@@ -171,9 +171,19 @@ export type UiIconName =
   | 'template'
   | 'play'
   | 'pause'
-  | 'help';
+  | 'help'
+  | 'sidebarLeft'
+  | 'sidebarRight';
 
 const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
+  sidebarLeft: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '18', height: '18', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M9 3v18' } },
+  ],
+  sidebarRight: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '18', height: '18', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M15 3v18' } },
+  ],
   undo: [
     { tag: 'path', attrs: { d: 'M3 7v6h6' } },
     { tag: 'path', attrs: { d: 'M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13' } },

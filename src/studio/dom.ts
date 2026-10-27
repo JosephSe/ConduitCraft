@@ -63,6 +63,11 @@ export const simButtonsSlot = document.getElementById('sim-buttons-slot') as HTM
 export const btnToggleMotion = document.getElementById('btn-toggle-motion') as HTMLButtonElement;
 
 export const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement;
+export const btnFileMenu = document.getElementById('btn-file-menu') as HTMLButtonElement | null;
+export const fileMenuPopup = document.getElementById('file-menu-popup') as HTMLElement | null;
+export const btnFileExport = document.getElementById('btn-file-export') as HTMLButtonElement | null;
+export const btnTogglePalette = document.getElementById('btn-toggle-palette') as HTMLButtonElement | null;
+export const btnToggleInspector = document.getElementById('btn-toggle-inspector') as HTMLButtonElement | null;
 export const btnNewCanvas = document.getElementById('btn-new-canvas') as HTMLButtonElement;
 export const btnImportFile = document.getElementById('btn-import-file') as HTMLButtonElement;
 export const btnOpenCode = document.getElementById('btn-open-code') as HTMLButtonElement;
@@ -70,6 +75,8 @@ export const btnOpenMatrix = document.getElementById('btn-open-matrix') as HTMLB
 export const btnEnterPresentation = document.getElementById('btn-enter-presentation') as HTMLButtonElement | null;
 export const btnOpenExport = document.getElementById('btn-open-export') as HTMLButtonElement;
 export const btnOpenSettings = document.getElementById('btn-open-settings') as HTMLButtonElement;
+export const paletteSidebar = document.getElementById('palette-sidebar') as HTMLElement | null;
+export const inspectorPanel = document.getElementById('inspector-panel') as HTMLElement | null;
 
 export const canvasStatsPill = document.getElementById('canvas-stats-pill') as HTMLElement;
 export const stencilGrid = document.getElementById('stencil-grid') as HTMLElement;

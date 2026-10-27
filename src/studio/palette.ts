@@ -20,6 +20,7 @@ import {
   groupSelection,
   ungroupSelection,
 } from './zOrderLockGroup';
+import { responsiveToolbar } from './responsiveToolbar';
 
 export interface PaletteCommand {
   id: string;
@@ -299,6 +300,28 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['presentation', 'present', 'tour', 'clean', 'fullscreen', 'slides'],
       run: () => {
         togglePresentation(app.doc);
+      },
+    },
+    {
+      id: 'toggle-palette',
+      title: 'Toggle Component Palette',
+      subtitle: 'Collapse or expand left stencil sidebar',
+      category: 'Mode & View',
+      shortcut: '[',
+      keywords: ['sidebar', 'palette', 'stencils', 'left', 'hide', 'show', 'collapse'],
+      run: () => {
+        responsiveToolbar.togglePalette();
+      },
+    },
+    {
+      id: 'toggle-inspector',
+      title: 'Toggle Properties Inspector',
+      subtitle: 'Collapse or expand right properties panel',
+      category: 'Mode & View',
+      shortcut: ']',
+      keywords: ['inspector', 'properties', 'telemetry', 'right', 'hide', 'show', 'collapse'],
+      run: () => {
+        responsiveToolbar.toggleInspector();
       },
     },
     {
