@@ -7,6 +7,7 @@ import { isMac } from './commands';
 import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
+import { createShareUrl } from './shareLink';
 
 export interface PaletteCommand {
   id: string;
@@ -377,6 +378,26 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['new', 'template', 'gallery', 'starter', 'blank', 'architecture'],
       run: () => {
         deps.openTemplateGallery ? deps.openTemplateGallery() : deps.loadShowcase();
+      },
+    },
+    {
+      id: 'copy-share-link',
+      title: 'Copy Shareable Link',
+      subtitle: 'Compress architecture into URL hash and copy to clipboard',
+      category: 'Export & Sync',
+      keywords: ['share', 'link', 'url', 'hash', 'copy', 'clipboard'],
+      run: async () => {
+        if (app.doc.nodes.length === 0) {
+          notify('Canvas is empty — add components before sharing', { tone: 'error' });
+          return;
+        }
+        try {
+          const res = await createShareUrl(app.doc);
+          await navigator.clipboard.writeText(res.url);
+          notify('Copied shareable link to clipboard!');
+        } catch {
+          deps.openExportDialog();
+        }
       },
     },
 

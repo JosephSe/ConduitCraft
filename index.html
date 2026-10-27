@@ -428,6 +428,40 @@
         </form>
       </div>
       <div class="dialog-body">
+        <!-- Shareable Link in URL Hash -->
+        <div class="share-link-box" id="share-link-box">
+          <div class="share-link-header">
+            <div class="share-link-title-group">
+              <span class="share-link-badge">SHAREABLE LINK</span>
+              <strong>Direct URL (zero backend)</strong>
+            </div>
+            <span class="share-link-size" id="share-link-size"></span>
+          </div>
+          <p class="share-link-desc">
+            Compresses this architecture into the browser address bar. Anyone with the link opens this diagram directly.
+          </p>
+          <div class="share-link-input-row">
+            <input
+              type="text"
+              class="input share-link-input"
+              id="share-link-input"
+              readonly
+              aria-label="Shareable diagram link"
+              placeholder="Generating shareable link…"
+            />
+            <button type="button" class="btn btn-primary-export" id="btn-copy-share-link">
+              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span>Copy Link</span>
+            </button>
+          </div>
+          <div class="share-link-options">
+            <label class="share-link-checkbox-label">
+              <input type="checkbox" id="chk-share-omit-images" />
+              <span>Omit custom image icons (makes URL more compact)</span>
+            </label>
+          </div>
+        </div>
+
         <div class="export-cards" id="export-cards">
           <button type="button" class="export-option-card is-recommended" id="btn-export-json" autofocus>
             <span class="export-option-kicker">Recommended · full document</span>

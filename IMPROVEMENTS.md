@@ -33,8 +33,8 @@ A review of the app as it stands today, with ideas for look and feel and for new
 | 4 | Collapsible inspector sections and search-as-you-type fields | Look and feel | High | S | [x] Done |
 | 5 | Command palette (`Cmd/Ctrl+K`) | Feature | Very high | M | [x] Done |
 | 6 | Template gallery in the empty state and in New | Feature | High | M | [x] Done |
-| 7 | Shareable link (diagram in the URL hash) | Feature | High | S | In Progress |
-| 8 | Node search and focus (`Cmd/Ctrl+F`) | Feature | High | S | Todo |
+| 7 | Shareable link (diagram in the URL hash) | Feature | High | S | [x] Done |
+| 8 | Node search and focus (`Cmd/Ctrl+F`) | Feature | High | S | In Progress |
 | 9 | Polished motion: node drop-in, port glow, smoother selection | Look and feel | Medium | S | Todo |
 | 10 | Presentation mode for Data View | Feature | High | M | Todo |
 | 11 | Simulation playback controls (step, scrub, speed) | Feature | High | M | Todo |

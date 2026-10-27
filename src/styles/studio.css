@@ -3350,5 +3350,102 @@ kbd {
   width: 100%;
 }
 
+/* Shareable Link Box in Export Dialog */
+.share-link-box {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 0.85rem;
+  background: var(--wl-surface);
+  border: 1px solid var(--wl-border-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.share-link-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.share-link-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.share-link-badge {
+  font-size: 0.65rem;
+  font-family: var(--wl-font-mono);
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--wl-blue-soft);
+  color: var(--wl-blue);
+  letter-spacing: 0.05em;
+}
+
+.share-link-size {
+  font-size: 0.72rem;
+  font-family: var(--wl-font-mono);
+  color: var(--wl-ink-muted);
+}
+
+.share-link-size.is-warning {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.share-link-desc {
+  font-size: 0.8rem;
+  color: var(--wl-ink-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.share-link-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.share-link-input {
+  flex: 1;
+  font-family: var(--wl-font-mono);
+  font-size: 0.78rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--wl-bg);
+  border: 1px solid var(--wl-border-ui);
+  border-radius: 0.45rem;
+  color: var(--wl-ink);
+  text-overflow: ellipsis;
+}
+
+.share-link-input:focus {
+  outline: none;
+  border-color: var(--wl-blue);
+  box-shadow: 0 0 0 2px var(--wl-blue-soft);
+}
+
+.share-link-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--wl-ink-muted);
+}
+
+.share-link-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+
 
 

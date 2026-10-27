@@ -59,6 +59,10 @@ import {
   exportCards,
   exportDialog,
   exportDialogTitle,
+  shareLinkInput,
+  btnCopyShareLink,
+  shareLinkSize,
+  chkShareOmitImages,
   fileUploadInput,
   gifExportPanel,
   gifScenarioEmpty,
@@ -158,6 +162,7 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { renderShortcutsHtml } from './commands';
 import { initCommandPalette } from './palette';
+import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -1438,9 +1443,66 @@ export function initEvents(): void {
     if (ok) void closeDialogSmoothly(codeDialog);
   });
 
+  // Shareable Link in Export Modal
+  const updateShareLinkPreview = async (): Promise<void> => {
+    if (!shareLinkInput || !shareLinkSize) return;
+    if (app.doc.nodes.length === 0) {
+      shareLinkInput.value = 'Add components to canvas to generate link';
+      shareLinkSize.textContent = '';
+      shareLinkSize.classList.remove('is-warning');
+      return;
+    }
+
+    shareLinkInput.value = 'Generating shareable link…';
+    try {
+      const omitImages = Boolean(chkShareOmitImages?.checked);
+      const result = await createShareUrl(app.doc, { omitImages });
+      shareLinkInput.value = result.url;
+      const kb = (result.url.length / 1024).toFixed(1);
+      if (result.isLarge) {
+        shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL)`;
+        shareLinkSize.classList.add('is-warning');
+      } else {
+        shareLinkSize.textContent = `${kb} KB (Safe)`;
+        shareLinkSize.classList.remove('is-warning');
+      }
+    } catch {
+      shareLinkInput.value = 'Error generating link';
+      shareLinkSize.textContent = '';
+    }
+  };
+
+  const copyBtn = btnCopyShareLink;
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      if (!shareLinkInput?.value || shareLinkInput.value.startsWith('Add components')) return;
+      try {
+        await navigator.clipboard.writeText(shareLinkInput.value);
+        const span = copyBtn.querySelector('span');
+        if (span) {
+          const orig = span.textContent;
+          span.textContent = 'Copied!';
+          setTimeout(() => {
+            if (span) span.textContent = orig;
+          }, 2000);
+        }
+        notify('Copied shareable diagram link to clipboard');
+      } catch {
+        shareLinkInput.select();
+        document.execCommand('copy');
+        notify('Copied shareable diagram link');
+      }
+    });
+  }
+
+  chkShareOmitImages?.addEventListener('change', () => {
+    void updateShareLinkPreview();
+  });
+
   // Export Modal & Actions
   btnOpenExport.addEventListener('click', () => {
     resetGifChoices();
+    void updateShareLinkPreview();
     exportDialog.showModal();
   });
   btnExportHtml.addEventListener('click', () => {
@@ -1931,4 +1993,44 @@ export function bootStudio(): void {
   initEvents();
   renderAll(true);
   requestAnimationFrame(fitToViewport);
+
+  // Check for shared diagram in URL hash on boot
+  if (typeof window !== 'undefined' && window.location?.hash) {
+    void (async () => {
+      const sharedDoc = await decodeSharedDiagramFromHash(window.location.hash);
+      if (sharedDoc) {
+        if (app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0) {
+          app.doc = sharedDoc;
+          setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
+          renderAll(true);
+          requestAnimationFrame(fitToViewport);
+          notify(`Loaded shared architecture: "${sharedDoc.title}"`, {
+            action: {
+              label: 'Undo',
+              onClick: () => {
+                app.doc = createBlankDocument();
+                setSelection({ type: 'none' });
+                renderAll(true);
+                fitToViewport();
+              },
+            },
+          });
+        } else {
+          notify(`Shared architecture in URL: "${sharedDoc.title}"`, {
+            action: {
+              label: 'Open',
+              onClick: () => {
+                pushHistory();
+                app.doc = sharedDoc;
+                setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
+                renderAll(true);
+                fitToViewport();
+                notify(`Opened shared architecture "${sharedDoc.title}"`);
+              },
+            },
+          });
+        }
+      }
+    })();
+  }
 }
