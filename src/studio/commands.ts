@@ -52,6 +52,9 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Click Minimap'], description: 'Center canvas on clicked location', category: 'Navigation & View' },
 
   // Document & Simulation
+  { keys: ['⌘', 'S'], description: 'Save diagram to disk (overwrite opened file)', category: 'Document & Simulation' },
+  { keys: ['⌘', '⇧', 'S'], description: 'Save diagram as…', category: 'Document & Simulation' },
+  { keys: ['⌘', 'O'], description: 'Open architecture file from disk', category: 'Document & Simulation' },
   { keys: ['?'], description: 'Open this keyboard shortcuts cheat-sheet', category: 'Document & Simulation' },
   { keys: ['Enter', 'Space'], description: 'Drop focused stencil or activate wire', category: 'Document & Simulation' },
   { keys: ['Tab'], description: 'Navigate focus through ports and wires', category: 'Document & Simulation' },

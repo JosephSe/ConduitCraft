@@ -43,6 +43,9 @@ export interface PaletteDeps {
   duplicateSelected: () => void;
   loadShowcase: () => void;
   runSimulationById: (id: string) => void;
+  saveFile?: () => void;
+  saveFileAs?: () => void;
+  openFile?: () => void;
 }
 
 let activeIndex = 0;
@@ -523,6 +526,39 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
 
     // Export & Sync
+    {
+      id: 'save-file',
+      title: 'Save Blueprint to Disk',
+      subtitle: 'Overwrite opened file or save .blueprint.json',
+      category: 'Export & Sync',
+      shortcut: `${mod}S`,
+      keywords: ['save', 'disk', 'file', 'write', 'store'],
+      run: () => {
+        if (deps.saveFile) deps.saveFile();
+      },
+    },
+    {
+      id: 'save-file-as',
+      title: 'Save Blueprint As…',
+      subtitle: 'Save a new copy to disk with file picker',
+      category: 'Export & Sync',
+      shortcut: `${mod}⇧S`,
+      keywords: ['save as', 'disk', 'file', 'copy'],
+      run: () => {
+        if (deps.saveFileAs) deps.saveFileAs();
+      },
+    },
+    {
+      id: 'open-file-disk',
+      title: 'Open File from Disk',
+      subtitle: 'Open .blueprint.json, .mmd or .md architecture file',
+      category: 'Export & Sync',
+      shortcut: `${mod}O`,
+      keywords: ['open', 'load', 'import', 'disk', 'file'],
+      run: () => {
+        if (deps.openFile) deps.openFile();
+      },
+    },
     {
       id: 'open-export',
       title: 'Export Diagram Modal',

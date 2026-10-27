@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "ConduitCraft — Architecture & Telemetry Studio",
+  "short_name": "ConduitCraft",
+  "description": "Interactive architecture diagramming and live telemetry studio",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c0e14",
+  "theme_color": "#0c0e14",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "developer",
+    "productivity",
+    "utilities"
+  ],
+  "shortcuts": [
+    {
+      "name": "New Architecture Blueprint",
+      "short_name": "New",
+      "url": "./#new",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "any"
+        }
+      ]
+    }
+  ]
+}

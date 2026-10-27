@@ -27,6 +27,10 @@ import {
   btnGifWhole,
   btnImportFile,
   btnNewCanvas,
+  btnOpenFile,
+  btnFileSave,
+  btnFileSaveAs,
+  btnInstallApp,
   btnOpenCode,
   btnOpenExport,
   btnEnterPresentation,
@@ -179,6 +183,15 @@ import {
   ungroupSelection,
 } from './zOrderLockGroup';
 import { responsiveToolbar } from './responsiveToolbar';
+import {
+  initInstallPrompt,
+  isFileSystemAccessSupported,
+  openWithNativeFilePicker,
+  promptInstallApp,
+  registerServiceWorker,
+  resetActiveFile,
+  saveWithNativeFileSystem,
+} from './pwa';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -1457,7 +1470,67 @@ export function initEvents(): void {
   });
 
   // New Canvas button opens Template Gallery
-  btnNewCanvas.addEventListener('click', openTemplateGallery);
+  btnNewCanvas.addEventListener('click', () => {
+    resetActiveFile();
+    openTemplateGallery();
+  });
+
+  // Native File System & PWA actions
+  async function handleSaveDiagram(forceSaveAs = false): Promise<void> {
+    const json = serializeBlueprintJson(app.doc);
+    const defaultName = `${getSafeFilenameSlug()}.blueprint.json`;
+    const res = await saveWithNativeFileSystem(json, defaultName, forceSaveAs);
+    if (res.success) {
+      notify(`Saved ${res.filename}`);
+    } else if (!isFileSystemAccessSupported()) {
+      downloadBlob(json, defaultName, 'application/json;charset=utf-8');
+      notify(`Downloaded ${defaultName}`);
+    }
+  }
+
+  async function handleOpenFile(): Promise<void> {
+    if (isFileSystemAccessSupported()) {
+      try {
+        const fileData = await openWithNativeFilePicker();
+        if (fileData) {
+          const baseName = fileData.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+          const titleFromFile = baseName
+            ? baseName.replace(/\b\w/g, (ch) => ch.toUpperCase())
+            : undefined;
+          applyImportedText(fileData.content, titleFromFile);
+          notify(`Opened ${fileData.name}`);
+          return;
+        }
+      } catch (err) {
+        console.warn('Native open error, fallback to upload input:', err);
+      }
+    }
+    fileUploadInput.click();
+  }
+
+  btnOpenFile?.addEventListener('click', () => {
+    void handleOpenFile();
+  });
+  btnFileSave?.addEventListener('click', () => {
+    void handleSaveDiagram(false);
+  });
+  btnFileSaveAs?.addEventListener('click', () => {
+    void handleSaveDiagram(true);
+  });
+  btnInstallApp?.addEventListener('click', async () => {
+    const accepted = await promptInstallApp();
+    if (accepted) {
+      notify('ConduitCraft installed!');
+    }
+  });
+
+  // PWA Service Worker & Install prompt setup
+  void registerServiceWorker();
+  initInstallPrompt((canInstall) => {
+    if (btnInstallApp) {
+      btnInstallApp.hidden = !canInstall;
+    }
+  });
 
   // File Import Triggers
   const triggerFilePicker = () => fileUploadInput.click();
@@ -1677,6 +1750,9 @@ export function initEvents(): void {
       if (showcase) loadTemplateDoc(showcase);
     },
     runSimulationById: (id) => runSimulation(id),
+    saveFile: () => void handleSaveDiagram(false),
+    saveFileAs: () => void handleSaveDiagram(true),
+    openFile: () => void handleOpenFile(),
   });
 
   // Dismissible Coach Mark Card
@@ -2075,7 +2151,19 @@ export function initEvents(): void {
       return;
     }
 
+    // Save diagram to disk (Cmd/Ctrl+S or Cmd/Ctrl+Shift+S)
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      void handleSaveDiagram(e.shiftKey);
+      return;
+    }
+
     if ((e.metaKey || e.ctrlKey) && !inEditable) {
+      if (e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        void handleOpenFile();
+        return;
+      }
       if (e.key.toLowerCase() === 'z' && e.shiftKey) {
         e.preventDefault();
         performRedo();

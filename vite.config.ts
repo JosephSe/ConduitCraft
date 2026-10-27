@@ -17,7 +17,7 @@ function inlineColorSchemeBoot(): Plugin {
 export default defineConfig({
   plugins: [inlineColorSchemeBoot()],
   cacheDir: path.join(os.tmpdir(), 'blueprint-studio-vite-cache'),
-  publicDir: false,
+  publicDir: 'public',
   build: {
     emptyOutDir: false,
   },
