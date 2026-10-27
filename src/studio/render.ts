@@ -24,6 +24,7 @@ import {
   updateVisualSelectionHighlights,
 } from './keyedStage';
 import { reconcileKeyed } from './reconcile';
+import { scheduleMinimapPaint } from './minimap';
 
 export {
   renderNodes,
@@ -97,6 +98,7 @@ export function renderAll(rebuildInspector = true): void {
       syncDataViewInspector();
     }
   }
+  scheduleMinimapPaint();
 }
 
 // ---------------------------------------------------------------------------

@@ -29,6 +29,7 @@ import {
   btnToggleMotion,
   btnUndo,
   btnZoomFit,
+  btnZoomFitSelection,
   btnZoomIn,
   btnZoomOut,
   chkSnapGrid,
@@ -65,6 +66,7 @@ import {
 import {
   app,
   applyTransform,
+  fitSelection,
   fitToViewport,
   flushAutosave,
   getSelectedNodeIds,
@@ -1180,6 +1182,7 @@ export function initEvents(): void {
     zoomAround(app.scale / 1.16, rect.width / 2, rect.height / 2);
   });
   btnZoomFit.addEventListener('click', fitToViewport);
+  btnZoomFitSelection.addEventListener('click', fitSelection);
   window.addEventListener('resize', fitToViewport);
 
   // Global Keyboard Shortcuts (Undo, Redo, Duplicate, Delete, Escape)

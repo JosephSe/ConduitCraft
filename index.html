@@ -236,6 +236,16 @@
 
       <!-- Floating Bottom HUD -->
       <div class="canvas-hud">
+        <div class="hud-card hud-minimap-card">
+          <canvas
+            id="minimap"
+            class="minimap"
+            width="168"
+            height="96"
+            aria-label="Diagram minimap. Click or drag to pan the canvas."
+          ></canvas>
+        </div>
+
         <div class="hud-card">
           <span class="hud-tip" id="hud-status-tip">Drag stencils onto grid · Drag from any port dot to wire animated streams</span>
         </div>
@@ -245,6 +255,7 @@
           <span class="zoom-readout" id="zoom-readout" aria-live="polite">100%</span>
           <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in">+</button>
           <button type="button" class="btn" id="btn-zoom-fit">Fit</button>
+          <button type="button" class="btn" id="btn-zoom-fit-selection">Fit selection</button>
         </div>
       </div>
     </section>

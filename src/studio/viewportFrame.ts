@@ -1,0 +1,210 @@
+/** Pure viewport framing math. Safe to import from node tests. */
+import type { DiagramDocument, DiagramNode, SelectionTarget } from '../types';
+
+export interface WorldRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/** Studio `.blueprint-spec` width. */
+export const NOTES_CARD_WIDTH = 404;
+
+/**
+ * Estimated notes-card height from padding, the header, and list rows.
+ * Used to frame the card without reading layout.
+ */
+export function notesCardHeight(itemCount: number): number {
+  return 72 + Math.max(0, itemCount) * 40;
+}
+
+export const FIT_PAD_X = 48;
+export const FIT_PAD_Y = 64;
+/** Same floor and ceiling as `zoomAround`. */
+export const FIT_SCALE_MIN = 0.35;
+export const FIT_SCALE_MAX = 1.9;
+
+export function unionRects(rects: WorldRect[]): WorldRect | null {
+  let x0 = Infinity;
+  let y0 = Infinity;
+  let x1 = -Infinity;
+  let y1 = -Infinity;
+  for (const rect of rects) {
+    if (rect.width <= 0 || rect.height <= 0) continue;
+    x0 = Math.min(x0, rect.x);
+    y0 = Math.min(y0, rect.y);
+    x1 = Math.max(x1, rect.x + rect.width);
+    y1 = Math.max(y1, rect.y + rect.height);
+  }
+  if (!Number.isFinite(x0)) return null;
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+}
+
+export function nodeRect(node: Pick<DiagramNode, 'x' | 'y' | 'width' | 'height'>): WorldRect {
+  return { x: node.x, y: node.y, width: node.width, height: node.height };
+}
+
+export function notesRect(card: { x: number; y: number; items: readonly unknown[] }): WorldRect {
+  return {
+    x: card.x,
+    y: card.y,
+    width: NOTES_CARD_WIDTH,
+    height: notesCardHeight(card.items.length),
+  };
+}
+
+/** Swimlane column. Nodes in the column tighten the vertical span; otherwise the stage height is used. */
+export function zoneWorldBounds(
+  zone: { x: number; width: number },
+  stageHeight: number,
+  nodes: readonly Pick<DiagramNode, 'x' | 'y' | 'width' | 'height'>[],
+): WorldRect {
+  const inside = nodes.filter((node) => node.x < zone.x + zone.width && node.x + node.width > zone.x);
+  if (inside.length === 0) {
+    return { x: zone.x, y: 0, width: zone.width, height: stageHeight };
+  }
+  let top = 0;
+  let bottom = 0;
+  for (const node of inside) {
+    top = Math.min(top, node.y);
+    bottom = Math.max(bottom, node.y + node.height);
+  }
+  return {
+    x: zone.x,
+    y: top,
+    width: zone.width,
+    height: Math.max(bottom - top, 120),
+  };
+}
+
+function nodesByIds(doc: DiagramDocument, ids: readonly string[]): WorldRect[] {
+  const rects: WorldRect[] = [];
+  for (const id of ids) {
+    const node = doc.nodes.find((candidate) => candidate.id === id);
+    if (node) rects.push(nodeRect(node));
+  }
+  return rects;
+}
+
+export function contentWorldBounds(doc: DiagramDocument): WorldRect | null {
+  return unionRects([
+    ...doc.nodes.map(nodeRect),
+    ...doc.zones.map((zone) => zoneWorldBounds(zone, doc.stageHeight, doc.nodes)),
+    ...doc.notesCards.map(notesRect),
+  ]);
+}
+
+/**
+ * World bounds for the current selection.
+ * An empty selection frames every node, zone, and notes card.
+ */
+export function selectionWorldBounds(doc: DiagramDocument, selection: SelectionTarget): WorldRect | null {
+  if (selection.type === 'none') return contentWorldBounds(doc);
+  if (selection.type === 'node') return unionRects(nodesByIds(doc, [selection.id]));
+  if (selection.type === 'multi') return unionRects(nodesByIds(doc, selection.ids));
+  if (selection.type === 'notes') {
+    const card = doc.notesCards.find((candidate) => candidate.id === selection.id);
+    return card ? notesRect(card) : null;
+  }
+  if (selection.type === 'zone') {
+    const zone = doc.zones.find((candidate) => candidate.id === selection.id);
+    return zone ? zoneWorldBounds(zone, doc.stageHeight, doc.nodes) : null;
+  }
+  if (selection.type === 'edge') {
+    const edge = doc.edges.find((candidate) => candidate.id === selection.id);
+    if (!edge) return null;
+    const rects = nodesByIds(doc, [edge.from, edge.to]);
+    if (edge.waypoint) {
+      const [wx, wy] = edge.waypoint;
+      rects.push({ x: wx - 8, y: wy - 8, width: 16, height: 16 });
+    }
+    return unionRects(rects);
+  }
+  return null;
+}
+
+export interface ViewportFrame {
+  scale: number;
+  panX: number;
+  panY: number;
+}
+
+/** Center `bounds` in the viewport. Scale stays inside the studio zoom range. */
+export function frameRectInViewport(
+  viewportWidth: number,
+  viewportHeight: number,
+  bounds: WorldRect,
+): ViewportFrame | null {
+  if (viewportWidth <= 0 || viewportHeight <= 0) return null;
+  if (bounds.width <= 0 || bounds.height <= 0) return null;
+  const availW = Math.max(32, viewportWidth - FIT_PAD_X);
+  const availH = Math.max(32, viewportHeight - FIT_PAD_Y);
+  const raw = Math.min(availW / bounds.width, availH / bounds.height);
+  const scale = Math.min(FIT_SCALE_MAX, Math.max(FIT_SCALE_MIN, raw));
+  return {
+    scale,
+    panX: (viewportWidth - bounds.width * scale) / 2 - bounds.x * scale,
+    panY: (viewportHeight - bounds.height * scale) / 2 - bounds.y * scale,
+  };
+}
+
+export interface MinimapMap {
+  scale: number;
+  originX: number;
+  originY: number;
+}
+
+export function minimapMap(
+  stageWidth: number,
+  stageHeight: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  pad = 6,
+): MinimapMap {
+  const innerW = Math.max(1, canvasWidth - pad * 2);
+  const innerH = Math.max(1, canvasHeight - pad * 2);
+  const scale = Math.min(innerW / Math.max(1, stageWidth), innerH / Math.max(1, stageHeight));
+  return {
+    scale,
+    originX: (canvasWidth - stageWidth * scale) / 2,
+    originY: (canvasHeight - stageHeight * scale) / 2,
+  };
+}
+
+export function worldToMinimap(map: MinimapMap, x: number, y: number): [number, number] {
+  return [map.originX + x * map.scale, map.originY + y * map.scale];
+}
+
+export function minimapToWorld(map: MinimapMap, px: number, py: number): [number, number] {
+  return [(px - map.originX) / map.scale, (py - map.originY) / map.scale];
+}
+
+export function viewportWorldRect(
+  viewportWidth: number,
+  viewportHeight: number,
+  panX: number,
+  panY: number,
+  scale: number,
+): WorldRect {
+  const safe = scale || 1;
+  return {
+    x: -panX / safe,
+    y: -panY / safe,
+    width: viewportWidth / safe,
+    height: viewportHeight / safe,
+  };
+}
+
+export function panToCenterWorld(
+  worldX: number,
+  worldY: number,
+  viewportWidth: number,
+  viewportHeight: number,
+  scale: number,
+): { panX: number; panY: number } {
+  return {
+    panX: viewportWidth / 2 - worldX * scale,
+    panY: viewportHeight / 2 - worldY * scale,
+  };
+}

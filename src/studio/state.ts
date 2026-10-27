@@ -18,6 +18,7 @@ import {
   resolveSelectionUpdate,
   type SelectionChange,
 } from './selection';
+import { selectionWorldBounds, frameRectInViewport } from './viewportFrame';
 
 export interface ActiveWireDraft {
   sourceNodeId: string;
@@ -195,9 +196,17 @@ export function validateSelection(): void {
 // ---------------------------------------------------------------------------
 // Viewport Pan & Zoom
 // ---------------------------------------------------------------------------
+let minimapPainter: (() => void) | null = null;
+
+/** Registered by the minimap so pan and zoom repaint the overview. */
+export function setMinimapPainter(painter: () => void): void {
+  minimapPainter = painter;
+}
+
 export function applyTransform(): void {
   stageWorld.style.transform = `translate(${app.panX}px, ${app.panY}px) scale(${app.scale})`;
   zoomReadout.textContent = `${Math.round(app.scale * 100)}%`;
+  minimapPainter?.();
 }
 
 export function screenToWorld(clientX: number, clientY: number): [number, number] {
@@ -235,6 +244,23 @@ export function fitToViewport(): void {
   app.scale = Math.max(0.38, Math.min(1.12, Math.min(scaleX, scaleY)));
   app.panX = Math.round((rect.width - app.doc.stageWidth * app.scale) / 2);
   app.panY = Math.max(12, Math.round((rect.height - app.doc.stageHeight * app.scale) / 2 - 8));
+  applyTransform();
+}
+
+/** Frame the current selection. With nothing selected, frame every node, zone, and notes card. */
+export function fitSelection(): void {
+  const rect = viewport.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const bounds = selectionWorldBounds(app.doc, app.selection);
+  if (!bounds) {
+    fitToViewport();
+    return;
+  }
+  const frame = frameRectInViewport(rect.width, rect.height, bounds);
+  if (!frame) return;
+  app.scale = frame.scale;
+  app.panX = Math.round(frame.panX);
+  app.panY = Math.round(frame.panY);
   applyTransform();
 }
 

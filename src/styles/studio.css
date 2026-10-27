@@ -1491,7 +1491,7 @@
     inset-block-end: 0.875rem;
     inset-inline: 0.875rem;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 0.65rem;
     pointer-events: none;
@@ -1527,6 +1527,28 @@
     min-inline-size: 3.1rem;
     text-align: center;
     font-weight: 600;
+  }
+
+  .hud-minimap-card {
+    padding: 0.35rem;
+  }
+
+  .minimap {
+    display: block;
+    width: 168px;
+    height: 96px;
+    border-radius: 0.4rem;
+    cursor: grab;
+    touch-action: none;
+    background: color-mix(in srgb, var(--wl-ink) 5%, transparent);
+  }
+
+  .minimap:active {
+    cursor: grabbing;
+  }
+
+  .canvas-hud .btn {
+    white-space: nowrap;
   }
 }
 

@@ -24,6 +24,7 @@ import { renderPropertyEditor } from './inspector';
 import { applySelection, requestInspectorRefresh } from './render';
 import { beginPortWireDrag, createEdgeConnection, deleteSelected } from './interactions';
 import { reconcileKeyed } from './reconcile';
+import { scheduleMinimapPaint } from './minimap';
 
 function liveZone(id: string): DiagramZone | undefined {
   return app.doc.zones.find((zone) => zone.id === id);
@@ -47,6 +48,7 @@ export function renderZones(): void {
     createZoneBanner,
     (el, zone) => paintZone(el as HTMLElement, zone),
   );
+  scheduleMinimapPaint();
 }
 
 function createZoneBanner(zone: DiagramZone): HTMLElement {
@@ -98,6 +100,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
       current.x = app.snapToGrid ? Math.round(rawX / 16) * 16 : Math.round(rawX);
       banner.style.setProperty('--zx', String(current.x));
       expandStageToFit(app.doc);
+      scheduleMinimapPaint();
     }
   });
   const endZoneDrag = () => {
@@ -140,6 +143,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
       current.width = app.snapToGrid ? Math.round(rawW / 16) * 16 : Math.round(rawW);
       banner.style.setProperty('--zw', String(current.width));
       expandStageToFit(app.doc);
+      scheduleMinimapPaint();
     }
   });
   resizeHandle.addEventListener('pointerup', (e) => {
@@ -174,6 +178,7 @@ export function renderNotesCards(): void {
     createNotesCard,
     (el, card) => paintNotesCard(el as HTMLElement, card),
   );
+  scheduleMinimapPaint();
 }
 
 function createNotesCard(card: DiagramNotesCard): HTMLElement {
@@ -248,6 +253,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
       aside.style.setProperty('--bx', String(current.x));
       aside.style.setProperty('--by', String(current.y));
       expandStageToFit(app.doc);
+      scheduleMinimapPaint();
     }
   });
   const endNotesDrag = () => {
@@ -303,6 +309,7 @@ export function renderWiresOnly(): void {
     (edge) => createWireGroup(edge.id),
     (el, edge) => paintWire(el as SVGGElement, edge),
   );
+  scheduleMinimapPaint();
 }
 
 const wirePainters = new WeakMap<SVGGElement, (edge: RoutedDiagramEdge) => void>();
@@ -512,6 +519,7 @@ export function renderNodes(): void {
     createNodeElement,
     (el, node) => paintNode(el as HTMLElement, node),
   );
+  scheduleMinimapPaint();
 }
 
 function createNodeElement(node: DiagramNode): HTMLElement {
@@ -686,6 +694,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       expandStageToFit(app.doc);
       renderWiresOnly();
       updateVisualSelectionHighlights();
+      scheduleMinimapPaint();
     });
 
     const endMove = () => {
