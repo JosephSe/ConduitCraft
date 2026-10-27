@@ -368,7 +368,10 @@ export function encodeGif(options: {
     imageHeight: number,
     transparentIndex: number | null,
   ) => {
-    out.push(0x21, 0xf9, 0x04, transparentIndex === null ? 0x04 : 0x09);
+    // Disposal 1 leaves the previous picture in place. Disposal 2 would clear this
+    // rectangle first, and the unchanged pixels in a delta would turn black.
+    const disposal = transparentIndex === null ? 0x04 : 0x05;
+    out.push(0x21, 0xf9, 0x04, disposal);
     word(out, delay);
     out.push(transparentIndex === null ? 0 : transparentIndex, 0);
     out.push(0x2c);

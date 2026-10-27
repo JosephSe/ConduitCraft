@@ -93,8 +93,65 @@ describe('gif export', () => {
     assert.ok(images[1].width < width);
     assert.ok(images[1].height < height);
     assert.ok(images[1].left > 0);
+    const controls = gifGraphicControls(gif);
+    assert.deepEqual(controls, [0x04, 0x05]);
+  });
+
+  it('leaves the first picture in place on the third frame', () => {
+    const width = 24;
+    const height = 16;
+    const paint = (step: number) => {
+      const rgba = new Uint8ClampedArray(width * height * 4);
+      for (let y = 0; y < height; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const i = (y * width + x) * 4;
+          const moved = x === 4 + step && y === 8;
+          rgba[i] = moved ? 220 : 236;
+          rgba[i + 1] = moved ? 48 : 242;
+          rgba[i + 2] = moved ? 64 : 248;
+          rgba[i + 3] = 255;
+        }
+      }
+      return rgba;
+    };
+    const gif = encodeGif({
+      width,
+      height,
+      frames: [paint(0), paint(1), paint(2)],
+      delayCs: 8,
+      maxColors: 16,
+    });
+    const controls = gifGraphicControls(gif);
+    assert.equal(controls.length, 3);
+    assert.equal(controls[0] & 0x1c, 0x04);
+    for (const packed of controls.slice(1)) {
+      assert.equal(packed & 1, 1);
+      assert.equal((packed >> 2) & 7, 1);
+    }
   });
 });
+
+function gifGraphicControls(gif: Uint8Array): number[] {
+  let offset = 13;
+  if (gif[10] & 0x80) offset += 3 * (2 << (gif[10] & 7));
+  const controls: number[] = [];
+  while (offset < gif.length) {
+    const marker = gif[offset];
+    if (marker === 0x3b) break;
+    if (marker === 0x21) {
+      if (gif[offset + 1] === 0xf9) controls.push(gif[offset + 3]);
+      offset += 2;
+      offset = skipSubBlocks(gif, offset);
+      continue;
+    }
+    if (marker !== 0x2c) break;
+    offset += 10;
+    if (gif[offset - 1] & 0x80) offset += 3 * (2 << (gif[offset - 1] & 7));
+    offset += 1;
+    offset = skipSubBlocks(gif, offset);
+  }
+  return controls;
+}
 
 function gifImageBounds(gif: Uint8Array): Array<{ left: number; top: number; width: number; height: number }> {
   let offset = 6;
