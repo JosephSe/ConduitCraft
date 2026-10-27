@@ -1,7 +1,7 @@
 /** Node outline and custom-icon values shared by the editor, parser, and export. */
 import type { NodeShape } from '../types';
 
-export const NODE_SHAPES = ['card', 'rounded', 'pill', 'circle', 'diamond', 'hexagon'] as const;
+export const NODE_SHAPES = ['card', 'rounded', 'pill', 'circle', 'diamond', 'hexagon', 'asymmetric'] as const;
 
 export const NODE_SHAPE_LABELS: Record<NodeShape, string> = {
   card: 'Card',
@@ -10,6 +10,7 @@ export const NODE_SHAPE_LABELS: Record<NodeShape, string> = {
   circle: 'Circle',
   diamond: 'Diamond',
   hexagon: 'Hexagon',
+  asymmetric: 'Asymmetric (Banner)',
 };
 
 /** Largest custom icon kept on a node, in data-URL characters. */
@@ -52,7 +53,7 @@ export function nodeShapePlate(
   width: number,
   height: number,
 ): ShapePlate | null {
-  if (shape !== 'circle' && shape !== 'diamond' && shape !== 'hexagon') return null;
+  if (shape !== 'circle' && shape !== 'diamond' && shape !== 'hexagon' && shape !== 'asymmetric') return null;
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const inset = 1.25;
@@ -65,22 +66,33 @@ export function nodeShapePlate(
       ry: roundTenth(Math.max(1, h / 2 - inset)),
     };
   }
-  const points =
-    shape === 'diamond'
-      ? [
-          [w / 2, inset],
-          [w - inset, h / 2],
-          [w / 2, h - inset],
-          [inset, h / 2],
-        ]
-      : [
-          [w * 0.22, inset],
-          [w * 0.78, inset],
-          [w - inset, h / 2],
-          [w * 0.78, h - inset],
-          [w * 0.22, h - inset],
-          [inset, h / 2],
-        ];
+  let points: Array<[number, number]>;
+  if (shape === 'diamond') {
+    points = [
+      [w / 2, inset],
+      [w - inset, h / 2],
+      [w / 2, h - inset],
+      [inset, h / 2],
+    ];
+  } else if (shape === 'asymmetric') {
+    const notch = Math.min(22, Math.round(w * 0.14));
+    points = [
+      [inset, inset],
+      [w - notch - inset, inset],
+      [w - inset, h / 2],
+      [w - notch - inset, h - inset],
+      [inset, h - inset],
+    ];
+  } else {
+    points = [
+      [w * 0.22, inset],
+      [w * 0.78, inset],
+      [w - inset, h / 2],
+      [w * 0.78, h - inset],
+      [w * 0.22, h - inset],
+      [inset, h / 2],
+    ];
+  }
   return {
     kind: 'polygon',
     points: points.map(([x, y]) => `${roundTenth(x)},${roundTenth(y)}`).join(' '),
@@ -112,6 +124,7 @@ export function nodeShapeContentPadding(
   if (shape === 'diamond') return `${Math.round(h * 0.26)}px ${Math.round(w * 0.27)}px`;
   if (shape === 'circle') return `${Math.round(h * 0.16)}px ${Math.round(w * 0.16)}px`;
   if (shape === 'hexagon') return `${Math.round(h * 0.1)}px ${Math.round(w * 0.2)}px`;
+  if (shape === 'asymmetric') return `${Math.round(h * 0.12)}px ${Math.round(w * 0.16)}px ${Math.round(h * 0.12)}px ${Math.round(w * 0.08)}px`;
   return `${Math.round(h * 0.1)}px ${Math.round(Math.min(w, h) * 0.2)}px`;
 }
 

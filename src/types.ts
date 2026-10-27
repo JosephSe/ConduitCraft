@@ -1,6 +1,6 @@
 export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client';
 
-export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon';
+export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric';
 
 export type StreamTone = 'blue' | 'emerald' | 'rose' | 'violet' | 'amber';
 

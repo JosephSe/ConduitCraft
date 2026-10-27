@@ -9,6 +9,7 @@ import type {
   ImportIssue,
   KeyValueMetric,
   NodeKind,
+  NodeShape,
   PortSide,
   SimulationScenario,
   StreamTone,
@@ -115,6 +116,10 @@ interface ParsedMermaidNode {
   title: string;
   subtitle: string;
   kind: NodeKind;
+  shape?: NodeShape;
+  tone?: StreamTone;
+  link?: string;
+  className?: string;
   subgraphTitle?: string;
 }
 
@@ -198,46 +203,145 @@ function splitLabelLines(rawLabel: string): { title: string; subtitle: string } 
   };
 }
 
+const STREAM_TONE_RGB: Record<StreamTone, [number, number, number]> = {
+  blue: [59, 130, 246],
+  emerald: [16, 185, 129],
+  rose: [244, 63, 94],
+  violet: [139, 92, 246],
+  amber: [245, 158, 11],
+};
+
+const COLOR_NAME_MAP: Record<string, StreamTone> = {
+  blue: 'blue',
+  sky: 'blue',
+  cyan: 'blue',
+  navy: 'blue',
+  teal: 'blue',
+  aqua: 'blue',
+  dodgerblue: 'blue',
+  cornflowerblue: 'blue',
+  green: 'emerald',
+  emerald: 'emerald',
+  lime: 'emerald',
+  forestgreen: 'emerald',
+  seagreen: 'emerald',
+  darkgreen: 'emerald',
+  springgreen: 'emerald',
+  red: 'rose',
+  rose: 'rose',
+  pink: 'rose',
+  crimson: 'rose',
+  salmon: 'rose',
+  magenta: 'rose',
+  deeppink: 'rose',
+  purple: 'violet',
+  violet: 'violet',
+  indigo: 'violet',
+  fuchsia: 'violet',
+  plum: 'violet',
+  yellow: 'amber',
+  amber: 'amber',
+  orange: 'amber',
+  gold: 'amber',
+  coral: 'amber',
+};
+
+export function colorToStreamTone(colorStr: string): StreamTone {
+  if (!colorStr) return 'blue';
+  const clean = colorStr.trim().toLowerCase();
+  if (COLOR_NAME_MAP[clean]) return COLOR_NAME_MAP[clean];
+
+  let rgb: [number, number, number] | null = null;
+  const hexMatch = clean.match(/^#([0-9a-f]{3,8})$/i);
+  if (hexMatch) {
+    const h = hexMatch[1];
+    if (h.length === 3 || h.length === 4) {
+      rgb = [
+        parseInt(h[0] + h[0], 16),
+        parseInt(h[1] + h[1], 16),
+        parseInt(h[2] + h[2], 16),
+      ];
+    } else if (h.length >= 6) {
+      rgb = [
+        parseInt(h.slice(0, 2), 16),
+        parseInt(h.slice(2, 4), 16),
+        parseInt(h.slice(4, 6), 16),
+      ];
+    }
+  }
+
+  if (!rgb) {
+    const rgbMatch = clean.match(/^rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if (rgbMatch) {
+      rgb = [parseInt(rgbMatch[1], 10), parseInt(rgbMatch[2], 10), parseInt(rgbMatch[3], 10)];
+    }
+  }
+
+  if (rgb) {
+    let bestTone: StreamTone = 'blue';
+    let bestDist = Infinity;
+    for (const [tone, [tr, tg, tb]] of Object.entries(STREAM_TONE_RGB) as Array<[StreamTone, [number, number, number]]>) {
+      const dist = (rgb[0] - tr) ** 2 + (rgb[1] - tg) ** 2 + (rgb[2] - tb) ** 2;
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestTone = tone;
+      }
+    }
+    return bestTone;
+  }
+
+  return 'blue';
+}
+
 function parseSingleNodeToken(token: string): {
   id: string;
   label?: string;
   inferredKind?: NodeKind;
+  shape?: NodeShape;
+  className?: string;
 } | null {
-  const trimmed = token.trim().replace(/:::[\w-]+$/, '').trim();
+  let trimmed = token.trim();
   if (!trimmed) return null;
 
-  const shapePatterns: Array<{ regex: RegExp; kind: NodeKind }> = [
+  let className: string | undefined;
+  const classMatch = trimmed.match(/:::([\w-]+)$/);
+  if (classMatch) {
+    className = classMatch[1];
+    trimmed = trimmed.slice(0, classMatch.index).trim();
+  }
+
+  const shapePatterns: Array<{ regex: RegExp; kind: NodeKind; shape?: NodeShape }> = [
     // Stadium ([Actor]) or Double Circle (((Actor))) / Circle ((Actor)) -> actor
-    { regex: /^([A-Za-z0-9_.-]+)\s*\(\[([\s\S]+)\]\)$/, kind: 'actor' },
-    { regex: /^([A-Za-z0-9_.-]+)\s*\(\(\(([\s\S]+)\)\)\)$/, kind: 'actor' },
-    { regex: /^([A-Za-z0-9_.-]+)\s*\(\(([\s\S]+)\)\)$/, kind: 'actor' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\(\[([\s\S]+)\]\)$/, kind: 'actor', shape: 'pill' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\(\(\(([\s\S]+)\)\)\)$/, kind: 'actor', shape: 'circle' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\(\(([\s\S]+)\)\)$/, kind: 'actor', shape: 'circle' },
     // Subroutine [[Core]] -> core
-    { regex: /^([A-Za-z0-9_.-]+)\s*\[\[([\s\S]+)\]\]$/, kind: 'core' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[\[([\s\S]+)\]\]$/, kind: 'core', shape: 'card' },
     // Cylinder [(Store)] -> store
-    { regex: /^([A-Za-z0-9_.-]+)\s*\[\(([\s\S]+)\)\]$/, kind: 'store' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[\(([\s\S]+)\)\]$/, kind: 'store', shape: 'rounded' },
     // Hexagon {{Gate}} or Rhombus {Gate} -> gate
-    { regex: /^([A-Za-z0-9_.-]+)\s*\{\{([\s\S]+)\}\}$/, kind: 'gate' },
-    { regex: /^([A-Za-z0-9_.-]+)\s*\{([\s\S]+)\}$/, kind: 'gate' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\{\{([\s\S]+)\}\}$/, kind: 'gate', shape: 'hexagon' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\{([\s\S]+)\}$/, kind: 'gate', shape: 'diamond' },
     // Asymmetric >Client] or Parallelogram [/Client/] -> client
-    { regex: /^([A-Za-z0-9_.-]+)\s*>([\s\S]+)\]$/, kind: 'client' },
-    { regex: /^([A-Za-z0-9_.-]+)\s*\[\/([\s\S]+)\/\]$/, kind: 'client' },
-    { regex: /^([A-Za-z0-9_.-]+)\s*\[\\([\s\S]+)\\\]$/, kind: 'client' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*>([\s\S]+)\]$/, kind: 'client', shape: 'asymmetric' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[\/([\s\S]+)\/\]$/, kind: 'client', shape: 'card' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[\\([\s\S]+)\\\]$/, kind: 'client', shape: 'card' },
     // Rounded (Event Broker) -> bus
-    { regex: /^([A-Za-z0-9_.-]+)\s*\(([\s\S]+)\)$/, kind: 'bus' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\(([\s\S]+)\)$/, kind: 'bus', shape: 'rounded' },
     // Standard rectangle [Service] -> service
-    { regex: /^([A-Za-z0-9_.-]+)\s*\[([\s\S]+)\]$/, kind: 'service' },
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[([\s\S]+)\]$/, kind: 'service', shape: 'card' },
   ];
 
-  for (const { regex, kind } of shapePatterns) {
+  for (const { regex, kind, shape } of shapePatterns) {
     const m = trimmed.match(regex);
     if (m) {
-      return { id: m[1], label: m[2], inferredKind: kind };
+      return { id: m[1], label: m[2], inferredKind: kind, shape, className };
     }
   }
 
   const plainId = trimmed.match(/^([A-Za-z0-9_.-]+)$/);
   if (plainId) {
-    return { id: plainId[1] };
+    return { id: plainId[1], className };
   }
 
   return null;
@@ -417,14 +521,38 @@ function parseMermaidFlowchart(
   const edges: ParsedMermaidEdge[] = [];
   const subgraphs: ParsedSubgraph[] = [];
   const subgraphStack: ParsedSubgraph[] = [];
+  const classDefs = new Map<string, { tone: StreamTone }>();
+  let defaultLinkTone: StreamTone | undefined;
   let currentLine = lineBase;
 
-  const ensureNode = (id: string, label?: string, inferredKind?: NodeKind) => {
+  function parseStylesToTone(stylesStr: string): StreamTone | null {
+    const parts = stylesStr.split(/[,;]/);
+    for (const part of parts) {
+      const colonIdx = part.indexOf(':');
+      if (colonIdx === -1) continue;
+      const prop = part.slice(0, colonIdx).trim().toLowerCase();
+      const val = part.slice(colonIdx + 1).trim();
+      if (prop === 'fill' || prop === 'stroke' || prop === 'color') {
+        return colorToStreamTone(val);
+      }
+    }
+    return null;
+  }
+
+  const ensureNode = (
+    id: string,
+    label?: string,
+    inferredKind?: NodeKind,
+    shape?: NodeShape,
+    className?: string,
+  ) => {
     const existing = nodes.get(id);
     const activeSubgraph = subgraphStack[subgraphStack.length - 1];
     if (activeSubgraph && !activeSubgraph.nodeIds.includes(id)) {
       activeSubgraph.nodeIds.push(id);
     }
+
+    const assignedTone = className && classDefs.has(className) ? classDefs.get(className)!.tone : undefined;
 
     if (!existing) {
       const parsedLines = label ? splitLabelLines(label) : { title: id, subtitle: '' };
@@ -433,6 +561,9 @@ function parseMermaidFlowchart(
         title: parsedLines.title,
         subtitle: parsedLines.subtitle,
         kind: inferredKind || 'service',
+        shape,
+        tone: assignedTone,
+        className,
         subgraphTitle: activeSubgraph?.title,
       });
     } else {
@@ -454,6 +585,15 @@ function parseMermaidFlowchart(
       if (inferredKind && existing.kind === 'service') {
         existing.kind = inferredKind;
       }
+      if (shape && !existing.shape) {
+        existing.shape = shape;
+      }
+      if (assignedTone && !existing.tone) {
+        existing.tone = assignedTone;
+      }
+      if (className && !existing.className) {
+        existing.className = className;
+      }
       if (!existing.subgraphTitle && activeSubgraph) {
         existing.subgraphTitle = activeSubgraph.title;
       }
@@ -474,7 +614,117 @@ function parseMermaidFlowchart(
       continue;
     }
 
-    if (/^(?:classDef|class|style|linkStyle|click|direction)\b/i.test(line)) {
+    const classDefMatch = line.match(/^classDef\s+([A-Za-z0-9_.-]+)\s+([^;]+)/i);
+    if (classDefMatch) {
+      const name = classDefMatch[1];
+      const stylesStr = classDefMatch[2];
+      const tone = parseStylesToTone(stylesStr);
+      if (tone) {
+        classDefs.set(name, { tone });
+        issues.push({
+          level: 'info',
+          code: 'mermaid-classdef',
+          line: currentLine,
+          message: `Mapped classDef "${name}" style to "${tone}" stream tone.`,
+        });
+      }
+      continue;
+    }
+
+    const classMatch = line.match(/^class\s+([^;]+?)\s+([A-Za-z0-9_.-]+)\s*;?$/i);
+    if (classMatch) {
+      const rawIds = classMatch[1].split(',').map((s) => s.trim()).filter(Boolean);
+      const className = classMatch[2].trim();
+      const def = classDefs.get(className);
+      for (const id of rawIds) {
+        ensureNode(id);
+        const n = nodes.get(id);
+        if (n && def) {
+          n.tone = def.tone;
+          n.className = className;
+        }
+      }
+      if (def) {
+        issues.push({
+          level: 'info',
+          code: 'mermaid-class',
+          line: currentLine,
+          message: `Applied class "${className}" (${def.tone} tone) to ${rawIds.join(', ')}.`,
+        });
+      }
+      continue;
+    }
+
+    const styleMatch = line.match(/^style\s+([A-Za-z0-9_.-]+)\s+([^;]+)/i);
+    if (styleMatch) {
+      const id = styleMatch[1];
+      const stylesStr = styleMatch[2];
+      const tone = parseStylesToTone(stylesStr);
+      if (tone) {
+        ensureNode(id);
+        const n = nodes.get(id);
+        if (n) n.tone = tone;
+        issues.push({
+          level: 'info',
+          code: 'mermaid-style',
+          line: currentLine,
+          message: `Mapped style for node "${id}" to "${tone}" stream tone.`,
+        });
+      }
+      continue;
+    }
+
+    const linkStyleMatch = line.match(/^linkStyle\s+(\d+|default)\s+([^;]+)/i);
+    if (linkStyleMatch) {
+      const target = linkStyleMatch[1].toLowerCase();
+      const stylesStr = linkStyleMatch[2];
+      const tone = parseStylesToTone(stylesStr);
+      if (tone) {
+        if (target === 'default') {
+          defaultLinkTone = tone;
+          for (const edge of edges) {
+            edge.tone = tone;
+          }
+        } else {
+          const idx = parseInt(target, 10);
+          if (edges[idx]) {
+            edges[idx].tone = tone;
+          }
+        }
+        issues.push({
+          level: 'info',
+          code: 'mermaid-linkstyle',
+          line: currentLine,
+          message: `Mapped linkStyle ${target} to "${tone}" wire tone.`,
+        });
+      }
+      continue;
+    }
+
+    const clickMatch =
+      line.match(/^click\s+([A-Za-z0-9_.-]+)\s+(?:href\s+)?"([^"]+)"/i) ||
+      line.match(/^click\s+([A-Za-z0-9_.-]+)\s+call\s+([A-Za-z0-9_.-]+)/i);
+    if (clickMatch) {
+      const id = clickMatch[1];
+      const dest = clickMatch[2];
+      ensureNode(id);
+      const n = nodes.get(id);
+      if (n) {
+        n.link = dest;
+      }
+      issues.push({
+        level: 'info',
+        code: 'mermaid-click',
+        line: currentLine,
+        message: `Captured click target "${dest}" for node "${id}".`,
+      });
+      continue;
+    }
+
+    const subDirMatch = line.match(/^direction\s+(LR|RL|TD|TB|BT)\b/i);
+    if (subDirMatch) {
+      const d = subDirMatch[1].toUpperCase();
+      direction = d === 'TD' || d === 'TB' || d === 'BT' ? 'TD' : 'LR';
       continue;
     }
 
@@ -532,8 +782,8 @@ function parseMermaidFlowchart(
           });
         }
 
-        for (const lt of leftTokens) ensureNode(lt.id, lt.label, lt.inferredKind);
-        for (const rt of rightTokens) ensureNode(rt.id, rt.label, rt.inferredKind);
+        for (const lt of leftTokens) ensureNode(lt.id, lt.label, lt.inferredKind, lt.shape, lt.className);
+        for (const rt of rightTokens) ensureNode(rt.id, rt.label, rt.inferredKind, rt.shape, rt.className);
 
         for (const lt of leftTokens) {
           for (const rt of rightTokens) {
@@ -546,11 +796,12 @@ function parseMermaidFlowchart(
               });
               continue;
             }
+            const wireTone = connector.tone !== 'blue' ? connector.tone : (defaultLinkTone || 'blue');
             edges.push({
               from: lt.id,
               to: rt.id,
               label: connector.label,
-              tone: connector.tone,
+              tone: wireTone,
               route: connector.route,
             });
           }
@@ -561,7 +812,7 @@ function parseMermaidFlowchart(
 
     const solo = parseSingleNodeToken(line);
     if (solo) {
-      ensureNode(solo.id, solo.label, solo.inferredKind);
+      ensureNode(solo.id, solo.label, solo.inferredKind, solo.shape, solo.className);
     } else {
       issues.push({
         level: 'warning',
@@ -692,9 +943,9 @@ export function importMermaidOrBlueprint(rawInput: string): {
     const stencil = STENCIL_CATALOG.find((s) => s.kind === kind) || STENCIL_CATALOG[2];
     const dims = getNodeDimensions(kind);
 
-    const accent = normalizeTone(metaNode.accent || metaNode.tone, stencil.accent);
+    const accent = normalizeTone(metaNode.accent || metaNode.tone, mNode?.tone || stencil.accent);
     const icon = normalizeIconName(metaNode.icon, stencil.icon);
-    const shape = normalizeNodeShape(metaNode.shape);
+    const shape = normalizeNodeShape(metaNode.shape || mNode?.shape);
     const iconImage = sanitizeIconImage(metaNode.iconImage);
     if (typeof metaNode.iconImage === 'string' && metaNode.iconImage.trim() && !iconImage) {
       issues.push({
@@ -727,7 +978,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
     ).trim();
     const summary = (
       metaNode.summary ||
-      `${title}${subtitle ? ` (${subtitle})` : ''} processes data streams within ${zoneLabel}.`
+      `${title}${subtitle ? ` (${subtitle})` : ''} processes data streams within ${zoneLabel}.${mNode?.link ? ` External link: ${mNode.link}` : ''}`
     ).trim();
 
     const defaultMetrics: KeyValueMetric[] = [
@@ -1057,6 +1308,13 @@ function formatMermaidNodeShape(node: DiagramNode, safeId: string): string {
   const label = node.subtitle
     ? `"${escapeMermaidText(node.title)}<br/>${escapeMermaidText(node.subtitle)}"`
     : `"${escapeMermaidText(node.title)}"`;
+
+  if (node.shape === 'circle') return `${safeId}((${label}))`;
+  if (node.shape === 'diamond') return `${safeId}{${label}}`;
+  if (node.shape === 'hexagon') return `${safeId}{{${label}}}`;
+  if (node.shape === 'asymmetric') return `${safeId}>${label}]`;
+  if (node.shape === 'pill') return `${safeId}([${label}])`;
+  if (node.shape === 'rounded') return `${safeId}(${label})`;
 
   switch (node.kind) {
     case 'actor':
