@@ -2,6 +2,10 @@
 import {
   btnRestoreSession,
   canvasStatsPill,
+  docBrandCluster,
+  docBrandGlyph,
+  docBrandLogo,
+  docBrandName,
   docStatusLabelEl,
   docSystemTagEl,
   docTitleHeadingEl,
@@ -15,6 +19,8 @@ import { app, loadSavedSessionDoc, setSelection } from './state';
 import type { SelectionTarget } from '../types';
 import { renderPropertyEditor, syncDataViewInspector } from './inspector';
 import { renderSimButtons } from './interactions';
+import { normalizeBrandAccent } from '../core/brand';
+import { sanitizeIconImage } from '../core/nodeStyle';
 import { getAdjacencyLists } from '../core/layout';
 import {
   renderNodes,
@@ -59,6 +65,30 @@ export function applySelection(
   if (options?.refreshIfUnchanged || headingStale) requestInspectorRefresh();
 }
 
+function paintDocumentBrand(): void {
+  const name = (app.doc.brand?.name || '').trim();
+  const accent = normalizeBrandAccent(app.doc.brand?.accent);
+  const logo = sanitizeIconImage(app.doc.brand?.logo);
+  docBrandName.hidden = !name;
+  docBrandName.textContent = name;
+  if (accent) {
+    docBrandCluster.dataset.brand = 'true';
+    docBrandCluster.style.setProperty('--brand-accent', accent);
+  } else {
+    delete docBrandCluster.dataset.brand;
+    docBrandCluster.style.removeProperty('--brand-accent');
+  }
+  if (logo) {
+    docBrandLogo.hidden = false;
+    docBrandLogo.src = logo;
+    docBrandGlyph.style.display = 'none';
+  } else {
+    docBrandLogo.hidden = true;
+    docBrandLogo.removeAttribute('src');
+    docBrandGlyph.style.display = '';
+  }
+}
+
 export function renderAll(rebuildInspector = true): void {
   const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
   emptyStageOverlay.hidden = !isEmpty;
@@ -75,6 +105,7 @@ export function renderAll(rebuildInspector = true): void {
   docTitleHeadingEl.textContent = app.doc.title || 'Untitled Architecture';
   docSystemTagEl.textContent = app.doc.systemTag || 'CONDUITCRAFT';
   docStatusLabelEl.textContent = app.doc.statusLabel || 'LIVE TELEMETRY';
+  paintDocumentBrand();
   canvasStatsPill.textContent = `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'NODE' : 'NODES'} · ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'WIRE' : 'WIRES'}`;
 
   stageWorld.style.width = `${app.doc.stageWidth}px`;

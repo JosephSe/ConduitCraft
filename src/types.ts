@@ -126,6 +126,15 @@ export interface SimulationScenario {
   steps: SimulationStep[];
 }
 
+/** Header lockup for the studio preview and the exported page. Empty fields use the defaults. */
+export interface DiagramBrand {
+  name: string;
+  /** `#rrggbb`, or empty for the default mark. */
+  accent: string;
+  /** Image data URL, or empty for the built-in mark. */
+  logo: string;
+}
+
 export interface DiagramDocument {
   title: string;
   systemTag: string;
@@ -134,6 +143,7 @@ export interface DiagramDocument {
   stageWidth: number;
   stageHeight: number;
   overviewSummary: string;
+  brand: DiagramBrand;
   zones: DiagramZone[];
   notesCards: DiagramNotesCard[];
   nodes: DiagramNode[];

@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
+import { brandIsDefault, normalizeBrand } from './brand';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
 
@@ -66,6 +67,7 @@ interface RawBlueprintMeta {
   stageWidth?: number;
   stageHeight?: number;
   overviewSummary?: string;
+  brand?: { name?: string; accent?: string; logo?: string };
   zones?: Array<{
     id?: string;
     number?: string | number;
@@ -628,6 +630,17 @@ export function importMermaidOrBlueprint(rawInput: string): {
   if (meta.systemTag?.trim()) doc.systemTag = meta.systemTag.trim();
   if (meta.statusLabel?.trim()) doc.statusLabel = meta.statusLabel.trim();
   if (meta.overviewSummary?.trim()) doc.overviewSummary = meta.overviewSummary.trim();
+  if (meta.brand) {
+    const rawLogo = meta.brand.logo;
+    doc.brand = normalizeBrand(meta.brand);
+    if (typeof rawLogo === 'string' && rawLogo.trim() && !doc.brand.logo) {
+      issues.push({
+        level: 'warning',
+        code: 'brand-logo',
+        message: 'The brand logo is not a supported image data URL and was dropped.',
+      });
+    }
+  }
 
   // Merge node IDs from Mermaid + YAML metadata
   const allNodeIds = new Set<string>([...parsedMermaid.nodes.keys()]);
@@ -1184,6 +1197,15 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
     stageHeight: doc.stageHeight,
     overviewSummary: doc.overviewSummary,
   };
+
+  const brand = normalizeBrand(doc.brand);
+  if (!brandIsDefault(brand)) {
+    frontmatterObj.brand = {
+      ...(brand.name ? { name: brand.name } : {}),
+      ...(brand.accent ? { accent: brand.accent } : {}),
+      ...(brand.logo ? { logo: brand.logo } : {}),
+    };
+  }
 
   if (doc.zones.length > 0) {
     frontmatterObj.zones = doc.zones.map((z) => ({

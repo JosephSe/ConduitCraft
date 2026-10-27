@@ -12,17 +12,19 @@
 </head>
 <body>
   <header class="topbar">
-    <div class="brand-cluster">
-      <div class="brand-mark" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="brand-cluster" id="doc-brand-cluster">
+      <div class="brand-mark" id="doc-brand-mark" aria-hidden="true">
+        <svg id="doc-brand-glyph" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1.5"/>
           <rect x="14" y="3" width="7" height="7" rx="1.5"/>
           <rect x="14" y="14" width="7" height="7" rx="1.5"/>
           <path d="M10 6.5h4M17.5 10v4M6.5 10v5a2.5 2.5 0 0 0 2.5 2.5h5"/>
         </svg>
+        <img id="doc-brand-logo" class="brand-logo" alt="" hidden>
       </div>
       <div class="brand-titles">
         <div class="eyebrow-row">
+          <span class="brand-name" id="doc-brand-name" hidden></span>
           <span class="live-dot" aria-hidden="true"></span>
           <span id="doc-system-tag">CONDUITCRAFT // V1.0</span>
           <span aria-hidden="true">·</span>

@@ -13,6 +13,7 @@ import type {
   PortSide,
   SelectionTarget,
 } from '../types';
+import { normalizeBrand } from '../core/brand';
 import { createBlankDocument } from '../templates/presets';
 import {
   resolveSelectionUpdate,
@@ -125,6 +126,7 @@ export function loadSavedSessionDoc(): DiagramDocument | null {
       Array.isArray(parsed.edges) &&
       (parsed.nodes.length > 0 || parsed.zones?.length > 0 || parsed.notesCards?.length > 0)
     ) {
+      parsed.brand = normalizeBrand(parsed.brand);
       return parsed;
     }
   } catch {

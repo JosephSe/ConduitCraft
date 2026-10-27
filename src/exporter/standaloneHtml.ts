@@ -1,6 +1,7 @@
 import type { DiagramDocument, DiagramNode, StreamTone } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
+import { normalizeBrand } from '../core/brand';
 import { sanitizeIconImage } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import sharedCss from '../styles/shared.css?raw';
@@ -235,6 +236,19 @@ ${sharedCss}
 ${viewerCss}
 </style>`;
 
+  const brand = normalizeBrand(doc.brand);
+  const brandAttrs = brand.accent ? ` data-brand style="--brand-accent: ${brand.accent}"` : '';
+  const brandNameMarkup = brand.name
+    ? `<span class="brand-name">${escapeHtml(brand.name)}</span><span aria-hidden="true">·</span>`
+    : '';
+  const brandMark = brand.logo
+    ? `<div class="brand-mark" aria-hidden="true"><img class="brand-logo" alt="" src="${escapeHtml(brand.logo)}"></div>`
+    : `<div class="brand-mark" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M3 12h6m6 0h6M12 3v6m0 6v6"/>
+        </svg>
+      </div>`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -248,15 +262,12 @@ ${colorSchemeBoot}
   ${exportedStyleTag}
 </head>
 <body>
-  <header class="topbar">
+  <header class="topbar"${brandAttrs}>
     <div class="brand-cluster">
-      <div class="brand-mark" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"/><path d="M3 12h6m6 0h6M12 3v6m0 6v6"/>
-        </svg>
-      </div>
+      ${brandMark}
       <div>
         <div class="eyebrow-row">
+          ${brandNameMarkup}
           <span class="live-dot" aria-hidden="true"></span>
           <span>${escapeHtml(doc.systemTag)}</span>
           <span aria-hidden="true">·</span>

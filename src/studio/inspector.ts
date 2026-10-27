@@ -64,6 +64,7 @@ import {
   getEffectiveSimulations,
   getNodeDimensions,
 } from '../core/layout';
+import { normalizeBrandAccent } from '../core/brand';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, sanitizeIconImage } from '../core/nodeStyle';
 
 import { ICON_LIST } from '../ui/icons';
@@ -979,6 +980,7 @@ export function renderPropertyEditor(): void {
     // Document Overview Properties
     propPanelHeading.textContent = 'DOCUMENT PROPERTIES';
     propSelectionActions.hidden = true;
+    if (!app.doc.brand) app.doc.brand = { name: '', accent: '', logo: '' };
 
     form.appendChild(
       makeField(
@@ -1051,6 +1053,98 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
+
+    const brandHeading = document.createElement('h3');
+    brandHeading.className = 'section-heading';
+    brandHeading.textContent = 'EXPORTED PAGE';
+    form.appendChild(brandHeading);
+    form.appendChild(
+      makeField(
+        'prop-brand-name',
+        'Brand name',
+        makeTextInput(app.doc.brand?.name || '', (value) => {
+          app.doc.brand.name = value.slice(0, 80);
+          renderAll(false);
+        }),
+      ),
+    );
+
+    const accentInput = document.createElement('input');
+    accentInput.type = 'color';
+    accentInput.className = 'prop-color';
+    accentInput.value = normalizeBrandAccent(app.doc.brand?.accent) || '#1d4ed8';
+    accentInput.addEventListener('focus', () => beginHistoryGesture());
+    accentInput.addEventListener('blur', () => endHistoryGesture());
+    accentInput.addEventListener('input', () => {
+      pushHistory();
+      app.doc.brand.accent = normalizeBrandAccent(accentInput.value);
+      renderAll(false);
+    });
+    const accentField = makeField('prop-brand-accent', 'Brand color', accentInput);
+    if (app.doc.brand?.accent) {
+      const clearAccent = document.createElement('button');
+      clearAccent.type = 'button';
+      clearAccent.className = 'btn btn-compact';
+      clearAccent.textContent = 'Use default color';
+      clearAccent.addEventListener('click', () => {
+        pushHistory();
+        app.doc.brand.accent = '';
+        renderAll(true);
+      });
+      accentField.appendChild(clearAccent);
+    }
+    form.appendChild(accentField);
+
+    const logoInput = document.createElement('input');
+    logoInput.type = 'file';
+    logoInput.className = 'prop-file';
+    logoInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
+    const logoHint = document.createElement('p');
+    logoHint.className = 'prop-hint';
+    logoHint.hidden = true;
+    logoInput.addEventListener('change', () => {
+      const picked = logoInput.files?.[0];
+      logoInput.value = '';
+      if (!picked) return;
+      if (!picked.type.startsWith('image/') || picked.size > 280_000) {
+        logoHint.hidden = false;
+        logoHint.textContent = 'Use a PNG, JPEG, GIF, WebP, or SVG image under 280 KB.';
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const url = sanitizeIconImage(String(reader.result || ''));
+        if (!url) {
+          logoHint.hidden = false;
+          logoHint.textContent = 'That image could not be used. Choose a smaller PNG, JPEG, GIF, WebP, or SVG.';
+          return;
+        }
+        pushHistory();
+        app.doc.brand.logo = url;
+        logoHint.hidden = true;
+        renderAll(true);
+      });
+      reader.readAsDataURL(picked);
+    });
+    const logoField = makeField('prop-brand-logo', 'Logo', logoInput);
+    logoField.appendChild(logoHint);
+    if (app.doc.brand?.logo) {
+      const clearLogo = document.createElement('button');
+      clearLogo.type = 'button';
+      clearLogo.className = 'btn btn-compact';
+      clearLogo.textContent = 'Remove logo';
+      clearLogo.addEventListener('click', () => {
+        pushHistory();
+        app.doc.brand.logo = '';
+        renderAll(true);
+      });
+      logoField.appendChild(clearLogo);
+    }
+    form.appendChild(logoField);
+    const brandNote = document.createElement('p');
+    brandNote.className = 'prop-hint';
+    brandNote.textContent = 'The name, color, and logo appear on the exported page header. The canvas preview uses them too.';
+    form.appendChild(brandNote);
 
     const tipDiv = document.createElement('div');
     tipDiv.className = 'prop-divider';

@@ -47,6 +47,11 @@ export const workspace = document.getElementById('workspace') as HTMLElement;
 export const docSystemTagEl = document.getElementById('doc-system-tag') as HTMLElement;
 export const docStatusLabelEl = document.getElementById('doc-status-label') as HTMLElement;
 export const docTitleHeadingEl = document.getElementById('doc-title-heading') as HTMLElement;
+export const docBrandCluster = document.getElementById('doc-brand-cluster') as HTMLElement;
+export const docBrandMark = document.getElementById('doc-brand-mark') as HTMLElement;
+export const docBrandGlyph = document.getElementById('doc-brand-glyph') as unknown as SVGSVGElement;
+export const docBrandLogo = document.getElementById('doc-brand-logo') as HTMLImageElement;
+export const docBrandName = document.getElementById('doc-brand-name') as HTMLElement;
 export const btnFocusDocTitle = document.getElementById('btn-focus-doc-title') as HTMLButtonElement;
 
 export const designToolbar = document.getElementById('design-toolbar') as HTMLElement;

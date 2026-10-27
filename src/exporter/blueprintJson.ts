@@ -11,6 +11,7 @@ import type {
   PortSide,
   StreamTone,
 } from '../types';
+import { normalizeBrand } from '../core/brand';
 import { expandStageToFit, getNodeDimensions } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
 import { normalizeIconName } from '../ui/icons';
@@ -161,6 +162,7 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
     stageWidth: num(source.stageWidth, blank.stageWidth) || blank.stageWidth,
     stageHeight: num(source.stageHeight, blank.stageHeight) || blank.stageHeight,
     overviewSummary: str(source.overviewSummary, blank.overviewSummary),
+    brand: normalizeBrand(source.brand),
     nodes: source.nodes.flatMap((node) => {
       const coerced = coerceNode(node);
       return coerced ? [coerced] : [];

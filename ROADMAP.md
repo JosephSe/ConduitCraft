@@ -27,5 +27,5 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 - [x] 16. SVG / PNG export and single-file `.blueprint.json`.
 - [x] 17. Simulation editor UI in Data View.
 - [x] 18. Touch and pen gestures (pinch zoom, two-finger pan, larger ports).
-- [ ] 19. Theming and branding controls for exported pages.
+- [x] 19. Theming and branding controls for exported pages.
 - [ ] 20. Docs: YAML schema reference, routing modes, shortcuts, screenshots.

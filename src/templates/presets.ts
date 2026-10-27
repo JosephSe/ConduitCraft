@@ -139,6 +139,7 @@ export function createBlankDocument(): DiagramDocument {
     stageHeight: 920,
     overviewSummary:
       'Interactive architecture and animated data-flow diagram. Add components from the palette, connect ports to create live animated streams, or import a Mermaid (.mmd) or Blueprint (.md) file.',
+    brand: { name: '', accent: '', logo: '' },
     zones: [],
     notesCards: [],
     nodes: [],
