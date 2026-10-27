@@ -1,6 +1,7 @@
 /** Pointer, keyboard, palette, wiring, import/export, and simulation controls. */
 import {
   btnAddNotes,
+  btnAddSimulation,
   btnAddZone,
   btnApplyCode,
   btnAutoLayout,
@@ -52,6 +53,7 @@ import {
   matrixDialog,
   nodesLayer,
   panelInspector,
+  panelSimulations,
   panelTrace,
   settingsDialog,
   simButtonsSlot,
@@ -60,6 +62,7 @@ import {
   simPacketLabel,
   stencilGrid,
   tabInspector,
+  tabSimulations,
   tabTrace,
   traceList,
   viewport,
@@ -90,6 +93,8 @@ import {
   updateVisualSelectionHighlights,
 } from './render';
 import {
+  addSimulationScenario,
+  renderSimulationEditor,
   withInspectorTransition,
 } from './inspector';
 import type {
@@ -436,13 +441,17 @@ export function appendTraceEntry(stepLabel: string, message: string, tone: Strea
   traceList.prepend(li);
 }
 
-export function switchDataViewTab(tab: 'inspector' | 'trace'): void {
-  const isInsp = tab === 'inspector';
-  tabInspector.setAttribute('aria-selected', String(isInsp));
-  tabTrace.setAttribute('aria-selected', String(!isInsp));
+export function switchDataViewTab(tab: 'inspector' | 'trace' | 'simulations'): void {
+  const tabs = [
+    [tabInspector, panelInspector, tab === 'inspector'],
+    [tabTrace, panelTrace, tab === 'trace'],
+    [tabSimulations, panelSimulations, tab === 'simulations'],
+  ] as const;
   withInspectorTransition(() => {
-    panelInspector.hidden = !isInsp;
-    panelTrace.hidden = isInsp;
+    for (const [button, panel, on] of tabs) {
+      button.setAttribute('aria-selected', String(on));
+      panel.hidden = !on;
+    }
   });
 }
 
@@ -516,10 +525,12 @@ export function deleteSelected(): void {
     const targetId = sel.id;
     app.doc.nodes = app.doc.nodes.filter((n) => n.id !== targetId);
     app.doc.edges = app.doc.edges.filter((e) => e.from !== targetId && e.to !== targetId);
+    dropNodesFromSimulations(new Set([targetId]));
   } else if (sel.type === 'multi') {
     const idSet = new Set(sel.ids);
     app.doc.nodes = app.doc.nodes.filter((n) => !idSet.has(n.id));
     app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to));
+    dropNodesFromSimulations(idSet);
   } else if (sel.type === 'edge') {
     app.doc.edges = app.doc.edges.filter((e) => e.id !== sel.id);
   } else if (sel.type === 'zone') {
@@ -530,6 +541,14 @@ export function deleteSelected(): void {
 
   setSelection({ type: 'none' });
   renderAll(true);
+}
+
+function dropNodesFromSimulations(ids: Set<string>): void {
+  for (const scenario of app.doc.simulations) {
+    for (const step of scenario.steps) {
+      step.nodes = step.nodes.filter((id) => !ids.has(id));
+    }
+  }
 }
 
 export function duplicateSelected(): void {
@@ -1122,6 +1141,11 @@ export function initEvents(): void {
   // Data View Tabs & Overview Reset
   tabInspector.addEventListener('click', () => switchDataViewTab('inspector'));
   tabTrace.addEventListener('click', () => switchDataViewTab('trace'));
+  tabSimulations.addEventListener('click', () => {
+    switchDataViewTab('simulations');
+    renderSimulationEditor();
+  });
+  btnAddSimulation.addEventListener('click', () => addSimulationScenario());
   btnResetSelection.addEventListener('click', () => {
     applySelection({ type: 'none' }, { refreshIfUnchanged: true });
   });

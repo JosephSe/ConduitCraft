@@ -13,7 +13,10 @@ import {
   inspSummary,
   inspTitle,
   inspectorScope,
+  panelSimulations,
   propFormContainer,
+  simEditorHint,
+  simEditorList,
   propPanelHeading,
   propSelectionActions,
 } from './dom';
@@ -36,6 +39,7 @@ import {
 } from './render';
 import {
   renderSimButtons,
+  runSimulation,
 } from './interactions';
 import type {
   DiagramNode,
@@ -44,16 +48,20 @@ import type {
   NodeKind,
   NodeShape,
   PortSide,
+  SimulationScenario,
+  SimulationStep,
   StreamTone,
 } from '../types';
 import {
   STENCIL_CATALOG,
   STREAM_TONE_OPTIONS,
+  nextUid,
 } from '../templates/presets';
 import {
   autoLayoutDocument,
   expandStageToFit,
   getAdjacencyLists,
+  getEffectiveSimulations,
   getNodeDimensions,
 } from '../core/layout';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, sanitizeIconImage } from '../core/nodeStyle';
@@ -1134,6 +1142,7 @@ export function syncDataViewInspector(): void {
         renderLineageRows(adj.upstream, adj.downstream);
         inspCode.textContent = node.code;
       });
+      renderSimulationEditor();
       return;
     }
   }
@@ -1161,4 +1170,256 @@ export function syncDataViewInspector(): void {
       2,
     );
   });
+  renderSimulationEditor();
+}
+
+/** Copy generated flows onto the document the first time they are edited. */
+function authoredSimulations(): SimulationScenario[] {
+  if (app.doc.simulations.length === 0) {
+    app.doc.simulations = structuredClone(getEffectiveSimulations(app.doc));
+  }
+  return app.doc.simulations;
+}
+
+function liveScenario(id: string): SimulationScenario | undefined {
+  return authoredSimulations().find((scenario) => scenario.id === id);
+}
+
+function liveStep(simId: string, stepId: string): SimulationStep | undefined {
+  return liveScenario(simId)?.steps.find((step) => step.id === stepId);
+}
+
+export function addSimulationScenario(): void {
+  pushHistory();
+  const list = authoredSimulations();
+  const first = app.doc.nodes[0];
+  list.push({
+    id: nextUid('sim'),
+    name: 'Custom Scenario',
+    tone: 'blue',
+    steps: first
+      ? [
+          {
+            id: nextUid('step'),
+            nodes: [first.id],
+            tone: 'blue',
+            label: first.title.toUpperCase(),
+            trace: `${first.title} processed a packet.`,
+          },
+        ]
+      : [],
+  });
+  renderSimButtons();
+  renderSimulationEditor(true);
+}
+
+export function renderSimulationEditor(force = false): void {
+  const active = document.activeElement;
+  if (
+    !force &&
+    active instanceof HTMLElement &&
+    panelSimulations.contains(active) &&
+    active.matches('input, textarea')
+  ) {
+    return;
+  }
+
+  const authored = app.doc.simulations.length > 0;
+  const scenarios = authored ? app.doc.simulations : getEffectiveSimulations(app.doc);
+  if (!authored && scenarios.length > 0) {
+    simEditorHint.textContent =
+      'Generated from the wires. The first edit saves a copy on this blueprint.';
+  } else if (authored) {
+    simEditorHint.textContent =
+      'Saved on this blueprint. Remove every scenario to restore the generated flows.';
+  } else {
+    simEditorHint.textContent =
+      'No flows yet. Add a scenario, then choose the components each hop visits.';
+  }
+
+  simEditorList.replaceChildren();
+  scenarios.forEach((scenario, scenarioIndex) => {
+    const card = document.createElement('section');
+    card.className = 'sim-editor-card';
+    card.dataset.simId = scenario.id;
+
+    const form = document.createElement('div');
+    form.className = 'prop-form';
+    form.append(
+      makeField(
+        `sim-name-${scenarioIndex}`,
+        'Scenario name',
+        makeTextInput(scenario.name, (value) => {
+          const live = liveScenario(scenario.id);
+          if (live) live.name = value;
+          renderSimButtons();
+        }),
+      ),
+      makeField(
+        `sim-tone-${scenarioIndex}`,
+        'Button tone',
+        makeTonePicker(`sim-tone-${scenario.id}`, scenario.tone, (tone) => {
+          const live = liveScenario(scenario.id);
+          if (!live) return;
+          live.tone = tone;
+          renderSimButtons();
+        }),
+      ),
+    );
+
+    const actions = document.createElement('div');
+    actions.className = 'sim-card-actions';
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'btn btn-compact';
+    play.textContent = 'Play';
+    play.addEventListener('click', () => runSimulation(scenario.id));
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'btn btn-compact btn-reject';
+    remove.textContent = 'Remove';
+    remove.addEventListener('click', () => {
+      const saved = app.doc.simulations.length > 0;
+      if (!saved && getEffectiveSimulations(app.doc).length <= 1) return;
+      pushHistory();
+      const list = authoredSimulations();
+      const index = list.findIndex((item) => item.id === scenario.id);
+      if (index >= 0) list.splice(index, 1);
+      renderSimButtons();
+      renderSimulationEditor(true);
+    });
+    actions.append(play, remove);
+
+    const stepsHeading = document.createElement('h3');
+    stepsHeading.className = 'section-heading';
+    stepsHeading.textContent = 'HOPS';
+
+    const steps = document.createElement('div');
+    scenario.steps.forEach((step, stepIndex) => {
+      const box = document.createElement('div');
+      box.className = 'sim-step';
+
+      const label = makeTextInput(step.label, (value) => {
+        const live = liveStep(scenario.id, step.id);
+        if (live) live.label = value;
+      });
+      label.setAttribute('aria-label', `Hop ${stepIndex + 1} label`);
+      const trace = makeTextarea(step.trace, (value) => {
+        const live = liveStep(scenario.id, step.id);
+        if (live) live.trace = value;
+      });
+      trace.rows = 2;
+      trace.setAttribute('aria-label', `Hop ${stepIndex + 1} trace`);
+
+      const tone = makeTonePicker(`step-tone-${scenario.id}-${step.id}`, step.tone, (next) => {
+        const live = liveStep(scenario.id, step.id);
+        if (live) live.tone = next;
+      });
+
+      const chips = document.createElement('div');
+      chips.className = 'lineage-chips';
+      if (app.doc.nodes.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'prop-hint';
+        empty.textContent = 'Add a component before assigning hops.';
+        chips.appendChild(empty);
+      }
+      for (const node of app.doc.nodes) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'lineage-chip sim-node-chip';
+        chip.textContent = node.title;
+        chip.setAttribute('aria-pressed', String(step.nodes.includes(node.id)));
+        chip.addEventListener('click', () => {
+          pushHistory();
+          const live = liveStep(scenario.id, step.id);
+          if (!live) return;
+          if (live.nodes.includes(node.id)) live.nodes = live.nodes.filter((id) => id !== node.id);
+          else live.nodes.push(node.id);
+          renderSimulationEditor(true);
+        });
+        chips.appendChild(chip);
+      }
+
+      const stepActions = document.createElement('div');
+      stepActions.className = 'sim-step-actions';
+      const up = document.createElement('button');
+      up.type = 'button';
+      up.className = 'btn btn-compact';
+      up.textContent = 'Up';
+      up.disabled = stepIndex === 0;
+      up.addEventListener('click', () => moveSimulationStep(scenario.id, step.id, -1));
+      const down = document.createElement('button');
+      down.type = 'button';
+      down.className = 'btn btn-compact';
+      down.textContent = 'Down';
+      down.disabled = stepIndex === scenario.steps.length - 1;
+      down.addEventListener('click', () => moveSimulationStep(scenario.id, step.id, 1));
+      const drop = document.createElement('button');
+      drop.type = 'button';
+      drop.className = 'btn btn-compact btn-reject';
+      drop.textContent = 'Delete hop';
+      drop.addEventListener('click', () => {
+        pushHistory();
+        const live = liveScenario(scenario.id);
+        if (!live) return;
+        live.steps = live.steps.filter((item) => item.id !== step.id);
+        renderSimButtons();
+        renderSimulationEditor(true);
+      });
+      stepActions.append(up, down, drop);
+
+      box.append(
+        makeField(`sim-step-label-${scenarioIndex}-${stepIndex}`, `Hop ${stepIndex + 1}`, label),
+        makeField(`sim-step-tone-${scenarioIndex}-${stepIndex}`, 'Hop tone', tone),
+        makeField(`sim-step-trace-${scenarioIndex}-${stepIndex}`, 'Trace', trace),
+        chips,
+        stepActions,
+      );
+      steps.appendChild(box);
+    });
+
+    const addStep = document.createElement('button');
+    addStep.type = 'button';
+    addStep.className = 'btn btn-compact';
+    addStep.textContent = 'Add hop';
+    addStep.addEventListener('click', () => {
+      pushHistory();
+      const live = liveScenario(scenario.id);
+      if (!live) return;
+      const node =
+        app.doc.nodes.find((item) => !live.steps.some((st) => st.nodes.includes(item.id))) ||
+        app.doc.nodes[0];
+      live.steps.push({
+        id: nextUid('step'),
+        nodes: node ? [node.id] : [],
+        tone: live.tone,
+        label: node ? node.title.toUpperCase() : `STEP ${live.steps.length + 1}`,
+        trace: node ? `${node.title} processed a packet.` : 'Processed telemetry step.',
+      });
+      renderSimButtons();
+      renderSimulationEditor(true);
+    });
+
+    card.append(form, actions, stepsHeading, steps, addStep);
+    simEditorList.appendChild(card);
+  });
+}
+
+function moveSimulationStep(simId: string, stepId: string, direction: -1 | 1): void {
+  const current = app.doc.simulations.find((scenario) => scenario.id === simId);
+  const fromGenerated = !current;
+  const preview = current || getEffectiveSimulations(app.doc).find((scenario) => scenario.id === simId);
+  if (!preview) return;
+  const index = preview.steps.findIndex((step) => step.id === stepId);
+  const next = index + direction;
+  if (index < 0 || next < 0 || next >= preview.steps.length) return;
+  pushHistory();
+  const live = fromGenerated ? liveScenario(simId) : current;
+  if (!live) return;
+  const [step] = live.steps.splice(index, 1);
+  if (!step) return;
+  live.steps.splice(next, 0, step);
+  renderSimButtons();
+  renderSimulationEditor(true);
 }

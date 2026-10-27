@@ -114,8 +114,13 @@ export const dataInspectorPane = document.getElementById('data-inspector-pane') 
 export const inspectorScope = document.getElementById('inspector-scope') as HTMLElement;
 export const tabInspector = document.getElementById('tab-inspector') as HTMLButtonElement;
 export const tabTrace = document.getElementById('tab-trace') as HTMLButtonElement;
+export const tabSimulations = document.getElementById('tab-simulations') as HTMLButtonElement;
 export const panelInspector = document.getElementById('panel-inspector') as HTMLElement;
 export const panelTrace = document.getElementById('panel-trace') as HTMLElement;
+export const panelSimulations = document.getElementById('panel-simulations') as HTMLElement;
+export const simEditorHint = document.getElementById('sim-editor-hint') as HTMLElement;
+export const simEditorList = document.getElementById('sim-editor-list') as HTMLElement;
+export const btnAddSimulation = document.getElementById('btn-add-simulation') as HTMLButtonElement;
 export const btnResetSelection = document.getElementById('btn-reset-selection') as HTMLButtonElement;
 export const btnClearTrace = document.getElementById('btn-clear-trace') as HTMLButtonElement;
 

@@ -1621,10 +1621,15 @@
 
   .tablist {
     display: inline-flex;
+    flex-wrap: wrap;
     background: var(--wl-surface-elevated);
     padding: 0.1875rem;
     border-radius: 0.55rem;
     border: 1px solid var(--wl-border-subtle);
+  }
+
+  #data-inspector-pane .inspector-tabs {
+    flex-wrap: wrap;
   }
 
   .tab-btn {
@@ -1964,6 +1969,43 @@
   }
 
   .lineage-chip:hover {
+    border-color: var(--wl-blue);
+    background: var(--wl-blue-soft);
+  }
+
+  .sim-editor-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-block-end: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--wl-border-subtle);
+    border-radius: 0.75rem;
+    background: var(--wl-surface-elevated);
+  }
+
+  .sim-card-actions,
+  .sim-step-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .sim-card-actions .btn-compact,
+  .sim-step-actions .btn-compact {
+    flex: 0 0 auto;
+  }
+
+  .sim-step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 0.6rem;
+    border-radius: 0.55rem;
+    background: var(--wl-surface);
+  }
+
+  .sim-node-chip[aria-pressed="true"] {
     border-color: var(--wl-blue);
     background: var(--wl-blue-soft);
   }

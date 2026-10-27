@@ -280,6 +280,7 @@
           <div class="tablist" role="tablist" aria-label="Data view panels">
             <button type="button" class="tab-btn" role="tab" id="tab-inspector" aria-selected="true" aria-controls="panel-inspector">Inspector</button>
             <button type="button" class="tab-btn" role="tab" id="tab-trace" aria-selected="false" aria-controls="panel-trace">Live Trace</button>
+            <button type="button" class="tab-btn" role="tab" id="tab-simulations" aria-selected="false" aria-controls="panel-simulations">Scenarios</button>
           </div>
           <button type="button" class="btn btn-compact" id="btn-reset-selection" style="flex: 0 0 auto;">Overview</button>
         </div>
@@ -315,9 +316,18 @@
               <button type="button" class="btn btn-compact" id="btn-clear-trace" style="flex: 0 0 auto;">Clear</button>
             </div>
             <p class="inspector-summary">
-              Trigger a simulation flow in the top toolbar to watch live packets traverse your architecture.
+              Trigger a simulation from the toolbar or the Scenarios tab to watch live packets traverse your architecture.
             </p>
             <ol class="trace-list" id="trace-list" aria-live="polite"></ol>
+          </div>
+
+          <div id="panel-simulations" role="tabpanel" aria-labelledby="tab-simulations" hidden>
+            <div class="inspector-badge-row">
+              <span class="tier-badge">PACKET SCENARIOS</span>
+              <button type="button" class="btn btn-compact" id="btn-add-simulation" style="flex: 0 0 auto;">Add scenario</button>
+            </div>
+            <p class="inspector-summary" id="sim-editor-hint"></p>
+            <div id="sim-editor-list"></div>
           </div>
         </div>
       </div>
