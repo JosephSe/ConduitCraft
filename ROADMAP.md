@@ -28,4 +28,4 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 - [x] 17. Simulation editor UI in Data View.
 - [x] 18. Touch and pen gestures (pinch zoom, two-finger pan, larger ports).
 - [x] 19. Theming and branding controls for exported pages.
-- [ ] 20. Docs: YAML schema reference, routing modes, shortcuts, screenshots.
+- [x] 20. Docs: YAML schema reference, routing modes, shortcuts, screenshots.

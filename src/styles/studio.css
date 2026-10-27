@@ -174,10 +174,6 @@
     grid-template-columns: minmax(0, 1fr) 23.5rem;
   }
 
-  .workspace[data-mode="data"] .palette-sidebar {
-    display: none;
-  }
-
   @media (max-width: 82rem) {
     .workspace {
       grid-template-columns: 15rem minmax(0, 1fr) 20.5rem;
@@ -203,6 +199,11 @@
     grid-template-rows: auto minmax(0, 1fr);
     min-block-size: 0;
     z-index: 14;
+  }
+
+  /* This layer is later than `layout`, so the hide rule has to live here. */
+  .workspace[data-mode="data"] .palette-sidebar {
+    display: none;
   }
 
   .palette-header {

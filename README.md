@@ -17,7 +17,11 @@
 - **Bidirectional Mermaid (`.mmd`) & Blueprint (`.md`) Compiler**
   - Edit or paste standard Mermaid flowcharts or YAML-frontmatter Blueprint documents with line-numbered validation diagnostics.
 - **Zero-Dependency Exports**
-  - Export self-contained **Interactive Animated HTML (`.html`)** pages, round-trippable **Blueprint Markdown (`.md`)**, or standard **Mermaid (`.mmd`)**.
+  - Export self-contained **Interactive Animated HTML (`.html`)** pages, **SVG** and **PNG** pictures, round-trippable **Blueprint Markdown (`.md`)** and **Blueprint JSON (`.blueprint.json`)**, or standard **Mermaid (`.mmd`)**.
+
+## Documentation
+
+The [guide](./docs/guide.md) is the Blueprint YAML schema, the wire routing modes, and the keyboard shortcuts.
 
 ## Quick Start
 
