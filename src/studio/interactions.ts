@@ -285,6 +285,19 @@ export function initStencilPalette(): void {
   }
 }
 
+export function tagEnteringNodes(ids: string[]): void {
+  if (typeof document === 'undefined') return;
+  requestAnimationFrame(() => {
+    for (const id of ids) {
+      const el = document.getElementById(`node-${id}`);
+      if (el) {
+        el.classList.add('is-entering');
+        setTimeout(() => el.classList.remove('is-entering'), 350);
+      }
+    }
+  });
+}
+
 export function addNodeAt(kind: NodeKind, rawX: number, rawY: number): DiagramNode {
   pushHistory();
   const clampedX = Math.max(24, rawX);
@@ -298,6 +311,7 @@ export function addNodeAt(kind: NodeKind, rawX: number, rawY: number): DiagramNo
   expandStageToFit(app.doc);
   setSelection({ type: 'node', id: node.id });
   renderAll(true);
+  tagEnteringNodes([node.id]);
   return node;
 }
 
@@ -314,6 +328,9 @@ export function beginPortWireDrag(
       ? getNodeCenter(sourceNode)
       : getPortPoint(sourceNode, sourcePort);
 
+  const sourceNodeEl = document.getElementById(`node-${sourceNode.id}`);
+  sourceNodeEl?.classList.add('is-wiring-source');
+
   app.activeWireDraft = {
     sourceNodeId: sourceNode.id,
     sourcePort,
@@ -326,6 +343,8 @@ export function beginPortWireDrag(
   captureEl.setPointerCapture(e.pointerId);
 
   const onLost = () => {
+    sourceNodeEl?.classList.remove('is-wiring-source');
+    sourceNodeEl?.classList.remove('is-wiring-source');
     captureEl.removeEventListener('pointermove', onMove);
     captureEl.removeEventListener('pointerup', onUp);
     captureEl.removeEventListener('pointercancel', onCancel);
@@ -367,6 +386,7 @@ export function beginPortWireDrag(
 
   const onFinish = (upEv: PointerEvent, commit: boolean) => {
     upEv.stopPropagation();
+    sourceNodeEl?.classList.remove('is-wiring-source');
     captureEl.removeEventListener('pointermove', onMove);
     captureEl.removeEventListener('pointerup', onUp);
     captureEl.removeEventListener('pointercancel', onCancel);
@@ -645,6 +665,7 @@ export function duplicateSelected(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'node', id: copy.id });
     renderAll(true);
+    tagEnteringNodes([copy.id]);
     notify('Duplicated component');
   } else if (sel.type === 'multi') {
     const origNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
@@ -695,6 +716,7 @@ export function duplicateSelected(): void {
     expandStageToFit(app.doc);
     setSelection(selectionOfStage({ nodes: newIds, zones: newZoneIds, notes: newNoteIds }));
     renderAll(true);
+    tagEnteringNodes(newIds);
     notify(`Duplicated ${newIds.length + newZoneIds.length + newNoteIds.length} items`);
   } else if (sel.type === 'zone') {
     const orig = app.doc.zones.find((z) => z.id === sel.id);
@@ -768,6 +790,7 @@ export function pasteSelection(): void {
   expandStageToFit(app.doc);
   setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
   renderAll(true);
+  tagEnteringNodes(newIds);
   const msg = `Pasted ${newIds.length} ${newIds.length === 1 ? 'component' : 'components'}`;
   hudStatusTip.textContent = msg;
   notify(msg);
@@ -1101,35 +1124,50 @@ export function openShortcutsDialog(): void {
 }
 
 export function initEvents(): void {
-  // Workspace Mode Switcher (Design vs Data View)
+  // Workspace Mode Switcher (Design vs Data View with View Transitions)
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="workspace-mode"]')) {
     radio.addEventListener('change', () => {
       if (!radio.checked) return;
-      app.workspaceMode = radio.value === 'data' ? 'data' : 'design';
-      workspace.dataset.mode = app.workspaceMode;
-      designToolbar.hidden = app.workspaceMode !== 'design';
-      dataToolbar.hidden = app.workspaceMode !== 'data';
-      designInspectorPane.hidden = app.workspaceMode !== 'design';
-      dataInspectorPane.hidden = app.workspaceMode !== 'data';
+      const targetMode = radio.value === 'data' ? 'data' : 'design';
 
-      hudStatusTip.textContent =
-        app.workspaceMode === 'design'
-          ? 'Drag stencils onto grid · Drag from any port dot to wire animated streams'
-          : 'Data View · Shift-click to select several components. Connected components stay highlighted.';
+      const applyMode = () => {
+        app.workspaceMode = targetMode;
+        workspace.dataset.mode = app.workspaceMode;
+        designToolbar.hidden = app.workspaceMode !== 'design';
+        dataToolbar.hidden = app.workspaceMode !== 'data';
+        designInspectorPane.hidden = app.workspaceMode !== 'design';
+        dataInspectorPane.hidden = app.workspaceMode !== 'data';
 
-      if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
-        const live = new Set(app.doc.nodes.map((node) => node.id));
-        const kept = app.selection.type === 'multi' ? app.selection.ids.filter((id) => live.has(id)) : [];
-        setSelection(
-          kept.length > 0
-            ? selectionOfStage({ nodes: kept, zones: [], notes: [] })
-            : { type: 'node', id: app.doc.nodes[0].id },
-        );
+        hudStatusTip.textContent =
+          app.workspaceMode === 'design'
+            ? 'Drag stencils onto grid · Drag from any port dot to wire animated streams'
+            : 'Data View · Shift-click to select several components. Connected components stay highlighted.';
+
+        if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
+          const live = new Set(app.doc.nodes.map((node) => node.id));
+          const kept = app.selection.type === 'multi' ? app.selection.ids.filter((id) => live.has(id)) : [];
+          setSelection(
+            kept.length > 0
+              ? selectionOfStage({ nodes: kept, zones: [], notes: [] })
+              : { type: 'node', id: app.doc.nodes[0].id },
+          );
+        }
+
+        updateVisualSelectionHighlights();
+        requestInspectorRefresh();
+        requestAnimationFrame(fitToViewport);
+      };
+
+      if (
+        typeof document !== 'undefined' &&
+        'startViewTransition' in document &&
+        typeof window !== 'undefined' &&
+        !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ) {
+        (document as any).startViewTransition(applyMode);
+      } else {
+        applyMode();
       }
-
-      updateVisualSelectionHighlights();
-      requestInspectorRefresh();
-      requestAnimationFrame(fitToViewport);
     });
   }
 
@@ -1351,6 +1389,7 @@ export function initEvents(): void {
     setSelection({ type: 'node', id: core.id });
     renderAll(true);
     fitToViewport();
+    tagEnteringNodes([actor.id, core.id]);
     notify('Added starter pair', { action: { label: 'Undo', onClick: () => performUndo() } });
   });
 

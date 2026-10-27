@@ -1175,13 +1175,17 @@
     border-radius: 1.1rem;
     background: var(--wl-surface);
     border: 1.5px solid var(--wl-border-ui);
+    outline: 2.5px solid transparent;
+    outline-offset: 1px;
     box-shadow: var(--wl-shadow-card);
     text-align: left;
     cursor: pointer;
     transition:
       transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
       border-color 0.2s ease,
-      box-shadow 0.2s ease;
+      box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+      outline-color 0.2s ease,
+      outline-offset 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .workspace[data-mode="design"][data-tool="select"] .node-select-hit {
@@ -1212,6 +1216,8 @@
 
   .node-select-hit[aria-pressed="true"] {
     border-color: var(--node-accent);
+    outline-color: var(--node-accent);
+    outline-offset: 4px;
     box-shadow:
       0 0 0 3px var(--node-accent-soft),
       var(--wl-shadow-elevated);
@@ -1288,8 +1294,8 @@
   /* 4-Side Connection Ports (`draw.io`-style interactive wiring handles) */
   .node-port {
     position: absolute;
-    inline-size: 0.85rem;
-    block-size: 0.85rem;
+    inline-size: 0.92rem;
+    block-size: 0.92rem;
     border-radius: 999px;
     border: 2px solid var(--wl-blue);
     background: var(--wl-surface);
@@ -1299,7 +1305,53 @@
     user-select: none;
     opacity: 0;
     z-index: 8;
-    transition: opacity 0.14s ease, transform 0.14s ease, background-color 0.14s ease;
+    transition:
+      opacity 0.16s ease,
+      transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+      background-color 0.16s ease,
+      box-shadow 0.16s ease;
+  }
+
+  .node-port::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+  }
+
+  @keyframes portPulse {
+    0%, 100% {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 2px var(--wl-blue-soft), 0 0 6px var(--wl-blue-soft);
+    }
+    50% {
+      transform: scale(1.36);
+      box-shadow: 0 0 0 5px var(--wl-blue-soft), 0 0 14px var(--wl-blue);
+    }
+  }
+
+  @keyframes nodeDropIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.9);
+    }
+    60% {
+      opacity: 1;
+      transform: translateY(2px) scale(1.02);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .arch-node.is-entering {
+    animation: nodeDropIn 0.26s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  .workspace[data-wiring="true"] .arch-node:not(.is-wiring-source) .node-port {
+    opacity: 0.92;
+    animation: portPulse 1.3s ease-in-out infinite;
   }
 
   .workspace[data-mode="data"] .node-port {
@@ -1307,23 +1359,23 @@
   }
 
   .node-port[data-port="top"] {
-    top: -0.425rem;
-    left: calc(50% - 0.425rem);
+    top: -0.46rem;
+    left: calc(50% - 0.46rem);
   }
 
   .node-port[data-port="right"] {
-    right: -0.425rem;
-    top: calc(50% - 0.425rem);
+    right: -0.46rem;
+    top: calc(50% - 0.46rem);
   }
 
   .node-port[data-port="bottom"] {
-    bottom: -0.425rem;
-    left: calc(50% - 0.425rem);
+    bottom: -0.46rem;
+    left: calc(50% - 0.46rem);
   }
 
   .node-port[data-port="left"] {
-    left: -0.425rem;
-    top: calc(50% - 0.425rem);
+    left: -0.46rem;
+    top: calc(50% - 0.46rem);
   }
 
   .arch-node[data-kind="actor"] .node-port[data-port="left"] {
@@ -1346,9 +1398,14 @@
 
   .node-port:hover,
   .node-port.is-target-port {
-    transform: scale(1.38);
+    transform: scale(1.48);
     background: var(--wl-blue);
-    box-shadow: 0 0 0 4px var(--wl-blue-soft);
+    box-shadow: 0 0 14px var(--wl-blue), 0 0 0 5px var(--wl-blue-soft);
+  }
+
+  .workspace[data-wiring="true"] .node-port:hover,
+  .workspace[data-wiring="true"] .node-port.is-target-port {
+    animation: none;
   }
 
   @media (pointer: coarse) {
@@ -3532,6 +3589,39 @@ kbd {
   color: var(--wl-ink);
   background: var(--wl-surface-elevated);
 }
+
+/* View Transitions for Mode Switching (Design <-> Data View) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.18s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  .arch-node.is-entering {
+    animation: none !important;
+  }
+
+  .workspace[data-wiring="true"] .arch-node:not(.is-wiring-source) .node-port {
+    animation: none !important;
+  }
+
+  .node-select-hit {
+    transition: none !important;
+  }
+
+  .node-port {
+    transition: none !important;
+  }
+}
+
 
 
 

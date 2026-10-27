@@ -35,8 +35,8 @@ A review of the app as it stands today, with ideas for look and feel and for new
 | 6 | Template gallery in the empty state and in New | Feature | High | M | [x] Done |
 | 7 | Shareable link (diagram in the URL hash) | Feature | High | S | [x] Done |
 | 8 | Node search and focus (`Cmd/Ctrl+F`) | Feature | High | S | [x] Done |
-| 9 | Polished motion: node drop-in, port glow, smoother selection | Look and feel | Medium | S | In Progress |
-| 10 | Presentation mode for Data View | Feature | High | M | Todo |
+| 9 | Polished motion: node drop-in, port glow, smoother selection | Look and feel | Medium | S | [x] Done |
+| 10 | Presentation mode for Data View | Feature | High | M | In Progress |
 | 11 | Simulation playback controls (step, scrub, speed) | Feature | High | M | Todo |
 | 12 | Z-order, lock, and group commands | Feature | Medium | M | Todo |
 | 13 | Responsive and compact toolbar | Look and feel | Medium | M | Todo |
