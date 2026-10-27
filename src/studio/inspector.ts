@@ -19,6 +19,8 @@ import {
 } from './dom';
 import {
   app,
+  beginHistoryGesture,
+  endHistoryGesture,
   fitToViewport,
   pushHistory,
   setSelection,
@@ -103,15 +105,14 @@ export function makeTextInput(
     input.setAttribute('autocapitalize', 'off');
     input.spellcheck = false;
   }
-  let pushedThisFocus = false;
   input.addEventListener('focus', () => {
-    pushedThisFocus = false;
+    beginHistoryGesture();
+  });
+  input.addEventListener('blur', () => {
+    endHistoryGesture();
   });
   input.addEventListener('input', () => {
-    if (!pushedThisFocus) {
-      pushHistory();
-      pushedThisFocus = true;
-    }
+    pushHistory();
     onInput(input.value);
   });
   return input;
@@ -130,15 +131,14 @@ export function makeTextarea(
     ta.setAttribute('autocorrect', 'off');
     ta.setAttribute('autocapitalize', 'off');
   }
-  let pushedThisFocus = false;
   ta.addEventListener('focus', () => {
-    pushedThisFocus = false;
+    beginHistoryGesture();
+  });
+  ta.addEventListener('blur', () => {
+    endHistoryGesture();
   });
   ta.addEventListener('input', () => {
-    if (!pushedThisFocus) {
-      pushHistory();
-      pushedThisFocus = true;
-    }
+    pushHistory();
     onInput(ta.value);
   });
   return ta;

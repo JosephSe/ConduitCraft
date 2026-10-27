@@ -19,6 +19,13 @@ import {
   type SelectionChange,
 } from './selection';
 import { selectionWorldBounds, frameRectInViewport } from './viewportFrame';
+import {
+  beginGesture,
+  endGesture,
+  initialHistoryGate,
+  resolveHistoryPush,
+  type HistoryGate,
+} from './historyGesture';
 
 export interface ActiveWireDraft {
   sourceNodeId: string;
@@ -49,6 +56,7 @@ export const app = {
 
 const MAX_HISTORY = 60;
 const selectionListeners = new Set<(event: SelectionChange) => void>();
+let historyGate: HistoryGate = initialHistoryGate();
 
 export function onSelectionChange(listener: (event: SelectionChange) => void): () => void {
   selectionListeners.add(listener);
@@ -136,12 +144,36 @@ export function getSelectedNodeIds(): string[] {
 // ---------------------------------------------------------------------------
 // Undo / Redo History
 // ---------------------------------------------------------------------------
-export function pushHistory(): void {
+function commitHistorySnapshot(): void {
   app.undoStack.push(structuredClone(app.doc));
   if (app.undoStack.length > MAX_HISTORY) app.undoStack.shift();
   app.redoStack.length = 0;
   syncHistoryButtons();
   scheduleAutosave();
+}
+
+/** Open a gesture. Later `pushHistory` calls keep the first snapshot until `endHistoryGesture`. */
+export function beginHistoryGesture(): void {
+  historyGate = beginGesture(historyGate);
+}
+
+export function endHistoryGesture(): void {
+  historyGate = endGesture(historyGate);
+}
+
+export function pushHistory(): void {
+  const decision = resolveHistoryPush(historyGate, { type: 'commit' });
+  historyGate = decision.gate;
+  if (!decision.capture) return;
+  commitHistorySnapshot();
+}
+
+/** Arrow-key nudges inside a short window share one undo step. */
+export function pushHistoryNudge(): void {
+  const decision = resolveHistoryPush(historyGate, { type: 'nudge', now: Date.now() });
+  historyGate = decision.gate;
+  if (!decision.capture) return;
+  commitHistorySnapshot();
 }
 
 export function syncHistoryButtons(): void {
@@ -152,6 +184,7 @@ export function syncHistoryButtons(): void {
 export function performUndo(): void {
   const prev = app.undoStack.pop();
   if (!prev) return;
+  historyGate = initialHistoryGate();
   app.redoStack.push(structuredClone(app.doc));
   app.doc = prev;
   validateSelection();
@@ -163,6 +196,7 @@ export function performUndo(): void {
 export function performRedo(): void {
   const next = app.redoStack.pop();
   if (!next) return;
+  historyGate = initialHistoryGate();
   app.undoStack.push(structuredClone(app.doc));
   app.doc = next;
   validateSelection();

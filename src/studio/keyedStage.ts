@@ -16,7 +16,10 @@ import {
   app,
   getSelectedNodeIds,
   isSelectedNode,
+  beginHistoryGesture,
+  endHistoryGesture,
   pushHistory,
+  pushHistoryNudge,
   screenToWorld,
   setSelection,
 } from './state';
@@ -91,6 +94,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     if (!current) return;
     const dx = (e.clientX - dragStartX) / app.scale;
     if (!moved && Math.abs(dx) > 3) {
+      beginHistoryGesture();
       pushHistory();
       moved = true;
       banner.classList.add('dragging');
@@ -107,7 +111,10 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     const didMove = moved;
     moved = false;
     banner.classList.remove('dragging');
-    if (didMove) renderPropertyEditor();
+    if (didMove) {
+      endHistoryGesture();
+      renderPropertyEditor();
+    }
   };
   banner.addEventListener('pointerup', (e) => {
     e.stopPropagation();
@@ -135,6 +142,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     if (!current) return;
     const dw = (e.clientX - resizeStartX) / app.scale;
     if (!resized && Math.abs(dw) > 3) {
+      beginHistoryGesture();
       pushHistory();
       resized = true;
     }
@@ -146,13 +154,17 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
       scheduleMinimapPaint();
     }
   });
+  const endZoneResize = () => {
+    if (!resized) return;
+    resized = false;
+    endHistoryGesture();
+    renderPropertyEditor();
+  };
   resizeHandle.addEventListener('pointerup', (e) => {
     e.stopPropagation();
-    if (resized) {
-      resized = false;
-      renderPropertyEditor();
-    }
+    endZoneResize();
   });
+  resizeHandle.addEventListener('lostpointercapture', endZoneResize);
 
   return banner;
 }
@@ -241,6 +253,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const dx = (e.clientX - startX) / app.scale;
     const dy = (e.clientY - startY) / app.scale;
     if (!moved && Math.hypot(dx, dy) > 4) {
+      beginHistoryGesture();
       pushHistory();
       moved = true;
       header.classList.add('dragging');
@@ -257,8 +270,10 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     }
   });
   const endNotesDrag = () => {
+    const didMove = moved;
     moved = false;
     header.classList.remove('dragging');
+    if (didMove) endHistoryGesture();
   };
   header.addEventListener('pointerup', (e) => {
     e.stopPropagation();
@@ -422,7 +437,7 @@ function createWireGroup(edgeId: string): SVGGElement {
       handle.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
         e.stopPropagation();
-        pushHistory();
+        beginHistoryGesture();
         wpDragging = true;
         handle?.classList.add('is-dragging');
         handle?.setPointerCapture(e.pointerId);
@@ -432,6 +447,7 @@ function createWireGroup(edgeId: string): SVGGElement {
         const [wx, wy] = screenToWorld(e.clientX, e.clientY);
         const targetEdge = app.doc.edges.find((ed) => ed.id === g.dataset.edgeId);
         if (!targetEdge) return;
+        pushHistory();
         targetEdge.waypoint = [
           app.snapToGrid ? Math.round(wx / 8) * 8 : wx,
           app.snapToGrid ? Math.round(wy / 8) * 8 : wy,
@@ -443,12 +459,15 @@ function createWireGroup(edgeId: string): SVGGElement {
         if (!wpDragging) return;
         wpDragging = false;
         handle?.classList.remove('is-dragging');
+        endHistoryGesture();
         renderPropertyEditor();
       };
       handle.addEventListener('pointerup', stopWpDrag);
       handle.addEventListener('lostpointercapture', () => {
+        if (!wpDragging) return;
         wpDragging = false;
         handle?.classList.remove('is-dragging');
+        endHistoryGesture();
       });
       handle.addEventListener('dblclick', (e) => {
         e.stopPropagation();
@@ -658,6 +677,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       const dy = (e.clientY - startClientY) / app.scale;
 
       if (!hasMoved && Math.hypot(dx, dy) > 4) {
+        beginHistoryGesture();
         pushHistory();
         hasMoved = true;
         wrapper.classList.add('is-dragging-node');
@@ -705,7 +725,10 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       alignGuideY.hidden = true;
       wrapper.classList.remove('is-dragging-node');
       dragHandle.classList.remove('dragging');
-      if (movedDuringDrag) renderPropertyEditor();
+      if (movedDuringDrag) {
+        endHistoryGesture();
+        renderPropertyEditor();
+      }
     };
 
     triggerEl.addEventListener('pointerup', (e) => {
@@ -761,7 +784,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     const current = liveNode(nodeId);
     if (!current) return;
     e.preventDefault();
-    pushHistory();
+    pushHistoryNudge();
     current.x = Math.max(16, current.x + dx);
     current.y = Math.max(24, current.y + dy);
     wrapper.style.setProperty('--nx', String(current.x));
