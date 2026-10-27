@@ -1,0 +1,379 @@
+{
+  "kind": "conduitcraft.blueprint",
+  "version": 1,
+  "document": {
+    "title": "Cloud Data Pipeline (ETL / ELT)",
+    "systemTag": "DATA PLATFORM // LAKEHOUSE",
+    "statusLabel": "STREAMING ENGINE ONLINE",
+    "direction": "LR",
+    "stageWidth": 1720,
+    "stageHeight": 920,
+    "overviewSummary": "Modern cloud lakehouse pipeline ingesting high-velocity IoT telemetry and application clickstreams, buffering via Kinesis, stream-processing with Apache Spark, persisting to Delta Lake, and serving through ClickHouse to real-time BI dashboards.",
+    "brand": {
+      "name": "LakeFlow Analytics",
+      "accent": "#047857",
+      "logo": ""
+    },
+    "zones": [
+      {
+        "id": "zone-sources",
+        "number": "01",
+        "title": "Ingestion Sources",
+        "subtitle": "High-velocity data originators",
+        "x": 24,
+        "width": 350
+      },
+      {
+        "id": "zone-buffer",
+        "number": "02",
+        "title": "Buffer & Streaming",
+        "subtitle": "Kinesis event ingestion",
+        "x": 394,
+        "width": 360
+      },
+      {
+        "id": "zone-compute",
+        "number": "03",
+        "title": "Processing Engine",
+        "subtitle": "Spark Structured Streaming & dbt",
+        "x": 774,
+        "width": 460
+      },
+      {
+        "id": "zone-serving",
+        "number": "04",
+        "title": "Storage & Serving",
+        "subtitle": "Delta Lakehouse and BI marts",
+        "x": 1254,
+        "width": 420
+      }
+    ],
+    "notesCards": [
+      {
+        "id": "notes-medallion",
+        "title": "Medallion Data Architecture",
+        "code": "DATA-MED",
+        "x": 48,
+        "y": 700,
+        "items": [
+          {
+            "title": "Bronze Layer",
+            "text": "Raw, append-only JSON event records stored with original ingestion timestamp."
+          },
+          {
+            "title": "Silver Layer",
+            "text": "Cleansed, deduplicated, and schema-validated parquet tables."
+          },
+          {
+            "title": "Gold Marts",
+            "text": "Aggregated business metrics queried in sub-second SLA by BI dashboards."
+          }
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "iot-source",
+        "kind": "client",
+        "accent": "blue",
+        "icon": "terminal",
+        "shape": "pill",
+        "title": "IoT Edge Sensors",
+        "subtitle": "MQTT / Telemetry Beacons",
+        "eyebrow": "FIELD HARDWARE",
+        "chip": "50,000 Devices",
+        "zoneLabel": "Ingestion Sources",
+        "summary": "Distributed hardware devices emitting temperature, pressure, and GPS telemetry every 500ms.",
+        "metrics": [
+          { "label": "Device Count", "value": "50,000" },
+          { "label": "Events / sec", "value": "112k" }
+        ],
+        "x": 64,
+        "y": 160,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "clickstream",
+        "kind": "actor",
+        "accent": "violet",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "App Clickstream",
+        "subtitle": "Web & Mobile Analytics SDK",
+        "eyebrow": "USER BEHAVIOR",
+        "chip": "Event Batcher",
+        "zoneLabel": "Ingestion Sources",
+        "summary": "Client-side SDK batching page views, button clicks, and cart actions over HTTPS.",
+        "metrics": [
+          { "label": "Batch Size", "value": "100 events" },
+          { "label": "P99 Delivery", "value": "220ms" }
+        ],
+        "x": 64,
+        "y": 400,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "kinesis-buffer",
+        "kind": "bus",
+        "accent": "amber",
+        "icon": "layers",
+        "shape": "card",
+        "title": "Kinesis Data Stream",
+        "subtitle": "Managed Ingestion Shards",
+        "eyebrow": "DATA BUFFER",
+        "chip": "64 Shards",
+        "zoneLabel": "Buffer & Streaming",
+        "summary": "Horizontally partitioned stream buffer retaining raw ingestion payloads for 7 days.",
+        "metrics": [
+          { "label": "Throughput", "value": "64 MB/s" },
+          { "label": "Lag", "value": "12ms" }
+        ],
+        "x": 440,
+        "y": 270,
+        "width": 250,
+        "height": 120
+      },
+      {
+        "id": "spark-streaming",
+        "kind": "core",
+        "accent": "emerald",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "Apache Spark Engine",
+        "subtitle": "Structured Streaming Cluster",
+        "eyebrow": "DISTRIBUTED COMPUTE",
+        "chip": "EKS 128 Nodes",
+        "zoneLabel": "Processing Engine",
+        "summary": "Performs windowed aggregations, anomaly detection, deduplication, and schema validation.",
+        "metrics": [
+          { "label": "Batch Interval", "value": "1.0s" },
+          { "label": "Records / sec", "value": "180k" }
+        ],
+        "x": 830,
+        "y": 180,
+        "width": 250,
+        "height": 115
+      },
+      {
+        "id": "dbt-transform",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "layers",
+        "shape": "card",
+        "title": "dbt Core Models",
+        "subtitle": "Semantic SQL Transformations",
+        "eyebrow": "ELT WORKFLOW",
+        "chip": "Hourly Scheduled",
+        "zoneLabel": "Processing Engine",
+        "summary": "Transforms clean Silver datasets into business dimensional models (facts and dimensions).",
+        "metrics": [
+          { "label": "Models", "value": "142" },
+          { "label": "Test Coverage", "value": "98.5%" }
+        ],
+        "x": 830,
+        "y": 420,
+        "width": 250,
+        "height": 110
+      },
+      {
+        "id": "delta-lake",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "shape": "rounded",
+        "title": "Delta Lake (S3)",
+        "subtitle": "ACID Parquet Lakehouse",
+        "eyebrow": "OBJECT LAKE",
+        "chip": "Bronze / Silver",
+        "zoneLabel": "Storage & Serving",
+        "summary": "Durable multi-tier storage with time-travel query capability and Z-order column indexing.",
+        "metrics": [
+          { "label": "Storage", "value": "1.8 PB" },
+          { "label": "Files", "value": "24M" }
+        ],
+        "x": 1310,
+        "y": 160,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "clickhouse-mart",
+        "kind": "store",
+        "accent": "rose",
+        "icon": "database",
+        "shape": "card",
+        "title": "ClickHouse Mart",
+        "subtitle": "Columnar Real-Time Database",
+        "eyebrow": "OLAP SERVING",
+        "chip": "Sub-second OLAP",
+        "zoneLabel": "Storage & Serving",
+        "summary": "Powers real-time operational analytics and aggregate aggregations for end-user dashboards.",
+        "metrics": [
+          { "label": "Query Latency", "value": "14ms" },
+          { "label": "QPS", "value": "4,200" }
+        ],
+        "x": 1310,
+        "y": 360,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "bi-dashboard",
+        "kind": "client",
+        "accent": "violet",
+        "icon": "terminal",
+        "shape": "pill",
+        "title": "Executive Dashboard",
+        "subtitle": "Grafana & Superset BI",
+        "eyebrow": "VISUALIZATION",
+        "chip": "Live Queries",
+        "zoneLabel": "Storage & Serving",
+        "summary": "Real-time monitors displaying sensor health, conversion funnels, and executive KPIs.",
+        "metrics": [
+          { "label": "Dashboards", "value": "24" },
+          { "label": "Active Users", "value": "320" }
+        ],
+        "x": 1310,
+        "y": 550,
+        "width": 240,
+        "height": 100
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "iot-source",
+        "to": "kinesis-buffer",
+        "sourcePort": "right",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "MQTT Stream",
+        "animated": true
+      },
+      {
+        "id": "e2",
+        "from": "clickstream",
+        "to": "kinesis-buffer",
+        "sourcePort": "right",
+        "targetPort": "bottom",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "Click Events",
+        "animated": true
+      },
+      {
+        "id": "e3",
+        "from": "kinesis-buffer",
+        "to": "spark-streaming",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Shard Consumer",
+        "animated": true
+      },
+      {
+        "id": "e4",
+        "from": "spark-streaming",
+        "to": "delta-lake",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Append Bronze & Silver",
+        "animated": true
+      },
+      {
+        "id": "e5",
+        "from": "delta-lake",
+        "to": "dbt-transform",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "orthogonal",
+        "label": "Batch Read",
+        "animated": true
+      },
+      {
+        "id": "e6",
+        "from": "dbt-transform",
+        "to": "clickhouse-mart",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Populate Gold Marts",
+        "animated": true
+      },
+      {
+        "id": "e7",
+        "from": "spark-streaming",
+        "to": "clickhouse-mart",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Direct Anomaly Push",
+        "animated": true
+      },
+      {
+        "id": "e8",
+        "from": "clickhouse-mart",
+        "to": "bi-dashboard",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "SQL Live Refresh",
+        "animated": true
+      }
+    ],
+    "simulations": [
+      {
+        "id": "sim-telemetry-flow",
+        "name": "Live Telemetry Ingestion & Alert",
+        "tone": "emerald",
+        "steps": [
+          {
+            "id": "t1",
+            "nodes": ["iot-source", "kinesis-buffer"],
+            "tone": "blue",
+            "label": "FIELD SENSOR BURST",
+            "trace": "50,000 IoT sensors emit telemetry payload to Kinesis Stream shards."
+          },
+          {
+            "id": "t2",
+            "nodes": ["kinesis-buffer", "spark-streaming"],
+            "tone": "amber",
+            "label": "SPARK WINDOWING",
+            "trace": "Spark Structured Streaming consumes micro-batches and runs 10-second tumbling windows."
+          },
+          {
+            "id": "t3",
+            "nodes": ["spark-streaming", "delta-lake"],
+            "tone": "emerald",
+            "label": "LAKEHOUSE COMMIT",
+            "trace": "Parquet files appended to S3 Delta Lake Bronze and Silver partitions."
+          },
+          {
+            "id": "t4",
+            "nodes": ["spark-streaming", "clickhouse-mart"],
+            "tone": "rose",
+            "label": "FAST OLAP INGEST",
+            "trace": "Aggregated metrics loaded into ClickHouse columnar tables in 12ms."
+          },
+          {
+            "id": "t5",
+            "nodes": ["clickhouse-mart", "bi-dashboard"],
+            "tone": "violet",
+            "label": "EXECUTIVE DASHBOARD UPDATE",
+            "trace": "Grafana live chart refreshes with updated fleet metrics."
+          }
+        ]
+      }
+    ]
+  }
+}

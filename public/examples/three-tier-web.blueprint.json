@@ -1,0 +1,418 @@
+{
+  "kind": "conduitcraft.blueprint",
+  "version": 1,
+  "document": {
+    "title": "Three-Tier Web Application",
+    "systemTag": "ENTERPRISE ARCHITECTURE // US-EAST-1",
+    "statusLabel": "PRODUCTION ACTIVE",
+    "direction": "LR",
+    "stageWidth": 1680,
+    "stageHeight": 920,
+    "overviewSummary": "Classic scalable 3-tier web topology featuring an Edge CDN and WAF, dual Application Load Balancers, horizontally scaled web application servers, a distributed Redis caching layer, and a high-availability PostgreSQL cluster with primary-replica replication.",
+    "brand": {
+      "name": "Cloud Native Corp",
+      "accent": "#2563eb",
+      "logo": ""
+    },
+    "zones": [
+      {
+        "id": "zone-edge",
+        "number": "01",
+        "title": "Edge & Ingress",
+        "subtitle": "CDN and perimeter security",
+        "x": 24,
+        "width": 360
+      },
+      {
+        "id": "zone-app",
+        "number": "02",
+        "title": "Application Tier",
+        "subtitle": "Compute and business logic",
+        "x": 414,
+        "width": 430
+      },
+      {
+        "id": "zone-cache",
+        "number": "03",
+        "title": "Caching Tier",
+        "subtitle": "Distributed session acceleration",
+        "x": 874,
+        "width": 360
+      },
+      {
+        "id": "zone-data",
+        "number": "04",
+        "title": "Persistence Tier",
+        "subtitle": "Transactional relational storage",
+        "x": 1264,
+        "width": 390
+      }
+    ],
+    "notesCards": [
+      {
+        "id": "notes-scale",
+        "title": "Scaling & Fault Tolerance",
+        "code": "SPEC-3T",
+        "x": 48,
+        "y": 700,
+        "items": [
+          {
+            "title": "Stateless Compute",
+            "text": "App instances carry no state. All sessions are stored in the Redis cluster."
+          },
+          {
+            "title": "Read Offload",
+            "text": "Read-heavy queries route to the streaming replica, protecting primary write capacity."
+          },
+          {
+            "title": "Failover",
+            "text": "Automated orchestrator promotes read replica to primary in under 30 seconds."
+          }
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "client",
+        "kind": "client",
+        "accent": "blue",
+        "icon": "terminal",
+        "shape": "pill",
+        "title": "Web & Mobile Clients",
+        "subtitle": "HTTPS / TLS 1.3 Requests",
+        "eyebrow": "PUBLIC INTERNET",
+        "chip": "Traffic Origin",
+        "zoneLabel": "Edge & Ingress",
+        "summary": "External web browsers and mobile apps dispatching TLS-encrypted traffic.",
+        "metrics": [
+          { "label": "Active Users", "value": "18.4k" },
+          { "label": "Avg Latency", "value": "32ms" }
+        ],
+        "x": 64,
+        "y": 140,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "cdn-waf",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "hexagon",
+        "title": "Cloudflare CDN & WAF",
+        "subtitle": "DDoS Shield & Edge Caching",
+        "eyebrow": "PERIMETER",
+        "chip": "Edge Shield",
+        "zoneLabel": "Edge & Ingress",
+        "summary": "Anycast edge network terminating SSL, mitigating DDoS, and caching static assets.",
+        "metrics": [
+          { "label": "Hit Ratio", "value": "89.2%" },
+          { "label": "Blocked Threats", "value": "340/s" }
+        ],
+        "x": 64,
+        "y": 360,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "alb",
+        "kind": "gate",
+        "accent": "blue",
+        "icon": "network",
+        "shape": "diamond",
+        "title": "Application Load Balancer",
+        "subtitle": "L7 Health-Checked Proxy",
+        "eyebrow": "DMZ ENTRY",
+        "chip": "Reverse Proxy",
+        "zoneLabel": "Application Tier",
+        "summary": "Distributes incoming HTTP traffic across healthy application pods with sticky session support.",
+        "metrics": [
+          { "label": "RPS", "value": "12.8k" },
+          { "label": "Pool Health", "value": "100%" }
+        ],
+        "x": 450,
+        "y": 140,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "app-01",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "App Service Alpha",
+        "subtitle": "Node.js Container Worker",
+        "eyebrow": "COMPUTE POD 1",
+        "chip": "Active Worker",
+        "zoneLabel": "Application Tier",
+        "summary": "Executes domain business logic, handles API endpoints, and orchestrates transactions.",
+        "metrics": [
+          { "label": "CPU", "value": "44%" },
+          { "label": "Memory", "value": "610MB" }
+        ],
+        "x": 450,
+        "y": 340,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "app-02",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "App Service Beta",
+        "subtitle": "Node.js Container Worker",
+        "eyebrow": "COMPUTE POD 2",
+        "chip": "Active Worker",
+        "zoneLabel": "Application Tier",
+        "summary": "Secondary horizontally scaled worker providing zero-downtime rolling deploys.",
+        "metrics": [
+          { "label": "CPU", "value": "41%" },
+          { "label": "Memory", "value": "580MB" }
+        ],
+        "x": 450,
+        "y": 520,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "redis",
+        "kind": "store",
+        "accent": "amber",
+        "icon": "layers",
+        "shape": "rounded",
+        "title": "Redis Sentinel Cluster",
+        "subtitle": "In-Memory Session & Cache",
+        "eyebrow": "CACHING TIER",
+        "chip": "Sub-ms Query",
+        "zoneLabel": "Caching Tier",
+        "summary": "Stores distributed session state, rate limit tokens, and frequently queried responses.",
+        "metrics": [
+          { "label": "Hit Rate", "value": "97.4%" },
+          { "label": "Memory Used", "value": "14.2GB" }
+        ],
+        "x": 920,
+        "y": 240,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "pg-primary",
+        "kind": "store",
+        "accent": "rose",
+        "icon": "database",
+        "shape": "card",
+        "title": "PostgreSQL Primary",
+        "subtitle": "Read / Write Master Instance",
+        "eyebrow": "ACID PERSISTENCE",
+        "chip": "Primary DB",
+        "zoneLabel": "Persistence Tier",
+        "summary": "Handles all ACID state mutations and writes WAL changes to disk and replication streams.",
+        "metrics": [
+          { "label": "IOPS", "value": "3,400" },
+          { "label": "Write QPS", "value": "1.8k" }
+        ],
+        "x": 1310,
+        "y": 190,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "pg-replica",
+        "kind": "store",
+        "accent": "rose",
+        "icon": "database",
+        "shape": "card",
+        "title": "PostgreSQL Replica",
+        "subtitle": "Streaming Read-Only Follower",
+        "eyebrow": "READ REPLICA",
+        "chip": "Read Scale",
+        "zoneLabel": "Persistence Tier",
+        "summary": "Serves analytical and catalog read queries with sub-second replication latency.",
+        "metrics": [
+          { "label": "Read QPS", "value": "7.9k" },
+          { "label": "Replica Lag", "value": "18ms" }
+        ],
+        "x": 1310,
+        "y": 420,
+        "width": 240,
+        "height": 110
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "client",
+        "to": "cdn-waf",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "HTTPS Request",
+        "animated": true
+      },
+      {
+        "id": "e2",
+        "from": "cdn-waf",
+        "to": "alb",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "Reverse Proxy",
+        "animated": true
+      },
+      {
+        "id": "e3",
+        "from": "alb",
+        "to": "app-01",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "emerald",
+        "route": "orthogonal",
+        "label": "Balance /api",
+        "animated": true
+      },
+      {
+        "id": "e4",
+        "from": "alb",
+        "to": "app-02",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Balance /api",
+        "animated": true
+      },
+      {
+        "id": "e5",
+        "from": "app-01",
+        "to": "redis",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Session & Cache",
+        "animated": true
+      },
+      {
+        "id": "e6",
+        "from": "app-02",
+        "to": "redis",
+        "sourcePort": "right",
+        "targetPort": "bottom",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Session & Cache",
+        "animated": true
+      },
+      {
+        "id": "e7",
+        "from": "app-01",
+        "to": "pg-primary",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Write Mutations",
+        "animated": true
+      },
+      {
+        "id": "e8",
+        "from": "app-02",
+        "to": "pg-replica",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "Read Queries",
+        "animated": true
+      },
+      {
+        "id": "e9",
+        "from": "pg-primary",
+        "to": "pg-replica",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "rose",
+        "route": "orthogonal",
+        "label": "WAL Replication",
+        "animated": true
+      }
+    ],
+    "simulations": [
+      {
+        "id": "sim-cache-read",
+        "name": "Read Request (Cache Hit)",
+        "tone": "emerald",
+        "steps": [
+          {
+            "id": "s1",
+            "nodes": ["client", "cdn-waf"],
+            "tone": "blue",
+            "label": "EDGE LOOKUP",
+            "trace": "Client sends HTTPS request to the Cloudflare CDN edge."
+          },
+          {
+            "id": "s2",
+            "nodes": ["cdn-waf", "alb"],
+            "tone": "violet",
+            "label": "INGRESS ROUTE",
+            "trace": "CDN bypasses static cache and forwards dynamic request to ALB."
+          },
+          {
+            "id": "s3",
+            "nodes": ["alb", "app-01"],
+            "tone": "emerald",
+            "label": "ROUND ROBIN",
+            "trace": "ALB routes request to healthy worker App Service Alpha."
+          },
+          {
+            "id": "s4",
+            "nodes": ["app-01", "redis"],
+            "tone": "amber",
+            "label": "CACHE HIT (0.6ms)",
+            "trace": "App queries Redis cache and receives an immediate hit without touching the database."
+          },
+          {
+            "id": "s5",
+            "nodes": ["app-01", "client"],
+            "tone": "emerald",
+            "label": "HTTP 200 OK",
+            "trace": "Payload formatted as JSON and returned directly to the client."
+          }
+        ]
+      },
+      {
+        "id": "sim-order-write",
+        "name": "Order Checkout (Write Transaction)",
+        "tone": "rose",
+        "steps": [
+          {
+            "id": "w1",
+            "nodes": ["client", "alb", "app-02"],
+            "tone": "blue",
+            "label": "CHECKOUT POST",
+            "trace": "User submits shopping cart checkout via HTTPS POST."
+          },
+          {
+            "id": "w2",
+            "nodes": ["app-02", "pg-primary"],
+            "tone": "rose",
+            "label": "ACID COMMIT",
+            "trace": "App Service Beta writes transaction to PostgreSQL Primary with serializable isolation."
+          },
+          {
+            "id": "w3",
+            "nodes": ["pg-primary", "pg-replica"],
+            "tone": "rose",
+            "label": "WAL STREAM",
+            "trace": "PostgreSQL streams write-ahead log records to read replica asynchronously."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -6,11 +6,12 @@ import { applySelection, renderAll, renderMatrixTable } from './render';
 import { isMac } from './commands';
 import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
+import { STARTER_TEMPLATES } from './templatesGallery';
 
 export interface PaletteCommand {
   id: string;
   title: string;
-  category: 'Components' | 'Canvas & Layout' | 'Mode & View' | 'Edit & History' | 'Export & Sync' | 'Preferences' | 'Nodes';
+  category: 'Components' | 'Canvas & Layout' | 'Mode & View' | 'Edit & History' | 'Export & Sync' | 'Preferences' | 'Nodes' | 'Templates';
   subtitle?: string;
   shortcut?: string;
   keywords?: string[];
@@ -22,6 +23,8 @@ export interface PaletteDeps {
   openExportDialog: () => void;
   openSettingsDialog: () => void;
   openShortcutsDialog: () => void;
+  openTemplateGallery?: () => void;
+  loadTemplateById?: (id: string) => void;
   deleteSelected: () => void;
   duplicateSelected: () => void;
   loadShowcase: () => void;
@@ -366,6 +369,16 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['showcase', 'demo', 'example', 'lumen', 'sample'],
       run: deps.loadShowcase,
     },
+    {
+      id: 'open-templates',
+      title: 'New Architecture / Starter Templates',
+      subtitle: 'Browse 7 production starter blueprints or create a blank canvas',
+      category: 'Templates',
+      keywords: ['new', 'template', 'gallery', 'starter', 'blank', 'architecture'],
+      run: () => {
+        deps.openTemplateGallery ? deps.openTemplateGallery() : deps.loadShowcase();
+      },
+    },
 
     // Preferences & Help
     {
@@ -386,6 +399,24 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: deps.openShortcutsDialog,
     },
   ];
+
+  // Starter Templates
+  for (const t of STARTER_TEMPLATES) {
+    commands.push({
+      id: `load-template-${t.id}`,
+      title: `Load Template: ${t.title}`,
+      subtitle: `${t.categoryLabel} · ${t.tag}`,
+      category: 'Templates',
+      keywords: ['template', 'starter', t.title, t.categoryLabel, t.tag],
+      run: () => {
+        if (deps.loadTemplateById) {
+          deps.loadTemplateById(t.id);
+        } else if (deps.openTemplateGallery) {
+          deps.openTemplateGallery();
+        }
+      },
+    });
+  }
 
   // Dynamic: Jump to any Node on canvas
   for (const node of app.doc.nodes) {

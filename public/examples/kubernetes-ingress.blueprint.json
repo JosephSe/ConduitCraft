@@ -1,0 +1,340 @@
+{
+  "kind": "conduitcraft.blueprint",
+  "version": 1,
+  "document": {
+    "title": "Kubernetes Ingress & Service Mesh",
+    "systemTag": "CLOUD ORCHESTRATION // K8S-MESH",
+    "statusLabel": "CLUSTER SYNCHRONIZED",
+    "direction": "LR",
+    "stageWidth": 1680,
+    "stageHeight": 900,
+    "overviewSummary": "Production cloud-native Kubernetes cluster topology featuring an external Cloud Load Balancer, Envoy Ingress Gateway, Istio Service Mesh control plane with mutual TLS sidecars, horizontally autoscaled pods, and persistent CSI storage volumes.",
+    "brand": {
+      "name": "KubeMesh Fabric",
+      "accent": "#0284c7",
+      "logo": ""
+    },
+    "zones": [
+      {
+        "id": "zone-edge",
+        "number": "01",
+        "title": "Ingress & Edge",
+        "subtitle": "External balancer & Envoy gateway",
+        "x": 24,
+        "width": 360
+      },
+      {
+        "id": "zone-control",
+        "number": "02",
+        "title": "Mesh Control Plane",
+        "subtitle": "Istio Istiod & CoreDNS discovery",
+        "x": 404,
+        "width": 420
+      },
+      {
+        "id": "zone-workloads",
+        "number": "03",
+        "title": "Namespace: Production",
+        "subtitle": "HPA autoscaling pod deployments",
+        "x": 844,
+        "width": 440
+      },
+      {
+        "id": "zone-storage",
+        "number": "04",
+        "title": "Storage & State",
+        "subtitle": "Persistent volume claims (CSI)",
+        "x": 1304,
+        "width": 350
+      }
+    ],
+    "notesCards": [
+      {
+        "id": "notes-k8s",
+        "title": "Mesh & Security Topology",
+        "code": "K8S-MESH",
+        "x": 48,
+        "y": 680,
+        "items": [
+          {
+            "title": "Strict mTLS",
+            "text": "Every inter-pod packet is authenticated and encrypted via Envoy sidecar certificates."
+          },
+          {
+            "title": "Horizontal Pod Autoscaler",
+            "text": "Targeting 75% average CPU; scales pods from 3 to 20 instances dynamically."
+          },
+          {
+            "title": "Affinity & Anti-Affinity",
+            "text": "Pod spread constraints ensure nodes across multiple availability zones."
+          }
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "cloud-lb",
+        "kind": "gate",
+        "accent": "blue",
+        "icon": "network",
+        "shape": "diamond",
+        "title": "Cloud NLB",
+        "subtitle": "AWS Network Load Balancer",
+        "eyebrow": "LAYER 4 INGRESS",
+        "chip": "Static Elastic IPs",
+        "zoneLabel": "Ingress & Edge",
+        "summary": "Terminates Layer 4 TCP traffic and passes packets into Kubernetes node port endpoints.",
+        "metrics": [
+          { "label": "Active Conns", "value": "32k" },
+          { "label": "Throughput", "value": "1.2 Gbps" }
+        ],
+        "x": 64,
+        "y": 180,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "ingress-envoy",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "hexagon",
+        "title": "Envoy Ingress Gateway",
+        "subtitle": "Kubernetes Gateway API",
+        "eyebrow": "CLUSTER BORDER",
+        "chip": "TLS Termination",
+        "zoneLabel": "Ingress & Edge",
+        "summary": "Handles path routing, rate limiting, and injects distributed tracing headers (W3C traceparent).",
+        "metrics": [
+          { "label": "RPS", "value": "18.4k" },
+          { "label": "P99 Latency", "value": "2.1ms" }
+        ],
+        "x": 64,
+        "y": 400,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "istio-pilot",
+        "kind": "core",
+        "accent": "violet",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "Istio Control Plane",
+        "subtitle": "Istiod Daemon // mTLS CA",
+        "eyebrow": "SERVICE MESH",
+        "chip": "Mesh Controller",
+        "zoneLabel": "Mesh Control Plane",
+        "summary": "Distributes dynamic routing configurations, canary weight splits, and issues rotating x509 certs.",
+        "metrics": [
+          { "label": "Mesh Proxies", "value": "64" },
+          { "label": "Cert Validity", "value": "24h" }
+        ],
+        "x": 450,
+        "y": 180,
+        "width": 250,
+        "height": 115
+      },
+      {
+        "id": "cluster-dns",
+        "kind": "core",
+        "accent": "amber",
+        "icon": "layers",
+        "shape": "pill",
+        "title": "CoreDNS Resolver",
+        "subtitle": "Kube-DNS Cluster Discovery",
+        "eyebrow": "SERVICE DISCOVERY",
+        "chip": "Internal DNS",
+        "zoneLabel": "Mesh Control Plane",
+        "summary": "Resolves cluster.local service names with round-robin DNS records for internal pod calling.",
+        "metrics": [
+          { "label": "QPS", "value": "42k" },
+          { "label": "Lookup P99", "value": "0.3ms" }
+        ],
+        "x": 450,
+        "y": 400,
+        "width": 250,
+        "height": 110
+      },
+      {
+        "id": "web-pods",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "Frontend Web Deployment",
+        "subtitle": "Next.js SSR // 3 Replicas",
+        "eyebrow": "DEPLOYMENT: WEB",
+        "chip": "Pod Status: Ready",
+        "zoneLabel": "Namespace: Production",
+        "summary": "Server-side rendering frontend containers wrapped with Envoy sidecar proxies.",
+        "metrics": [
+          { "label": "Replicas", "value": "3 / 3" },
+          { "label": "CPU", "value": "38%" }
+        ],
+        "x": 890,
+        "y": 160,
+        "width": 250,
+        "height": 115
+      },
+      {
+        "id": "api-pods",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "Core API Deployment",
+        "subtitle": "Go gRPC Engine // 5 Replicas",
+        "eyebrow": "DEPLOYMENT: API",
+        "chip": "Pod Status: Ready",
+        "zoneLabel": "Namespace: Production",
+        "summary": "High-performance gRPC backend microservices executing concurrent business logic.",
+        "metrics": [
+          { "label": "Replicas", "value": "5 / 5" },
+          { "label": "gRPC QPS", "value": "28k" }
+        ],
+        "x": 890,
+        "y": 400,
+        "width": 250,
+        "height": 115
+      },
+      {
+        "id": "ceph-csi",
+        "kind": "store",
+        "accent": "rose",
+        "icon": "database",
+        "shape": "rounded",
+        "title": "Ceph CSI Storage",
+        "subtitle": "Distributed ReadWriteMany PVC",
+        "eyebrow": "PERSISTENT STORAGE",
+        "chip": "NVMe Volume",
+        "zoneLabel": "Storage & State",
+        "summary": "Block and file storage driver mounted dynamically into running backend pods.",
+        "metrics": [
+          { "label": "Capacity", "value": "12 TB" },
+          { "label": "Read IOPS", "value": "45k" }
+        ],
+        "x": 1340,
+        "y": 280,
+        "width": 240,
+        "height": 115
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "cloud-lb",
+        "to": "ingress-envoy",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "TCP 443 -> NodePort",
+        "animated": true
+      },
+      {
+        "id": "e2",
+        "from": "ingress-envoy",
+        "to": "web-pods",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "mTLS: /",
+        "animated": true
+      },
+      {
+        "id": "e3",
+        "from": "ingress-envoy",
+        "to": "api-pods",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "mTLS: /api/v1",
+        "animated": true
+      },
+      {
+        "id": "e4",
+        "from": "istio-pilot",
+        "to": "ingress-envoy",
+        "sourcePort": "left",
+        "targetPort": "top",
+        "tone": "violet",
+        "route": "orthogonal",
+        "label": "xDS Config Push",
+        "animated": false
+      },
+      {
+        "id": "e5",
+        "from": "istio-pilot",
+        "to": "web-pods",
+        "sourcePort": "right",
+        "targetPort": "top",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "mTLS Certificates",
+        "animated": false
+      },
+      {
+        "id": "e6",
+        "from": "web-pods",
+        "to": "api-pods",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "orthogonal",
+        "label": "Internal gRPC Call",
+        "animated": true
+      },
+      {
+        "id": "e7",
+        "from": "api-pods",
+        "to": "ceph-csi",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "CSI Volume Mount",
+        "animated": true
+      }
+    ],
+    "simulations": [
+      {
+        "id": "sim-mesh-ingress",
+        "name": "Ingress Request Through Mesh",
+        "tone": "emerald",
+        "steps": [
+          {
+            "id": "m1",
+            "nodes": ["cloud-lb", "ingress-envoy"],
+            "tone": "blue",
+            "label": "EXTERNAL TCP ENTRY",
+            "trace": "AWS NLB forwards incoming TLS traffic to Envoy Ingress Gateway pods."
+          },
+          {
+            "id": "m2",
+            "nodes": ["ingress-envoy", "web-pods"],
+            "tone": "emerald",
+            "label": "ENCRYPTED MTLS ROUTE",
+            "trace": "Envoy verifies client certificate and routes over mTLS tunnel to Web Frontend pod."
+          },
+          {
+            "id": "m3",
+            "nodes": ["web-pods", "api-pods"],
+            "tone": "blue",
+            "label": "INTERNAL GRPC RPC",
+            "trace": "Frontend dispatches gRPC remote procedure call to backend Core API pods."
+          },
+          {
+            "id": "m4",
+            "nodes": ["api-pods", "ceph-csi"],
+            "tone": "rose",
+            "label": "CSI PERSISTENCE",
+            "trace": "Backend microservice reads and writes shared state to NVMe Ceph CSI volume."
+          }
+        ]
+      }
+    ]
+  }
+}

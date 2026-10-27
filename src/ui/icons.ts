@@ -168,6 +168,7 @@ export type UiIconName =
   | 'zoomOut'
   | 'fit'
   | 'layout'
+  | 'template'
   | 'play'
   | 'pause'
   | 'help';
@@ -235,6 +236,10 @@ const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
     { tag: 'rect', attrs: { x: '15', y: '3', width: '6', height: '6', rx: '1' } },
     { tag: 'rect', attrs: { x: '9', y: '15', width: '6', height: '6', rx: '1' } },
     { tag: 'path', attrs: { d: 'M6 9v3a3 3 0 0 0 3 3h3a3 3 0 0 0 3-3V9' } },
+  ],
+  template: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '18', height: '18', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M3 9h18M9 21V9' } },
   ],
   play: [
     { tag: 'path', attrs: { d: 'm5 3 14 9-14 9V3z' } },

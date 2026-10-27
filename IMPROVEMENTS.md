@@ -25,28 +25,28 @@ A review of the app as it stands today, with ideas for look and feel and for new
 | L | Three to five days |
 | XL | A week or more |
 
-| # | Suggestion | Type | Impact | Effort |
-| --- | --- | --- | --- | --- |
-| 1 | Toast notifications and an undo-aware status bar | Look and feel | High | S |
-| 2 | Tooltips with shortcut hints, plus a `?` shortcuts overlay | Look and feel | High | S |
-| 3 | Replace unicode glyphs with the SVG icon set | Look and feel | High | S |
-| 4 | Collapsible inspector sections and search-as-you-type fields | Look and feel | High | S |
-| 5 | Command palette (`Cmd/Ctrl+K`) | Feature | Very high | M |
-| 6 | Template gallery in the empty state and in New | Feature | High | M |
-| 7 | Shareable link (diagram in the URL hash) | Feature | High | S |
-| 8 | Node search and focus (`Cmd/Ctrl+F`) | Feature | High | S |
-| 9 | Polished motion: node drop-in, port glow, smoother selection | Look and feel | Medium | S |
-| 10 | Presentation mode for Data View | Feature | High | M |
-| 11 | Simulation playback controls (step, scrub, speed) | Feature | High | M |
-| 12 | Z-order, lock, and group commands | Feature | Medium | M |
-| 13 | Responsive and compact toolbar | Look and feel | Medium | M |
-| 14 | Mermaid import coverage (`classDef`, styles, more shapes) | Feature | Medium | M |
-| 15 | Edge and node comments, plus status badges | Feature | Medium | M |
-| 16 | PWA install and offline support | Feature | Medium | S |
-| 17 | Accessibility audit pass (contrast, focus rings, live regions) | Look and feel | Medium | M |
-| 18 | Auto-layout options (direction, spacing, layered or tree) | Feature | Medium | L |
-| 19 | Version snapshots and a diff view | Feature | Medium | L |
-| 20 | Real-time collaboration | Feature | High | XL |
+| # | Suggestion | Type | Impact | Effort | Status |
+| --- | --- | --- | --- | --- | --- |
+| 1 | Toast notifications and an undo-aware status bar | Look and feel | High | S | [x] Done |
+| 2 | Tooltips with shortcut hints, plus a `?` shortcuts overlay | Look and feel | High | S | [x] Done |
+| 3 | Replace unicode glyphs with the SVG icon set | Look and feel | High | S | [x] Done |
+| 4 | Collapsible inspector sections and search-as-you-type fields | Look and feel | High | S | [x] Done |
+| 5 | Command palette (`Cmd/Ctrl+K`) | Feature | Very high | M | [x] Done |
+| 6 | Template gallery in the empty state and in New | Feature | High | M | [x] Done |
+| 7 | Shareable link (diagram in the URL hash) | Feature | High | S | In Progress |
+| 8 | Node search and focus (`Cmd/Ctrl+F`) | Feature | High | S | Todo |
+| 9 | Polished motion: node drop-in, port glow, smoother selection | Look and feel | Medium | S | Todo |
+| 10 | Presentation mode for Data View | Feature | High | M | Todo |
+| 11 | Simulation playback controls (step, scrub, speed) | Feature | High | M | Todo |
+| 12 | Z-order, lock, and group commands | Feature | Medium | M | Todo |
+| 13 | Responsive and compact toolbar | Look and feel | Medium | M | Todo |
+| 14 | Mermaid import coverage (`classDef`, styles, more shapes) | Feature | Medium | M | Todo |
+| 15 | Edge and node comments, plus status badges | Feature | Medium | M | Todo |
+| 16 | PWA install and offline support | Feature | Medium | S | Todo |
+| 17 | Accessibility audit pass (contrast, focus rings, live regions) | Look and feel | Medium | M | Todo |
+| 18 | Auto-layout options (direction, spacing, layered or tree) | Feature | Medium | L | Todo |
+| 19 | Version snapshots and a diff view | Feature | Medium | L | Todo |
+| 20 | Real-time collaboration | Feature | High | XL | Skipped |
 
 ---
 

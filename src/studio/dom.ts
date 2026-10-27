@@ -81,9 +81,14 @@ export const windowDropVeil = document.getElementById('window-drop-veil') as HTM
 export const emptyStageOverlay = document.getElementById('empty-stage-overlay') as HTMLElement;
 export const btnQuickStarter = document.getElementById('btn-quick-starter') as HTMLButtonElement;
 export const btnEmptyShowcase = document.getElementById('btn-empty-showcase') as HTMLButtonElement;
+export const btnEmptyTemplates = document.getElementById('btn-empty-templates') as HTMLButtonElement | null;
+export const emptyStageShelfSlot = document.getElementById('empty-stage-shelf-slot') as HTMLElement | null;
 export const btnEmptyImport = document.getElementById('btn-empty-import') as HTMLButtonElement;
 export const btnEmptyCode = document.getElementById('btn-empty-code') as HTMLButtonElement;
 export const btnRestoreSession = document.getElementById('btn-restore-session') as HTMLButtonElement | null;
+export const templateGalleryDialog = document.getElementById('template-gallery-dialog') as HTMLDialogElement | null;
+export const templateCategoryFilters = document.getElementById('template-category-filters') as HTMLElement | null;
+export const templateGalleryGrid = document.getElementById('template-gallery-grid') as HTMLElement | null;
 
 export const viewport = document.getElementById('canvas-viewport') as HTMLElement;
 export const stageWorld = document.getElementById('stage-world') as HTMLElement;

@@ -23,6 +23,7 @@ const ALL_UI_ICONS: UiIconName[] = [
   'zoomOut',
   'fit',
   'layout',
+  'template',
   'play',
   'pause',
   'help',

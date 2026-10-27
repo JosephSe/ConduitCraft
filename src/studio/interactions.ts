@@ -10,6 +10,11 @@ import {
   btnEmptyCode,
   btnEmptyImport,
   btnEmptyShowcase,
+  btnEmptyTemplates,
+  emptyStageShelfSlot,
+  templateGalleryDialog,
+  templateCategoryFilters,
+  templateGalleryGrid,
   btnExportHtml,
   btnExportJson,
   btnExportMmd,
@@ -144,7 +149,6 @@ import {
 import { GIF_MAX_EDGE, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
-import showcaseBlueprint from '../../public/examples/lumen-relay.blueprint.json?raw';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
 import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
@@ -154,6 +158,16 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { renderShortcutsHtml } from './commands';
 import { initCommandPalette } from './palette';
+import {
+  TEMPLATE_CATEGORIES,
+  getStarterTemplates,
+  getStarterTemplateById,
+  renderTemplateCardHtml,
+  renderBlankCanvasCardHtml,
+  renderEmptyStageShelfHtml,
+  type TemplateCategory,
+  type TemplateDefinition,
+} from './templatesGallery';
 
 export function initStencilPalette(): void {
   stencilGrid.replaceChildren();
@@ -1181,8 +1195,31 @@ export function initEvents(): void {
     renderAll(true);
   });
 
-  btnEmptyShowcase.addEventListener('click', () => {
-    const parsed = parseBlueprintJson(showcaseBlueprint);
+  let currentGalleryCategory: TemplateCategory = 'all';
+
+  const renderGalleryGrid = (): void => {
+    if (!templateCategoryFilters || !templateGalleryGrid) return;
+
+    templateCategoryFilters.innerHTML = TEMPLATE_CATEGORIES.map(
+      (cat) => `
+      <button type="button" class="template-filter-btn ${cat.id === currentGalleryCategory ? 'is-active' : ''}" data-cat="${cat.id}">
+        ${cat.label}
+      </button>
+    `,
+    ).join('');
+
+    const templates = getStarterTemplates(currentGalleryCategory);
+    const blankCard =
+      currentGalleryCategory === 'all' || currentGalleryCategory === 'cloud'
+        ? renderBlankCanvasCardHtml()
+        : '';
+    const templateCards = templates.map((t) => renderTemplateCardHtml(t)).join('');
+
+    templateGalleryGrid.innerHTML = `${blankCard}${templateCards}`;
+  };
+
+  const loadTemplateDoc = (template: TemplateDefinition): void => {
+    const parsed = parseBlueprintJson(template.rawJson);
     if (!parsed.ok) {
       hudStatusTip.textContent = parsed.error;
       notify(parsed.error, { tone: 'error' });
@@ -1195,8 +1232,89 @@ export function initEvents(): void {
     setSelection(focus ? { type: 'node', id: focus.id } : { type: 'none' });
     renderAll(true);
     requestAnimationFrame(fitToViewport);
-    hudStatusTip.textContent = 'Loaded the Lumen Relay showcase.';
-    notify('Loaded the Lumen Relay showcase', { action: { label: 'Undo', onClick: () => performUndo() } });
+    const msg = `Loaded ${template.title}`;
+    hudStatusTip.textContent = msg;
+    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
+  };
+
+  const createBlankCanvas = (): void => {
+    const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
+    if (!isEmpty) pushHistory();
+    clearSimulation();
+    app.doc = createBlankDocument();
+    setSelection({ type: 'none' });
+    traceList.replaceChildren();
+    renderAll(true);
+    fitToViewport();
+    if (!isEmpty) {
+      notify('Created blank canvas', { action: { label: 'Undo', onClick: () => performUndo() } });
+    }
+  };
+
+  const openTemplateGallery = (): void => {
+    if (!templateGalleryDialog) return;
+    renderGalleryGrid();
+    templateGalleryDialog.showModal();
+  };
+
+  btnEmptyShowcase.addEventListener('click', () => {
+    const showcase = getStarterTemplateById('lumen-relay');
+    if (showcase) {
+      loadTemplateDoc(showcase);
+    }
+  });
+
+  // Empty state "Browse Templates" button
+  btnEmptyTemplates?.addEventListener('click', openTemplateGallery);
+
+  // Empty state Quick Template Shelf
+  if (emptyStageShelfSlot) {
+    emptyStageShelfSlot.innerHTML = renderEmptyStageShelfHtml();
+    emptyStageShelfSlot.addEventListener('click', (e) => {
+      const target = (e.target as HTMLElement).closest<HTMLElement>('.empty-shelf-pill');
+      if (!target) return;
+      if (target.id === 'btn-empty-more-templates') {
+        openTemplateGallery();
+        return;
+      }
+      const templateId = target.getAttribute('data-template-id');
+      if (templateId) {
+        const template = getStarterTemplateById(templateId);
+        if (template) {
+          loadTemplateDoc(template);
+        }
+      }
+    });
+  }
+
+  // Template Gallery Category Filters
+  templateCategoryFilters?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.template-filter-btn');
+    if (!btn) return;
+    const cat = btn.getAttribute('data-cat') as TemplateCategory;
+    if (cat) {
+      currentGalleryCategory = cat;
+      renderGalleryGrid();
+    }
+  });
+
+  // Template Gallery Grid Selection (Card clicks & Use Template buttons)
+  templateGalleryGrid?.addEventListener('click', (e) => {
+    const trigger = (e.target as HTMLElement).closest<HTMLElement>('[data-template-id]');
+    if (!trigger) return;
+    const templateId = trigger.getAttribute('data-template-id');
+    if (!templateId) return;
+
+    if (templateId === 'blank') {
+      createBlankCanvas();
+      if (templateGalleryDialog) void closeDialogSmoothly(templateGalleryDialog);
+    } else {
+      const template = getStarterTemplateById(templateId);
+      if (template) {
+        loadTemplateDoc(template);
+        if (templateGalleryDialog) void closeDialogSmoothly(templateGalleryDialog);
+      }
+    }
   });
 
   // Starter Pair on Blank Canvas (1 generic Actor -> 1 generic Core System)
@@ -1250,20 +1368,8 @@ export function initEvents(): void {
     }
   });
 
-  // New Blank Canvas
-  btnNewCanvas.addEventListener('click', () => {
-    const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
-    if (!isEmpty) pushHistory();
-    clearSimulation();
-    app.doc = createBlankDocument();
-    setSelection({ type: 'none' });
-    traceList.replaceChildren();
-    renderAll(true);
-    fitToViewport();
-    if (!isEmpty) {
-      notify('Cleared canvas', { action: { label: 'Undo', onClick: () => performUndo() } });
-    }
-  });
+  // New Canvas button opens Template Gallery
+  btnNewCanvas.addEventListener('click', openTemplateGallery);
 
   // File Import Triggers
   const triggerFilePicker = () => fileUploadInput.click();
@@ -1409,24 +1515,16 @@ export function initEvents(): void {
     },
     openSettingsDialog: () => settingsDialog.showModal(),
     openShortcutsDialog,
+    openTemplateGallery,
+    loadTemplateById: (id) => {
+      const template = getStarterTemplateById(id);
+      if (template) loadTemplateDoc(template);
+    },
     deleteSelected,
     duplicateSelected,
     loadShowcase: () => {
-      const parsed = parseBlueprintJson(showcaseBlueprint);
-      if (!parsed.ok) {
-        hudStatusTip.textContent = parsed.error;
-        notify(parsed.error, { tone: 'error' });
-        return;
-      }
-      pushHistory();
-      clearSimulation();
-      app.doc = parsed.doc;
-      const focus = app.doc.nodes.find((node) => node.id === 'night-desk') ?? app.doc.nodes[0];
-      setSelection(focus ? { type: 'node', id: focus.id } : { type: 'none' });
-      renderAll(true);
-      requestAnimationFrame(fitToViewport);
-      hudStatusTip.textContent = 'Loaded the Lumen Relay showcase.';
-      notify('Loaded the Lumen Relay showcase', { action: { label: 'Undo', onClick: () => performUndo() } });
+      const showcase = getStarterTemplateById('lumen-relay');
+      if (showcase) loadTemplateDoc(showcase);
     },
     runSimulationById: (id) => runSimulation(id),
   });

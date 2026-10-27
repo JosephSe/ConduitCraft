@@ -201,15 +201,20 @@
           <div class="empty-stage-badge">BLANK CANVAS</div>
           <h2>Build Your Architecture From Scratch</h2>
           <p>
-            Drag components from the left palette onto the grid, wire ports into animated conduits, import a file, or load the Lumen Relay showcase.
+            Drag components from the left palette onto the grid, wire ports into animated conduits, import a file, or pick a production starter template.
           </p>
           <div class="empty-stage-actions">
-            <button type="button" class="btn btn-primary-export" id="btn-quick-starter">+ Add Starter Pair</button>
+            <button type="button" class="btn btn-primary-export" id="btn-empty-templates">
+              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+              Browse Templates (7)
+            </button>
+            <button type="button" class="btn" id="btn-quick-starter">+ Add Starter Pair</button>
             <button type="button" class="btn" id="btn-empty-showcase">Load showcase</button>
             <button type="button" class="btn" id="btn-empty-import">Import .mmd / .md / .json</button>
             <button type="button" class="btn" id="btn-empty-code">Paste Mermaid</button>
             <button type="button" class="btn" id="btn-restore-session" hidden>↺ Restore Previous Session</button>
           </div>
+          <div id="empty-stage-shelf-slot"></div>
         </div>
       </div>
 
@@ -523,6 +528,27 @@
         <span><kbd>↵</kbd> select</span>
         <span><kbd>Esc</kbd> dismiss</span>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Starter Templates Gallery Dialog -->
+  <dialog id="template-gallery-dialog" closedby="any" aria-labelledby="template-gallery-title">
+    <div class="dialog-shell" style="max-inline-size: 72rem;">
+      <div class="dialog-header">
+        <div>
+          <h2 id="template-gallery-title">Architecture Starter Templates</h2>
+          <p class="dialog-subtitle" style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--wl-ink-secondary);">
+            Choose a production-ready starter blueprint or begin with a clean canvas
+          </p>
+        </div>
+        <form method="dialog">
+          <button type="submit" class="btn" autofocus>Done</button>
+        </form>
+      </div>
+      <div class="template-gallery-controls" id="template-gallery-controls">
+        <div class="template-category-filters" id="template-category-filters" role="tablist" aria-label="Template categories"></div>
+      </div>
+      <div class="dialog-body template-gallery-body" id="template-gallery-grid" role="region" aria-label="Available templates"></div>
     </div>
   </dialog>
 

@@ -1,0 +1,379 @@
+{
+  "kind": "conduitcraft.blueprint",
+  "version": 1,
+  "document": {
+    "title": "Event-Driven Microservices",
+    "systemTag": "STREAM BACKBONE // MULTI-REGION",
+    "statusLabel": "KAFKA CLUSTER ACTIVE",
+    "direction": "LR",
+    "stageWidth": 1720,
+    "stageHeight": 920,
+    "overviewSummary": "Asynchronous microservices topology powered by an Apache Kafka event spine, decoupled order processing, inventory reservations, credit card payment capture, notification fanout, and an immutable audit event store.",
+    "brand": {
+      "name": "EventCraft Systems",
+      "accent": "#d97706",
+      "logo": ""
+    },
+    "zones": [
+      {
+        "id": "zone-ingest",
+        "number": "01",
+        "title": "API & Ingress",
+        "subtitle": "External gateway and ingestion",
+        "x": 24,
+        "width": 340
+      },
+      {
+        "id": "zone-spine",
+        "number": "02",
+        "title": "Event Spine",
+        "subtitle": "Kafka distributed streaming log",
+        "x": 384,
+        "width": 380
+      },
+      {
+        "id": "zone-domain",
+        "number": "03",
+        "title": "Domain Microservices",
+        "subtitle": "Decoupled consumer & producer pods",
+        "x": 784,
+        "width": 490
+      },
+      {
+        "id": "zone-state",
+        "number": "04",
+        "title": "State & Projections",
+        "subtitle": "Materialized views & audit ledger",
+        "x": 1294,
+        "width": 380
+      }
+    ],
+    "notesCards": [
+      {
+        "id": "notes-patterns",
+        "title": "Saga Orchestration & Guarantees",
+        "code": "EVENT-01",
+        "x": 48,
+        "y": 700,
+        "items": [
+          {
+            "title": "At-Least-Once Delivery",
+            "text": "Every microservice uses idempotent consumer deduplication via message sequence IDs."
+          },
+          {
+            "title": "Outbox Pattern",
+            "text": "Services commit state mutations and outbox records in a single local transaction."
+          },
+          {
+            "title": "Dead Letter Queue",
+            "text": "Poison pill messages route to the dlq.orders topic after 3 failed retries."
+          }
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "id": "api-gw",
+        "kind": "gate",
+        "accent": "blue",
+        "icon": "network",
+        "shape": "diamond",
+        "title": "API Gateway",
+        "subtitle": "Kong Gateway // JWT Auth",
+        "eyebrow": "ENTRY PERIMETER",
+        "chip": "REST / GraphQL",
+        "zoneLabel": "API & Ingress",
+        "summary": "Validates API tokens, enforces rate limits, and routes client commands to the Order service.",
+        "metrics": [
+          { "label": "Traffic", "value": "24.5k req/s" },
+          { "label": "Auth Latency", "value": "1.2ms" }
+        ],
+        "x": 64,
+        "y": 280,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "kafka-bus",
+        "kind": "bus",
+        "accent": "amber",
+        "icon": "layers",
+        "shape": "card",
+        "title": "Apache Kafka Spine",
+        "subtitle": "Distributed Commit Log",
+        "eyebrow": "MESSAGING BUS",
+        "chip": "32 Partitions",
+        "zoneLabel": "Event Spine",
+        "summary": "High-throughput, durable streaming platform managing order, payment, and inventory topics.",
+        "metrics": [
+          { "label": "Throughput", "value": "180k msg/s" },
+          { "label": "Replication", "value": "RF=3" }
+        ],
+        "x": 430,
+        "y": 260,
+        "width": 260,
+        "height": 130
+      },
+      {
+        "id": "order-svc",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "cpu",
+        "shape": "card",
+        "title": "Order Service",
+        "subtitle": "Order Lifecycle Orchestrator",
+        "eyebrow": "DOMAIN CORE",
+        "chip": "Producer / Consumer",
+        "zoneLabel": "Domain Microservices",
+        "summary": "Receives order commands, emits OrderCreated events, and manages the checkout saga.",
+        "metrics": [
+          { "label": "Active Sagas", "value": "1,420" },
+          { "label": "Success Rate", "value": "99.94%" }
+        ],
+        "x": 840,
+        "y": 100,
+        "width": 240,
+        "height": 105
+      },
+      {
+        "id": "payment-svc",
+        "kind": "service",
+        "accent": "rose",
+        "icon": "shield",
+        "shape": "card",
+        "title": "Payment Service",
+        "subtitle": "Stripe & PSP Integration",
+        "eyebrow": "PCI DOMAIN",
+        "chip": "Consumer",
+        "zoneLabel": "Domain Microservices",
+        "summary": "Subscribes to OrderCreated events and authorizes credit card charges via external PSP.",
+        "metrics": [
+          { "label": "Auth P95", "value": "310ms" },
+          { "label": "Declines", "value": "1.1%" }
+        ],
+        "x": 840,
+        "y": 250,
+        "width": 240,
+        "height": 105
+      },
+      {
+        "id": "inventory-svc",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "box",
+        "shape": "card",
+        "title": "Inventory Service",
+        "subtitle": "Warehouse Stock Allocator",
+        "eyebrow": "FULFILLMENT",
+        "chip": "Consumer",
+        "zoneLabel": "Domain Microservices",
+        "summary": "Locks available warehouse stock and releases held allocations if payments fail.",
+        "metrics": [
+          { "label": "Reservations", "value": "8.2k/min" },
+          { "label": "Lock Lag", "value": "4ms" }
+        ],
+        "x": 840,
+        "y": 400,
+        "width": 240,
+        "height": 105
+      },
+      {
+        "id": "notify-svc",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "terminal",
+        "shape": "pill",
+        "title": "Notification Dispatcher",
+        "subtitle": "Email, SMS & Push Gateway",
+        "eyebrow": "COMMUNICATIONS",
+        "chip": "Fanout Worker",
+        "zoneLabel": "Domain Microservices",
+        "summary": "Sends customer confirmation emails and push notifications when orders are completed.",
+        "metrics": [
+          { "label": "Sent / sec", "value": "450" },
+          { "label": "Delivery Rate", "value": "99.8%" }
+        ],
+        "x": 840,
+        "y": 550,
+        "width": 240,
+        "height": 100
+      },
+      {
+        "id": "event-store",
+        "kind": "store",
+        "accent": "amber",
+        "icon": "database",
+        "shape": "rounded",
+        "title": "Event Store Ledger",
+        "subtitle": "Immutable Change Log",
+        "eyebrow": "AUDIT ARCHIVE",
+        "chip": "Append-Only",
+        "zoneLabel": "State & Projections",
+        "summary": "Persistent append-only event archive used for event sourcing and full state reconstruction.",
+        "metrics": [
+          { "label": "Events Total", "value": "4.2B" },
+          { "label": "Compression", "value": "4.2x" }
+        ],
+        "x": 1330,
+        "y": 180,
+        "width": 240,
+        "height": 110
+      },
+      {
+        "id": "analytics-view",
+        "kind": "core",
+        "accent": "emerald",
+        "icon": "layers",
+        "shape": "card",
+        "title": "Real-time Projections",
+        "subtitle": "Materialized Read Models",
+        "eyebrow": "CQRS PROJECTIONS",
+        "chip": "ClickHouse / Read",
+        "zoneLabel": "State & Projections",
+        "summary": "Continuous stream projection generating fast queryable order status and financial summaries.",
+        "metrics": [
+          { "label": "Sync Delay", "value": "< 50ms" },
+          { "label": "Query RPS", "value": "16k" }
+        ],
+        "x": 1330,
+        "y": 420,
+        "width": 240,
+        "height": 110
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "api-gw",
+        "to": "order-svc",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "POST /v1/orders",
+        "animated": true
+      },
+      {
+        "id": "e2",
+        "from": "order-svc",
+        "to": "kafka-bus",
+        "sourcePort": "left",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "orthogonal",
+        "label": "Publish: OrderCreated",
+        "animated": true
+      },
+      {
+        "id": "e3",
+        "from": "kafka-bus",
+        "to": "payment-svc",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Consume: OrderCreated",
+        "animated": true
+      },
+      {
+        "id": "e4",
+        "from": "kafka-bus",
+        "to": "inventory-svc",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "Consume: ReserveStock",
+        "animated": true
+      },
+      {
+        "id": "e5",
+        "from": "payment-svc",
+        "to": "kafka-bus",
+        "sourcePort": "left",
+        "targetPort": "bottom",
+        "tone": "emerald",
+        "route": "orthogonal",
+        "label": "Publish: PaymentCaptured",
+        "animated": true
+      },
+      {
+        "id": "e6",
+        "from": "kafka-bus",
+        "to": "notify-svc",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "Consume: SendReceipt",
+        "animated": true
+      },
+      {
+        "id": "e7",
+        "from": "kafka-bus",
+        "to": "event-store",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Archive All Events",
+        "animated": true
+      },
+      {
+        "id": "e8",
+        "from": "kafka-bus",
+        "to": "analytics-view",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Continuous Projection",
+        "animated": true
+      }
+    ],
+    "simulations": [
+      {
+        "id": "sim-order-flow",
+        "name": "Order Placed & Fulfilled Saga",
+        "tone": "emerald",
+        "steps": [
+          {
+            "id": "p1",
+            "nodes": ["api-gw", "order-svc"],
+            "tone": "blue",
+            "label": "COMMAND INGEST",
+            "trace": "Client sends checkout request through API Gateway to Order Service."
+          },
+          {
+            "id": "p2",
+            "nodes": ["order-svc", "kafka-bus"],
+            "tone": "amber",
+            "label": "EVENT EMITTED",
+            "trace": "Order Service commits local record and publishes OrderCreated to Kafka orders topic."
+          },
+          {
+            "id": "p3",
+            "nodes": ["kafka-bus", "payment-svc", "inventory-svc"],
+            "tone": "rose",
+            "label": "PARALLEL CONSUMPTION",
+            "trace": "Payment Service charges card; Inventory Service reserves SKU warehouse stock."
+          },
+          {
+            "id": "p4",
+            "nodes": ["payment-svc", "kafka-bus"],
+            "tone": "emerald",
+            "label": "PAYMENT CONFIRMED",
+            "trace": "Payment Service publishes PaymentCaptured event back to the Kafka event log."
+          },
+          {
+            "id": "p5",
+            "nodes": ["kafka-bus", "notify-svc", "analytics-view"],
+            "tone": "blue",
+            "label": "NOTIFY & PROJECT",
+            "trace": "Notification service emails order receipt; CQRS projector updates real-time analytics."
+          }
+        ]
+      }
+    ]
+  }
+}
