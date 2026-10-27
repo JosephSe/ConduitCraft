@@ -365,26 +365,39 @@ export function createEdgeConnection(
 }
 
 export function renderSimButtons(): void {
-  simButtonsSlot.replaceChildren();
   const scenarios = getEffectiveSimulations(app.doc);
+  const existing = new Map<string, HTMLButtonElement>();
+  for (const child of Array.from(simButtonsSlot.children)) {
+    if (child instanceof HTMLButtonElement && child.dataset.simId) {
+      existing.set(child.dataset.simId, child);
+    }
+  }
+  const seen = new Set<string>();
   for (const sim of scenarios) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
+    seen.add(sim.id);
+    let btn = existing.get(sim.id);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.simId = sim.id;
+      const dot = document.createElement('span');
+      dot.className = 'pill-swatch';
+      const label = document.createElement('span');
+      label.className = 'sim-label';
+      btn.append(dot, label);
+      btn.addEventListener('click', () => runSimulation(btn?.dataset.simId || ''));
+    }
     btn.className =
-      sim.tone === 'rose'
-        ? 'btn btn-reject'
-        : sim.tone === 'emerald'
-          ? 'btn btn-approve'
-          : 'btn';
+      sim.tone === 'rose' ? 'btn btn-reject' : sim.tone === 'emerald' ? 'btn btn-approve' : 'btn';
     const [dotCss] = TONE_CSS[sim.tone] || TONE_CSS.emerald;
-    const dot = document.createElement('span');
-    dot.className = 'pill-swatch';
-    dot.style.background = dotCss;
-    const label = document.createElement('span');
-    label.textContent = sim.name;
-    btn.append(dot, label);
-    btn.addEventListener('click', () => runSimulation(sim.id));
+    const dot = btn.querySelector<HTMLElement>('.pill-swatch');
+    if (dot) dot.style.background = dotCss;
+    const label = btn.querySelector('.sim-label');
+    if (label) label.textContent = sim.name;
     simButtonsSlot.appendChild(btn);
+  }
+  for (const [id, btn] of existing) {
+    if (!seen.has(id)) btn.remove();
   }
 }
 
