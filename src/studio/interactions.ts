@@ -192,6 +192,7 @@ import {
   resetActiveFile,
   saveWithNativeFileSystem,
 } from './pwa';
+import { announceModeChange, announceToolChange } from './a11y';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -1185,6 +1186,7 @@ export function initEvents(): void {
         updateVisualSelectionHighlights();
         requestInspectorRefresh();
         requestAnimationFrame(fitToViewport);
+        announceModeChange(targetMode);
       };
 
       if (
@@ -1211,6 +1213,7 @@ export function initEvents(): void {
         app.pointerTool === 'connect'
           ? 'Connect Mode · Drag from any component or port to another component to wire an animated stream'
           : 'Drag stencils onto grid · Drag from any port dot to wire animated streams';
+      announceToolChange(app.pointerTool);
     });
   }
 

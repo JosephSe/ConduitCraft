@@ -772,9 +772,20 @@
     cursor: not-allowed;
   }
 
-  .btn:focus-visible {
-    outline: 2px solid var(--wl-blue);
+  :focus-visible {
+    outline: 2px solid var(--brand-accent, var(--wl-blue));
     outline-offset: 2px;
+  }
+
+  .btn:focus-visible,
+  .stencil-card:focus-visible,
+  .stencil-aux-btn:focus-visible,
+  .tab-btn:focus-visible,
+  .menu-item:focus-visible,
+  .dialog-close:focus-visible {
+    outline: 2px solid var(--brand-accent, var(--wl-blue));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--wl-blue-soft);
   }
 
   .btn-compact {
@@ -1991,6 +2002,27 @@
     border: 1px solid var(--wl-border-subtle);
     color: var(--wl-ink-secondary);
     font-size: 0.75rem;
+  }
+
+  /* Level-of-Detail (LoD) rendering for low zoom (< 55%) */
+  #stage-world[data-lod="low"] .node-footer,
+  #stage-world[data-lod="low"] .node-eyebrow,
+  #stage-world[data-lod="low"] .node-footer-label,
+  #stage-world[data-lod="low"] .micro-chip,
+  #stage-world[data-lod="low"] .node-port {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  #stage-world[data-lod="low"] .node-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  #stage-world[data-lod="low"] .node-sub {
+    font-size: 0.95rem;
+    font-weight: 600;
   }
 
   /* Traveling Simulation Packet */

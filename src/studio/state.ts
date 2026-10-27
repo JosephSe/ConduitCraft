@@ -248,6 +248,7 @@ export function applyTransform(): void {
   // Paint at the displayed size. A transform scale stretches a 1× layer and softens text and icons.
   stageWorld.style.setProperty('zoom', String(scale));
   stageWorld.style.transform = `translate(${app.panX / scale}px, ${app.panY / scale}px)`;
+  stageWorld.dataset.lod = scale < 0.55 ? 'low' : scale < 0.8 ? 'medium' : 'high';
   zoomReadout.textContent = `${Math.round(scale * 100)}%`;
   minimapPainter?.();
 }
