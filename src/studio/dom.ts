@@ -153,6 +153,14 @@ export const btnExportSvg = document.getElementById('btn-export-svg') as HTMLBut
 export const btnExportPng = document.getElementById('btn-export-png') as HTMLButtonElement;
 export const btnExportGif = document.getElementById('btn-export-gif') as HTMLButtonElement;
 export const btnExportJson = document.getElementById('btn-export-json') as HTMLButtonElement;
+export const exportDialogTitle = document.getElementById('export-dialog-title') as HTMLElement;
+export const exportCards = document.getElementById('export-cards') as HTMLElement;
+export const gifExportPanel = document.getElementById('gif-export-panel') as HTMLElement;
+export const btnGifBack = document.getElementById('btn-gif-back') as HTMLButtonElement;
+export const btnGifWhole = document.getElementById('btn-gif-whole') as HTMLButtonElement;
+export const btnGifView = document.getElementById('btn-gif-view') as HTMLButtonElement;
+export const gifScenarioList = document.getElementById('gif-scenario-list') as HTMLElement;
+export const gifScenarioEmpty = document.getElementById('gif-scenario-empty') as HTMLElement;
 
 export const matrixDialog = document.getElementById('matrix-dialog') as HTMLDialogElement;
 export const matrixTbody = document.getElementById('matrix-tbody') as HTMLTableSectionElement;

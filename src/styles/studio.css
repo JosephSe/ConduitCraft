@@ -2429,6 +2429,24 @@
     inline-size: min(38rem, calc(100vw - 4rem));
   }
 
+  .export-cards[hidden] {
+    display: none;
+  }
+
+  .gif-export-panel {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .gif-export-panel[hidden] {
+    display: none;
+  }
+
+  .gif-export-panel .guide-lead,
+  .gif-export-panel .section-heading {
+    margin: 0;
+  }
+
   .export-option-card {
     display: grid;
     gap: 0.25rem;

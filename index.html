@@ -396,7 +396,7 @@
         </form>
       </div>
       <div class="dialog-body">
-        <div class="export-cards">
+        <div class="export-cards" id="export-cards">
           <button type="button" class="export-option-card is-recommended" id="btn-export-json" autofocus>
             <span class="export-option-kicker">Recommended · full document</span>
             <strong>Blueprint File (.blueprint.json)</strong>
@@ -404,7 +404,7 @@
           </button>
           <button type="button" class="export-option-card" id="btn-export-gif">
             <strong>Animation (.gif)</strong>
-            <span>A short loop of this canvas, with the telemetry wires moving, sized for chat, docs, and slides.</span>
+            <span>A short loop. Choose the whole diagram, the current view, or a scenario.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-html">
             <strong>Interactive Animated Data View (.html)</strong>
@@ -422,6 +422,25 @@
             <strong>Image (.png)</strong>
             <span>The same canvas picture, at up to twice the stage resolution.</span>
           </button>
+        </div>
+        <div class="gif-export-panel" id="gif-export-panel" hidden>
+          <div>
+            <button type="button" class="btn" id="btn-gif-back">Back</button>
+          </div>
+          <p class="guide-lead">Choose what the animation records.</p>
+          <div class="export-cards">
+            <button type="button" class="export-option-card" id="btn-gif-whole">
+              <strong>Whole diagram</strong>
+              <span>The full stage, with the telemetry wires moving.</span>
+            </button>
+            <button type="button" class="export-option-card" id="btn-gif-view">
+              <strong>Current view</strong>
+              <span>The canvas as it is framed now, with the wires moving.</span>
+            </button>
+          </div>
+          <h3 class="section-heading" id="gif-scenario-heading">Scenarios</h3>
+          <p class="guide-lead" id="gif-scenario-empty" hidden>Add components to build a scenario.</p>
+          <div class="export-cards" id="gif-scenario-list"></div>
         </div>
       </div>
     </div>

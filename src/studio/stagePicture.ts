@@ -1,6 +1,19 @@
 /** A picture of the canvas as it is drawn, not a simplified redraw. */
+import type { StreamTone } from '../types';
+import { TONE_CSS } from '../shared/tones';
 import { app } from './state';
-import { stageWorld, workspace } from './dom';
+import { stageWorld, viewport, workspace } from './dom';
+
+export interface StagePictureOptions {
+  /** Steps animated wires. Omit to keep the dash where it is on screen. */
+  dashOffset?: number;
+  /** Crop to the canvas viewport, including the current pan and zoom. */
+  currentView?: boolean;
+  /** Components lit for one scenario hop. */
+  activeNodes?: readonly string[];
+  tone?: StreamTone;
+  packetLabel?: string;
+}
 
 function collectCss(sheet: CSSStyleSheet, chunks: string[]): void {
   let rules: CSSRuleList;
@@ -32,6 +45,41 @@ function customProperties(style: CSSStyleDeclaration): string {
   return parts.join(';');
 }
 
+function paintScenario(clone: HTMLElement, frame: StagePictureOptions): void {
+  const activeNodes = frame.activeNodes ?? [];
+  if (activeNodes.length === 0) return;
+  const tone = frame.tone ?? 'emerald';
+  const [accent, soft] = TONE_CSS[tone];
+  const active = new Set(activeNodes);
+  clone.querySelectorAll<HTMLElement>('.arch-node').forEach((node) => {
+    if (!active.has(node.dataset.node ?? '')) {
+      delete node.dataset.simActive;
+      node.style.removeProperty('--sim-accent');
+      node.style.removeProperty('--sim-accent-soft');
+      return;
+    }
+    node.dataset.simActive = 'true';
+    node.style.setProperty('--sim-accent', accent);
+    node.style.setProperty('--sim-accent-soft', soft);
+  });
+
+  const anchor = app.doc.nodes.find((node) => node.id === activeNodes[0]);
+  const packet = clone.querySelector<HTMLElement>('#sim-packet');
+  if (!packet) return;
+  if (!anchor) {
+    packet.hidden = true;
+    return;
+  }
+  packet.hidden = false;
+  packet.dataset.tone = tone;
+  const label = packet.querySelector('#sim-packet-label');
+  if (label) label.textContent = frame.packetLabel || anchor.title;
+  const dot = packet.querySelector<HTMLElement>('#sim-packet-dot');
+  if (dot) dot.style.background = accent;
+  packet.style.setProperty('--px', String(Math.round(anchor.x + anchor.width / 2)));
+  packet.style.setProperty('--py', String(Math.round(anchor.y + anchor.height / 2 - 62)));
+}
+
 /**
  * SVG of the live stage. Pass pixel width and height to rasterize sharper than
  * the stage's CSS pixels; the viewBox stays in stage coordinates.
@@ -41,12 +89,15 @@ function customProperties(style: CSSStyleDeclaration): string {
 export function renderStagePictureSvg(
   pixelWidth?: number,
   pixelHeight?: number,
-  frame?: { dashOffset: number },
+  frame?: StagePictureOptions,
 ): string {
   const stageWidth = Math.max(1, Math.round(app.doc.stageWidth));
   const stageHeight = Math.max(1, Math.round(app.doc.stageHeight));
-  const outWidth = pixelWidth ?? stageWidth;
-  const outHeight = pixelHeight ?? stageHeight;
+  const currentView = Boolean(frame?.currentView) && viewport.clientWidth > 0 && viewport.clientHeight > 0;
+  const frameWidth = currentView ? Math.max(1, Math.round(viewport.clientWidth)) : stageWidth;
+  const frameHeight = currentView ? Math.max(1, Math.round(viewport.clientHeight)) : stageHeight;
+  const outWidth = pixelWidth ?? frameWidth;
+  const outHeight = pixelHeight ?? frameHeight;
 
   const clone = stageWorld.cloneNode(true) as HTMLElement;
   const liveStreams = [...stageWorld.querySelectorAll<SVGElement>('.conduit-stream')];
@@ -56,21 +107,25 @@ export function renderStagePictureSvg(
     const computed = getComputedStyle(live);
     const dashed = computed.strokeDasharray !== 'none' && computed.strokeDasharray !== '';
     stream.style.animation = 'none';
-    if (frame && dashed) {
+    if (frame?.dashOffset !== undefined && dashed) {
       stream.style.strokeDasharray = computed.strokeDasharray;
       stream.style.strokeDashoffset = `${frame.dashOffset}px`;
       return;
     }
     stream.style.strokeDashoffset = computed.strokeDashoffset;
   });
+  clone.querySelectorAll<HTMLElement>('.align-guide, .marquee-box, #draft-wire').forEach((el) => {
+    el.setAttribute('hidden', '');
+  });
+  if (frame) paintScenario(clone, frame);
   clone.removeAttribute('id');
-  clone.style.transform = 'none';
+  if (!currentView) clone.style.transform = 'none';
   clone.style.width = `${stageWidth}px`;
   clone.style.height = `${stageHeight}px`;
 
   const shell = document.createElement('section');
   shell.className = 'canvas-shell';
-  shell.style.cssText = `position:relative;width:${stageWidth}px;height:${stageHeight}px;overflow:hidden`;
+  shell.style.cssText = `position:relative;width:${frameWidth}px;height:${frameHeight}px;overflow:hidden`;
   shell.appendChild(clone);
 
   const root = document.createElement('div');
@@ -83,8 +138,8 @@ export function renderStagePictureSvg(
   root.style.cssText = [
     customProperties(rootStyle),
     'display:block',
-    `width:${stageWidth}px`,
-    `height:${stageHeight}px`,
+    `width:${frameWidth}px`,
+    `height:${frameHeight}px`,
     `margin:0`,
     `color:${body.color}`,
     `font-family:${body.fontFamily}`,
@@ -100,7 +155,7 @@ export function renderStagePictureSvg(
 
   const serialized = new XMLSerializer().serializeToString(root);
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${stageWidth} ${stageHeight}">
-  <foreignObject x="0" y="0" width="${stageWidth}" height="${stageHeight}">${serialized}</foreignObject>
+<svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${frameWidth} ${frameHeight}">
+  <foreignObject x="0" y="0" width="${frameWidth}" height="${frameHeight}">${serialized}</foreignObject>
 </svg>`;
 }

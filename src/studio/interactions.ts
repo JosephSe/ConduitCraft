@@ -17,6 +17,9 @@ import {
   btnExportPng,
   btnExportSvg,
   btnFocusDocTitle,
+  btnGifBack,
+  btnGifView,
+  btnGifWhole,
   btnImportFile,
   btnNewCanvas,
   btnOpenCode,
@@ -47,8 +50,13 @@ import {
   designInspectorPane,
   designToolbar,
   draftWire,
+  exportCards,
   exportDialog,
+  exportDialogTitle,
   fileUploadInput,
+  gifExportPanel,
+  gifScenarioEmpty,
+  gifScenarioList,
   hudStatusTip,
   marqueeBox,
   matrixDialog,
@@ -128,12 +136,12 @@ import {
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../core/parser';
-import { encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
+import { GIF_MAX_EDGE, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import showcaseBlueprint from '../../public/examples/lumen-relay.blueprint.json?raw';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
-import { renderStagePictureSvg } from './stagePicture';
+import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
@@ -841,22 +849,106 @@ function rasterizeSvg(svg: string, width: number, height: number): Promise<Uint8
   });
 }
 
-async function downloadDiagramGif(): Promise<void> {
+type GifExport = { kind: 'whole' } | { kind: 'view' } | { kind: 'scenario'; id: string };
+
+function filenameSlug(value: string, fallback: string): string {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || fallback
+  );
+}
+
+function showGifChoices(): void {
+  const scenarios = getEffectiveSimulations(app.doc).filter((scenario) => scenario.steps.length > 0);
+  gifScenarioList.replaceChildren();
+  for (const scenario of scenarios) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'export-option-card';
+    const title = document.createElement('strong');
+    title.textContent = scenario.name;
+    const detail = document.createElement('span');
+    const hops = scenario.steps.length;
+    detail.textContent = hops === 1 ? '1 hop' : `${hops} hops`;
+    button.append(title, detail);
+    button.addEventListener('click', () => {
+      void downloadDiagramGif({ kind: 'scenario', id: scenario.id });
+      void closeDialogSmoothly(exportDialog);
+    });
+    gifScenarioList.append(button);
+  }
+  gifScenarioEmpty.hidden = scenarios.length > 0;
+  exportCards.hidden = true;
+  gifExportPanel.hidden = false;
+  exportDialogTitle.textContent = 'Animation';
+  btnGifWhole.focus();
+}
+
+function resetGifChoices(): void {
+  gifExportPanel.hidden = true;
+  exportCards.hidden = false;
+  exportDialogTitle.textContent = 'Export Architecture';
+  gifScenarioList.replaceChildren();
+  gifScenarioEmpty.hidden = true;
+}
+
+async function downloadDiagramGif(target: GifExport): Promise<void> {
   const doc = app.doc;
-  const animated = doc.edges.filter((edge) => edge.animated !== false).length;
-  const frameCount = gifFrameCount(animated);
-  const size = gifPixelSize(doc.stageWidth, doc.stageHeight);
-  // The studio dash travels 36px in 1.35s. One 18px cycle across the frames is 8 centiseconds.
-  const delayCs = 8;
   hudStatusTip.textContent = 'Rendering a short animation…';
   try {
+    if (target.kind === 'scenario') {
+      const scenario = getEffectiveSimulations(doc).find((item) => item.id === target.id);
+      if (!scenario || scenario.steps.length === 0) {
+        hudStatusTip.textContent = 'That scenario has no hops to record.';
+        return;
+      }
+      const size = gifPixelSize(doc.stageWidth, doc.stageHeight);
+      const frames: Uint8ClampedArray[] = [];
+      for (const step of scenario.steps) {
+        const svg = renderStagePictureSvg(size.width, size.height, {
+          activeNodes: step.nodes,
+          tone: step.tone,
+          packetLabel: step.label,
+        });
+        frames.push(await rasterizeSvg(svg, size.width, size.height));
+      }
+      const gif = encodeGif({
+        width: size.width,
+        height: size.height,
+        frames,
+        delayCs: 95,
+        maxColors: 256,
+      });
+      const scenarioSlug = filenameSlug(scenario.name, 'scenario');
+      downloadBytes(gif, `${getSafeFilenameSlug()}-${scenarioSlug}.gif`, 'image/gif');
+      hudStatusTip.textContent = `Saved the ${scenario.name} scenario.`;
+      return;
+    }
+
+    const viewRect = target.kind === 'view' ? viewport.getBoundingClientRect() : null;
+    const view =
+      viewRect && viewRect.width >= 1 && viewRect.height >= 1
+        ? { width: viewRect.width, height: viewRect.height }
+        : null;
+    const animated = doc.edges.filter((edge) => edge.animated !== false).length;
+    const frameCount = gifFrameCount(animated);
+    const viewScale = view ? Math.min(2, GIF_MAX_EDGE / Math.max(view.width, view.height, 1)) : 1;
+    const size = view
+      ? {
+          width: Math.max(1, Math.round(view.width * viewScale)),
+          height: Math.max(1, Math.round(view.height * viewScale)),
+        }
+      : gifPixelSize(doc.stageWidth, doc.stageHeight);
+    // The studio dash travels 36px in 1.35s. One 18px cycle across the frames is 8 centiseconds.
+    const delayCs = 8;
     const frames: Uint8ClampedArray[] = [];
     for (let index = 0; index < frameCount; index += 1) {
-      const svg = renderStagePictureSvg(
-        size.width,
-        size.height,
-        frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) },
-      );
+      const dash: StagePictureOptions | undefined =
+        frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) };
+      const options: StagePictureOptions | undefined = view ? { currentView: true, ...dash } : dash;
+      const svg = renderStagePictureSvg(size.width, size.height, options);
       frames.push(await rasterizeSvg(svg, size.width, size.height));
     }
     const gif = encodeGif({
@@ -866,7 +958,12 @@ async function downloadDiagramGif(): Promise<void> {
       delayCs,
       maxColors: 256,
     });
-    downloadBytes(gif, `${getSafeFilenameSlug()}.gif`, 'image/gif');
+    const filename = view ? `${getSafeFilenameSlug()}-view.gif` : `${getSafeFilenameSlug()}.gif`;
+    downloadBytes(gif, filename, 'image/gif');
+    if (view) {
+      hudStatusTip.textContent = 'Saved the current view.';
+      return;
+    }
     hudStatusTip.textContent =
       animated > 0
         ? 'Saved a short animation of the telemetry wires.'
@@ -877,12 +974,7 @@ async function downloadDiagramGif(): Promise<void> {
 }
 
 export function getSafeFilenameSlug(): string {
-  return (
-    (app.doc.title || 'architecture-diagram')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'architecture-diagram'
-  );
+  return filenameSlug(app.doc.title || 'architecture-diagram', 'architecture-diagram');
 }
 
 export function getSelectedCodeFormat(): 'mermaid' | 'blueprint' {
@@ -1146,7 +1238,10 @@ export function initEvents(): void {
   });
 
   // Export Modal & Actions
-  btnOpenExport.addEventListener('click', () => exportDialog.showModal());
+  btnOpenExport.addEventListener('click', () => {
+    resetGifChoices();
+    exportDialog.showModal();
+  });
   btnExportHtml.addEventListener('click', () => {
     const html = generateStandaloneHtml(app.doc);
     downloadBlob(html, `${getSafeFilenameSlug()}.html`, 'text/html;charset=utf-8');
@@ -1170,7 +1265,18 @@ export function initEvents(): void {
     void closeDialogSmoothly(exportDialog);
   });
   btnExportGif.addEventListener('click', () => {
-    void downloadDiagramGif();
+    showGifChoices();
+  });
+  btnGifBack.addEventListener('click', () => {
+    resetGifChoices();
+    btnExportGif.focus();
+  });
+  btnGifWhole.addEventListener('click', () => {
+    void downloadDiagramGif({ kind: 'whole' });
+    void closeDialogSmoothly(exportDialog);
+  });
+  btnGifView.addEventListener('click', () => {
+    void downloadDiagramGif({ kind: 'view' });
     void closeDialogSmoothly(exportDialog);
   });
   btnExportJson.addEventListener('click', () => {
@@ -1194,6 +1300,7 @@ export function initEvents(): void {
   for (const dlg of allDialogs) {
     dlg.addEventListener('close', () => {
       dlg.returnValue = '';
+      if (dlg === exportDialog) resetGifChoices();
     });
     const closeForm = dlg.querySelector('form[method="dialog"]');
     closeForm?.addEventListener('submit', (e) => {
