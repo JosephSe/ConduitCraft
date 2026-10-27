@@ -1,0 +1,14 @@
+flowchart LR
+  subgraph s1["01 · ENTRY — Client"]
+    actor(["Actor"])
+    gateway[["Gateway<br/>Edge Entry"]]
+  end
+
+  subgraph s2["02 · CORE — Processing"]
+    worker("Worker<br/>Stream Processor")
+    db[("Database<br/>State Store")]
+  end
+
+  actor --> gateway
+  gateway --> worker
+  worker ==>|Saved| db

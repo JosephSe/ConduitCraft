@@ -1,0 +1,36 @@
+{
+  "name": "conduitcraft",
+  "version": "1.0.0",
+  "description": "ConduitCraft — Open-source interactive architecture & live telemetry diagramming studio. Build from scratch on a blank canvas or compile Mermaid (.mmd) and Blueprint (.md) files into animated, simulation-ready architecture views.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "architecture-diagram",
+    "mermaid",
+    "flowchart",
+    "telemetry",
+    "diagram-editor",
+    "drawio",
+    "blueprint",
+    "svg-animation"
+  ],
+  "scripts": {
+    "dev": "vite --port 5180",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4180",
+    "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/core.test.ts"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
