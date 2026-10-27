@@ -175,6 +175,8 @@ The name, accent, and logo appear on the studio header and on the exported HTML 
 
 ## Blueprint JSON
 
+Blueprint JSON is the file that keeps the whole studio document. Markdown is easier to read, and its Mermaid block does not carry metrics, brand, scenarios, or custom icons. The export dialog highlights this file. A GIF is a short loop of the moving wires, not a document.
+
 Export writes one file:
 
 ```json

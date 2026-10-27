@@ -151,6 +151,7 @@ export const btnExportMd = document.getElementById('btn-export-md') as HTMLButto
 export const btnExportMmd = document.getElementById('btn-export-mmd') as HTMLButtonElement;
 export const btnExportSvg = document.getElementById('btn-export-svg') as HTMLButtonElement;
 export const btnExportPng = document.getElementById('btn-export-png') as HTMLButtonElement;
+export const btnExportGif = document.getElementById('btn-export-gif') as HTMLButtonElement;
 export const btnExportJson = document.getElementById('btn-export-json') as HTMLButtonElement;
 
 export const matrixDialog = document.getElementById('matrix-dialog') as HTMLDialogElement;

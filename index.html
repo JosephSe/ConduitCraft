@@ -391,21 +391,30 @@
       <div class="dialog-header">
         <h2 id="export-dialog-title">Export Architecture</h2>
         <form method="dialog">
-          <button type="submit" class="btn" autofocus>Close</button>
+          <button type="submit" class="btn">Close</button>
         </form>
       </div>
       <div class="dialog-body">
         <p class="guide-lead">
-          Export an interactive HTML page, a picture, Mermaid, Blueprint Markdown, or a single-file Blueprint JSON document.
+          The highlighted Blueprint file keeps every component, wire, metric, and scenario. The other options are pictures or a readable Markdown copy.
         </p>
         <div class="export-cards">
+          <button type="button" class="export-option-card is-recommended" id="btn-export-json" autofocus>
+            <span class="export-option-kicker">Recommended · full document</span>
+            <strong>Blueprint File (.blueprint.json)</strong>
+            <span>One file for the whole studio document: layout, routes, metrics, payloads, brand, icons, and scenarios. Drop it back on the window to open it again.</span>
+          </button>
+          <button type="button" class="export-option-card" id="btn-export-gif">
+            <strong>Animation (.gif)</strong>
+            <span>A short looping picture of the moving telemetry wires, sized for chat, docs, and slides.</span>
+          </button>
           <button type="button" class="export-option-card" id="btn-export-html">
             <strong>Interactive Animated Data View (.html)</strong>
             <span>Self-contained single-file web page with animated telemetry streams, pan/zoom, inspector, matrix, and live packet simulation.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-md">
             <strong>Blueprint Document (.md)</strong>
-            <span>Preserves exact node coordinates, custom metrics, payloads, swimlanes, notes, and embedded Mermaid chart for re-importing later.</span>
+            <span>A readable copy with coordinates, metrics, and an embedded Mermaid chart. The chart itself does not carry brand, scenarios, or custom icons.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-mmd">
             <strong>Mermaid Flowchart (.mmd)</strong>
@@ -418,10 +427,6 @@
           <button type="button" class="export-option-card" id="btn-export-png">
             <strong>Image (.png)</strong>
             <span>A raster picture of the same drawing, at up to twice the stage resolution.</span>
-          </button>
-          <button type="button" class="export-option-card" id="btn-export-json">
-            <strong>Blueprint File (.blueprint.json)</strong>
-            <span>One JSON file with the whole document. Import it later from the file picker or by dropping it on the window.</span>
           </button>
         </div>
       </div>

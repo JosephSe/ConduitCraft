@@ -2452,6 +2452,12 @@
     outline-offset: 2px;
   }
 
+  .export-option-card.is-recommended {
+    border-color: var(--wl-blue);
+    background: var(--wl-blue-soft);
+    box-shadow: 0 0 0 3px var(--wl-blue-soft);
+  }
+
   .export-option-card strong {
     font-size: 0.9375rem;
     color: var(--wl-ink);
@@ -2461,6 +2467,15 @@
     font-size: 0.8125rem;
     color: var(--wl-ink-secondary);
     line-height: 1.45;
+  }
+
+  .export-option-card .export-option-kicker {
+    font-family: var(--wl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--wl-blue);
   }
 
   .matrix-table {

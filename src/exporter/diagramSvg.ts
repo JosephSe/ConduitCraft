@@ -69,7 +69,7 @@ function nodeMarkup(node: DiagramNode): string {
   ].join('');
 }
 
-export function renderDiagramSvg(doc: DiagramDocument): string {
+export function renderDiagramSvg(doc: DiagramDocument, frame?: { dashOffset: number }): string {
   const width = Math.max(1, doc.stageWidth);
   const height = Math.max(1, doc.stageHeight);
   const routed = routeDiagramEdges(doc);
@@ -101,7 +101,11 @@ export function renderDiagramSvg(doc: DiagramDocument): string {
         edge.label && edge.badgePos
           ? `<text x="${edge.badgePos[0]}" y="${edge.badgePos[1]}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#0b1324">${escapeXml(edge.label)}</text>`
           : '';
-      return `<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="2.25" marker-end="url(#arrow-${edge.tone})"/>${label}`;
+      const dash =
+        frame && edge.animated !== false
+          ? ` stroke-dasharray="8 10" stroke-dashoffset="${frame.dashOffset}"`
+          : '';
+      return `<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="2.25"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}`;
     })
     .join('');
 

@@ -13,6 +13,7 @@ import {
   btnExportJson,
   btnExportMd,
   btnExportMmd,
+  btnExportGif,
   btnExportPng,
   btnExportSvg,
   btnFocusDocTitle,
@@ -127,9 +128,10 @@ import {
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../core/parser';
+import { renderDiagramSvg } from '../exporter/diagramSvg';
+import { GIF_FRAME_DELAY_CS, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
-import { renderDiagramSvg } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
@@ -810,6 +812,74 @@ function downloadDiagramPng(svg: string, width: number, height: number, filename
   image.src = url;
 }
 
+function downloadBytes(bytes: Uint8Array, filename: string, mimeType: string): void {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  const blob = new Blob([copy.buffer], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  downloadUrl(url, filename);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function rasterizeSvg(svg: string, width: number, height: number): Promise<Uint8ClampedArray> {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error('canvas'));
+        return;
+      }
+      ctx.drawImage(image, 0, 0, width, height);
+      const pixels = ctx.getImageData(0, 0, width, height).data;
+      URL.revokeObjectURL(url);
+      resolve(pixels);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('svg'));
+    };
+    image.src = url;
+  });
+}
+
+async function downloadDiagramGif(): Promise<void> {
+  const doc = app.doc;
+  const animated = doc.edges.filter((edge) => edge.animated !== false).length;
+  const frameCount = gifFrameCount(animated);
+  const size = gifPixelSize(doc.stageWidth, doc.stageHeight);
+  hudStatusTip.textContent = 'Rendering a short animation…';
+  try {
+    const frames: Uint8ClampedArray[] = [];
+    for (let index = 0; index < frameCount; index += 1) {
+      const svg = renderDiagramSvg(
+        doc,
+        frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) },
+      );
+      frames.push(await rasterizeSvg(svg, size.width, size.height));
+    }
+    const gif = encodeGif({
+      width: size.width,
+      height: size.height,
+      frames,
+      delayCs: GIF_FRAME_DELAY_CS,
+    });
+    downloadBytes(gif, `${getSafeFilenameSlug()}.gif`, 'image/gif');
+    hudStatusTip.textContent =
+      animated > 0
+        ? 'Saved a short animation of the telemetry wires.'
+        : 'Saved a still picture. No wires on this diagram are animated.';
+  } catch {
+    hudStatusTip.textContent = 'Could not render a GIF of this diagram.';
+  }
+}
+
 export function getSafeFilenameSlug(): string {
   return (
     (app.doc.title || 'architecture-diagram')
@@ -1087,6 +1157,10 @@ export function initEvents(): void {
   btnExportPng.addEventListener('click', () => {
     const svg = renderDiagramSvg(app.doc);
     downloadDiagramPng(svg, app.doc.stageWidth, app.doc.stageHeight, `${getSafeFilenameSlug()}.png`);
+    void closeDialogSmoothly(exportDialog);
+  });
+  btnExportGif.addEventListener('click', () => {
+    void downloadDiagramGif();
     void closeDialogSmoothly(exportDialog);
   });
   btnExportJson.addEventListener('click', () => {
