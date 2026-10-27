@@ -7,6 +7,7 @@ import {
 } from '../src/core/parser.ts';
 import {
   autoLayoutDocument,
+  relatedNodeIds,
   routeDiagramEdges,
 } from '../src/core/layout.ts';
 import {
@@ -183,5 +184,61 @@ describe('ConduitCraft Core Engine — Parser, Routing & Round-Trip Tests', () =
     autoLayoutDocument(doc);
     const [na, nb, nc] = doc.nodes;
     assert.ok(na.x < nb.x && nb.x < nc.x, 'Expected left-to-right monotonic X coordinates');
+  });
+});
+
+describe('connected component highlight', () => {
+  it('keeps the highlight to one hop around every selected component', () => {
+    const doc = createBlankDocument();
+    const a = createNodeFromStencil('core', 40, 40, 0);
+    const b = createNodeFromStencil('service', 280, 40, 1);
+    const c = createNodeFromStencil('store', 520, 40, 2);
+    const lone = createNodeFromStencil('client', 40, 280, 3);
+    a.id = 'a';
+    b.id = 'b';
+    c.id = 'c';
+    lone.id = 'lone';
+    doc.nodes.push(a, b, c, lone);
+    doc.edges.push(
+      {
+        id: 'ab',
+        from: 'a',
+        to: 'b',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'blue',
+        route: 'auto',
+        label: '',
+        animated: false,
+      },
+      {
+        id: 'bc',
+        from: 'b',
+        to: 'c',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'blue',
+        route: 'auto',
+        label: '',
+        animated: false,
+      },
+      {
+        id: 'missing',
+        from: 'a',
+        to: 'ghost',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'blue',
+        route: 'auto',
+        label: '',
+        animated: false,
+      },
+    );
+
+    assert.deepEqual([...relatedNodeIds(doc, ['b'])].sort(), ['a', 'b', 'c']);
+    assert.deepEqual([...relatedNodeIds(doc, ['a'])].sort(), ['a', 'b']);
+    assert.deepEqual([...relatedNodeIds(doc, ['a', 'c'])].sort(), ['a', 'b', 'c']);
+    assert.deepEqual([...relatedNodeIds(doc, ['lone', 'ghost'])].sort(), ['lone']);
+    assert.equal(relatedNodeIds(doc, ['ghost']).size, 0);
   });
 });

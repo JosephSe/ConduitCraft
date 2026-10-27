@@ -1356,6 +1356,25 @@ export function renderLineageRows(upstream: DiagramNode[], downstream: DiagramNo
   );
 }
 
+function lineageOutsideSelection(selected: DiagramNode[]): {
+  upstream: DiagramNode[];
+  downstream: DiagramNode[];
+} {
+  const selectedIds = new Set(selected.map((node) => node.id));
+  const upstream = new Map<string, DiagramNode>();
+  const downstream = new Map<string, DiagramNode>();
+  for (const node of selected) {
+    const adj = getAdjacencyLists(app.doc, node.id);
+    for (const source of adj.upstream) {
+      if (!selectedIds.has(source.id)) upstream.set(source.id, source);
+    }
+    for (const consumer of adj.downstream) {
+      if (!selectedIds.has(consumer.id)) downstream.set(consumer.id, consumer);
+    }
+  }
+  return { upstream: [...upstream.values()], downstream: [...downstream.values()] };
+}
+
 export function syncDataViewInspector(): void {
   const sel = app.selection;
   if (sel.type === 'node') {
@@ -1370,6 +1389,38 @@ export function syncDataViewInspector(): void {
         renderMetricsBoxes(node.metrics);
         renderLineageRows(adj.upstream, adj.downstream);
         inspCode.textContent = node.code;
+      });
+      renderSimulationEditor();
+      return;
+    }
+  }
+
+  if (sel.type === 'multi') {
+    const selected = sel.ids
+      .map((id) => app.doc.nodes.find((node) => node.id === id))
+      .filter((node): node is DiagramNode => node !== undefined);
+    if (selected.length > 0) {
+      const lineage = lineageOutsideSelection(selected);
+      withInspectorTransition(() => {
+        inspBadge.textContent = 'MULTI-SELECT';
+        inspId.textContent = `${selected.length} SELECTED`;
+        inspTitle.textContent = `${selected.length} components`;
+        inspSummary.textContent = selected.map((node) => node.title).join(', ');
+        renderMetricsBoxes([
+          { label: 'Selected', value: `${selected.length}` },
+          { label: 'Upstream', value: `${lineage.upstream.length}` },
+          { label: 'Downstream', value: `${lineage.downstream.length}` },
+        ]);
+        renderLineageRows(lineage.upstream, lineage.downstream);
+        inspCode.textContent = JSON.stringify(
+          {
+            selected: selected.map((node) => node.id),
+            upstream: lineage.upstream.map((node) => node.id),
+            downstream: lineage.downstream.map((node) => node.id),
+          },
+          null,
+          2,
+        );
       });
       renderSimulationEditor();
       return;

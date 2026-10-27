@@ -1126,4 +1126,16 @@ export function getAdjacencyLists(
   };
 }
 
+/** Selected components plus every component one wire away from any of them. */
+export function relatedNodeIds(doc: DiagramDocument, selectedIds: readonly string[]): Set<string> {
+  const nodeMap = new Map(doc.nodes.map((node) => [node.id, node]));
+  const selected = new Set(selectedIds.filter((id) => nodeMap.has(id)));
+  const related = new Set(selected);
+  for (const edge of doc.edges) {
+    if (selected.has(edge.from) && nodeMap.has(edge.to)) related.add(edge.to);
+    if (selected.has(edge.to) && nodeMap.has(edge.from)) related.add(edge.from);
+  }
+  return related;
+}
+
 export type { DiagramEdge };

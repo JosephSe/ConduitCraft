@@ -1040,10 +1040,16 @@ export function initEvents(): void {
       hudStatusTip.textContent =
         app.workspaceMode === 'design'
           ? 'Drag stencils onto grid · Drag from any port dot to wire animated streams'
-          : 'Data View · Select any component to inspect lineage & payload, or trigger a simulation above';
+          : 'Data View · Shift-click to select several components. Connected components stay highlighted.';
 
       if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
-        setSelection({ type: 'node', id: app.doc.nodes[0].id });
+        const live = new Set(app.doc.nodes.map((node) => node.id));
+        const kept = app.selection.type === 'multi' ? app.selection.ids.filter((id) => live.has(id)) : [];
+        setSelection(
+          kept.length > 0
+            ? selectionOfStage({ nodes: kept, zones: [], notes: [] })
+            : { type: 'node', id: app.doc.nodes[0].id },
+        );
       }
 
       updateVisualSelectionHighlights();

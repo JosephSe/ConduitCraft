@@ -1151,6 +1151,13 @@
     transform: translateY(-2px);
   }
 
+  .arch-node.is-related .node-select-hit {
+    border-color: var(--node-accent);
+    box-shadow:
+      0 0 0 3px var(--node-accent-soft),
+      var(--wl-shadow-card);
+  }
+
   .arch-node[data-sim-active="true"] .node-select-hit {
     border-color: var(--sim-accent, var(--wl-emerald));
     box-shadow:
@@ -1368,9 +1375,15 @@
     filter: drop-shadow(0 0 14px var(--node-accent));
   }
 
+  .arch-node.is-related[data-kind="actor"] .actor-shape,
   .arch-node[data-kind="actor"] .node-select-hit:hover .actor-shape,
   .arch-node[data-kind="actor"] .node-select-hit[aria-pressed="true"] .actor-shape {
     fill: var(--node-accent-soft);
+  }
+
+  .arch-node.is-related[data-kind="actor"] .actor-caption {
+    border-color: var(--node-accent);
+    box-shadow: 0 0 0 3px var(--node-accent-soft);
   }
 
   .arch-node[data-kind="actor"][data-sim-active="true"] .actor-figure {
@@ -1479,6 +1492,11 @@
   .arch-node[data-kind="gate"] .node-shape-geom,
   .arch-node[data-kind="store"] .node-shape-geom {
     fill: color-mix(in srgb, var(--node-accent-soft) 72%, var(--wl-surface));
+  }
+
+  .arch-node.is-related .node-shape-plate {
+    color: var(--node-accent);
+    filter: drop-shadow(0 0 8px var(--node-accent-soft));
   }
 
   .node-select-hit:hover .node-shape-plate,

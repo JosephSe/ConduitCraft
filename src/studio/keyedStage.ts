@@ -1,6 +1,6 @@
 /** Keyed stage rendering. Existing elements are updated in place; listeners stay bound. */
 import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagramEdge } from '../types';
-import { expandStageToFit, getAdjacencyLists, routeDiagramEdges } from '../core/layout';
+import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
 import { nodeShapeContentPadding, nodeShapePlate, sanitizeIconImage } from '../core/nodeStyle';
 import {
@@ -29,6 +29,20 @@ import { applySelection, requestInspectorRefresh } from './render';
 import { beginPortWireDrag, createEdgeConnection, deleteSelected } from './interactions';
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
+
+function toggleSelectedNode(id: string): void {
+  const currentIds = getSelectedNodeIds();
+  const nextIds = currentIds.includes(id)
+    ? currentIds.filter((existing) => existing !== id)
+    : [...currentIds, id];
+  applySelection(
+    nextIds.length > 1
+      ? { type: 'multi', ids: nextIds }
+      : nextIds.length === 1
+        ? { type: 'node', id: nextIds[0] }
+        : { type: 'none' },
+  );
+}
 
 function liveZone(id: string): DiagramZone | undefined {
   return app.doc.zones.find((zone) => zone.id === id);
@@ -637,17 +651,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       lastPointerWasDrag = false;
 
       if (e.shiftKey) {
-        const currentIds = getSelectedNodeIds();
-        const nextIds = currentIds.includes(current.id)
-          ? currentIds.filter((id) => id !== current.id)
-          : [...currentIds, current.id];
-        applySelection(
-          nextIds.length > 1
-            ? { type: 'multi', ids: nextIds }
-            : nextIds.length === 1
-              ? { type: 'node', id: nextIds[0] }
-              : { type: 'none' },
-        );
+        toggleSelectedNode(current.id);
         return;
       }
 
@@ -813,6 +817,10 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     }
     const current = liveNode(nodeId);
     if (!current) return;
+    if (e.shiftKey) {
+      if (app.workspaceMode === 'data') toggleSelectedNode(current.id);
+      return;
+    }
     if (app.workspaceMode === 'data') {
       applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
     } else if (app.pointerTool === 'connect') {
@@ -1052,20 +1060,21 @@ export function updateVisualSelectionHighlights(): void {
     nc.classList.toggle('is-selected', notesSelected);
   }
 
-  if (app.workspaceMode === 'data' && app.selection.type === 'node') {
-    const adj = getAdjacencyLists(app.doc, app.selection.id);
-    const upIds = adj.upstream.map((u) => u.id);
-    const downIds = adj.downstream.map((d) => d.id);
+  const selectedIds = getSelectedNodeIds();
+  const spotlight = selectedIds.length > 0 && (app.workspaceMode === 'data' || selectedIds.length > 1);
+  if (spotlight) {
+    const selected = new Set(selectedIds);
+    const related = relatedNodeIds(app.doc, selectedIds);
     for (const w of nodeWrappers) {
       const id = w.dataset.node || '';
       const hit = w.querySelector('.node-select-hit');
-      const isSelected = id === app.selection.id;
-      const connected = isSelected || upIds.includes(id) || downIds.includes(id);
+      const isSelected = selected.has(id);
       hit?.setAttribute('aria-pressed', String(isSelected));
-      w.classList.toggle('is-dimmed', !connected);
+      w.classList.toggle('is-related', related.has(id) && !isSelected);
+      w.classList.toggle('is-dimmed', !related.has(id));
     }
     for (const g of conduitGroups) {
-      const touches = g.dataset.from === app.selection.id || g.dataset.to === app.selection.id;
+      const touches = selected.has(g.dataset.from || '') || selected.has(g.dataset.to || '');
       g.classList.toggle('is-highlighted', touches);
       g.classList.toggle('is-dimmed', !touches);
       g.classList.remove('is-selected');
@@ -1077,7 +1086,7 @@ export function updateVisualSelectionHighlights(): void {
     const id = w.dataset.node || '';
     const hit = w.querySelector('.node-select-hit');
     hit?.setAttribute('aria-pressed', String(isSelectedNode(id)));
-    w.classList.remove('is-dimmed');
+    w.classList.remove('is-dimmed', 'is-related');
   }
   for (const g of conduitGroups) {
     const isSel = app.selection.type === 'edge' && g.dataset.edgeId === app.selection.id;
