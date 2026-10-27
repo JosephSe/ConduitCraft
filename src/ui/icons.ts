@@ -151,3 +151,138 @@ export function renderIconMarkup(icon: NodeIconName, size = 18): string {
 export function renderHumanOutlineMarkup(): string {
   return `<svg width="66" height="78" viewBox="0 0 70 82" fill="none" aria-hidden="true"><circle class="actor-shape" cx="35" cy="18" r="12.5"/><path class="actor-shape" d="M 14 74 C 14 53 22.5 38 35 38 C 47.5 38 56 53 56 74 C 56 77.5 53 79.5 49 79.5 H 21 C 17 79.5 14 77.5 14 74 Z"/></svg>`;
 }
+
+export type UiIconName =
+  | 'undo'
+  | 'redo'
+  | 'pencil'
+  | 'select'
+  | 'connect'
+  | 'settings'
+  | 'swimlane'
+  | 'notes'
+  | 'upload'
+  | 'trash'
+  | 'copy'
+  | 'zoomIn'
+  | 'zoomOut'
+  | 'fit'
+  | 'layout'
+  | 'play'
+  | 'pause'
+  | 'help';
+
+const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
+  undo: [
+    { tag: 'path', attrs: { d: 'M3 7v6h6' } },
+    { tag: 'path', attrs: { d: 'M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13' } },
+  ],
+  redo: [
+    { tag: 'path', attrs: { d: 'M21 7v6h-6' } },
+    { tag: 'path', attrs: { d: 'M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7' } },
+  ],
+  pencil: [
+    { tag: 'path', attrs: { d: 'M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z' } },
+  ],
+  select: [
+    { tag: 'path', attrs: { d: 'm3 3 7 18 3-7 7-3L3 3z' } },
+  ],
+  connect: [
+    { tag: 'circle', attrs: { cx: '18', cy: '6', r: '3' } },
+    { tag: 'circle', attrs: { cx: '6', cy: '18', r: '3' } },
+    { tag: 'path', attrs: { d: 'M18 9v2a4 4 0 0 1-4 4H9' } },
+  ],
+  settings: [
+    { tag: 'circle', attrs: { cx: '12', cy: '12', r: '3' } },
+    {
+      tag: 'path',
+      attrs: {
+        d: 'M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+      },
+    },
+  ],
+  swimlane: [
+    { tag: 'rect', attrs: { x: '3', y: '4', width: '18', height: '16', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M3 10h18' } },
+  ],
+  notes: [
+    { tag: 'rect', attrs: { x: '4', y: '3', width: '16', height: '18', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M8 8h8M8 12h8M8 16h5' } },
+  ],
+  upload: [
+    { tag: 'path', attrs: { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12' } },
+  ],
+  trash: [
+    { tag: 'path', attrs: { d: 'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6' } },
+  ],
+  copy: [
+    { tag: 'rect', attrs: { x: '9', y: '9', width: '13', height: '13', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1' } },
+  ],
+  zoomIn: [
+    { tag: 'circle', attrs: { cx: '11', cy: '11', r: '8' } },
+    { tag: 'path', attrs: { d: 'm21 21-4.35-4.35M11 8v6M8 11h6' } },
+  ],
+  zoomOut: [
+    { tag: 'circle', attrs: { cx: '11', cy: '11', r: '8' } },
+    { tag: 'path', attrs: { d: 'm21 21-4.35-4.35M8 11h6' } },
+  ],
+  fit: [
+    { tag: 'path', attrs: { d: 'M15 3h6v6M9 21H3v-6M21 15v6h-6M3 9V3h6' } },
+  ],
+  layout: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '6', height: '6', rx: '1' } },
+    { tag: 'rect', attrs: { x: '15', y: '3', width: '6', height: '6', rx: '1' } },
+    { tag: 'rect', attrs: { x: '9', y: '15', width: '6', height: '6', rx: '1' } },
+    { tag: 'path', attrs: { d: 'M6 9v3a3 3 0 0 0 3 3h3a3 3 0 0 0 3-3V9' } },
+  ],
+  play: [
+    { tag: 'path', attrs: { d: 'm5 3 14 9-14 9V3z' } },
+  ],
+  pause: [
+    { tag: 'rect', attrs: { x: '6', y: '4', width: '4', height: '16' } },
+    { tag: 'rect', attrs: { x: '14', y: '4', width: '4', height: '16' } },
+  ],
+  help: [
+    { tag: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
+    { tag: 'path', attrs: { d: 'M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01' } },
+  ],
+};
+
+export function renderUiIconMarkup(icon: UiIconName, size = 16): string {
+  const primitives = UI_ICON_PRIMITIVES[icon] || UI_ICON_PRIMITIVES.help;
+  const inner = primitives
+    .map((p) => {
+      const attrs = Object.entries(p.attrs)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(' ');
+      return `<${p.tag} ${attrs}/>`;
+    })
+    .join('');
+  return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+}
+
+export function createUiIconSvg(icon: UiIconName, size = 16): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'ui-icon');
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+
+  const primitives = UI_ICON_PRIMITIVES[icon] || UI_ICON_PRIMITIVES.help;
+  for (const prim of primitives) {
+    const el = document.createElementNS(SVG_NS, prim.tag);
+    for (const [k, v] of Object.entries(prim.attrs)) {
+      el.setAttribute(k, v);
+    }
+    svg.appendChild(el);
+  }
+  return svg;
+}
+

@@ -42,7 +42,8 @@
         <legend class="visually-hidden">Workspace Mode</legend>
         <label class="segmented-label">
           <input type="radio" name="workspace-mode" value="design" class="visually-hidden" checked>
-          <span>✎ Design</span>
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <span>Design</span>
         </label>
         <label class="segmented-label">
           <input type="radio" name="workspace-mode" value="data" class="visually-hidden">
@@ -57,16 +58,22 @@
           <legend class="visually-hidden">Pointer Tool</legend>
           <label class="segmented-label">
             <input type="radio" name="pointer-tool" value="select" class="visually-hidden" checked>
-            <span>↖ Select</span>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
+            <span>Select</span>
           </label>
           <label class="segmented-label">
             <input type="radio" name="pointer-tool" value="connect" class="visually-hidden">
-            <span>⤭ Connect</span>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
+            <span>Connect</span>
           </label>
         </fieldset>
 
-        <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" data-tip="Undo (⌘Z)" disabled>↶</button>
-        <button type="button" class="btn btn-icon-only" id="btn-redo" aria-label="Redo (Cmd/Ctrl+Shift+Z)" data-tip="Redo (⌘⇧Z)" disabled>↷</button>
+        <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" data-tip="Undo (⌘Z)" disabled>
+          <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+        </button>
+        <button type="button" class="btn btn-icon-only" id="btn-redo" aria-label="Redo (Cmd/Ctrl+Shift+Z)" data-tip="Redo (⌘⇧Z)" disabled>
+          <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+        </button>
         <button type="button" class="btn" id="btn-auto-layout" data-tip="Auto-arrange diagram flow">Auto-Layout</button>
       </div>
 
@@ -113,8 +120,12 @@
       <button type="button" class="btn" id="btn-open-code">Mermaid / MD</button>
       <button type="button" class="btn" id="btn-open-matrix">Matrix</button>
       <button type="button" class="btn btn-primary-export" id="btn-open-export">Export</button>
-      <button type="button" class="btn btn-icon-only" id="btn-open-shortcuts" aria-label="Keyboard shortcuts (?)" data-tip="Shortcuts (?)">?</button>
-      <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings" data-tip="Settings">⚙</button>
+      <button type="button" class="btn btn-icon-only" id="btn-open-shortcuts" aria-label="Keyboard shortcuts (?)" data-tip="Shortcuts (?)">
+        <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+      </button>
+      <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings" data-tip="Settings">
+        <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
     </div>
   </header>
 
@@ -134,14 +145,18 @@
           <h3 class="section-heading">STAGE CONTAINERS</h3>
           <div class="palette-stack">
             <button type="button" class="stencil-aux-btn" id="btn-add-zone">
-              <span class="stencil-aux-icon" aria-hidden="true">▭</span>
+              <span class="stencil-aux-icon" aria-hidden="true">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
+              </span>
               <span>
                 <strong>Swimlane Stage</strong>
                 <small>Column header banner</small>
               </span>
             </button>
             <button type="button" class="stencil-aux-btn" id="btn-add-notes">
-              <span class="stencil-aux-icon" aria-hidden="true">☰</span>
+              <span class="stencil-aux-icon" aria-hidden="true">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+              </span>
               <span>
                 <strong>Notes / Spec Card</strong>
                 <small>Checklist annotation box</small>
@@ -168,7 +183,9 @@
       <!-- Drag-and-Drop Overlay -->
       <div class="window-drop-veil" id="window-drop-veil" hidden>
         <div class="drop-veil-card">
-          <span class="drop-veil-icon" aria-hidden="true">⇪</span>
+          <span class="drop-veil-icon" aria-hidden="true">
+            <svg class="ui-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          </span>
           <strong>Drop Mermaid (.mmd), Blueprint (.md), or .blueprint.json</strong>
           <span>Nodes, swimlanes, and animated telemetry conduits will be built automatically</span>
         </div>
@@ -256,9 +273,13 @@
         </div>
 
         <div class="hud-card" role="group" aria-label="Zoom controls">
-          <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">−</button>
+          <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <span class="zoom-readout" id="zoom-readout" aria-live="polite">100%</span>
-          <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in" data-tip="Zoom in (+)" data-tip-pos="top">+</button>
+          <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in" data-tip="Zoom in (+)" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
           <button type="button" class="btn" id="btn-zoom-fit" data-tip="Fit diagram to viewport" data-tip-pos="top">Fit</button>
           <button type="button" class="btn" id="btn-zoom-fit-selection" data-tip="Fit selection to view" data-tip-pos="top">Fit selection</button>
         </div>
