@@ -6,8 +6,8 @@
     "systemTag": "HARBOR CITY // NIGHT DESK",
     "statusLabel": "LIVE TELEMETRY",
     "direction": "LR",
-    "stageWidth": 2000,
-    "stageHeight": 1160,
+    "stageWidth": 2920,
+    "stageHeight": 1172,
     "overviewSummary": "Lumen Relay is the night desk of a fictional harbor city. A resident files a lantern request, the permit gate clears or refuses it, and the relay bus hands a route to the sorter. The ledger tells the partner kiosk when a parcel is ready. Weather can hold the dock beacon, and a still wire carries the signed copy to the quay seal.",
     "brand": {
       "name": "Lumen Relay",
@@ -29,22 +29,22 @@
         "title": "Desk",
         "subtitle": "Permit and archive",
         "x": 196,
-        "width": 640
+        "width": 740
       },
       {
         "id": "zone-relay",
         "number": "03",
         "title": "Relay",
         "subtitle": "Bus, sorter, and dock",
-        "x": 840,
-        "width": 500
+        "x": 1264,
+        "width": 800
       },
       {
         "id": "zone-ledger",
         "number": "04",
         "title": "Ledger",
         "subtitle": "Book, kiosk, and seal",
-        "x": 1344,
+        "x": 2128,
         "width": 540
       }
     ],
@@ -78,8 +78,8 @@
         "id": "notes-rules",
         "title": "Night rules",
         "code": "SPEC-02",
-        "x": 850,
-        "y": 820,
+        "x": 1264,
+        "y": 832,
         "items": [
           {
             "title": "Permit",
@@ -98,6 +98,12 @@
     ],
     "nodes": [
       {
+        "id": "resident",
+        "kind": "actor",
+        "accent": "blue",
+        "icon": "actor",
+        "title": "Resident",
+        "subtitle": "Night caller",
         "eyebrow": "ACTOR",
         "footerLeft": "Bell window",
         "chip": "ROLE",
@@ -115,18 +121,19 @@
           }
         ],
         "code": "{\n  \"caller\": \"resident\",\n  \"window\": \"night\",\n  \"slip\": \"lantern\"\n}",
-        "id": "resident",
-        "kind": "actor",
-        "accent": "blue",
-        "icon": "actor",
-        "title": "Resident",
-        "subtitle": "Night caller",
-        "x": 24,
-        "y": 216,
+        "x": 16,
+        "y": 230,
         "width": 148,
         "height": 142
       },
       {
+        "id": "night-desk",
+        "kind": "core",
+        "accent": "blue",
+        "icon": "monitor",
+        "shape": "rounded",
+        "title": "Night Desk",
+        "subtitle": "Request desk",
         "eyebrow": "PLATFORM",
         "footerLeft": "Desk runtime",
         "chip": "TIER 1",
@@ -144,19 +151,19 @@
           }
         ],
         "code": "{\n  \"desk\": \"night\",\n  \"stamp\": \"open\",\n  \"tier\": 1\n}",
-        "id": "night-desk",
-        "kind": "core",
-        "accent": "blue",
-        "icon": "monitor",
-        "shape": "rounded",
-        "title": "Night Desk",
-        "subtitle": "Request desk",
-        "x": 204,
-        "y": 200,
+        "x": 336,
+        "y": 215,
         "width": 242,
         "height": 172
       },
       {
+        "id": "permit",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "diamond",
+        "title": "Permit",
+        "subtitle": "City policy",
         "eyebrow": "GATE",
         "footerLeft": "Signed check",
         "chip": "GATE",
@@ -174,19 +181,19 @@
           }
         ],
         "code": "{\n  \"gate\": \"permit\",\n  \"policy\": \"harbor-hours\"\n}",
-        "id": "permit",
-        "kind": "gate",
-        "accent": "violet",
-        "icon": "shield",
-        "shape": "diamond",
-        "title": "Permit",
-        "subtitle": "City policy",
-        "x": 474,
-        "y": 156,
+        "x": 768,
+        "y": 159,
         "width": 344,
         "height": 284
       },
       {
+        "id": "relay",
+        "kind": "bus",
+        "accent": "amber",
+        "icon": "bridge",
+        "shape": "pill",
+        "title": "Relay Bus",
+        "subtitle": "Night routes",
         "eyebrow": "BUS",
         "footerLeft": "Pub/sub",
         "chip": "ASYNC",
@@ -204,19 +211,18 @@
           }
         ],
         "code": "{\n  \"bus\": \"relay\",\n  \"topic\": \"night.routes\"\n}",
-        "id": "relay",
-        "kind": "bus",
-        "accent": "amber",
-        "icon": "bridge",
-        "shape": "pill",
-        "title": "Relay Bus",
-        "subtitle": "Night routes",
-        "x": 850,
-        "y": 216,
+        "x": 1296,
+        "y": 230,
         "width": 222,
         "height": 142
       },
       {
+        "id": "sorter",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "code",
+        "title": "Sorter",
+        "subtitle": "Route planner",
         "eyebrow": "SERVICE",
         "footerLeft": "Planner API",
         "chip": "API",
@@ -234,18 +240,19 @@
           }
         ],
         "code": "{\n  \"service\": \"sorter\",\n  \"method\": \"POST\",\n  \"path\": \"/routes\"\n}",
-        "id": "sorter",
-        "kind": "service",
-        "accent": "blue",
-        "icon": "code",
-        "title": "Sorter",
-        "subtitle": "Route planner",
-        "x": 1100,
-        "y": 216,
+        "x": 1744,
+        "y": 230,
         "width": 222,
         "height": 142
       },
       {
+        "id": "ledger",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "shape": "rounded",
+        "title": "Parcel Ledger",
+        "subtitle": "Handoff book",
         "eyebrow": "STORE",
         "footerLeft": "Read / write",
         "chip": "LEDGER",
@@ -263,19 +270,19 @@
           }
         ],
         "code": "{\n  \"store\": \"parcel-ledger\",\n  \"op\": \"commit\"\n}",
-        "id": "ledger",
-        "kind": "store",
-        "accent": "emerald",
-        "icon": "database",
-        "shape": "rounded",
-        "title": "Parcel Ledger",
-        "subtitle": "Handoff book",
-        "x": 1354,
-        "y": 196,
+        "x": 2128,
+        "y": 215,
         "width": 248,
         "height": 172
       },
       {
+        "id": "kiosk",
+        "kind": "client",
+        "accent": "emerald",
+        "icon": "agency",
+        "shape": "pill",
+        "title": "Kiosk",
+        "subtitle": "Partner desk",
         "eyebrow": "",
         "footerLeft": "",
         "chip": "SYNC",
@@ -293,19 +300,19 @@
           }
         ],
         "code": "{\n  \"client\": \"kiosk\",\n  \"partner\": \"quay-coop\"\n}",
-        "id": "kiosk",
-        "kind": "client",
-        "accent": "emerald",
-        "icon": "agency",
-        "shape": "pill",
-        "title": "Kiosk",
-        "subtitle": "Partner desk",
-        "x": 1664,
-        "y": 232,
+        "x": 2592,
+        "y": 256,
         "width": 188,
         "height": 96
       },
       {
+        "id": "archive",
+        "kind": "service",
+        "accent": "rose",
+        "icon": "cloud",
+        "shape": "rounded",
+        "title": "Fog Archive",
+        "subtitle": "Failed nights",
         "eyebrow": "ARCHIVE",
         "footerLeft": "Cold store",
         "chip": "HOLD",
@@ -323,19 +330,18 @@
           }
         ],
         "code": "{\n  \"archive\": \"fog\",\n  \"retentionNights\": 30\n}",
-        "id": "archive",
-        "kind": "service",
-        "accent": "rose",
-        "icon": "cloud",
-        "shape": "rounded",
-        "title": "Fog Archive",
-        "subtitle": "Failed nights",
-        "x": 204,
+        "x": 240,
         "y": 520,
         "width": 222,
         "height": 142
       },
       {
+        "id": "dispatcher",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "cpu",
+        "title": "Dispatcher",
+        "subtitle": "Lane assigner",
         "eyebrow": "COMPUTE",
         "footerLeft": "Worker",
         "chip": "CPU",
@@ -353,18 +359,19 @@
           }
         ],
         "code": "{\n  \"worker\": \"dispatcher\",\n  \"state\": \"running\"\n}",
-        "id": "dispatcher",
-        "kind": "service",
-        "accent": "violet",
-        "icon": "cpu",
-        "title": "Dispatcher",
-        "subtitle": "Lane assigner",
-        "x": 612,
+        "x": 688,
         "y": 520,
         "width": 222,
         "height": 142
       },
       {
+        "id": "beacon",
+        "kind": "service",
+        "accent": "amber",
+        "icon": "spark",
+        "shape": "circle",
+        "title": "Beacon",
+        "subtitle": "Dock light",
         "eyebrow": "SIGNAL",
         "footerLeft": "Lamp",
         "chip": "LIVE",
@@ -382,19 +389,19 @@
           }
         ],
         "code": "{\n  \"beacon\": \"dock-4\",\n  \"state\": \"lit\"\n}",
-        "id": "beacon",
-        "kind": "service",
-        "accent": "amber",
-        "icon": "spark",
-        "shape": "circle",
-        "title": "Beacon",
-        "subtitle": "Dock light",
-        "x": 850,
-        "y": 500,
+        "x": 1136,
+        "y": 496,
         "width": 222,
         "height": 142
       },
       {
+        "id": "weather",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "globe",
+        "shape": "hexagon",
+        "title": "Weather",
+        "subtitle": "Harbor wind",
         "eyebrow": "SIGNAL",
         "footerLeft": "Feed",
         "chip": "WIND",
@@ -412,19 +419,18 @@
           }
         ],
         "code": "{\n  \"feed\": \"harbor-wind\",\n  \"limitKnots\": 18\n}",
-        "id": "weather",
-        "kind": "service",
-        "accent": "blue",
-        "icon": "globe",
-        "shape": "hexagon",
-        "title": "Weather",
-        "subtitle": "Harbor wind",
-        "x": 1100,
-        "y": 500,
+        "x": 1456,
+        "y": 480,
         "width": 222,
         "height": 142
       },
       {
+        "id": "rack",
+        "kind": "service",
+        "accent": "amber",
+        "icon": "server",
+        "title": "Dock Rack",
+        "subtitle": "Edge compute",
         "eyebrow": "EDGE",
         "footerLeft": "Rack",
         "chip": "NODE",
@@ -442,18 +448,18 @@
           }
         ],
         "code": "{\n  \"rack\": \"quay\",\n  \"role\": \"edge\"\n}",
-        "id": "rack",
-        "kind": "service",
-        "accent": "amber",
-        "icon": "server",
-        "title": "Dock Rack",
-        "subtitle": "Edge compute",
-        "x": 1354,
-        "y": 500,
+        "x": 1744,
+        "y": 480,
         "width": 222,
         "height": 142
       },
       {
+        "id": "vault",
+        "kind": "store",
+        "accent": "violet",
+        "icon": "lock",
+        "title": "Seal Vault",
+        "subtitle": "Signed records",
         "eyebrow": "VAULT",
         "footerLeft": "Sealed",
         "chip": "LOCK",
@@ -471,18 +477,19 @@
           }
         ],
         "code": "{\n  \"vault\": \"seal\",\n  \"signed\": true\n}",
-        "id": "vault",
-        "kind": "store",
-        "accent": "violet",
-        "icon": "lock",
-        "title": "Seal Vault",
-        "subtitle": "Signed records",
-        "x": 1616,
-        "y": 480,
+        "x": 2128,
+        "y": 465,
         "width": 248,
         "height": 172
       },
       {
+        "id": "quay-mark",
+        "kind": "client",
+        "accent": "amber",
+        "icon": "spark",
+        "iconImage": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTMiIGZpbGw9IiMxMzRlNGEiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI3IiBmaWxsPSJub25lIiBzdHJva2U9IiM1ZWVhZDQiIHN0cm9rZS13aWR0aD0iMS42Ii8+PHBhdGggZD0iTTE2IDguNXYxNU04LjUgMTZoMTUiIHN0cm9rZT0iI2Y4ZmFmYyIgc3Ryb2tlLXdpZHRoPSIxLjQiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIyLjIiIGZpbGw9IiNmYmJmMjQiLz48L3N2Zz4=",
+        "title": "Quay Mark",
+        "subtitle": "Custom seal",
         "eyebrow": "",
         "footerLeft": "",
         "chip": "SEAL",
@@ -500,22 +507,14 @@
           }
         ],
         "code": "{\n  \"mark\": \"quay-seal\",\n  \"icon\": \"custom\"\n}",
-        "id": "quay-mark",
-        "kind": "client",
-        "accent": "amber",
-        "icon": "spark",
-        "iconImage": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTMiIGZpbGw9IiMxMzRlNGEiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI3IiBmaWxsPSJub25lIiBzdHJva2U9IiM1ZWVhZDQiIHN0cm9rZS13aWR0aD0iMS42Ii8+PHBhdGggZD0iTTE2IDguNXYxNU04LjUgMTZoMTUiIHN0cm9rZT0iI2Y4ZmFmYyIgc3Ryb2tlLXdpZHRoPSIxLjQiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIyLjIiIGZpbGw9IiNmYmJmMjQiLz48L3N2Zz4=",
-        "title": "Quay Mark",
-        "subtitle": "Custom seal",
-        "x": 1648,
-        "y": 748,
+        "x": 2304,
+        "y": 768,
         "width": 188,
         "height": 96
       }
     ],
     "edges": [
       {
-        "animated": true,
         "id": "e-call",
         "from": "resident",
         "to": "night-desk",
@@ -523,10 +522,10 @@
         "targetPort": "left",
         "tone": "blue",
         "route": "auto",
-        "label": "Lantern call"
+        "label": "Lantern call",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-policy",
         "from": "night-desk",
         "to": "permit",
@@ -534,10 +533,10 @@
         "targetPort": "left",
         "tone": "violet",
         "route": "bezier",
-        "label": "Policy check"
+        "label": "Policy check",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-override",
         "from": "night-desk",
         "to": "permit",
@@ -545,10 +544,10 @@
         "targetPort": "top",
         "tone": "violet",
         "route": "over",
-        "label": "Override"
+        "label": "Override",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-clear",
         "from": "permit",
         "to": "relay",
@@ -556,10 +555,10 @@
         "targetPort": "left",
         "tone": "amber",
         "route": "orthogonal",
-        "label": "Cleared"
+        "label": "Cleared",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-denied",
         "from": "permit",
         "to": "resident",
@@ -567,10 +566,10 @@
         "targetPort": "bottom",
         "tone": "rose",
         "route": "under",
-        "label": "Denied"
+        "label": "Denied",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-fog",
         "from": "night-desk",
         "to": "archive",
@@ -578,10 +577,10 @@
         "targetPort": "top",
         "tone": "rose",
         "route": "step",
-        "label": "Fog file"
+        "label": "Fog file",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-assign",
         "from": "archive",
         "to": "dispatcher",
@@ -589,10 +588,10 @@
         "targetPort": "left",
         "tone": "violet",
         "route": "straight",
-        "label": "Assign"
+        "label": "Assign",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-ticket",
         "from": "relay",
         "to": "sorter",
@@ -600,10 +599,10 @@
         "targetPort": "left",
         "tone": "amber",
         "route": "step",
-        "label": "Route ticket"
+        "label": "Route ticket",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-beacon",
         "from": "relay",
         "to": "beacon",
@@ -611,10 +610,10 @@
         "targetPort": "top",
         "tone": "amber",
         "route": "fanout",
-        "label": "Dock light"
+        "label": "Dock light",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-wind",
         "from": "relay",
         "to": "weather",
@@ -622,10 +621,10 @@
         "targetPort": "top",
         "tone": "blue",
         "route": "fanout",
-        "label": "Harbor wind"
+        "label": "Harbor wind",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-commit",
         "from": "sorter",
         "to": "ledger",
@@ -633,10 +632,10 @@
         "targetPort": "left",
         "tone": "emerald",
         "route": "straight",
-        "label": "Commit"
+        "label": "Commit",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-handoff",
         "from": "ledger",
         "to": "kiosk",
@@ -644,10 +643,10 @@
         "targetPort": "left",
         "tone": "emerald",
         "route": "arc",
-        "label": "Handoff"
+        "label": "Handoff",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-receipt",
         "from": "ledger",
         "to": "kiosk",
@@ -655,10 +654,10 @@
         "targetPort": "left",
         "tone": "blue",
         "route": "straight",
-        "label": "Receipt"
+        "label": "Receipt",
+        "animated": true
       },
       {
-        "animated": true,
         "id": "e-rack",
         "from": "sorter",
         "to": "rack",
@@ -666,10 +665,10 @@
         "targetPort": "top",
         "tone": "amber",
         "route": "fanout",
-        "label": "Rack ping"
+        "label": "Rack ping",
+        "animated": true
       },
       {
-        "animated": false,
         "id": "e-seal",
         "from": "rack",
         "to": "vault",
@@ -677,22 +676,19 @@
         "targetPort": "auto",
         "tone": "violet",
         "route": "auto",
-        "label": "Seal"
+        "label": "Seal",
+        "animated": false
       },
       {
-        "animated": false,
         "id": "e-copy",
         "from": "vault",
         "to": "quay-mark",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "sourcePort": "bottom",
+        "targetPort": "top",
         "tone": "amber",
-        "route": "straight",
+        "route": "auto",
         "label": "Seal copy",
-        "waypoint": [
-          1860,
-          700
-        ]
+        "animated": false
       }
     ],
     "simulations": [

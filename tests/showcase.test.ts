@@ -73,7 +73,6 @@ describe('lumen relay showcase', () => {
     );
     assert.ok(doc.edges.some((edge) => edge.animated));
     assert.ok(doc.edges.some((edge) => !edge.animated));
-    assert.ok(doc.edges.some((edge) => edge.waypoint));
     assert.ok(doc.edges.every((edge) => ids.has(edge.from) && ids.has(edge.to)));
 
     const stepTones = new Set(doc.simulations.flatMap((scenario) => scenario.steps.map((step) => step.tone)));
@@ -96,7 +95,10 @@ describe('lumen relay showcase', () => {
     if (!again.ok) return;
     assert.equal(again.doc.nodes.find((node) => node.id === 'permit')?.shape, 'diamond');
     assert.match(again.doc.nodes.find((node) => node.id === 'quay-mark')?.iconImage || '', /^data:image\/svg\+xml;base64,/);
-    assert.deepEqual(again.doc.edges.find((edge) => edge.id === 'e-copy')?.waypoint, [1860, 700]);
+    const sealCopy = again.doc.edges.find((edge) => edge.id === 'e-copy');
+    assert.equal(sealCopy?.sourcePort, 'bottom');
+    assert.equal(sealCopy?.targetPort, 'top');
+    assert.equal(sealCopy?.waypoint, undefined);
     assert.equal(again.doc.edges.find((edge) => edge.id === 'e-seal')?.animated, false);
     assert.equal(again.doc.brand.accent, '#0f766e');
   });
