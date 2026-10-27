@@ -146,6 +146,7 @@ import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture'
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
+import { notify } from './toast';
 
 export function initStencilPalette(): void {
   stencilGrid.replaceChildren();
@@ -553,12 +554,17 @@ export function deleteSelected(): void {
   if (sel.type === 'none') return;
   pushHistory();
 
+  let desc = 'element';
   if (sel.type === 'node') {
     const targetId = sel.id;
+    const node = app.doc.nodes.find((n) => n.id === targetId);
+    desc = node ? `"${node.title}"` : 'component';
     app.doc.nodes = app.doc.nodes.filter((n) => n.id !== targetId);
     app.doc.edges = app.doc.edges.filter((e) => e.from !== targetId && e.to !== targetId);
     dropNodesFromSimulations(new Set([targetId]));
   } else if (sel.type === 'multi') {
+    const count = sel.ids.length + (sel.zoneIds?.length ?? 0) + (sel.notesIds?.length ?? 0);
+    desc = `${count} ${count === 1 ? 'item' : 'items'}`;
     const idSet = new Set(sel.ids);
     const zoneIds = new Set(sel.zoneIds ?? []);
     const notesIds = new Set(sel.notesIds ?? []);
@@ -568,15 +574,19 @@ export function deleteSelected(): void {
     if (notesIds.size > 0) app.doc.notesCards = app.doc.notesCards.filter((card) => !notesIds.has(card.id));
     dropNodesFromSimulations(idSet);
   } else if (sel.type === 'edge') {
+    desc = 'stream';
     app.doc.edges = app.doc.edges.filter((e) => e.id !== sel.id);
   } else if (sel.type === 'zone') {
+    desc = 'swimlane';
     app.doc.zones = app.doc.zones.filter((z) => z.id !== sel.id);
   } else if (sel.type === 'notes') {
+    desc = 'note card';
     app.doc.notesCards = app.doc.notesCards.filter((c) => c.id !== sel.id);
   }
 
   setSelection({ type: 'none' });
   renderAll(true);
+  notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
 }
 
 function dropNodesFromSimulations(ids: Set<string>): void {
@@ -602,6 +612,7 @@ export function duplicateSelected(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'node', id: copy.id });
     renderAll(true);
+    notify('Duplicated component');
   } else if (sel.type === 'multi') {
     const origNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
     const origZones = app.doc.zones.filter((zone) => sel.zoneIds?.includes(zone.id));
@@ -651,6 +662,7 @@ export function duplicateSelected(): void {
     expandStageToFit(app.doc);
     setSelection(selectionOfStage({ nodes: newIds, zones: newZoneIds, notes: newNoteIds }));
     renderAll(true);
+    notify(`Duplicated ${newIds.length + newZoneIds.length + newNoteIds.length} items`);
   } else if (sel.type === 'zone') {
     const orig = app.doc.zones.find((z) => z.id === sel.id);
     if (!orig) return;
@@ -662,6 +674,7 @@ export function duplicateSelected(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'zone', id: copy.id });
     renderAll(true);
+    notify('Duplicated swimlane');
   } else if (sel.type === 'notes') {
     const orig = app.doc.notesCards.find((c) => c.id === sel.id);
     if (!orig) return;
@@ -674,6 +687,7 @@ export function duplicateSelected(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'notes', id: copy.id });
     renderAll(true);
+    notify('Duplicated note card');
   }
 }
 
@@ -685,7 +699,10 @@ export function copySelection(): void {
   app.clipboardEdges = structuredClone(
     app.doc.edges.filter((e) => idSet.has(e.from) && idSet.has(e.to)),
   );
-  hudStatusTip.textContent = `Copied ${app.clipboardNodes.length} ${app.clipboardNodes.length === 1 ? 'component' : 'components'} to studio clipboard`;
+  const count = app.clipboardNodes.length;
+  const msg = `Copied ${count} ${count === 1 ? 'component' : 'components'} to clipboard`;
+  hudStatusTip.textContent = msg;
+  notify(msg);
 }
 
 export function pasteSelection(): void {
@@ -718,6 +735,9 @@ export function pasteSelection(): void {
   expandStageToFit(app.doc);
   setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
   renderAll(true);
+  const msg = `Pasted ${newIds.length} ${newIds.length === 1 ? 'component' : 'components'}`;
+  hudStatusTip.textContent = msg;
+  notify(msg);
 }
 
 // ---------------------------------------------------------------------------
@@ -731,6 +751,7 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
       codeSyncDiagnostics.dataset.tone = 'warn';
       codeSyncDiagnostics.textContent = parsed.error;
       hudStatusTip.textContent = parsed.error;
+      notify(parsed.error, { tone: 'error' });
       return false;
     }
     pushHistory();
@@ -742,7 +763,9 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
     requestAnimationFrame(fitToViewport);
     codeSyncDiagnostics.dataset.tone = 'ok';
     codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components from Blueprint JSON.`;
-    hudStatusTip.textContent = `Imported Blueprint JSON (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    const msg = `Imported Blueprint JSON (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    hudStatusTip.textContent = msg;
+    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
     return true;
   }
 
@@ -755,8 +778,9 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
 
   if (importedDoc.nodes.length === 0 && importedDoc.zones.length === 0 && importedDoc.notesCards.length === 0) {
     codeSyncDiagnostics.dataset.tone = 'warn';
-    codeSyncDiagnostics.textContent =
-      formatIssue(0) || 'No Mermaid flowchart nodes or Blueprint definitions found in input.';
+    const err = formatIssue(0) || 'No Mermaid flowchart nodes or Blueprint definitions found in input.';
+    codeSyncDiagnostics.textContent = err;
+    notify(err, { tone: 'error' });
     return false;
   }
 
@@ -777,11 +801,15 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
       .map((_, i) => formatIssue(i))
       .join(' · ');
     codeSyncDiagnostics.textContent = summary || warnings[0];
-    hudStatusTip.textContent = `Imported ${app.doc.nodes.length} nodes (${issues.length || warnings.length} warning${(issues.length || warnings.length) === 1 ? '' : 's'}: ${formatIssue(0)})`;
+    const msg = `Imported ${app.doc.nodes.length} nodes (${issues.length || warnings.length} warning${(issues.length || warnings.length) === 1 ? '' : 's'}: ${formatIssue(0)})`;
+    hudStatusTip.textContent = msg;
+    notify(`Imported ${app.doc.nodes.length} nodes with warnings`, { action: { label: 'Undo', onClick: () => performUndo() } });
   } else {
     codeSyncDiagnostics.dataset.tone = 'ok';
     codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} streams (0 issues).`;
-    hudStatusTip.textContent = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} animated telemetry streams`;
+    const msg = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} animated telemetry streams`;
+    hudStatusTip.textContent = msg;
+    notify(`Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} streams`, { action: { label: 'Undo', onClick: () => performUndo() } });
   }
   return true;
 }
@@ -828,16 +856,19 @@ function downloadDiagramPng(svg: string, width: number, height: number, filename
     canvas.toBlob((png) => {
       if (!png) {
         hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
+        notify('Could not render a PNG of this diagram.', { tone: 'error' });
         return;
       }
       const pngUrl = URL.createObjectURL(png);
       downloadUrl(pngUrl, filename);
       window.setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
       hudStatusTip.textContent = 'Saved a picture of the canvas.';
+      notify(`Exported ${filename}`);
     }, 'image/png');
   };
   image.onerror = () => {
     hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
+    notify('Could not render a PNG of this diagram.', { tone: 'error' });
   };
   image.src = url;
 }
@@ -946,8 +977,10 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         maxColors: 256,
       });
       const scenarioSlug = filenameSlug(scenario.name, 'scenario');
-      downloadBytes(gif, `${getSafeFilenameSlug()}-${scenarioSlug}.gif`, 'image/gif');
+      const filename = `${getSafeFilenameSlug()}-${scenarioSlug}.gif`;
+      downloadBytes(gif, filename, 'image/gif');
       hudStatusTip.textContent = `Saved the ${scenario.name} scenario.`;
+      notify(`Exported ${filename}`);
       return;
     }
 
@@ -984,6 +1017,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
     });
     const filename = view ? `${getSafeFilenameSlug()}-view.gif` : `${getSafeFilenameSlug()}.gif`;
     downloadBytes(gif, filename, 'image/gif');
+    notify(`Exported ${filename}`);
     if (view) {
       hudStatusTip.textContent = 'Saved the current view.';
       return;
@@ -1096,6 +1130,7 @@ export function initEvents(): void {
     autoLayoutDocument(app.doc);
     renderAll(true);
     fitToViewport();
+    notify('Applied auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
   });
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);
@@ -1128,6 +1163,7 @@ export function initEvents(): void {
     const parsed = parseBlueprintJson(showcaseBlueprint);
     if (!parsed.ok) {
       hudStatusTip.textContent = parsed.error;
+      notify(parsed.error, { tone: 'error' });
       return;
     }
     pushHistory();
@@ -1138,6 +1174,7 @@ export function initEvents(): void {
     renderAll(true);
     requestAnimationFrame(fitToViewport);
     hudStatusTip.textContent = 'Loaded the Lumen Relay showcase.';
+    notify('Loaded the Lumen Relay showcase', { action: { label: 'Undo', onClick: () => performUndo() } });
   });
 
   // Starter Pair on Blank Canvas (1 generic Actor -> 1 generic Core System)
@@ -1165,6 +1202,7 @@ export function initEvents(): void {
     setSelection({ type: 'node', id: core.id });
     renderAll(true);
     fitToViewport();
+    notify('Added starter pair', { action: { label: 'Undo', onClick: () => performUndo() } });
   });
 
   // Restore Previous Autosaved Session
@@ -1177,7 +1215,9 @@ export function initEvents(): void {
     setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
     renderAll(true);
     fitToViewport();
-    hudStatusTip.textContent = `Restored previous session (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    const msg = `Restored previous session (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    hudStatusTip.textContent = msg;
+    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
   });
 
   // Flush pending autosave on page unload
@@ -1198,6 +1238,9 @@ export function initEvents(): void {
     traceList.replaceChildren();
     renderAll(true);
     fitToViewport();
+    if (!isEmpty) {
+      notify('Cleared canvas', { action: { label: 'Undo', onClick: () => performUndo() } });
+    }
   });
 
   // File Import Triggers
@@ -1274,24 +1317,31 @@ export function initEvents(): void {
   });
   btnExportHtml.addEventListener('click', () => {
     const html = generateStandaloneHtml(app.doc);
-    downloadBlob(html, `${getSafeFilenameSlug()}.html`, 'text/html;charset=utf-8');
+    const filename = `${getSafeFilenameSlug()}.html`;
+    downloadBlob(html, filename, 'text/html;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
+    notify(`Exported ${filename}`);
   });
   btnExportMmd.addEventListener('click', () => {
     const mmd = serializeToMermaid(app.doc);
-    downloadBlob(mmd, `${getSafeFilenameSlug()}.mmd`, 'text/plain;charset=utf-8');
+    const filename = `${getSafeFilenameSlug()}.mmd`;
+    downloadBlob(mmd, filename, 'text/plain;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
+    notify(`Exported ${filename}`);
   });
   btnExportSvg.addEventListener('click', () => {
-    downloadBlob(renderStagePictureSvg(), `${getSafeFilenameSlug()}.svg`, 'image/svg+xml;charset=utf-8');
+    const filename = `${getSafeFilenameSlug()}.svg`;
+    downloadBlob(renderStagePictureSvg(), filename, 'image/svg+xml;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
+    notify(`Exported ${filename}`);
   });
   btnExportPng.addEventListener('click', () => {
     const scale = Math.min(2, 4096 / Math.max(app.doc.stageWidth, app.doc.stageHeight, 1));
     const width = Math.max(1, Math.round(app.doc.stageWidth * scale));
     const height = Math.max(1, Math.round(app.doc.stageHeight * scale));
     hudStatusTip.textContent = 'Rendering the canvas…';
-    downloadDiagramPng(renderStagePictureSvg(width, height), width, height, `${getSafeFilenameSlug()}.png`);
+    const filename = `${getSafeFilenameSlug()}.png`;
+    downloadDiagramPng(renderStagePictureSvg(width, height), width, height, filename);
     void closeDialogSmoothly(exportDialog);
   });
   btnExportGif.addEventListener('click', () => {
@@ -1310,12 +1360,14 @@ export function initEvents(): void {
     void closeDialogSmoothly(exportDialog);
   });
   btnExportJson.addEventListener('click', () => {
+    const filename = `${getSafeFilenameSlug()}.blueprint.json`;
     downloadBlob(
       serializeBlueprintJson(app.doc),
-      `${getSafeFilenameSlug()}.blueprint.json`,
+      filename,
       'application/json;charset=utf-8',
     );
     void closeDialogSmoothly(exportDialog);
+    notify(`Exported ${filename}`);
   });
 
   // Matrix & Settings Dialogs
