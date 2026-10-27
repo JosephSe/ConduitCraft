@@ -42,6 +42,7 @@ import type {
   EdgeRouteMode,
   NodeIconName,
   NodeKind,
+  NodeShape,
   PortSide,
   StreamTone,
 } from '../types';
@@ -55,6 +56,7 @@ import {
   getAdjacencyLists,
   getNodeDimensions,
 } from '../core/layout';
+import { NODE_SHAPE_LABELS, NODE_SHAPES, sanitizeIconImage } from '../core/nodeStyle';
 
 import { ICON_LIST } from '../ui/icons';
 
@@ -270,6 +272,74 @@ export function renderPropertyEditor(): void {
     } else {
       form.appendChild(makeField('prop-node-kind', 'Shape Kind', kindSelect));
     }
+
+    const shapeSelect = document.createElement('select');
+    shapeSelect.className = 'prop-select';
+    for (const shape of NODE_SHAPES) {
+      const opt = document.createElement('option');
+      opt.value = shape;
+      opt.textContent = NODE_SHAPE_LABELS[shape];
+      opt.selected = (node.shape || 'card') === shape;
+      shapeSelect.appendChild(opt);
+    }
+    shapeSelect.addEventListener('change', () => {
+      pushHistory();
+      const next = shapeSelect.value as NodeShape;
+      if (next === 'card') delete node.shape;
+      else node.shape = next;
+      renderAll(false);
+    });
+    form.appendChild(makeField('prop-node-shape', 'Node shape', shapeSelect));
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.className = 'prop-file';
+    fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
+    const iconHint = document.createElement('p');
+    iconHint.className = 'prop-hint';
+    iconHint.hidden = true;
+    fileInput.addEventListener('change', () => {
+      const picked = fileInput.files?.[0];
+      fileInput.value = '';
+      if (!picked) return;
+      if (!picked.type.startsWith('image/') || picked.size > 280_000) {
+        iconHint.hidden = false;
+        iconHint.textContent = 'Use a PNG, JPEG, GIF, WebP, or SVG image under 280 KB.';
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        const url = sanitizeIconImage(String(reader.result || ''));
+        const live = app.doc.nodes.find((candidate) => candidate.id === node.id);
+        if (!url || !live) {
+          iconHint.hidden = false;
+          iconHint.textContent = 'That image could not be used. Choose a smaller PNG, JPEG, GIF, WebP, or SVG.';
+          return;
+        }
+        pushHistory();
+        live.iconImage = url;
+        iconHint.hidden = true;
+        renderAll(true);
+      });
+      reader.readAsDataURL(picked);
+    });
+    const iconField = makeField('prop-node-icon-file', 'Custom icon', fileInput);
+    iconField.appendChild(iconHint);
+    if (node.iconImage) {
+      const clearIcon = document.createElement('button');
+      clearIcon.type = 'button';
+      clearIcon.className = 'btn btn-compact';
+      clearIcon.textContent = 'Remove custom icon';
+      clearIcon.addEventListener('click', () => {
+        const live = app.doc.nodes.find((candidate) => candidate.id === node.id);
+        if (!live?.iconImage) return;
+        pushHistory();
+        delete live.iconImage;
+        renderAll(true);
+      });
+      iconField.appendChild(clearIcon);
+    }
+    form.appendChild(iconField);
 
     // Accent Swatch Picker
     const toneWrap = document.createElement('div');

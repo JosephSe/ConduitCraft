@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
+import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
 
 interface RawNodeMeta {
@@ -23,6 +24,8 @@ interface RawNodeMeta {
   accent?: string;
   tone?: string;
   icon?: string;
+  shape?: string;
+  iconImage?: string;
   title?: string;
   subtitle?: string;
   eyebrow?: string;
@@ -670,6 +673,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       typeof metaNode.icon === 'string' &&
         normalizeIconName(metaNode.icon, 'actor') === normalizeIconName(metaNode.icon, 'cloud'),
     );
+    flagUnknown('shape', metaNode.shape, isKnownNodeShape(metaNode.shape));
 
     const kind = normalizeNodeKind(metaNode.kind || metaNode.tier, mNode?.kind || 'service');
     const stencil = STENCIL_CATALOG.find((s) => s.kind === kind) || STENCIL_CATALOG[2];
@@ -677,6 +681,15 @@ export function importMermaidOrBlueprint(rawInput: string): {
 
     const accent = normalizeTone(metaNode.accent || metaNode.tone, stencil.accent);
     const icon = normalizeIconName(metaNode.icon, stencil.icon);
+    const shape = normalizeNodeShape(metaNode.shape);
+    const iconImage = sanitizeIconImage(metaNode.iconImage);
+    if (typeof metaNode.iconImage === 'string' && metaNode.iconImage.trim() && !iconImage) {
+      issues.push({
+        level: 'warning',
+        code: 'unknown-value',
+        message: `Component "${id}" has an icon image that is not a supported image data URL; the built-in icon was used.`,
+      });
+    }
     const title = (metaNode.title || mNode?.title || id).trim();
     const subtitle =
       metaNode.subtitle !== undefined
@@ -735,6 +748,8 @@ export function importMermaidOrBlueprint(rawInput: string): {
       kind,
       accent,
       icon,
+      ...(shape === 'card' ? {} : { shape }),
+      ...(iconImage ? { iconImage } : {}),
       title,
       subtitle,
       eyebrow,
@@ -1144,6 +1159,8 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       kind: n.kind,
       accent: n.accent,
       icon: n.icon,
+      ...(n.shape && n.shape !== 'card' ? { shape: n.shape } : {}),
+      ...(n.iconImage ? { iconImage: n.iconImage } : {}),
       title: n.title,
       subtitle: n.subtitle,
       eyebrow: n.eyebrow,

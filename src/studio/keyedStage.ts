@@ -2,6 +2,7 @@
 import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagramEdge } from '../types';
 import { expandStageToFit, getAdjacencyLists, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
+import { sanitizeIconImage } from '../core/nodeStyle';
 import {
   SVG_NS,
   alignGuideX,
@@ -815,9 +816,23 @@ function createNodeElement(node: DiagramNode): HTMLElement {
   return wrapper;
 }
 
+function glyphKey(image: string | undefined, fallback: string): string {
+  return image ? `img:${image.length}:${image.slice(-32)}` : fallback;
+}
+
+function paintCustomImage(slot: HTMLElement, image: string): void {
+  const img = document.createElement('img');
+  img.className = 'node-custom-icon';
+  img.alt = '';
+  img.src = image;
+  slot.replaceChildren(img);
+}
+
 function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.dataset.kind = node.kind;
   wrapper.dataset.accent = node.accent;
+  if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
+  else delete wrapper.dataset.shape;
   wrapper.style.setProperty('--nx', String(node.x));
   wrapper.style.setProperty('--ny', String(node.y));
   wrapper.style.setProperty('--nw', String(node.width));
@@ -830,6 +845,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   for (const port of wrapper.querySelectorAll<HTMLElement>('.node-port')) {
     port.setAttribute('aria-label', `Connect from ${node.title} ${port.dataset.port} port`);
   }
+
+  const customIcon = sanitizeIconImage(node.iconImage);
 
   if (node.kind === 'actor') {
     const cap = wrapper.querySelector('.actor-caption');
@@ -844,6 +861,15 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     } else {
       role?.remove();
     }
+    const figure = wrapper.querySelector<HTMLElement>('.actor-figure');
+    if (figure) {
+      const key = glyphKey(customIcon, 'outline');
+      if (figure.dataset.glyph !== key) {
+        figure.dataset.glyph = key;
+        if (customIcon) paintCustomImage(figure, customIcon);
+        else figure.replaceChildren(createHumanOutlineSvg(false));
+      }
+    }
     return;
   }
 
@@ -852,9 +878,13 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   const chip = wrapper.querySelector('.micro-chip');
   if (chip) chip.textContent = node.chip;
   const iconBox = wrapper.querySelector<HTMLElement>('.node-icon');
-  if (iconBox && iconBox.dataset.icon !== node.icon) {
-    iconBox.dataset.icon = node.icon;
-    iconBox.replaceChildren(createNodeIconSvg(node.icon, node.kind === 'client' ? 16 : 19));
+  if (iconBox) {
+    const key = glyphKey(customIcon, node.icon);
+    if (iconBox.dataset.icon !== key) {
+      iconBox.dataset.icon = key;
+      if (customIcon) paintCustomImage(iconBox, customIcon);
+      else iconBox.replaceChildren(createNodeIconSvg(node.icon, node.kind === 'client' ? 16 : 19));
+    }
   }
   if (node.kind !== 'client') {
     const eyebrow = wrapper.querySelector('.node-eyebrow');

@@ -1,6 +1,7 @@
 import type { DiagramDocument, DiagramNode, StreamTone } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
+import { sanitizeIconImage } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
@@ -22,12 +23,24 @@ function serializeScriptJson(data: unknown): string {
     .replace(/&/g, '\\u0026');
 }
 
+function nodeShapeAttr(node: DiagramNode): string {
+  if (!node.shape || node.shape === 'card') return '';
+  return ` data-shape="${escapeHtml(node.shape)}"`;
+}
+
+function exportedIconMarkup(node: DiagramNode, size: number, fallback: string): string {
+  const image = sanitizeIconImage(node.iconImage);
+  if (image) return `<img class="node-custom-icon" alt="" src="${escapeHtml(image)}">`;
+  return fallback || renderIconMarkup(node.icon, size);
+}
+
 function renderExportedNode(node: DiagramNode, index: number): string {
   const pressed = index === 0 ? 'true' : 'false';
+  const shape = nodeShapeAttr(node);
   if (node.kind === 'actor') {
     return `
-      <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="actor" data-accent="${escapeHtml(node.accent)}" aria-pressed="${pressed}" style="--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height};">
-        <span class="actor-figure">${renderHumanOutlineMarkup()}</span>
+      <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="actor" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height};">
+        <span class="actor-figure">${exportedIconMarkup(node, 0, renderHumanOutlineMarkup())}</span>
         <span class="actor-caption">
           <span class="node-title">${escapeHtml(node.title)}</span>
           ${node.subtitle ? `<span class="actor-role">${escapeHtml(node.subtitle)}</span>` : ''}
@@ -37,9 +50,9 @@ function renderExportedNode(node: DiagramNode, index: number): string {
 
   if (node.kind === 'client') {
     return `
-      <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="client" data-accent="${escapeHtml(node.accent)}" aria-pressed="${pressed}" style="--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height};">
+      <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="client" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height};">
         <div class="node-top">
-          <span class="node-icon">${renderIconMarkup(node.icon, 16)}</span>
+          <span class="node-icon">${exportedIconMarkup(node, 16, '')}</span>
           <span class="micro-chip">${escapeHtml(node.chip)}</span>
         </div>
         <div>
@@ -50,9 +63,9 @@ function renderExportedNode(node: DiagramNode, index: number): string {
   }
 
   return `
-    <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="${escapeHtml(node.kind)}" data-accent="${escapeHtml(node.accent)}" aria-pressed="${pressed}" style="--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height};">
+    <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="${escapeHtml(node.kind)}" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height};">
       <div class="node-top">
-        <span class="node-icon">${renderIconMarkup(node.icon, 19)}</span>
+        <span class="node-icon">${exportedIconMarkup(node, 19, '')}</span>
         <span class="node-eyebrow">${escapeHtml(node.eyebrow)}</span>
       </div>
       <div>

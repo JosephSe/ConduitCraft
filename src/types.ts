@@ -1,5 +1,7 @@
 export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client';
 
+export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon';
+
 export type StreamTone = 'blue' | 'emerald' | 'rose' | 'violet' | 'amber';
 
 export type PortSide = 'auto' | 'top' | 'right' | 'bottom' | 'left';
@@ -63,6 +65,10 @@ export interface DiagramNode {
   kind: NodeKind;
   accent: StreamTone;
   icon: NodeIconName;
+  /** Visual outline. Omitted means the standard card. */
+  shape?: NodeShape;
+  /** Custom icon as an image data URL. The built-in `icon` is used when this is absent. */
+  iconImage?: string;
   title: string;
   subtitle: string;
   eyebrow: string;

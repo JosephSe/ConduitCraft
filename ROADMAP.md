@@ -23,7 +23,7 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 ## Nice-to-have (polish and features)
 - [x] 13. Minimap and fit-selection.
 - [x] 14. Undo grouping (one undo step per gesture).
-- [ ] 15. More node shapes and custom icon/image upload.
+- [x] 15. More node shapes and custom icon/image upload.
 - [ ] 16. SVG / PNG export and single-file `.blueprint.json`.
 - [ ] 17. Simulation editor UI in Data View.
 - [ ] 18. Touch and pen gestures (pinch zoom, two-finger pan, larger ports).

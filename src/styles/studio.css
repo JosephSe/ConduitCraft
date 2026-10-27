@@ -1373,6 +1373,33 @@
     block-size: 1.85rem;
   }
 
+  .node-custom-icon {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .actor-figure .node-custom-icon {
+    inline-size: 4.75rem;
+    block-size: 5.5rem;
+    object-fit: contain;
+  }
+
+  .arch-node[data-shape="rounded"] .node-select-hit { border-radius: 1.75rem; overflow: hidden; }
+  .arch-node[data-shape="pill"] .node-select-hit { border-radius: 999px; overflow: hidden; }
+  .arch-node[data-shape="circle"] .node-select-hit { border-radius: 50%; overflow: hidden; }
+  .arch-node[data-shape="diamond"] .node-select-hit {
+    border-radius: 0;
+    overflow: hidden;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+  .arch-node[data-shape="hexagon"] .node-select-hit {
+    border-radius: 0;
+    overflow: hidden;
+    clip-path: polygon(22% 0, 78% 0, 100% 50%, 78% 100%, 22% 100%, 0 50%);
+  }
+
   .node-eyebrow {
     font-family: var(--wl-font-mono);
     font-size: 0.75rem;
@@ -1673,6 +1700,23 @@
   .prop-textarea {
     resize: vertical;
     min-block-size: 4.5rem;
+  }
+
+  .prop-file {
+    inline-size: 100%;
+    font-size: 0.75rem;
+    color: var(--wl-ink-secondary);
+  }
+
+  .prop-hint {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: var(--wl-rose);
+  }
+
+  .prop-field .btn-compact {
+    margin-block-start: 0.35rem;
+    flex: 0 0 auto;
   }
 
   .prop-textarea-code {
