@@ -67,10 +67,11 @@ import {
 import { normalizeBrandAccent } from '../core/brand';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
 
-import { ICON_LIST, createNodeIconSvg } from '../ui/icons';
+import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 
 // Element-scoped View Transitions (`scoped-component-transitions`)
-export const supportsScopedVT = 'startViewTransition' in Element.prototype;
+export const supportsScopedVT =
+  typeof Element !== 'undefined' && 'startViewTransition' in Element.prototype;
 export function withInspectorTransition(updateFn: () => void): void {
   if (!supportsScopedVT) {
     updateFn();
@@ -169,7 +170,11 @@ export function makeTonePicker(
 
   for (const opt of STREAM_TONE_OPTIONS) {
     const lbl = document.createElement('label');
-    lbl.className = 'swatch-option';
+    lbl.className = 'swatch-option swatch-dot-only';
+    const capName = opt.id.charAt(0).toUpperCase() + opt.id.slice(1);
+    lbl.setAttribute('data-tip', capName);
+    lbl.setAttribute('aria-label', capName);
+
     const radio = document.createElement('input');
     radio.type = 'radio';
     radio.name = groupName;
@@ -181,9 +186,6 @@ export function makeTonePicker(
     dot.className = 'pill-swatch';
     dot.style.background = opt.cssVar;
 
-    const text = document.createElement('span');
-    text.textContent = opt.id.charAt(0).toUpperCase() + opt.id.slice(1);
-
     radio.addEventListener('change', () => {
       if (radio.checked) {
         pushHistory();
@@ -191,7 +193,7 @@ export function makeTonePicker(
       }
     });
 
-    lbl.append(radio, dot, text);
+    lbl.append(radio, dot);
     fs.appendChild(lbl);
   }
   return fs;
@@ -326,6 +328,43 @@ function makeIconPicker(selected: NodeIconName, onChange: (next: NodeIconName) =
   return root;
 }
 
+export function makeCollapsibleSection(
+  id: string,
+  title: string,
+  defaultOpen: boolean,
+  children: HTMLElement[],
+): HTMLDetailsElement {
+  const details = document.createElement('details');
+  details.className = 'prop-section-details';
+  details.id = `prop-section-${id}`;
+
+  try {
+    const saved = localStorage.getItem(`conduitcraft-section-${id}`);
+    details.open = saved !== null ? saved === 'open' : defaultOpen;
+  } catch {
+    details.open = defaultOpen;
+  }
+
+  details.addEventListener('toggle', () => {
+    try {
+      localStorage.setItem(`conduitcraft-section-${id}`, details.open ? 'open' : 'closed');
+    } catch {
+      // Ignore storage errors
+    }
+  });
+
+  const summary = document.createElement('summary');
+  summary.className = 'prop-section-summary';
+  summary.textContent = title;
+
+  const content = document.createElement('div');
+  content.className = 'prop-section-content';
+  content.append(...children);
+
+  details.append(summary, content);
+  return details;
+}
+
 export function renderPropertyEditor(): void {
   closeIconMenus();
   propFormContainer.replaceChildren();
@@ -344,7 +383,9 @@ export function renderPropertyEditor(): void {
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
-    form.appendChild(
+    // --- 1. Basics Section ---
+    const basicsElements: HTMLElement[] = [];
+    basicsElements.push(
       makeField(
         'prop-node-title',
         'Title',
@@ -355,7 +396,7 @@ export function renderPropertyEditor(): void {
       ),
     );
 
-    form.appendChild(
+    basicsElements.push(
       makeField(
         'prop-node-subtitle',
         'Subtitle / Role',
@@ -366,7 +407,23 @@ export function renderPropertyEditor(): void {
       ),
     );
 
-    // Component Kind + Icon Row
+    const toneWrap = document.createElement('div');
+    toneWrap.className = 'prop-field';
+    const toneTitle = document.createElement('span');
+    toneTitle.className = 'field-label';
+    toneTitle.textContent = 'Accent Color';
+    toneWrap.append(
+      toneTitle,
+      makeTonePicker('node-accent-tone', node.accent, (tone) => {
+        node.accent = tone;
+        renderAll(false);
+      }),
+    );
+    basicsElements.push(toneWrap);
+
+    // --- 2. Appearance Section ---
+    const appearanceElements: HTMLElement[] = [];
+
     const kindSelect = document.createElement('select');
     kindSelect.className = 'prop-select';
     for (const st of STENCIL_CATALOG) {
@@ -400,9 +457,9 @@ export function renderPropertyEditor(): void {
       const trigger = iconPicker.querySelector('button');
       if (trigger) trigger.id = 'prop-node-icon';
       iconPicker.removeAttribute('id');
-      form.appendChild(row);
+      appearanceElements.push(row);
     } else {
-      form.appendChild(makeField('prop-node-kind', 'Shape Kind', kindSelect));
+      appearanceElements.push(makeField('prop-node-kind', 'Shape Kind', kindSelect));
     }
 
     const shapeSelect = document.createElement('select');
@@ -424,19 +481,25 @@ export function renderPropertyEditor(): void {
       node.height = frame.height;
       renderAll(false);
     });
-    form.appendChild(makeField('prop-node-shape', 'Node shape', shapeSelect));
+    appearanceElements.push(makeField('prop-node-shape', 'Node Shape', shapeSelect));
 
+    // Custom Icon Upload Zone
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
-    fileInput.className = 'prop-file';
+    fileInput.className = 'visually-hidden';
     fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
+
     const iconHint = document.createElement('p');
     iconHint.className = 'prop-hint';
     iconHint.hidden = true;
-    fileInput.addEventListener('change', () => {
-      const picked = fileInput.files?.[0];
-      fileInput.value = '';
-      if (!picked) return;
+
+    const uploadZone = document.createElement('div');
+    uploadZone.className = 'custom-icon-upload-zone';
+    uploadZone.setAttribute('role', 'button');
+    uploadZone.setAttribute('tabindex', '0');
+    uploadZone.setAttribute('aria-label', 'Upload custom icon image');
+
+    const handleIconFile = (picked: File) => {
       if (!picked.type.startsWith('image/') || picked.size > 280_000) {
         iconHint.hidden = false;
         iconHint.textContent = 'Use a PNG, JPEG, GIF, WebP, or SVG image under 280 KB.';
@@ -454,42 +517,96 @@ export function renderPropertyEditor(): void {
         pushHistory();
         live.iconImage = url;
         iconHint.hidden = true;
+        renderPropertyEditor();
         renderAll(true);
       });
       reader.readAsDataURL(picked);
+    };
+
+    fileInput.addEventListener('change', () => {
+      const picked = fileInput.files?.[0];
+      fileInput.value = '';
+      if (picked) handleIconFile(picked);
     });
-    const iconField = makeField('prop-node-icon-file', 'Custom icon', fileInput);
-    iconField.appendChild(iconHint);
+
     if (node.iconImage) {
-      const clearIcon = document.createElement('button');
-      clearIcon.type = 'button';
-      clearIcon.className = 'btn btn-compact';
-      clearIcon.textContent = 'Remove custom icon';
-      clearIcon.addEventListener('click', () => {
+      const img = document.createElement('img');
+      img.src = node.iconImage;
+      img.className = 'custom-icon-thumb';
+      img.alt = 'Icon preview';
+
+      const promptWrap = document.createElement('div');
+      promptWrap.className = 'custom-icon-upload-prompt';
+      const promptTitle = document.createElement('span');
+      promptTitle.className = 'custom-icon-upload-title';
+      promptTitle.textContent = 'Custom Icon Active';
+      const promptSub = document.createElement('span');
+      promptSub.className = 'custom-icon-upload-sub';
+      promptSub.textContent = 'Drop file or click to replace';
+      promptWrap.append(promptTitle, promptSub);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn btn-compact btn-reject';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const live = app.doc.nodes.find((candidate) => candidate.id === node.id);
         if (!live?.iconImage) return;
         pushHistory();
         delete live.iconImage;
+        renderPropertyEditor();
         renderAll(true);
       });
-      iconField.appendChild(clearIcon);
-    }
-    form.appendChild(iconField);
 
-    // Accent Swatch Picker
-    const toneWrap = document.createElement('div');
-    toneWrap.className = 'prop-field';
-    const toneTitle = document.createElement('span');
-    toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Accent Color';
-    toneWrap.append(
-      toneTitle,
-      makeTonePicker('node-accent-tone', node.accent, (tone) => {
-        node.accent = tone;
-        renderAll(false);
-      }),
-    );
-    form.appendChild(toneWrap);
+      uploadZone.append(img, promptWrap, removeBtn);
+    } else {
+      const uploadIcon = createUiIconSvg('upload', 20);
+      const promptWrap = document.createElement('div');
+      promptWrap.className = 'custom-icon-upload-prompt';
+      const promptTitle = document.createElement('span');
+      promptTitle.className = 'custom-icon-upload-title';
+      promptTitle.textContent = 'Custom Icon (Optional)';
+      const promptSub = document.createElement('span');
+      promptSub.className = 'custom-icon-upload-sub';
+      promptSub.textContent = 'Drop PNG/SVG or click to browse (max 280KB)';
+      promptWrap.append(promptTitle, promptSub);
+      uploadZone.append(uploadIcon, promptWrap);
+    }
+
+    uploadZone.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).tagName !== 'BUTTON') {
+        fileInput.click();
+      }
+    });
+
+    uploadZone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('is-dragover');
+    });
+    uploadZone.addEventListener('dragleave', () => {
+      uploadZone.classList.remove('is-dragover');
+    });
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('is-dragover');
+      const file = e.dataTransfer?.files?.[0];
+      if (file) handleIconFile(file);
+    });
+
+    const iconField = makeField('prop-node-icon-file', 'Custom Icon', uploadZone);
+    iconField.append(fileInput, iconHint);
+    appearanceElements.push(iconField);
+
+    // --- 3. Metadata & Matrix Section ---
+    const metadataElements: HTMLElement[] = [];
 
     if (node.kind !== 'actor') {
       const rowBadges = document.createElement('div');
@@ -520,10 +637,10 @@ export function renderPropertyEditor(): void {
           ),
         ),
       );
-      form.appendChild(rowBadges);
+      metadataElements.push(rowBadges);
 
       if (node.kind !== 'client') {
-        form.appendChild(
+        metadataElements.push(
           makeField(
             'prop-node-footer',
             'Card Footer Label',
@@ -536,7 +653,7 @@ export function renderPropertyEditor(): void {
       }
     }
 
-    form.appendChild(
+    metadataElements.push(
       makeField(
         'prop-node-interface',
         'Protocol / Interface (Matrix)',
@@ -547,7 +664,7 @@ export function renderPropertyEditor(): void {
       ),
     );
 
-    form.appendChild(
+    metadataElements.push(
       makeField(
         'prop-node-summary',
         'Inspector Description',
@@ -556,6 +673,9 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
+
+    // --- 4. Telemetry & Contract Section ---
+    const telemetryElements: HTMLElement[] = [];
 
     // Telemetry Metrics Editor
     const metricsDiv = document.createElement('div');
@@ -604,7 +724,7 @@ export function renderPropertyEditor(): void {
       row.append(kIn, vIn, delBtn);
       metricsDiv.appendChild(row);
     });
-    form.appendChild(metricsDiv);
+    telemetryElements.push(metricsDiv);
 
     // Sample Payload Editor
     const payloadDiv = document.createElement('div');
@@ -622,7 +742,15 @@ export function renderPropertyEditor(): void {
         ),
       ),
     );
-    form.appendChild(payloadDiv);
+    telemetryElements.push(payloadDiv);
+
+    // Assemble Form Sections
+    form.append(
+      makeCollapsibleSection('basics', 'Basics', true, basicsElements),
+      makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements),
+      makeCollapsibleSection('metadata', 'Metadata & Matrix', false, metadataElements),
+      makeCollapsibleSection('telemetry', 'Telemetry & Contract', false, telemetryElements),
+    );
   } else if (sel.type === 'edge') {
     const edge = app.doc.edges.find((e) => e.id === sel.id);
     if (!edge) {
