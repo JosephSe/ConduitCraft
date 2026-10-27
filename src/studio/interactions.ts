@@ -70,6 +70,9 @@ import {
   hudCoachCard,
   btnDismissHudCoach,
   hudStatusTip,
+  hudSearchInput,
+  hudSearchCount,
+  btnClearSearch,
   marqueeBox,
   matrixDialog,
   nodesLayer,
@@ -163,6 +166,7 @@ import { notify } from './toast';
 import { renderShortcutsHtml } from './commands';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
+import { initNodeSearch } from './nodeSearch';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -1608,9 +1612,28 @@ export function initEvents(): void {
     }
   });
 
+  // Node Search in Canvas HUD (Cmd/Ctrl+F)
+  if (hudSearchInput && hudSearchCount && btnClearSearch) {
+    initNodeSearch({
+      searchInput: hudSearchInput,
+      searchCount: hudSearchCount,
+      clearButton: btnClearSearch,
+      getDoc: () => app.doc,
+      onFocusNode: (node) => {
+        setSelection({ type: 'node', id: node.id });
+        renderAll(false);
+        fitSelection();
+      },
+      onClearSearch: () => {
+        renderAll(false);
+      },
+    });
+  }
+
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
   if (shortcutsDialog) allDialogs.push(shortcutsDialog);
+  if (templateGalleryDialog) allDialogs.push(templateGalleryDialog);
   const cmdPaletteDialog = document.getElementById('command-palette-dialog') as HTMLDialogElement | null;
   if (cmdPaletteDialog) allDialogs.push(cmdPaletteDialog);
   for (const dlg of allDialogs) {

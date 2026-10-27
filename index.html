@@ -281,6 +281,24 @@
           <button type="button" class="coach-dismiss-btn" id="btn-dismiss-hud-coach" aria-label="Dismiss hint" data-tip="Dismiss hint" data-tip-pos="top">&times;</button>
         </div>
 
+        <!-- Node Search & Focus in HUD (Cmd/Ctrl+F) -->
+        <div class="hud-card hud-search-card" id="hud-search-card" role="search">
+          <span class="hud-search-icon" aria-hidden="true">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          </span>
+          <input
+            type="search"
+            class="hud-search-input"
+            id="hud-search-input"
+            placeholder="Find node… (⌘F)"
+            aria-label="Find node by title, subtitle, or eyebrow"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <span class="hud-search-count" id="hud-search-count" hidden aria-live="polite"></span>
+          <button type="button" class="hud-search-clear" id="btn-clear-search" hidden aria-label="Clear search" data-tip="Clear (Esc)">&times;</button>
+        </div>
+
         <div class="hud-card" role="group" aria-label="Zoom controls">
           <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>

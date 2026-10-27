@@ -106,6 +106,9 @@ export const simPacketDot = document.getElementById('sim-packet-dot') as HTMLEle
 export const simPacketLabel = document.getElementById('sim-packet-label') as HTMLElement;
 
 export const hudStatusTip = document.getElementById('hud-status-tip') as HTMLElement;
+export const hudSearchInput = document.getElementById('hud-search-input') as HTMLInputElement | null;
+export const hudSearchCount = document.getElementById('hud-search-count') as HTMLElement | null;
+export const btnClearSearch = document.getElementById('btn-clear-search') as HTMLButtonElement | null;
 export const zoomReadout = document.getElementById('zoom-readout') as HTMLElement;
 export const btnZoomIn = document.getElementById('btn-zoom-in') as HTMLButtonElement;
 export const btnZoomOut = document.getElementById('btn-zoom-out') as HTMLButtonElement;
