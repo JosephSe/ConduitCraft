@@ -14,6 +14,10 @@ import type {
   SelectionTarget,
 } from '../types';
 import { createBlankDocument } from '../templates/presets';
+import {
+  resolveSelectionUpdate,
+  type SelectionChange,
+} from './selection';
 
 export interface ActiveWireDraft {
   sourceNodeId: string;
@@ -43,6 +47,23 @@ export const app = {
 };
 
 const MAX_HISTORY = 60;
+const selectionListeners = new Set<(event: SelectionChange) => void>();
+
+export function onSelectionChange(listener: (event: SelectionChange) => void): () => void {
+  selectionListeners.add(listener);
+  return () => selectionListeners.delete(listener);
+}
+
+/** Write `app.selection` and notify listeners only when the selection key changes. */
+export function setSelection(next: SelectionTarget): boolean {
+  const update = resolveSelectionUpdate(app.selection, next);
+  if (!update.changed) return false;
+  const previous = app.selection;
+  app.selection = update.selection;
+  const event: SelectionChange = { previous, selection: app.selection };
+  for (const listener of [...selectionListeners]) listener(event);
+  return true;
+}
 
 let historyApplied: () => void = () => {};
 
@@ -152,21 +173,22 @@ export function performRedo(): void {
 export function validateSelection(): void {
   const sel = app.selection;
   if (sel.type === 'node' && !app.doc.nodes.some((n) => n.id === sel.id)) {
-    app.selection = { type: 'none' };
+    setSelection({ type: 'none' });
   } else if (sel.type === 'multi') {
     const validIds = sel.ids.filter((id) => app.doc.nodes.some((n) => n.id === id));
-    app.selection =
+    setSelection(
       validIds.length > 1
         ? { type: 'multi', ids: validIds }
         : validIds.length === 1
           ? { type: 'node', id: validIds[0] }
-          : { type: 'none' };
+          : { type: 'none' },
+    );
   } else if (sel.type === 'edge' && !app.doc.edges.some((e) => e.id === sel.id)) {
-    app.selection = { type: 'none' };
+    setSelection({ type: 'none' });
   } else if (sel.type === 'zone' && !app.doc.zones.some((z) => z.id === sel.id)) {
-    app.selection = { type: 'none' };
+    setSelection({ type: 'none' });
   } else if (sel.type === 'notes' && !app.doc.notesCards.some((c) => c.id === sel.id)) {
-    app.selection = { type: 'none' };
+    setSelection({ type: 'none' });
   }
 }
 

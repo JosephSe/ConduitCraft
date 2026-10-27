@@ -74,16 +74,17 @@ import {
   performUndo,
   pushHistory,
   screenToWorld,
+  setSelection,
   zoomAround,
 } from './state';
 import {
+  applySelection,
   renderAll,
   renderMatrixTable,
+  requestInspectorRefresh,
   updateVisualSelectionHighlights,
 } from './render';
 import {
-  renderPropertyEditor,
-  syncDataViewInspector,
   withInspectorTransition,
 } from './inspector';
 import type {
@@ -236,7 +237,7 @@ export function addNodeAt(kind: NodeKind, rawX: number, rawY: number): DiagramNo
   }
   app.doc.nodes.push(node);
   expandStageToFit(app.doc);
-  app.selection = { type: 'node', id: node.id };
+  setSelection({ type: 'node', id: node.id });
   renderAll(true);
   return node;
 }
@@ -349,7 +350,7 @@ export function createEdgeConnection(
     animated: true,
   };
   app.doc.edges.push(newEdge);
-  app.selection = { type: 'edge', id: newEdge.id };
+  setSelection({ type: 'edge', id: newEdge.id });
   app.connectSourceNodeId = null;
   renderAll(true);
 }
@@ -520,7 +521,7 @@ export function deleteSelected(): void {
     app.doc.notesCards = app.doc.notesCards.filter((c) => c.id !== sel.id);
   }
 
-  app.selection = { type: 'none' };
+  setSelection({ type: 'none' });
   renderAll(true);
 }
 
@@ -537,7 +538,7 @@ export function duplicateSelected(): void {
     copy.y += 32;
     app.doc.nodes.push(copy);
     expandStageToFit(app.doc);
-    app.selection = { type: 'node', id: copy.id };
+    setSelection({ type: 'node', id: copy.id });
     renderAll(true);
   } else if (sel.type === 'multi') {
     const origNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
@@ -567,7 +568,7 @@ export function duplicateSelected(): void {
       }
     }
     expandStageToFit(app.doc);
-    app.selection = newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] };
+    setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
     renderAll(true);
   } else if (sel.type === 'zone') {
     const orig = app.doc.zones.find((z) => z.id === sel.id);
@@ -578,7 +579,7 @@ export function duplicateSelected(): void {
     copy.x += orig.width + 24;
     app.doc.zones.push(copy);
     expandStageToFit(app.doc);
-    app.selection = { type: 'zone', id: copy.id };
+    setSelection({ type: 'zone', id: copy.id });
     renderAll(true);
   } else if (sel.type === 'notes') {
     const orig = app.doc.notesCards.find((c) => c.id === sel.id);
@@ -590,7 +591,7 @@ export function duplicateSelected(): void {
     copy.y += 32;
     app.doc.notesCards.push(copy);
     expandStageToFit(app.doc);
-    app.selection = { type: 'notes', id: copy.id };
+    setSelection({ type: 'notes', id: copy.id });
     renderAll(true);
   }
 }
@@ -634,8 +635,7 @@ export function pasteSelection(): void {
     }
   }
   expandStageToFit(app.doc);
-  app.selection =
-    newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] };
+  setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
   renderAll(true);
 }
 
@@ -662,7 +662,7 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
     importedDoc.title = fallbackTitle;
   }
   app.doc = importedDoc;
-  app.selection = app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' };
+  setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
   clearSimulation();
   renderAll(true);
   requestAnimationFrame(fitToViewport);
@@ -755,12 +755,11 @@ export function initEvents(): void {
           : 'Data View · Select any component to inspect lineage & payload, or trigger a simulation above';
 
       if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
-        app.selection = { type: 'node', id: app.doc.nodes[0].id };
+        setSelection({ type: 'node', id: app.doc.nodes[0].id });
       }
 
       updateVisualSelectionHighlights();
-      if (app.workspaceMode === 'design') renderPropertyEditor();
-      else syncDataViewInspector();
+      requestInspectorRefresh();
       requestAnimationFrame(fitToViewport);
     });
   }
@@ -788,13 +787,9 @@ export function initEvents(): void {
 
   // Click Topbar Title -> Focus Document Title input in Property Panel
   btnFocusDocTitle.addEventListener('click', () => {
-    app.selection = { type: 'none' };
-    updateVisualSelectionHighlights();
+    applySelection({ type: 'none' }, { refreshIfUnchanged: true });
     if (app.workspaceMode === 'design') {
-      renderPropertyEditor();
       document.getElementById('prop-doc-title')?.focus();
-    } else {
-      syncDataViewInspector();
     }
   });
 
@@ -821,7 +816,7 @@ export function initEvents(): void {
     const zone = createSwimlaneZone(app.doc.zones.length, nextX);
     app.doc.zones.push(zone);
     expandStageToFit(app.doc);
-    app.selection = { type: 'zone', id: zone.id };
+    setSelection({ type: 'zone', id: zone.id });
     renderAll(true);
   });
 
@@ -831,7 +826,7 @@ export function initEvents(): void {
     const notes = createNotesCard(cx - 200, cy + 120);
     app.doc.notesCards.push(notes);
     expandStageToFit(app.doc);
-    app.selection = { type: 'notes', id: notes.id };
+    setSelection({ type: 'notes', id: notes.id });
     renderAll(true);
   });
 
@@ -857,7 +852,7 @@ export function initEvents(): void {
       animated: true,
     });
     expandStageToFit(app.doc);
-    app.selection = { type: 'node', id: core.id };
+    setSelection({ type: 'node', id: core.id });
     renderAll(true);
     fitToViewport();
   });
@@ -869,7 +864,7 @@ export function initEvents(): void {
     pushHistory();
     app.doc = saved;
     expandStageToFit(app.doc);
-    app.selection = app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' };
+    setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
     renderAll(true);
     fitToViewport();
     hudStatusTip.textContent = `Restored previous session (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
@@ -889,7 +884,7 @@ export function initEvents(): void {
     if (!isEmpty) pushHistory();
     clearSimulation();
     app.doc = createBlankDocument();
-    app.selection = { type: 'none' };
+    setSelection({ type: 'none' });
     traceList.replaceChildren();
     renderAll(true);
     fitToViewport();
@@ -1044,9 +1039,7 @@ export function initEvents(): void {
   tabInspector.addEventListener('click', () => switchDataViewTab('inspector'));
   tabTrace.addEventListener('click', () => switchDataViewTab('trace'));
   btnResetSelection.addEventListener('click', () => {
-    app.selection = { type: 'none' };
-    updateVisualSelectionHighlights();
-    syncDataViewInspector();
+    applySelection({ type: 'none' }, { refreshIfUnchanged: true });
   });
   btnClearTrace.addEventListener('click', () => traceList.replaceChildren());
 
@@ -1134,14 +1127,13 @@ export function initEvents(): void {
       const hitIds = app.doc.nodes
         .filter((n) => n.x + n.width >= x1 && n.x <= x2 && n.y + n.height >= y1 && n.y <= y2)
         .map((n) => n.id);
-      app.selection =
+      applySelection(
         hitIds.length > 1
           ? { type: 'multi', ids: hitIds }
           : hitIds.length === 1
             ? { type: 'node', id: hitIds[0] }
-            : { type: 'none' };
-      updateVisualSelectionHighlights();
-      renderPropertyEditor();
+            : { type: 'none' },
+      );
       return;
     }
 
@@ -1152,11 +1144,8 @@ export function initEvents(): void {
     panMoved = false;
     viewport.classList.remove('is-dragging');
     if (e.type === 'pointerup' && !didMove && app.selection.type !== 'none') {
-      app.selection = { type: 'none' };
       app.connectSourceNodeId = null;
-      updateVisualSelectionHighlights();
-      if (app.workspaceMode === 'design') renderPropertyEditor();
-      else syncDataViewInspector();
+      applySelection({ type: 'none' });
     }
   };
   viewport.addEventListener('pointerup', endPan);
@@ -1233,12 +1222,11 @@ export function initEvents(): void {
       if (e.key.toLowerCase() === 'a' && app.workspaceMode === 'design') {
         if (app.doc.nodes.length > 0) {
           e.preventDefault();
-          app.selection =
+          applySelection(
             app.doc.nodes.length > 1
               ? { type: 'multi', ids: app.doc.nodes.map((n) => n.id) }
-              : { type: 'node', id: app.doc.nodes[0].id };
-          updateVisualSelectionHighlights();
-          renderPropertyEditor();
+              : { type: 'node', id: app.doc.nodes[0].id },
+          );
         }
         return;
       }
@@ -1253,9 +1241,7 @@ export function initEvents(): void {
       } else if (e.key === 'Escape') {
         app.connectSourceNodeId = null;
         if (app.selection.type !== 'none') {
-          app.selection = { type: 'none' };
-          updateVisualSelectionHighlights();
-          renderPropertyEditor();
+          applySelection({ type: 'none' });
         }
       }
     }

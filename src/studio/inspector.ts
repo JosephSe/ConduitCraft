@@ -21,8 +21,10 @@ import {
   app,
   fitToViewport,
   pushHistory,
+  setSelection,
 } from './state';
 import {
+  applySelection,
   renderAll,
   renderMatrixTable,
   renderNotesCards,
@@ -193,8 +195,7 @@ export function renderPropertyEditor(): void {
   if (sel.type === 'node') {
     const node = app.doc.nodes.find((n) => n.id === sel.id);
     if (!node) {
-      app.selection = { type: 'none' };
-      renderPropertyEditor();
+      setSelection({ type: 'none' });
       return;
     }
 
@@ -420,8 +421,7 @@ export function renderPropertyEditor(): void {
   } else if (sel.type === 'edge') {
     const edge = app.doc.edges.find((e) => e.id === sel.id);
     if (!edge) {
-      app.selection = { type: 'none' };
-      renderPropertyEditor();
+      setSelection({ type: 'none' });
       return;
     }
 
@@ -651,8 +651,7 @@ export function renderPropertyEditor(): void {
   } else if (sel.type === 'multi') {
     const selectedNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
     if (selectedNodes.length <= 1) {
-      app.selection = selectedNodes.length === 1 ? { type: 'node', id: selectedNodes[0].id } : { type: 'none' };
-      renderPropertyEditor();
+      setSelection(selectedNodes.length === 1 ? { type: 'node', id: selectedNodes[0].id } : { type: 'none' });
       return;
     }
 
@@ -745,8 +744,7 @@ export function renderPropertyEditor(): void {
   } else if (sel.type === 'zone') {
     const zone = app.doc.zones.find((z) => z.id === sel.id);
     if (!zone) {
-      app.selection = { type: 'none' };
-      renderPropertyEditor();
+      setSelection({ type: 'none' });
       return;
     }
 
@@ -811,8 +809,7 @@ export function renderPropertyEditor(): void {
   } else if (sel.type === 'notes') {
     const card = app.doc.notesCards.find((c) => c.id === sel.id);
     if (!card) {
-      app.selection = { type: 'none' };
-      renderPropertyEditor();
+      setSelection({ type: 'none' });
       return;
     }
 
@@ -1037,9 +1034,7 @@ export function renderLineageRows(upstream: DiagramNode[], downstream: DiagramNo
         chip.className = 'lineage-chip';
         chip.textContent = item.title;
         chip.addEventListener('click', () => {
-          app.selection = { type: 'node', id: item.id };
-          updateVisualSelectionHighlights();
-          syncDataViewInspector();
+          applySelection({ type: 'node', id: item.id }, { refreshIfUnchanged: true });
         });
         row.appendChild(chip);
       }

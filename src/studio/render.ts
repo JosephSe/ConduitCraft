@@ -7,10 +7,12 @@ import {
   docTitleHeadingEl,
   emptyStageOverlay,
   matrixTbody,
+  propPanelHeading,
   stageWorld,
   wiresSvg,
 } from './dom';
-import { app, loadSavedSessionDoc } from './state';
+import { app, loadSavedSessionDoc, setSelection } from './state';
+import type { SelectionTarget } from '../types';
 import { renderPropertyEditor, syncDataViewInspector } from './inspector';
 import { renderSimButtons } from './interactions';
 import { getAdjacencyLists } from '../core/layout';
@@ -34,6 +36,28 @@ export {
 // ---------------------------------------------------------------------------
 // Rendering Pipeline (Stage + Wires + Property Editor + Telemetry Inspector)
 // ---------------------------------------------------------------------------
+export function requestInspectorRefresh(): void {
+  if (app.workspaceMode === 'design') renderPropertyEditor();
+  else syncDataViewInspector();
+}
+
+/**
+ * Change the selection through the controller.
+ * An unchanged key skips the inspector rebuild unless the panel heading is stale
+ * or the caller asks for a refresh.
+ */
+export function applySelection(
+  next: SelectionTarget,
+  options?: { refreshIfUnchanged?: boolean; expectedHeading?: string },
+): void {
+  const changed = setSelection(next);
+  if (changed) return;
+  const headingStale =
+    options?.expectedHeading !== undefined &&
+    propPanelHeading.textContent !== options.expectedHeading;
+  if (options?.refreshIfUnchanged || headingStale) requestInspectorRefresh();
+}
+
 export function renderAll(rebuildInspector = true): void {
   const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
   emptyStageOverlay.hidden = !isEmpty;

@@ -18,8 +18,10 @@ import {
   isSelectedNode,
   pushHistory,
   screenToWorld,
+  setSelection,
 } from './state';
-import { renderPropertyEditor, syncDataViewInspector } from './inspector';
+import { renderPropertyEditor } from './inspector';
+import { applySelection, requestInspectorRefresh } from './render';
 import { beginPortWireDrag, createEdgeConnection, deleteSelected } from './interactions';
 import { reconcileKeyed } from './reconcile';
 
@@ -75,9 +77,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     const current = liveZone(banner.dataset.zoneId || '');
     if (!current) return;
     e.stopPropagation();
-    app.selection = { type: 'zone', id: current.id };
-    updateVisualSelectionHighlights();
-    renderPropertyEditor();
+    applySelection({ type: 'zone', id: current.id }, { refreshIfUnchanged: true });
     dragStartX = e.clientX;
     origX = current.x;
     moved = false;
@@ -120,11 +120,7 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     const current = liveZone(banner.dataset.zoneId || '');
     if (!current) return;
     e.stopPropagation();
-    if (app.selection.type !== 'zone' || app.selection.id !== current.id) {
-      app.selection = { type: 'zone', id: current.id };
-      updateVisualSelectionHighlights();
-      renderPropertyEditor();
-    }
+    applySelection({ type: 'zone', id: current.id });
     resizeStartX = e.clientX;
     origW = current.width;
     resized = false;
@@ -202,11 +198,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
-    if (app.selection.type !== 'notes' || app.selection.id !== current.id) {
-      app.selection = { type: 'notes', id: current.id };
-      updateVisualSelectionHighlights();
-      renderPropertyEditor();
-    }
+    applySelection({ type: 'notes', id: current.id });
   });
   aside.addEventListener('pointerup', (e) => {
     if (app.workspaceMode === 'design') e.stopPropagation();
@@ -216,15 +208,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
-    if (
-      app.selection.type !== 'notes' ||
-      app.selection.id !== current.id ||
-      propPanelHeading.textContent !== 'NOTES / SPEC CARD'
-    ) {
-      app.selection = { type: 'notes', id: current.id };
-      updateVisualSelectionHighlights();
-      renderPropertyEditor();
-    }
+    applySelection({ type: 'notes', id: current.id }, { expectedHeading: 'NOTES / SPEC CARD' });
   });
 
   let startX = 0;
@@ -237,11 +221,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
-    if (app.selection.type !== 'notes' || app.selection.id !== current.id) {
-      app.selection = { type: 'notes', id: current.id };
-      updateVisualSelectionHighlights();
-      renderPropertyEditor();
-    }
+    applySelection({ type: 'notes', id: current.id });
     startX = e.clientX;
     startY = e.clientY;
     origX = current.x;
@@ -343,15 +323,11 @@ function createWireGroup(edgeId: string): SVGGElement {
         app.selection.id !== id ||
         propPanelHeading.textContent !== 'STREAM WIRE PROPERTIES'
       ) {
-        app.selection = { type: 'edge', id };
-        updateVisualSelectionHighlights();
+        applySelection({ type: 'edge', id }, { expectedHeading: 'STREAM WIRE PROPERTIES' });
         renderWiresOnly();
-        renderPropertyEditor();
       }
     } else {
-      app.selection = { type: 'node', id: g.dataset.to || '' };
-      updateVisualSelectionHighlights();
-      syncDataViewInspector();
+      applySelection({ type: 'node', id: g.dataset.to || '' }, { refreshIfUnchanged: true });
     }
   };
 
@@ -362,7 +338,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && app.workspaceMode === 'design') {
       e.preventDefault();
       e.stopPropagation();
-      app.selection = { type: 'edge', id: g.dataset.edgeId || '' };
+      setSelection({ type: 'edge', id: g.dataset.edgeId || '' });
       deleteSelected();
     }
   });
@@ -634,23 +610,20 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         const nextIds = currentIds.includes(current.id)
           ? currentIds.filter((id) => id !== current.id)
           : [...currentIds, current.id];
-        app.selection =
+        applySelection(
           nextIds.length > 1
             ? { type: 'multi', ids: nextIds }
             : nextIds.length === 1
               ? { type: 'node', id: nextIds[0] }
-              : { type: 'none' };
-        updateVisualSelectionHighlights();
-        renderPropertyEditor();
+              : { type: 'none' },
+        );
         return;
       }
 
       if (!isSelectedNode(current.id)) {
-        app.selection = { type: 'node', id: current.id };
-        updateVisualSelectionHighlights();
-        renderPropertyEditor();
+        applySelection({ type: 'node', id: current.id });
       } else if (app.selection.type === 'node' && propPanelHeading.textContent !== 'COMPONENT PROPERTIES') {
-        renderPropertyEditor();
+        requestInspectorRefresh();
       }
 
       startClientX = e.clientX;
@@ -681,7 +654,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         hasMoved = true;
         wrapper.classList.add('is-dragging-node');
         if (isHandle) dragHandle.classList.add('dragging');
-        if (!isSelectedNode(current.id)) app.selection = { type: 'node', id: current.id };
+        if (!isSelectedNode(current.id)) setSelection({ type: 'node', id: current.id });
         updateVisualSelectionHighlights();
       }
 
@@ -734,19 +707,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       const current = liveNode(nodeId);
       if (!current || wasMoved || e.shiftKey) return;
       if (app.workspaceMode === 'design') {
-        if (
-          app.selection.type !== 'node' ||
-          app.selection.id !== current.id ||
-          propPanelHeading.textContent !== 'COMPONENT PROPERTIES'
-        ) {
-          app.selection = { type: 'node', id: current.id };
-          updateVisualSelectionHighlights();
-          renderPropertyEditor();
-        }
+        applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
       } else {
-        app.selection = { type: 'node', id: current.id };
-        updateVisualSelectionHighlights();
-        syncDataViewInspector();
+        applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
       }
     });
     triggerEl.addEventListener('lostpointercapture', endMove);
@@ -764,26 +727,16 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     const current = liveNode(nodeId);
     if (!current) return;
     if (app.workspaceMode === 'data') {
-      app.selection = { type: 'node', id: current.id };
-      updateVisualSelectionHighlights();
-      syncDataViewInspector();
+      applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
     } else if (app.pointerTool === 'connect') {
       if (app.connectSourceNodeId && app.connectSourceNodeId !== current.id) {
         createEdgeConnection(app.connectSourceNodeId, current.id, 'auto', 'auto');
       } else {
         app.connectSourceNodeId = current.id;
-        app.selection = { type: 'node', id: current.id };
-        updateVisualSelectionHighlights();
-        renderPropertyEditor();
+        applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
       }
-    } else if (
-      app.selection.type !== 'node' ||
-      app.selection.id !== current.id ||
-      propPanelHeading.textContent !== 'COMPONENT PROPERTIES'
-    ) {
-      app.selection = { type: 'node', id: current.id };
-      updateVisualSelectionHighlights();
-      renderPropertyEditor();
+    } else {
+      applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
     }
   });
 
@@ -806,9 +759,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     wrapper.style.setProperty('--ny', String(current.y));
     expandStageToFit(app.doc);
     renderWiresOnly();
-    app.selection = { type: 'node', id: current.id };
-    updateVisualSelectionHighlights();
-    renderPropertyEditor();
+    applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
   });
 
   wrapper.append(selectBtn, dragHandle);
