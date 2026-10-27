@@ -65,6 +65,8 @@ export interface DiagramZone {
   z?: number;
 }
 
+export type ComponentStatus = 'planned' | 'live' | 'deprecated' | 'at-risk';
+
 export interface DiagramNode {
   id: string;
   kind: NodeKind;
@@ -91,6 +93,8 @@ export interface DiagramNode {
   locked?: boolean;
   z?: number;
   groupId?: string;
+  status?: ComponentStatus;
+  comment?: string;
 }
 
 export interface DiagramEdge {
@@ -105,6 +109,7 @@ export interface DiagramEdge {
   animated: boolean;
   /** Optional manual bend point (world coordinates) the wire is nudged through. */
   waypoint?: [number, number];
+  comment?: string;
 }
 
 export interface RoutedDiagramEdge extends DiagramEdge {

@@ -42,15 +42,29 @@ function nodeBoxStyle(node: DiagramNode): string {
   return `--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height}${pad}`;
 }
 
+function renderNodeBadges(node: DiagramNode): string {
+  let html = '';
+  if (node.status) {
+    const label = node.status === 'at-risk' ? 'At Risk' : node.status.charAt(0).toUpperCase() + node.status.slice(1);
+    html += `<span class="node-status-badge" data-status="${escapeHtml(node.status)}"><span class="status-dot"></span><span class="status-text">${escapeHtml(label)}</span></span>`;
+  }
+  if (node.comment) {
+    html += `<span class="node-comment-badge" title="${escapeHtml(node.comment)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>`;
+  }
+  return html;
+}
+
 function renderExportedNode(node: DiagramNode, index: number): string {
   const pressed = index === 0 ? 'true' : 'false';
   const shape = nodeShapeAttr(node);
   const box = nodeBoxStyle(node);
   const plate = renderNodeShapePlate(node.shape, node.width, node.height);
+  const badges = renderNodeBadges(node);
   if (node.kind === 'actor') {
     return `
       <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="actor" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
         ${plate}
+        ${badges}
         <span class="actor-figure">${exportedIconMarkup(node, 0, renderHumanOutlineMarkup())}</span>
         <span class="actor-caption">
           <span class="node-title">${escapeHtml(node.title)}</span>
@@ -63,6 +77,7 @@ function renderExportedNode(node: DiagramNode, index: number): string {
     return `
       <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="client" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
         ${plate}
+        ${badges}
         <div class="node-top">
           <span class="node-icon">${exportedIconMarkup(node, 16, '')}</span>
           <span class="micro-chip">${escapeHtml(node.chip)}</span>
@@ -77,6 +92,7 @@ function renderExportedNode(node: DiagramNode, index: number): string {
   return `
     <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="${escapeHtml(node.kind)}" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
       ${plate}
+      ${badges}
       <div class="node-top">
         <span class="node-icon">${exportedIconMarkup(node, 19, '')}</span>
         <span class="node-eyebrow">${escapeHtml(node.eyebrow)}</span>

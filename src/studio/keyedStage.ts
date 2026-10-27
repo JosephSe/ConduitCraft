@@ -449,6 +449,34 @@ function createWireGroup(edgeId: string): SVGGElement {
     badge.setAttribute('transform', `translate(${edge.badgePos[0]}, ${edge.badgePos[1]})`);
   };
 
+  const ensureComment = (edge: RoutedDiagramEdge) => {
+    let commentG = g.querySelector<SVGGElement>('.conduit-comment-badge');
+    if (!edge.comment) {
+      commentG?.remove();
+      return;
+    }
+    if (!commentG) {
+      commentG = document.createElementNS(SVG_NS, 'g');
+      commentG.setAttribute('class', 'conduit-comment-badge');
+      const circ = document.createElementNS(SVG_NS, 'circle');
+      circ.setAttribute('r', '7.5');
+      circ.setAttribute('class', 'conduit-comment-bg');
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', 'M -3.5 -2.5 h 7 v 5 h -4.5 l -2.5 2 z');
+      path.setAttribute('class', 'conduit-comment-icon');
+      commentG.append(circ, path);
+      g.appendChild(commentG);
+    }
+    const pos = edge.badgePos || [
+      Math.round((edge.startPoint[0] + edge.endPoint[0]) / 2),
+      Math.round((edge.startPoint[1] + edge.endPoint[1]) / 2),
+    ];
+    const offset = edge.badgeWidth ? Math.round(edge.badgeWidth / 2) + 12 : 0;
+    commentG.setAttribute('transform', `translate(${pos[0] + offset}, ${pos[1] - 8})`);
+    commentG.setAttribute('data-tip', edge.comment.length > 70 ? `${edge.comment.slice(0, 67)}…` : edge.comment);
+    commentG.setAttribute('aria-label', `Review comment: ${edge.comment}`);
+  };
+
   const ensureWaypoint = (edge: RoutedDiagramEdge) => {
     const selected = app.workspaceMode === 'design' && app.selection.type === 'edge' && app.selection.id === edge.id;
     let handle = g.querySelector<SVGCircleElement>('.conduit-waypoint-handle');
@@ -546,6 +574,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     if (laneTx) dot?.setAttribute('transform', laneTx);
     else dot?.removeAttribute('transform');
     ensureBadge(edge);
+    ensureComment(edge);
     ensureWaypoint(edge);
   });
 
@@ -978,6 +1007,40 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     }
   } else {
     lockBadge?.remove();
+  }
+
+  // Status badge
+  let statusBadge = wrapper.querySelector<HTMLElement>('.node-status-badge');
+  if (node.status) {
+    wrapper.dataset.status = node.status;
+    if (!statusBadge) {
+      statusBadge = document.createElement('span');
+      statusBadge.className = 'node-status-badge';
+      wrapper.appendChild(statusBadge);
+    }
+    statusBadge.dataset.status = node.status;
+    const label = node.status === 'at-risk' ? 'At Risk' : node.status.charAt(0).toUpperCase() + node.status.slice(1);
+    statusBadge.setAttribute('data-tip', `Status: ${label}`);
+    statusBadge.setAttribute('aria-label', `Component status: ${label}`);
+    statusBadge.innerHTML = `<span class="status-dot"></span><span class="status-text">${label}</span>`;
+  } else {
+    delete wrapper.dataset.status;
+    statusBadge?.remove();
+  }
+
+  // Comment badge
+  let commentBadge = wrapper.querySelector<HTMLElement>('.node-comment-badge');
+  if (node.comment) {
+    if (!commentBadge) {
+      commentBadge = document.createElement('span');
+      commentBadge.className = 'node-comment-badge';
+      commentBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+      wrapper.appendChild(commentBadge);
+    }
+    commentBadge.setAttribute('data-tip', node.comment.length > 70 ? `${node.comment.slice(0, 67)}…` : node.comment);
+    commentBadge.setAttribute('aria-label', `Review comment: ${node.comment}`);
+  } else {
+    commentBadge?.remove();
   }
 
   const title = wrapper.querySelector('.node-title');

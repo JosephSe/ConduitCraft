@@ -41,8 +41,8 @@ A review of the app as it stands today, with ideas for look and feel and for new
 | 12 | Z-order, lock, and group commands | Feature | Medium | M | [x] Done |
 | 13 | Responsive and compact toolbar | Look and feel | Medium | M | [x] Done |
 | 14 | Mermaid import coverage (`classDef`, styles, more shapes) | Feature | Medium | M | [x] Done |
-| 15 | Edge and node comments, plus status badges | Feature | Medium | M | In Progress |
-| 16 | PWA install and offline support | Feature | Medium | S | Todo |
+| 15 | Edge and node comments, plus status badges | Feature | Medium | M | [x] Done |
+| 16 | PWA install and offline support | Feature | Medium | S | In Progress |
 | 17 | Accessibility audit pass (contrast, focus rings, live regions) | Look and feel | Medium | M | Todo |
 | 18 | Auto-layout options (direction, spacing, layered or tree) | Feature | Medium | L | Todo |
 | 19 | Version snapshots and a diff view | Feature | Medium | L | Todo |

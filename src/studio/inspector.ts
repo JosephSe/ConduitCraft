@@ -45,6 +45,7 @@ import {
 } from './interactions';
 import { isSelectionLocked, canGroupSelection } from './zOrderLockGroup';
 import type {
+  ComponentStatus,
   DiagramNode,
   EdgeRouteMode,
   NodeIconName,
@@ -784,10 +785,48 @@ export function renderPropertyEditor(): void {
     );
     telemetryElements.push(payloadDiv);
 
+    // --- 5. Review & Status Section ---
+    const reviewElements: HTMLElement[] = [];
+    const statusSelect = document.createElement('select');
+    statusSelect.className = 'prop-select';
+    statusSelect.id = 'prop-node-status';
+    const statusOptions: Array<{ value: string; label: string }> = [
+      { value: '', label: 'None / Unspecified' },
+      { value: 'live', label: 'Live (Production Active)' },
+      { value: 'planned', label: 'Planned (Upcoming)' },
+      { value: 'at-risk', label: 'At Risk (Incident / Deprecating)' },
+      { value: 'deprecated', label: 'Deprecated (Legacy)' },
+    ];
+    for (const opt of statusOptions) {
+      const el = document.createElement('option');
+      el.value = opt.value;
+      el.textContent = opt.label;
+      el.selected = (node.status || '') === opt.value;
+      statusSelect.appendChild(el);
+    }
+    statusSelect.addEventListener('change', () => {
+      pushHistory();
+      node.status = (statusSelect.value as ComponentStatus) || undefined;
+      renderAll(false);
+    });
+    reviewElements.push(makeField('prop-node-status', 'Architecture Status', statusSelect));
+
+    reviewElements.push(
+      makeField(
+        'prop-node-comment',
+        'Review Comment / Note',
+        makeTextarea(node.comment || '', (v) => {
+          node.comment = v.trim() || undefined;
+          renderAll(false);
+        }),
+      ),
+    );
+
     // Assemble Form Sections
     form.append(
       makeCollapsibleSection('basics', 'Basics', true, basicsElements),
       makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements),
+      makeCollapsibleSection('review', 'Review & Status', true, reviewElements),
       makeCollapsibleSection('metadata', 'Metadata & Matrix', false, metadataElements),
       makeCollapsibleSection('telemetry', 'Telemetry & Contract', false, telemetryElements),
     );
@@ -1007,6 +1046,17 @@ export function renderPropertyEditor(): void {
       renderAll(true);
     });
     form.appendChild(btnReverse);
+
+    form.appendChild(
+      makeField(
+        'prop-edge-comment',
+        'Review Comment (optional)',
+        makeTextarea(edge.comment || '', (v) => {
+          edge.comment = v.trim() || undefined;
+          renderWiresOnly();
+        }),
+      ),
+    );
 
     if (edge.waypoint) {
       const btnResetWp = document.createElement('button');

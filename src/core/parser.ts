@@ -1,5 +1,6 @@
 import yaml from 'js-yaml';
 import type {
+  ComponentStatus,
   DiagramDocument,
   DiagramEdge,
   DiagramNode,
@@ -44,6 +45,10 @@ interface RawNodeMeta {
   position?: [number, number];
   x?: number;
   y?: number;
+  status?: string;
+  comment?: string;
+  locked?: boolean;
+  groupId?: string;
 }
 
 interface RawEdgeOverride {
@@ -58,6 +63,7 @@ interface RawEdgeOverride {
   label?: string;
   animated?: boolean;
   waypoint?: [number, number];
+  comment?: string;
 }
 
 interface RawBlueprintMeta {
@@ -1014,6 +1020,10 @@ export function importMermaidOrBlueprint(rawInput: string): {
       icon,
       ...(shape === 'card' ? {} : { shape }),
       ...(iconImage ? { iconImage } : {}),
+      ...(metaNode.status ? { status: metaNode.status as ComponentStatus } : {}),
+      ...(metaNode.comment ? { comment: String(metaNode.comment) } : {}),
+      ...(metaNode.locked !== undefined ? { locked: Boolean(metaNode.locked) } : {}),
+      ...(metaNode.groupId ? { groupId: String(metaNode.groupId) } : {}),
       title,
       subtitle,
       eyebrow,
@@ -1055,6 +1065,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       route: normalizeRouteMode(ov?.route ?? me.route),
       label: ov?.label !== undefined ? String(ov.label) : me.label,
       animated: ov?.animated !== false,
+      ...(ov?.comment ? { comment: String(ov.comment) } : {}),
       ...waypointField(ov?.waypoint),
     });
   });
@@ -1080,6 +1091,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       route: normalizeRouteMode(ov.route),
       label: ov.label ? String(ov.label) : '',
       animated: ov.animated !== false,
+      ...(ov.comment ? { comment: String(ov.comment) } : {}),
       ...waypointField(ov.waypoint),
     });
   });
@@ -1432,6 +1444,10 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       icon: n.icon,
       ...(n.shape && n.shape !== 'card' ? { shape: n.shape } : {}),
       ...(n.iconImage ? { iconImage: n.iconImage } : {}),
+      ...(n.status ? { status: n.status } : {}),
+      ...(n.comment ? { comment: n.comment } : {}),
+      ...(n.locked !== undefined ? { locked: n.locked } : {}),
+      ...(n.groupId ? { groupId: n.groupId } : {}),
       title: n.title,
       subtitle: n.subtitle,
       eyebrow: n.eyebrow,
@@ -1501,6 +1517,7 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       route: e.route,
       label: e.label,
       animated: e.animated,
+      ...(e.comment ? { comment: e.comment } : {}),
       ...(e.waypoint ? { waypoint: [Math.round(e.waypoint[0]), Math.round(e.waypoint[1])] } : {}),
     }));
   }

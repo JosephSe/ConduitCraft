@@ -83,6 +83,12 @@ function coerceNode(raw: unknown): DiagramNode | null {
     y: num(raw.y),
     width: num(raw.width, dims.width) || dims.width,
     height: num(raw.height, dims.height) || dims.height,
+    ...(typeof raw.status === 'string' && ['planned', 'live', 'deprecated', 'at-risk'].includes(raw.status)
+      ? { status: raw.status as DiagramNode['status'] }
+      : {}),
+    ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
+    ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
+    ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
   };
 }
 
@@ -102,6 +108,7 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     route: typeof raw.route === 'string' && ROUTES.has(raw.route as EdgeRouteMode) ? (raw.route as EdgeRouteMode) : 'auto',
     label: str(raw.label),
     animated: raw.animated !== false,
+    ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
     ...(waypoint ? { waypoint } : {}),
   };
 }
