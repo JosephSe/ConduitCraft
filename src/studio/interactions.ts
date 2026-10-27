@@ -34,6 +34,9 @@ import {
   btnFileSave,
   btnFileSaveAs,
   btnInstallApp,
+  btnOpenSnapshots,
+  snapshotsDialog,
+  snapshotsDialogBody,
   btnOpenCode,
   btnOpenExport,
   btnEnterPresentation,
@@ -198,6 +201,14 @@ import {
   saveWithNativeFileSystem,
 } from './pwa';
 import { announceModeChange, announceToolChange } from './a11y';
+import {
+  listSnapshots,
+  saveSnapshot,
+  deleteSnapshot,
+  getSnapshot,
+  computeDocumentDiff,
+  renderSnapshotsDialogHtml,
+} from './snapshots';
 import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
@@ -1791,6 +1802,84 @@ export function initEvents(): void {
     notify(`Exported ${filename}`);
   });
 
+  // Version Snapshots & Diff Controller
+  let currentDiffSnapshotId: string | null = null;
+
+  function refreshSnapshotsDialog(): void {
+    if (!snapshotsDialogBody) return;
+    const snapshots = listSnapshots();
+    if (!currentDiffSnapshotId && snapshots.length > 0) {
+      currentDiffSnapshotId = snapshots[0].id;
+    }
+    const selectedSnapshot = snapshots.find((s) => s.id === currentDiffSnapshotId);
+    const diff = selectedSnapshot ? computeDocumentDiff(selectedSnapshot.doc, app.doc) : null;
+    snapshotsDialogBody.innerHTML = renderSnapshotsDialogHtml(snapshots, currentDiffSnapshotId, diff);
+
+    const btnCreate = snapshotsDialogBody.querySelector<HTMLButtonElement>('#btn-create-snapshot');
+    const inputName = snapshotsDialogBody.querySelector<HTMLInputElement>('#input-snapshot-name');
+
+    const handleCreate = () => {
+      const name = inputName?.value.trim() || `Snapshot ${snapshots.length + 1}`;
+      const snap = saveSnapshot(name, app.doc);
+      currentDiffSnapshotId = snap.id;
+      notify(`Saved version snapshot "${snap.name}"`);
+      refreshSnapshotsDialog();
+    };
+
+    btnCreate?.addEventListener('click', handleCreate);
+    inputName?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleCreate();
+      }
+    });
+
+    snapshotsDialogBody.querySelectorAll<HTMLButtonElement>('.btn-snapshot-diff').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentDiffSnapshotId = btn.getAttribute('data-diff-id');
+        refreshSnapshotsDialog();
+      });
+    });
+
+    snapshotsDialogBody.querySelectorAll<HTMLButtonElement>('.btn-snapshot-restore').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-restore-id');
+        if (!id) return;
+        const target = getSnapshot(id);
+        if (target) {
+          pushHistory();
+          app.doc = JSON.parse(JSON.stringify(target.doc));
+          renderAll(true);
+          fitToViewport();
+          snapshotsDialog?.close();
+          notify(`Restored snapshot "${target.name}"`, { action: { label: 'Undo', onClick: () => performUndo() } });
+        }
+      });
+    });
+
+    snapshotsDialogBody.querySelectorAll<HTMLButtonElement>('.btn-snapshot-delete').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-delete-id');
+        if (!id) return;
+        deleteSnapshot(id);
+        if (currentDiffSnapshotId === id) {
+          currentDiffSnapshotId = null;
+        }
+        refreshSnapshotsDialog();
+      });
+    });
+  }
+
+  function openSnapshotsDialog(): void {
+    refreshSnapshotsDialog();
+    snapshotsDialog?.showModal();
+  }
+
+  btnOpenSnapshots?.addEventListener('click', openSnapshotsDialog);
+
   // Matrix & Settings Dialogs
   btnOpenMatrix.addEventListener('click', () => {
     renderMatrixTable();
@@ -1823,6 +1912,7 @@ export function initEvents(): void {
     saveFile: () => void handleSaveDiagram(false),
     saveFileAs: () => void handleSaveDiagram(true),
     openFile: () => void handleOpenFile(),
+    openSnapshotsDialog,
   });
 
   // Dismissible Coach Mark Card

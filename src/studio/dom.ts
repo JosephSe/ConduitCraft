@@ -69,6 +69,7 @@ export const fileUploadInput = document.getElementById('file-upload') as HTMLInp
 export const btnFileMenu = document.getElementById('btn-file-menu') as HTMLButtonElement | null;
 export const fileMenuPopup = document.getElementById('file-menu-popup') as HTMLElement | null;
 export const btnFileExport = document.getElementById('btn-file-export') as HTMLButtonElement | null;
+export const btnOpenSnapshots = document.getElementById('btn-open-snapshots') as HTMLButtonElement | null;
 export const btnTogglePalette = document.getElementById('btn-toggle-palette') as HTMLButtonElement | null;
 export const btnToggleInspector = document.getElementById('btn-toggle-inspector') as HTMLButtonElement | null;
 export const btnNewCanvas = document.getElementById('btn-new-canvas') as HTMLButtonElement;
@@ -104,6 +105,8 @@ export const btnRestoreSession = document.getElementById('btn-restore-session') 
 export const templateGalleryDialog = document.getElementById('template-gallery-dialog') as HTMLDialogElement | null;
 export const templateCategoryFilters = document.getElementById('template-category-filters') as HTMLElement | null;
 export const templateGalleryGrid = document.getElementById('template-gallery-grid') as HTMLElement | null;
+export const snapshotsDialog = document.getElementById('snapshots-dialog') as HTMLDialogElement | null;
+export const snapshotsDialogBody = document.getElementById('snapshots-dialog-body') as HTMLElement | null;
 
 export const viewport = document.getElementById('canvas-viewport') as HTMLElement;
 export const stageWorld = document.getElementById('stage-world') as HTMLElement;

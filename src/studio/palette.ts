@@ -21,6 +21,7 @@ import {
   ungroupSelection,
 } from './zOrderLockGroup';
 import { responsiveToolbar } from './responsiveToolbar';
+import { saveSnapshot } from './snapshots';
 
 export interface PaletteCommand {
   id: string;
@@ -46,6 +47,7 @@ export interface PaletteDeps {
   saveFile?: () => void;
   saveFileAs?: () => void;
   openFile?: () => void;
+  openSnapshotsDialog?: () => void;
 }
 
 let activeIndex = 0;
@@ -640,6 +642,30 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['open', 'load', 'import', 'disk', 'file'],
       run: () => {
         if (deps.openFile) deps.openFile();
+      },
+    },
+    {
+      id: 'open-snapshots',
+      title: 'Version Snapshots & Architecture Diff',
+      subtitle: 'Browse milestones and diff against current live diagram',
+      category: 'Export & Sync',
+      keywords: ['snapshots', 'diff', 'compare', 'history', 'version', 'milestone'],
+      run: () => {
+        if (deps.openSnapshotsDialog) deps.openSnapshotsDialog();
+      },
+    },
+    {
+      id: 'take-snapshot',
+      title: 'Record Version Snapshot Milestone',
+      subtitle: 'Save a named checkpoint of the current diagram state',
+      category: 'Export & Sync',
+      keywords: ['snapshot', 'save', 'checkpoint', 'milestone', 'record'],
+      run: () => {
+        const snap = saveSnapshot(
+          `Snapshot ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          app.doc
+        );
+        notify(`Recorded snapshot "${snap.name}"`);
       },
     },
     {

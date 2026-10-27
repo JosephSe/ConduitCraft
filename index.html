@@ -182,6 +182,10 @@
             <span>Save As…</span>
             <span class="menu-shortcut">⌘⇧S</span>
           </button>
+          <button type="button" class="menu-item" id="btn-open-snapshots" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>Snapshots &amp; Diff…</span>
+          </button>
           <div class="menu-divider" role="separator"></div>
           <button type="button" class="menu-item" id="btn-import-file" role="menuitem">
             <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
@@ -788,6 +792,19 @@
         <div class="template-category-filters" id="template-category-filters" role="tablist" aria-label="Template categories"></div>
       </div>
       <div class="dialog-body template-gallery-body" id="template-gallery-grid" role="region" aria-label="Available templates"></div>
+    </div>
+  </dialog>
+
+  <!-- Version Snapshots & Architecture Diff Dialog -->
+  <dialog id="snapshots-dialog" closedby="any" aria-labelledby="snapshots-dialog-title">
+    <div class="dialog-shell snapshots-dialog-shell" style="max-inline-size: 58rem; inline-size: 92vw;">
+      <div class="dialog-header">
+        <h2 id="snapshots-dialog-title">Version Snapshots &amp; Architecture Diff</h2>
+        <form method="dialog">
+          <button type="submit" class="btn" autofocus>Done</button>
+        </form>
+      </div>
+      <div class="dialog-body snapshots-dialog-body" id="snapshots-dialog-body"></div>
     </div>
   </dialog>
 

@@ -45,7 +45,7 @@ A review of the app as it stands today, with ideas for look and feel and for new
 | 16 | PWA install and offline support | Feature | Medium | S | [x] Done |
 | 17 | Accessibility audit pass (contrast, focus rings, live regions) | Look and feel | Medium | M | [x] Done |
 | 18 | Auto-layout options (direction, spacing, layered or tree) | Feature | Medium | L | [x] Done |
-| 19 | Version snapshots and a diff view | Feature | Medium | L | In Progress |
+| 19 | Version snapshots and a diff view | Feature | Medium | L | [x] Done |
 | 20 | Real-time collaboration | Feature | High | XL | Skipped |
 
 ---
