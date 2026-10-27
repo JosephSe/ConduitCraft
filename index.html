@@ -84,7 +84,36 @@
           </label>
         </fieldset>
 
-        <button type="button" class="btn" id="btn-auto-layout" data-tip="Auto-arrange diagram flow">Auto-Layout</button>
+        <div class="split-btn-group" id="auto-layout-cluster">
+          <button type="button" class="btn btn-split-main" id="btn-auto-layout" data-tip="Auto-arrange diagram flow">Auto-Layout</button>
+          <button type="button" class="btn btn-icon-only btn-split-toggle" id="btn-auto-layout-menu" aria-label="Auto-layout options" data-tip="Layout options" aria-haspopup="menu" aria-expanded="false">
+            <svg class="ui-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="menu-dropdown-popup auto-layout-menu" id="auto-layout-popup" role="menu" hidden>
+            <div class="menu-heading-label">Direction</div>
+            <button type="button" class="menu-item" id="btn-layout-dir-lr" data-layout-dir="LR" role="menuitem">
+              <span>Left to Right (LR)</span>
+            </button>
+            <button type="button" class="menu-item" id="btn-layout-dir-td" data-layout-dir="TD" role="menuitem">
+              <span>Top to Bottom (TD)</span>
+            </button>
+            <div class="menu-divider" role="separator"></div>
+            <div class="menu-heading-label">Spacing</div>
+            <button type="button" class="menu-item" id="btn-layout-sp-compact" data-layout-spacing="compact" role="menuitem">
+              <span>Compact</span>
+            </button>
+            <button type="button" class="menu-item" id="btn-layout-sp-comfortable" data-layout-spacing="comfortable" role="menuitem">
+              <span>Comfortable</span>
+            </button>
+            <button type="button" class="menu-item" id="btn-layout-sp-spacious" data-layout-spacing="spacious" role="menuitem">
+              <span>Spacious</span>
+            </button>
+            <div class="menu-divider" role="separator"></div>
+            <button type="button" class="menu-item" id="btn-layout-selection" role="menuitem">
+              <span>Layout Selection Only</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- Data View Stream Filters (Data View Mode) -->

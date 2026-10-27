@@ -839,10 +839,45 @@ function buildOrthogonalPathFromPoints(
   return { pathD: cmds.join(' '), midPoint };
 }
 
-export function autoLayoutDocument(doc: DiagramDocument): void {
+export type LayoutDirection = 'LR' | 'TD';
+export type LayoutSpacing = 'compact' | 'comfortable' | 'spacious';
+export type LayoutAlgorithm = 'layered' | 'tree';
+
+export interface AutoLayoutOptions {
+  direction?: LayoutDirection;
+  spacing?: LayoutSpacing;
+  algorithm?: LayoutAlgorithm;
+  selectionOnly?: boolean;
+  selectedNodeIds?: readonly string[];
+}
+
+export function autoLayoutDocument(doc: DiagramDocument, options?: AutoLayoutOptions): void {
   if (doc.nodes.length === 0) return;
 
-  const nodes = doc.nodes;
+  const isSelectionOnly = !!(options?.selectionOnly && options.selectedNodeIds && options.selectedNodeIds.length >= 2);
+  const targetIds = isSelectionOnly ? new Set(options!.selectedNodeIds) : new Set(doc.nodes.map((n) => n.id));
+  const nodes = doc.nodes.filter((n) => targetIds.has(n.id));
+  if (nodes.length === 0) return;
+
+  const direction: LayoutDirection = options?.direction || doc.direction || 'LR';
+  if (!isSelectionOnly) {
+    doc.direction = direction;
+  }
+
+  const spacing: LayoutSpacing = options?.spacing || 'comfortable';
+
+  // Compute original bounding box if selectionOnly
+  let initialCenterX = 0;
+  let initialCenterY = 0;
+  if (isSelectionOnly) {
+    const minX = Math.min(...nodes.map((n) => n.x));
+    const maxX = Math.max(...nodes.map((n) => n.x + n.width));
+    const minY = Math.min(...nodes.map((n) => n.y));
+    const maxY = Math.max(...nodes.map((n) => n.y + n.height));
+    initialCenterX = (minX + maxX) / 2;
+    initialCenterY = (minY + maxY) / 2;
+  }
+
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   for (const n of nodes) {
     const frame = nodeShapeFrame(getNodeDimensions(n.kind), n.shape);
@@ -854,7 +889,9 @@ export function autoLayoutDocument(doc: DiagramDocument): void {
   const tempAdj = new Map<string, string[]>();
   for (const id of ids) tempAdj.set(id, []);
 
-  for (const e of doc.edges) {
+  const relevantEdges = doc.edges.filter((e) => targetIds.has(e.from) && targetIds.has(e.to));
+
+  for (const e of relevantEdges) {
     if (e.from !== e.to && e.tone !== 'rose' && e.route !== 'under' && nodeMap.has(e.from) && nodeMap.has(e.to)) {
       tempAdj.get(e.from)!.push(e.to);
     }
@@ -905,10 +942,10 @@ export function autoLayoutDocument(doc: DiagramDocument): void {
 
   // Pin mid-pipeline actor reviewers directly above their target gate in LR mode
   const pinnedAbove = new Map<string, string>();
-  if (doc.direction === 'LR') {
+  if (direction === 'LR') {
     for (const n of nodes) {
-      const inEdges = doc.edges.filter((e) => e.to === n.id);
-      const outEdges = doc.edges.filter((e) => e.from === n.id);
+      const inEdges = relevantEdges.filter((e) => e.to === n.id);
+      const outEdges = relevantEdges.filter((e) => e.from === n.id);
       if (n.kind === 'actor' && inEdges.length === 0 && outEdges.length === 1) {
         const targetId = outEdges[0].to;
         if ((rank.get(targetId) || 0) >= 2) {
@@ -927,24 +964,93 @@ export function autoLayoutDocument(doc: DiagramDocument): void {
   }
 
   const sortedRanks = [...columns.keys()].sort((a, b) => a - b);
+  const maxRank = sortedRanks.length > 0 ? sortedRanks[sortedRanks.length - 1] : 0;
 
-  if (doc.direction === 'LR') {
+  // Sugiyama crossing minimization via Barycenter ordering passes
+  for (let pass = 0; pass < 2; pass++) {
+    // Forward pass: order layer r based on average position in layer r-1
+    for (let r = 1; r <= maxRank; r++) {
+      const col = columns.get(r);
+      const prevCol = columns.get(r - 1);
+      if (!col || !prevCol || prevCol.length === 0) continue;
+
+      const prevOrder = new Map<string, number>();
+      prevCol.forEach((node, idx) => prevOrder.set(node.id, idx));
+
+      col.sort((a, b) => {
+        const inA = relevantEdges.filter((e) => e.to === a.id && prevOrder.has(e.from));
+        const inB = relevantEdges.filter((e) => e.to === b.id && prevOrder.has(e.from));
+        const scoreA = inA.length > 0 ? inA.reduce((sum, e) => sum + prevOrder.get(e.from)!, 0) / inA.length : Infinity;
+        const scoreB = inB.length > 0 ? inB.reduce((sum, e) => sum + prevOrder.get(e.from)!, 0) / inB.length : Infinity;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return (a.y - b.y) || (a.x - b.x);
+      });
+    }
+
+    // Backward pass: order layer r based on average position in layer r+1
+    for (let r = maxRank - 1; r >= 0; r--) {
+      const col = columns.get(r);
+      const nextCol = columns.get(r + 1);
+      if (!col || !nextCol || nextCol.length === 0) continue;
+
+      const nextOrder = new Map<string, number>();
+      nextCol.forEach((node, idx) => nextOrder.set(node.id, idx));
+
+      col.sort((a, b) => {
+        const outA = relevantEdges.filter((e) => e.from === a.id && nextOrder.has(e.to));
+        const outB = relevantEdges.filter((e) => e.from === b.id && nextOrder.has(e.to));
+        const scoreA = outA.length > 0 ? outA.reduce((sum, e) => sum + nextOrder.get(e.to)!, 0) / outA.length : Infinity;
+        const scoreB = outB.length > 0 ? outB.reduce((sum, e) => sum + nextOrder.get(e.to)!, 0) / outB.length : Infinity;
+        if (scoreA !== scoreB) return scoreA - scoreB;
+        return (a.y - b.y) || (a.x - b.x);
+      });
+    }
+  }
+
+  // Spacing gaps
+  let layerGap = 104;
+  let nodeGap = 56;
+  if (direction === 'LR') {
+    if (spacing === 'compact') {
+      layerGap = 64;
+      nodeGap = 32;
+    } else if (spacing === 'spacious') {
+      layerGap = 160;
+      nodeGap = 88;
+    } else {
+      layerGap = 104;
+      nodeGap = 56;
+    }
+  } else {
+    // TD
+    if (spacing === 'compact') {
+      layerGap = 64;
+      nodeGap = 32;
+    } else if (spacing === 'spacious') {
+      layerGap = 152;
+      nodeGap = 88;
+    } else {
+      layerGap = 96;
+      nodeGap = 56;
+    }
+  }
+
+  if (direction === 'LR') {
     let cursorX = 72;
     const centerLineY = 352;
-    const vGap = 56;
 
     for (const r of sortedRanks) {
       const col = columns.get(r)!;
       const colW = Math.max(...col.map((n) => n.width));
-      const totalH = col.reduce((s, n) => s + n.height, 0) + Math.max(0, col.length - 1) * vGap;
+      const totalH = col.reduce((s, n) => s + n.height, 0) + Math.max(0, col.length - 1) * nodeGap;
       let cursorY = Math.max(196, Math.round((centerLineY - totalH / 2) / 16) * 16);
 
       for (const n of col) {
         n.x = Math.round((cursorX + (colW - n.width) / 2) / 16) * 16;
         n.y = cursorY;
-        cursorY += n.height + vGap;
+        cursorY += n.height + nodeGap;
       }
-      cursorX += colW + 104;
+      cursorX += colW + layerGap;
     }
 
     for (const [actorId, gateId] of pinnedAbove.entries()) {
@@ -956,20 +1062,36 @@ export function autoLayoutDocument(doc: DiagramDocument): void {
   } else {
     let cursorY = 96;
     const centerLineX = 840;
-    const hGap = 56;
 
     for (const r of sortedRanks) {
       const row = columns.get(r)!;
       const rowH = Math.max(...row.map((n) => n.height));
-      const totalW = row.reduce((s, n) => s + n.width, 0) + Math.max(0, row.length - 1) * hGap;
+      const totalW = row.reduce((s, n) => s + n.width, 0) + Math.max(0, row.length - 1) * nodeGap;
       let cursorX = Math.max(64, Math.round((centerLineX - totalW / 2) / 16) * 16);
 
       for (const n of row) {
         n.x = cursorX;
         n.y = Math.round((cursorY + (rowH - n.height) / 2) / 16) * 16;
-        cursorX += n.width + hGap;
+        cursorX += n.width + nodeGap;
       }
-      cursorY += rowH + 96;
+      cursorY += rowH + layerGap;
+    }
+  }
+
+  // If selectionOnly, shift nodes so their new center aligns with initial center
+  if (isSelectionOnly) {
+    const newMinX = Math.min(...nodes.map((n) => n.x));
+    const newMaxX = Math.max(...nodes.map((n) => n.x + n.width));
+    const newMinY = Math.min(...nodes.map((n) => n.y));
+    const newMaxY = Math.max(...nodes.map((n) => n.y + n.height));
+    const newCenterX = (newMinX + newMaxX) / 2;
+    const newCenterY = (newMinY + newMaxY) / 2;
+    const shiftX = Math.round((initialCenterX - newCenterX) / 16) * 16;
+    const shiftY = Math.round((initialCenterY - newCenterY) / 16) * 16;
+
+    for (const n of nodes) {
+      n.x = Math.max(32, n.x + shiftX);
+      n.y = Math.max(32, n.y + shiftY);
     }
   }
 

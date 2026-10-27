@@ -739,6 +739,56 @@
     flex-shrink: 0;
   }
 
+  .split-btn-group {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+  }
+
+  .split-btn-group .btn-split-main {
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .split-btn-group .btn-split-toggle {
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+    border-inline-start: none;
+    min-inline-size: 1.8rem;
+    padding-inline: 0.25rem;
+  }
+
+  .auto-layout-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-inline-size: 12rem;
+    z-index: 50;
+  }
+
+  .menu-heading-label {
+    padding-inline: 0.75rem;
+    padding-block: 0.35rem 0.15rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--wl-ink-muted);
+  }
+
+  /* Smooth node position animation during Auto-Layout */
+  #stage-world.layout-animating .arch-node,
+  #stage-world.layout-animating .boundary-zone,
+  #stage-world.layout-animating .notes-card {
+    transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1),
+                left 0.42s cubic-bezier(0.2, 0.9, 0.3, 1),
+                top 0.42s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
+  }
+
+  #stage-world.layout-animating .conduit-group {
+    transition: opacity 0.25s ease;
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;

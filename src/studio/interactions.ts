@@ -5,6 +5,9 @@ import {
   btnAddZone,
   btnApplyCode,
   btnAutoLayout,
+  btnAutoLayoutMenu,
+  autoLayoutPopup,
+  btnLayoutSelection,
   btnClearTrace,
   btnCopyCode,
   btnEmptyCode,
@@ -95,6 +98,7 @@ import {
   tabTrace,
   traceList,
   viewport,
+  stageWorld,
   windowDropVeil,
   workspace,
 } from './dom';
@@ -150,6 +154,7 @@ import {
   getNodeCenter,
   getNodeDimensions,
   getPortPoint,
+  type AutoLayoutOptions,
 } from '../core/layout';
 import {
   importMermaidOrBlueprint,
@@ -1235,13 +1240,75 @@ export function initEvents(): void {
   // Undo / Redo / Auto-Layout / Delete / Duplicate
   btnUndo.addEventListener('click', performUndo);
   btnRedo.addEventListener('click', performRedo);
-  btnAutoLayout.addEventListener('click', () => {
+  function runAutoLayout(options?: AutoLayoutOptions): void {
     if (app.doc.nodes.length === 0) return;
     pushHistory();
-    autoLayoutDocument(app.doc);
+    stageWorld.classList.add('layout-animating');
+    autoLayoutDocument(app.doc, options);
     renderAll(true);
     fitToViewport();
-    notify('Applied auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
+    window.setTimeout(() => {
+      stageWorld.classList.remove('layout-animating');
+      renderAll(true);
+    }, 450);
+    const msg = options?.selectionOnly
+      ? 'Auto-arranged selected components'
+      : `Auto-arranged layout (${options?.direction || app.doc.direction || 'LR'})`;
+    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
+  }
+
+  btnAutoLayout.addEventListener('click', () => {
+    runAutoLayout();
+  });
+
+  btnAutoLayoutMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!autoLayoutPopup) return;
+    const isHidden = autoLayoutPopup.hidden;
+    autoLayoutPopup.hidden = !isHidden;
+    btnAutoLayoutMenu?.setAttribute('aria-expanded', String(isHidden));
+  });
+
+  autoLayoutPopup?.querySelectorAll<HTMLButtonElement>('[data-layout-dir]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const dir = btn.getAttribute('data-layout-dir') as 'LR' | 'TD';
+      if (autoLayoutPopup) autoLayoutPopup.hidden = true;
+      btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
+      runAutoLayout({ direction: dir });
+    });
+  });
+
+  autoLayoutPopup?.querySelectorAll<HTMLButtonElement>('[data-layout-spacing]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const sp = btn.getAttribute('data-layout-spacing') as 'compact' | 'comfortable' | 'spacious';
+      if (autoLayoutPopup) autoLayoutPopup.hidden = true;
+      btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
+      runAutoLayout({ spacing: sp });
+    });
+  });
+
+  btnLayoutSelection?.addEventListener('click', () => {
+    if (autoLayoutPopup) autoLayoutPopup.hidden = true;
+    btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
+    const selectedIds = app.selection.type === 'multi'
+      ? app.selection.ids
+      : app.selection.type === 'node'
+        ? [app.selection.id]
+        : [];
+    if (selectedIds.length < 2) {
+      notify('Select 2 or more components to layout selection', { tone: 'normal' });
+      return;
+    }
+    runAutoLayout({ selectionOnly: true, selectedNodeIds: selectedIds });
+  });
+
+  window.addEventListener('click', (e) => {
+    if (autoLayoutPopup && !autoLayoutPopup.hidden) {
+      if (!autoLayoutPopup.contains(e.target as Node) && e.target !== btnAutoLayoutMenu) {
+        autoLayoutPopup.hidden = true;
+        btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
+      }
+    }
   });
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);

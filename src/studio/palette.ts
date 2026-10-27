@@ -209,7 +209,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'auto-layout',
       title: 'Auto-Layout Architecture',
-      subtitle: 'Cleanly order components hierarchically',
+      subtitle: 'Cleanly order components with crossing minimization',
       category: 'Canvas & Layout',
       keywords: ['arrange', 'layout', 'tidy', 'format', 'organize'],
       run: () => {
@@ -219,6 +219,89 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
         renderAll(true);
         fitToViewport();
         notify('Applied auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
+      },
+    },
+    {
+      id: 'auto-layout-lr',
+      title: 'Auto-Layout: Left-to-Right (LR)',
+      subtitle: 'Flow diagram horizontally from left to right',
+      category: 'Canvas & Layout',
+      keywords: ['lr', 'horizontal', 'layout', 'direction'],
+      run: () => {
+        if (app.doc.nodes.length === 0) return;
+        pushHistory();
+        autoLayoutDocument(app.doc, { direction: 'LR' });
+        renderAll(true);
+        fitToViewport();
+        notify('Applied auto-layout (LR)', { action: { label: 'Undo', onClick: () => performUndo() } });
+      },
+    },
+    {
+      id: 'auto-layout-td',
+      title: 'Auto-Layout: Top-to-Bottom (TD)',
+      subtitle: 'Flow diagram vertically from top to bottom',
+      category: 'Canvas & Layout',
+      keywords: ['td', 'vertical', 'layout', 'direction'],
+      run: () => {
+        if (app.doc.nodes.length === 0) return;
+        pushHistory();
+        autoLayoutDocument(app.doc, { direction: 'TD' });
+        renderAll(true);
+        fitToViewport();
+        notify('Applied auto-layout (TD)', { action: { label: 'Undo', onClick: () => performUndo() } });
+      },
+    },
+    {
+      id: 'auto-layout-compact',
+      title: 'Auto-Layout: Compact Spacing',
+      subtitle: 'Tightly packed layout for dense architectures',
+      category: 'Canvas & Layout',
+      keywords: ['compact', 'dense', 'spacing', 'tight', 'layout'],
+      run: () => {
+        if (app.doc.nodes.length === 0) return;
+        pushHistory();
+        autoLayoutDocument(app.doc, { spacing: 'compact' });
+        renderAll(true);
+        fitToViewport();
+        notify('Applied compact auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
+      },
+    },
+    {
+      id: 'auto-layout-spacious',
+      title: 'Auto-Layout: Spacious Spacing',
+      subtitle: 'Generous breathing room between tiers and components',
+      category: 'Canvas & Layout',
+      keywords: ['spacious', 'wide', 'roomy', 'spacing', 'layout'],
+      run: () => {
+        if (app.doc.nodes.length === 0) return;
+        pushHistory();
+        autoLayoutDocument(app.doc, { spacing: 'spacious' });
+        renderAll(true);
+        fitToViewport();
+        notify('Applied spacious auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
+      },
+    },
+    {
+      id: 'auto-layout-selection',
+      title: 'Auto-Layout Selection Only',
+      subtitle: 'Re-arrange only currently selected components',
+      category: 'Canvas & Layout',
+      keywords: ['selection', 'partial', 'layout', 'arrange'],
+      run: () => {
+        const ids = app.selection.type === 'multi'
+          ? app.selection.ids
+          : app.selection.type === 'node'
+            ? [app.selection.id]
+            : [];
+        if (ids.length < 2) {
+          notify('Select 2 or more components to layout selection', { tone: 'normal' });
+          return;
+        }
+        pushHistory();
+        autoLayoutDocument(app.doc, { selectionOnly: true, selectedNodeIds: ids });
+        renderAll(true);
+        fitToViewport();
+        notify('Auto-arranged selected components', { action: { label: 'Undo', onClick: () => performUndo() } });
       },
     },
     {

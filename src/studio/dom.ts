@@ -59,6 +59,9 @@ export const dataToolbar = document.getElementById('data-toolbar') as HTMLElemen
 export const btnUndo = document.getElementById('btn-undo') as HTMLButtonElement;
 export const btnRedo = document.getElementById('btn-redo') as HTMLButtonElement;
 export const btnAutoLayout = document.getElementById('btn-auto-layout') as HTMLButtonElement;
+export const btnAutoLayoutMenu = document.getElementById('btn-auto-layout-menu') as HTMLButtonElement | null;
+export const autoLayoutPopup = document.getElementById('auto-layout-popup') as HTMLElement | null;
+export const btnLayoutSelection = document.getElementById('btn-layout-selection') as HTMLButtonElement | null;
 export const simButtonsSlot = document.getElementById('sim-buttons-slot') as HTMLElement;
 export const btnToggleMotion = document.getElementById('btn-toggle-motion') as HTMLButtonElement;
 
