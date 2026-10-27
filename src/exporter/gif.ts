@@ -90,18 +90,23 @@ function medianCut(samples: number[], maxColors: number): Array<[number, number,
   return boxes.map((box) => averageColor(box.colors));
 }
 
+function pushSamples(frame: Uint8ClampedArray, step: number, samples: number[]): void {
+  const stride = Math.max(1, step) * 4;
+  for (let i = 0; i < frame.length; i += stride) {
+    samples.push((frame[i] << 16) | (frame[i + 1] << 8) | frame[i + 2]);
+  }
+}
+
+/** Every pixel of the first frame, then a thinner pass over the later frames. */
 function sampleFrames(frames: Uint8ClampedArray[], maxSamples: number): number[] {
-  const total = frames.reduce((sum, frame) => sum + frame.length / 4, 0);
-  const step = Math.max(1, Math.floor(total / maxSamples));
   const samples: number[] = [];
-  let seen = 0;
-  for (const frame of frames) {
-    for (let i = 0; i < frame.length; i += 4) {
-      if (seen % step === 0) {
-        samples.push((frame[i] << 16) | (frame[i + 1] << 8) | frame[i + 2]);
-      }
-      seen += 1;
-    }
+  const firstPixels = frames[0].length / 4;
+  pushSamples(frames[0], firstPixels <= maxSamples ? 1 : Math.ceil(firstPixels / maxSamples), samples);
+  const budget = Math.max(0, maxSamples - samples.length);
+  const restPixels = frames.slice(1).reduce((sum, frame) => sum + frame.length / 4, 0);
+  if (budget > 0 && restPixels > 0) {
+    const step = Math.max(1, Math.floor(restPixels / budget));
+    for (const frame of frames.slice(1)) pushSamples(frame, step, samples);
   }
   return samples;
 }
@@ -157,13 +162,15 @@ function lzwEncode(indices: Uint8Array, minCodeSize: number): number[] {
   let acc = 0;
   let bits = 0;
   const emit = (code: number) => {
-    acc |= code << bits;
+    acc += code * 2 ** bits;
     bits += codeSize;
     while (bits >= 8) {
       bytes.push(acc & 255);
-      acc >>>= 8;
+      acc = Math.floor(acc / 256);
       bits -= 8;
     }
+    // The code just written still uses the old width. The next one grows.
+    if (nextCode > (1 << codeSize) - 1 && codeSize < 12) codeSize += 1;
   };
   const reset = () => {
     dict = new Map();
@@ -196,7 +203,6 @@ function lzwEncode(indices: Uint8Array, minCodeSize: number): number[] {
       }
       row.set(value, nextCode);
       nextCode += 1;
-      if (nextCode === 1 << codeSize && codeSize < 12) codeSize += 1;
     } else {
       emit(clearCode);
       reset();
@@ -241,7 +247,11 @@ export function encodeGif(options: {
     if (frame.length !== expected) throw new Error('A GIF frame does not match the picture size.');
   }
 
-  const palette = padPalette(medianCut(sampleFrames(options.frames, 12000), options.maxColors ?? GIF_MAX_COLORS));
+  const maxColors = Math.min(256, Math.max(2, options.maxColors ?? GIF_MAX_COLORS));
+  const firstPixels = options.frames[0].length / 4;
+  const palette = padPalette(
+    medianCut(sampleFrames(options.frames, Math.max(firstPixels, maxColors * 200)), maxColors),
+  );
   const lut = buildLookup(palette);
   let minCodeSize = 2;
   while (1 << minCodeSize < palette.length) minCodeSize += 1;

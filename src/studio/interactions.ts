@@ -127,8 +127,7 @@ import {
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../core/parser';
-import { renderDiagramSvg } from '../exporter/diagramSvg';
-import { GIF_FRAME_DELAY_CS, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
+import { encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
@@ -820,8 +819,6 @@ function downloadBytes(bytes: Uint8Array, filename: string, mimeType: string): v
 
 function rasterizeSvg(svg: string, width: number, height: number): Promise<Uint8ClampedArray> {
   return new Promise((resolve, reject) => {
-    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement('canvas');
@@ -829,20 +826,14 @@ function rasterizeSvg(svg: string, width: number, height: number): Promise<Uint8
       canvas.height = height;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
       if (!ctx) {
-        URL.revokeObjectURL(url);
         reject(new Error('canvas'));
         return;
       }
       ctx.drawImage(image, 0, 0, width, height);
-      const pixels = ctx.getImageData(0, 0, width, height).data;
-      URL.revokeObjectURL(url);
-      resolve(pixels);
+      resolve(ctx.getImageData(0, 0, width, height).data);
     };
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('svg'));
-    };
-    image.src = url;
+    image.onerror = () => reject(new Error('svg'));
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   });
 }
 
@@ -851,12 +842,15 @@ async function downloadDiagramGif(): Promise<void> {
   const animated = doc.edges.filter((edge) => edge.animated !== false).length;
   const frameCount = gifFrameCount(animated);
   const size = gifPixelSize(doc.stageWidth, doc.stageHeight);
+  // The studio dash travels 36px in 1.35s. One 18px cycle across the frames is 8 centiseconds.
+  const delayCs = 8;
   hudStatusTip.textContent = 'Rendering a short animation…';
   try {
     const frames: Uint8ClampedArray[] = [];
     for (let index = 0; index < frameCount; index += 1) {
-      const svg = renderDiagramSvg(
-        doc,
+      const svg = renderStagePictureSvg(
+        size.width,
+        size.height,
         frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) },
       );
       frames.push(await rasterizeSvg(svg, size.width, size.height));
@@ -865,7 +859,8 @@ async function downloadDiagramGif(): Promise<void> {
       width: size.width,
       height: size.height,
       frames,
-      delayCs: GIF_FRAME_DELAY_CS,
+      delayCs,
+      maxColors: 256,
     });
     downloadBytes(gif, `${getSafeFilenameSlug()}.gif`, 'image/gif');
     hudStatusTip.textContent =

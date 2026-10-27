@@ -35,8 +35,14 @@ function customProperties(style: CSSStyleDeclaration): string {
 /**
  * SVG of the live stage. Pass pixel width and height to rasterize sharper than
  * the stage's CSS pixels; the viewBox stays in stage coordinates.
+ * A dash offset steps animated wires for one GIF frame. Without it, the still
+ * picture keeps the dash where it is on screen.
  */
-export function renderStagePictureSvg(pixelWidth?: number, pixelHeight?: number): string {
+export function renderStagePictureSvg(
+  pixelWidth?: number,
+  pixelHeight?: number,
+  frame?: { dashOffset: number },
+): string {
   const stageWidth = Math.max(1, Math.round(app.doc.stageWidth));
   const stageHeight = Math.max(1, Math.round(app.doc.stageHeight));
   const outWidth = pixelWidth ?? stageWidth;
@@ -47,8 +53,15 @@ export function renderStagePictureSvg(pixelWidth?: number, pixelHeight?: number)
   clone.querySelectorAll<SVGElement>('.conduit-stream').forEach((stream, index) => {
     const live = liveStreams[index];
     if (!live) return;
+    const computed = getComputedStyle(live);
+    const dashed = computed.strokeDasharray !== 'none' && computed.strokeDasharray !== '';
     stream.style.animation = 'none';
-    stream.style.strokeDashoffset = getComputedStyle(live).strokeDashoffset;
+    if (frame && dashed) {
+      stream.style.strokeDasharray = computed.strokeDasharray;
+      stream.style.strokeDashoffset = `${frame.dashOffset}px`;
+      return;
+    }
+    stream.style.strokeDashoffset = computed.strokeDashoffset;
   });
   clone.removeAttribute('id');
   clone.style.transform = 'none';
