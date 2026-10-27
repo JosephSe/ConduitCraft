@@ -2,7 +2,7 @@
 import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagramEdge } from '../types';
 import { expandStageToFit, getAdjacencyLists, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
-import { sanitizeIconImage } from '../core/nodeStyle';
+import { nodeShapeContentPadding, nodeShapePlate, sanitizeIconImage } from '../core/nodeStyle';
 import {
   SVG_NS,
   alignGuideX,
@@ -826,6 +826,43 @@ function glyphKey(image: string | undefined, fallback: string): string {
   return image ? `img:${image.length}:${image.slice(-32)}` : fallback;
 }
 
+function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
+  hit.style.padding = nodeShapeContentPadding(node.kind, node.shape, node.width, node.height);
+  const plate = nodeShapePlate(node.shape, node.width, node.height);
+  let svg = hit.querySelector<SVGSVGElement>('.node-shape-plate');
+  if (!plate) {
+    svg?.remove();
+    return;
+  }
+  if (!svg) {
+    svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'node-shape-plate');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    hit.prepend(svg);
+  }
+  const w = Math.max(1, Math.round(node.width));
+  const h = Math.max(1, Math.round(node.height));
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const tag = plate.kind === 'ellipse' ? 'ellipse' : 'polygon';
+  let geom = svg.querySelector<SVGElement>('.node-shape-geom');
+  if (!geom || geom.localName !== tag) {
+    geom?.remove();
+    geom = document.createElementNS(SVG_NS, tag);
+    geom.setAttribute('class', 'node-shape-geom');
+    svg.appendChild(geom);
+  }
+  if (plate.kind === 'ellipse') {
+    geom.setAttribute('cx', String(plate.cx));
+    geom.setAttribute('cy', String(plate.cy));
+    geom.setAttribute('rx', String(plate.rx));
+    geom.setAttribute('ry', String(plate.ry));
+    geom.removeAttribute('points');
+  } else {
+    geom.setAttribute('points', plate.points);
+  }
+}
+
 function paintCustomImage(slot: HTMLElement, image: string): void {
   const img = document.createElement('img');
   img.className = 'node-custom-icon';
@@ -843,6 +880,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.style.setProperty('--ny', String(node.y));
   wrapper.style.setProperty('--nw', String(node.width));
   wrapper.style.setProperty('--nh', String(node.height));
+  const hit = wrapper.querySelector<HTMLElement>('.node-select-hit');
+  if (hit) paintShapePlate(hit, node);
 
   const title = wrapper.querySelector('.node-title');
   if (title) title.textContent = node.title;

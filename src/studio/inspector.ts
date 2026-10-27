@@ -65,9 +65,9 @@ import {
   getNodeDimensions,
 } from '../core/layout';
 import { normalizeBrandAccent } from '../core/brand';
-import { NODE_SHAPE_LABELS, NODE_SHAPES, sanitizeIconImage } from '../core/nodeStyle';
+import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
 
-import { ICON_LIST } from '../ui/icons';
+import { ICON_LIST, createNodeIconSvg } from '../ui/icons';
 
 // Element-scoped View Transitions (`scoped-component-transitions`)
 export const supportsScopedVT = 'startViewTransition' in Element.prototype;
@@ -197,7 +197,137 @@ export function makeTonePicker(
   return fs;
 }
 
+function closeIconMenus(): void {
+  for (const menu of document.querySelectorAll<HTMLElement>('body > .icon-picker-menu')) {
+    menu.remove();
+  }
+}
+
+let iconMenuDismissBound = false;
+function bindIconMenuDismiss(): void {
+  if (iconMenuDismissBound) return;
+  iconMenuDismissBound = true;
+  document.addEventListener('pointerdown', (event) => {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    for (const menu of document.querySelectorAll<HTMLElement>('body > .icon-picker-menu')) {
+      const triggerId = menu.dataset.triggerId || '';
+      const trigger = triggerId ? document.getElementById(triggerId) : null;
+      if (menu.contains(target) || trigger?.contains(target)) continue;
+      menu.remove();
+      trigger?.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+function makeIconPicker(selected: NodeIconName, onChange: (next: NodeIconName) => void): HTMLElement {
+  bindIconMenuDismiss();
+  const root = document.createElement('div');
+  root.className = 'icon-picker';
+
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'prop-select icon-picker-trigger';
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+
+  const menu = document.createElement('div');
+  menu.className = 'icon-picker-menu';
+  menu.setAttribute('role', 'listbox');
+  menu.dataset.triggerId = 'prop-node-icon';
+
+  const paintTrigger = (id: NodeIconName) => {
+    const item = ICON_LIST.find((icon) => icon.id === id) || ICON_LIST[0];
+    trigger.replaceChildren(createNodeIconSvg(item.id, 16));
+    trigger.append(item.label);
+  };
+  paintTrigger(selected);
+
+  const options: HTMLButtonElement[] = [];
+  for (const icon of ICON_LIST) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'icon-picker-option';
+    option.setAttribute('role', 'option');
+    option.dataset.icon = icon.id;
+    option.setAttribute('aria-selected', String(icon.id === selected));
+    option.append(createNodeIconSvg(icon.id, 16), icon.label);
+    option.addEventListener('click', () => {
+      for (const other of options) other.setAttribute('aria-selected', String(other === option));
+      paintTrigger(icon.id);
+      menu.remove();
+      trigger.setAttribute('aria-expanded', 'false');
+      onChange(icon.id);
+    });
+    options.push(option);
+    menu.appendChild(option);
+  }
+
+  const placeMenu = () => {
+    const rect = trigger.getBoundingClientRect();
+    const roomBelow = window.innerHeight - rect.bottom - 12;
+    const roomAbove = rect.top - 12;
+    const openUp = roomBelow < 180 && roomAbove > roomBelow;
+    menu.style.left = `${rect.left}px`;
+    menu.style.width = `${rect.width}px`;
+    menu.style.maxHeight = `${Math.max(120, openUp ? roomAbove : roomBelow)}px`;
+    if (openUp) {
+      menu.style.top = 'auto';
+      menu.style.bottom = `${window.innerHeight - rect.top + 4}px`;
+    } else {
+      menu.style.bottom = 'auto';
+      menu.style.top = `${rect.bottom + 4}px`;
+    }
+  };
+
+  const openMenu = () => {
+    closeIconMenus();
+    placeMenu();
+    document.body.appendChild(menu);
+    trigger.setAttribute('aria-expanded', 'true');
+    menu.querySelector<HTMLElement>('[aria-selected="true"]')?.focus();
+  };
+
+  const menuIsOpen = () => menu.parentElement === document.body;
+
+  trigger.addEventListener('click', () => {
+    if (menuIsOpen()) {
+      menu.remove();
+      trigger.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    openMenu();
+  });
+
+  root.addEventListener('keydown', (event) => {
+    const open = menuIsOpen();
+    if (event.key === 'Escape' && open) {
+      event.preventDefault();
+      event.stopPropagation();
+      menu.remove();
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.focus();
+      return;
+    }
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && event.target === trigger && !open) {
+      event.preventDefault();
+      openMenu();
+      return;
+    }
+    if (!open || (event.key !== 'ArrowDown' && event.key !== 'ArrowUp')) return;
+    event.preventDefault();
+    const current = options.findIndex((option) => option === document.activeElement);
+    const delta = event.key === 'ArrowDown' ? 1 : -1;
+    const next = options[(current + delta + options.length) % options.length];
+    next?.focus();
+  });
+
+  root.append(trigger, menu);
+  return root;
+}
+
 export function renderPropertyEditor(): void {
+  closeIconMenus();
   propFormContainer.replaceChildren();
   const form = document.createElement('div');
   form.className = 'prop-form';
@@ -249,34 +379,27 @@ export function renderPropertyEditor(): void {
     kindSelect.addEventListener('change', () => {
       pushHistory();
       node.kind = kindSelect.value as NodeKind;
-      const dims = getNodeDimensions(node.kind);
-      node.width = dims.width;
-      node.height = dims.height;
+      const frame = nodeShapeFrame(getNodeDimensions(node.kind), node.shape);
+      node.width = frame.width;
+      node.height = frame.height;
       renderAll(true);
     });
 
     if (node.kind !== 'actor') {
-      const iconSelect = document.createElement('select');
-      iconSelect.className = 'prop-select';
-      for (const ic of ICON_LIST) {
-        const opt = document.createElement('option');
-        opt.value = ic.id;
-        opt.textContent = ic.label;
-        opt.selected = ic.id === node.icon;
-        iconSelect.appendChild(opt);
-      }
-      iconSelect.addEventListener('change', () => {
+      const iconPicker = makeIconPicker(node.icon, (icon) => {
         pushHistory();
-        node.icon = iconSelect.value as NodeIconName;
+        node.icon = icon;
         renderAll(false);
       });
-
       const row = document.createElement('div');
       row.className = 'prop-row-2';
       row.append(
         makeField('prop-node-kind', 'Shape Kind', kindSelect),
-        makeField('prop-node-icon', 'Icon', iconSelect),
+        makeField('prop-node-icon', 'Icon', iconPicker),
       );
+      const trigger = iconPicker.querySelector('button');
+      if (trigger) trigger.id = 'prop-node-icon';
+      iconPicker.removeAttribute('id');
       form.appendChild(row);
     } else {
       form.appendChild(makeField('prop-node-kind', 'Shape Kind', kindSelect));
@@ -296,6 +419,9 @@ export function renderPropertyEditor(): void {
       const next = shapeSelect.value as NodeShape;
       if (next === 'card') delete node.shape;
       else node.shape = next;
+      const frame = nodeShapeFrame(getNodeDimensions(node.kind), node.shape);
+      node.width = frame.width;
+      node.height = frame.height;
       renderAll(false);
     });
     form.appendChild(makeField('prop-node-shape', 'Node shape', shapeSelect));

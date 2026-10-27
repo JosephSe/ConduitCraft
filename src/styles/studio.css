@@ -1098,6 +1098,7 @@
   }
 
   .node-select-hit {
+    position: relative;
     inline-size: 100%;
     block-size: 100%;
     display: flex;
@@ -1444,18 +1445,81 @@
     object-fit: contain;
   }
 
-  .arch-node[data-shape="rounded"] .node-select-hit { border-radius: 1.75rem; overflow: hidden; }
-  .arch-node[data-shape="pill"] .node-select-hit { border-radius: 999px; overflow: hidden; }
-  .arch-node[data-shape="circle"] .node-select-hit { border-radius: 50%; overflow: hidden; }
-  .arch-node[data-shape="diamond"] .node-select-hit {
-    border-radius: 0;
-    overflow: hidden;
-    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
-  }
+  .arch-node[data-shape="rounded"] .node-select-hit { border-radius: 1.75rem; }
+  .arch-node[data-shape="pill"] .node-select-hit { border-radius: 999px; }
+
+  /* Circle, diamond, and hexagon draw their own stroke. A clip would cut the border and the text. */
+  .arch-node[data-shape="circle"] .node-select-hit,
+  .arch-node[data-shape="diamond"] .node-select-hit,
   .arch-node[data-shape="hexagon"] .node-select-hit {
-    border-radius: 0;
-    overflow: hidden;
-    clip-path: polygon(22% 0, 78% 0, 100% 50%, 78% 100%, 22% 100%, 0 50%);
+    overflow: visible;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .node-shape-plate {
+    position: absolute;
+    inset: -1.5px;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 0;
+    color: var(--wl-border-ui);
+    filter: drop-shadow(0 6px 14px rgba(2, 6, 23, 0.16));
+  }
+
+  .node-shape-geom {
+    fill: var(--wl-surface);
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+
+  .arch-node[data-kind="core"] .node-shape-geom,
+  .arch-node[data-kind="gate"] .node-shape-geom,
+  .arch-node[data-kind="store"] .node-shape-geom {
+    fill: color-mix(in srgb, var(--node-accent-soft) 72%, var(--wl-surface));
+  }
+
+  .node-select-hit:hover .node-shape-plate,
+  .node-select-hit[aria-pressed="true"] .node-shape-plate {
+    color: var(--node-accent);
+  }
+
+  .arch-node[data-sim-active="true"] .node-shape-plate {
+    color: var(--sim-accent, var(--wl-emerald));
+  }
+
+  .node-select-hit > :not(.node-shape-plate) {
+    position: relative;
+    z-index: 1;
+    min-inline-size: 0;
+  }
+
+  .arch-node[data-shape="circle"] .node-select-hit,
+  .arch-node[data-shape="diamond"] .node-select-hit,
+  .arch-node[data-shape="hexagon"] .node-select-hit {
+    justify-content: center;
+    gap: 0.28rem;
+  }
+
+  .arch-node[data-shape] .node-top,
+  .arch-node[data-shape] .node-footer {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .arch-node[data-shape] .node-eyebrow,
+  .arch-node[data-shape] .node-footer-label,
+  .arch-node[data-shape] .micro-chip {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .arch-node[data-shape] .node-title,
+  .arch-node[data-shape] .node-sub {
+    overflow-wrap: break-word;
+    text-align: center;
   }
 
   .node-eyebrow {
@@ -1797,6 +1861,71 @@
     background: var(--wl-surface-code);
     color: #e2e8f0;
     min-block-size: 6rem;
+  }
+
+  .icon-picker-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .icon-picker-trigger svg,
+  .icon-picker-option svg {
+    flex-shrink: 0;
+    color: var(--wl-blue);
+  }
+
+  .icon-picker-trigger::after {
+    content: '';
+    margin-inline-start: auto;
+    border-inline: 4px solid transparent;
+    border-block-start: 5px solid var(--wl-ink-muted);
+  }
+
+  .icon-picker > .icon-picker-menu {
+    display: none;
+  }
+
+  .icon-picker-menu {
+    position: fixed;
+    z-index: 40;
+    display: grid;
+    gap: 0.12rem;
+    padding: 0.3rem;
+    overflow: auto;
+    background: var(--wl-surface);
+    border: 1px solid var(--wl-border-ui);
+    border-radius: 0.55rem;
+    box-shadow: var(--wl-shadow-elevated);
+  }
+
+  .icon-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.45rem;
+    border: none;
+    border-radius: 0.4rem;
+    background: transparent;
+    color: var(--wl-ink);
+    font: inherit;
+    font-size: 0.8125rem;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .icon-picker-option[aria-selected="true"],
+  .icon-picker-option:hover {
+    background: var(--wl-blue-soft);
+  }
+
+  .icon-picker-option:focus-visible,
+  .icon-picker-trigger:focus-visible {
+    outline: 2px solid var(--wl-blue);
+    outline-offset: 2px;
   }
 
   .prop-input:focus-visible,

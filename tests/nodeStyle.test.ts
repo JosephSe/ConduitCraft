@@ -34,7 +34,8 @@ describe('node shapes and custom icons', () => {
     const html = generateStandaloneHtml(restored);
     assert.match(html, /data-shape="hexagon"/);
     assert.match(html, /class="node-custom-icon"/);
-    assert.match(html, /data-shape="hexagon"[\s\S]*clip-path: polygon\(22% 0/);
+    assert.match(html, /class="node-shape-plate"[\s\S]*class="node-shape-geom"/);
+    assert.doesNotMatch(html, /clip-path:\s*polygon/);
 
     const rejected = importMermaidOrBlueprint(`---
 title: Bad

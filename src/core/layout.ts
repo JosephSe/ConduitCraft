@@ -1,3 +1,4 @@
+import { nodeShapeFrame } from './nodeStyle';
 import type {
   DiagramDocument,
   DiagramEdge,
@@ -844,9 +845,9 @@ export function autoLayoutDocument(doc: DiagramDocument): void {
   const nodes = doc.nodes;
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
   for (const n of nodes) {
-    const dims = getNodeDimensions(n.kind);
-    n.width = dims.width;
-    n.height = dims.height;
+    const frame = nodeShapeFrame(getNodeDimensions(n.kind), n.shape);
+    n.width = frame.width;
+    n.height = frame.height;
   }
 
   const ids = nodes.map((n) => n.id);
