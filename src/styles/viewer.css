@@ -126,7 +126,7 @@
   .canvas-viewport { inline-size: 100%; block-size: 100%; position: relative; overflow: hidden; cursor: grab; touch-action: none; }
   .canvas-viewport.is-dragging { cursor: grabbing; }
   .canvas-viewport:focus-visible { outline: 3px solid var(--wl-blue); outline-offset: -3px; }
-  .stage-world { position: absolute; top: 0; left: 0; width: var(--stage-w); height: var(--stage-h); transform-origin: 0 0; will-change: transform; }
+  .stage-world { position: absolute; top: 0; left: 0; width: var(--stage-w); height: var(--stage-h); transform-origin: 0 0; }
 
   .zone-banner {
     position: absolute; top: 18px; left: calc(var(--zx) * 1px); width: calc(var(--zw) * 1px);

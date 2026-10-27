@@ -701,7 +701,6 @@
     width: 1680px;
     height: 920px;
     transform-origin: 0 0;
-    will-change: transform;
   }
 
   /* Alignment Guides */

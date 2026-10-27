@@ -244,8 +244,11 @@ export function setMinimapPainter(painter: () => void): void {
 }
 
 export function applyTransform(): void {
-  stageWorld.style.transform = `translate(${app.panX}px, ${app.panY}px) scale(${app.scale})`;
-  zoomReadout.textContent = `${Math.round(app.scale * 100)}%`;
+  const scale = app.scale || 1;
+  // Paint at the displayed size. A transform scale stretches a 1× layer and softens text and icons.
+  stageWorld.style.setProperty('zoom', String(scale));
+  stageWorld.style.transform = `translate(${app.panX / scale}px, ${app.panY / scale}px)`;
+  zoomReadout.textContent = `${Math.round(scale * 100)}%`;
   minimapPainter?.();
 }
 

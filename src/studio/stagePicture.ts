@@ -119,7 +119,14 @@ export function renderStagePictureSvg(
   });
   if (frame) paintScenario(clone, frame);
   clone.removeAttribute('id');
-  if (!currentView) clone.style.transform = 'none';
+  // The live stage uses CSS zoom. This picture keeps the previous scale transform.
+  clone.style.removeProperty('zoom');
+  if (currentView) {
+    const scale = app.scale || 1;
+    clone.style.transform = `translate(${app.panX}px, ${app.panY}px) scale(${scale})`;
+  } else {
+    clone.style.transform = 'none';
+  }
   clone.style.width = `${stageWidth}px`;
   clone.style.height = `${stageHeight}px`;
 

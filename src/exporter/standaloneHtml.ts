@@ -455,8 +455,10 @@ ${colorSchemeBoot}
 
       let scale = 1, panX = 0, panY = 0;
       function applyTransform() {
-        stageWorld.style.transform = 'translate(' + panX + 'px, ' + panY + 'px) scale(' + scale + ')';
-        zoomReadout.textContent = Math.round(scale * 100) + '%';
+        var safe = scale || 1;
+        stageWorld.style.zoom = safe;
+        stageWorld.style.transform = 'translate(' + (panX / safe) + 'px, ' + (panY / safe) + 'px)';
+        zoomReadout.textContent = Math.round(safe * 100) + '%';
       }
       function fitToViewport() {
         const r = viewport.getBoundingClientRect();
