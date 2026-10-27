@@ -17,7 +17,7 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 ## Medium value (architecture and performance)
 - [x] 9. Split `main.ts` into modules (state, render, inspector, interactions).
 - [x] 10. Incremental rendering (keyed diffing) instead of full DOM rebuilds.
-- [ ] 11. Remove duplicated CSS/logic between `standaloneHtml.ts` and the studio.
+- [x] 11. Remove duplicated CSS/logic between `standaloneHtml.ts` and the studio.
 - [ ] 12. Single selection controller emitting change events.
 
 ## Nice-to-have (polish and features)

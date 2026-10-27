@@ -1,0 +1,249 @@
+/* Shared by the studio and the standalone export.
+   Viewer-only layout and chrome live in viewer.css. */
+@layer reset {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  ul, ol {
+    list-style: none;
+  }
+}
+
+@layer tokens {
+  :root {
+    --in-oklab: ;
+
+    --wl-canvas-light: #f4f7fb;
+    --wl-canvas-dark: #070b14;
+
+    --wl-surface-light: #ffffff;
+    --wl-surface-dark: #101829;
+
+    --wl-surface-elevated-light: #eef3fa;
+    --wl-surface-elevated-dark: #17223a;
+
+    --wl-surface-code-light: #0f172a;
+    --wl-surface-code-dark: #060912;
+
+    --wl-ink-light: #0b1324;
+    --wl-ink-dark: #f1f5f9;
+
+    --wl-ink-secondary-light: #3e4e68;
+    --wl-ink-secondary-dark: #9fb0ca;
+
+    --wl-ink-muted-light: #596b87;
+    --wl-ink-muted-dark: #7e92b2;
+
+    --wl-border-ui-light: #b6c5db;
+    --wl-border-ui-dark: #2a3b5c;
+
+    --wl-border-subtle-light: #dce5f2;
+    --wl-border-subtle-dark: #1b2842;
+
+    --wl-grid-dot-light: rgba(51, 78, 122, 0.18);
+    --wl-grid-dot-dark: rgba(125, 158, 214, 0.16);
+
+    --wl-blue-light: #1d4ed8;
+    --wl-blue-dark: #60a5fa;
+    --wl-blue-soft-light: rgba(29, 78, 216, 0.12);
+    --wl-blue-soft-dark: rgba(96, 165, 250, 0.16);
+
+    --wl-emerald-light: #047857;
+    --wl-emerald-dark: #34d399;
+    --wl-emerald-soft-light: rgba(4, 120, 87, 0.12);
+    --wl-emerald-soft-dark: rgba(52, 211, 153, 0.16);
+
+    --wl-rose-light: #be123c;
+    --wl-rose-dark: #fb7185;
+    --wl-rose-soft-light: rgba(190, 18, 60, 0.11);
+    --wl-rose-soft-dark: rgba(251, 113, 133, 0.16);
+
+    --wl-amber-light: #b45309;
+    --wl-amber-dark: #fbbf24;
+    --wl-amber-soft-light: rgba(180, 83, 9, 0.12);
+    --wl-amber-soft-dark: rgba(251, 191, 36, 0.16);
+
+    --wl-violet-light: #5b21b6;
+    --wl-violet-dark: #a78bfa;
+    --wl-violet-soft-light: rgba(91, 33, 182, 0.12);
+    --wl-violet-soft-dark: rgba(167, 139, 250, 0.2);
+
+    --wl-scroll-thumb-light: #7c8fa9;
+    --wl-scroll-thumb-dark: #4c6185;
+    --wl-scroll-track-light: #e2e8f2;
+    --wl-scroll-track-dark: #0a101f;
+
+    --wl-canvas: var(--wl-canvas-light);
+    --wl-panel: var(--wl-panel-light);
+    --wl-surface: var(--wl-surface-light);
+    --wl-surface-elevated: var(--wl-surface-elevated-light);
+    --wl-surface-code: var(--wl-surface-code-light);
+    --wl-ink: var(--wl-ink-light);
+    --wl-ink-secondary: var(--wl-ink-secondary-light);
+    --wl-ink-muted: var(--wl-ink-muted-light);
+    --wl-border-ui: var(--wl-border-ui-light);
+    --wl-border-subtle: var(--wl-border-subtle-light);
+    --wl-grid-dot: var(--wl-grid-dot-light);
+    --wl-blue: var(--wl-blue-light);
+    --wl-blue-soft: var(--wl-blue-soft-light);
+    --wl-emerald: var(--wl-emerald-light);
+    --wl-emerald-soft: var(--wl-emerald-soft-light);
+    --wl-rose: var(--wl-rose-light);
+    --wl-rose-soft: var(--wl-rose-soft-light);
+    --wl-amber: var(--wl-amber-light);
+    --wl-amber-soft: var(--wl-amber-soft-light);
+    --wl-violet: var(--wl-violet-light);
+    --wl-violet-soft: var(--wl-violet-soft-light);
+    --wl-scroll-thumb: var(--wl-scroll-thumb-light);
+    --wl-scroll-track: var(--wl-scroll-track-light);
+
+    --wl-shadow-card:
+      0 1px 2px rgba(2, 6, 23, 0.12),
+      0 10px 28px -6px rgba(2, 6, 23, 0.22),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    --wl-shadow-elevated:
+      0 4px 12px rgba(2, 6, 23, 0.2),
+      0 24px 48px -12px rgba(2, 6, 23, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+
+    color-scheme: light dark;
+    accent-color: var(--wl-blue);
+    scrollbar-width: thin;
+    scrollbar-color: var(--wl-scroll-thumb) var(--wl-scroll-track);
+
+    @media (prefers-color-scheme: dark) {
+      --wl-canvas: var(--wl-canvas-dark);
+      --wl-panel: var(--wl-panel-dark);
+      --wl-surface: var(--wl-surface-dark);
+      --wl-surface-elevated: var(--wl-surface-elevated-dark);
+      --wl-surface-code: var(--wl-surface-code-dark);
+      --wl-ink: var(--wl-ink-dark);
+      --wl-ink-secondary: var(--wl-ink-secondary-dark);
+      --wl-ink-muted: var(--wl-ink-muted-dark);
+      --wl-border-ui: var(--wl-border-ui-dark);
+      --wl-border-subtle: var(--wl-border-subtle-dark);
+      --wl-grid-dot: var(--wl-grid-dot-dark);
+      --wl-blue: var(--wl-blue-dark);
+      --wl-blue-soft: var(--wl-blue-soft-dark);
+      --wl-emerald: var(--wl-emerald-dark);
+      --wl-emerald-soft: var(--wl-emerald-soft-dark);
+      --wl-rose: var(--wl-rose-dark);
+      --wl-rose-soft: var(--wl-rose-soft-dark);
+      --wl-amber: var(--wl-amber-dark);
+      --wl-amber-soft: var(--wl-amber-soft-dark);
+      --wl-violet: var(--wl-violet-dark);
+      --wl-violet-soft: var(--wl-violet-soft-dark);
+      --wl-scroll-thumb: var(--wl-scroll-thumb-dark);
+      --wl-scroll-track: var(--wl-scroll-track-dark);
+    }
+
+    &:has(> head > meta[name="color-scheme"][content="dark"]) {
+      color-scheme: dark;
+      --wl-canvas: var(--wl-canvas-dark);
+      --wl-panel: var(--wl-panel-dark);
+      --wl-surface: var(--wl-surface-dark);
+      --wl-surface-elevated: var(--wl-surface-elevated-dark);
+      --wl-surface-code: var(--wl-surface-code-dark);
+      --wl-ink: var(--wl-ink-dark);
+      --wl-ink-secondary: var(--wl-ink-secondary-dark);
+      --wl-ink-muted: var(--wl-ink-muted-dark);
+      --wl-border-ui: var(--wl-border-ui-dark);
+      --wl-border-subtle: var(--wl-border-subtle-dark);
+      --wl-grid-dot: var(--wl-grid-dot-dark);
+      --wl-blue: var(--wl-blue-dark);
+      --wl-blue-soft: var(--wl-blue-soft-dark);
+      --wl-emerald: var(--wl-emerald-dark);
+      --wl-emerald-soft: var(--wl-emerald-soft-dark);
+      --wl-rose: var(--wl-rose-dark);
+      --wl-rose-soft: var(--wl-rose-soft-dark);
+      --wl-amber: var(--wl-amber-dark);
+      --wl-amber-soft: var(--wl-amber-soft-dark);
+      --wl-violet: var(--wl-violet-dark);
+      --wl-violet-soft: var(--wl-violet-soft-dark);
+      --wl-scroll-thumb: var(--wl-scroll-thumb-dark);
+      --wl-scroll-track: var(--wl-scroll-track-dark);
+    }
+
+    &:has(> head > meta[name="color-scheme"][content="light"]) {
+      color-scheme: light;
+      --wl-canvas: var(--wl-canvas-light);
+      --wl-panel: var(--wl-panel-light);
+      --wl-surface: var(--wl-surface-light);
+      --wl-surface-elevated: var(--wl-surface-elevated-light);
+      --wl-surface-code: var(--wl-surface-code-light);
+      --wl-ink: var(--wl-ink-light);
+      --wl-ink-secondary: var(--wl-ink-secondary-light);
+      --wl-ink-muted: var(--wl-ink-muted-light);
+      --wl-border-ui: var(--wl-border-ui-light);
+      --wl-border-subtle: var(--wl-border-subtle-light);
+      --wl-grid-dot: var(--wl-grid-dot-light);
+      --wl-blue: var(--wl-blue-light);
+      --wl-blue-soft: var(--wl-blue-soft-light);
+      --wl-emerald: var(--wl-emerald-light);
+      --wl-emerald-soft: var(--wl-emerald-soft-light);
+      --wl-rose: var(--wl-rose-light);
+      --wl-rose-soft: var(--wl-rose-soft-light);
+      --wl-amber: var(--wl-amber-light);
+      --wl-amber-soft: var(--wl-amber-soft-light);
+      --wl-violet: var(--wl-violet-light);
+      --wl-violet-soft: var(--wl-violet-soft-light);
+      --wl-scroll-thumb: var(--wl-scroll-thumb-light);
+      --wl-scroll-track: var(--wl-scroll-track-light);
+    }
+  }
+
+  @supports (background: linear-gradient(in oklab, white, black)) {
+    :root {
+      --in-oklab: in oklab;
+    }
+  }
+}
+
+@layer layout {
+  body {
+    font-family: var(--wl-font-sans);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    background-color: var(--wl-canvas);
+    color: var(--wl-ink);
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .visually-hidden {
+    position: absolute;
+    clip-path: inset(50%);
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation: none !important;
+    }
+  }
+}

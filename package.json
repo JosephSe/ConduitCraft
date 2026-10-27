@@ -18,7 +18,7 @@
     "dev": "vite --port 5180",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4180",
-    "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/core.test.ts tests/reconcile.test.ts"
+    "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/core.test.ts tests/reconcile.test.ts tests/exportShared.test.ts"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"

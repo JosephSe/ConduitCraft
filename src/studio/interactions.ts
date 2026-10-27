@@ -117,19 +117,9 @@ import {
   serializeToMermaid,
 } from '../core/parser';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
+import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
-
-// ---------------------------------------------------------------------------
-// Palette Stencils (Click to Place OR Drag onto Stage)
-// ---------------------------------------------------------------------------
-export const TONE_CSS: Record<StreamTone, [string, string]> = {
-  blue: ['var(--wl-blue)', 'var(--wl-blue-soft)'],
-  emerald: ['var(--wl-emerald)', 'var(--wl-emerald-soft)'],
-  rose: ['var(--wl-rose)', 'var(--wl-rose-soft)'],
-  violet: ['var(--wl-violet)', 'var(--wl-violet-soft)'],
-  amber: ['var(--wl-amber)', 'var(--wl-amber-soft)'],
-};
 
 export function initStencilPalette(): void {
   stencilGrid.replaceChildren();
@@ -1031,38 +1021,13 @@ export function initEvents(): void {
     }
   }
 
-  // Color Scheme Toggle (`dark-mode-toggle` guide)
-  const metaScheme = document.querySelector('meta[name="color-scheme"]') as HTMLMetaElement;
-  const themeRadios = Array.from(
-    document.querySelectorAll<HTMLInputElement>('input[name="theme-choice"]'),
-  );
-  try {
-    const saved = localStorage.getItem('blueprint-studio-color-scheme');
-    const initial = saved === 'light' || saved === 'dark' ? saved : 'system';
-    for (const r of themeRadios) r.checked = r.value === initial;
-  } catch {
-    // Ignore storage restrictions
-  }
-  for (const r of themeRadios) {
-    r.addEventListener('change', () => {
-      if (!r.checked) return;
-      if (r.value === 'system') {
-        metaScheme.content = 'light dark';
-        try {
-          localStorage.removeItem('blueprint-studio-color-scheme');
-        } catch {
-          // Ignore
-        }
-      } else {
-        metaScheme.content = r.value;
-        try {
-          localStorage.setItem('blueprint-studio-color-scheme', r.value);
-        } catch {
-          // Ignore
-        }
-      }
-    });
-  }
+  // Color scheme radios share the boot script used by exported pages.
+  const bindColorScheme = (
+    window as Window & {
+      conduitBindColorScheme?: (meta: HTMLMetaElement | null) => void;
+    }
+  ).conduitBindColorScheme;
+  bindColorScheme?.(document.querySelector('meta[name="color-scheme"]'));
 
   chkSnapGrid.addEventListener('change', () => {
     app.snapToGrid = chkSnapGrid.checked;
