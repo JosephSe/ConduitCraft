@@ -618,7 +618,7 @@
 
   .empty-stage-card {
     pointer-events: auto;
-    max-inline-size: 31rem;
+    max-inline-size: 36rem;
     padding: 1.65rem 1.85rem;
     border-radius: 1.25rem;
     background: var(--wl-panel);

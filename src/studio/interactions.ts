@@ -9,6 +9,7 @@ import {
   btnCopyCode,
   btnEmptyCode,
   btnEmptyImport,
+  btnEmptyShowcase,
   btnExportHtml,
   btnExportJson,
   btnExportMmd,
@@ -130,6 +131,7 @@ import {
 import { encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
+import showcaseBlueprint from '../../public/examples/lumen-relay.blueprint.json?raw';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { renderStagePictureSvg } from './stagePicture';
 import { TONE_CSS } from '../shared/tones';
@@ -996,6 +998,22 @@ export function initEvents(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'notes', id: notes.id });
     renderAll(true);
+  });
+
+  btnEmptyShowcase.addEventListener('click', () => {
+    const parsed = parseBlueprintJson(showcaseBlueprint);
+    if (!parsed.ok) {
+      hudStatusTip.textContent = parsed.error;
+      return;
+    }
+    pushHistory();
+    clearSimulation();
+    app.doc = parsed.doc;
+    const focus = app.doc.nodes.find((node) => node.id === 'night-desk') ?? app.doc.nodes[0];
+    setSelection(focus ? { type: 'node', id: focus.id } : { type: 'none' });
+    renderAll(true);
+    requestAnimationFrame(fitToViewport);
+    hudStatusTip.textContent = 'Loaded the Lumen Relay showcase.';
   });
 
   // Starter Pair on Blank Canvas (1 generic Actor -> 1 generic Core System)

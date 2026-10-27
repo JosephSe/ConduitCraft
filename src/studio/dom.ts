@@ -80,6 +80,7 @@ export const btnPaletteCode = document.getElementById('btn-palette-code') as HTM
 export const windowDropVeil = document.getElementById('window-drop-veil') as HTMLElement;
 export const emptyStageOverlay = document.getElementById('empty-stage-overlay') as HTMLElement;
 export const btnQuickStarter = document.getElementById('btn-quick-starter') as HTMLButtonElement;
+export const btnEmptyShowcase = document.getElementById('btn-empty-showcase') as HTMLButtonElement;
 export const btnEmptyImport = document.getElementById('btn-empty-import') as HTMLButtonElement;
 export const btnEmptyCode = document.getElementById('btn-empty-code') as HTMLButtonElement;
 export const btnRestoreSession = document.getElementById('btn-restore-session') as HTMLButtonElement | null;

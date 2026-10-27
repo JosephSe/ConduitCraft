@@ -1,0 +1,844 @@
+{
+  "kind": "conduitcraft.blueprint",
+  "version": 1,
+  "document": {
+    "title": "Lumen Relay",
+    "systemTag": "HARBOR CITY // NIGHT DESK",
+    "statusLabel": "LIVE TELEMETRY",
+    "direction": "LR",
+    "stageWidth": 2000,
+    "stageHeight": 1160,
+    "overviewSummary": "Lumen Relay is the night desk of a fictional harbor city. A resident files a lantern request, the permit gate clears or refuses it, and the relay bus hands a route to the sorter. The ledger tells the partner kiosk when a parcel is ready. Weather can hold the dock beacon, and a still wire carries the signed copy to the quay seal.",
+    "brand": {
+      "name": "Lumen Relay",
+      "accent": "#0f766e",
+      "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzBmNzY2ZSIvPjxwYXRoIGQ9Ik0xMi41IDloN00xNiA5djIuNU0xMS41IDEzaDlsLTEuMiAxMWgtNi42TDExLjUgMTN6IiBmaWxsPSJub25lIiBzdHJva2U9IiNmOGZhZmMiIHN0cm9rZS13aWR0aD0iMS43IiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PGNpcmNsZSBjeD0iMTYiIGN5PSIxOCIgcj0iMS43IiBmaWxsPSIjZmJiZjI0Ii8+PC9zdmc+"
+    },
+    "zones": [
+      {
+        "id": "zone-intake",
+        "number": "01",
+        "title": "Intake",
+        "subtitle": "Callers",
+        "x": 16,
+        "width": 176
+      },
+      {
+        "id": "zone-desk",
+        "number": "02",
+        "title": "Desk",
+        "subtitle": "Permit and archive",
+        "x": 196,
+        "width": 640
+      },
+      {
+        "id": "zone-relay",
+        "number": "03",
+        "title": "Relay",
+        "subtitle": "Bus, sorter, and dock",
+        "x": 840,
+        "width": 500
+      },
+      {
+        "id": "zone-ledger",
+        "number": "04",
+        "title": "Ledger",
+        "subtitle": "Book, kiosk, and seal",
+        "x": 1344,
+        "width": 540
+      }
+    ],
+    "notesCards": [
+      {
+        "id": "notes-read",
+        "title": "How to read this",
+        "code": "SPEC-01",
+        "x": 24,
+        "y": 820,
+        "items": [
+          {
+            "title": "Shapes",
+            "text": "Card, rounded, pill, circle, diamond, and hexagon each appear once."
+          },
+          {
+            "title": "Wires",
+            "text": "Every route, tone, and port is used. Two wires share the ledger and the kiosk."
+          },
+          {
+            "title": "Still copy",
+            "text": "Seal and Seal copy do not animate. Seal copy bends through a waypoint."
+          },
+          {
+            "title": "Scenarios",
+            "text": "Clear Night, Denied Permit, and Storm Hold run from Data View."
+          }
+        ]
+      },
+      {
+        "id": "notes-rules",
+        "title": "Night rules",
+        "code": "SPEC-02",
+        "x": 850,
+        "y": 820,
+        "items": [
+          {
+            "title": "Permit",
+            "text": "A refusal loops under the desk. An override travels over the top."
+          },
+          {
+            "title": "Storm",
+            "text": "Harbor wind above 18 knots holds the beacon and pauses the dispatcher."
+          },
+          {
+            "title": "Quay mark",
+            "text": "The seal on this card is a custom image, not a built-in glyph."
+          }
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "eyebrow": "ACTOR",
+        "footerLeft": "Bell window",
+        "chip": "ROLE",
+        "zoneLabel": "INTAKE",
+        "interfaceLabel": "Bell and paper slip",
+        "summary": "A harbor resident who rings the night bell and files a lantern request.",
+        "metrics": [
+          {
+            "label": "Window",
+            "value": "Dusk to dawn"
+          },
+          {
+            "label": "Channel",
+            "value": "Bell slip"
+          }
+        ],
+        "code": "{\n  \"caller\": \"resident\",\n  \"window\": \"night\",\n  \"slip\": \"lantern\"\n}",
+        "id": "resident",
+        "kind": "actor",
+        "accent": "blue",
+        "icon": "actor",
+        "title": "Resident",
+        "subtitle": "Night caller",
+        "x": 24,
+        "y": 216,
+        "width": 148,
+        "height": 142
+      },
+      {
+        "eyebrow": "PLATFORM",
+        "footerLeft": "Desk runtime",
+        "chip": "TIER 1",
+        "zoneLabel": "DESK",
+        "interfaceLabel": "Counter and internal RPC",
+        "summary": "The city desk that stamps a slip and opens the request.",
+        "metrics": [
+          {
+            "label": "Shift",
+            "value": "Night"
+          },
+          {
+            "label": "Queue",
+            "value": "Open slips"
+          }
+        ],
+        "code": "{\n  \"desk\": \"night\",\n  \"stamp\": \"open\",\n  \"tier\": 1\n}",
+        "id": "night-desk",
+        "kind": "core",
+        "accent": "blue",
+        "icon": "monitor",
+        "shape": "rounded",
+        "title": "Night Desk",
+        "subtitle": "Request desk",
+        "x": 204,
+        "y": 200,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "eyebrow": "GATE",
+        "footerLeft": "Signed check",
+        "chip": "GATE",
+        "zoneLabel": "DESK",
+        "interfaceLabel": "Policy decision",
+        "summary": "The policy gate. A clear slip continues. A refused slip loops back.",
+        "metrics": [
+          {
+            "label": "Rule",
+            "value": "Harbor hours"
+          },
+          {
+            "label": "Decision",
+            "value": "Clear or deny"
+          }
+        ],
+        "code": "{\n  \"gate\": \"permit\",\n  \"policy\": \"harbor-hours\"\n}",
+        "id": "permit",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "diamond",
+        "title": "Permit",
+        "subtitle": "City policy",
+        "x": 474,
+        "y": 156,
+        "width": 344,
+        "height": 284
+      },
+      {
+        "eyebrow": "BUS",
+        "footerLeft": "Pub/sub",
+        "chip": "ASYNC",
+        "zoneLabel": "RELAY",
+        "interfaceLabel": "Route topic",
+        "summary": "The night route bus. Cleared slips become tickets for the sorter and the dock.",
+        "metrics": [
+          {
+            "label": "Topic",
+            "value": "night.routes"
+          },
+          {
+            "label": "Mode",
+            "value": "Pub/sub"
+          }
+        ],
+        "code": "{\n  \"bus\": \"relay\",\n  \"topic\": \"night.routes\"\n}",
+        "id": "relay",
+        "kind": "bus",
+        "accent": "amber",
+        "icon": "bridge",
+        "shape": "pill",
+        "title": "Relay Bus",
+        "subtitle": "Night routes",
+        "x": 850,
+        "y": 216,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "SERVICE",
+        "footerLeft": "Planner API",
+        "chip": "API",
+        "zoneLabel": "RELAY",
+        "interfaceLabel": "Planner API",
+        "summary": "Plans the quay lane and writes the route ticket.",
+        "metrics": [
+          {
+            "label": "API",
+            "value": "POST /routes"
+          },
+          {
+            "label": "Latency",
+            "value": "40 ms"
+          }
+        ],
+        "code": "{\n  \"service\": \"sorter\",\n  \"method\": \"POST\",\n  \"path\": \"/routes\"\n}",
+        "id": "sorter",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "code",
+        "title": "Sorter",
+        "subtitle": "Route planner",
+        "x": 1100,
+        "y": 216,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "STORE",
+        "footerLeft": "Read / write",
+        "chip": "LEDGER",
+        "zoneLabel": "LEDGER",
+        "interfaceLabel": "Transactional book",
+        "summary": "The handoff book. A commit tells the partner kiosk the parcel is ready.",
+        "metrics": [
+          {
+            "label": "Book",
+            "value": "Handoffs"
+          },
+          {
+            "label": "Write",
+            "value": "Commit"
+          }
+        ],
+        "code": "{\n  \"store\": \"parcel-ledger\",\n  \"op\": \"commit\"\n}",
+        "id": "ledger",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "shape": "rounded",
+        "title": "Parcel Ledger",
+        "subtitle": "Handoff book",
+        "x": 1354,
+        "y": 196,
+        "width": 248,
+        "height": 172
+      },
+      {
+        "eyebrow": "",
+        "footerLeft": "",
+        "chip": "SYNC",
+        "zoneLabel": "LEDGER",
+        "interfaceLabel": "Partner counter",
+        "summary": "The partner pickup desk. It receives the handoff and a receipt on a second wire.",
+        "metrics": [
+          {
+            "label": "Partner",
+            "value": "Quay co-op"
+          },
+          {
+            "label": "Mode",
+            "value": "Sync"
+          }
+        ],
+        "code": "{\n  \"client\": \"kiosk\",\n  \"partner\": \"quay-coop\"\n}",
+        "id": "kiosk",
+        "kind": "client",
+        "accent": "emerald",
+        "icon": "agency",
+        "shape": "pill",
+        "title": "Kiosk",
+        "subtitle": "Partner desk",
+        "x": 1664,
+        "y": 232,
+        "width": 188,
+        "height": 96
+      },
+      {
+        "eyebrow": "ARCHIVE",
+        "footerLeft": "Cold store",
+        "chip": "HOLD",
+        "zoneLabel": "DESK",
+        "interfaceLabel": "Exception archive",
+        "summary": "Holds the slips the permit gate refused.",
+        "metrics": [
+          {
+            "label": "Retention",
+            "value": "30 nights"
+          },
+          {
+            "label": "Tone",
+            "value": "Exception"
+          }
+        ],
+        "code": "{\n  \"archive\": \"fog\",\n  \"retentionNights\": 30\n}",
+        "id": "archive",
+        "kind": "service",
+        "accent": "rose",
+        "icon": "cloud",
+        "shape": "rounded",
+        "title": "Fog Archive",
+        "subtitle": "Failed nights",
+        "x": 204,
+        "y": 520,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "COMPUTE",
+        "footerLeft": "Worker",
+        "chip": "CPU",
+        "zoneLabel": "DESK",
+        "interfaceLabel": "Assignment worker",
+        "summary": "Assigns a quay lane, and pauses assignment when the wind is too high.",
+        "metrics": [
+          {
+            "label": "Worker",
+            "value": "Lane CPU"
+          },
+          {
+            "label": "State",
+            "value": "Running"
+          }
+        ],
+        "code": "{\n  \"worker\": \"dispatcher\",\n  \"state\": \"running\"\n}",
+        "id": "dispatcher",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "cpu",
+        "title": "Dispatcher",
+        "subtitle": "Lane assigner",
+        "x": 612,
+        "y": 520,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "SIGNAL",
+        "footerLeft": "Lamp",
+        "chip": "LIVE",
+        "zoneLabel": "RELAY",
+        "interfaceLabel": "Dock beacon",
+        "summary": "The dock lamp. It holds a steady light when a storm pauses the route.",
+        "metrics": [
+          {
+            "label": "Lamp",
+            "value": "Dock 4"
+          },
+          {
+            "label": "State",
+            "value": "Lit"
+          }
+        ],
+        "code": "{\n  \"beacon\": \"dock-4\",\n  \"state\": \"lit\"\n}",
+        "id": "beacon",
+        "kind": "service",
+        "accent": "amber",
+        "icon": "spark",
+        "shape": "circle",
+        "title": "Beacon",
+        "subtitle": "Dock light",
+        "x": 850,
+        "y": 500,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "SIGNAL",
+        "footerLeft": "Feed",
+        "chip": "WIND",
+        "zoneLabel": "RELAY",
+        "interfaceLabel": "Wind feed",
+        "summary": "Reports harbor wind. Above the quay limit, the relay holds.",
+        "metrics": [
+          {
+            "label": "Feed",
+            "value": "Harbor wind"
+          },
+          {
+            "label": "Limit",
+            "value": "18 kn"
+          }
+        ],
+        "code": "{\n  \"feed\": \"harbor-wind\",\n  \"limitKnots\": 18\n}",
+        "id": "weather",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "globe",
+        "shape": "hexagon",
+        "title": "Weather",
+        "subtitle": "Harbor wind",
+        "x": 1100,
+        "y": 500,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "EDGE",
+        "footerLeft": "Rack",
+        "chip": "NODE",
+        "zoneLabel": "LEDGER",
+        "interfaceLabel": "Quay rack",
+        "summary": "The edge rack on the quay. It pings from the sorter and seals a copy into the vault.",
+        "metrics": [
+          {
+            "label": "Site",
+            "value": "Quay rack"
+          },
+          {
+            "label": "Ping",
+            "value": "From sorter"
+          }
+        ],
+        "code": "{\n  \"rack\": \"quay\",\n  \"role\": \"edge\"\n}",
+        "id": "rack",
+        "kind": "service",
+        "accent": "amber",
+        "icon": "server",
+        "title": "Dock Rack",
+        "subtitle": "Edge compute",
+        "x": 1354,
+        "y": 500,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "eyebrow": "VAULT",
+        "footerLeft": "Sealed",
+        "chip": "LOCK",
+        "zoneLabel": "LEDGER",
+        "interfaceLabel": "Signed store",
+        "summary": "Keeps the signed copy of the book. The copy wire does not animate.",
+        "metrics": [
+          {
+            "label": "Seal",
+            "value": "Signed"
+          },
+          {
+            "label": "Copy",
+            "value": "Still wire"
+          }
+        ],
+        "code": "{\n  \"vault\": \"seal\",\n  \"signed\": true\n}",
+        "id": "vault",
+        "kind": "store",
+        "accent": "violet",
+        "icon": "lock",
+        "title": "Seal Vault",
+        "subtitle": "Signed records",
+        "x": 1616,
+        "y": 480,
+        "width": 248,
+        "height": 172
+      },
+      {
+        "eyebrow": "",
+        "footerLeft": "",
+        "chip": "SEAL",
+        "zoneLabel": "LEDGER",
+        "interfaceLabel": "Painted seal",
+        "summary": "A painted quay seal stored as a custom icon, not a built-in glyph.",
+        "metrics": [
+          {
+            "label": "Icon",
+            "value": "Custom image"
+          },
+          {
+            "label": "Wire",
+            "value": "Still copy"
+          }
+        ],
+        "code": "{\n  \"mark\": \"quay-seal\",\n  \"icon\": \"custom\"\n}",
+        "id": "quay-mark",
+        "kind": "client",
+        "accent": "amber",
+        "icon": "spark",
+        "iconImage": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTMiIGZpbGw9IiMxMzRlNGEiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI3IiBmaWxsPSJub25lIiBzdHJva2U9IiM1ZWVhZDQiIHN0cm9rZS13aWR0aD0iMS42Ii8+PHBhdGggZD0iTTE2IDguNXYxNU04LjUgMTZoMTUiIHN0cm9rZT0iI2Y4ZmFmYyIgc3Ryb2tlLXdpZHRoPSIxLjQiLz48Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIyLjIiIGZpbGw9IiNmYmJmMjQiLz48L3N2Zz4=",
+        "title": "Quay Mark",
+        "subtitle": "Custom seal",
+        "x": 1648,
+        "y": 748,
+        "width": 188,
+        "height": 96
+      }
+    ],
+    "edges": [
+      {
+        "animated": true,
+        "id": "e-call",
+        "from": "resident",
+        "to": "night-desk",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "blue",
+        "route": "auto",
+        "label": "Lantern call"
+      },
+      {
+        "animated": true,
+        "id": "e-policy",
+        "from": "night-desk",
+        "to": "permit",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "Policy check"
+      },
+      {
+        "animated": true,
+        "id": "e-override",
+        "from": "night-desk",
+        "to": "permit",
+        "sourcePort": "top",
+        "targetPort": "top",
+        "tone": "violet",
+        "route": "over",
+        "label": "Override"
+      },
+      {
+        "animated": true,
+        "id": "e-clear",
+        "from": "permit",
+        "to": "relay",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "orthogonal",
+        "label": "Cleared"
+      },
+      {
+        "animated": true,
+        "id": "e-denied",
+        "from": "permit",
+        "to": "resident",
+        "sourcePort": "bottom",
+        "targetPort": "bottom",
+        "tone": "rose",
+        "route": "under",
+        "label": "Denied"
+      },
+      {
+        "animated": true,
+        "id": "e-fog",
+        "from": "night-desk",
+        "to": "archive",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "rose",
+        "route": "step",
+        "label": "Fog file"
+      },
+      {
+        "animated": true,
+        "id": "e-assign",
+        "from": "archive",
+        "to": "dispatcher",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "violet",
+        "route": "straight",
+        "label": "Assign"
+      },
+      {
+        "animated": true,
+        "id": "e-ticket",
+        "from": "relay",
+        "to": "sorter",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "step",
+        "label": "Route ticket"
+      },
+      {
+        "animated": true,
+        "id": "e-beacon",
+        "from": "relay",
+        "to": "beacon",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "fanout",
+        "label": "Dock light"
+      },
+      {
+        "animated": true,
+        "id": "e-wind",
+        "from": "relay",
+        "to": "weather",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "fanout",
+        "label": "Harbor wind"
+      },
+      {
+        "animated": true,
+        "id": "e-commit",
+        "from": "sorter",
+        "to": "ledger",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "straight",
+        "label": "Commit"
+      },
+      {
+        "animated": true,
+        "id": "e-handoff",
+        "from": "ledger",
+        "to": "kiosk",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "arc",
+        "label": "Handoff"
+      },
+      {
+        "animated": true,
+        "id": "e-receipt",
+        "from": "ledger",
+        "to": "kiosk",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "blue",
+        "route": "straight",
+        "label": "Receipt"
+      },
+      {
+        "animated": true,
+        "id": "e-rack",
+        "from": "sorter",
+        "to": "rack",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "fanout",
+        "label": "Rack ping"
+      },
+      {
+        "animated": false,
+        "id": "e-seal",
+        "from": "rack",
+        "to": "vault",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "auto",
+        "label": "Seal"
+      },
+      {
+        "animated": false,
+        "id": "e-copy",
+        "from": "vault",
+        "to": "quay-mark",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "straight",
+        "label": "Seal copy",
+        "waypoint": [
+          1860,
+          700
+        ]
+      }
+    ],
+    "simulations": [
+      {
+        "id": "sim-clear",
+        "name": "Clear Night",
+        "tone": "emerald",
+        "steps": [
+          {
+            "id": "clear-1",
+            "nodes": [
+              "resident"
+            ],
+            "tone": "blue",
+            "label": "LANTERN CALL",
+            "trace": "A resident rings the night bell and files a lantern request."
+          },
+          {
+            "id": "clear-2",
+            "nodes": [
+              "night-desk"
+            ],
+            "tone": "blue",
+            "label": "NIGHT DESK",
+            "trace": "The desk stamps the slip and opens a request."
+          },
+          {
+            "id": "clear-3",
+            "nodes": [
+              "permit"
+            ],
+            "tone": "violet",
+            "label": "PERMIT CLEARED",
+            "trace": "City policy clears the parcel for the harbor."
+          },
+          {
+            "id": "clear-4",
+            "nodes": [
+              "relay",
+              "sorter"
+            ],
+            "tone": "amber",
+            "label": "ROUTE TICKET",
+            "trace": "The relay bus hands the sorter a route ticket."
+          },
+          {
+            "id": "clear-5",
+            "nodes": [
+              "ledger",
+              "kiosk"
+            ],
+            "tone": "emerald",
+            "label": "HANDOFF READY",
+            "trace": "The ledger tells the partner kiosk the parcel is ready."
+          }
+        ]
+      },
+      {
+        "id": "sim-denied",
+        "name": "Denied Permit",
+        "tone": "rose",
+        "steps": [
+          {
+            "id": "deny-1",
+            "nodes": [
+              "resident",
+              "night-desk"
+            ],
+            "tone": "blue",
+            "label": "SLIP FILED",
+            "trace": "The same bell, with a slip the policy will refuse."
+          },
+          {
+            "id": "deny-2",
+            "nodes": [
+              "permit"
+            ],
+            "tone": "violet",
+            "label": "POLICY HOLD",
+            "trace": "The permit gate stops the request."
+          },
+          {
+            "id": "deny-3",
+            "nodes": [
+              "resident"
+            ],
+            "tone": "rose",
+            "label": "DENIED",
+            "trace": "The refusal loops back under the desk to the caller."
+          },
+          {
+            "id": "deny-4",
+            "nodes": [
+              "archive"
+            ],
+            "tone": "rose",
+            "label": "FOG FILE",
+            "trace": "The failed night is filed in the fog archive."
+          }
+        ]
+      },
+      {
+        "id": "sim-storm",
+        "name": "Storm Hold",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "storm-1",
+            "nodes": [
+              "weather"
+            ],
+            "tone": "blue",
+            "label": "HARBOR WIND",
+            "trace": "The weather feed reports a wind above the quay limit."
+          },
+          {
+            "id": "storm-2",
+            "nodes": [
+              "beacon",
+              "relay"
+            ],
+            "tone": "amber",
+            "label": "BEACON HOLD",
+            "trace": "The dock beacon and the relay bus hold the route."
+          },
+          {
+            "id": "storm-3",
+            "nodes": [
+              "dispatcher"
+            ],
+            "tone": "violet",
+            "label": "LANES PAUSED",
+            "trace": "The dispatcher pauses lane assignment."
+          },
+          {
+            "id": "storm-4",
+            "nodes": [
+              "vault",
+              "quay-mark"
+            ],
+            "tone": "violet",
+            "label": "SEAL THE BOOK",
+            "trace": "The vault seals the book, and the quay mark keeps the still copy."
+          }
+        ]
+      }
+    ]
+  }
+}
