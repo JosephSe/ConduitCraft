@@ -15,7 +15,7 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 - [x] 8. **Routing edge cases**: obstacle-aware U-loops, parallel-wire lane offsets, badge overlap avoidance.
 
 ## Medium value (architecture and performance)
-- [ ] 9. Split `main.ts` into modules (state, render, inspector, interactions).
+- [x] 9. Split `main.ts` into modules (state, render, inspector, interactions).
 - [ ] 10. Incremental rendering (keyed diffing) instead of full DOM rebuilds.
 - [ ] 11. Remove duplicated CSS/logic between `standaloneHtml.ts` and the studio.
 - [ ] 12. Single selection controller emitting change events.
