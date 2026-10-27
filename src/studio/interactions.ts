@@ -153,6 +153,7 @@ import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
 import { renderShortcutsHtml } from './commands';
+import { initCommandPalette } from './palette';
 
 export function initStencilPalette(): void {
   stencilGrid.replaceChildren();
@@ -1399,6 +1400,37 @@ export function initEvents(): void {
   btnOpenSettings.addEventListener('click', () => settingsDialog.showModal());
   btnOpenShortcuts?.addEventListener('click', openShortcutsDialog);
 
+  // Command Palette
+  initCommandPalette({
+    openCodeDialog,
+    openExportDialog: () => {
+      resetGifChoices();
+      exportDialog.showModal();
+    },
+    openSettingsDialog: () => settingsDialog.showModal(),
+    openShortcutsDialog,
+    deleteSelected,
+    duplicateSelected,
+    loadShowcase: () => {
+      const parsed = parseBlueprintJson(showcaseBlueprint);
+      if (!parsed.ok) {
+        hudStatusTip.textContent = parsed.error;
+        notify(parsed.error, { tone: 'error' });
+        return;
+      }
+      pushHistory();
+      clearSimulation();
+      app.doc = parsed.doc;
+      const focus = app.doc.nodes.find((node) => node.id === 'night-desk') ?? app.doc.nodes[0];
+      setSelection(focus ? { type: 'node', id: focus.id } : { type: 'none' });
+      renderAll(true);
+      requestAnimationFrame(fitToViewport);
+      hudStatusTip.textContent = 'Loaded the Lumen Relay showcase.';
+      notify('Loaded the Lumen Relay showcase', { action: { label: 'Undo', onClick: () => performUndo() } });
+    },
+    runSimulationById: (id) => runSimulation(id),
+  });
+
   // Dismissible Coach Mark Card
   try {
     if (localStorage.getItem('conduitcraft-coach-dismissed') === '1' && hudCoachCard) {
@@ -1419,6 +1451,8 @@ export function initEvents(): void {
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
   if (shortcutsDialog) allDialogs.push(shortcutsDialog);
+  const cmdPaletteDialog = document.getElementById('command-palette-dialog') as HTMLDialogElement | null;
+  if (cmdPaletteDialog) allDialogs.push(cmdPaletteDialog);
   for (const dlg of allDialogs) {
     dlg.addEventListener('close', () => {
       dlg.returnValue = '';
