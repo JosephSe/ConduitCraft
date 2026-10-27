@@ -132,6 +132,7 @@ import { GIF_FRAME_DELAY_CS, encodeGif, gifFrameCount, gifFrameDashOffset, gifPi
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
+import { renderStagePictureSvg } from './stagePicture';
 import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
@@ -778,23 +779,20 @@ export function downloadBlob(content: string, filename: string, mimeType: string
 }
 
 function downloadDiagramPng(svg: string, width: number, height: number, filename: string): void {
-  const scale = Math.min(2, 4096 / Math.max(width, height, 1));
-  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
+  // A blob URL taints the canvas when the SVG embeds the live stage. A data URL does not.
+  const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   const image = new Image();
   image.onload = () => {
     const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(width * scale));
-    canvas.height = Math.max(1, Math.round(height * scale));
+    canvas.width = Math.max(1, image.naturalWidth || width);
+    canvas.height = Math.max(1, image.naturalHeight || height);
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      URL.revokeObjectURL(url);
       hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
       return;
     }
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     canvas.toBlob((png) => {
-      URL.revokeObjectURL(url);
       if (!png) {
         hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
         return;
@@ -802,10 +800,10 @@ function downloadDiagramPng(svg: string, width: number, height: number, filename
       const pngUrl = URL.createObjectURL(png);
       downloadUrl(pngUrl, filename);
       window.setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+      hudStatusTip.textContent = 'Saved a picture of the canvas.';
     }, 'image/png');
   };
   image.onerror = () => {
-    URL.revokeObjectURL(url);
     hudStatusTip.textContent = 'Could not render a PNG of this diagram.';
   };
   image.src = url;
@@ -1145,12 +1143,15 @@ export function initEvents(): void {
     void closeDialogSmoothly(exportDialog);
   });
   btnExportSvg.addEventListener('click', () => {
-    downloadBlob(renderDiagramSvg(app.doc), `${getSafeFilenameSlug()}.svg`, 'image/svg+xml;charset=utf-8');
+    downloadBlob(renderStagePictureSvg(), `${getSafeFilenameSlug()}.svg`, 'image/svg+xml;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
   });
   btnExportPng.addEventListener('click', () => {
-    const svg = renderDiagramSvg(app.doc);
-    downloadDiagramPng(svg, app.doc.stageWidth, app.doc.stageHeight, `${getSafeFilenameSlug()}.png`);
+    const scale = Math.min(2, 4096 / Math.max(app.doc.stageWidth, app.doc.stageHeight, 1));
+    const width = Math.max(1, Math.round(app.doc.stageWidth * scale));
+    const height = Math.max(1, Math.round(app.doc.stageHeight * scale));
+    hudStatusTip.textContent = 'Rendering the canvas…';
+    downloadDiagramPng(renderStagePictureSvg(width, height), width, height, `${getSafeFilenameSlug()}.png`);
     void closeDialogSmoothly(exportDialog);
   });
   btnExportGif.addEventListener('click', () => {
