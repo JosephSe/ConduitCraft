@@ -4,9 +4,11 @@ import type { DiagramDocument, DiagramNode, DiagramEdge } from '../src/types.ts'
 import {
   FIT_SCALE_MAX,
   FIT_SCALE_MIN,
+  READABLE_FIT_SCALE_MIN,
   NOTES_CARD_WIDTH,
   contentWorldBounds,
   frameRectInViewport,
+  frameDocumentInViewport,
   minimapMap,
   minimapToWorld,
   notesCardHeight,
@@ -167,5 +169,34 @@ describe('viewport framing', () => {
     const visible = viewportWorldRect(800, 600, pan.panX, pan.panY, 2);
     assert.equal(visible.x + visible.width / 2, 100);
     assert.equal(visible.y + visible.height / 2, 50);
+  });
+
+  it('clamps small diagrams (1-2 nodes) to a readable minimum zoom instead of whole stage shrinkage', () => {
+    // 2 starter nodes placed in default positions
+    const smallDoc = blank({
+      nodes: [
+        node({ id: 'core', x: 200, y: 200, width: 140, height: 80 }),
+        node({ id: 'service', x: 420, y: 200, width: 140, height: 80 }),
+      ],
+    });
+
+    // On standard laptop viewport (e.g. 850px width):
+    // Stage framing would do: (850 - 48) / 1680 = 0.47 (shrinks into low-LOD < 55%)
+    // frameDocumentInViewport must clamp to at least READABLE_FIT_SCALE_MIN (0.65)
+    const frame = frameDocumentInViewport(850, 600, smallDoc);
+    assert.ok(frame, 'must frame small document successfully');
+    assert.ok(
+      frame.scale >= READABLE_FIT_SCALE_MIN,
+      `Small diagram zoom (${frame.scale}) must be >= readable minimum (${READABLE_FIT_SCALE_MIN})`
+    );
+    assert.ok(
+      frame.scale <= 1.0,
+      `Small diagram zoom (${frame.scale}) should not exceed 1.0`
+    );
+
+    // Empty document centers at 1.0 scale
+    const emptyFrame = frameDocumentInViewport(850, 600, blank());
+    assert.ok(emptyFrame);
+    assert.equal(emptyFrame.scale, 1.0);
   });
 });

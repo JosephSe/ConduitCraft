@@ -25,6 +25,7 @@ import {
 import {
   selectionWorldBounds,
   frameRectInViewport,
+  frameDocumentInViewport,
   viewportWorldRect,
   panToCenterWorld,
 } from './viewportFrame';
@@ -356,22 +357,13 @@ export function fitToViewport(): void {
   const rect = viewport.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) return;
 
-  if (app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0) {
-    app.scale = 1;
-    app.panX = Math.round((rect.width - app.doc.stageWidth) / 2);
-    app.panY = Math.max(0, Math.round((rect.height - app.doc.stageHeight) / 2));
+  const frame = frameDocumentInViewport(rect.width, rect.height, app.doc);
+  if (frame) {
+    app.scale = frame.scale;
+    app.panX = Math.round(frame.panX);
+    app.panY = Math.round(frame.panY);
     applyTransform();
-    return;
   }
-
-  const padX = 48;
-  const padY = 64;
-  const scaleX = (rect.width - padX) / app.doc.stageWidth;
-  const scaleY = (rect.height - padY) / app.doc.stageHeight;
-  app.scale = Math.max(0.38, Math.min(1.12, Math.min(scaleX, scaleY)));
-  app.panX = Math.round((rect.width - app.doc.stageWidth * app.scale) / 2);
-  app.panY = Math.max(12, Math.round((rect.height - app.doc.stageHeight * app.scale) / 2 - 8));
-  applyTransform();
 }
 
 /** Frame the current selection. With nothing selected, frame every node, zone, and notes card. */

@@ -24,6 +24,8 @@ export const FIT_PAD_Y = 64;
 /** Same floor and ceiling as `zoomAround`. */
 export const FIT_SCALE_MIN = 0.35;
 export const FIT_SCALE_MAX = 1.9;
+/** Minimum readable scale when framing small diagrams (e.g. 1-2 nodes) to prevent low-LOD shrinkage. */
+export const READABLE_FIT_SCALE_MIN = 0.65;
 
 export function unionRects(rects: WorldRect[]): WorldRect | null {
   let x0 = Infinity;
@@ -146,17 +148,69 @@ export function frameRectInViewport(
   viewportWidth: number,
   viewportHeight: number,
   bounds: WorldRect,
+  minScale = FIT_SCALE_MIN,
+  maxScale = FIT_SCALE_MAX,
 ): ViewportFrame | null {
   if (viewportWidth <= 0 || viewportHeight <= 0) return null;
   if (bounds.width <= 0 || bounds.height <= 0) return null;
   const availW = Math.max(32, viewportWidth - FIT_PAD_X);
   const availH = Math.max(32, viewportHeight - FIT_PAD_Y);
   const raw = Math.min(availW / bounds.width, availH / bounds.height);
-  const scale = Math.min(FIT_SCALE_MAX, Math.max(FIT_SCALE_MIN, raw));
+  const scale = Math.min(maxScale, Math.max(minScale, raw));
   return {
     scale,
     panX: (viewportWidth - bounds.width * scale) / 2 - bounds.x * scale,
     panY: (viewportHeight - bounds.height * scale) / 2 - bounds.y * scale,
+  };
+}
+
+/**
+ * Frame the diagram document in the viewport.
+ * When framing small diagrams (e.g. 1-2 nodes), does not shrink them into a tiny fraction
+ * of the 1680x920 stage at default laptop Fit zoom; clamps to a readable minimum zoom (>= READABLE_FIT_SCALE_MIN).
+ */
+export function frameDocumentInViewport(
+  viewportWidth: number,
+  viewportHeight: number,
+  doc: DiagramDocument,
+): ViewportFrame | null {
+  if (viewportWidth <= 0 || viewportHeight <= 0) return null;
+
+  if (doc.nodes.length === 0 && doc.zones.length === 0 && doc.notesCards.length === 0) {
+    return {
+      scale: 1,
+      panX: Math.round((viewportWidth - doc.stageWidth) / 2),
+      panY: Math.max(0, Math.round((viewportHeight - doc.stageHeight) / 2)),
+    };
+  }
+
+  const content = contentWorldBounds(doc);
+  // When framing small diagrams (1-4 nodes and no zones spanning the full stage),
+  // frame the actual content bounding box clamped to a readable minimum zoom (>= READABLE_FIT_SCALE_MIN).
+  if (content && doc.nodes.length <= 4 && doc.zones.length === 0) {
+    const padX = 80;
+    const padY = 80;
+    const availW = Math.max(32, viewportWidth - padX);
+    const availH = Math.max(32, viewportHeight - padY);
+    const raw = Math.min(availW / content.width, availH / content.height);
+    const scale = Math.min(1.0, Math.max(READABLE_FIT_SCALE_MIN, raw));
+    return {
+      scale,
+      panX: (viewportWidth - content.width * scale) / 2 - content.x * scale,
+      panY: (viewportHeight - content.height * scale) / 2 - content.y * scale,
+    };
+  }
+
+  // Large or zoned diagrams: frame stage dimensions clamped to [FIT_SCALE_MIN, 1.12]
+  const padX = 48;
+  const padY = 64;
+  const scaleX = (viewportWidth - padX) / doc.stageWidth;
+  const scaleY = (viewportHeight - padY) / doc.stageHeight;
+  const scale = Math.max(FIT_SCALE_MIN, Math.min(1.12, Math.min(scaleX, scaleY)));
+  return {
+    scale,
+    panX: Math.round((viewportWidth - doc.stageWidth * scale) / 2),
+    panY: Math.max(12, Math.round((viewportHeight - doc.stageHeight * scale) / 2 - 8)),
   };
 }
 

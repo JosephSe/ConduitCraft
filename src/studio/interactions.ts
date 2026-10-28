@@ -237,6 +237,91 @@ import {
   type TemplateDefinition,
 } from './templatesGallery';
 
+export function attachStencilDragAndDrop(
+  btn: HTMLElement,
+  kind: NodeKind,
+  title: string,
+): void {
+  // Pointer drag onto canvas OR simple click to add at viewport center
+  let ghostEl: HTMLElement | null = null;
+  let startClientX = 0;
+  let startClientY = 0;
+  let dragged = false;
+
+  btn.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    startClientX = e.clientX;
+    startClientY = e.clientY;
+    dragged = false;
+    btn.setPointerCapture(e.pointerId);
+  });
+
+  btn.addEventListener('pointermove', (e) => {
+    if (!btn.hasPointerCapture(e.pointerId)) return;
+    if (!dragged && Math.hypot(e.clientX - startClientX, e.clientY - startClientY) > 6) {
+      dragged = true;
+      ghostEl = document.createElement('div');
+      ghostEl.className = 'stencil-drag-ghost';
+      ghostEl.textContent = `+ ${title}`;
+      document.body.appendChild(ghostEl);
+    }
+    if (ghostEl) {
+      ghostEl.style.setProperty('--gx', String(e.clientX));
+      ghostEl.style.setProperty('--gy', String(e.clientY));
+    }
+  });
+
+  const finishStencilPointer = (e: PointerEvent, commit: boolean) => {
+    if (ghostEl) {
+      ghostEl.remove();
+      ghostEl = null;
+    }
+    if (!commit) return;
+
+    if (dragged) {
+      const vpRect = viewport.getBoundingClientRect();
+      if (
+        e.clientX >= vpRect.left &&
+        e.clientX <= vpRect.right &&
+        e.clientY >= vpRect.top &&
+        e.clientY <= vpRect.bottom
+      ) {
+        const [wx, wy] = screenToWorld(e.clientX, e.clientY);
+        const dims = getNodeDimensions(kind);
+        addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2);
+      }
+    } else {
+      const [cx, cy] = getViewportWorldCenter();
+      const dims = getNodeDimensions(kind);
+      const cascade = (app.doc.nodes.length % 5) * 24;
+      addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
+    }
+
+    if (
+      e.pointerType === 'touch' ||
+      (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches)
+    ) {
+      responsiveToolbar.togglePalette(true);
+    }
+  };
+
+  btn.addEventListener('pointerup', (e) => finishStencilPointer(e, true));
+  btn.addEventListener('pointercancel', (e) => finishStencilPointer(e, false));
+
+  // Keyboard Enter / Space support when focused
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const [cx, cy] = getViewportWorldCenter();
+      const dims = getNodeDimensions(kind);
+      addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2);
+      if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
+        responsiveToolbar.togglePalette(true);
+      }
+    }
+  });
+}
+
 export function initStencilPalette(): void {
   stencilGrid.replaceChildren();
 
@@ -271,77 +356,20 @@ export function initStencilPalette(): void {
 
     btn.append(preview, title, sub);
 
-    // Pointer drag onto canvas OR simple click to add at viewport center
-    let ghostEl: HTMLElement | null = null;
-    let startClientX = 0;
-    let startClientY = 0;
-    let dragged = false;
-
-    btn.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      startClientX = e.clientX;
-      startClientY = e.clientY;
-      dragged = false;
-      btn.setPointerCapture(e.pointerId);
-    });
-
-    btn.addEventListener('pointermove', (e) => {
-      if (!btn.hasPointerCapture(e.pointerId)) return;
-      if (!dragged && Math.hypot(e.clientX - startClientX, e.clientY - startClientY) > 6) {
-        dragged = true;
-        ghostEl = document.createElement('div');
-        ghostEl.className = 'stencil-drag-ghost';
-        ghostEl.textContent = `+ ${stencil.paletteTitle}`;
-        document.body.appendChild(ghostEl);
-      }
-      if (ghostEl) {
-        ghostEl.style.setProperty('--gx', String(e.clientX));
-        ghostEl.style.setProperty('--gy', String(e.clientY));
-      }
-    });
-
-    const finishStencilPointer = (e: PointerEvent, commit: boolean) => {
-      if (ghostEl) {
-        ghostEl.remove();
-        ghostEl = null;
-      }
-      if (!commit) return;
-
-      if (dragged) {
-        const vpRect = viewport.getBoundingClientRect();
-        if (
-          e.clientX >= vpRect.left &&
-          e.clientX <= vpRect.right &&
-          e.clientY >= vpRect.top &&
-          e.clientY <= vpRect.bottom
-        ) {
-          const [wx, wy] = screenToWorld(e.clientX, e.clientY);
-          const dims = getNodeDimensions(stencil.kind);
-          addNodeAt(stencil.kind, wx - dims.width / 2, wy - dims.height / 2);
-        }
-      } else {
-        const [cx, cy] = getViewportWorldCenter();
-        const dims = getNodeDimensions(stencil.kind);
-        const cascade = (app.doc.nodes.length % 5) * 24;
-        addNodeAt(stencil.kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
-      }
-    };
-
-    btn.addEventListener('pointerup', (e) => finishStencilPointer(e, true));
-    btn.addEventListener('pointercancel', (e) => finishStencilPointer(e, false));
-
-    // Keyboard Enter / Space support when focused
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        const [cx, cy] = getViewportWorldCenter();
-        const dims = getNodeDimensions(stencil.kind);
-        addNodeAt(stencil.kind, cx - dims.width / 2, cy - dims.height / 2);
-      }
-    });
+    attachStencilDragAndDrop(btn, stencil.kind, stencil.paletteTitle);
 
     stencilGrid.appendChild(btn);
   }
+
+  // Also wire drag-and-drop & click actions for collapsed palette rail buttons
+  const railBtns = document.querySelectorAll<HTMLButtonElement>('.rail-stencil-btn[data-stencil-kind]');
+  railBtns.forEach((railBtn) => {
+    const kind = railBtn.getAttribute('data-stencil-kind') as NodeKind | 'zone' | 'notes';
+    if (kind && kind !== 'zone' && kind !== 'notes') {
+      const stencil = STENCIL_CATALOG.find((s) => s.kind === kind);
+      attachStencilDragAndDrop(railBtn, kind, stencil?.paletteTitle ?? kind);
+    }
+  });
 }
 
 export function tagEnteringNodes(ids: string[]): void {
@@ -1383,6 +1411,9 @@ export function initEvents(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'zone', id: zone.id });
     renderAll(true);
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
+      responsiveToolbar.togglePalette(true);
+    }
   });
 
   btnAddNotes.setAttribute('data-tip', 'Add a checklist specification card');
@@ -1395,6 +1426,9 @@ export function initEvents(): void {
     expandStageToFit(app.doc);
     setSelection({ type: 'notes', id: notes.id });
     renderAll(true);
+    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
+      responsiveToolbar.togglePalette(true);
+    }
   });
 
   let currentGalleryCategory: TemplateCategory = 'all';
@@ -2544,7 +2578,23 @@ export function initEvents(): void {
 
 export function bootStudio(): void {
   initStencilPalette();
-  responsiveToolbar.init();
+  responsiveToolbar.init(undefined, {
+    onAddStencil: (kind) => {
+      const [cx, cy] = getViewportWorldCenter();
+      const dims = getNodeDimensions(kind as NodeKind);
+      const cascade = (app.doc.nodes.length % 5) * 24;
+      addNodeAt(kind as NodeKind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
+    },
+    onAddZone: () => {
+      btnAddZone.click();
+    },
+    onAddNotes: () => {
+      btnAddNotes.click();
+    },
+    onOpenExport: () => {
+      btnOpenExport.click();
+    },
+  });
   initEvents();
 
   // Check if a saved session exists and should be offered on blank canvas

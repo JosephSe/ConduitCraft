@@ -240,10 +240,59 @@
           <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
         </button>
       </div>
+
+      <!-- Header Overflow Menu (Narrow screens / Mobile) -->
+      <div class="menu-dropdown-wrapper header-overflow-wrapper" id="header-overflow-wrapper">
+        <button type="button" class="btn btn-icon-only" id="btn-header-overflow" aria-label="More actions" aria-haspopup="menu" aria-expanded="false" data-tip="More actions">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        </button>
+        <div class="menu-dropdown-popup menu-dropdown-right" id="header-overflow-popup" role="menu" hidden>
+          <button type="button" class="menu-item" id="btn-overflow-search" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Search &amp; Commands</span>
+            <span class="menu-shortcut">⌘K</span>
+          </button>
+          <button type="button" class="menu-item" id="btn-overflow-present" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+            <span>Presentation Mode</span>
+            <span class="menu-shortcut">P</span>
+          </button>
+          <button type="button" class="menu-item" id="btn-overflow-fit" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <span>Fit to Viewport</span>
+          </button>
+          <button type="button" class="menu-item" id="btn-overflow-layout" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
+            <span>Auto-Layout</span>
+          </button>
+          <button type="button" class="menu-item" id="btn-overflow-snap" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+            <span>Toggle Grid Snap</span>
+          </button>
+          <div class="menu-divider" role="separator"></div>
+          <button type="button" class="menu-item" id="btn-overflow-shortcuts" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
+            <span>Keyboard Shortcuts</span>
+            <span class="menu-shortcut">?</span>
+          </button>
+          <button type="button" class="menu-item" id="btn-overflow-settings" role="menuitem">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Display Settings</span>
+          </button>
+          <div class="menu-divider" role="separator"></div>
+          <button type="button" class="menu-item" id="btn-overflow-clear" role="menuitem" style="color: var(--wl-rose);">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            <span>Clear Canvas</span>
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 
   <main class="workspace" id="workspace" data-mode="design" data-tool="select" data-flow="all">
+    <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
+    <div class="drawer-scrim" id="drawer-scrim" hidden></div>
+
     <!-- Left Stencil Palette (Design Mode) -->
     <aside class="palette-sidebar" id="palette-sidebar" aria-label="Component stencil palette">
       <!-- Collapsed Icon Rail View -->
@@ -252,17 +301,26 @@
           <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
         </button>
         <div class="rail-divider"></div>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="service" data-tip="Add Service node" data-tip-pos="right" aria-label="Add Service node">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></svg>
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="actor" data-tip="Add Actor node" data-tip-pos="right" aria-label="Add Actor node">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6 21v-2a6 6 0 0 1 12 0v2"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="database" data-tip="Add Database node" data-tip-pos="right" aria-label="Add Database node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="core" data-tip="Add Core System node" data-tip-pos="right" aria-label="Add Core System node">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+        </button>
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="service" data-tip="Add Service / API node" data-tip-pos="right" aria-label="Add Service / API node">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        </button>
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="bus" data-tip="Add Event Broker node" data-tip-pos="right" aria-label="Add Event Broker node">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M4 15h16M8 15V9a4 4 0 0 1 8 0v6M12 9v6"/></svg>
+        </button>
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="store" data-tip="Add Data Store node" data-tip-pos="right" aria-label="Add Data Store node">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="queue" data-tip="Add Queue / Bus node" data-tip-pos="right" aria-label="Add Queue / Bus node">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="gate" data-tip="Add Control Gate node" data-tip-pos="right" aria-label="Add Control Gate node">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="cloud" data-tip="Add Cloud node" data-tip-pos="right" aria-label="Add Cloud node">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="client" data-tip="Add Client Device node" data-tip-pos="right" aria-label="Add Client Device node">
+          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
         </button>
         <button type="button" class="rail-stencil-btn" data-stencil-kind="zone" data-tip="Add Swimlane Stage" data-tip-pos="right" aria-label="Add Swimlane Stage">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
