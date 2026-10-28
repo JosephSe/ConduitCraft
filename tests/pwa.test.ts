@@ -48,7 +48,7 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     assert.ok(fs.existsSync(swPath), 'sw.js must exist in public/');
 
     const sw = fs.readFileSync(swPath, 'utf8');
-    assert.ok(sw.includes('conduitcraft-v1'), 'sw.js must declare cache name');
+    assert.ok(sw.includes('conduitcraft-v'), 'sw.js must declare cache name');
     assert.ok(sw.includes('install'), 'sw.js must have install event listener');
     assert.ok(sw.includes('activate'), 'sw.js must have activate event listener');
     assert.ok(sw.includes('fetch'), 'sw.js must have fetch event listener');

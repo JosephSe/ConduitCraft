@@ -15,11 +15,12 @@ function inlineColorSchemeBoot(): Plugin {
 }
 
 export default defineConfig({
+  base: './',
   plugins: [inlineColorSchemeBoot()],
   cacheDir: path.join(os.tmpdir(), 'blueprint-studio-vite-cache'),
   publicDir: 'public',
   build: {
-    emptyOutDir: false,
+    emptyOutDir: true,
   },
   server: {
     port: 5180,

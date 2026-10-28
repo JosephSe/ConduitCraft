@@ -186,6 +186,19 @@ export async function saveWithNativeFileSystem(
 export async function registerServiceWorker(swPath = './sw.js'): Promise<ServiceWorkerRegistration | null> {
   if (!isServiceWorkerSupported()) return null;
 
+  // In local development, unregister any service worker so Vite HMR works immediately
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        await reg.unregister();
+      }
+    } catch {
+      // Ignore unregistration errors in dev
+    }
+    return null;
+  }
+
   try {
     const reg = await navigator.serviceWorker.register(swPath, { scope: './' });
     return reg;
