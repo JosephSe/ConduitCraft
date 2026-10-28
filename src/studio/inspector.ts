@@ -71,6 +71,7 @@ import {
 } from '../core/layout';
 import { normalizeBrandAccent } from '../core/brand';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
+import { TONE_CSS } from '../shared/tones';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 
@@ -1711,6 +1712,34 @@ export function addSimulationScenario(): void {
   renderSimulationEditor(true);
 }
 
+const collapsedScenarioIds = new Set<string>();
+
+export function isScenarioCollapsed(id: string): boolean {
+  if (collapsedScenarioIds.has(id)) return true;
+  try {
+    return localStorage.getItem(`conduitcraft-sim-collapsed-${id}`) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function setScenarioCollapsed(id: string, collapsed: boolean): void {
+  if (collapsed) {
+    collapsedScenarioIds.add(id);
+  } else {
+    collapsedScenarioIds.delete(id);
+  }
+  try {
+    if (collapsed) {
+      localStorage.setItem(`conduitcraft-sim-collapsed-${id}`, 'true');
+    } else {
+      localStorage.removeItem(`conduitcraft-sim-collapsed-${id}`);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function renderSimulationEditor(force = false): void {
   const active = document.activeElement;
   if (
@@ -1741,6 +1770,67 @@ export function renderSimulationEditor(force = false): void {
     card.className = 'sim-editor-card';
     card.dataset.simId = scenario.id;
 
+    const isCollapsed = isScenarioCollapsed(scenario.id);
+    card.dataset.collapsed = String(isCollapsed);
+
+    // Collapsible Header
+    const header = document.createElement('div');
+    header.className = 'sim-card-header';
+
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'sim-card-toggle';
+    toggle.setAttribute('aria-expanded', String(!isCollapsed));
+    toggle.setAttribute('aria-controls', `sim-body-${scenario.id}`);
+
+    const chevron = document.createElement('span');
+    chevron.className = 'sim-collapse-chevron';
+    chevron.textContent = '▾';
+
+    const dot = document.createElement('span');
+    dot.className = 'pill-swatch';
+    const [dotCss] = TONE_CSS[scenario.tone] || TONE_CSS.emerald;
+    dot.style.background = dotCss;
+
+    const title = document.createElement('span');
+    title.className = 'sim-card-title';
+    title.textContent = scenario.name;
+
+    const hopCount = document.createElement('span');
+    hopCount.className = 'micro-chip';
+    const numHops = scenario.steps.length;
+    hopCount.textContent = `${numHops} ${numHops === 1 ? 'hop' : 'hops'}`;
+
+    toggle.append(chevron, dot, title, hopCount);
+
+    toggle.addEventListener('click', () => {
+      const currentlyCollapsed = card.dataset.collapsed === 'true';
+      const nextCollapsed = !currentlyCollapsed;
+      setScenarioCollapsed(scenario.id, nextCollapsed);
+      card.dataset.collapsed = String(nextCollapsed);
+      toggle.setAttribute('aria-expanded', String(!nextCollapsed));
+    });
+
+    const headerActions = document.createElement('div');
+    headerActions.className = 'sim-card-header-actions';
+
+    const quickPlay = document.createElement('button');
+    quickPlay.type = 'button';
+    quickPlay.className = 'btn btn-compact';
+    quickPlay.textContent = 'Play';
+    quickPlay.setAttribute('aria-label', `Play scenario ${scenario.name}`);
+    quickPlay.addEventListener('click', (e) => {
+      e.stopPropagation();
+      runSimulation(scenario.id);
+    });
+
+    headerActions.append(quickPlay);
+    header.append(toggle, headerActions);
+
+    const body = document.createElement('div');
+    body.className = 'sim-card-body';
+    body.id = `sim-body-${scenario.id}`;
+
     const form = document.createElement('div');
     form.className = 'prop-form';
     form.append(
@@ -1750,6 +1840,7 @@ export function renderSimulationEditor(force = false): void {
         makeTextInput(scenario.name, (value) => {
           const live = liveScenario(scenario.id);
           if (live) live.name = value;
+          title.textContent = value || 'Untitled Scenario';
           renderSimButtons();
         }),
       ),
@@ -1760,6 +1851,8 @@ export function renderSimulationEditor(force = false): void {
           const live = liveScenario(scenario.id);
           if (!live) return;
           live.tone = tone;
+          const [newDotCss] = TONE_CSS[tone] || TONE_CSS.emerald;
+          dot.style.background = newDotCss;
           renderSimButtons();
         }),
       ),
@@ -1899,7 +1992,8 @@ export function renderSimulationEditor(force = false): void {
       renderSimulationEditor(true);
     });
 
-    card.append(form, actions, stepsHeading, steps, addStep);
+    body.append(form, actions, stepsHeading, steps, addStep);
+    card.append(header, body);
     simEditorList.appendChild(card);
   });
 }

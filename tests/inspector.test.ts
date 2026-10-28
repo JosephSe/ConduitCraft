@@ -82,7 +82,7 @@ globalThis.document = {
 // @ts-expect-error Mocking global localStorage
 globalThis.localStorage = fakeLocalStorage;
 
-const { makeCollapsibleSection, makeTonePicker } = await import('../src/studio/inspector.ts');
+const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed } = await import('../src/studio/inspector.ts');
 
 describe('inspector collapsible sections and tone picker', () => {
   beforeEach(() => {
@@ -148,5 +148,21 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(studioCss.includes('.prop-row-2 {') && studioCss.includes('repeat(auto-fit'), 'prop-row-2 uses responsive auto-fit columns');
     assert.ok(studioCss.includes('.prop-input,') && studioCss.includes('box-sizing: border-box;'), 'prop inputs use border-box sizing');
     assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
+
+    // Collapsible scenarios
+    assert.ok(studioCss.includes('.sim-card-header {'), 'sim-card-header exists in studio.css');
+    assert.ok(studioCss.includes('.sim-card-toggle {'), 'sim-card-toggle exists in studio.css');
+    assert.ok(studioCss.includes('.sim-editor-card[data-collapsed="true"] .sim-card-body'), 'sim-card-body is hidden when collapsed');
+  });
+
+  it('manages collapsible scenario cards with toggle and persistence', () => {
+    assert.strictEqual(isScenarioCollapsed('sim-1'), false, 'defaults to open');
+    setScenarioCollapsed('sim-1', true);
+    assert.strictEqual(isScenarioCollapsed('sim-1'), true, 'collapses scenario');
+    assert.strictEqual(mockStorage.get('conduitcraft-sim-collapsed-sim-1'), 'true');
+
+    setScenarioCollapsed('sim-1', false);
+    assert.strictEqual(isScenarioCollapsed('sim-1'), false, 'expands scenario');
+    assert.strictEqual(mockStorage.get('conduitcraft-sim-collapsed-sim-1'), undefined);
   });
 });

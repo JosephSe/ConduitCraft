@@ -2792,6 +2792,79 @@
     border: 1px solid var(--wl-border-subtle);
     border-radius: 0.75rem;
     background: var(--wl-surface-elevated);
+    transition: border-color 0.15s ease;
+  }
+
+  .sim-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .sim-card-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: transparent;
+    border: none;
+    padding: 0.2rem 0.3rem;
+    border-radius: 0.4rem;
+    color: var(--wl-ink);
+    font-family: var(--wl-font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    min-inline-size: 0;
+    flex: 1 1 auto;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .sim-card-toggle:hover {
+    background: var(--wl-surface);
+    color: var(--wl-blue);
+  }
+
+  .sim-card-toggle:focus-visible {
+    outline: 2px solid var(--wl-blue);
+    outline-offset: 1px;
+  }
+
+  .sim-collapse-chevron {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--wl-ink-muted);
+    transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .sim-editor-card[data-collapsed="true"] .sim-collapse-chevron {
+    transform: rotate(-90deg);
+  }
+
+  .sim-card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sim-card-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .sim-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .sim-editor-card[data-collapsed="true"] .sim-card-body {
+    display: none;
   }
 
   .sim-card-actions,
