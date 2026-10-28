@@ -2120,6 +2120,8 @@
     border: 1px solid var(--wl-border-subtle);
     color: var(--wl-ink-secondary);
     font-size: 0.75rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   /* Level-of-Detail (LoD) rendering for low zoom (< 55%) */
@@ -2797,14 +2799,14 @@
 
   .sim-card-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.5rem;
   }
 
   .sim-card-toggle {
-    display: inline-flex;
-    align-items: center;
+    display: flex;
+    align-items: flex-start;
     gap: 0.45rem;
     background: transparent;
     border: none;
@@ -2819,6 +2821,21 @@
     min-inline-size: 0;
     flex: 1 1 auto;
     transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .sim-card-toggle .sim-collapse-chevron {
+    margin-block-start: 0.18rem;
+  }
+
+  .sim-card-toggle .pill-swatch {
+    margin-block-start: 0.32rem;
+    flex-shrink: 0;
+  }
+
+  .sim-card-toggle .micro-chip {
+    margin-block-start: 0.05rem;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .sim-card-toggle:hover {
@@ -2845,9 +2862,12 @@
   }
 
   .sim-card-title {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.35;
+    flex: 1 1 auto;
+    min-inline-size: 0;
   }
 
   .sim-card-header-actions {

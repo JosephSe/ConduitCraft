@@ -1870,7 +1870,8 @@ export function renderSimulationEditor(force = false): void {
     const quickDuplicate = document.createElement('button');
     quickDuplicate.type = 'button';
     quickDuplicate.className = 'btn btn-compact';
-    quickDuplicate.textContent = 'Duplicate';
+    quickDuplicate.textContent = 'Copy';
+    quickDuplicate.title = 'Duplicate scenario';
     quickDuplicate.setAttribute('aria-label', `Duplicate scenario ${scenario.name}`);
     quickDuplicate.addEventListener('click', (e) => {
       e.stopPropagation();

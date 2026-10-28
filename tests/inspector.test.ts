@@ -187,6 +187,9 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(studioCss.includes('.sim-card-header {'), 'sim-card-header exists in studio.css');
     assert.ok(studioCss.includes('.sim-card-toggle {'), 'sim-card-toggle exists in studio.css');
     assert.ok(studioCss.includes('.sim-editor-card[data-collapsed="true"] .sim-card-body'), 'sim-card-body is hidden when collapsed');
+    assert.ok(studioCss.includes('.sim-card-title {') && studioCss.includes('white-space: normal;'), 'sim-card-title wraps scenario name');
+    assert.ok(studioCss.includes('.sim-card-title {') && studioCss.includes('word-break: break-word;'), 'sim-card-title breaks long words');
+    assert.ok(studioCss.includes('.micro-chip {') && studioCss.includes('white-space: nowrap;'), 'micro-chip keeps count on single line');
   });
 
   it('manages collapsible scenario cards with toggle and persistence', () => {
