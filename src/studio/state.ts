@@ -109,6 +109,7 @@ export function flushAutosave(): void {
 
 export function scheduleAutosave(): void {
   app.hasPendingAutosave = true;
+  if (typeof window === 'undefined') return;
   if (app.autosaveTimer !== null) {
     window.clearTimeout(app.autosaveTimer);
   }

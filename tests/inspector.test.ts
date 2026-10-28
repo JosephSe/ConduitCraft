@@ -8,7 +8,23 @@ class MockElement {
   className = '';
   textContent = '';
   open = false;
+  dataset: Record<string, string> = {};
   style: Record<string, string> = {};
+  classList = {
+    add: (cls: string) => {
+      const parts = new Set(this.className.split(' ').filter(Boolean));
+      parts.add(cls);
+      this.className = Array.from(parts).join(' ');
+    },
+    remove: (cls: string) => {
+      const parts = new Set(this.className.split(' ').filter(Boolean));
+      parts.delete(cls);
+      this.className = Array.from(parts).join(' ');
+    },
+    contains: (cls: string) => {
+      return this.className.split(' ').includes(cls);
+    },
+  };
   children: MockElement[] = [];
   parentNode: MockElement | null = null;
   attributes = new Map<string, string>();
@@ -36,7 +52,21 @@ class MockElement {
     return child;
   }
 
+  remove() {
+    if (this.parentNode) {
+      const idx = this.parentNode.children.indexOf(this);
+      if (idx >= 0) this.parentNode.children.splice(idx, 1);
+    }
+  }
+
   append(...children: MockElement[]) {
+    for (const child of children) {
+      this.appendChild(child);
+    }
+  }
+
+  replaceChildren(...children: MockElement[]) {
+    this.children = [];
     for (const child of children) {
       this.appendChild(child);
     }
@@ -82,7 +112,7 @@ globalThis.document = {
 // @ts-expect-error Mocking global localStorage
 globalThis.localStorage = fakeLocalStorage;
 
-const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed } = await import('../src/studio/inspector.ts');
+const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario } = await import('../src/studio/inspector.ts');
 
 describe('inspector collapsible sections and tone picker', () => {
   beforeEach(() => {
@@ -164,5 +194,47 @@ describe('inspector collapsible sections and tone picker', () => {
     setScenarioCollapsed('sim-1', false);
     assert.strictEqual(isScenarioCollapsed('sim-1'), false, 'expands scenario');
     assert.strictEqual(mockStorage.get('conduitcraft-sim-collapsed-sim-1'), undefined);
+  });
+
+  it('duplicates a scenario with fresh IDs, cloned steps, and (Copy) name', async () => {
+    const { app } = await import('../src/studio/state.ts');
+    app.doc.simulations = [
+      {
+        id: 'sim-flow-1',
+        name: 'Happy Path',
+        tone: 'emerald',
+        steps: [
+          {
+            id: 'step-1',
+            nodes: ['node-a', 'node-b'],
+            tone: 'emerald',
+            label: 'AUTH',
+            trace: 'Token validated',
+          },
+        ],
+      },
+      {
+        id: 'sim-flow-2',
+        name: 'Failover',
+        tone: 'rose',
+        steps: [],
+      },
+    ];
+
+    const dup = duplicateSimulationScenario('sim-flow-1');
+    assert.ok(dup);
+    assert.strictEqual(dup.name, 'Happy Path (Copy)');
+    assert.strictEqual(dup.tone, 'emerald');
+    assert.notStrictEqual(dup.id, 'sim-flow-1');
+    assert.strictEqual(dup.steps.length, 1);
+    assert.notStrictEqual(dup.steps[0].id, 'step-1');
+    assert.strictEqual(dup.steps[0].label, 'AUTH');
+    assert.deepStrictEqual(dup.steps[0].nodes, ['node-a', 'node-b']);
+
+    // Check that duplicate was inserted right after sim-flow-1
+    assert.strictEqual(app.doc.simulations.length, 3);
+    assert.strictEqual(app.doc.simulations[0].id, 'sim-flow-1');
+    assert.strictEqual(app.doc.simulations[1].id, dup.id);
+    assert.strictEqual(app.doc.simulations[2].id, 'sim-flow-2');
   });
 });

@@ -74,6 +74,7 @@ import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } fro
 import { TONE_CSS } from '../shared/tones';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
+import { notify } from './toast';
 
 // Element-scoped View Transitions (`scoped-component-transitions`)
 export const supportsScopedVT =
@@ -1740,6 +1741,33 @@ export function setScenarioCollapsed(id: string, collapsed: boolean): void {
   }
 }
 
+export function duplicateSimulationScenario(simId: string): SimulationScenario | undefined {
+  pushHistory();
+  const list = authoredSimulations();
+  const index = list.findIndex((scenario) => scenario.id === simId);
+  if (index < 0) return undefined;
+  const original = list[index];
+
+  const duplicate: SimulationScenario = {
+    id: nextUid('sim'),
+    name: `${original.name} (Copy)`,
+    tone: original.tone,
+    steps: original.steps.map((st) => ({
+      id: nextUid('step'),
+      nodes: [...st.nodes],
+      tone: st.tone,
+      label: st.label,
+      trace: st.trace,
+    })),
+  };
+
+  list.splice(index + 1, 0, duplicate);
+  renderSimButtons();
+  renderSimulationEditor(true);
+  notify(`Duplicated scenario "${duplicate.name}"`);
+  return duplicate;
+}
+
 export function renderSimulationEditor(force = false): void {
   const active = document.activeElement;
   if (
@@ -1824,7 +1852,17 @@ export function renderSimulationEditor(force = false): void {
       runSimulation(scenario.id);
     });
 
-    headerActions.append(quickPlay);
+    const quickDuplicate = document.createElement('button');
+    quickDuplicate.type = 'button';
+    quickDuplicate.className = 'btn btn-compact';
+    quickDuplicate.textContent = 'Duplicate';
+    quickDuplicate.setAttribute('aria-label', `Duplicate scenario ${scenario.name}`);
+    quickDuplicate.addEventListener('click', (e) => {
+      e.stopPropagation();
+      duplicateSimulationScenario(scenario.id);
+    });
+
+    headerActions.append(quickPlay, quickDuplicate);
     header.append(toggle, headerActions);
 
     const body = document.createElement('div');
@@ -1865,6 +1903,12 @@ export function renderSimulationEditor(force = false): void {
     play.className = 'btn btn-compact';
     play.textContent = 'Play';
     play.addEventListener('click', () => runSimulation(scenario.id));
+    const duplicateBtn = document.createElement('button');
+    duplicateBtn.type = 'button';
+    duplicateBtn.className = 'btn btn-compact';
+    duplicateBtn.textContent = 'Duplicate';
+    duplicateBtn.setAttribute('aria-label', `Duplicate scenario ${scenario.name}`);
+    duplicateBtn.addEventListener('click', () => duplicateSimulationScenario(scenario.id));
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'btn btn-compact btn-reject';
@@ -1879,7 +1923,7 @@ export function renderSimulationEditor(force = false): void {
       renderSimButtons();
       renderSimulationEditor(true);
     });
-    actions.append(play, remove);
+    actions.append(play, duplicateBtn, remove);
 
     const stepsHeading = document.createElement('h3');
     stepsHeading.className = 'section-heading';
