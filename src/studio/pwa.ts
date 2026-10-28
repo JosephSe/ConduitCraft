@@ -1,3 +1,7 @@
+import type { DiagramDocument } from '../types';
+import { serializeToMermaid, serializeToBlueprintMarkdown } from '../core/parser';
+import { serializeBlueprintJson } from '../exporter/blueprintJson';
+
 /**
  * Progressive Web App (PWA) and File System Access API integration.
  * Enables offline execution, standalone installation, and native file save/overwrite.
@@ -27,6 +31,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 let activeFileHandle: FileSystemFileHandleLike | null = null;
 let activeFileName: string | null = null;
+let isDiskDirty = false;
 let deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
 const installListeners = new Set<(canInstall: boolean) => void>();
 
@@ -50,16 +55,59 @@ export function getActiveFileName(): string | null {
   return activeFileName;
 }
 
+export function isFileDiskDirty(): boolean {
+  return isDiskDirty;
+}
+
+export function setDiskDirty(dirty: boolean): void {
+  isDiskDirty = dirty;
+}
+
 /** Set or clear the active file handle and filename. */
 export function setActiveFile(handle: FileSystemFileHandleLike | null, name: string | null): void {
   activeFileHandle = handle;
   activeFileName = name;
+  isDiskDirty = false;
 }
 
 /** Reset the active file context (e.g. when opening a blank canvas or template). */
 export function resetActiveFile(): void {
   activeFileHandle = null;
   activeFileName = null;
+  isDiskDirty = false;
+}
+
+/**
+ * Format-aware serializer based on chosen filename extension.
+ * Resolves:
+ * - .mmd / .mermaid -> Mermaid flowchart syntax
+ * - .md / .markdown -> Blueprint Markdown syntax
+ * - .json / other   -> Blueprint JSON syntax
+ */
+export function serializeForFilename(
+  doc: DiagramDocument,
+  filename: string,
+): { content: string; mime: string; format: 'mermaid' | 'blueprint-md' | 'json' } {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith('.mmd') || lower.endsWith('.mermaid')) {
+    return {
+      content: serializeToMermaid(doc),
+      mime: 'text/plain;charset=utf-8',
+      format: 'mermaid',
+    };
+  }
+  if (lower.endsWith('.md') || lower.endsWith('.markdown')) {
+    return {
+      content: serializeToBlueprintMarkdown(doc),
+      mime: 'text/markdown;charset=utf-8',
+      format: 'blueprint-md',
+    };
+  }
+  return {
+    content: serializeBlueprintJson(doc),
+    mime: 'application/json;charset=utf-8',
+    format: 'json',
+  };
 }
 
 export const BLUEPRINT_FILE_TYPES = [
@@ -124,19 +172,23 @@ export async function openWithNativeFilePicker(): Promise<{
  * Otherwise, prompts the native Save File Picker where supported.
  */
 export async function saveWithNativeFileSystem(
-  content: string,
+  contentOrSerializer: string | ((chosenName: string) => string),
   defaultName: string,
   forceSaveAs = false
 ): Promise<{ success: boolean; filename: string; directSaved: boolean }> {
   // Direct overwrite of opened file
   if (!forceSaveAs && activeFileHandle) {
     try {
+      const filename = activeFileName || activeFileHandle.name || defaultName;
+      const content =
+        typeof contentOrSerializer === 'function' ? contentOrSerializer(filename) : contentOrSerializer;
       const writable = await activeFileHandle.createWritable();
       await writable.write(content);
       await writable.close();
+      setDiskDirty(false);
       return {
         success: true,
-        filename: activeFileName || activeFileHandle.name || defaultName,
+        filename,
         directSaved: true,
       };
     } catch {
@@ -159,11 +211,14 @@ export async function saveWithNativeFileSystem(
         types: BLUEPRINT_FILE_TYPES,
       });
 
+      const content =
+        typeof contentOrSerializer === 'function' ? contentOrSerializer(handle.name) : contentOrSerializer;
       const writable = await handle.createWritable();
       await writable.write(content);
       await writable.close();
 
       setActiveFile(handle, handle.name);
+      setDiskDirty(false);
       return {
         success: true,
         filename: handle.name,

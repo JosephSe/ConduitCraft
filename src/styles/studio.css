@@ -2,6 +2,12 @@
 
 @import "./shared.css";
 
+@layer reset {
+  [hidden] {
+    display: none !important;
+  }
+}
+
 @layer tokens {
   :root {
     --in-oklch: ;
@@ -135,6 +141,37 @@
     display: flex;
     align-items: center;
     gap: 0.45rem;
+  }
+
+  .save-status-pill {
+    font-family: var(--wl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    background: var(--wl-surface-elevated);
+    color: var(--wl-ink-muted);
+    border: 1px solid var(--wl-border-subtle);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .save-status-pill[data-status="saving"] {
+    color: var(--wl-blue);
+    border-color: var(--wl-blue);
+  }
+
+  .save-status-pill[data-status="saved"] {
+    color: var(--wl-emerald);
+    border-color: color-mix(in srgb, var(--wl-emerald) 35%, transparent);
+  }
+
+  .save-status-pill[data-status="error"] {
+    color: var(--wl-rose);
+    border-color: var(--wl-rose);
+    background: color-mix(in srgb, var(--wl-rose) 12%, transparent);
   }
 
   .doc-history-controls {
@@ -973,6 +1010,52 @@
 
   .drop-veil-icon {
     font-size: 2rem;
+  }
+
+  /* Session Recovery Offer Banner */
+  .restore-session-banner {
+    position: absolute;
+    top: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    padding: 0.45rem 1rem;
+    background: var(--wl-panel);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--wl-blue);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    color: var(--wl-ink);
+    pointer-events: auto;
+  }
+
+  .restore-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .restore-banner-icon {
+    color: var(--wl-blue);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .restore-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .btn-sm {
+    padding: 0.2rem 0.65rem;
+    font-size: 0.78rem;
+    border-radius: 9999px;
   }
 
   /* Empty Blank Canvas Onboarding Card */

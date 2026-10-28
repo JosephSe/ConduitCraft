@@ -12,10 +12,12 @@ import {
   emptyStageOverlay,
   matrixTbody,
   propPanelHeading,
+  restoreBannerText,
+  restoreSessionBanner,
   stageWorld,
   wiresSvg,
 } from './dom';
-import { app, loadSavedSessionDoc, setSelection } from './state';
+import { app, getPendingRestoreOffer, setSelection, updateDocumentTitle } from './state';
 import type { SelectionTarget } from '../types';
 import { renderPropertyEditor, syncDataViewInspector } from './inspector';
 import { renderSimButtons } from './interactions';
@@ -92,17 +94,38 @@ function paintDocumentBrand(): void {
 export function renderAll(rebuildInspector = true): void {
   const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
   emptyStageOverlay.hidden = !isEmpty;
-  if (isEmpty && btnRestoreSession) {
-    const saved = loadSavedSessionDoc();
-    if (saved) {
-      btnRestoreSession.hidden = false;
-      btnRestoreSession.textContent = `↺ Restore Previous Session (${saved.nodes.length} ${saved.nodes.length === 1 ? 'node' : 'nodes'})`;
-    } else {
+  const pending = getPendingRestoreOffer();
+  const hasPending = Boolean(
+    pending &&
+      (pending.nodes.length > 0 ||
+        (pending.zones && pending.zones.length > 0) ||
+        (pending.notesCards && pending.notesCards.length > 0))
+  );
+
+  if (hasPending && pending) {
+    const count = pending.nodes.length;
+    const countLabel = `${count} ${count === 1 ? 'component' : 'components'}`;
+    if (restoreBannerText) {
+      restoreBannerText.textContent = `Previous session (${countLabel}) available from this browser`;
+    }
+    if (restoreSessionBanner) {
+      restoreSessionBanner.hidden = false;
+    }
+    if (btnRestoreSession) {
+      btnRestoreSession.hidden = !isEmpty;
+      btnRestoreSession.textContent = `↺ Restore Previous Session (${count} ${count === 1 ? 'node' : 'nodes'})`;
+    }
+  } else {
+    if (restoreSessionBanner) {
+      restoreSessionBanner.hidden = true;
+    }
+    if (btnRestoreSession) {
       btnRestoreSession.hidden = true;
     }
   }
 
   docTitleHeadingEl.textContent = app.doc.title || 'Untitled Architecture';
+  updateDocumentTitle();
   docSystemTagEl.textContent = app.doc.systemTag || 'CONDUITCRAFT';
   docStatusLabelEl.textContent = app.doc.statusLabel || 'LIVE TELEMETRY';
   paintDocumentBrand();

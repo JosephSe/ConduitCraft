@@ -162,4 +162,106 @@ describe('shareable link (diagram in URL hash)', () => {
     const malformed = await decodeSharedDiagramFromHash('#share=!!!not-base64url!!!');
     assert.strictEqual(malformed, null);
   });
+
+  it('performs full compress -> decompress round-trip on multi-node diagram with unicode without deadlock', async () => {
+    const doc: DiagramDocument = {
+      ...createBlankDocument(),
+      title: 'Global Payment & Telemetry ⚡️',
+      systemTag: 'PAY-PROD-V2',
+      statusLabel: 'HEALTHY · 99.99%',
+      nodes: [
+        {
+          id: 'edge-gateway',
+          kind: 'gate',
+          accent: 'blue',
+          title: 'Edge Proxy 🌐',
+          subtitle: 'Envoy / TLS 1.3',
+          eyebrow: 'PERIMETER',
+          footerLeft: 'eu-west-1',
+          chip: 'Active',
+          zoneLabel: 'DMZ',
+          interfaceLabel: ':443',
+          summary: 'Terminates client mTLS connections and handles rate-limiting.',
+          metrics: [{ label: 'p99', value: '4.2ms' }],
+          code: 'fn route() {}',
+          x: 120,
+          y: 100,
+          width: 240,
+          height: 120,
+        },
+        {
+          id: 'auth-vault',
+          kind: 'store',
+          accent: 'violet',
+          title: 'HSM Vault 🔐',
+          subtitle: 'Key Management',
+          eyebrow: 'SECURITY',
+          footerLeft: 'FIPS 140-3',
+          chip: 'Zero Trust',
+          zoneLabel: 'Core Vault',
+          interfaceLabel: ':8200',
+          summary: 'Stores master decryption keys.',
+          metrics: [{ label: 'Keys', value: '1,024' }],
+          code: '',
+          x: 480,
+          y: 100,
+          width: 240,
+          height: 120,
+        },
+      ],
+      edges: [
+        {
+          id: 'gw-vault-wire',
+          from: 'edge-gateway',
+          to: 'auth-vault',
+          sourcePort: 'right',
+          targetPort: 'left',
+          tone: 'violet',
+          route: 'bezier',
+          label: 'gRPC mTLS / RS256',
+          animated: true,
+        },
+      ],
+      zones: [
+        {
+          id: 'zone-dmz',
+          title: 'Public Perimeter Zone',
+          x: 80,
+          y: 60,
+          width: 320,
+          height: 200,
+          tone: 'blue',
+        },
+      ],
+      notesCards: [
+        {
+          id: 'note-compliance',
+          title: 'PCI-DSS 4.0 Audit',
+          content: 'Audit passed without non-conformities.',
+          x: 80,
+          y: 300,
+        },
+      ],
+    };
+
+    const shareResult = await createShareUrl(doc);
+    assert.ok(shareResult.url.includes(SHARE_HASH_PREFIX), 'URL contains share prefix');
+    assert.ok(shareResult.compressedBytes > 0, 'URL contains compressed bytes');
+
+    // Decode back from hash
+    const decoded = await decodeSharedDiagramFromHash(shareResult.hash);
+    assert.ok(decoded !== null, 'Decoded document must not be null');
+    assert.strictEqual(decoded.title, doc.title);
+    assert.strictEqual(decoded.systemTag, doc.systemTag);
+    assert.strictEqual(decoded.statusLabel, doc.statusLabel);
+    assert.strictEqual(decoded.nodes.length, 2);
+    assert.strictEqual(decoded.nodes[0].title, 'Edge Proxy 🌐');
+    assert.strictEqual(decoded.nodes[1].title, 'HSM Vault 🔐');
+    assert.strictEqual(decoded.edges.length, 1);
+    assert.strictEqual(decoded.edges[0].label, 'gRPC mTLS / RS256');
+    assert.strictEqual(decoded.zones.length, 1);
+    assert.strictEqual(decoded.zones[0].title, 'Public Perimeter Zone');
+    assert.strictEqual(decoded.notesCards.length, 1);
+    assert.strictEqual(decoded.notesCards[0].title, 'PCI-DSS 4.0 Audit');
+  });
 });

@@ -53,6 +53,11 @@ export const docBrandGlyph = document.getElementById('doc-brand-glyph') as unkno
 export const docBrandLogo = document.getElementById('doc-brand-logo') as HTMLImageElement;
 export const docBrandName = document.getElementById('doc-brand-name') as HTMLElement;
 export const btnFocusDocTitle = document.getElementById('btn-focus-doc-title') as HTMLButtonElement;
+export const saveStatusPill = document.getElementById('save-status-pill') as HTMLElement | null;
+export const restoreSessionBanner = document.getElementById('restore-session-banner') as HTMLElement | null;
+export const restoreBannerText = document.getElementById('restore-banner-text') as HTMLElement | null;
+export const btnRestoreOpen = document.getElementById('btn-restore-open') as HTMLButtonElement | null;
+export const btnRestoreDiscard = document.getElementById('btn-restore-discard') as HTMLButtonElement | null;
 
 export const designToolbar = document.getElementById('design-toolbar') as HTMLElement;
 export const dataToolbar = document.getElementById('data-toolbar') as HTMLElement;

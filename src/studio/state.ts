@@ -2,10 +2,12 @@
 import {
   btnRedo,
   btnUndo,
+  saveStatusPill,
   stageWorld,
   viewport,
   zoomReadout,
 } from './dom';
+import { getActiveFileHandle, getActiveFileName, isFileDiskDirty, setDiskDirty } from './pwa';
 import type {
   DiagramDocument,
   DiagramEdge,
@@ -20,7 +22,12 @@ import {
   selectionOfStage,
   type SelectionChange,
 } from './selection';
-import { selectionWorldBounds, frameRectInViewport } from './viewportFrame';
+import {
+  selectionWorldBounds,
+  frameRectInViewport,
+  viewportWorldRect,
+  panToCenterWorld,
+} from './viewportFrame';
 import {
   beginGesture,
   endGesture,
@@ -87,8 +94,67 @@ export function setHistoryApplied(fn: () => void): void {
   historyApplied = fn;
 }
 
-// Debounced LocalStorage Autosave & Session Recovery
+// Debounced LocalStorage Autosave, Session Recovery & Save State
 export const AUTOSAVE_KEY = 'conduitcraft-autosave-v1';
+export const RECOVERY_KEY = 'conduitcraft-recovery-v1';
+
+export type SaveState = 'saving' | 'saved' | 'error';
+let currentSaveState: SaveState = 'saved';
+let pendingRestoreOffer: DiagramDocument | null = null;
+let saveErrorHandler: (() => void) | null = null;
+
+export function getSaveState(): SaveState {
+  return currentSaveState;
+}
+
+export function setSaveErrorHandler(handler: () => void): void {
+  saveErrorHandler = handler;
+}
+
+export function updateDocumentTitle(): void {
+  if (typeof document === 'undefined') return;
+  const baseTitle = app.doc.title || 'Untitled Architecture';
+  const hasUnsavedDisk = isFileDiskDirty() && Boolean(getActiveFileHandle());
+  const isDirty = app.hasPendingAutosave || hasUnsavedDisk || getSaveState() === 'error';
+  document.title = (isDirty ? '• ' : '') + `${baseTitle} — ConduitCraft`;
+}
+
+export function setSaveState(state: SaveState): void {
+  currentSaveState = state;
+  updateDocumentTitle();
+  if (saveStatusPill) {
+    saveStatusPill.dataset.status = state;
+    if (state === 'saving') {
+      saveStatusPill.textContent = 'Saving…';
+    } else if (state === 'saved') {
+      const activeName = getActiveFileName();
+      saveStatusPill.textContent = activeName ? `Saved to ${activeName}` : 'Saved';
+    } else if (state === 'error') {
+      saveStatusPill.textContent = 'Not saved (storage full)';
+    }
+  }
+}
+
+export function setPendingRestoreOffer(doc: DiagramDocument | null): void {
+  pendingRestoreOffer = doc;
+}
+
+export function getPendingRestoreOffer(): DiagramDocument | null {
+  return pendingRestoreOffer;
+}
+
+export function clearPendingRestoreOffer(): void {
+  pendingRestoreOffer = null;
+}
+
+export function discardPendingRestoreOffer(): void {
+  pendingRestoreOffer = null;
+  try {
+    localStorage.removeItem(AUTOSAVE_KEY);
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 export function flushAutosave(): void {
   if (app.autosaveTimer !== null) {
@@ -96,19 +162,35 @@ export function flushAutosave(): void {
     app.autosaveTimer = null;
   }
   app.hasPendingAutosave = false;
+  const isEmpty =
+    app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
+  if (isEmpty) {
+    setSaveState('saved');
+    return;
+  }
+
   try {
-    const isEmpty =
-      app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
-    if (!isEmpty) {
-      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(app.doc));
+    const pending = getPendingRestoreOffer();
+    if (pending && app.doc.nodes.length < pending.nodes.length) {
+      // Protect the larger saved session: write scratch session to recovery slot
+      localStorage.setItem(RECOVERY_KEY, JSON.stringify(app.doc));
+      setSaveState('saved');
+      return;
     }
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(app.doc));
+    setSaveState('saved');
   } catch {
-    // Ignore storage quota or private mode restrictions
+    setSaveState('error');
+    if (saveErrorHandler) {
+      saveErrorHandler();
+    }
   }
 }
 
 export function scheduleAutosave(): void {
   app.hasPendingAutosave = true;
+  setDiskDirty(true);
+  setSaveState('saving');
   if (typeof window === 'undefined') return;
   if (app.autosaveTimer !== null) {
     window.clearTimeout(app.autosaveTimer);
@@ -317,4 +399,37 @@ export function zoomAround(nextScale: number, cx: number, cy: number): void {
   app.panX = cx - worldX * app.scale;
   app.panY = cy - worldY * app.scale;
   applyTransform();
+}
+
+/**
+ * Pans the viewport smoothly only if the node lies outside the current viewport.
+ * Does not alter camera zoom level, preventing jarring zoom jumps while typing search queries.
+ */
+export function panToNodeIfNeeded(node: DiagramNode): void {
+  const rect = viewport.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const vRect = viewportWorldRect(rect.width, rect.height, app.panX, app.panY, app.scale);
+  const margin = 48;
+  const nodeLeft = node.x;
+  const nodeRight = node.x + node.width;
+  const nodeTop = node.y;
+  const nodeBottom = node.y + node.height;
+  const isInside =
+    nodeLeft >= vRect.x + margin &&
+    nodeRight <= vRect.x + vRect.width - margin &&
+    nodeTop >= vRect.y + margin &&
+    nodeBottom <= vRect.y + vRect.height - margin;
+
+  if (!isInside) {
+    const center = panToCenterWorld(
+      node.x + node.width / 2,
+      node.y + node.height / 2,
+      rect.width,
+      rect.height,
+      app.scale,
+    );
+    app.panX = Math.round(center.panX);
+    app.panY = Math.round(center.panY);
+    applyTransform();
+  }
 }

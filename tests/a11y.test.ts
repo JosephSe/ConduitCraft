@@ -127,4 +127,74 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
     assert.ok(studioCss.includes(':focus-visible {'), 'must declare universal focus-visible outline');
     assert.ok(studioCss.includes('.stencil-card:focus-visible'), 'must declare stencil-card focus ring');
   });
+
+  it('verifies global [hidden] rule inside earliest @layer reset in shared.css and studio.css', () => {
+    const sharedCss = fs.readFileSync(path.resolve('src/styles/shared.css'), 'utf8');
+    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+
+    // Both files must declare [hidden] { display: none !important; } in @layer reset
+    assert.match(
+      sharedCss,
+      /@layer\s+reset\s*\{[\s\S]*?\[hidden\]\s*\{[\s\S]*?display:\s*none\s*!important/m,
+      'shared.css must declare [hidden] { display: none !important; } in @layer reset',
+    );
+    assert.match(
+      studioCss,
+      /@layer\s+reset\s*\{[\s\S]*?\[hidden\]\s*\{[\s\S]*?display:\s*none\s*!important/m,
+      'studio.css must declare [hidden] { display: none !important; } in @layer reset',
+    );
+  });
+
+  it('verifies #hud-status-tip is decoupled from dismissible #hud-coach-card in index.html', () => {
+    const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
+    // Ensure #hud-coach-card does not contain #hud-status-tip
+    const coachCardMatch = indexHtml.match(/<div[^>]*id="hud-coach-card"[^>]*>([\s\S]*?)<\/div>/);
+    assert.ok(coachCardMatch, 'hud-coach-card exists in index.html');
+    assert.ok(
+      !coachCardMatch[1].includes('id="hud-status-tip"'),
+      '#hud-status-tip must not live inside #hud-coach-card so dismissal does not silence status messages',
+    );
+    assert.ok(
+      indexHtml.includes('id="hud-status-tip"'),
+      '#hud-status-tip exists in index.html',
+    );
+  });
+
+  it('verifies #btn-restore-session is gated with hidden attribute and disabled copy link initial state', () => {
+    const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
+    assert.match(
+      indexHtml,
+      /<button[^>]*id="btn-restore-session"[^>]*hidden/,
+      '#btn-restore-session must start with hidden attribute in index.html',
+    );
+    assert.match(
+      indexHtml,
+      /<button[^>]*id="btn-copy-share-link"[^>]*disabled/,
+      '#btn-copy-share-link must start disabled in index.html',
+    );
+  });
+
+  it('verifies session recovery banner and save status pill markup structure (items 4 & 6)', () => {
+    const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
+    // Session recovery offer banner
+    assert.match(
+      indexHtml,
+      /<div[^>]*id="restore-session-banner"[^>]*hidden/,
+      '#restore-session-banner must start with hidden attribute',
+    );
+    assert.ok(
+      indexHtml.includes('id="btn-restore-open"'),
+      '#btn-restore-open button must exist in restore banner',
+    );
+    assert.ok(
+      indexHtml.includes('id="btn-restore-discard"'),
+      '#btn-restore-discard button must exist in restore banner',
+    );
+
+    // Save status indicator beside title
+    assert.ok(
+      indexHtml.includes('id="save-status-pill"'),
+      '#save-status-pill element must exist in title-row',
+    );
+  });
 });

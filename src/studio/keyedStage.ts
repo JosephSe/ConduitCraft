@@ -609,8 +609,10 @@ export function renderNodes(): void {
 function createNodeElement(node: DiagramNode): HTMLElement {
   const nodeId = node.id;
   const wrapper = document.createElement('div');
+  wrapper.id = 'node-' + nodeId;
   wrapper.className = 'arch-node';
   wrapper.dataset.node = nodeId;
+  wrapper.dataset.nodeId = nodeId;
   wrapper.dataset.kind = node.kind;
 
   const selectBtn = document.createElement('button');
@@ -991,6 +993,9 @@ function paintCustomImage(slot: HTMLElement, image: string): void {
 }
 
 function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
+  wrapper.id = 'node-' + node.id;
+  wrapper.dataset.node = node.id;
+  wrapper.dataset.nodeId = node.id;
   wrapper.dataset.kind = node.kind;
   wrapper.dataset.accent = node.accent;
   if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;

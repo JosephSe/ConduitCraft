@@ -40,6 +40,7 @@
           <button type="button" class="title-edit-trigger" id="btn-focus-doc-title" aria-label="Edit diagram title and document properties">
             <h1 id="doc-title-heading">Untitled Architecture</h1>
           </button>
+          <span class="save-status-pill" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
           <div class="doc-history-controls" role="group" aria-label="Undo and redo history">
             <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" data-tip="Undo (⌘Z)" disabled>
               <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
@@ -336,6 +337,18 @@
         </div>
       </div>
 
+      <!-- Session Recovery Offer Banner -->
+      <div class="restore-session-banner" id="restore-session-banner" hidden role="region" aria-label="Session recovery banner">
+        <div class="restore-banner-content">
+          <span class="restore-banner-icon" aria-hidden="true">↺</span>
+          <span class="restore-banner-text" id="restore-banner-text">Previous session found</span>
+        </div>
+        <div class="restore-banner-actions">
+          <button type="button" class="btn btn-primary-export btn-sm" id="btn-restore-open">Open</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-restore-discard">Discard</button>
+        </div>
+      </div>
+
       <!-- Blank-Canvas Onboarding Prompt (disappears as soon as any element is placed) -->
       <div class="empty-stage-overlay" id="empty-stage-overlay">
         <div class="empty-stage-card">
@@ -417,8 +430,12 @@
           ></canvas>
         </div>
 
+        <div class="hud-card hud-status-card" id="hud-status-card">
+          <span class="hud-tip" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto grid · Drag from any port dot to wire animated streams</span>
+        </div>
+
         <div class="hud-card hud-coach-card" id="hud-coach-card">
-          <span class="hud-tip" id="hud-status-tip">Drag stencils onto grid · Drag from any port dot to wire animated streams</span>
+          <span class="hud-tip" id="hud-coach-tip">Tip: Press <kbd>?</kbd> for shortcuts · Drag stencils onto grid</span>
           <button type="button" class="coach-dismiss-btn" id="btn-dismiss-hud-coach" aria-label="Dismiss hint" data-tip="Dismiss hint" data-tip-pos="top">&times;</button>
         </div>
 
@@ -658,7 +675,7 @@
               aria-label="Shareable diagram link"
               placeholder="Generating shareable link…"
             />
-            <button type="button" class="btn btn-primary-export" id="btn-copy-share-link">
+            <button type="button" class="btn btn-primary-export" id="btn-copy-share-link" disabled>
               <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <span>Copy Link</span>
             </button>

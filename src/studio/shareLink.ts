@@ -37,31 +37,13 @@ export function stripDocImages(doc: DiagramDocument): DiagramDocument {
  */
 export async function compressStringToBase64Url(input: string): Promise<string> {
   const bytes = new TextEncoder().encode(input);
-  const cs = new CompressionStream('deflate');
-  const writer = cs.writable.getWriter();
-  await writer.write(bytes);
-  await writer.close();
+  const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
+  const buffer = await new Response(stream).arrayBuffer();
+  const compressed = new Uint8Array(buffer);
 
-  const chunks: Uint8Array[] = [];
-  const reader = cs.readable.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-
-  const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
-  const combined = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const c of chunks) {
-    combined.set(c, offset);
-    offset += c.length;
-  }
-
-  // Convert binary Uint8Array to Base64
   let binary = '';
-  for (let i = 0; i < combined.length; i++) {
-    binary += String.fromCharCode(combined[i]);
+  for (let i = 0; i < compressed.length; i++) {
+    binary += String.fromCharCode(compressed[i]);
   }
   const base64 = btoa(binary);
 
@@ -86,28 +68,8 @@ export async function decompressBase64UrlToString(base64url: string): Promise<st
     bytes[i] = binary.charCodeAt(i);
   }
 
-  const ds = new DecompressionStream('deflate');
-  const writer = ds.writable.getWriter();
-  await writer.write(bytes);
-  await writer.close();
-
-  const chunks: Uint8Array[] = [];
-  const reader = ds.readable.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (value) chunks.push(value);
-  }
-
-  const totalLength = chunks.reduce((acc, c) => acc + c.length, 0);
-  const combined = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const c of chunks) {
-    combined.set(c, offset);
-    offset += c.length;
-  }
-
-  return new TextDecoder().decode(combined);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+  return await new Response(stream).text();
 }
 
 export interface ShareUrlResult {

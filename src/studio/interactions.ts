@@ -53,6 +53,10 @@ import {
   btnRedo,
   btnResetSelection,
   btnRestoreSession,
+  btnRestoreOpen,
+  btnRestoreDiscard,
+  restoreSessionBanner,
+  saveStatusPill,
   btnToggleMotion,
   btnUndo,
   btnZoomFit,
@@ -108,16 +112,24 @@ import {
 import {
   app,
   applyTransform,
+  clearPendingRestoreOffer,
+  discardPendingRestoreOffer,
   fitSelection,
   fitToViewport,
   flushAutosave,
+  getPendingRestoreOffer,
+  getSaveState,
   getSelectedNodeIds,
   getViewportWorldCenter,
   loadSavedSessionDoc,
+  panToNodeIfNeeded,
   performRedo,
   performUndo,
   pushHistory,
   screenToWorld,
+  setPendingRestoreOffer,
+  setSaveErrorHandler,
+  setSaveState,
   setSelection,
   zoomAround,
 } from './state';
@@ -192,13 +204,18 @@ import {
 } from './zOrderLockGroup';
 import { responsiveToolbar } from './responsiveToolbar';
 import {
+  getActiveFileHandle,
+  getActiveFileName,
   initInstallPrompt,
+  isFileDiskDirty,
   isFileSystemAccessSupported,
   openWithNativeFilePicker,
   promptInstallApp,
   registerServiceWorker,
   resetActiveFile,
   saveWithNativeFileSystem,
+  serializeForFilename,
+  setDiskDirty,
 } from './pwa';
 import { announceModeChange, announceToolChange } from './a11y';
 import {
@@ -917,6 +934,7 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
 }
 
 export async function handleUploadedFile(file: File): Promise<void> {
+  resetActiveFile();
   const text = await file.text();
   const baseName = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
   const titleFromFile = baseName
@@ -1169,6 +1187,9 @@ export function openShortcutsDialog(): void {
   shortcutsDialog.showModal();
 }
 
+// Re-export serialization helper
+export { serializeForFilename } from './pwa';
+
 export function initEvents(): void {
   // Workspace Mode Switcher (Design vs Data View with View Transitions)
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="workspace-mode"]')) {
@@ -1400,6 +1421,8 @@ export function initEvents(): void {
   };
 
   const loadTemplateDoc = (template: TemplateDefinition): void => {
+    resetActiveFile();
+    clearPendingRestoreOffer();
     const parsed = parseBlueprintJson(template.rawJson);
     if (!parsed.ok) {
       hudStatusTip.textContent = parsed.error;
@@ -1419,17 +1442,16 @@ export function initEvents(): void {
   };
 
   const createBlankCanvas = (): void => {
-    const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
-    if (!isEmpty) pushHistory();
+    resetActiveFile();
+    clearPendingRestoreOffer();
+    pushHistory();
     clearSimulation();
     app.doc = createBlankDocument();
     setSelection({ type: 'none' });
     traceList.replaceChildren();
     renderAll(true);
     fitToViewport();
-    if (!isEmpty) {
-      notify('Created blank canvas', { action: { label: 'Undo', onClick: () => performUndo() } });
-    }
+    notify('Created blank canvas', { action: { label: 'Undo', onClick: () => performUndo() } });
   };
 
   const openTemplateGallery = (): void => {
@@ -1527,11 +1549,13 @@ export function initEvents(): void {
     notify('Added starter pair', { action: { label: 'Undo', onClick: () => performUndo() } });
   });
 
-  // Restore Previous Autosaved Session
-  btnRestoreSession?.addEventListener('click', () => {
-    const saved = loadSavedSessionDoc();
+  // Restore Previous Autosaved Session (Banner & Empty Stage Button)
+  const openRestoredSession = () => {
+    const saved = getPendingRestoreOffer() || loadSavedSessionDoc();
     if (!saved) return;
     pushHistory();
+    resetActiveFile();
+    clearPendingRestoreOffer();
     app.doc = saved;
     expandStageToFit(app.doc);
     setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
@@ -1540,13 +1564,27 @@ export function initEvents(): void {
     const msg = `Restored previous session (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
     hudStatusTip.textContent = msg;
     notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
+  };
+  btnRestoreOpen?.addEventListener('click', openRestoredSession);
+  btnRestoreSession?.addEventListener('click', openRestoredSession);
+
+  btnRestoreDiscard?.addEventListener('click', () => {
+    discardPendingRestoreOffer();
+    if (restoreSessionBanner) restoreSessionBanner.hidden = true;
+    if (btnRestoreSession) btnRestoreSession.hidden = true;
+    notify('Discarded previous session');
   });
 
-  // Flush pending autosave on page unload
+  // Flush pending autosave on page unload, and prompt on unsaved disk changes
   window.addEventListener('beforeunload', (e) => {
     if (app.hasPendingAutosave) {
       flushAutosave();
+    }
+    const hasUnsavedDiskChanges = isFileDiskDirty() && Boolean(getActiveFileHandle());
+    const isAutosaveFailing = getSaveState() === 'error';
+    if (hasUnsavedDiskChanges || isAutosaveFailing) {
       e.preventDefault();
+      e.returnValue = '';
     }
   });
 
@@ -1557,17 +1595,43 @@ export function initEvents(): void {
   });
 
   // Native File System & PWA actions
+
   async function handleSaveDiagram(forceSaveAs = false): Promise<void> {
-    const json = serializeBlueprintJson(app.doc);
-    const defaultName = `${getSafeFilenameSlug()}.blueprint.json`;
-    const res = await saveWithNativeFileSystem(json, defaultName, forceSaveAs);
+    const activeName = getActiveFileName();
+    const defaultName = activeName || `${getSafeFilenameSlug()}.blueprint.json`;
+    const serializer = (name: string) => serializeForFilename(app.doc, name).content;
+
+    const res = await saveWithNativeFileSystem(serializer, defaultName, forceSaveAs);
     if (res.success) {
+      setDiskDirty(false);
+      setSaveState('saved');
       notify(`Saved ${res.filename}`);
     } else if (!isFileSystemAccessSupported()) {
-      downloadBlob(json, defaultName, 'application/json;charset=utf-8');
+      const { content, mime } = serializeForFilename(app.doc, defaultName);
+      downloadBlob(content, defaultName, mime);
+      setDiskDirty(false);
+      setSaveState('saved');
       notify(`Downloaded ${defaultName}`);
     }
   }
+
+  // Save State Pill Click -> Quick Save
+  saveStatusPill?.addEventListener('click', () => {
+    void handleSaveDiagram(false);
+  });
+
+  // Register honest storage quota error notification
+  setSaveErrorHandler(() => {
+    notify('Local storage is full — autosave failed', {
+      tone: 'error',
+      action: {
+        label: 'Save to file',
+        onClick: () => {
+          void handleSaveDiagram(true);
+        },
+      },
+    });
+  });
 
   async function handleOpenFile(): Promise<void> {
     if (isFileSystemAccessSupported()) {
@@ -1683,6 +1747,7 @@ export function initEvents(): void {
   // Shareable Link in Export Modal
   const updateShareLinkPreview = async (): Promise<void> => {
     if (!shareLinkInput || !shareLinkSize) return;
+    if (btnCopyShareLink) btnCopyShareLink.disabled = true;
     if (app.doc.nodes.length === 0) {
       shareLinkInput.value = 'Add components to canvas to generate link';
       shareLinkSize.textContent = '';
@@ -1691,10 +1756,20 @@ export function initEvents(): void {
     }
 
     shareLinkInput.value = 'Generating shareable link…';
+    let timeoutId: any;
     try {
       const omitImages = Boolean(chkShareOmitImages?.checked);
-      const result = await createShareUrl(app.doc, { omitImages });
+      const sharePromise = createShareUrl(app.doc, { omitImages });
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Timed out generating share link (5s)')), 5000);
+      });
+      const result = await Promise.race([sharePromise, timeoutPromise]);
+      clearTimeout(timeoutId);
       shareLinkInput.value = result.url;
+      const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+      if (btnCopyShareLink) {
+        btnCopyShareLink.disabled = !origin || !result.url.startsWith(origin);
+      }
       const kb = (result.url.length / 1024).toFixed(1);
       if (result.isLarge) {
         shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL)`;
@@ -1704,15 +1779,18 @@ export function initEvents(): void {
         shareLinkSize.classList.remove('is-warning');
       }
     } catch {
+      clearTimeout(timeoutId);
       shareLinkInput.value = 'Error generating link';
       shareLinkSize.textContent = '';
+      if (btnCopyShareLink) btnCopyShareLink.disabled = true;
     }
   };
 
   const copyBtn = btnCopyShareLink;
   if (copyBtn) {
     copyBtn.addEventListener('click', async () => {
-      if (!shareLinkInput?.value || shareLinkInput.value.startsWith('Add components')) return;
+      const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
+      if (!shareLinkInput?.value || !origin || !shareLinkInput.value.startsWith(origin)) return;
       try {
         await navigator.clipboard.writeText(shareLinkInput.value);
         const span = copyBtn.querySelector('span');
@@ -1742,11 +1820,12 @@ export function initEvents(): void {
   });
 
   // Export Modal & Actions
-  btnOpenExport.addEventListener('click', () => {
+  const openExportDialog = (): void => {
     resetGifChoices();
     void updateShareLinkPreview();
     exportDialog.showModal();
-  });
+  };
+  btnOpenExport.addEventListener('click', openExportDialog);
   btnExportHtml.addEventListener('click', () => {
     const html = generateStandaloneHtml(app.doc);
     const filename = `${getSafeFilenameSlug()}.html`;
@@ -1849,6 +1928,8 @@ export function initEvents(): void {
         if (!id) return;
         const target = getSnapshot(id);
         if (target) {
+          resetActiveFile();
+          clearPendingRestoreOffer();
           pushHistory();
           app.doc = JSON.parse(JSON.stringify(target.doc));
           renderAll(true);
@@ -1891,10 +1972,7 @@ export function initEvents(): void {
   // Command Palette
   initCommandPalette({
     openCodeDialog,
-    openExportDialog: () => {
-      resetGifChoices();
-      exportDialog.showModal();
-    },
+    openExportDialog,
     openSettingsDialog: () => settingsDialog.showModal(),
     openShortcutsDialog,
     openTemplateGallery,
@@ -1939,10 +2017,14 @@ export function initEvents(): void {
       searchCount: hudSearchCount,
       clearButton: btnClearSearch,
       getDoc: () => app.doc,
-      onFocusNode: (node) => {
+      onFocusNode: (node, frame = false) => {
         setSelection({ type: 'node', id: node.id });
         renderAll(false);
-        fitSelection();
+        if (frame) {
+          fitSelection();
+        } else {
+          panToNodeIfNeeded(node);
+        }
       },
       onClearSearch: () => {
         renderAll(false);
@@ -2464,6 +2546,19 @@ export function bootStudio(): void {
   initStencilPalette();
   responsiveToolbar.init();
   initEvents();
+
+  // Check if a saved session exists and should be offered on blank canvas
+  const saved = loadSavedSessionDoc();
+  if (
+    saved &&
+    (saved.nodes.length > 0 || (saved.zones && saved.zones.length > 0) || (saved.notesCards && saved.notesCards.length > 0)) &&
+    app.doc.nodes.length === 0 &&
+    app.doc.zones.length === 0 &&
+    app.doc.notesCards.length === 0
+  ) {
+    setPendingRestoreOffer(saved);
+  }
+
   renderAll(true);
   requestAnimationFrame(fitToViewport);
 
@@ -2472,6 +2567,8 @@ export function bootStudio(): void {
     void (async () => {
       const sharedDoc = await decodeSharedDiagramFromHash(window.location.hash);
       if (sharedDoc) {
+        resetActiveFile();
+        clearPendingRestoreOffer();
         if (app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0) {
           app.doc = sharedDoc;
           setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
@@ -2493,6 +2590,8 @@ export function bootStudio(): void {
             action: {
               label: 'Open',
               onClick: () => {
+                resetActiveFile();
+                clearPendingRestoreOffer();
                 pushHistory();
                 app.doc = sharedDoc;
                 setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });

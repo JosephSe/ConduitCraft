@@ -13,7 +13,7 @@ export interface NodeSearchOptions {
   searchCount: HTMLElement;
   clearButton: HTMLButtonElement;
   getDoc: () => DiagramDocument;
-  onFocusNode: (node: DiagramNode) => void;
+  onFocusNode: (node: DiagramNode, shouldZoomFrame?: boolean) => void;
   onClearSearch?: () => void;
 }
 
@@ -76,7 +76,7 @@ export function applySearchHighlightsToStage(
   }
 
   for (const el of nodeEls) {
-    const id = el.dataset.nodeId || el.id.replace(/^node-/, '');
+    const id = el.dataset.node || el.dataset.nodeId || el.id.replace(/^node-/, '');
     const isMatch = matchedNodeIds.has(id);
     const isActive = activeNodeId === id;
 
@@ -159,7 +159,7 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
     updateUiState();
 
     if (currentMatches.length > 0 && currentIndex >= 0) {
-      onFocusNode(currentMatches[currentIndex]);
+      onFocusNode(currentMatches[currentIndex], false);
     }
   }
 
@@ -167,14 +167,14 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
     if (currentMatches.length === 0) return;
     currentIndex = (currentIndex + 1) % currentMatches.length;
     updateUiState();
-    onFocusNode(currentMatches[currentIndex]);
+    onFocusNode(currentMatches[currentIndex], true);
   }
 
   function prevMatch() {
     if (currentMatches.length === 0) return;
     currentIndex = (currentIndex - 1 + currentMatches.length) % currentMatches.length;
     updateUiState();
-    onFocusNode(currentMatches[currentIndex]);
+    onFocusNode(currentMatches[currentIndex], true);
   }
 
   function clear() {
@@ -194,10 +194,15 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
+      if (currentMatches.length === 0) return;
       if (e.shiftKey) {
         prevMatch();
       } else {
-        nextMatch();
+        if (currentMatches.length === 1) {
+          onFocusNode(currentMatches[0], true);
+        } else {
+          nextMatch();
+        }
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
