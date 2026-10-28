@@ -126,4 +126,27 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(first.getAttribute('data-tip'), 'has data-tip for hover tooltip');
     assert.ok(first.getAttribute('aria-label'), 'has aria-label for accessibility');
   });
+
+  it('verifies responsive inspector rules that prevent right-side truncation', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { resolve } = await import('node:path');
+
+    const studioCss = readFileSync(resolve(process.cwd(), 'src/styles/studio.css'), 'utf8');
+    const sharedCss = readFileSync(resolve(process.cwd(), 'src/styles/shared.css'), 'utf8');
+
+    // Body bounds preventing horizontal blowout
+    assert.ok(sharedCss.includes('max-inline-size: 100vw;'), 'body is constrained to 100vw in shared.css');
+    assert.ok(sharedCss.includes('overflow: hidden;'), 'body prevents page horizontal overflow in shared.css');
+
+    // Inspector and pane bounds
+    assert.ok(studioCss.includes('.inspector {') && studioCss.includes('overflow: hidden;'), 'inspector has overflow hidden');
+    assert.ok(studioCss.includes('.inspector-mode-pane {') && studioCss.includes('min-inline-size: 0;'), 'inspector-mode-pane sets min-inline-size: 0 to prevent min-content blowout');
+    assert.ok(studioCss.includes('.inspector-tabs {') && studioCss.includes('flex-wrap: wrap;'), 'inspector-tabs wraps action buttons to avoid overflowing right edge');
+    assert.ok(studioCss.includes('.inspector-scroll {') && studioCss.includes('overflow-x: hidden;'), 'inspector-scroll clips horizontal overflow');
+
+    // Form inputs and triggers contained within bounds
+    assert.ok(studioCss.includes('.prop-row-2 {') && studioCss.includes('repeat(auto-fit'), 'prop-row-2 uses responsive auto-fit columns');
+    assert.ok(studioCss.includes('.prop-input,') && studioCss.includes('box-sizing: border-box;'), 'prop inputs use border-box sizing');
+    assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
+  });
 });

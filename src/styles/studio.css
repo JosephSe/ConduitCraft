@@ -288,6 +288,9 @@
     display: grid;
     grid-template-columns: 16.5rem minmax(0, 1fr) 22.5rem;
     min-block-size: 0;
+    min-inline-size: 0;
+    max-inline-size: 100vw;
+    overflow: hidden;
     position: relative;
     transition: grid-template-columns 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -435,7 +438,7 @@
     }
 
     .workspace:not([data-palette-collapsed="true"]):not([data-inspector-collapsed="true"]) {
-      grid-template-columns: 14.5rem minmax(0, 1fr) 19.5rem;
+      grid-template-columns: 14.5rem minmax(0, 1fr) 21.5rem;
     }
   }
 
@@ -2242,6 +2245,9 @@
     border-inline-start: 1px solid var(--wl-border-subtle);
     display: grid;
     min-block-size: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
     z-index: 12;
   }
 
@@ -2249,6 +2255,9 @@
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     min-block-size: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
   }
 
   .inspector-mode-pane[hidden] {
@@ -2259,20 +2268,43 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-inline: 0.95rem;
-    padding-block: 0.6rem;
+    padding-inline: 0.85rem;
+    padding-block: 0.55rem;
     border-block-end: 1px solid var(--wl-border-subtle);
-    gap: 0.5rem;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .inspector-tabs-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-inline-size: 0;
+    flex: 1 0 auto;
   }
 
   .prop-header-actions {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 0.35rem;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    min-inline-size: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
   }
 
   .prop-header-actions[hidden] {
     display: none;
+  }
+
+  .prop-header-actions .btn-compact {
+    flex: 1 1 auto;
+    text-align: center;
+    padding-inline: 0.45rem;
+    white-space: nowrap;
+    min-inline-size: 0;
   }
 
   .tablist {
@@ -2313,7 +2345,11 @@
 
   .inspector-scroll {
     overflow-y: auto;
-    padding: 1rem;
+    overflow-x: hidden;
+    padding: 0.85rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
     contain: layout;
   }
 
@@ -2321,17 +2357,23 @@
   .prop-form {
     display: grid;
     gap: 0.85rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .prop-row-2 {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
     gap: 0.55rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .prop-field {
     display: grid;
     gap: 0.25rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .prop-field label {
@@ -2344,6 +2386,9 @@
   .prop-select,
   .prop-textarea {
     inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
     padding: 0.45rem 0.6rem;
     border-radius: 0.55rem;
     border: 1px solid var(--wl-border-ui);
@@ -2397,6 +2442,11 @@
     min-block-size: 6rem;
   }
 
+  .icon-picker {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
   .icon-picker-trigger {
     display: flex;
     align-items: center;
@@ -2404,6 +2454,10 @@
     text-align: left;
     cursor: pointer;
     font: inherit;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
   }
 
   .icon-picker-trigger svg,
@@ -3488,6 +3542,9 @@ kbd {
   background: var(--wl-surface-code);
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
 }
 
 .custom-icon-upload-zone:hover,
@@ -3503,6 +3560,7 @@ kbd {
   object-fit: cover;
   border: 1px solid var(--wl-border-ui);
   background: var(--wl-surface);
+  flex-shrink: 0;
 }
 
 .custom-icon-upload-prompt {
@@ -3511,6 +3569,12 @@ kbd {
   gap: 0.15rem;
   font-size: 0.75rem;
   flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.custom-icon-upload-title,
+.custom-icon-upload-sub {
+  word-break: break-word;
 }
 
 .custom-icon-upload-title {

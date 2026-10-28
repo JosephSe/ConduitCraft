@@ -221,7 +221,11 @@
     color: var(--wl-ink);
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    inline-size: 100vw;
+    max-inline-size: 100vw;
     height: 100dvh;
+    overflow: hidden;
     -webkit-font-smoothing: antialiased;
   }
 }
