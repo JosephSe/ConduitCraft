@@ -688,6 +688,25 @@
           </div>
         </div>
 
+        <!-- PNG Export Scale & Size Estimation -->
+        <div class="export-png-options" id="export-png-options">
+          <div class="export-png-header">
+            <div class="export-png-title-group">
+              <span class="export-png-badge">PNG RESOLUTION</span>
+              <label for="export-png-scale"><strong>Scale Factor</strong></label>
+            </div>
+            <span class="export-png-estimate" id="export-png-estimate" aria-live="polite">~1.2 MB (3360 × 1840 px)</span>
+          </div>
+          <div class="export-png-controls-row">
+            <select id="export-png-scale" class="export-png-select" aria-label="PNG export resolution scale">
+              <option value="1">1× (1680 × 920 px — ~302 KB)</option>
+              <option value="2" selected>2× (3360 × 1840 px — ~1.2 MB)</option>
+              <option value="4">4× (6720 × 3680 px — ~4.7 MB)</option>
+            </select>
+            <span class="export-png-hint">Scales output resolution when downloading Image (.png) below</span>
+          </div>
+        </div>
+
         <div class="export-cards" id="export-cards">
           <button type="button" class="export-option-card is-recommended" id="btn-export-json" autofocus>
             <span class="export-option-kicker">Recommended · full document</span>
@@ -707,12 +726,18 @@
             <span>Clean standard Mermaid syntax compatible with GitHub, Notion, GitLab, and documentation sites.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-svg">
+            <span class="export-option-kicker">Standard · Vector</span>
             <strong>Vector Picture (.svg)</strong>
-            <span>The canvas as it looks now: cards, icons, wires, zones, and the stage background.</span>
+            <span>Clean, portable standalone SVG (foreignObject-free). Opens cleanly in Figma, Illustrator, and markdown image tags.</span>
+          </button>
+          <button type="button" class="export-option-card" id="btn-export-svg-clone">
+            <span class="export-option-kicker">Pixel-Perfect (DOM Clone)</span>
+            <strong>Pixel-Perfect (DOM Clone) (.svg)</strong>
+            <span>Exact replica of the live canvas DOM via SVG foreignObject and embedded studio styles.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-png">
             <strong>Image (.png)</strong>
-            <span>The same canvas picture, at up to twice the stage resolution.</span>
+            <span>Raster image at selected resolution scale (<span id="export-png-button-estimate">~1.2 MB</span>).</span>
           </button>
         </div>
         <div class="gif-export-panel" id="gif-export-panel" hidden>

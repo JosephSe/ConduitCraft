@@ -11,8 +11,8 @@ const TONE_HEX: Record<StreamTone, string> = {
   amber: '#b45309',
 };
 
-function escapeXml(value: string): string {
-  return value
+function escapeXml(value: unknown): string {
+  return String(value ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
@@ -90,7 +90,18 @@ export function renderDiagramSvg(doc: DiagramDocument, frame?: { dashOffset: num
   const notes = doc.notesCards
     .map((card) => {
       const boxHeight = notesHeight(card.items.length);
-      return `<g><rect x="${card.x}" y="${card.y}" width="404" height="${boxHeight}" rx="16" fill="#ffffff" stroke="#b6c5db" stroke-dasharray="5 4"/><text x="${card.x + 18}" y="${card.y + 28}" font-family="ui-monospace, monospace" font-size="12" font-weight="700" fill="#1d4ed8">${escapeXml(card.title)}</text></g>`;
+      const items = (card.items || [])
+        .map((item, idx) => {
+          const itemText =
+            typeof item === 'string'
+              ? item
+              : item && typeof item === 'object'
+                ? (item.title ? `${item.title}: ` : '') + (item.text || '')
+                : '';
+          return `<text x="${card.x + 18}" y="${card.y + 54 + idx * 24}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#334155">• ${escapeXml(itemText)}</text>`;
+        })
+        .join('');
+      return `<g><rect x="${card.x}" y="${card.y}" width="404" height="${boxHeight}" rx="16" fill="#ffffff" stroke="#b6c5db" stroke-dasharray="5 4"/><text x="${card.x + 18}" y="${card.y + 28}" font-family="ui-monospace, monospace" font-size="12" font-weight="700" fill="#1d4ed8">${escapeXml(card.title)}</text>${items}</g>`;
     })
     .join('');
 
@@ -120,4 +131,49 @@ export function renderDiagramSvg(doc: DiagramDocument, frame?: { dashOffset: num
   ${wires}
   ${nodes}
 </svg>`;
+}
+
+export interface PngExportEstimate {
+  scale: number;
+  width: number;
+  height: number;
+  bytes: number;
+  formattedSize: string;
+  summary: string;
+}
+
+/**
+ * Calculates PNG export dimensions and estimated compressed file size for a given scale factor.
+ * In typical 2D technical diagrams with solid color fills, vector lines, and text,
+ * PNG DEFLATE achieves ~0.20 bytes per pixel.
+ */
+export function estimatePngExport(
+  stageWidth: number,
+  stageHeight: number,
+  scale: number = 1,
+): PngExportEstimate {
+  const s = Math.max(1, Number(scale) || 1);
+  const width = Math.max(1, Math.round(stageWidth * s));
+  const height = Math.max(1, Math.round(stageHeight * s));
+  const totalPixels = width * height;
+  const bytes = Math.round(totalPixels * 0.2);
+
+  let formattedSize: string;
+  if (bytes < 1024 * 1024) {
+    const kb = Math.max(1, Math.round(bytes / 1024));
+    formattedSize = `~${kb} KB`;
+  } else {
+    const mb = (bytes / (1024 * 1024)).toFixed(1);
+    formattedSize = `~${mb} MB`;
+  }
+
+  const summary = `${formattedSize} (${width} × ${height} px)`;
+  return {
+    scale: s,
+    width,
+    height,
+    bytes,
+    formattedSize,
+    summary,
+  };
 }

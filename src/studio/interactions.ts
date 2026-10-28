@@ -24,6 +24,10 @@ import {
   btnExportGif,
   btnExportPng,
   btnExportSvg,
+  btnExportSvgClone,
+  exportPngScale,
+  exportPngEstimate,
+  exportPngButtonEstimate,
   btnFocusDocTitle,
   btnGifBack,
   btnGifView,
@@ -179,6 +183,7 @@ import {
 import { GIF_MAX_EDGE, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
 import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
+import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
 import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
@@ -1820,8 +1825,41 @@ export function initEvents(): void {
   });
 
   // Export Modal & Actions
+  const getSelectedPngScale = (): number => {
+    const raw = exportPngScale?.value;
+    const num = Number(raw);
+    return num === 1 || num === 2 || num === 4 ? num : 2;
+  };
+
+  const updatePngExportEstimate = (): void => {
+    const scale = getSelectedPngScale();
+    const estimate = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, scale);
+    if (exportPngEstimate) {
+      exportPngEstimate.textContent = estimate.summary;
+    }
+    if (exportPngButtonEstimate) {
+      exportPngButtonEstimate.textContent = estimate.formattedSize;
+    }
+    if (exportPngScale) {
+      const opt1 = exportPngScale.querySelector('option[value="1"]');
+      const opt2 = exportPngScale.querySelector('option[value="2"]');
+      const opt4 = exportPngScale.querySelector('option[value="4"]');
+      const est1 = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, 1);
+      const est2 = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, 2);
+      const est4 = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, 4);
+      if (opt1) opt1.textContent = `1× (${est1.width} × ${est1.height} px — ${est1.formattedSize})`;
+      if (opt2) opt2.textContent = `2× (${est2.width} × ${est2.height} px — ${est2.formattedSize})`;
+      if (opt4) opt4.textContent = `4× (${est4.width} × ${est4.height} px — ${est4.formattedSize})`;
+    }
+  };
+
+  exportPngScale?.addEventListener('change', updatePngExportEstimate);
+  exportPngScale?.addEventListener('input', updatePngExportEstimate);
+  updatePngExportEstimate();
+
   const openExportDialog = (): void => {
     resetGifChoices();
+    updatePngExportEstimate();
     void updateShareLinkPreview();
     exportDialog.showModal();
   };
@@ -1842,12 +1880,18 @@ export function initEvents(): void {
   });
   btnExportSvg.addEventListener('click', () => {
     const filename = `${getSafeFilenameSlug()}.svg`;
+    downloadBlob(renderDiagramSvg(app.doc), filename, 'image/svg+xml;charset=utf-8');
+    void closeDialogSmoothly(exportDialog);
+    notify(`Exported ${filename}`);
+  });
+  btnExportSvgClone?.addEventListener('click', () => {
+    const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(renderStagePictureSvg(), filename, 'image/svg+xml;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
   btnExportPng.addEventListener('click', () => {
-    const scale = Math.min(2, 4096 / Math.max(app.doc.stageWidth, app.doc.stageHeight, 1));
+    const scale = getSelectedPngScale();
     const width = Math.max(1, Math.round(app.doc.stageWidth * scale));
     const height = Math.max(1, Math.round(app.doc.stageHeight * scale));
     hudStatusTip.textContent = 'Rendering the canvas…';
