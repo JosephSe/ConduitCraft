@@ -2,6 +2,25 @@
 
 **ConduitCraft** is an open-source, interactive architecture diagramming and live telemetry studio. Build system architectures from scratch on a blank drafting canvas (like draw.io), or import/sync standard **Mermaid (`.mmd`)** and **Blueprint Markdown (`.md`)** files to render animated telemetry conduits, contextual lineage inspectors, specification matrices, and live packet simulations.
 
+## Interactive Export Previews
+
+ConduitCraft exports self-contained, interactive standalone HTML architectures and animated GIF recordings with zero external runtime dependencies. Here is how exported diagrams look in action:
+
+### 1. Whole Architecture View
+Full end-to-end overview of a distributed system architecture showing animated packet conduits, stage swimlanes, and multi-tier components.
+
+![Whole Architecture View](public/export/lumen-relay_whole.gif)
+
+### 2. Scenario Simulation Run View
+Multi-step packet trace simulation ("Clear Night Run") dynamically animating traffic propagation across edge gateways, message brokers, and datastores with live execution highlights.
+
+![Scenario Simulation Run View](public/export/lumen-relay-clear-night_scenario.gif)
+
+### 3. Zoomed-In Inspection View
+Detailed close-up inspection view highlighting directional port wiring, custom status indicators, telemetry metrics, and multi-wire routing.
+
+![Zoomed-In Inspection View](public/export/lumen-relay-zoomed-view.gif)
+
 ## Highlights
 
 - **Blank-Canvas Visual Authoring (`✎ Design` Mode)**
