@@ -1285,10 +1285,69 @@
     color: var(--wl-ink-secondary);
   }
 
+  .spec-icon,
+  .spec-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 1.1rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1.2;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  .spec-icon.icon-check,
   .spec-check {
     color: var(--wl-emerald);
+  }
+
+  .spec-icon.icon-bullet {
+    color: var(--wl-blue);
+    font-size: 1.15rem;
+    line-height: 0.9;
+  }
+
+  .spec-icon.icon-cross,
+  .spec-icon.icon-x {
+    color: var(--wl-rose);
+  }
+
+  .spec-icon.icon-exclamation {
+    color: var(--wl-amber);
+    font-weight: 800;
+  }
+
+  .spec-icon.icon-warning {
+    color: var(--wl-amber);
+    font-size: 0.82rem;
+  }
+
+  .spec-icon.icon-info {
+    color: var(--wl-blue);
+    font-style: italic;
+    font-family: serif;
     font-weight: 700;
-    flex-shrink: 0;
+  }
+
+  .spec-icon.icon-question {
+    color: var(--wl-violet);
+    font-weight: 800;
+  }
+
+  .spec-icon.icon-star {
+    color: var(--wl-amber);
+  }
+
+  .spec-icon.icon-arrow {
+    color: var(--wl-blue);
+    font-weight: 800;
+  }
+
+  .spec-icon.icon-dash {
+    color: var(--wl-ink-muted);
+    font-weight: 800;
   }
 
   /* SVG Animated Telemetry Conduits */
@@ -2669,6 +2728,22 @@
     border-radius: 0.6rem;
     border: 1px solid var(--wl-border-subtle);
     background: var(--wl-surface-elevated);
+  }
+
+  .notes-item-topbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.35rem;
+    align-items: center;
+  }
+
+  .notes-item-icon-select {
+    inline-size: auto;
+    min-inline-size: 5.6rem;
+    max-inline-size: 7.25rem;
+    padding-inline: 0.4rem 0.25rem;
+    font-size: 0.78rem;
+    font-weight: 600;
   }
 
   .checkbox-inline {

@@ -56,7 +56,9 @@ import type {
   SimulationStep,
   StreamTone,
   SelectionTarget,
+  NotesItemIcon,
 } from '../types';
+import { NOTES_ITEM_ICONS, normalizeNotesItemIcon } from '../types';
 import {
   STENCIL_CATALOG,
   STREAM_TONE_OPTIONS,
@@ -1283,7 +1285,7 @@ export function renderPropertyEditor(): void {
     iHeader.className = 'prop-list-header';
     const iTitle = document.createElement('span');
     iTitle.className = 'section-heading';
-    iTitle.textContent = 'CHECKLIST ITEMS';
+    iTitle.textContent = 'ITEMS';
     const btnAddItem = document.createElement('button');
     btnAddItem.type = 'button';
     btnAddItem.className = 'btn btn-compact';
@@ -1291,7 +1293,11 @@ export function renderPropertyEditor(): void {
     btnAddItem.textContent = '+ Add Item';
     btnAddItem.addEventListener('click', () => {
       pushHistory();
-      card.items.push({ title: `Item 0${card.items.length + 1}`, text: 'Describe architectural note.' });
+      card.items.push({
+        title: `Item 0${card.items.length + 1}`,
+        text: 'Describe architectural note.',
+        icon: 'check',
+      });
       renderNotesCards();
       renderPropertyEditor();
     });
@@ -1301,31 +1307,55 @@ export function renderPropertyEditor(): void {
     card.items.forEach((item, idx) => {
       const box = document.createElement('div');
       box.className = 'notes-item-editor';
+
       const topBar = document.createElement('div');
-      topBar.className = 'prop-list-header';
+      topBar.className = 'notes-item-topbar';
+
+      const iconSelect = document.createElement('select');
+      iconSelect.className = 'prop-select notes-item-icon-select';
+      iconSelect.setAttribute('aria-label', `Item ${idx + 1} icon`);
+      const currentIcon = normalizeNotesItemIcon(item.icon);
+      for (const opt of NOTES_ITEM_ICONS) {
+        const oEl = document.createElement('option');
+        oEl.value = opt.value;
+        oEl.textContent = opt.label;
+        if (opt.value === currentIcon) oEl.selected = true;
+        iconSelect.appendChild(oEl);
+      }
+      iconSelect.addEventListener('change', () => {
+        pushHistory();
+        item.icon = iconSelect.value as NotesItemIcon;
+        renderNotesCards();
+      });
+
       const tIn = makeTextInput(item.title, (v) => {
         item.title = v;
         renderNotesCards();
       });
       tIn.setAttribute('aria-label', `Note ${idx + 1} title`);
+      tIn.placeholder = 'Item title';
+
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
-      delBtn.className = 'btn btn-compact';
-      delBtn.style.flex = '0 0 auto';
+      delBtn.className = 'btn btn-compact btn-sim-reorder';
       delBtn.textContent = '×';
+      delBtn.title = 'Delete item';
+      delBtn.setAttribute('aria-label', `Delete item ${idx + 1}`);
       delBtn.addEventListener('click', () => {
         pushHistory();
         card.items.splice(idx, 1);
         renderNotesCards();
         renderPropertyEditor();
       });
-      topBar.append(tIn, delBtn);
+
+      topBar.append(iconSelect, tIn, delBtn);
 
       const bodyIn = makeTextInput(item.text, (v) => {
         item.text = v;
         renderNotesCards();
       });
       bodyIn.setAttribute('aria-label', `Note ${idx + 1} description`);
+      bodyIn.placeholder = 'Item description...';
 
       box.append(topBar, bodyIn);
       itemsSection.appendChild(box);

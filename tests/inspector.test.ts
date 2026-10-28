@@ -194,6 +194,13 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(studioCss.includes('.sim-editor-card[data-collapsed="true"]') && studioCss.includes('cursor: grab;'), 'collapsed scenario card has grab cursor');
     assert.ok(studioCss.includes('.is-dragging-sim'), 'is-dragging-sim exists in studio.css');
     assert.ok(studioCss.includes('.is-drop-target-above') && studioCss.includes('.is-drop-target-below'), 'drop targets styling exists');
+
+    // Notes items and icons
+    assert.ok(studioCss.includes('.notes-item-topbar {'), 'notes-item-topbar exists in studio.css');
+    assert.ok(studioCss.includes('.notes-item-icon-select {'), 'notes-item-icon-select exists in studio.css');
+    assert.ok(studioCss.includes('.spec-icon'), 'spec-icon exists in studio.css');
+    assert.ok(studioCss.includes('.icon-check') && studioCss.includes('.icon-cross'), 'icon-check and icon-cross exist in studio.css');
+    assert.ok(studioCss.includes('.icon-bullet') && studioCss.includes('.icon-exclamation'), 'icon-bullet and icon-exclamation exist in studio.css');
   });
 
   it('manages collapsible scenario cards with toggle and persistence', () => {
@@ -304,5 +311,95 @@ describe('inspector collapsible sections and tone picker', () => {
     // Drag Scenario C above Scenario B (insertAbove = true)
     assert.strictEqual(reorderSimulationScenario('sim-c', 'sim-b', true), true);
     assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-a', 'sim-c', 'sim-b']);
+  });
+
+  it('supports selecting icons on notes/spec card items and round-tripping', async () => {
+    const { normalizeNotesItemIcon, getNotesItemIconMeta, NOTES_ITEM_ICONS } = await import('../src/types.ts');
+    const { serializeToBlueprintMarkdown, importMermaidOrBlueprint } = await import('../src/core/parser.ts');
+    const { serializeBlueprintJson, parseBlueprintJson } = await import('../src/exporter/blueprintJson.ts');
+    const { createBlankDocument } = await import('../src/templates/presets.ts');
+
+    // 1. Verify normalization and icon meta
+    assert.strictEqual(normalizeNotesItemIcon('check'), 'check');
+    assert.strictEqual(normalizeNotesItemIcon('bullet'), 'bullet');
+    assert.strictEqual(normalizeNotesItemIcon('cross'), 'cross');
+    assert.strictEqual(normalizeNotesItemIcon('x'), 'cross');
+    assert.strictEqual(normalizeNotesItemIcon('exclamation'), 'exclamation');
+    assert.strictEqual(normalizeNotesItemIcon('warning'), 'warning');
+    assert.strictEqual(normalizeNotesItemIcon('info'), 'info');
+    assert.strictEqual(normalizeNotesItemIcon('question'), 'question');
+    assert.strictEqual(normalizeNotesItemIcon('star'), 'star');
+    assert.strictEqual(normalizeNotesItemIcon('arrow'), 'arrow');
+    assert.strictEqual(normalizeNotesItemIcon('dash'), 'dash');
+    assert.strictEqual(normalizeNotesItemIcon('none'), 'none');
+    assert.strictEqual(normalizeNotesItemIcon(undefined), 'check');
+
+    // Check glyphs and labels
+    const checkMeta = getNotesItemIconMeta('check');
+    assert.strictEqual(checkMeta.glyph, '✓');
+    assert.strictEqual(checkMeta.tone, 'emerald');
+
+    const bulletMeta = getNotesItemIconMeta('bullet');
+    assert.strictEqual(bulletMeta.glyph, '•');
+
+    const crossMeta = getNotesItemIconMeta('cross');
+    assert.strictEqual(crossMeta.glyph, '✕');
+    assert.strictEqual(crossMeta.tone, 'rose');
+
+    const exclMeta = getNotesItemIconMeta('exclamation');
+    assert.strictEqual(exclMeta.glyph, '!');
+    assert.strictEqual(exclMeta.tone, 'amber');
+
+    const noneMeta = getNotesItemIconMeta('none');
+    assert.strictEqual(noneMeta.glyph, '');
+    assert.strictEqual(noneMeta.value, 'none');
+
+    assert.ok(NOTES_ITEM_ICONS.length >= 10, 'contains all relevant icon options');
+
+    // 2. Verify round-trip through Blueprint Markdown
+    const doc = createBlankDocument();
+    doc.notesCards = [
+      {
+        id: 'notes-test',
+        title: 'ARCHITECTURAL CONSTRAINTS',
+        code: 'SPEC-01',
+        x: 100,
+        y: 200,
+        items: [
+          { title: 'Passed Rule', text: 'TLS 1.3 enforced', icon: 'check' },
+          { title: 'Note', text: 'Latency target under 50ms', icon: 'bullet' },
+          { title: 'Prohibited', text: 'No plain text auth', icon: 'cross' },
+          { title: 'Warning', text: 'Token TTL under 15m', icon: 'exclamation' },
+          { title: 'Star', text: 'Critical SLA target', icon: 'star' },
+          { title: 'Plain', text: 'Raw remarks', icon: 'none' },
+        ],
+      },
+    ];
+
+    const md = serializeToBlueprintMarkdown(doc);
+    const { doc: restoredMd } = importMermaidOrBlueprint(md);
+    assert.strictEqual(restoredMd.notesCards.length, 1);
+    const mdItems = restoredMd.notesCards[0].items;
+    assert.strictEqual(mdItems.length, 6);
+    assert.strictEqual(mdItems[0].icon, 'check');
+    assert.strictEqual(mdItems[1].icon, 'bullet');
+    assert.strictEqual(mdItems[2].icon, 'cross');
+    assert.strictEqual(mdItems[3].icon, 'exclamation');
+    assert.strictEqual(mdItems[4].icon, 'star');
+    assert.strictEqual(mdItems[5].icon, 'none');
+
+    // 3. Verify round-trip through Blueprint JSON
+    const jsonStr = serializeBlueprintJson(doc);
+    const parsedJson = parseBlueprintJson(jsonStr);
+    assert.strictEqual(parsedJson.ok, true);
+    if (!parsedJson.ok) return;
+    const jsonItems = parsedJson.doc.notesCards[0].items;
+    assert.strictEqual(jsonItems.length, 6);
+    assert.strictEqual(jsonItems[0].icon, 'check');
+    assert.strictEqual(jsonItems[1].icon, 'bullet');
+    assert.strictEqual(jsonItems[2].icon, 'cross');
+    assert.strictEqual(jsonItems[3].icon, 'exclamation');
+    assert.strictEqual(jsonItems[4].icon, 'star');
+    assert.strictEqual(jsonItems[5].icon, 'none');
   });
 });

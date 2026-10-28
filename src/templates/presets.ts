@@ -220,8 +220,8 @@ export function createNotesCard(x: number, y: number): DiagramNotesCard {
     x: Math.max(24, Math.round(x / 16) * 16),
     y: Math.max(24, Math.round(y / 16) * 16),
     items: [
-      { title: 'Rule 01', text: 'Document key architectural constraints or SLAs here.' },
-      { title: 'Rule 02', text: 'Select this card in Design Mode to customize items.' },
+      { title: 'Rule 01', text: 'Document key architectural constraints or SLAs here.', icon: 'check' },
+      { title: 'Rule 02', text: 'Select this card in Design Mode to customize items.', icon: 'bullet' },
     ],
   };
 }

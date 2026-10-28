@@ -37,10 +37,70 @@ export interface KeyValueMetric {
   value: string;
 }
 
+export type NotesItemIcon =
+  | 'check'
+  | 'bullet'
+  | 'cross'
+  | 'x'
+  | 'exclamation'
+  | 'warning'
+  | 'info'
+  | 'question'
+  | 'star'
+  | 'arrow'
+  | 'dash'
+  | 'none';
+
+export interface NotesItemIconOption {
+  value: NotesItemIcon;
+  glyph: string;
+  label: string;
+  tone: string;
+}
+
+export const NOTES_ITEM_ICONS: readonly NotesItemIconOption[] = [
+  { value: 'check', glyph: '✓', label: '✓ Check', tone: 'emerald' },
+  { value: 'bullet', glyph: '•', label: '• Bullet', tone: 'blue' },
+  { value: 'cross', glyph: '✕', label: '✕ X / Cross', tone: 'rose' },
+  { value: 'exclamation', glyph: '!', label: '! Exclamation', tone: 'amber' },
+  { value: 'warning', glyph: '⚠', label: '⚠ Warning', tone: 'amber' },
+  { value: 'info', glyph: 'ℹ', label: 'ℹ Info', tone: 'blue' },
+  { value: 'question', glyph: '?', label: '? Question', tone: 'violet' },
+  { value: 'star', glyph: '★', label: '★ Star', tone: 'amber' },
+  { value: 'arrow', glyph: '→', label: '→ Arrow', tone: 'blue' },
+  { value: 'dash', glyph: '–', label: '– Dash', tone: 'muted' },
+  { value: 'none', glyph: '', label: '∅ None', tone: 'none' },
+];
+
+export function normalizeNotesItemIcon(raw?: string): NotesItemIcon {
+  if (!raw) return 'check';
+  const lower = raw.trim().toLowerCase();
+  if (lower === 'x' || lower === 'cross' || lower === 'close') return 'cross';
+  if (lower === 'check' || lower === 'tick' || lower === 'checked') return 'check';
+  if (lower === 'bullet' || lower === 'dot') return 'bullet';
+  if (lower === 'exclamation' || lower === 'alert') return 'exclamation';
+  if (lower === 'warning' || lower === 'warn') return 'warning';
+  if (lower === 'info' || lower === 'information') return 'info';
+  if (lower === 'question' || lower === 'help') return 'question';
+  if (lower === 'star' || lower === 'fav') return 'star';
+  if (lower === 'arrow' || lower === 'right') return 'arrow';
+  if (lower === 'dash' || lower === 'minus' || lower === 'hyphen') return 'dash';
+  if (lower === 'none' || lower === 'blank' || lower === 'empty') return 'none';
+  return 'check';
+}
+
+export function getNotesItemIconMeta(icon?: string): NotesItemIconOption {
+  const normalized = normalizeNotesItemIcon(icon);
+  return NOTES_ITEM_ICONS.find((opt) => opt.value === normalized) || NOTES_ITEM_ICONS[0];
+}
+
 export interface NotesCheckItem {
   title: string;
   text: string;
+  icon?: NotesItemIcon;
 }
+
+export type NotesItem = NotesCheckItem;
 
 export interface DiagramNotesCard {
   id: string;

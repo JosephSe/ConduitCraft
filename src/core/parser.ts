@@ -15,6 +15,7 @@ import type {
   SimulationScenario,
   StreamTone,
 } from '../types';
+import { normalizeNotesItemIcon } from '../types';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
@@ -90,7 +91,7 @@ interface RawBlueprintMeta {
     position?: [number, number];
     x?: number;
     y?: number;
-    items?: Array<{ title?: string; text?: string }>;
+    items?: Array<{ title?: string; text?: string; icon?: string }>;
   }>;
   specCard?: {
     id?: string;
@@ -99,7 +100,7 @@ interface RawBlueprintMeta {
     position?: [number, number];
     x?: number;
     y?: number;
-    items?: Array<{ title?: string; text?: string }>;
+    items?: Array<{ title?: string; text?: string; icon?: string }>;
   };
   nodes?: Record<string, RawNodeMeta>;
   edges?: RawEdgeOverride[];
@@ -1226,6 +1227,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       items: rc.items.map((item, itemIdx) => ({
         title: item.title || `Note ${itemIdx + 1}`,
         text: item.text || '',
+        ...(item.icon ? { icon: normalizeNotesItemIcon(item.icon) } : {}),
       })),
     });
   });
@@ -1498,7 +1500,11 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       title: c.title,
       code: c.code,
       position: [Math.round(c.x), Math.round(c.y)],
-      items: c.items,
+      items: c.items.map((it) => ({
+        title: it.title,
+        text: it.text,
+        ...(it.icon ? { icon: it.icon } : {}),
+      })),
     }));
   }
 

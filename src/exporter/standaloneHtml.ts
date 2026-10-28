@@ -1,4 +1,5 @@
 import type { DiagramDocument, DiagramNode, StreamTone } from '../types';
+import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
 import { normalizeBrand } from '../core/brand';
@@ -153,12 +154,18 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
         </div>
         <ul class="blueprint-spec-list">
           ${card.items
-            .map(
-              (item) => `<li>
-            <span class="spec-check" aria-hidden="true">✓</span>
-            <span><strong>${escapeHtml(item.title)}:</strong> ${escapeHtml(item.text)}</span>
-          </li>`,
-            )
+            .map((item) => {
+              const iconMeta = getNotesItemIconMeta(item.icon);
+              const iconMarkup =
+                iconMeta.value !== 'none'
+                  ? `<span class="spec-icon spec-check icon-${escapeHtml(iconMeta.value)}" aria-hidden="true">${escapeHtml(iconMeta.glyph)}</span>`
+                  : '';
+              const titleMarkup = item.title ? `<strong>${escapeHtml(item.title)}:</strong> ` : '';
+              return `<li>
+            ${iconMarkup}
+            <span>${titleMarkup}${escapeHtml(item.text)}</span>
+          </li>`;
+            })
             .join('\n')}
         </ul>
       </aside>`,

@@ -1,5 +1,6 @@
 /** Keyed stage rendering. Existing elements are updated in place; listeners stay bound. */
 import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagramEdge } from '../types';
+import { getNotesItemIconMeta } from '../types';
 import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
 import { nodeShapeContentPadding, nodeShapePlate, sanitizeIconImage } from '../core/nodeStyle';
@@ -328,15 +329,22 @@ function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   list.replaceChildren();
   for (const item of card.items) {
     const li = document.createElement('li');
-    const check = document.createElement('span');
-    check.className = 'spec-check';
-    check.setAttribute('aria-hidden', 'true');
-    check.textContent = '✓';
+    const iconMeta = getNotesItemIconMeta(item.icon);
+    if (iconMeta.value !== 'none') {
+      const iconSpan = document.createElement('span');
+      iconSpan.className = `spec-icon spec-check icon-${iconMeta.value}`;
+      iconSpan.setAttribute('aria-hidden', 'true');
+      iconSpan.textContent = iconMeta.glyph;
+      li.appendChild(iconSpan);
+    }
     const body = document.createElement('span');
-    const strong = document.createElement('strong');
-    strong.textContent = `${item.title}: `;
-    body.append(strong, document.createTextNode(item.text));
-    li.append(check, body);
+    if (item.title) {
+      const strong = document.createElement('strong');
+      strong.textContent = `${item.title}: `;
+      body.append(strong);
+    }
+    body.append(document.createTextNode(item.text));
+    li.append(body);
     list.appendChild(li);
   }
 }

@@ -11,6 +11,7 @@ import type {
   PortSide,
   StreamTone,
 } from '../types';
+import { normalizeNotesItemIcon } from '../types';
 import { normalizeBrand } from '../core/brand';
 import { expandStageToFit, getNodeDimensions } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
@@ -130,7 +131,11 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
   const items = Array.isArray(raw.items)
     ? raw.items.flatMap((item) => {
         if (!isRecord(item)) return [];
-        return [{ title: str(item.title), text: str(item.text) }];
+        return [{
+          title: str(item.title),
+          text: str(item.text),
+          ...(typeof item.icon === 'string' ? { icon: normalizeNotesItemIcon(item.icon) } : {}),
+        }];
       })
     : [];
   return {
