@@ -19,7 +19,7 @@ export function getNodeDimensions(kind: NodeKind): { width: number; height: numb
     case 'store':
       return { width: 248, height: 172 };
     case 'client':
-      return { width: 178, height: 88 };
+      return { width: 192, height: 112 };
     case 'service':
     case 'bus':
     default:

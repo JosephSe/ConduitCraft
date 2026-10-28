@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { describe, it } from 'node:test';
+import { getNodeDimensions } from '../src/core/layout.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import { normalizeNodeShape, sanitizeIconImage } from '../src/core/nodeStyle.ts';
 import { generateStandaloneHtml } from '../src/exporter/standaloneHtml.ts';
@@ -52,5 +54,30 @@ flowchart LR
     assert.equal(rejected.doc.nodes[0].iconImage, undefined);
     assert.ok(rejected.issues.some((issue) => issue.message.includes('unknown shape')));
     assert.ok(rejected.issues.some((issue) => issue.message.includes('icon image')));
+  });
+
+  it('sizes client nodes to fit multi-line roles and enforces overflow containment', () => {
+    const clientDims = getNodeDimensions('client');
+    assert.deepEqual(clientDims, { width: 192, height: 112 });
+
+    const doc = createBlankDocument();
+    const clientNode = createNodeFromStencil('client', 100, 100, 0);
+    clientNode.title = 'DVA-D';
+    clientNode.subtitle = 'Data Validation\nApplication: Digital';
+    doc.nodes.push(clientNode);
+
+    const html = generateStandaloneHtml(doc);
+    assert.match(html, /data-kind="client"/);
+    assert.match(html, /class="node-title">DVA-D<\/span>/);
+    assert.match(html, /class="node-sub">Data Validation[\s\S]*Application: Digital<\/span>/);
+
+    const studioCss = fs.readFileSync(new URL('../src/styles/studio.css', import.meta.url), 'utf8');
+    const viewerCss = fs.readFileSync(new URL('../src/styles/viewer.css', import.meta.url), 'utf8');
+
+    assert.match(studioCss, /\.arch-node\[data-kind="client"\]\s*\.node-sub\s*\{[^}]*-webkit-line-clamp:\s*3/);
+    assert.match(studioCss, /\.arch-node\[data-kind="client"\](?::not\([^)]*\))*\s*\.node-select-hit\s*\{[^}]*overflow:\s*hidden/);
+
+    assert.match(viewerCss, /\.arch-node\[data-kind="client"\]\s*\.node-sub\s*\{[^}]*-webkit-line-clamp:\s*3/);
+    assert.match(viewerCss, /\.arch-node\[data-kind="client"\](?::not\([^)]*\))*\s*\{[^}]*overflow:\s*hidden/);
   });
 });
