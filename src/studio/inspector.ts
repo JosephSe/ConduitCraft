@@ -512,7 +512,7 @@ export function renderPropertyEditor(): void {
     for (const shape of NODE_SHAPES) {
       const opt = document.createElement('option');
       opt.value = shape;
-      opt.textContent = NODE_SHAPE_LABELS[shape];
+      opt.textContent = shape === 'card' && node.kind === 'store' ? 'Cylinder' : NODE_SHAPE_LABELS[shape];
       opt.selected = (node.shape || 'card') === shape;
       shapeSelect.appendChild(opt);
     }

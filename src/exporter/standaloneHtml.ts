@@ -3,7 +3,13 @@ import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
 import { normalizeBrand } from '../core/brand';
-import { nodeShapeContentPadding, renderNodeShapePlate, sanitizeIconImage } from '../core/nodeStyle';
+import {
+  nodeShapeContentPadding,
+  renderCylinderPlate,
+  renderNodeShapePlate,
+  sanitizeIconImage,
+  storeDrawsCylinder,
+} from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
@@ -27,8 +33,14 @@ function serializeScriptJson(data: unknown): string {
 }
 
 function nodeShapeAttr(node: DiagramNode): string {
+  if (storeDrawsCylinder(node.kind, node.shape)) return ' data-shape="cylinder"';
   if (!node.shape || node.shape === 'card') return '';
   return ` data-shape="${escapeHtml(node.shape)}"`;
+}
+
+function nodePlateMarkup(node: DiagramNode): string {
+  if (storeDrawsCylinder(node.kind, node.shape)) return renderCylinderPlate(node.width, node.height);
+  return renderNodeShapePlate(node.shape, node.width, node.height);
 }
 
 function exportedIconMarkup(node: DiagramNode, size: number, fallback: string): string {
@@ -59,7 +71,7 @@ function renderExportedNode(node: DiagramNode, index: number): string {
   const pressed = index === 0 ? 'true' : 'false';
   const shape = nodeShapeAttr(node);
   const box = nodeBoxStyle(node);
-  const plate = renderNodeShapePlate(node.shape, node.width, node.height);
+  const plate = nodePlateMarkup(node);
   const badges = renderNodeBadges(node);
   if (node.kind === 'actor') {
     return `

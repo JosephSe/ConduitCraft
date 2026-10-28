@@ -324,8 +324,8 @@ function parseSingleNodeToken(token: string): {
     { regex: /^([A-Za-z0-9_.-]+)\s*\(\(([\s\S]+)\)\)$/, kind: 'actor', shape: 'circle' },
     // Subroutine [[Core]] -> core
     { regex: /^([A-Za-z0-9_.-]+)\s*\[\[([\s\S]+)\]\]$/, kind: 'core', shape: 'card' },
-    // Cylinder [(Store)] -> store
-    { regex: /^([A-Za-z0-9_.-]+)\s*\[\(([\s\S]+)\)\]$/, kind: 'store', shape: 'rounded' },
+    // Database cylinder [(Store)] -> store. The drum is drawn; no outline is stored.
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[\(([\s\S]+)\)\]$/, kind: 'store' },
     // Hexagon {{Gate}} or Rhombus {Gate} -> gate
     { regex: /^([A-Za-z0-9_.-]+)\s*\{\{([\s\S]+)\}\}$/, kind: 'gate', shape: 'hexagon' },
     { regex: /^([A-Za-z0-9_.-]+)\s*\{([\s\S]+)\}$/, kind: 'gate', shape: 'diamond' },

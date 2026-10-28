@@ -111,6 +111,58 @@ export function nodeShapeFrame(
   };
 }
 
+/**
+ * Default data stores are drawn as a cylinder. The outline is not stored:
+ * `shape` stays absent, and an explicit non-card outline still wins.
+ */
+export function storeDrawsCylinder(kind: string, shape: NodeShape | undefined): boolean {
+  return kind === 'store' && (shape == null || shape === 'card');
+}
+
+export interface CylinderPlate {
+  width: number;
+  height: number;
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  /** Straight walls and a curved base. The lid ellipse covers the open top. */
+  body: string;
+}
+
+/** Drum geometry in the node's box. Ports stay on the rectangle, so wires do not move. */
+export function cylinderPlate(width: number, height: number): CylinderPlate {
+  const w = Math.max(1, width);
+  const h = Math.max(1, height);
+  const inset = 1.5;
+  const rx = Math.max(1, w / 2 - inset);
+  const capRoom = Math.max(4, (h - inset * 2) / 4);
+  const ry = Math.max(4, Math.min(18, h * 0.14, capRoom));
+  const cx = w / 2;
+  const cy = inset + ry;
+  const bottom = h - inset;
+  const left = cx - rx;
+  const right = cx + rx;
+  const n = roundTenth;
+  const body = [
+    `M ${n(left)},${n(cy)}`,
+    `L ${n(left)},${n(bottom - ry)}`,
+    `A ${n(rx)} ${n(ry)} 0 0 0 ${n(cx)},${n(bottom)}`,
+    `A ${n(rx)} ${n(ry)} 0 0 0 ${n(right)},${n(bottom - ry)}`,
+    `L ${n(right)},${n(cy)}`,
+    'Z',
+  ].join(' ');
+  return {
+    width: Math.max(1, Math.round(w)),
+    height: Math.max(1, Math.round(h)),
+    cx: n(cx),
+    cy: n(cy),
+    rx: n(rx),
+    ry: n(ry),
+    body,
+  };
+}
+
 /** Padding that keeps the label inside the outline. Empty keeps the card padding. */
 export function nodeShapeContentPadding(
   kind: string,
@@ -118,6 +170,10 @@ export function nodeShapeContentPadding(
   width: number,
   height: number,
 ): string {
+  if (storeDrawsCylinder(kind, shape)) {
+    const { cy, ry } = cylinderPlate(width, height);
+    return `${Math.round(cy + ry + 6)}px 1.15rem ${Math.round(ry + 8)}px`;
+  }
   if (kind === 'actor' || !shape || shape === 'card' || shape === 'rounded') return '';
   const w = Math.max(1, width);
   const h = Math.max(1, height);
@@ -142,6 +198,11 @@ export function renderNodeShapePlate(
       ? `<ellipse class="node-shape-geom" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/>`
       : `<polygon class="node-shape-geom" points="${plate.points}"/>`;
   return `<svg class="node-shape-plate" viewBox="0 0 ${w} ${h}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false">${geom}</svg>`;
+}
+
+export function renderCylinderPlate(width: number, height: number): string {
+  const plate = cylinderPlate(width, height);
+  return `<svg class="node-shape-plate" data-plate="cylinder" viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom cylinder-body" d="${plate.body}"/><ellipse class="node-shape-geom cylinder-lid" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
 }
 
 /** True when the field is absent or a known outline name. */

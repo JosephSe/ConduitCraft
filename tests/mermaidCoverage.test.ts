@@ -166,7 +166,8 @@ describe('Mermaid import coverage (classDef, style, linkStyle, shapes)', () => {
     assert.strictEqual(stadium?.shape, 'pill');
 
     const cylinder = doc.nodes.find((n) => n.id === 'CylinderNode');
-    assert.strictEqual(cylinder?.shape, 'rounded');
+    assert.strictEqual(cylinder?.kind, 'store');
+    assert.strictEqual(cylinder?.shape, undefined);
   });
 
   it('serializes custom shapes accurately back to Mermaid', () => {

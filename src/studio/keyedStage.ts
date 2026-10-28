@@ -3,7 +3,13 @@ import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagra
 import { getNotesItemIconMeta } from '../types';
 import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
-import { nodeShapeContentPadding, nodeShapePlate, sanitizeIconImage } from '../core/nodeStyle';
+import {
+  cylinderPlate,
+  nodeShapeContentPadding,
+  nodeShapePlate,
+  sanitizeIconImage,
+  storeDrawsCylinder,
+} from '../core/nodeStyle';
 import {
   SVG_NS,
   alignGuideX,
@@ -947,25 +953,54 @@ function glyphKey(image: string | undefined, fallback: string): string {
   return image ? `img:${image.length}:${image.slice(-32)}` : fallback;
 }
 
-function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
-  hit.style.padding = nodeShapeContentPadding(node.kind, node.shape, node.width, node.height);
-  const plate = nodeShapePlate(node.shape, node.width, node.height);
+function ensureShapePlate(hit: HTMLElement, plateKind: string): SVGSVGElement {
   let svg = hit.querySelector<SVGSVGElement>('.node-shape-plate');
-  if (!plate) {
+  if (!svg || svg.dataset.plate !== plateKind) {
     svg?.remove();
-    return;
-  }
-  if (!svg) {
     svg = document.createElementNS(SVG_NS, 'svg');
     svg.setAttribute('class', 'node-shape-plate');
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('focusable', 'false');
+    svg.setAttribute('overflow', 'visible');
+    svg.dataset.plate = plateKind;
     hit.prepend(svg);
   }
-  const w = Math.max(1, Math.round(node.width));
-  const h = Math.max(1, Math.round(node.height));
+  return svg;
+}
+
+function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
+  hit.style.padding = nodeShapeContentPadding(node.kind, node.shape, node.width, node.height);
+  const cylinder = storeDrawsCylinder(node.kind, node.shape)
+    ? cylinderPlate(node.width, node.height)
+    : null;
+  const plate = cylinder ? null : nodeShapePlate(node.shape, node.width, node.height);
+  if (!cylinder && !plate) {
+    hit.querySelector('.node-shape-plate')?.remove();
+    return;
+  }
+  const svg = ensureShapePlate(hit, cylinder ? 'cylinder' : plate!.kind);
+  const w = cylinder ? cylinder.width : Math.max(1, Math.round(node.width));
+  const h = cylinder ? cylinder.height : Math.max(1, Math.round(node.height));
   svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  const tag = plate.kind === 'ellipse' ? 'ellipse' : 'polygon';
+  if (cylinder) {
+    let body = svg.querySelector<SVGPathElement>('.cylinder-body');
+    let lid = svg.querySelector<SVGEllipseElement>('.cylinder-lid');
+    if (!body || !lid) {
+      svg.replaceChildren();
+      body = document.createElementNS(SVG_NS, 'path');
+      body.setAttribute('class', 'node-shape-geom cylinder-body');
+      lid = document.createElementNS(SVG_NS, 'ellipse');
+      lid.setAttribute('class', 'node-shape-geom cylinder-lid');
+      svg.append(body, lid);
+    }
+    body.setAttribute('d', cylinder.body);
+    lid.setAttribute('cx', String(cylinder.cx));
+    lid.setAttribute('cy', String(cylinder.cy));
+    lid.setAttribute('rx', String(cylinder.rx));
+    lid.setAttribute('ry', String(cylinder.ry));
+    return;
+  }
+  const tag = plate!.kind === 'ellipse' ? 'ellipse' : 'polygon';
   let geom = svg.querySelector<SVGElement>('.node-shape-geom');
   if (!geom || geom.localName !== tag) {
     geom?.remove();
@@ -973,14 +1008,14 @@ function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
     geom.setAttribute('class', 'node-shape-geom');
     svg.appendChild(geom);
   }
-  if (plate.kind === 'ellipse') {
-    geom.setAttribute('cx', String(plate.cx));
-    geom.setAttribute('cy', String(plate.cy));
-    geom.setAttribute('rx', String(plate.rx));
-    geom.setAttribute('ry', String(plate.ry));
+  if (plate!.kind === 'ellipse') {
+    geom.setAttribute('cx', String(plate!.cx));
+    geom.setAttribute('cy', String(plate!.cy));
+    geom.setAttribute('rx', String(plate!.rx));
+    geom.setAttribute('ry', String(plate!.ry));
     geom.removeAttribute('points');
   } else {
-    geom.setAttribute('points', plate.points);
+    geom.setAttribute('points', plate!.points);
   }
 }
 
@@ -998,7 +1033,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.dataset.nodeId = node.id;
   wrapper.dataset.kind = node.kind;
   wrapper.dataset.accent = node.accent;
-  if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
+  if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
+  else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
   else delete wrapper.dataset.shape;
   wrapper.style.setProperty('--nx', String(node.x));
   wrapper.style.setProperty('--ny', String(node.y));

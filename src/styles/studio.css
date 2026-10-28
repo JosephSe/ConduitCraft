@@ -2400,6 +2400,58 @@
     flex-shrink: 0;
   }
 
+  /* Data stores draw a drum. The hit stays clear so the plate is the silhouette. */
+  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit,
+  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit:hover,
+  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit[aria-pressed="true"],
+  .arch-node.is-related[data-kind="store"][data-shape="cylinder"] .node-select-hit,
+  .arch-node[data-kind="store"][data-shape="cylinder"][data-sim-active="true"] .node-select-hit {
+    overflow: visible;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    text-align: center;
+  }
+
+  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit[aria-pressed="true"],
+  .arch-node.is-related[data-kind="store"][data-shape="cylinder"] .node-select-hit {
+    outline-color: transparent;
+  }
+
+  .arch-node[data-kind="store"][data-shape="cylinder"] .cylinder-body {
+    fill: color-mix(in srgb, var(--node-accent) 16%, var(--wl-surface));
+  }
+
+  .arch-node[data-kind="store"][data-shape="cylinder"] .cylinder-lid {
+    fill: color-mix(in srgb, var(--node-accent) 7%, var(--wl-surface));
+  }
+
+  .arch-node[data-shape="cylinder"] .node-top {
+    justify-content: center;
+    padding-inline-end: 0;
+  }
+
+  .arch-node[data-shape="cylinder"] .node-icon:not(:has(.node-custom-icon)) {
+    display: none;
+  }
+
+  .arch-node[data-shape="cylinder"] .node-eyebrow { display: none; }
+
+  .arch-node[data-shape="cylinder"] .node-top:not(:has(.node-custom-icon)) {
+    display: none;
+  }
+
+  .arch-node[data-shape="cylinder"] .node-footer {
+    border-block-start: 0;
+    justify-content: center;
+    padding-block-start: 0.1rem;
+    gap: 0.45rem;
+  }
+
+  .arch-node[data-shape="cylinder"] .node-drag-handle {
+    top: 2.45rem;
+  }
+
   /* Level-of-Detail (LoD) rendering for low zoom (< 55%) */
   #stage-world[data-lod="low"] .node-footer,
   #stage-world[data-lod="low"] .node-eyebrow,

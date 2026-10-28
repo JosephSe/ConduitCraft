@@ -3,7 +3,12 @@ import fs from 'node:fs';
 import { describe, it } from 'node:test';
 import { getNodeDimensions } from '../src/core/layout.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
-import { normalizeNodeShape, sanitizeIconImage } from '../src/core/nodeStyle.ts';
+import {
+  cylinderPlate,
+  nodeShapeContentPadding,
+  normalizeNodeShape,
+  sanitizeIconImage,
+} from '../src/core/nodeStyle.ts';
 import { generateStandaloneHtml } from '../src/exporter/standaloneHtml.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 
@@ -54,6 +59,55 @@ flowchart LR
     assert.equal(rejected.doc.nodes[0].iconImage, undefined);
     assert.ok(rejected.issues.some((issue) => issue.message.includes('unknown shape')));
     assert.ok(rejected.issues.some((issue) => issue.message.includes('icon image')));
+  });
+
+  it('draws a default data store as a cylinder without storing that outline', () => {
+    const plate = cylinderPlate(248, 172);
+    assert.equal(plate.rx, 122.5);
+    assert.equal(plate.ry, 18);
+    assert.equal(plate.cy, 19.5);
+    assert.equal(
+      plate.body,
+      'M 1.5,19.5 L 1.5,152.5 A 122.5 18 0 0 0 124,170.5 A 122.5 18 0 0 0 246.5,152.5 L 246.5,19.5 Z',
+    );
+    assert.equal(nodeShapeContentPadding('store', undefined, 248, 172), '44px 1.15rem 26px');
+    for (const sheet of ['studio.css', 'viewer.css']) {
+      const css = fs.readFileSync(new URL(`../src/styles/${sheet}`, import.meta.url), 'utf8');
+      assert.match(css, /\.arch-node\[data-shape="cylinder"\] \.node-eyebrow \{ display: none; \}/);
+    }
+    assert.match(nodeShapeContentPadding('store', 'diamond', 248, 172), /px /);
+
+    const doc = createBlankDocument();
+    const store = createNodeFromStencil('store', 80, 80, 0);
+    store.title = 'ES Cache';
+    store.subtitle = 'Elastic Search';
+    store.eyebrow = 'Data Store';
+    store.footerLeft = 'REST';
+    store.chip = 'API';
+    doc.nodes.push(store);
+
+    const md = serializeToBlueprintMarkdown(doc);
+    assert.doesNotMatch(md, /shape:\s*cylinder/);
+    assert.doesNotMatch(md, /shape:\s*rounded/);
+    const { doc: restored, issues } = importMermaidOrBlueprint(md);
+    assert.equal(issues.length, 0);
+    assert.equal(restored.nodes[0].kind, 'store');
+    assert.equal(restored.nodes[0].shape, undefined);
+
+    const html = generateStandaloneHtml(restored);
+    const open = html.match(/<button\b[^>]*data-kind="store"[^>]*>/)?.[0] ?? '';
+    assert.match(open, /data-shape="cylinder"/);
+    assert.match(html, /class="node-shape-geom cylinder-body"/);
+    assert.match(html, /class="node-shape-geom cylinder-lid"/);
+    assert.doesNotMatch(open, /shape:\s*cylinder/);
+
+    store.shape = 'diamond';
+    const diamondHtml = generateStandaloneHtml(doc);
+    const diamondOpen = diamondHtml.match(/<button\b[^>]*data-kind="store"[^>]*>/)?.[0] ?? '';
+    assert.match(diamondOpen, /data-shape="diamond"/);
+    assert.doesNotMatch(diamondOpen, /data-shape="cylinder"/);
+    assert.match(diamondHtml, /<polygon class="node-shape-geom"/);
+    assert.doesNotMatch(diamondHtml, /class="node-shape-geom cylinder-body"/);
   });
 
   it('sizes client nodes to fit multi-line roles and enforces overflow containment', () => {
