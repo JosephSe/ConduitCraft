@@ -499,8 +499,8 @@ export function renderSimButtons(): void {
   const scenarios = getEffectiveSimulations(app.doc);
   const existing = new Map<string, HTMLButtonElement>();
   for (const child of Array.from(simButtonsSlot.children)) {
-    if (child instanceof HTMLButtonElement && child.dataset.simId) {
-      existing.set(child.dataset.simId, child);
+    if (child instanceof HTMLElement && child.dataset.simId) {
+      existing.set(child.dataset.simId, child as HTMLButtonElement);
     }
   }
   const seen = new Set<string>();

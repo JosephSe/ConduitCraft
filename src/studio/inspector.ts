@@ -1768,6 +1768,21 @@ export function duplicateSimulationScenario(simId: string): SimulationScenario |
   return duplicate;
 }
 
+export function moveSimulationScenario(simId: string, direction: -1 | 1): boolean {
+  const list = authoredSimulations();
+  const index = list.findIndex((scenario) => scenario.id === simId);
+  const next = index + direction;
+  if (index < 0 || next < 0 || next >= list.length) return false;
+  pushHistory();
+  const [scenario] = list.splice(index, 1);
+  if (!scenario) return false;
+  list.splice(next, 0, scenario);
+  renderSimButtons();
+  renderSimulationEditor(true);
+  notify(`Moved scenario "${scenario.name}" ${direction === -1 ? 'up' : 'down'}`);
+  return true;
+}
+
 export function renderSimulationEditor(force = false): void {
   const active = document.activeElement;
   if (
@@ -1862,7 +1877,31 @@ export function renderSimulationEditor(force = false): void {
       duplicateSimulationScenario(scenario.id);
     });
 
-    headerActions.append(quickPlay, quickDuplicate);
+    const quickUp = document.createElement('button');
+    quickUp.type = 'button';
+    quickUp.className = 'btn btn-compact btn-sim-reorder';
+    quickUp.textContent = '↑';
+    quickUp.title = 'Move scenario up';
+    quickUp.setAttribute('aria-label', `Move scenario ${scenario.name} up`);
+    quickUp.disabled = scenarioIndex === 0;
+    quickUp.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moveSimulationScenario(scenario.id, -1);
+    });
+
+    const quickDown = document.createElement('button');
+    quickDown.type = 'button';
+    quickDown.className = 'btn btn-compact btn-sim-reorder';
+    quickDown.textContent = '↓';
+    quickDown.title = 'Move scenario down';
+    quickDown.setAttribute('aria-label', `Move scenario ${scenario.name} down`);
+    quickDown.disabled = scenarioIndex === scenarios.length - 1;
+    quickDown.addEventListener('click', (e) => {
+      e.stopPropagation();
+      moveSimulationScenario(scenario.id, 1);
+    });
+
+    headerActions.append(quickPlay, quickDuplicate, quickUp, quickDown);
     header.append(toggle, headerActions);
 
     const body = document.createElement('div');
@@ -1909,6 +1948,21 @@ export function renderSimulationEditor(force = false): void {
     duplicateBtn.textContent = 'Duplicate';
     duplicateBtn.setAttribute('aria-label', `Duplicate scenario ${scenario.name}`);
     duplicateBtn.addEventListener('click', () => duplicateSimulationScenario(scenario.id));
+    const moveUp = document.createElement('button');
+    moveUp.type = 'button';
+    moveUp.className = 'btn btn-compact';
+    moveUp.textContent = 'Move up';
+    moveUp.setAttribute('aria-label', `Move scenario ${scenario.name} up`);
+    moveUp.disabled = scenarioIndex === 0;
+    moveUp.addEventListener('click', () => moveSimulationScenario(scenario.id, -1));
+
+    const moveDown = document.createElement('button');
+    moveDown.type = 'button';
+    moveDown.className = 'btn btn-compact';
+    moveDown.textContent = 'Move down';
+    moveDown.setAttribute('aria-label', `Move scenario ${scenario.name} down`);
+    moveDown.disabled = scenarioIndex === scenarios.length - 1;
+    moveDown.addEventListener('click', () => moveSimulationScenario(scenario.id, 1));
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'btn btn-compact btn-reject';
@@ -1923,7 +1977,7 @@ export function renderSimulationEditor(force = false): void {
       renderSimButtons();
       renderSimulationEditor(true);
     });
-    actions.append(play, duplicateBtn, remove);
+    actions.append(play, duplicateBtn, moveUp, moveDown, remove);
 
     const stepsHeading = document.createElement('h3');
     stepsHeading.className = 'section-heading';

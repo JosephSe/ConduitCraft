@@ -111,8 +111,12 @@ globalThis.document = {
 };
 // @ts-expect-error Mocking global localStorage
 globalThis.localStorage = fakeLocalStorage;
+// @ts-expect-error Mocking global HTMLElement
+globalThis.HTMLElement = MockElement as unknown as typeof HTMLElement;
+// @ts-expect-error Mocking global HTMLButtonElement
+globalThis.HTMLButtonElement = MockElement as unknown as typeof HTMLButtonElement;
 
-const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario } = await import('../src/studio/inspector.ts');
+const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario } = await import('../src/studio/inspector.ts');
 
 describe('inspector collapsible sections and tone picker', () => {
   beforeEach(() => {
@@ -236,5 +240,34 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.strictEqual(app.doc.simulations[0].id, 'sim-flow-1');
     assert.strictEqual(app.doc.simulations[1].id, dup.id);
     assert.strictEqual(app.doc.simulations[2].id, 'sim-flow-2');
+  });
+
+  it('orders simulation scenarios up and down with bounds checking', async () => {
+    const { app } = await import('../src/studio/state.ts');
+    app.doc.simulations = [
+      { id: 'sim-a', name: 'Scenario A', tone: 'blue', steps: [] },
+      { id: 'sim-b', name: 'Scenario B', tone: 'emerald', steps: [] },
+      { id: 'sim-c', name: 'Scenario C', tone: 'rose', steps: [] },
+    ];
+
+    // Attempt to move top scenario up -> should return false and not change order
+    assert.strictEqual(moveSimulationScenario('sim-a', -1), false);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-a', 'sim-b', 'sim-c']);
+
+    // Attempt to move bottom scenario down -> should return false and not change order
+    assert.strictEqual(moveSimulationScenario('sim-c', 1), false);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-a', 'sim-b', 'sim-c']);
+
+    // Move Scenario A down
+    assert.strictEqual(moveSimulationScenario('sim-a', 1), true);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-b', 'sim-a', 'sim-c']);
+
+    // Move Scenario C up
+    assert.strictEqual(moveSimulationScenario('sim-c', -1), true);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-b', 'sim-c', 'sim-a']);
+
+    // Move Scenario B down
+    assert.strictEqual(moveSimulationScenario('sim-b', 1), true);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-c', 'sim-b', 'sim-a']);
   });
 });

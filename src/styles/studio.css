@@ -2857,6 +2857,13 @@
     flex-shrink: 0;
   }
 
+  .btn-sim-reorder {
+    padding-inline: 0.45rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+
   .sim-card-body {
     display: flex;
     flex-direction: column;
