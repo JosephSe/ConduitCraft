@@ -114,7 +114,6 @@ export function renderDiagramSvg(doc: DiagramDocument, frame?: { dashOffset: num
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <defs>${markers}</defs>
-  <rect width="100%" height="100%" fill="#f8fafc"/>
   ${zones}
   ${notes}
   ${wires}

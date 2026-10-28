@@ -102,6 +102,7 @@ function medianCut(samples: number[], maxColors: number): Array<[number, number,
 function pushSamples(frame: Uint8ClampedArray, step: number, samples: number[]): void {
   const stride = Math.max(1, step) * 4;
   for (let i = 0; i < frame.length; i += stride) {
+    if (frame[i + 3] < 128) continue;
     samples.push((frame[i] << 16) | (frame[i + 1] << 8) | frame[i + 2]);
   }
 }
@@ -176,10 +177,15 @@ function indexFrame(
   width: number,
   lut: Uint8Array,
   palette: Array<[number, number, number]>,
+  transparent?: number,
 ): Uint8Array {
   const indexed = new Uint8Array(frame.length / 4);
   const limit = DITHER_LIMIT * DITHER_LIMIT;
   for (let pixel = 0, i = 0; i < frame.length; i += 4, pixel += 1) {
+    if (transparent !== undefined && frame[i + 3] < 128) {
+      indexed[pixel] = transparent;
+      continue;
+    }
     const r = frame[i];
     const g = frame[i + 1];
     const b = frame[i + 2];
@@ -359,7 +365,8 @@ export function encodeGif(options: {
   out.push(3, 1, 0, 0, 0);
 
   const delay = Math.max(1, Math.min(65535, Math.round(options.delayCs)));
-  const indexed = options.frames.map((frame) => indexFrame(frame, width, lut, palette));
+  const hasTransparentInFrame0 = options.frames[0].some((val, idx) => idx % 4 === 3 && val < 128);
+  const indexed = options.frames.map((frame) => indexFrame(frame, width, lut, palette, transparent));
   const writeImage = (
     pixels: Uint8Array,
     left: number,
@@ -384,7 +391,7 @@ export function encodeGif(options: {
     subBlocks(out, lzwEncode(pixels, minCodeSize));
   };
 
-  writeImage(indexed[0], 0, 0, width, height, null);
+  writeImage(indexed[0], 0, 0, width, height, hasTransparentInFrame0 ? transparent : null);
   for (let frame = 1; frame < indexed.length; frame += 1) {
     const rect = diffRect(indexed[frame - 1], indexed[frame], width, height);
     if (!rect) {

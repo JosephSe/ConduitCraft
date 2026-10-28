@@ -32,4 +32,11 @@ describe('shared export stylesheet and tone metadata', () => {
     assert.match(boot, /blueprint-studio-color-scheme/);
     assert.match(boot, /window\.conduitBindColorScheme/);
   });
+
+  it('renders vector SVG without hardcoded application background rect', async () => {
+    const { renderDiagramSvg } = await import('../src/exporter/diagramSvg.ts');
+    const svg = renderDiagramSvg(createBlankDocument());
+    assert.doesNotMatch(svg, /fill="#f8fafc"/);
+    assert.doesNotMatch(svg, /<rect width="100%"/);
+  });
 });

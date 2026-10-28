@@ -129,6 +129,33 @@ describe('gif export', () => {
       assert.equal((packed >> 2) & 7, 1);
     }
   });
+
+  it('encodes transparent background for media exports when pixels have zero alpha', () => {
+    const width = 8;
+    const height = 8;
+    // Transparent background with a single non-transparent center pixel
+    const paint = () => {
+      const rgba = new Uint8ClampedArray(width * height * 4);
+      // center pixel (x=4, y=4) is colored, rest has alpha = 0
+      const centerIdx = (4 * width + 4) * 4;
+      rgba[centerIdx] = 255;
+      rgba[centerIdx + 1] = 0;
+      rgba[centerIdx + 2] = 0;
+      rgba[centerIdx + 3] = 255;
+      return rgba;
+    };
+    const gif = encodeGif({
+      width,
+      height,
+      frames: [paint()],
+      delayCs: 10,
+      maxColors: 4,
+    });
+    const controls = gifGraphicControls(gif);
+    assert.equal(controls.length, 1);
+    // Control byte should have transparent flag set (bit 0 = 1, disposal 1 = 0x05)
+    assert.equal(controls[0], 0x05);
+  });
 });
 
 function gifGraphicControls(gif: Uint8Array): number[] {

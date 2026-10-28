@@ -132,7 +132,7 @@ export function renderStagePictureSvg(
 
   const shell = document.createElement('section');
   shell.className = 'canvas-shell';
-  shell.style.cssText = `position:relative;width:${frameWidth}px;height:${frameHeight}px;overflow:hidden`;
+  shell.style.cssText = `position:relative;width:${frameWidth}px;height:${frameHeight}px;overflow:hidden;background:transparent !important;background-image:none !important;box-shadow:none !important;`;
   shell.appendChild(clone);
 
   const root = document.createElement('div');
@@ -153,11 +153,25 @@ export function renderStagePictureSvg(
     `font-size:${body.fontSize}`,
     `line-height:${body.lineHeight}`,
     `color-scheme:${rootStyle.colorScheme}`,
+    'background:transparent !important',
+    'background-color:transparent !important',
+    'background-image:none !important',
+    'box-shadow:none !important',
   ].join(';');
   root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
   const style = document.createElement('style');
-  style.textContent = documentCss();
+  style.textContent = documentCss() + `
+    .workspace,
+    .canvas-shell,
+    .canvas-viewport,
+    .stage-world {
+      background: transparent !important;
+      background-color: transparent !important;
+      background-image: none !important;
+      box-shadow: none !important;
+    }
+  `;
   root.append(style, shell);
 
   const serialized = new XMLSerializer().serializeToString(root);
