@@ -1768,6 +1768,33 @@ export function duplicateSimulationScenario(simId: string): SimulationScenario |
   return duplicate;
 }
 
+let draggedScenarioId: string | null = null;
+
+export function reorderSimulationScenario(
+  sourceId: string,
+  targetId: string,
+  insertAbove = true,
+): boolean {
+  if (sourceId === targetId) return false;
+  const list = authoredSimulations();
+  const fromIndex = list.findIndex((s) => s.id === sourceId);
+  const toIndex = list.findIndex((s) => s.id === targetId);
+  if (fromIndex < 0 || toIndex < 0) return false;
+
+  pushHistory();
+  const [moved] = list.splice(fromIndex, 1);
+  if (!moved) return false;
+
+  const newTargetIndex = list.findIndex((s) => s.id === targetId);
+  const finalIndex = insertAbove ? newTargetIndex : newTargetIndex + 1;
+  list.splice(finalIndex, 0, moved);
+
+  renderSimButtons();
+  renderSimulationEditor(true);
+  notify(`Reordered scenario "${moved.name}"`);
+  return true;
+}
+
 export function moveSimulationScenario(simId: string, direction: -1 | 1): boolean {
   const list = authoredSimulations();
   const index = list.findIndex((scenario) => scenario.id === simId);
@@ -1815,6 +1842,69 @@ export function renderSimulationEditor(force = false): void {
 
     const isCollapsed = isScenarioCollapsed(scenario.id);
     card.dataset.collapsed = String(isCollapsed);
+    card.draggable = isCollapsed;
+
+    // Drag handle
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'sim-drag-handle';
+    dragHandle.textContent = '⋮⋮';
+    dragHandle.title = 'Drag to reorder scenario';
+    dragHandle.setAttribute('aria-hidden', 'true');
+
+    // Drag & drop event listeners on card for reordering when collapsed
+    card.addEventListener('dragstart', (e) => {
+      if (card.dataset.collapsed !== 'true') {
+        e.preventDefault();
+        return;
+      }
+      draggedScenarioId = scenario.id;
+      card.classList.add('is-dragging-sim');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', scenario.id);
+      }
+    });
+
+    card.addEventListener('dragend', () => {
+      draggedScenarioId = null;
+      card.classList.remove('is-dragging-sim');
+      simEditorList.querySelectorAll('.sim-editor-card').forEach((el) => {
+        el.classList.remove('is-drop-target-above', 'is-drop-target-below');
+      });
+    });
+
+    card.addEventListener('dragover', (e) => {
+      if (!draggedScenarioId || draggedScenarioId === scenario.id) return;
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
+      }
+      const rect = typeof card.getBoundingClientRect === 'function' ? card.getBoundingClientRect() : { top: 0, height: 40 };
+      const midY = rect.top + rect.height / 2;
+      const isAbove = e.clientY < midY;
+      card.classList.toggle('is-drop-target-above', isAbove);
+      card.classList.toggle('is-drop-target-below', !isAbove);
+    });
+
+    card.addEventListener('dragleave', (e) => {
+      const related = e.relatedTarget as Node | null;
+      if (!card.contains(related)) {
+        card.classList.remove('is-drop-target-above', 'is-drop-target-below');
+      }
+    });
+
+    card.addEventListener('drop', (e) => {
+      e.preventDefault();
+      card.classList.remove('is-drop-target-above', 'is-drop-target-below');
+      const sourceId = draggedScenarioId || e.dataTransfer?.getData('text/plain');
+      if (!sourceId || sourceId === scenario.id) return;
+
+      const rect = typeof card.getBoundingClientRect === 'function' ? card.getBoundingClientRect() : { top: 0, height: 40 };
+      const midY = rect.top + rect.height / 2;
+      const insertAbove = e.clientY < midY;
+
+      reorderSimulationScenario(sourceId, scenario.id, insertAbove);
+    });
 
     // Collapsible Header
     const header = document.createElement('div');
@@ -1851,6 +1941,7 @@ export function renderSimulationEditor(force = false): void {
       const nextCollapsed = !currentlyCollapsed;
       setScenarioCollapsed(scenario.id, nextCollapsed);
       card.dataset.collapsed = String(nextCollapsed);
+      card.draggable = nextCollapsed;
       toggle.setAttribute('aria-expanded', String(!nextCollapsed));
     });
 
@@ -1878,32 +1969,8 @@ export function renderSimulationEditor(force = false): void {
       duplicateSimulationScenario(scenario.id);
     });
 
-    const quickUp = document.createElement('button');
-    quickUp.type = 'button';
-    quickUp.className = 'btn btn-compact btn-sim-reorder';
-    quickUp.textContent = '↑';
-    quickUp.title = 'Move scenario up';
-    quickUp.setAttribute('aria-label', `Move scenario ${scenario.name} up`);
-    quickUp.disabled = scenarioIndex === 0;
-    quickUp.addEventListener('click', (e) => {
-      e.stopPropagation();
-      moveSimulationScenario(scenario.id, -1);
-    });
-
-    const quickDown = document.createElement('button');
-    quickDown.type = 'button';
-    quickDown.className = 'btn btn-compact btn-sim-reorder';
-    quickDown.textContent = '↓';
-    quickDown.title = 'Move scenario down';
-    quickDown.setAttribute('aria-label', `Move scenario ${scenario.name} down`);
-    quickDown.disabled = scenarioIndex === scenarios.length - 1;
-    quickDown.addEventListener('click', (e) => {
-      e.stopPropagation();
-      moveSimulationScenario(scenario.id, 1);
-    });
-
-    headerActions.append(quickPlay, quickDuplicate, quickUp, quickDown);
-    header.append(toggle, headerActions);
+    headerActions.append(quickPlay, quickDuplicate);
+    header.append(dragHandle, toggle, headerActions);
 
     const body = document.createElement('div');
     body.className = 'sim-card-body';

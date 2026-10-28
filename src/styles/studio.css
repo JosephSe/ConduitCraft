@@ -2794,7 +2794,31 @@
     border: 1px solid var(--wl-border-subtle);
     border-radius: 0.75rem;
     background: var(--wl-surface-elevated);
-    transition: border-color 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+
+  .sim-editor-card[data-collapsed="true"] {
+    cursor: grab;
+  }
+
+  .sim-editor-card[data-collapsed="true"]:active {
+    cursor: grabbing;
+  }
+
+  .sim-editor-card.is-dragging-sim {
+    opacity: 0.45;
+    border-style: dashed;
+    border-color: var(--wl-blue);
+  }
+
+  .sim-editor-card.is-drop-target-above {
+    border-block-start: 2px solid var(--wl-blue);
+    box-shadow: 0 -2px 6px rgba(59, 130, 246, 0.25);
+  }
+
+  .sim-editor-card.is-drop-target-below {
+    border-block-end: 2px solid var(--wl-blue);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
   }
 
   .sim-card-header {
@@ -2802,6 +2826,29 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.5rem;
+  }
+
+  .sim-drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    line-height: 1;
+    color: var(--wl-ink-subtle, #888);
+    margin-block-start: 0.3rem;
+    cursor: grab;
+    user-select: none;
+    opacity: 0.5;
+    transition: opacity 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .sim-editor-card:hover .sim-drag-handle {
+    opacity: 1;
+  }
+
+  .sim-drag-handle:hover {
+    color: var(--wl-ink);
   }
 
   .sim-card-toggle {

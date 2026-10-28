@@ -116,7 +116,7 @@ globalThis.HTMLElement = MockElement as unknown as typeof HTMLElement;
 // @ts-expect-error Mocking global HTMLButtonElement
 globalThis.HTMLButtonElement = MockElement as unknown as typeof HTMLButtonElement;
 
-const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario } = await import('../src/studio/inspector.ts');
+const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario, reorderSimulationScenario } = await import('../src/studio/inspector.ts');
 
 describe('inspector collapsible sections and tone picker', () => {
   beforeEach(() => {
@@ -183,13 +183,17 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(studioCss.includes('.prop-input,') && studioCss.includes('box-sizing: border-box;'), 'prop inputs use border-box sizing');
     assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
 
-    // Collapsible scenarios
+    // Collapsible scenarios and drag-and-drop
     assert.ok(studioCss.includes('.sim-card-header {'), 'sim-card-header exists in studio.css');
     assert.ok(studioCss.includes('.sim-card-toggle {'), 'sim-card-toggle exists in studio.css');
     assert.ok(studioCss.includes('.sim-editor-card[data-collapsed="true"] .sim-card-body'), 'sim-card-body is hidden when collapsed');
     assert.ok(studioCss.includes('.sim-card-title {') && studioCss.includes('white-space: normal;'), 'sim-card-title wraps scenario name');
     assert.ok(studioCss.includes('.sim-card-title {') && studioCss.includes('word-break: break-word;'), 'sim-card-title breaks long words');
     assert.ok(studioCss.includes('.micro-chip {') && studioCss.includes('white-space: nowrap;'), 'micro-chip keeps count on single line');
+    assert.ok(studioCss.includes('.sim-drag-handle'), 'sim-drag-handle exists in studio.css');
+    assert.ok(studioCss.includes('.sim-editor-card[data-collapsed="true"]') && studioCss.includes('cursor: grab;'), 'collapsed scenario card has grab cursor');
+    assert.ok(studioCss.includes('.is-dragging-sim'), 'is-dragging-sim exists in studio.css');
+    assert.ok(studioCss.includes('.is-drop-target-above') && studioCss.includes('.is-drop-target-below'), 'drop targets styling exists');
   });
 
   it('manages collapsible scenario cards with toggle and persistence', () => {
@@ -272,5 +276,33 @@ describe('inspector collapsible sections and tone picker', () => {
     // Move Scenario B down
     assert.strictEqual(moveSimulationScenario('sim-b', 1), true);
     assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-c', 'sim-b', 'sim-a']);
+  });
+
+  it('reorders simulation scenarios via drag and drop target positions', async () => {
+    const { app } = await import('../src/studio/state.ts');
+    app.doc.simulations = [
+      { id: 'sim-a', name: 'Scenario A', tone: 'blue', steps: [] },
+      { id: 'sim-b', name: 'Scenario B', tone: 'emerald', steps: [] },
+      { id: 'sim-c', name: 'Scenario C', tone: 'rose', steps: [] },
+    ];
+
+    // Attempting to reorder onto itself should return false
+    assert.strictEqual(reorderSimulationScenario('sim-a', 'sim-a', true), false);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-a', 'sim-b', 'sim-c']);
+
+    // Attempting to reorder invalid ID should return false
+    assert.strictEqual(reorderSimulationScenario('unknown', 'sim-a', true), false);
+
+    // Drag Scenario A below Scenario C (insertAbove = false)
+    assert.strictEqual(reorderSimulationScenario('sim-a', 'sim-c', false), true);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-b', 'sim-c', 'sim-a']);
+
+    // Drag Scenario A above Scenario B (insertAbove = true)
+    assert.strictEqual(reorderSimulationScenario('sim-a', 'sim-b', true), true);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-a', 'sim-b', 'sim-c']);
+
+    // Drag Scenario C above Scenario B (insertAbove = true)
+    assert.strictEqual(reorderSimulationScenario('sim-c', 'sim-b', true), true);
+    assert.deepStrictEqual(app.doc.simulations.map((s) => s.id), ['sim-a', 'sim-c', 'sim-b']);
   });
 });
