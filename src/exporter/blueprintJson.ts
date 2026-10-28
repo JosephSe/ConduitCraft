@@ -13,7 +13,7 @@ import type {
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
 import { normalizeBrand } from '../core/brand';
-import { expandStageToFit, getNodeDimensions } from '../core/layout';
+import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
 import { normalizeIconName } from '../ui/icons';
 import { createBlankDocument } from '../templates/presets';
@@ -63,7 +63,7 @@ function coerceNode(raw: unknown): DiagramNode | null {
         return [{ label: str(item.label), value: str(item.value) }];
       })
     : [];
-  return {
+  const node: DiagramNode = {
     id: raw.id,
     kind,
     accent,
@@ -91,6 +91,8 @@ function coerceNode(raw: unknown): DiagramNode | null {
     ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
     ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
   };
+  tightenLegacyStoreCylinder(node);
+  return node;
 }
 
 function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
@@ -109,6 +111,7 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     route: typeof raw.route === 'string' && ROUTES.has(raw.route as EdgeRouteMode) ? (raw.route as EdgeRouteMode) : 'auto',
     label: str(raw.label),
     animated: raw.animated !== false,
+    flow: raw.flow === 'both' ? 'both' : 'forward',
     ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
     ...(waypoint ? { waypoint } : {}),
   };

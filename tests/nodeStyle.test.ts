@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { describe, it } from 'node:test';
-import { getNodeDimensions } from '../src/core/layout.ts';
+import { getNodeDimensions, tightenLegacyStoreCylinder } from '../src/core/layout.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import {
   cylinderPlate,
@@ -71,6 +71,31 @@ flowchart LR
       'M 1.5,19.5 L 1.5,152.5 A 122.5 18 0 0 0 124,170.5 A 122.5 18 0 0 0 246.5,152.5 L 246.5,19.5 Z',
     );
     assert.equal(nodeShapeContentPadding('store', undefined, 248, 172), '44px 1.15rem 26px');
+    assert.deepEqual(getNodeDimensions('store'), { width: 216, height: 150 });
+
+    const legacy = createNodeFromStencil('store', 80, 120, 0);
+    legacy.width = 248;
+    legacy.height = 172;
+    tightenLegacyStoreCylinder(legacy);
+    assert.equal(legacy.width, 216);
+    assert.equal(legacy.height, 150);
+    assert.equal(legacy.x, 96);
+    assert.equal(legacy.y, 139);
+
+    const custom = createNodeFromStencil('store', 40, 40, 1);
+    custom.width = 300;
+    custom.height = 180;
+    tightenLegacyStoreCylinder(custom);
+    assert.equal(custom.width, 300);
+    assert.equal(custom.height, 180);
+
+    const rounded = createNodeFromStencil('store', 80, 120, 2);
+    rounded.shape = 'rounded';
+    rounded.width = 248;
+    rounded.height = 172;
+    tightenLegacyStoreCylinder(rounded);
+    assert.equal(rounded.width, 248);
+    assert.equal(rounded.height, 172);
     for (const sheet of ['studio.css', 'viewer.css']) {
       const css = fs.readFileSync(new URL(`../src/styles/${sheet}`, import.meta.url), 'utf8');
       assert.match(css, /\.arch-node\[data-shape="cylinder"\] \.node-eyebrow \{ display: none; \}/);

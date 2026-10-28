@@ -16,6 +16,7 @@ import type {
   SelectionTarget,
 } from '../types';
 import { normalizeBrand } from '../core/brand';
+import { tightenLegacyStoreCylinder } from '../core/layout';
 import { createBlankDocument } from '../templates/presets';
 import {
   resolveSelectionUpdate,
@@ -212,6 +213,7 @@ export function loadSavedSessionDoc(): DiagramDocument | null {
       (parsed.nodes.length > 0 || parsed.zones?.length > 0 || parsed.notesCards?.length > 0)
     ) {
       parsed.brand = normalizeBrand(parsed.brand);
+      for (const node of parsed.nodes) tightenLegacyStoreCylinder(node);
       return parsed;
     }
   } catch {

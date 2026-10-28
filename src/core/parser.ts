@@ -6,6 +6,7 @@ import type {
   DiagramNode,
   DiagramNotesCard,
   DiagramZone,
+  EdgeFlowMode,
   EdgeRouteMode,
   ImportIssue,
   KeyValueMetric,
@@ -63,6 +64,7 @@ interface RawEdgeOverride {
   route?: string;
   label?: string;
   animated?: boolean;
+  flow?: string;
   waypoint?: [number, number];
   comment?: string;
 }
@@ -136,6 +138,7 @@ interface ParsedMermaidEdge {
   label: string;
   tone: StreamTone;
   route: EdgeRouteMode;
+  flow?: EdgeFlowMode;
 }
 
 interface ParsedSubgraph {
@@ -355,40 +358,53 @@ function parseSingleNodeToken(token: string): {
 }
 
 const EDGE_CONNECTOR_REGEX =
-  /(\s*(?:==\s*[^=\n]+?\s*==>|==>\s*\|[^|\n]*\||==>|-\.\s*[^.\n]+?\s*\.->|-\.->\s*\|[^|\n]*\||-\.->|--\s*[^-\n>]+?\s*-->|-->\s*\|[^|\n]*\||-->|---\s*\|[^|\n]*\||---)\s*)/g;
+  /(\s*(?:<==>\s*\|[^|\n]*\||<==>|==\s*[^=\n]+?\s*==[=>]|==>\s*\|[^|\n]*\||==>|===\s*\|[^|\n]*\||===|<-[.]->\s*\|[^|\n]*\||<-[.]->|-\.\s*[^.\n]+?\s*(?:\.->|-[.]-)|-\.->\s*\|[^|\n]*\||-\.->|-[.]-\s*\|[^|\n]*\||-[.]-|<-->\s*\|[^|\n]*\||<-->|--\s*[^-\n>]+?\s*--[->]|-->\s*\|[^|\n]*\||-->|---\s*\|[^|\n]*\||---)\s*)/g;
 
 function parseConnectorToken(rawArrow: string): {
   label: string;
   tone: StreamTone;
   route: EdgeRouteMode;
+  flow: EdgeFlowMode;
 } {
   const s = rawArrow.trim();
 
-  if (s.startsWith('==')) {
+  if (s.startsWith('==') || s.startsWith('<==>') || s.startsWith('===')) {
     let label = '';
-    const pipeMatch = s.match(/==>\s*\|([^|]*)\|/);
-    const inlineMatch = s.match(/^==\s*([\s\S]+?)\s*==>$/);
+    const pipeMatch = s.match(/(?:==>|<==>|===)\s*\|([^|]*)\|/);
+    const inlineMatch = s.match(/^==\s*([\s\S]+?)\s*==[=>]$/);
     if (pipeMatch) label = pipeMatch[1].trim();
     else if (inlineMatch) label = inlineMatch[1].trim();
-    return { label, tone: 'emerald', route: 'auto' };
+    const flow: EdgeFlowMode =
+      s.includes('<==>') || s === '===' || s.startsWith('===|') || (inlineMatch ? s.endsWith('===') : false)
+        ? 'both'
+        : 'forward';
+    return { label, tone: 'emerald', route: 'auto', flow };
   }
 
-  if (s.startsWith('-.')) {
+  if (s.startsWith('-.') || s.startsWith('<-.->') || s.startsWith('-.-')) {
     let label = '';
-    const pipeMatch = s.match(/-\.->\s*\|([^|]*)\|/);
-    const inlineMatch = s.match(/^-\.\s*([\s\S]+?)\s*\.->$/);
+    const pipeMatch = s.match(/(?:-\.->|<-[.]->|-[.]-)\s*\|([^|]*)\|/);
+    const inlineMatch = s.match(/^-\.\s*([\s\S]+?)\s*(?:\.->|-[.]-)$/);
     if (pipeMatch) label = pipeMatch[1].trim();
     else if (inlineMatch) label = inlineMatch[1].trim();
-    return { label, tone: 'rose', route: 'auto' };
+    const flow: EdgeFlowMode =
+      s.includes('<-.->') || s === '-.-' || s.startsWith('-.-|') || (inlineMatch ? s.endsWith('-.-') : false)
+        ? 'both'
+        : 'forward';
+    return { label, tone: 'rose', route: 'auto', flow };
   }
 
   let label = '';
-  const pipeMatch = s.match(/(?:-->|---)\s*\|([^|]*)\|/);
-  const inlineMatch = s.match(/^--\s*([\s\S]+?)\s*-->$/);
+  const pipeMatch = s.match(/(?:-->|<-->|---)\s*\|([^|]*)\|/);
+  const inlineMatch = s.match(/^--\s*([\s\S]+?)\s*--[->]$/);
   if (pipeMatch) label = pipeMatch[1].trim();
   else if (inlineMatch) label = inlineMatch[1].trim();
+  const flow: EdgeFlowMode =
+    s.includes('<-->') || s === '---' || s.startsWith('---|') || (inlineMatch ? s.endsWith('---') : false)
+      ? 'both'
+      : 'forward';
 
-  return { label, tone: 'blue', route: 'auto' };
+  return { label, tone: 'blue', route: 'auto', flow };
 }
 
 function countNewlines(s: string): number {
@@ -810,6 +826,7 @@ function parseMermaidFlowchart(
               label: connector.label,
               tone: wireTone,
               route: connector.route,
+              flow: connector.flow,
             });
           }
         }
@@ -1066,6 +1083,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       route: normalizeRouteMode(ov?.route ?? me.route),
       label: ov?.label !== undefined ? String(ov.label) : me.label,
       animated: ov?.animated !== false,
+      flow: ov?.flow === 'both' || me.flow === 'both' ? 'both' : 'forward',
       ...(ov?.comment ? { comment: String(ov.comment) } : {}),
       ...waypointField(ov?.waypoint),
     });
@@ -1092,6 +1110,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       route: normalizeRouteMode(ov.route),
       label: ov.label ? String(ov.label) : '',
       animated: ov.animated !== false,
+      flow: ov.flow === 'both' ? 'both' : 'forward',
       ...(ov.comment ? { comment: String(ov.comment) } : {}),
       ...waypointField(ov.waypoint),
     });
@@ -1406,8 +1425,14 @@ export function serializeToMermaid(doc: DiagramDocument): string {
 
       const labelPart = e.label.trim() ? `|${escapeMermaidText(e.label)}|` : '';
       let arrow = '-->';
-      if (e.tone === 'emerald') arrow = '==>';
-      else if (e.tone === 'rose') arrow = '-.->';
+      if (e.flow === 'both') {
+        if (e.tone === 'emerald') arrow = '===';
+        else if (e.tone === 'rose') arrow = '-.-';
+        else arrow = '---';
+      } else {
+        if (e.tone === 'emerald') arrow = '==>';
+        else if (e.tone === 'rose') arrow = '-.->';
+      }
 
       lines.push(`  ${src} ${arrow}${labelPart} ${dst}`);
     }
@@ -1523,6 +1548,7 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       route: e.route,
       label: e.label,
       animated: e.animated,
+      ...(e.flow === 'both' ? { flow: 'both' } : {}),
       ...(e.comment ? { comment: e.comment } : {}),
       ...(e.waypoint ? { waypoint: [Math.round(e.waypoint[0]), Math.round(e.waypoint[1])] } : {}),
     }));

@@ -186,7 +186,10 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
 
   const edgesMarkup = routedEdges
     .map((e) => {
-      const markerUrl = `url(#arrow-${e.tone})`;
+      const isBoth = e.flow === 'both';
+      const markerAttr = isBoth ? '' : ` marker-end="url(#arrow-${e.tone})"`;
+      const reverseStream = isBoth ? `<path class="conduit-stream-reverse" d="${e.pathD}"/>` : '';
+      const portDot = isBoth ? '' : `<circle class="port-dot" cx="${e.startPoint[0]}" cy="${e.startPoint[1]}" r="4"/>`;
       const badgeMarkup =
         e.label && e.badgePos && e.badgeWidth
           ? `<g transform="translate(${e.badgePos[0]}, ${e.badgePos[1]})">
@@ -196,11 +199,12 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
           : '';
 
       return `
-        <g class="conduit-group" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}">
+        <g class="conduit-group" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-flow="${escapeHtml(e.flow || 'forward')}">
           <path class="conduit-glow" d="${e.pathD}"/>
           <path class="conduit-rail" d="${e.pathD}"/>
-          <path class="conduit-stream" d="${e.pathD}" marker-end="${markerUrl}"/>
-          <circle class="port-dot" cx="${e.startPoint[0]}" cy="${e.startPoint[1]}" r="4"/>
+          <path class="conduit-stream" d="${e.pathD}"${markerAttr}/>
+          ${reverseStream}
+          ${portDot}
           ${badgeMarkup}
         </g>`;
     })

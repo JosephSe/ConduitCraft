@@ -47,6 +47,7 @@ import { isSelectionLocked, canGroupSelection } from './zOrderLockGroup';
 import type {
   ComponentStatus,
   DiagramNode,
+  EdgeFlowMode,
   EdgeRouteMode,
   NodeIconName,
   NodeKind,
@@ -1020,6 +1021,79 @@ export function renderPropertyEditor(): void {
     );
     form.appendChild(portRow);
 
+    // Telemetry Flow Direction (One-way with arrow vs Both ways without arrow)
+    const flowRow = document.createElement('div');
+    flowRow.className = 'route-style-grid';
+    flowRow.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+    flowRow.setAttribute('role', 'radiogroup');
+    flowRow.setAttribute('aria-label', 'Telemetry flow direction');
+
+    const flowOptions: Array<{ value: EdgeFlowMode; label: string; tip: string; iconPath: string }> = [
+      {
+        value: 'forward',
+        label: 'One-way (→)',
+        tip: 'One-way stream with arrowhead',
+        iconPath: 'M 3 9 h 18 M 15 4 l 6 5 l -6 5',
+      },
+      {
+        value: 'both',
+        label: 'Both ways (⇄)',
+        tip: 'Bidirectional telemetry flowing both ways (no arrows at ends)',
+        iconPath: 'M 3 6 h 18 M 6 3 l -3 3 l 3 3 M 21 12 h -18 M 18 9 l 3 3 l -3 3',
+      },
+    ];
+
+    const currentFlow = edge.flow || 'forward';
+    for (const fo of flowOptions) {
+      const lbl = document.createElement('label');
+      lbl.className = 'route-style-option';
+      lbl.title = fo.tip;
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'prop-edge-flow';
+      radio.value = fo.value;
+      radio.checked = currentFlow === fo.value;
+
+      const svg = document.createElementNS(SVG_NS, 'svg');
+      svg.setAttribute('class', 'route-style-icon');
+      svg.setAttribute('width', '24');
+      svg.setAttribute('height', '18');
+      svg.setAttribute('viewBox', '0 0 24 18');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+
+      const path = document.createElementNS(SVG_NS, 'path');
+      path.setAttribute('d', fo.iconPath);
+      path.setAttribute('stroke', 'currentColor');
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(path);
+
+      const txt = document.createElement('span');
+      txt.textContent = fo.label;
+
+      radio.addEventListener('change', () => {
+        if (!radio.checked) return;
+        pushHistory();
+        edge.flow = fo.value;
+        btnReverse.disabled = edge.flow === 'both';
+        renderWiresOnly();
+        updateVisualSelectionHighlights();
+      });
+
+      lbl.append(radio, svg, txt);
+      flowRow.appendChild(lbl);
+    }
+
+    const flowFieldset = document.createElement('fieldset');
+    flowFieldset.className = 'prop-fieldset';
+    const flowLegend = document.createElement('legend');
+    flowLegend.textContent = 'Flow Direction';
+    flowFieldset.append(flowLegend, flowRow);
+    form.appendChild(flowFieldset);
+
     // Animated Pulse Toggle
     const animLabel = document.createElement('label');
     animLabel.className = 'checkbox-inline';
@@ -1039,6 +1113,7 @@ export function renderPropertyEditor(): void {
     btnReverse.type = 'button';
     btnReverse.className = 'btn';
     btnReverse.textContent = '⇄ Reverse Flow Direction';
+    btnReverse.disabled = edge.flow === 'both';
     btnReverse.addEventListener('click', () => {
       pushHistory();
       const tmpNode = edge.from;

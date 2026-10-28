@@ -205,6 +205,9 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
       if (before.comment !== after.comment) {
         changes.push('Wire comment updated');
       }
+      if ((before.flow || 'forward') !== (after.flow || 'forward')) {
+        changes.push(`Wire flow changed from ${before.flow || 'forward'} to ${after.flow || 'forward'}`);
+      }
 
       edgeDiffs.push({
         id,

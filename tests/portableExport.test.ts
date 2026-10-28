@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { renderDiagramSvg, estimatePngExport } from '../src/exporter/diagramSvg.ts';
+import { generateStandaloneHtml } from '../src/exporter/standaloneHtml.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 import type { DiagramDocument } from '../src/types.ts';
 
@@ -663,5 +664,84 @@ describe('portable export', () => {
       assert.match(textTag, /font-family="[^"]+"/, 'Text element specifies font-family');
       assert.match(textTag, /fill="[^"]+"/, 'Text element specifies explicit fill color');
     }
+  });
+
+  it('renders bidirectional conduits without end arrows and with dual stream paths in exports', () => {
+    const doc = createBlankDocument();
+    const n1 = createNodeFromStencil('service', 100, 100, 0);
+    const n2 = createNodeFromStencil('core', 500, 100, 1);
+    doc.nodes.push(n1, n2);
+
+    doc.edges.push(
+      {
+        id: 'bidirectional-wire',
+        from: n1.id,
+        to: n2.id,
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'blue',
+        route: 'straight',
+        label: 'Duplex Stream',
+        animated: true,
+        flow: 'both',
+      },
+      {
+        id: 'unidirectional-wire',
+        from: n2.id,
+        to: n1.id,
+        sourcePort: 'bottom',
+        targetPort: 'bottom',
+        tone: 'emerald',
+        route: 'under',
+        label: 'Ack',
+        animated: true,
+        flow: 'forward',
+      },
+    );
+
+    // 1. Vector SVG Export (static and animated frame)
+    const staticSvg = renderDiagramSvg(doc);
+    // Bidirectional conduit wire must NOT have marker-end
+    assert.doesNotMatch(
+      staticSvg,
+      /<path[^>]+stroke="#1d4ed8"[^>]*marker-end/,
+      'Bidirectional wire has no marker-end',
+    );
+    // Unidirectional conduit wire MUST have marker-end
+    assert.match(
+      staticSvg,
+      /<path[^>]+stroke="#047857"[^>]*marker-end="url\(#arrow-emerald\)"/,
+      'Unidirectional wire has marker-end',
+    );
+
+    const animatedSvg = renderDiagramSvg(doc, { frameIndex: 1, totalFrames: 10, dashOffset: 12 });
+    // Animated bidirectional conduit must produce dual stream paths (dashOffset and -dashOffset) with period 22 (6 16)
+    assert.match(animatedSvg, /stroke-dasharray="6 16" stroke-dashoffset="12"/);
+    assert.match(animatedSvg, /stroke-dasharray="6 16" stroke-dashoffset="-12"/);
+    // Animated unidirectional conduit has period 18 (8 10)
+    assert.match(animatedSvg, /stroke-dasharray="8 10" stroke-dashoffset="12"/);
+
+    // 2. Standalone HTML Export
+    const html = generateStandaloneHtml(doc);
+    // Both-ways conduit group has data-flow="both"
+    assert.match(html, /data-edge="bidirectional-wire"[^>]*data-flow="both"/);
+    // Unidirectional conduit group has data-flow="forward"
+    assert.match(html, /data-edge="unidirectional-wire"[^>]*data-flow="forward"/);
+
+    // In HTML, bidirectional edge has .conduit-stream-reverse, NO marker-end on conduit-stream, and NO port-dot
+    const bidiGroupMatch = html.match(/<g class="conduit-group"[^>]*data-edge="bidirectional-wire"[\s\S]*?<\/g>/);
+    assert.ok(bidiGroupMatch, 'Found bidirectional wire group in HTML');
+    const bidiGroup = bidiGroupMatch[0];
+    assert.match(bidiGroup, /<path class="conduit-stream-reverse"/, 'Includes reverse stream path');
+    assert.doesNotMatch(bidiGroup, /marker-end=/, 'No marker-end on bidirectional stream');
+    assert.doesNotMatch(bidiGroup, /<circle class="port-dot"/, 'No port-dot on bidirectional stream');
+
+    // In HTML, unidirectional edge has marker-end, has port-dot, and NO reverse stream
+    const uniGroupMatch = html.match(/<g class="conduit-group"[^>]*data-edge="unidirectional-wire"[\s\S]*?<\/g>/);
+    assert.ok(uniGroupMatch, 'Found unidirectional wire group in HTML');
+    const uniGroup = uniGroupMatch[0];
+    assert.match(uniGroup, /marker-end="url\(#arrow-emerald\)"/, 'Includes marker-end arrow');
+    assert.match(uniGroup, /<circle class="port-dot"/, 'Includes start port-dot');
+    assert.doesNotMatch(uniGroup, /<path class="conduit-stream-reverse"/, 'No reverse stream path');
   });
 });

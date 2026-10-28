@@ -5,6 +5,7 @@ import {
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../src/core/parser.ts';
+import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import {
   autoLayoutDocument,
   relatedNodeIds,
@@ -184,6 +185,71 @@ describe('ConduitCraft Core Engine — Parser, Routing & Round-Trip Tests', () =
     autoLayoutDocument(doc);
     const [na, nb, nc] = doc.nodes;
     assert.ok(na.x < nb.x && nb.x < nc.x, 'Expected left-to-right monotonic X coordinates');
+  });
+
+  it('supports bidirectional connectors with two-way flow and no end arrowheads', () => {
+    const mmd = `flowchart LR
+      n1([Client]) ---|Sync Bus| n2[[Server]]
+      n2 <-->|Peer Link| n3[[Replica]]
+      n3 ===|Solid Bus| n4[(Store)]
+      n4 <==>|Thick Peer| n5[(Archive)]
+      n1 -.-|Dotted Bus| n5
+      n2 <-.->|Dotted Peer| n4
+      n1 -->|One-way Request| n4`;
+
+    const { doc, issues } = importMermaidOrBlueprint(mmd);
+    assert.equal(issues.length, 0);
+    assert.equal(doc.edges.length, 7);
+
+    const syncEdge = doc.edges.find((e) => e.label === 'Sync Bus');
+    const peerEdge = doc.edges.find((e) => e.label === 'Peer Link');
+    const solidEdge = doc.edges.find((e) => e.label === 'Solid Bus');
+    const thickPeerEdge = doc.edges.find((e) => e.label === 'Thick Peer');
+    const dottedEdge = doc.edges.find((e) => e.label === 'Dotted Bus');
+    const dottedPeerEdge = doc.edges.find((e) => e.label === 'Dotted Peer');
+    const oneWayEdge = doc.edges.find((e) => e.label === 'One-way Request');
+
+    assert.equal(syncEdge?.flow, 'both');
+    assert.equal(syncEdge?.tone, 'blue');
+    assert.equal(peerEdge?.flow, 'both');
+    assert.equal(peerEdge?.tone, 'blue');
+    assert.equal(solidEdge?.flow, 'both');
+    assert.equal(solidEdge?.tone, 'emerald');
+    assert.equal(thickPeerEdge?.flow, 'both');
+    assert.equal(thickPeerEdge?.tone, 'emerald');
+    assert.equal(dottedEdge?.flow, 'both');
+    assert.equal(dottedEdge?.tone, 'rose');
+    assert.equal(dottedPeerEdge?.flow, 'both');
+    assert.equal(dottedPeerEdge?.tone, 'rose');
+    assert.equal(oneWayEdge?.flow, 'forward');
+
+    // Mermaid serialization: flow: 'both' produces connector without end arrowhead
+    const outMmd = serializeToMermaid(doc);
+    assert.match(outMmd, /n1 ---\|Sync Bus\| n2/);
+    assert.match(outMmd, /n3 ===\|Solid Bus\| n4/);
+    assert.match(outMmd, /n1 -\.-\|Dotted Bus\| n5/);
+    assert.match(outMmd, /n1 -->\|One-way Request\| n4/);
+
+    // Markdown round-trip preserves flow: 'both'
+    const md = serializeToBlueprintMarkdown(doc);
+    assert.match(md, /flow: both/);
+    const { doc: restoredMd } = importMermaidOrBlueprint(md);
+    const restoredSync = restoredMd.edges.find((e) => e.label === 'Sync Bus');
+    const restoredOneWay = restoredMd.edges.find((e) => e.label === 'One-way Request');
+    assert.equal(restoredSync?.flow, 'both');
+    assert.equal(restoredOneWay?.flow, 'forward');
+
+    // JSON round-trip preserves flow: 'both'
+    const jsonStr = serializeBlueprintJson(doc);
+    assert.match(jsonStr, /"flow": "both"/);
+    const parsedJson = parseBlueprintJson(jsonStr);
+    assert.equal(parsedJson.ok, true);
+    if (parsedJson.ok) {
+      const jsonSync = parsedJson.doc.edges.find((e) => e.label === 'Sync Bus');
+      const jsonOneWay = parsedJson.doc.edges.find((e) => e.label === 'One-way Request');
+      assert.equal(jsonSync?.flow, 'both');
+      assert.equal(jsonOneWay?.flow, 'forward');
+    }
   });
 });
 

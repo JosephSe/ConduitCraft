@@ -175,15 +175,28 @@
     animation: pulse-dash 1.35s linear infinite;
     @media (prefers-reduced-motion: reduce) { animation: none; stroke-dasharray: none; }
   }
-  .conduit-group[data-animated="false"] .conduit-stream { animation: none; stroke-dasharray: none; }
-  body.motion-paused .conduit-stream { animation-play-state: paused; }
+  .conduit-stream-reverse {
+    fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 6 16;
+    pointer-events: none; display: none;
+    animation: pulse-dash-both-rev 1.5s linear infinite;
+    @media (prefers-reduced-motion: reduce) { animation: none; stroke-dasharray: none; }
+  }
+  .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 6 16; animation: pulse-dash-both-fwd 1.5s linear infinite; }
+  .conduit-group[data-flow="both"] .conduit-stream-reverse { display: inline; }
+  .conduit-group[data-flow="both"] .port-dot { display: none; }
+  .conduit-group[data-animated="false"] .conduit-stream,
+  .conduit-group[data-animated="false"] .conduit-stream-reverse { animation: none; stroke-dasharray: none; }
+  body.motion-paused .conduit-stream,
+  body.motion-paused .conduit-stream-reverse { animation-play-state: paused; }
   @keyframes pulse-dash { to { stroke-dashoffset: -36; } }
+  @keyframes pulse-dash-both-fwd { to { stroke-dashoffset: -44; } }
+  @keyframes pulse-dash-both-rev { to { stroke-dashoffset: 44; } }
 
-  .conduit-group[data-tone="blue"] .conduit-stream, .conduit-group[data-tone="blue"] .conduit-glow { stroke: var(--wl-blue); }
-  .conduit-group[data-tone="emerald"] .conduit-stream, .conduit-group[data-tone="emerald"] .conduit-glow { stroke: var(--wl-emerald); }
-  .conduit-group[data-tone="rose"] .conduit-stream, .conduit-group[data-tone="rose"] .conduit-glow { stroke: var(--wl-rose); }
-  .conduit-group[data-tone="violet"] .conduit-stream, .conduit-group[data-tone="violet"] .conduit-glow { stroke: var(--wl-violet); }
-  .conduit-group[data-tone="amber"] .conduit-stream, .conduit-group[data-tone="amber"] .conduit-glow { stroke: var(--wl-amber); }
+  .conduit-group[data-tone="blue"] .conduit-stream, .conduit-group[data-tone="blue"] .conduit-stream-reverse, .conduit-group[data-tone="blue"] .conduit-glow { stroke: var(--wl-blue); }
+  .conduit-group[data-tone="emerald"] .conduit-stream, .conduit-group[data-tone="emerald"] .conduit-stream-reverse, .conduit-group[data-tone="emerald"] .conduit-glow { stroke: var(--wl-emerald); }
+  .conduit-group[data-tone="rose"] .conduit-stream, .conduit-group[data-tone="rose"] .conduit-stream-reverse, .conduit-group[data-tone="rose"] .conduit-glow { stroke: var(--wl-rose); }
+  .conduit-group[data-tone="violet"] .conduit-stream, .conduit-group[data-tone="violet"] .conduit-stream-reverse, .conduit-group[data-tone="violet"] .conduit-glow { stroke: var(--wl-violet); }
+  .conduit-group[data-tone="amber"] .conduit-stream, .conduit-group[data-tone="amber"] .conduit-stream-reverse, .conduit-group[data-tone="amber"] .conduit-glow { stroke: var(--wl-amber); }
 
   .conduit-group { transition: opacity 0.22s ease; }
   .conduit-group.is-highlighted .conduit-glow { opacity: 0.42; stroke-width: 11; }

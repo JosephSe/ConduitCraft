@@ -1,4 +1,4 @@
-import { nodeShapeFrame } from './nodeStyle';
+import { nodeShapeFrame, storeDrawsCylinder } from './nodeStyle';
 import type {
   DiagramDocument,
   DiagramEdge,
@@ -17,7 +17,7 @@ export function getNodeDimensions(kind: NodeKind): { width: number; height: numb
     case 'gate':
       return { width: 242, height: 172 };
     case 'store':
-      return { width: 248, height: 172 };
+      return { width: 216, height: 150 };
     case 'client':
       return { width: 192, height: 112 };
     case 'service':
@@ -25,6 +25,20 @@ export function getNodeDimensions(kind: NodeKind): { width: number; height: numb
     default:
       return { width: 222, height: 142 };
   }
+}
+
+const LEGACY_STORE_WIDTH = 248;
+const LEGACY_STORE_HEIGHT = 172;
+
+/** Shrink a drum that is still the old card size. A custom size stays put, and the box stays centered. */
+export function tightenLegacyStoreCylinder(node: DiagramNode): void {
+  if (!storeDrawsCylinder(node.kind, node.shape)) return;
+  if (node.width !== LEGACY_STORE_WIDTH || node.height !== LEGACY_STORE_HEIGHT) return;
+  const next = getNodeDimensions('store');
+  node.x += Math.round((node.width - next.width) / 2);
+  node.y += Math.round((node.height - next.height) / 2);
+  node.width = next.width;
+  node.height = next.height;
 }
 
 export function getNodeCenter(node: DiagramNode): [number, number] {

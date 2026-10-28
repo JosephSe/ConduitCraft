@@ -112,6 +112,22 @@ export function renderDiagramSvg(doc: DiagramDocument, frame?: { dashOffset: num
         edge.label && edge.badgePos
           ? `<text x="${edge.badgePos[0]}" y="${edge.badgePos[1]}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#0b1324">${escapeXml(edge.label)}</text>`
           : '';
+      const isBoth = edge.flow === 'both';
+      if (isBoth) {
+        const dash1 =
+          frame && edge.animated !== false
+            ? ` stroke-dasharray="6 16" stroke-dashoffset="${frame.dashOffset}"`
+            : '';
+        const dash2 =
+          frame && edge.animated !== false
+            ? ` stroke-dasharray="6 16" stroke-dashoffset="${-frame.dashOffset}"`
+            : '';
+        const stream2 =
+          frame && edge.animated !== false
+            ? `<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="2.25"${dash2}/>`
+            : '';
+        return `<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="2.25"${dash1}/>${stream2}${label}`;
+      }
       const dash =
         frame && edge.animated !== false
           ? ` stroke-dasharray="8 10" stroke-dashoffset="${frame.dashOffset}"`

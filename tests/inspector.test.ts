@@ -10,6 +10,12 @@ class MockElement {
   open = false;
   dataset: Record<string, string> = {};
   style: Record<string, string> = {};
+  type = '';
+  value = '';
+  checked = false;
+  disabled = false;
+  title = '';
+  name = '';
   classList = {
     add: (cls: string) => {
       const parts = new Set(this.className.split(' ').filter(Boolean));
@@ -23,6 +29,13 @@ class MockElement {
     },
     contains: (cls: string) => {
       return this.className.split(' ').includes(cls);
+    },
+    toggle: (cls: string, force?: boolean) => {
+      const has = this.className.split(' ').includes(cls);
+      const shouldHave = force !== undefined ? force : !has;
+      if (shouldHave) this.classList.add(cls);
+      else this.classList.remove(cls);
+      return shouldHave;
     },
   };
   children: MockElement[] = [];
@@ -65,6 +78,23 @@ class MockElement {
     }
   }
 
+  getBoundingClientRect() {
+    return { top: 0, left: 0, width: 800, height: 600, bottom: 600, right: 800, x: 0, y: 0 };
+  }
+
+  getContext() {
+    return new Proxy(
+      {},
+      {
+        get: (_target, prop) => {
+          if (prop === 'canvas') return this;
+          return () => {};
+        },
+        set: () => true,
+      },
+    );
+  }
+
   replaceChildren(...children: MockElement[]) {
     this.children = [];
     for (const child of children) {
@@ -86,7 +116,31 @@ class MockElement {
   }
 
   querySelector(selector: string): MockElement | null {
-    return this.children.find((c) => c.tagName.toLowerCase() === selector.toLowerCase()) ?? null;
+    const list = this.querySelectorAll(selector);
+    return list.length > 0 ? list[0] : null;
+  }
+
+  querySelectorAll(selector: string): MockElement[] {
+    const results: MockElement[] = [];
+    const walk = (el: MockElement) => {
+      for (const child of el.children) {
+        let match = false;
+        if (selector.startsWith('.')) {
+          match = child.classList.contains(selector.slice(1));
+        } else if (selector.startsWith('#')) {
+          match = child.id === selector.slice(1);
+        } else if (selector.startsWith('[name=')) {
+          const expected = selector.replace(/^\[name="?([^"\]]+)"?\]$/, '$1');
+          match = child.name === expected;
+        } else {
+          match = child.tagName.toLowerCase() === selector.toLowerCase();
+        }
+        if (match) results.push(child);
+        walk(child);
+      }
+    };
+    walk(this);
+    return results;
   }
 }
 
@@ -101,6 +155,12 @@ const fakeLocalStorage = {
 // @ts-expect-error Mocking global document and localStorage
 globalThis.document = {
   createElement: (tag: string) => new MockElement(tag),
+  createElementNS: (_ns: string, tag: string) => new MockElement(tag),
+  createTextNode: (text: string) => {
+    const el = new MockElement('#text');
+    el.textContent = text;
+    return el;
+  },
   getElementById: (id: string) => {
     const el = new MockElement('DIV');
     el.id = id;
@@ -115,6 +175,27 @@ globalThis.localStorage = fakeLocalStorage;
 globalThis.HTMLElement = MockElement as unknown as typeof HTMLElement;
 // @ts-expect-error Mocking global HTMLButtonElement
 globalThis.HTMLButtonElement = MockElement as unknown as typeof HTMLButtonElement;
+// @ts-expect-error Mocking global HTMLInputElement
+globalThis.HTMLInputElement = MockElement as unknown as typeof HTMLInputElement;
+// @ts-expect-error Mocking global HTMLSelectElement
+globalThis.HTMLSelectElement = MockElement as unknown as typeof HTMLSelectElement;
+// @ts-expect-error Mocking global HTMLTextAreaElement
+globalThis.HTMLTextAreaElement = MockElement as unknown as typeof HTMLTextAreaElement;
+if (typeof (globalThis as any).window === 'undefined') {
+  (globalThis as any).window = globalThis;
+  (globalThis as any).devicePixelRatio = 1;
+  (globalThis as any).matchMedia = () => ({ matches: false, addEventListener: () => {}, removeEventListener: () => {} });
+}
+if (!globalThis.requestAnimationFrame) {
+  globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(cb, 16) as unknown as number;
+  globalThis.cancelAnimationFrame = (id: number) => clearTimeout(id);
+}
+if (!globalThis.getComputedStyle) {
+  globalThis.getComputedStyle = () =>
+    ({
+      getPropertyValue: () => '',
+    }) as unknown as CSSStyleDeclaration;
+}
 
 const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario, reorderSimulationScenario } = await import('../src/studio/inspector.ts');
 
@@ -401,5 +482,59 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.strictEqual(jsonItems[3].icon, 'exclamation');
     assert.strictEqual(jsonItems[4].icon, 'star');
     assert.strictEqual(jsonItems[5].icon, 'none');
+  });
+
+  it('renders wire flow direction controls and toggles between forward and both ways', async () => {
+    const { app, setSelection } = await import('../src/studio/state.ts');
+    const { propFormContainer } = await import('../src/studio/dom.ts');
+    const { renderPropertyEditor } = await import('../src/studio/inspector.ts');
+    const { createBlankDocument, createNodeFromStencil } = await import('../src/templates/presets.ts');
+
+    const doc = createBlankDocument();
+    const n1 = createNodeFromStencil('actor', 50, 50, 0);
+    const n2 = createNodeFromStencil('core', 300, 50, 1);
+    doc.nodes.push(n1, n2);
+    doc.edges.push({
+      id: 'edge-flow-test',
+      from: n1.id,
+      to: n2.id,
+      sourcePort: 'right',
+      targetPort: 'left',
+      tone: 'blue',
+      route: 'straight',
+      label: 'Channel',
+      animated: true,
+      flow: 'forward',
+    });
+    app.doc = doc;
+    setSelection({ type: 'edge', id: 'edge-flow-test' });
+
+    renderPropertyEditor();
+
+    const edge = doc.edges[0];
+    assert.strictEqual(edge.flow, 'forward');
+
+    // Find radio options for flow
+    const flowRadios = (propFormContainer as any).querySelectorAll('[name="prop-edge-flow"]');
+    assert.strictEqual(flowRadios.length, 2, 'renders 2 flow direction radio choices');
+
+    const forwardRadio = flowRadios.find((r: any) => r.value === 'forward');
+    const bothRadio = flowRadios.find((r: any) => r.value === 'both');
+    assert.ok(forwardRadio);
+    assert.ok(bothRadio);
+    assert.strictEqual(forwardRadio.checked, true);
+    assert.strictEqual(bothRadio.checked, false);
+
+    // Switch to both ways
+    bothRadio.checked = true;
+    forwardRadio.checked = false;
+    bothRadio.dispatchEvent('change');
+    assert.strictEqual(edge.flow, 'both', 'edge.flow updated to both');
+
+    // Switch back to forward
+    forwardRadio.checked = true;
+    bothRadio.checked = false;
+    forwardRadio.dispatchEvent('change');
+    assert.strictEqual(edge.flow, 'forward', 'edge.flow updated back to forward');
   });
 });

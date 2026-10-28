@@ -422,10 +422,12 @@ function createWireGroup(edgeId: string): SVGGElement {
   rail.setAttribute('class', 'conduit-rail');
   const stream = document.createElementNS(SVG_NS, 'path');
   stream.setAttribute('class', 'conduit-stream');
+  const streamRev = document.createElementNS(SVG_NS, 'path');
+  streamRev.setAttribute('class', 'conduit-stream-reverse');
   const portDot = document.createElementNS(SVG_NS, 'circle');
   portDot.setAttribute('class', 'port-dot');
   portDot.setAttribute('r', '4');
-  g.append(hit, glow, rail, stream, portDot);
+  g.append(hit, glow, rail, stream, streamRev, portDot);
 
   const ensureBadge = (edge: RoutedDiagramEdge) => {
     let badge = g.querySelector<SVGGElement>('.conduit-badge-hit');
@@ -566,22 +568,28 @@ function createWireGroup(edgeId: string): SVGGElement {
     g.dataset.from = edge.from;
     g.dataset.to = edge.to;
     g.dataset.animated = edge.animated ? 'true' : 'false';
+    g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
+    const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;
     g.setAttribute(
       'aria-label',
-      `Stream wire from ${fromName} to ${toName}${edge.label ? `, ${edge.label}` : ''}, ${edge.route} routing`,
+      `Stream wire ${flowText}${edge.label ? `, ${edge.label}` : ''}, ${edge.route} routing`,
     );
     const laneTx =
       edge.laneOffset && (edge.laneOffset[0] !== 0 || edge.laneOffset[1] !== 0)
         ? `translate(${edge.laneOffset[0]}, ${edge.laneOffset[1]})`
         : null;
-    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-glow, .conduit-rail, .conduit-stream')) {
+    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-glow, .conduit-rail, .conduit-stream, .conduit-stream-reverse')) {
       path.setAttribute('d', edge.pathD);
       if (laneTx) path.setAttribute('transform', laneTx);
       else path.removeAttribute('transform');
     }
     const stream = g.querySelector('.conduit-stream');
-    stream?.setAttribute('marker-end', `url(#arrow-${edge.tone})`);
+    if (edge.flow === 'both') {
+      stream?.removeAttribute('marker-end');
+    } else {
+      stream?.setAttribute('marker-end', `url(#arrow-${edge.tone})`);
+    }
     const dot = g.querySelector('.port-dot');
     dot?.setAttribute('cx', String(edge.startPoint[0]));
     dot?.setAttribute('cy', String(edge.startPoint[1]));

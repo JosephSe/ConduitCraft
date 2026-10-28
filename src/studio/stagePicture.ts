@@ -319,6 +319,21 @@ export function renderStagePictureSvg(
     stream.style.strokeDashoffset = computed.strokeDashoffset;
   });
 
+  const liveStreamsRev = [...liveStage.querySelectorAll<SVGElement>('.conduit-stream-reverse')];
+  clone.querySelectorAll<SVGElement>('.conduit-stream-reverse').forEach((stream, index) => {
+    const live = liveStreamsRev[index];
+    if (!live || typeof getComputedStyle !== 'function') return;
+    const computed = getComputedStyle(live);
+    const dashed = computed.strokeDasharray !== 'none' && computed.strokeDasharray !== '';
+    stream.style.animation = 'none';
+    if (frame?.dashOffset !== undefined && dashed) {
+      stream.style.strokeDasharray = computed.strokeDasharray;
+      stream.style.strokeDashoffset = `${-frame.dashOffset}px`;
+      return;
+    }
+    stream.style.strokeDashoffset = computed.strokeDashoffset;
+  });
+
   // Strip selection, dimming, drag handles, ports, waypoint handles, and overlays cleanly
   cleanClonedStage(clone);
 

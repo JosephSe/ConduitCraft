@@ -157,6 +157,8 @@ export interface DiagramNode {
   comment?: string;
 }
 
+export type EdgeFlowMode = 'forward' | 'both';
+
 export interface DiagramEdge {
   id: string;
   from: string;
@@ -167,6 +169,8 @@ export interface DiagramEdge {
   route: EdgeRouteMode;
   label: string;
   animated: boolean;
+  /** Telemetry flow direction. 'forward' (one-way with arrow) or 'both' (flows both ways, no arrows). */
+  flow?: EdgeFlowMode;
   /** Optional manual bend point (world coordinates) the wire is nudged through. */
   waypoint?: [number, number];
   comment?: string;
