@@ -133,12 +133,14 @@
     padding: 0.45rem 0.85rem; border-radius: 0.65rem; background: var(--wl-panel); border: 1px solid var(--wl-border-subtle);
     display: flex; align-items: center; justify-content: space-between; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; color: var(--wl-ink-muted); pointer-events: none;
   }
+  .zone-banner.is-selected { border-color: var(--wl-blue); box-shadow: 0 0 0 3px var(--wl-blue-soft); }
   .zone-banner .zone-num { font-family: var(--wl-font-mono); color: var(--wl-blue); font-weight: 700; }
 
   .blueprint-spec {
     position: absolute; left: calc(var(--bx) * 1px); top: calc(var(--by) * 1px); width: 404px;
     padding: 1.125rem 1.25rem; border-radius: 1rem; background: var(--wl-panel); border: 1px dashed var(--wl-border-ui); backdrop-filter: blur(12px); pointer-events: none;
   }
+  .blueprint-spec.is-selected { border-style: solid; border-color: var(--wl-blue); box-shadow: 0 0 0 3px var(--wl-blue-soft), var(--wl-shadow-card); }
   .blueprint-spec-header { display: flex; align-items: center; justify-content: space-between; margin-block-end: 0.625rem; font-size: 0.75rem; font-family: var(--wl-font-mono); font-weight: 700; color: var(--wl-blue); }
   .blueprint-spec-list { display: grid; gap: 0.5rem; }
   .blueprint-spec-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.78rem; line-height: 1.4; color: var(--wl-ink-secondary); }
@@ -200,6 +202,8 @@
 
   .conduit-group { transition: opacity 0.22s ease; }
   .conduit-group.is-highlighted .conduit-glow { opacity: 0.42; stroke-width: 11; }
+  .conduit-group.is-selected .conduit-glow { opacity: 0.62; stroke-width: 13; }
+  .conduit-group.is-selected .route-pill-bg { stroke: var(--wl-blue); stroke-width: 2; }
   .conduit-group.is-dimmed { opacity: 0.15; }
 
   .workspace[data-flow="blue"] .conduit-group:not([data-tone="blue"]) { opacity: 0.13; }
@@ -235,6 +239,7 @@
   .arch-node:hover { transform: translateY(-2px); box-shadow: var(--wl-shadow-elevated); border-color: var(--node-accent); }
   .arch-node:focus-visible { outline: 3px solid var(--wl-blue); outline-offset: 4px; }
   .arch-node[aria-pressed="true"] { border-color: var(--node-accent); box-shadow: 0 0 0 3px var(--node-accent-soft), var(--wl-shadow-elevated); transform: translateY(-2px); }
+  .arch-node.is-related { border-color: var(--node-accent); box-shadow: 0 0 0 3px var(--node-accent-soft), var(--wl-shadow-card); }
   .arch-node[data-sim-active="true"] { border-color: var(--sim-accent, var(--wl-emerald)); box-shadow: 0 0 0 5px var(--sim-accent-soft, var(--wl-emerald-soft)), var(--wl-shadow-elevated); transform: translateY(-3px) scale(1.02); }
   .arch-node.is-dimmed { opacity: 0.32; }
 

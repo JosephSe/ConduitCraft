@@ -6,7 +6,7 @@ import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blue
 import { renderDiagramSvg, estimatePngExport } from '../src/exporter/diagramSvg.ts';
 import { generateStandaloneHtml } from '../src/exporter/standaloneHtml.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
-import type { DiagramDocument } from '../src/types.ts';
+import type { DiagramDocument, SelectionTarget } from '../src/types.ts';
 
 // Lightweight Mock Node for testing DOM manipulation and cleanClonedStage
 class MockDOMNode {
@@ -820,5 +820,229 @@ describe('portable export', () => {
     } finally {
       (globalThis as any).document = prevDoc;
     }
+  });
+
+  it('preserves multi-select highlights when preserveSelection: true is passed to cleanClonedStage', () => {
+    const stage = new MockDOMNode('div');
+    stage.id = 'stage-world';
+
+    const selectedNode = new MockDOMNode('div');
+    selectedNode.className = 'arch-node is-selected';
+    const hitBtn = new MockDOMNode('button');
+    hitBtn.className = 'node-select-hit';
+    hitBtn.setAttribute('aria-pressed', 'true');
+    const handleEl = new MockDOMNode('div');
+    handleEl.className = 'node-drag-handle';
+    const portEl = new MockDOMNode('button');
+    portEl.className = 'node-port';
+    selectedNode.append(hitBtn, handleEl, portEl);
+
+    const dimmedNode = new MockDOMNode('div');
+    dimmedNode.className = 'arch-node is-dimmed';
+
+    const relatedNode = new MockDOMNode('div');
+    relatedNode.className = 'arch-node is-related';
+
+    const wireGroup = new MockDOMNode('g');
+    wireGroup.className = 'conduit-group is-highlighted is-selected';
+    const wireHandle = new MockDOMNode('circle');
+    wireHandle.className = 'conduit-waypoint-handle';
+    wireGroup.append(wireHandle);
+
+    const dimmedWire = new MockDOMNode('g');
+    dimmedWire.className = 'conduit-group is-dimmed';
+
+    const zoneBanner = new MockDOMNode('div');
+    zoneBanner.className = 'zone-banner is-selected';
+
+    const notesCard = new MockDOMNode('aside');
+    notesCard.className = 'blueprint-spec is-selected';
+
+    const marquee = new MockDOMNode('div');
+    marquee.className = 'marquee-box';
+
+    stage.append(
+      selectedNode,
+      dimmedNode,
+      relatedNode,
+      wireGroup,
+      dimmedWire,
+      zoneBanner,
+      notesCard,
+      marquee,
+    );
+
+    // Call cleanClonedStage with preserveSelection: true
+    cleanClonedStage(stage as unknown as HTMLElement, { preserveSelection: true });
+
+    // Interactive handles and temporary marquee must be stripped
+    assert.equal(stage.querySelectorAll('.node-drag-handle').length, 0);
+    assert.equal(stage.querySelectorAll('.node-port').length, 0);
+    assert.equal(stage.querySelectorAll('.conduit-waypoint-handle').length, 0);
+    assert.equal(stage.querySelectorAll('.marquee-box').length, 0);
+
+    // But selection, dimming, related, and pressed highlights are preserved
+    assert.equal(stage.querySelectorAll('.is-selected').length, 4);
+    assert.equal(stage.querySelectorAll('.is-dimmed').length, 2);
+    assert.equal(stage.querySelectorAll('.is-related').length, 1);
+    assert.equal(stage.querySelectorAll('.is-highlighted').length, 1);
+    assert.equal(stage.querySelectorAll('.node-select-hit[aria-pressed="true"]').length, 1);
+  });
+
+  it('preserves multi-select highlights across vector SVG export (renderDiagramSvg)', () => {
+    const doc = createBlankDocument();
+    const n1 = createNodeFromStencil('service', 100, 150, 0);
+    n1.id = 'node-a';
+    n1.title = 'Service A';
+    const n2 = createNodeFromStencil('core', 450, 150, 1);
+    n2.id = 'node-b';
+    n2.title = 'Core B';
+    const n3 = createNodeFromStencil('store', 800, 150, 2);
+    n3.id = 'node-c';
+    n3.title = 'Store C';
+    doc.nodes.push(n1, n2, n3);
+
+    doc.edges.push(
+      {
+        id: 'wire-ab',
+        from: 'node-a',
+        to: 'node-b',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'blue',
+        route: 'orthogonal',
+      },
+      {
+        id: 'wire-bc',
+        from: 'node-b',
+        to: 'node-c',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'emerald',
+        route: 'orthogonal',
+      },
+    );
+
+    doc.zones.push({
+      id: 'zone-1',
+      number: '01',
+      title: 'Zone Alpha',
+      x: 50,
+      width: 400,
+    });
+
+    doc.notesCards.push({
+      id: 'notes-1',
+      title: 'Spec Sheet',
+      code: 'SPEC-01',
+      x: 100,
+      y: 500,
+      items: [{ title: 'Requirement', text: 'Auth' }],
+    });
+
+    const selection: SelectionTarget = {
+      type: 'multi',
+      ids: ['node-a'],
+      edgeIds: ['wire-ab'],
+      zoneIds: ['zone-1'],
+      notesIds: ['notes-1'],
+    };
+
+    const svg = renderDiagramSvg(doc, undefined, selection);
+
+    // Selected node gets selection ring (rx + 4, stroke-opacity="0.45")
+    assert.match(svg, /stroke-opacity="0\.45"/, 'Contains selection ring for selected node');
+
+    // Unselected and unrelated node-c gets dimmed opacity
+    assert.match(svg, /opacity="0\.28"/, 'Contains dimmed group for unselected node C');
+
+    // Inactive wire-bc is dimmed
+    assert.match(svg, /opacity="0\.16"/, 'Contains dimmed opacity for inactive wire');
+
+    // Selected zone has highlight stroke
+    assert.match(svg, /stroke="#1d4ed8" stroke-width="2\.5"/, 'Contains highlight stroke for selected zone and notes');
+  });
+
+  it('preserves multi-select highlights in standalone HTML export (generateStandaloneHtml)', () => {
+    const doc = createBlankDocument();
+    const n1 = createNodeFromStencil('service', 100, 150, 0);
+    n1.id = 'node-1';
+    n1.title = 'Ingress';
+    const n2 = createNodeFromStencil('core', 450, 150, 1);
+    n2.id = 'node-2';
+    n2.title = 'Worker';
+    const n3 = createNodeFromStencil('store', 800, 150, 2);
+    n3.id = 'node-3';
+    n3.title = 'Database';
+    doc.nodes.push(n1, n2, n3);
+
+    doc.edges.push(
+      {
+        id: 'wire-12',
+        from: 'node-1',
+        to: 'node-2',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'blue',
+        route: 'orthogonal',
+      },
+      {
+        id: 'wire-23',
+        from: 'node-2',
+        to: 'node-3',
+        sourcePort: 'right',
+        targetPort: 'left',
+        tone: 'emerald',
+        route: 'orthogonal',
+      },
+    );
+
+    doc.zones.push({
+      id: 'zone-1',
+      number: '01',
+      title: 'Perimeter',
+      x: 50,
+      width: 400,
+    });
+
+    doc.notesCards.push({
+      id: 'notes-1',
+      title: 'Notes Card',
+      code: 'N-1',
+      x: 100,
+      y: 500,
+      items: [{ text: 'Item 1' }],
+    });
+
+    const selection: SelectionTarget = {
+      type: 'multi',
+      ids: ['node-1'],
+      edgeIds: ['wire-12'],
+      zoneIds: ['zone-1'],
+      notesIds: ['notes-1'],
+    };
+
+    const html = generateStandaloneHtml(doc, { initialSelection: selection });
+
+    // HTML includes selection payload and multi-selection handler
+    assert.match(html, /"initialSelection":\{"type":"multi"/, 'Embeds initial multi-selection in script payload');
+    assert.match(html, /applyMultiSelection\(DATA\.initialSelection\)/, 'Applies multi-selection on initial boot');
+
+    // Selected node has aria-pressed="true"
+    assert.match(html, /data-node="node-1"[^>]*aria-pressed="true"/, 'Selected node has aria-pressed="true"');
+
+    // Connected node has is-related
+    assert.match(html, /class="[^"]*is-related[^"]*"[^>]*data-node="node-2"/, 'Connected node has is-related');
+
+    // Unconnected node has is-dimmed
+    assert.match(html, /class="[^"]*is-dimmed[^"]*"[^>]*data-node="node-3"/, 'Unconnected node has is-dimmed');
+
+    // Wires have is-highlighted and is-selected
+    assert.match(html, /class="[^"]*is-highlighted[^"]*is-selected[^"]*"[^>]*data-edge="wire-12"/, 'Active selected wire has classes');
+    assert.match(html, /class="[^"]*is-dimmed[^"]*"[^>]*data-edge="wire-23"/, 'Inactive wire has is-dimmed');
+
+    // Zone and notes card have is-selected
+    assert.match(html, /class="zone-banner is-selected"[^>]*data-zone-id="zone-1"/, 'Zone banner has is-selected');
+    assert.match(html, /class="blueprint-spec is-selected"[^>]*data-notes-id="notes-1"/, 'Notes card has is-selected');
   });
 });

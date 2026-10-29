@@ -14,6 +14,8 @@ export interface StagePictureOptions {
   activeNodes?: readonly string[];
   tone?: StreamTone;
   packetLabel?: string;
+  /** Keep highlighted/selected states (defaults to true when multi-selection is active). */
+  preserveSelection?: boolean;
 }
 
 /**
@@ -172,7 +174,7 @@ export function resolveCssVariables(
  * - Strips .is-selected, .is-dimmed, .is-related, .is-highlighted, .is-entering, .is-dragging
  * - Deactivates node-select-hit aria-pressed so outline/selection rings do not show
  */
-export function cleanClonedStage(clone: HTMLElement): void {
+export function cleanClonedStage(clone: HTMLElement, options?: { preserveSelection?: boolean }): void {
   // 1. Remove interactive handles and ports
   const handlesAndPorts = clone.querySelectorAll(
     '.drag-handle, .node-drag-handle, .sim-drag-handle, .node-port, .waypoint-handle, .conduit-waypoint-handle, .wire-handle'
@@ -185,12 +187,25 @@ export function cleanClonedStage(clone: HTMLElement): void {
   );
   overlays.forEach((el) => el.remove());
 
-  // 3. Strip selection, dimming, related, and ghost states from all elements
-  const stateful = clone.querySelectorAll(
-    '.is-selected, .is-dimmed, .is-related, .is-highlighted, .is-entering, .is-dragging, .is-drag-ghost'
-  );
-  stateful.forEach((el) => {
-    el.classList.remove(
+  const preserveSelection = options?.preserveSelection ?? (app.selection.type === 'multi');
+
+  if (!preserveSelection) {
+    // 3. Strip selection, dimming, related, and ghost states from all elements
+    const stateful = clone.querySelectorAll(
+      '.is-selected, .is-dimmed, .is-related, .is-highlighted, .is-entering, .is-dragging, .is-drag-ghost'
+    );
+    stateful.forEach((el) => {
+      el.classList.remove(
+        'is-selected',
+        'is-dimmed',
+        'is-related',
+        'is-highlighted',
+        'is-entering',
+        'is-dragging',
+        'is-drag-ghost'
+      );
+    });
+    clone.classList.remove(
       'is-selected',
       'is-dimmed',
       'is-related',
@@ -199,22 +214,18 @@ export function cleanClonedStage(clone: HTMLElement): void {
       'is-dragging',
       'is-drag-ghost'
     );
-  });
-  clone.classList.remove(
-    'is-selected',
-    'is-dimmed',
-    'is-related',
-    'is-highlighted',
-    'is-entering',
-    'is-dragging',
-    'is-drag-ghost'
-  );
 
-  // 4. Deactivate node-select-hit aria-pressed so outline/selection rings do not show
-  const pressedHits = clone.querySelectorAll('.node-select-hit[aria-pressed="true"]');
-  pressedHits.forEach((hit) => {
-    hit.setAttribute('aria-pressed', 'false');
-  });
+    // 4. Deactivate node-select-hit aria-pressed so outline/selection rings do not show
+    const pressedHits = clone.querySelectorAll('.node-select-hit[aria-pressed="true"]');
+    pressedHits.forEach((hit) => {
+      hit.setAttribute('aria-pressed', 'false');
+    });
+  } else {
+    // Still strip transient drag and entering states
+    const transient = clone.querySelectorAll('.is-entering, .is-dragging, .is-drag-ghost');
+    transient.forEach((el) => el.classList.remove('is-entering', 'is-dragging', 'is-drag-ghost'));
+    clone.classList.remove('is-entering', 'is-dragging', 'is-drag-ghost');
+  }
 }
 
 function collectCss(sheet: CSSStyleSheet, chunks: string[]): void {
@@ -335,7 +346,7 @@ export function renderStagePictureSvg(
   });
 
   // Strip selection, dimming, drag handles, ports, waypoint handles, and overlays cleanly
-  cleanClonedStage(clone);
+  cleanClonedStage(clone, { preserveSelection: frame?.preserveSelection ?? (app.selection.type === 'multi') });
 
   if (frame) paintScenario(clone, frame);
   clone.removeAttribute('id');

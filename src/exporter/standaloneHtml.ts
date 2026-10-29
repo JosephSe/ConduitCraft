@@ -1,6 +1,6 @@
-import type { DiagramDocument, DiagramNode, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, SelectionTarget, StreamTone } from '../types';
 import { getNotesItemIconMeta } from '../types';
-import { getAdjacencyLists, getEffectiveSimulations, routeDiagramEdges } from '../core/layout';
+import { getAdjacencyLists, getEffectiveSimulations, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
 import { normalizeBrand } from '../core/brand';
 import {
@@ -67,15 +67,30 @@ function renderNodeBadges(node: DiagramNode): string {
   return html;
 }
 
-function renderExportedNode(node: DiagramNode, index: number): string {
-  const pressed = index === 0 ? 'true' : 'false';
+function renderExportedNode(
+  node: DiagramNode,
+  index: number,
+  options?: StandaloneHtmlOptions,
+  related?: Set<string>,
+): string {
+  const multiSel = options?.initialSelection?.type === 'multi' ? options.initialSelection : null;
+  const hasSelection = Boolean(options?.initialSelection && options.initialSelection.type !== 'none');
+  const isSel = multiSel
+    ? multiSel.ids.includes(node.id)
+    : hasSelection
+      ? false
+      : index === 0;
+  const pressed = isSel ? 'true' : 'false';
+  const isRel = Boolean(multiSel && related?.has(node.id) && !isSel);
+  const isDim = Boolean(multiSel && multiSel.ids.length > 0 && !isSel && !isRel);
+  const stateCls = isRel ? ' is-related' : isDim ? ' is-dimmed' : '';
   const shape = nodeShapeAttr(node);
   const box = nodeBoxStyle(node);
   const plate = nodePlateMarkup(node);
   const badges = renderNodeBadges(node);
   if (node.kind === 'actor') {
     return `
-      <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="actor" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
+      <button type="button" class="arch-node${stateCls}" data-node="${escapeHtml(node.id)}" data-kind="actor" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
         ${plate}
         ${badges}
         <span class="actor-figure">${exportedIconMarkup(node, 0, renderHumanOutlineMarkup())}</span>
@@ -88,7 +103,7 @@ function renderExportedNode(node: DiagramNode, index: number): string {
 
   if (node.kind === 'client') {
     return `
-      <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="client" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
+      <button type="button" class="arch-node${stateCls}" data-node="${escapeHtml(node.id)}" data-kind="client" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
         ${plate}
         ${badges}
         <div class="node-top">
@@ -103,7 +118,7 @@ function renderExportedNode(node: DiagramNode, index: number): string {
   }
 
   return `
-    <button type="button" class="arch-node" data-node="${escapeHtml(node.id)}" data-kind="${escapeHtml(node.kind)}" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
+    <button type="button" class="arch-node${stateCls}" data-node="${escapeHtml(node.id)}" data-kind="${escapeHtml(node.kind)}" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
       ${plate}
       ${badges}
       <div class="node-top">
@@ -121,9 +136,28 @@ function renderExportedNode(node: DiagramNode, index: number): string {
     </button>`;
 }
 
-export function generateStandaloneHtml(doc: DiagramDocument): string {
+export interface StandaloneHtmlOptions {
+  initialSelection?: SelectionTarget;
+}
+
+export function generateStandaloneHtml(doc: DiagramDocument, options?: StandaloneHtmlOptions): string {
   const routedEdges = routeDiagramEdges(doc);
   const simulations = getEffectiveSimulations(doc);
+
+  const multiSel = options?.initialSelection?.type === 'multi' ? options.initialSelection : null;
+  const isMulti = Boolean(multiSel);
+  const selectedNodes = new Set(multiSel ? multiSel.ids : []);
+  const multiEdges = new Set(multiSel ? (multiSel.edgeIds ?? []) : []);
+  const excludedEdges = new Set(multiSel ? (multiSel.excludedEdgeIds ?? []) : []);
+  const selectedZones = new Set(multiSel ? (multiSel.zoneIds ?? []) : []);
+  const selectedNotes = new Set(multiSel ? (multiSel.notesIds ?? []) : []);
+
+  const hasEdges = multiEdges.size > 0;
+  const spotlight =
+    isMulti &&
+    (selectedNodes.size > 0 || hasEdges) &&
+    (selectedNodes.size > 1 || hasEdges || excludedEdges.size > 0);
+  const related = spotlight && multiSel ? relatedNodeIds(doc, multiSel.ids) : new Set<string>();
 
   const presentTones = Array.from(new Set(routedEdges.map((e) => e.tone)));
   const filterPillsMarkup =
@@ -147,19 +181,23 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
       : '';
 
   const zonesMarkup = doc.zones
-    .map(
-      (z) => `
-      <div class="zone-banner" style="--zx: ${z.x}; --zw: ${z.width};" aria-hidden="true">
+    .map((z) => {
+      const isSel = isMulti && selectedZones.has(z.id);
+      const selCls = isSel ? ' is-selected' : '';
+      return `
+      <div class="zone-banner${selCls}" data-zone-id="${escapeHtml(z.id)}" style="--zx: ${z.x}; --zw: ${z.width};" aria-hidden="true">
         <span><span class="zone-num">${escapeHtml(z.number)}</span> ${escapeHtml(z.title)}</span>
         <span>${escapeHtml(z.subtitle)}</span>
-      </div>`,
-    )
+      </div>`;
+    })
     .join('\n');
 
   const notesMarkup = doc.notesCards
-    .map(
-      (card) => `
-      <aside class="blueprint-spec" style="--bx: ${card.x}; --by: ${card.y};" aria-label="${escapeHtml(card.title)}">
+    .map((card) => {
+      const isSel = isMulti && selectedNotes.has(card.id);
+      const selCls = isSel ? ' is-selected' : '';
+      return `
+      <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};" aria-label="${escapeHtml(card.title)}">
         <div class="blueprint-spec-header">
           <span>${escapeHtml(card.title)}</span>
           <span>${escapeHtml(card.code)}</span>
@@ -180,8 +218,8 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
             })
             .join('\n')}
         </ul>
-      </aside>`,
-    )
+      </aside>`;
+    })
     .join('\n');
 
   const edgesMarkup = routedEdges
@@ -198,8 +236,20 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
             </g>`
           : '';
 
+      const touches = selectedNodes.has(e.from) || selectedNodes.has(e.to);
+      const isExplicit = multiEdges.has(e.id);
+      const isExcluded = excludedEdges.has(e.id);
+      const active = isMulti ? ((touches || isExplicit) && !isExcluded) : true;
+      const isSelectedEdge = isMulti && isExplicit && !isExcluded;
+      let edgeCls = 'conduit-group';
+      if (isMulti && spotlight) {
+        if (active) edgeCls += ' is-highlighted';
+        else edgeCls += ' is-dimmed';
+        if (isSelectedEdge) edgeCls += ' is-selected';
+      }
+
       return `
-        <g class="conduit-group" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-flow="${escapeHtml(e.flow || 'forward')}">
+        <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-flow="${escapeHtml(e.flow || 'forward')}">
           <path class="conduit-glow" d="${e.pathD}"/>
           <path class="conduit-rail" d="${e.pathD}"/>
           <path class="conduit-stream" d="${e.pathD}"${markerAttr}/>
@@ -210,7 +260,7 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
     })
     .join('\n');
 
-  const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx)).join('\n');
+  const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx, options, related)).join('\n');
 
   const simButtonsMarkup = simulations
     .map((sim) => {
@@ -278,6 +328,7 @@ export function generateStandaloneHtml(doc: DiagramDocument): string {
     nodes: runtimeNodes,
     nodeShortLabels: Object.fromEntries(doc.nodes.map((n) => [n.id, n.title])),
     simulations,
+    initialSelection: options?.initialSelection,
   };
 
   const exportedStyleTag = `<style>
@@ -711,6 +762,69 @@ ${colorSchemeBoot}
         });
       }
 
+      function applyMultiSelection(sel) {
+        if (!sel || sel.type !== 'multi') return;
+        const selectedNodes = new Set(sel.ids || []);
+        const multiEdges = sel.edgeIds || [];
+        const excludedEdges = new Set(sel.excludedEdgeIds || []);
+        const selectedZones = new Set(sel.zoneIds || []);
+        const selectedNotes = new Set(sel.notesIds || []);
+
+        const relatedNodes = new Set();
+        for (const sId of selectedNodes) {
+          const data = DATA.nodes[sId];
+          if (data) {
+            for (const u of data.upstream) relatedNodes.add(u);
+            for (const d of data.downstream) relatedNodes.add(d);
+          }
+        }
+        for (const btn of nodeButtons) {
+          const id = btn.dataset.node;
+          const isSel = selectedNodes.has(id);
+          const isRel = relatedNodes.has(id);
+          btn.setAttribute('aria-pressed', String(isSel));
+          btn.classList.toggle('is-related', isRel && !isSel);
+          btn.classList.toggle('is-dimmed', !isSel && !isRel && selectedNodes.size > 0);
+        }
+
+        for (const g of conduitGroups) {
+          const edgeId = g.dataset.edge;
+          const touches = selectedNodes.has(g.dataset.from) || selectedNodes.has(g.dataset.to);
+          const isExplicit = multiEdges.includes(edgeId);
+          const isExcluded = excludedEdges.has(edgeId);
+          const active = (touches || isExplicit) && !isExcluded;
+          g.classList.toggle('is-highlighted', active);
+          g.classList.toggle('is-dimmed', !active);
+          g.classList.toggle('is-selected', isExplicit && !isExcluded);
+        }
+
+        for (const z of document.querySelectorAll('.zone-banner')) {
+          const zId = z.dataset.zoneId;
+          z.classList.toggle('is-selected', selectedZones.has(zId));
+        }
+
+        for (const n of document.querySelectorAll('.blueprint-spec')) {
+          const nId = n.dataset.notesId;
+          n.classList.toggle('is-selected', selectedNotes.has(nId));
+        }
+
+        withInspectorTransition(() => {
+          inspBadge.textContent = 'MULTI SELECTION';
+          inspId.textContent = selectedNodes.size + ' SELECTED';
+          inspTitle.textContent = selectedNodes.size + ' Components Selected';
+          const selTitles = Array.from(selectedNodes).map(id => DATA.nodeShortLabels[id] || id);
+          inspSummary.textContent = selTitles.length ? 'Selected: ' + selTitles.join(', ') : 'Components and connectors highlighted.';
+          renderMetrics([
+            { label: 'Components', value: String(selectedNodes.size) },
+            { label: 'Zones', value: String(selectedZones.size) },
+            { label: 'Notes Cards', value: String(selectedNotes.size) },
+            { label: 'Connectors', value: String(multiEdges.length) },
+          ]);
+          inspLineage.replaceChildren();
+          inspCode.textContent = JSON.stringify(sel, null, 2);
+        });
+      }
+
       for (const btn of nodeButtons) btn.addEventListener('click', () => selectNode(btn.dataset.node));
       document.getElementById('btn-reset-selection').addEventListener('click', showOverview);
 
@@ -939,9 +1053,13 @@ ${colorSchemeBoot}
 
       window.conduitBindColorScheme(document.querySelector('meta[name="color-scheme"]'));
 
-      const firstId = Object.keys(DATA.nodes)[0];
-      if (firstId) selectNode(firstId);
-      else showOverview();
+      if (DATA.initialSelection && DATA.initialSelection.type === 'multi') {
+        applyMultiSelection(DATA.initialSelection);
+      } else {
+        const firstId = Object.keys(DATA.nodes)[0];
+        if (firstId) selectNode(firstId);
+        else showOverview();
+      }
       requestAnimationFrame(fitToViewport);
     })();
   </script>

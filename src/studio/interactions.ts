@@ -1122,6 +1122,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
           activeNodes: step.nodes,
           tone: step.tone,
           packetLabel: step.label,
+          preserveSelection: false,
         });
         frames.push(await rasterizeSvg(svg, size.width, size.height));
       }
@@ -1160,7 +1161,11 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
     for (let index = 0; index < frameCount; index += 1) {
       const dash: StagePictureOptions | undefined =
         frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) };
-      const options: StagePictureOptions | undefined = view ? { currentView: true, ...dash } : dash;
+      const options: StagePictureOptions | undefined = {
+        preserveSelection: app.selection.type === 'multi',
+        ...(view ? { currentView: true } : {}),
+        ...dash,
+      };
       const svg = renderStagePictureSvg(size.width, size.height, options);
       frames.push(await rasterizeSvg(svg, size.width, size.height));
     }
@@ -1904,7 +1909,9 @@ export function initEvents(): void {
   btnOpenExport.addEventListener('click', openExportDialog);
   btnExportHtml.addEventListener('click', () => {
     expandStageToFit(app.doc);
-    const html = generateStandaloneHtml(app.doc);
+    const html = generateStandaloneHtml(app.doc, {
+      initialSelection: app.selection.type === 'multi' ? app.selection : undefined,
+    });
     const filename = `${getSafeFilenameSlug()}.html`;
     downloadBlob(html, filename, 'text/html;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
@@ -1921,14 +1928,22 @@ export function initEvents(): void {
   btnExportSvg.addEventListener('click', () => {
     expandStageToFit(app.doc);
     const filename = `${getSafeFilenameSlug()}.svg`;
-    downloadBlob(renderDiagramSvg(app.doc), filename, 'image/svg+xml;charset=utf-8');
+    downloadBlob(
+      renderDiagramSvg(app.doc, undefined, app.selection.type === 'multi' ? app.selection : undefined),
+      filename,
+      'image/svg+xml;charset=utf-8',
+    );
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
   btnExportSvgClone?.addEventListener('click', () => {
     expandStageToFit(app.doc);
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
-    downloadBlob(renderStagePictureSvg(), filename, 'image/svg+xml;charset=utf-8');
+    downloadBlob(
+      renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi' }),
+      filename,
+      'image/svg+xml;charset=utf-8',
+    );
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
@@ -1939,7 +1954,12 @@ export function initEvents(): void {
     const height = Math.max(1, Math.round(app.doc.stageHeight * scale));
     hudStatusTip.textContent = 'Rendering the canvas…';
     const filename = `${getSafeFilenameSlug()}.png`;
-    downloadDiagramPng(renderStagePictureSvg(width, height), width, height, filename);
+    downloadDiagramPng(
+      renderStagePictureSvg(width, height, { preserveSelection: app.selection.type === 'multi' }),
+      width,
+      height,
+      filename,
+    );
     void closeDialogSmoothly(exportDialog);
   });
   btnExportGif.addEventListener('click', () => {
