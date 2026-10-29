@@ -10,13 +10,13 @@ import { renderDiagramSvg } from '../exporter/diagramSvg';
 import { renderUiIconMarkup } from '../ui/icons';
 
 // Raw bundled JSON imports for instant offline loading and preview rendering
-import lumenRelayJson from '../../public/examples/lumen-relay.blueprint.json?raw';
-import threeTierWebJson from '../../public/examples/three-tier-web.blueprint.json?raw';
-import eventDrivenJson from '../../public/examples/event-driven-microservices.blueprint.json?raw';
-import cloudDataPipelineJson from '../../public/examples/cloud-data-pipeline.blueprint.json?raw';
-import authOidcJson from '../../public/examples/auth-oauth-oidc.blueprint.json?raw';
-import k8sIngressJson from '../../public/examples/kubernetes-ingress.blueprint.json?raw';
-import cicdPipelineJson from '../../public/examples/cicd-pipeline.blueprint.json?raw';
+import lumenRelayJson from '../examples/lumen-relay.blueprint.json?raw';
+import threeTierWebJson from '../examples/three-tier-web.blueprint.json?raw';
+import eventDrivenJson from '../examples/event-driven-microservices.blueprint.json?raw';
+import cloudDataPipelineJson from '../examples/cloud-data-pipeline.blueprint.json?raw';
+import authOidcJson from '../examples/auth-oauth-oidc.blueprint.json?raw';
+import k8sIngressJson from '../examples/kubernetes-ingress.blueprint.json?raw';
+import cicdPipelineJson from '../examples/cicd-pipeline.blueprint.json?raw';
 
 export type TemplateCategory =
   | 'all'
