@@ -1117,10 +1117,18 @@ export function expandStageToFit(doc: DiagramDocument): void {
   const maxNodeB = doc.nodes.length > 0 ? Math.max(...doc.nodes.map((n) => n.y + n.height)) : 700;
   const maxZoneR = doc.zones.length > 0 ? Math.max(...doc.zones.map((z) => z.x + z.width)) : 0;
   const maxNotesR = doc.notesCards.length > 0 ? Math.max(...doc.notesCards.map((c) => c.x + 410)) : 0;
-  const maxNotesB = doc.notesCards.length > 0 ? Math.max(...doc.notesCards.map((c) => c.y + 220)) : 0;
+  const maxNotesB = doc.notesCards.length > 0
+    ? Math.max(0, ...doc.notesCards.map((c) => c.y + Math.max(220, 54 + (c.items?.length || 0) * 26 + 24)))
+    : 0;
+  const maxEdgeR = doc.edges.length > 0
+    ? Math.max(0, ...doc.edges.map((e) => (e.waypoint ? e.waypoint[0] + 60 : 0)))
+    : 0;
+  const maxEdgeB = doc.edges.length > 0
+    ? Math.max(0, ...doc.edges.map((e) => (e.waypoint ? e.waypoint[1] + 60 : 0)))
+    : 0;
 
-  doc.stageWidth = Math.max(1680, maxNodeR + 140, maxZoneR + 96, maxNotesR + 96);
-  doc.stageHeight = Math.max(920, maxNodeB + 160, maxNotesB + 120);
+  doc.stageWidth = Math.max(1680, maxNodeR + 140, maxZoneR + 96, maxNotesR + 96, maxEdgeR);
+  doc.stageHeight = Math.max(920, maxNodeB + 160, maxNotesB + 120, maxEdgeB);
 }
 
 export function getEffectiveSimulations(doc: DiagramDocument): SimulationScenario[] {

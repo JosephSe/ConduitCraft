@@ -201,8 +201,20 @@ if (typeof (globalThis as any).XMLSerializer === 'undefined') {
       const attrs: string[] = [];
       if (node.id) attrs.push(`id="${node.id}"`);
       if (node.className) attrs.push(`class="${node.className}"`);
-      if (node.style && typeof node.style.cssText === 'string' && node.style.cssText) {
-        attrs.push(`style="${node.style.cssText}"`);
+      if (node.style) {
+        const parts: string[] = [];
+        if (typeof node.style.cssText === 'string' && node.style.cssText) {
+          parts.push(node.style.cssText);
+        }
+        for (const [k, v] of Object.entries(node.style)) {
+          if (typeof v === 'string' && v && k !== 'cssText' && typeof (node.style as any)[k] !== 'function') {
+            const cssProp = k.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+            parts.push(`${cssProp}: ${v}`);
+          }
+        }
+        if (parts.length > 0) {
+          attrs.push(`style="${parts.join('; ')}"`);
+        }
       }
       if (node.attributes && typeof node.attributes.entries === 'function') {
         for (const [k, v] of node.attributes.entries()) {
@@ -743,5 +755,70 @@ describe('portable export', () => {
     assert.match(uniGroup, /marker-end="url\(#arrow-emerald\)"/, 'Includes marker-end arrow');
     assert.match(uniGroup, /<circle class="port-dot"/, 'Includes start port-dot');
     assert.doesNotMatch(uniGroup, /<path class="conduit-stream-reverse"/, 'No reverse stream path');
+  });
+
+  it('scales large diagrams down to fit inside export bounds (e.g. 1987 × 2048) without cutting off elements', async () => {
+    const { app } = await import('../src/studio/state.ts');
+    const { expandStageToFit } = await import('../src/core/layout.ts');
+    const prevDoc = (globalThis as any).document;
+
+    const doc = createBlankDocument();
+    // Create nodes and waypoints that extend into a large ~4000x4100 stage
+    const farNode = createNodeFromStencil('core', 3600, 3800, 0);
+    doc.nodes.push(farNode);
+    doc.edges.push({
+      id: 'far-wire',
+      from: farNode.id,
+      to: farNode.id,
+      sourcePort: 'right',
+      targetPort: 'left',
+      tone: 'blue',
+      route: 'bezier',
+      label: 'Loop',
+      animated: true,
+      waypoint: [3900, 4000],
+    });
+
+    expandStageToFit(doc);
+    assert.ok(doc.stageWidth >= 3960, `stageWidth (${doc.stageWidth}) encompasses far waypoint at 3900`);
+    assert.ok(doc.stageHeight >= 4060, `stageHeight (${doc.stageHeight}) encompasses far waypoint at 4000`);
+
+    const stageEl = new MockDOMNode('div');
+    stageEl.id = 'stage-world';
+    const viewportEl = new MockDOMNode('div');
+    viewportEl.id = 'viewport';
+    const workspaceEl = new MockDOMNode('div');
+    workspaceEl.id = 'workspace';
+
+    (globalThis as any).document = {
+      getElementById: (id: string) => {
+        if (id === 'stage-world') return stageEl;
+        if (id === 'viewport') return viewportEl;
+        if (id === 'workspace') return workspaceEl;
+        return null;
+      },
+      createElement: (tag: string) => new MockDOMNode(tag),
+      documentElement: new MockDOMNode('html'),
+      body: new MockDOMNode('body'),
+      styleSheets: [],
+    };
+
+    app.doc = doc;
+
+    try {
+      // Simulate exporting a GIF downscaled to 1987 × 2048
+      const svg = renderStagePictureSvg(1987, 2048);
+
+      // SVG root dimensions and viewBox must match the scaled raster size exactly
+      assert.match(svg, /width="1987" height="2048"/, 'Matches requested raster dimensions');
+      assert.match(svg, /viewBox="0 0 1987 2048"/, 'viewBox matches raster dimensions to avoid browser viewBox clipping');
+      assert.match(svg, /<foreignObject[^>]+width="1987" height="2048"/, 'foreignObject matches raster dimensions');
+
+      // Stage world must have transform: scale(...) so elements are scaled into the canvas
+      assert.match(svg, /transform:\s*scale\(/, 'Stage is scaled via CSS transform');
+      assert.match(svg, /transform-origin:\s*0px 0px|transform-origin:\s*0 0/, 'Scale transform origin is top-left');
+    } finally {
+      (globalThis as any).document = prevDoc;
+    }
   });
 });

@@ -706,20 +706,22 @@ export function deleteSelected(): void {
     const unlockedNodeIds = sel.ids.filter((id) => !app.doc.nodes.find((n) => n.id === id)?.locked);
     const unlockedZoneIds = (sel.zoneIds ?? []).filter((id) => !app.doc.zones.find((z) => z.id === id)?.locked);
     const unlockedNoteIds = (sel.notesIds ?? []).filter((id) => !app.doc.notesCards.find((c) => c.id === id)?.locked);
+    const unlockedEdgeIds = sel.edgeIds ?? [];
 
-    if (unlockedNodeIds.length + unlockedZoneIds.length + unlockedNoteIds.length === 0) {
+    if (unlockedNodeIds.length + unlockedZoneIds.length + unlockedNoteIds.length + unlockedEdgeIds.length === 0) {
       notify('Selected items are locked');
       return;
     }
 
     pushHistory();
-    const count = unlockedNodeIds.length + unlockedZoneIds.length + unlockedNoteIds.length;
+    const count = unlockedNodeIds.length + unlockedZoneIds.length + unlockedNoteIds.length + unlockedEdgeIds.length;
     const desc = `${count} ${count === 1 ? 'item' : 'items'}`;
     const idSet = new Set(unlockedNodeIds);
     const zoneIds = new Set(unlockedZoneIds);
     const notesIds = new Set(unlockedNoteIds);
+    const edgeIds = new Set(unlockedEdgeIds);
     app.doc.nodes = app.doc.nodes.filter((n) => !idSet.has(n.id));
-    app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to));
+    app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to) && !edgeIds.has(e.id));
     if (zoneIds.size > 0) app.doc.zones = app.doc.zones.filter((zone) => !zoneIds.has(zone.id));
     if (notesIds.size > 0) app.doc.notesCards = app.doc.notesCards.filter((card) => !notesIds.has(card.id));
     dropNodesFromSimulations(idSet);
@@ -1103,6 +1105,7 @@ function resetGifChoices(): void {
 }
 
 async function downloadDiagramGif(target: GifExport): Promise<void> {
+  expandStageToFit(app.doc);
   const doc = app.doc;
   hudStatusTip.textContent = 'Rendering a short animation…';
   try {
@@ -1892,6 +1895,7 @@ export function initEvents(): void {
   updatePngExportEstimate();
 
   const openExportDialog = (): void => {
+    expandStageToFit(app.doc);
     resetGifChoices();
     updatePngExportEstimate();
     void updateShareLinkPreview();
@@ -1899,6 +1903,7 @@ export function initEvents(): void {
   };
   btnOpenExport.addEventListener('click', openExportDialog);
   btnExportHtml.addEventListener('click', () => {
+    expandStageToFit(app.doc);
     const html = generateStandaloneHtml(app.doc);
     const filename = `${getSafeFilenameSlug()}.html`;
     downloadBlob(html, filename, 'text/html;charset=utf-8');
@@ -1906,6 +1911,7 @@ export function initEvents(): void {
     notify(`Exported ${filename}`);
   });
   btnExportMmd.addEventListener('click', () => {
+    expandStageToFit(app.doc);
     const mmd = serializeToMermaid(app.doc);
     const filename = `${getSafeFilenameSlug()}.mmd`;
     downloadBlob(mmd, filename, 'text/plain;charset=utf-8');
@@ -1913,18 +1919,21 @@ export function initEvents(): void {
     notify(`Exported ${filename}`);
   });
   btnExportSvg.addEventListener('click', () => {
+    expandStageToFit(app.doc);
     const filename = `${getSafeFilenameSlug()}.svg`;
     downloadBlob(renderDiagramSvg(app.doc), filename, 'image/svg+xml;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
   btnExportSvgClone?.addEventListener('click', () => {
+    expandStageToFit(app.doc);
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(renderStagePictureSvg(), filename, 'image/svg+xml;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
   btnExportPng.addEventListener('click', () => {
+    expandStageToFit(app.doc);
     const scale = getSelectedPngScale();
     const width = Math.max(1, Math.round(app.doc.stageWidth * scale));
     const height = Math.max(1, Math.round(app.doc.stageHeight * scale));

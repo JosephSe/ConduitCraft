@@ -44,6 +44,15 @@ import {
   runSimulation,
 } from './interactions';
 import { isSelectionLocked, canGroupSelection } from './zOrderLockGroup';
+import {
+  excludeAllEdgesInSelection,
+  getActiveEdgeIdsInSelection,
+  includeAllEdgesInSelection,
+  toggleEdgeInSelection,
+  toggleNodeInSelection,
+  toggleNotesInSelection,
+  toggleZoneInSelection,
+} from './selection';
 import type {
   ComponentStatus,
   DiagramNode,
@@ -1154,19 +1163,282 @@ export function renderPropertyEditor(): void {
     const selectedNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
     const zoneCount = sel.zoneIds?.length ?? 0;
     const notesCount = sel.notesIds?.length ?? 0;
-    if (selectedNodes.length <= 1 && zoneCount === 0 && notesCount === 0) {
+    const edgeCount = sel.edgeIds?.length ?? 0;
+    const excludedCount = sel.excludedEdgeIds?.length ?? 0;
+    if (selectedNodes.length <= 1 && zoneCount === 0 && notesCount === 0 && edgeCount === 0 && excludedCount === 0) {
       setSelection(selectedNodes.length === 1 ? { type: 'node', id: selectedNodes[0].id } : { type: 'none' });
       return;
     }
 
+    const activeEdgeIds = getActiveEdgeIdsInSelection(sel, app.doc.edges);
+    const activeEdges = app.doc.edges.filter((e) => activeEdgeIds.includes(e.id));
+    const excludedEdges = app.doc.edges.filter((e) => sel.excludedEdgeIds?.includes(e.id));
+
     const counts = [
       selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'NODE' : 'NODES'}` : '',
+      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'CONNECTOR' : 'CONNECTORS'}` : '',
       zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'SWIMLANE' : 'SWIMLANES'}` : '',
       notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'NOTE' : 'NOTES'}` : '',
     ].filter(Boolean);
     propPanelHeading.textContent = `MULTI-SELECT (${counts.join(', ')})`;
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
+
+    // Selection Members (Components & Connectors) Section
+    const membersSection = document.createElement('div');
+    membersSection.className = 'prop-divider selection-members-section';
+
+    const membersHeading = document.createElement('span');
+    membersHeading.className = 'section-heading';
+    membersHeading.textContent = 'SELECTION MEMBERS';
+    membersSection.appendChild(membersHeading);
+
+    const helpTip = document.createElement('p');
+    helpTip.className = 'field-tip selection-help-tip';
+    helpTip.textContent = 'Click any item chip or Shift+click on canvas to unselect individually.';
+    membersSection.appendChild(helpTip);
+
+    const actionsBar = document.createElement('div');
+    actionsBar.className = 'selection-actions-bar';
+
+    const toggleModeBtn = document.createElement('button');
+    toggleModeBtn.type = 'button';
+    toggleModeBtn.className = `btn btn-compact selection-mode-toggle ${app.selectionUnselectMode ? 'btn-active is-active' : ''}`;
+    toggleModeBtn.textContent = app.selectionUnselectMode ? '✓ Click-to-Unselect: Active' : 'Click-to-Unselect on Canvas';
+    toggleModeBtn.title = 'When active, regular clicking canvas items unselects them without Shift';
+    toggleModeBtn.addEventListener('click', () => {
+      app.selectionUnselectMode = !app.selectionUnselectMode;
+      toggleModeBtn.classList.toggle('is-active', app.selectionUnselectMode);
+      toggleModeBtn.classList.toggle('btn-active', app.selectionUnselectMode);
+      toggleModeBtn.textContent = app.selectionUnselectMode ? '✓ Click-to-Unselect: Active' : 'Click-to-Unselect on Canvas';
+    });
+    actionsBar.appendChild(toggleModeBtn);
+
+    if (activeEdges.length > 0) {
+      const btnUnselectConnectors = document.createElement('button');
+      btnUnselectConnectors.type = 'button';
+      btnUnselectConnectors.className = 'btn btn-compact';
+      btnUnselectConnectors.textContent = 'Unselect All Connectors';
+      btnUnselectConnectors.title = 'Exclude all connectors from selection highlight';
+      btnUnselectConnectors.addEventListener('click', () => {
+        const nextSel = excludeAllEdgesInSelection(app.selection, app.doc.edges);
+        applySelection(nextSel);
+        renderWiresOnly();
+      });
+      actionsBar.appendChild(btnUnselectConnectors);
+    }
+
+    if (excludedEdges.length > 0) {
+      const btnRestoreConnectors = document.createElement('button');
+      btnRestoreConnectors.type = 'button';
+      btnRestoreConnectors.className = 'btn btn-compact';
+      btnRestoreConnectors.textContent = 'Restore Connectors';
+      btnRestoreConnectors.title = 'Re-include excluded connectors in selection';
+      btnRestoreConnectors.addEventListener('click', () => {
+        const nextSel = includeAllEdgesInSelection(app.selection);
+        applySelection(nextSel);
+        renderWiresOnly();
+      });
+      actionsBar.appendChild(btnRestoreConnectors);
+    }
+    membersSection.appendChild(actionsBar);
+
+    if (selectedNodes.length > 0) {
+      const nodesHeading = document.createElement('div');
+      nodesHeading.className = 'field-label selection-subheading';
+      nodesHeading.textContent = `Components (${selectedNodes.length})`;
+      membersSection.appendChild(nodesHeading);
+
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'selection-member-chips';
+      for (const node of selectedNodes) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'selection-member-chip node-chip';
+        chip.dataset.tone = node.accent;
+        chip.title = `Click to unselect ${node.title || node.id}`;
+        chip.setAttribute('aria-label', `Unselect component ${node.title || node.id}`);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'chip-title';
+        nameSpan.textContent = node.title || node.id;
+
+        const removeIcon = document.createElement('span');
+        removeIcon.className = 'chip-remove';
+        removeIcon.textContent = '✕';
+        removeIcon.setAttribute('aria-hidden', 'true');
+
+        chip.append(nameSpan, removeIcon);
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextSel = toggleNodeInSelection(app.selection, node.id);
+          applySelection(nextSel);
+        });
+        chipsWrap.appendChild(chip);
+      }
+      membersSection.appendChild(chipsWrap);
+    }
+
+    const selectedZones = app.doc.zones.filter((z) => (sel.zoneIds ?? []).includes(z.id));
+    if (selectedZones.length > 0) {
+      const zonesHeading = document.createElement('div');
+      zonesHeading.className = 'field-label selection-subheading';
+      zonesHeading.textContent = `Swimlane Stages (${selectedZones.length})`;
+      membersSection.appendChild(zonesHeading);
+
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'selection-member-chips';
+      for (const zone of selectedZones) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'selection-member-chip zone-chip';
+        const label = `Stage ${zone.number}: ${zone.title || zone.id}`;
+        chip.title = `Click to unselect swimlane ${label}`;
+        chip.setAttribute('aria-label', `Unselect swimlane ${label}`);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'chip-title';
+        nameSpan.textContent = label;
+
+        const removeIcon = document.createElement('span');
+        removeIcon.className = 'chip-remove';
+        removeIcon.textContent = '✕';
+        removeIcon.setAttribute('aria-hidden', 'true');
+
+        chip.append(nameSpan, removeIcon);
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextSel = toggleZoneInSelection(app.selection, zone.id);
+          applySelection(nextSel);
+        });
+        chipsWrap.appendChild(chip);
+      }
+      membersSection.appendChild(chipsWrap);
+    }
+
+    const selectedNotes = app.doc.notesCards.filter((c) => (sel.notesIds ?? []).includes(c.id));
+    if (selectedNotes.length > 0) {
+      const notesHeading = document.createElement('div');
+      notesHeading.className = 'field-label selection-subheading';
+      notesHeading.textContent = `Notes Cards (${selectedNotes.length})`;
+      membersSection.appendChild(notesHeading);
+
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'selection-member-chips';
+      for (const card of selectedNotes) {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'selection-member-chip notes-chip';
+        const label = card.title || card.code || card.id;
+        chip.title = `Click to unselect notes card ${label}`;
+        chip.setAttribute('aria-label', `Unselect notes card ${label}`);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'chip-title';
+        nameSpan.textContent = label;
+
+        const removeIcon = document.createElement('span');
+        removeIcon.className = 'chip-remove';
+        removeIcon.textContent = '✕';
+        removeIcon.setAttribute('aria-hidden', 'true');
+
+        chip.append(nameSpan, removeIcon);
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextSel = toggleNotesInSelection(app.selection, card.id);
+          applySelection(nextSel);
+        });
+        chipsWrap.appendChild(chip);
+      }
+      membersSection.appendChild(chipsWrap);
+    }
+
+    if (activeEdges.length > 0) {
+      const edgesHeading = document.createElement('div');
+      edgesHeading.className = 'field-label selection-subheading';
+      edgesHeading.textContent = `Connectors (${activeEdges.length})`;
+      membersSection.appendChild(edgesHeading);
+
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'selection-member-chips';
+      for (const edge of activeEdges) {
+        const fromNode = app.doc.nodes.find((n) => n.id === edge.from);
+        const toNode = app.doc.nodes.find((n) => n.id === edge.to);
+        const fromLabel = fromNode?.title || edge.from;
+        const toLabel = toNode?.title || edge.to;
+        const edgeDesc = `${fromLabel} → ${toLabel}${edge.label ? ` (${edge.label})` : ''}`;
+
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'selection-member-chip edge-chip';
+        chip.dataset.tone = edge.tone;
+        chip.title = `Click to unselect connector ${edgeDesc}`;
+        chip.setAttribute('aria-label', `Unselect connector ${edgeDesc}`);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'chip-title';
+        nameSpan.textContent = edgeDesc;
+
+        const removeIcon = document.createElement('span');
+        removeIcon.className = 'chip-remove';
+        removeIcon.textContent = '✕';
+        removeIcon.setAttribute('aria-hidden', 'true');
+
+        chip.append(nameSpan, removeIcon);
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextSel = toggleEdgeInSelection(app.selection, edge.id, app.doc.edges);
+          applySelection(nextSel);
+          renderWiresOnly();
+        });
+        chipsWrap.appendChild(chip);
+      }
+      membersSection.appendChild(chipsWrap);
+    }
+
+    if (excludedEdges.length > 0) {
+      const excludedHeading = document.createElement('div');
+      excludedHeading.className = 'field-label selection-subheading text-muted';
+      excludedHeading.textContent = `Unselected / Excluded Connectors (${excludedEdges.length})`;
+      membersSection.appendChild(excludedHeading);
+
+      const chipsWrap = document.createElement('div');
+      chipsWrap.className = 'selection-member-chips';
+      for (const edge of excludedEdges) {
+        const fromNode = app.doc.nodes.find((n) => n.id === edge.from);
+        const toNode = app.doc.nodes.find((n) => n.id === edge.to);
+        const fromLabel = fromNode?.title || edge.from;
+        const toLabel = toNode?.title || edge.to;
+        const edgeDesc = `${fromLabel} → ${toLabel}${edge.label ? ` (${edge.label})` : ''}`;
+
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'selection-member-chip edge-chip is-excluded';
+        chip.title = `Click to re-select connector ${edgeDesc}`;
+        chip.setAttribute('aria-label', `Re-select connector ${edgeDesc}`);
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'chip-title';
+        nameSpan.textContent = edgeDesc;
+
+        const addIcon = document.createElement('span');
+        addIcon.className = 'chip-add';
+        addIcon.textContent = '+';
+        addIcon.setAttribute('aria-hidden', 'true');
+
+        chip.append(nameSpan, addIcon);
+        chip.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const nextSel = toggleEdgeInSelection(app.selection, edge.id, app.doc.edges);
+          applySelection(nextSel);
+          renderWiresOnly();
+        });
+        chipsWrap.appendChild(chip);
+      }
+      membersSection.appendChild(chipsWrap);
+    }
+
+    form.appendChild(membersSection);
 
     const alignSection = document.createElement('div');
     alignSection.className = 'prop-divider';

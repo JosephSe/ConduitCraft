@@ -1719,6 +1719,118 @@
     gap: 0.4rem;
   }
 
+  .selection-members-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .selection-help-tip {
+    font-size: 0.72rem;
+    color: var(--wl-text-muted);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .selection-actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .selection-mode-toggle.is-active,
+  .selection-mode-toggle.btn-active {
+    background: var(--wl-blue-soft);
+    color: var(--wl-blue);
+    border-color: var(--wl-blue);
+    font-weight: 600;
+  }
+
+  .selection-subheading {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--wl-text-secondary);
+    margin-top: 0.25rem;
+  }
+
+  .selection-member-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .selection-member-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.74rem;
+    font-family: inherit;
+    color: var(--wl-text-primary);
+    background: var(--wl-surface-card);
+    border: 1px solid var(--wl-border-ui);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    max-width: 100%;
+  }
+
+  .selection-member-chip:hover {
+    background: var(--wl-surface-hover);
+    border-color: var(--wl-text-muted);
+  }
+
+  .selection-member-chip .chip-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 14rem;
+  }
+
+  .selection-member-chip .chip-remove,
+  .selection-member-chip .chip-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    font-size: 0.68rem;
+    border-radius: 50%;
+    background: rgba(125, 125, 125, 0.18);
+    color: var(--wl-text-muted);
+    flex-shrink: 0;
+  }
+
+  .selection-member-chip:hover .chip-remove {
+    background: var(--wl-rose-soft);
+    color: var(--wl-rose);
+  }
+
+  .selection-member-chip:hover .chip-add {
+    background: var(--wl-emerald-soft);
+    color: var(--wl-emerald);
+  }
+
+  .selection-member-chip.zone-chip {
+    border-color: var(--wl-violet, #8b5cf6);
+  }
+
+  .selection-member-chip.notes-chip {
+    border-color: var(--wl-amber, #f59e0b);
+  }
+
+  .selection-member-chip.is-excluded {
+    opacity: 0.55;
+    border-style: dashed;
+  }
+
+  .selection-member-chip.is-excluded:hover {
+    opacity: 0.95;
+  }
+
   .conduit-group.is-selected .conduit-glow {
     opacity: 0.62;
     stroke-width: 13;

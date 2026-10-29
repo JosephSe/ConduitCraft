@@ -67,6 +67,8 @@ export const app = {
   multiPointer: false,
   /** Swallow the click that a pinch or two-finger pan would otherwise trigger. */
   blockPointerClick: false,
+  /** When enabled, clicking canvas items directly unselects them without requiring Shift. */
+  selectionUnselectMode: false,
 };
 
 const MAX_HISTORY = 60;
@@ -84,6 +86,9 @@ export function setSelection(next: SelectionTarget): boolean {
   if (!update.changed) return false;
   const previous = app.selection;
   app.selection = update.selection;
+  if (app.selection.type === 'none') {
+    app.selectionUnselectMode = false;
+  }
   const event: SelectionChange = { previous, selection: app.selection };
   for (const listener of [...selectionListeners]) listener(event);
   return true;
@@ -231,6 +236,47 @@ export function isSelectedNode(nodeId: string): boolean {
 export function getSelectedNodeIds(): string[] {
   if (app.selection.type === 'node') return [app.selection.id];
   if (app.selection.type === 'multi') return [...app.selection.ids];
+  return [];
+}
+
+export function isSelectedZone(zoneId: string): boolean {
+  if (app.selection.type === 'zone') return app.selection.id === zoneId;
+  if (app.selection.type === 'multi') return (app.selection.zoneIds ?? []).includes(zoneId);
+  return false;
+}
+
+export function isSelectedNotes(notesId: string): boolean {
+  if (app.selection.type === 'notes') return app.selection.id === notesId;
+  if (app.selection.type === 'multi') return (app.selection.notesIds ?? []).includes(notesId);
+  return false;
+}
+
+export function isSelectedEdge(edgeId: string): boolean {
+  if (app.selection.type === 'edge') return app.selection.id === edgeId;
+  if (app.selection.type === 'multi') {
+    if (app.selection.excludedEdgeIds?.includes(edgeId)) return false;
+    if (app.selection.edgeIds?.includes(edgeId)) return true;
+    const edge = app.doc.edges.find((e) => e.id === edgeId);
+    if (!edge) return false;
+    return app.selection.ids.includes(edge.from) || app.selection.ids.includes(edge.to);
+  }
+  return false;
+}
+
+export function getSelectedEdgeIds(): string[] {
+  if (app.selection.type === 'edge') return [app.selection.id];
+  if (app.selection.type === 'multi') {
+    const selectedNodes = new Set(app.selection.ids);
+    const explicitEdges = new Set(app.selection.edgeIds ?? []);
+    const excludedEdges = new Set(app.selection.excludedEdgeIds ?? []);
+    return app.doc.edges
+      .filter((e) => {
+        const touches = selectedNodes.has(e.from) || selectedNodes.has(e.to);
+        const explicit = explicitEdges.has(e.id);
+        return (touches || explicit) && !excludedEdges.has(e.id);
+      })
+      .map((e) => e.id);
+  }
   return [];
 }
 

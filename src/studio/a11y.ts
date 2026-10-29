@@ -68,7 +68,17 @@ export function describeSelection(selection: SelectionTarget, doc: DiagramDocume
     }
     case 'multi': {
       const count = selection.ids.length;
-      return `Selected ${count} ${count === 1 ? 'component' : 'components'}`;
+      const edgeCount = selection.edgeIds?.length ?? 0;
+      if (count > 0 && edgeCount === 0) {
+        return `Selected ${count} ${count === 1 ? 'component' : 'components'}`;
+      }
+      if (count === 0 && edgeCount > 0) {
+        return `Selected ${edgeCount} ${edgeCount === 1 ? 'wire' : 'wires'}`;
+      }
+      const parts: string[] = [];
+      if (count > 0) parts.push(`${count} ${count === 1 ? 'component' : 'components'}`);
+      if (edgeCount > 0) parts.push(`${edgeCount} ${edgeCount === 1 ? 'wire' : 'wires'}`);
+      return `Selected ${parts.join(', ')}`;
     }
     case 'edge': {
       const edge = doc.edges.find((e) => e.id === selection.id);

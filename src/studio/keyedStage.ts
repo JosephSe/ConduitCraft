@@ -24,6 +24,8 @@ import {
   app,
   getSelectedNodeIds,
   isSelectedNode,
+  isSelectedNotes,
+  isSelectedZone,
   beginHistoryGesture,
   endHistoryGesture,
   pushHistory,
@@ -36,19 +38,32 @@ import { applySelection, requestInspectorRefresh } from './render';
 import { beginPortWireDrag, createEdgeConnection, deleteSelected } from './interactions';
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
+import {
+  toggleEdgeInSelection,
+  toggleNodeInSelection,
+  toggleNotesInSelection,
+  toggleZoneInSelection,
+} from './selection';
 
-function toggleSelectedNode(id: string): void {
-  const currentIds = getSelectedNodeIds();
-  const nextIds = currentIds.includes(id)
-    ? currentIds.filter((existing) => existing !== id)
-    : [...currentIds, id];
-  applySelection(
-    nextIds.length > 1
-      ? { type: 'multi', ids: nextIds }
-      : nextIds.length === 1
-        ? { type: 'node', id: nextIds[0] }
-        : { type: 'none' },
-  );
+export function toggleSelectedNode(id: string): void {
+  const next = toggleNodeInSelection(app.selection, id);
+  applySelection(next);
+}
+
+export function toggleSelectedZone(id: string): void {
+  const next = toggleZoneInSelection(app.selection, id);
+  applySelection(next);
+}
+
+export function toggleSelectedNotes(id: string): void {
+  const next = toggleNotesInSelection(app.selection, id);
+  applySelection(next);
+}
+
+export function toggleSelectedEdge(edgeId: string): void {
+  const next = toggleEdgeInSelection(app.selection, edgeId, app.doc.edges);
+  applySelection(next);
+  renderWiresOnly();
 }
 
 function liveZone(id: string): DiagramZone | undefined {
@@ -104,12 +119,29 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     const current = liveZone(banner.dataset.zoneId || '');
     if (!current) return;
     e.stopPropagation();
+
+    const isToggleZone =
+      e.shiftKey ||
+      e.metaKey ||
+      e.ctrlKey ||
+      (app.selectionUnselectMode && isSelectedZone(current.id));
+
+    if (isToggleZone) {
+      toggleSelectedZone(current.id);
+      return;
+    }
+
     applySelection({ type: 'zone', id: current.id }, { refreshIfUnchanged: true });
     if (current.locked) return;
     dragStartX = e.clientX;
     origX = current.x;
     moved = false;
     banner.setPointerCapture(e.pointerId);
+  });
+  banner.addEventListener('click', (e) => {
+    if (e.shiftKey || e.metaKey || e.ctrlKey || app.selectionUnselectMode) {
+      e.stopPropagation();
+    }
   });
   banner.addEventListener('pointermove', (e) => {
     if (!banner.hasPointerCapture(e.pointerId)) return;
@@ -233,11 +265,24 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
   list.className = 'blueprint-spec-list';
   aside.append(header, list);
 
+  const isToggleNotesEvent = (e: MouseEvent | PointerEvent) => {
+    return (
+      e.shiftKey ||
+      e.metaKey ||
+      e.ctrlKey ||
+      (app.selectionUnselectMode && isSelectedNotes(card.id))
+    );
+  };
+
   aside.addEventListener('pointerdown', (e) => {
     if (app.workspaceMode !== 'design' || e.button !== 0) return;
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
+    if (isToggleNotesEvent(e)) {
+      toggleSelectedNotes(current.id);
+      return;
+    }
     applySelection({ type: 'notes', id: current.id });
   });
   aside.addEventListener('pointerup', (e) => {
@@ -249,6 +294,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
+    if (isToggleNotesEvent(e)) return;
     applySelection({ type: 'notes', id: current.id }, { expectedHeading: 'NOTES / SPEC CARD' });
   });
 
@@ -262,6 +308,10 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
+    if (isToggleNotesEvent(e)) {
+      toggleSelectedNotes(current.id);
+      return;
+    }
     if (current.groupId && !e.altKey) {
       const gNodeIds = app.doc.nodes.filter((n) => n.groupId === current.groupId).map((n) => n.id);
       const gNoteIds = app.doc.notesCards.filter((c) => c.groupId === current.groupId).map((c) => c.id);
@@ -378,6 +428,15 @@ function createWireGroup(edgeId: string): SVGGElement {
   g.setAttribute('tabindex', '0');
   g.setAttribute('role', 'button');
 
+  const isToggleWireEvent = (e: MouseEvent | PointerEvent) => {
+    return (
+      e.shiftKey ||
+      e.metaKey ||
+      e.ctrlKey ||
+      (app.selectionUnselectMode && (app.selection.type === 'multi' || app.selection.type === 'node'))
+    );
+  };
+
   const selectWire = (e: Event) => {
     e.stopPropagation();
     const id = g.dataset.edgeId || '';
@@ -398,6 +457,10 @@ function createWireGroup(edgeId: string): SVGGElement {
   g.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
+      if (e.shiftKey) {
+        toggleSelectedEdge(edgeId);
+        return;
+      }
       selectWire(e);
     } else if ((e.key === 'Delete' || e.key === 'Backspace') && app.workspaceMode === 'design') {
       e.preventDefault();
@@ -411,10 +474,21 @@ function createWireGroup(edgeId: string): SVGGElement {
   hit.setAttribute('class', 'conduit-hit');
   hit.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
+    if (isToggleWireEvent(e)) {
+      e.stopPropagation();
+      toggleSelectedEdge(edgeId);
+      return;
+    }
     selectWire(e);
   });
   hit.addEventListener('pointerup', (e) => e.stopPropagation());
-  hit.addEventListener('click', selectWire);
+  hit.addEventListener('click', (e) => {
+    if (isToggleWireEvent(e as MouseEvent)) {
+      e.stopPropagation();
+      return;
+    }
+    selectWire(e);
+  });
 
   const glow = document.createElementNS(SVG_NS, 'path');
   glow.setAttribute('class', 'conduit-glow');
@@ -450,10 +524,21 @@ function createWireGroup(edgeId: string): SVGGElement {
       badge.append(rect, txt);
       badge.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
+        if (isToggleWireEvent(e)) {
+          e.stopPropagation();
+          toggleSelectedEdge(edgeId);
+          return;
+        }
         selectWire(e);
       });
       badge.addEventListener('pointerup', (e) => e.stopPropagation());
-      badge.addEventListener('click', selectWire);
+      badge.addEventListener('click', (e) => {
+        if (isToggleWireEvent(e as MouseEvent)) {
+          e.stopPropagation();
+          return;
+        }
+        selectWire(e);
+      });
       g.appendChild(badge);
     }
     const bw = Math.round(edge.badgeWidth);
@@ -688,6 +773,15 @@ function createNodeElement(node: DiagramNode): HTMLElement {
   dragHandle.textContent = '⋮⋮';
 
   let lastPointerWasDrag = false;
+  const isToggleNodeEvent = (e: MouseEvent | PointerEvent) => {
+    return (
+      e.shiftKey ||
+      e.metaKey ||
+      e.ctrlKey ||
+      (app.selectionUnselectMode && isSelectedNode(nodeId))
+    );
+  };
+
   const attachNodeMove = (triggerEl: HTMLElement, isHandle: boolean) => {
     let startClientX = 0;
     let startClientY = 0;
@@ -715,7 +809,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       e.stopPropagation();
       lastPointerWasDrag = false;
 
-      if (e.shiftKey) {
+      if (isToggleNodeEvent(e)) {
         toggleSelectedNode(current.id);
         return;
       }
@@ -874,7 +968,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       lastPointerWasDrag = wasMoved;
       endMove();
       const current = liveNode(nodeId);
-      if (!current || wasMoved || e.shiftKey) return;
+      if (!current || wasMoved || isToggleNodeEvent(e)) return;
       if (app.workspaceMode === 'design') {
         applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
       } else {
@@ -896,7 +990,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     }
     const current = liveNode(nodeId);
     if (!current) return;
-    if (e.shiftKey) {
+    if (isToggleNodeEvent(e)) {
       if (app.workspaceMode === 'data') toggleSelectedNode(current.id);
       return;
     }
@@ -1222,7 +1316,13 @@ export function updateVisualSelectionHighlights(): void {
   }
 
   const selectedIds = getSelectedNodeIds();
-  const spotlight = selectedIds.length > 0 && (app.workspaceMode === 'data' || selectedIds.length > 1);
+  const multiEdges = app.selection.type === 'multi' ? (app.selection.edgeIds ?? []) : [];
+  const excludedEdges =
+    app.selection.type === 'multi' ? new Set(app.selection.excludedEdgeIds ?? []) : new Set<string>();
+  const hasEdges = multiEdges.length > 0;
+  const spotlight =
+    (selectedIds.length > 0 || hasEdges) &&
+    (app.workspaceMode === 'data' || selectedIds.length > 1 || hasEdges || excludedEdges.size > 0);
   if (spotlight) {
     const selected = new Set(selectedIds);
     const related = relatedNodeIds(app.doc, selectedIds);
@@ -1235,10 +1335,16 @@ export function updateVisualSelectionHighlights(): void {
       w.classList.toggle('is-dimmed', !related.has(id));
     }
     for (const g of conduitGroups) {
-      const touches = selected.has(g.dataset.from || '') || selected.has(g.dataset.to || '');
-      g.classList.toggle('is-highlighted', touches);
-      g.classList.toggle('is-dimmed', !touches);
-      g.classList.remove('is-selected');
+      const edgeId = g.dataset.edgeId || '';
+      const fromId = g.dataset.from || '';
+      const toId = g.dataset.to || '';
+      const touches = selected.has(fromId) || selected.has(toId);
+      const isExplicit = multiEdges.includes(edgeId);
+      const isExcluded = excludedEdges.has(edgeId);
+      const active = (touches || isExplicit) && !isExcluded;
+      g.classList.toggle('is-highlighted', active);
+      g.classList.toggle('is-dimmed', !active);
+      g.classList.toggle('is-selected', isExplicit && !isExcluded);
     }
     return;
   }

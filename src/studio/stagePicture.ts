@@ -341,18 +341,32 @@ export function renderStagePictureSvg(
   clone.removeAttribute('id');
   // The live stage uses CSS zoom. This picture keeps the previous scale transform.
   clone.style.removeProperty('zoom');
+  clone.style.transformOrigin = '0 0';
+
   if (currentView) {
     const scale = app.scale || 1;
-    clone.style.transform = `translate(${app.panX}px, ${app.panY}px) scale(${scale})`;
+    const panX = app.panX || 0;
+    const panY = app.panY || 0;
+    const viewFitScale = Math.min(outWidth / frameWidth, outHeight / frameHeight);
+    if (viewFitScale !== 1) {
+      clone.style.transform = `scale(${viewFitScale}) translate(${panX}px, ${panY}px) scale(${scale})`;
+    } else {
+      clone.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
   } else {
-    clone.style.transform = 'none';
+    const fitScale = Math.min(outWidth / stageWidth, outHeight / stageHeight);
+    if (fitScale !== 1) {
+      clone.style.transform = `scale(${fitScale})`;
+    } else {
+      clone.style.transform = 'none';
+    }
   }
   clone.style.width = `${stageWidth}px`;
   clone.style.height = `${stageHeight}px`;
 
   const shell = document.createElement('section');
   shell.className = 'canvas-shell';
-  shell.style.cssText = `position:relative;width:${frameWidth}px;height:${frameHeight}px;overflow:hidden`;
+  shell.style.cssText = `position:relative;width:${outWidth}px;height:${outHeight}px;overflow:hidden`;
   shell.appendChild(clone);
 
   const resolvedVars = getResolvedWlVariables();
@@ -388,8 +402,8 @@ export function renderStagePictureSvg(
   root.style.cssText = [
     customParts.join(';'),
     'display:block',
-    `width:${frameWidth}px`,
-    `height:${frameHeight}px`,
+    `width:${outWidth}px`,
+    `height:${outHeight}px`,
     `margin:0`,
     `color:${bodyStyle?.color || '#0b1324'}`,
     `font-family:${bodyStyle?.fontFamily || "'Inter', system-ui, sans-serif"}`,
@@ -406,7 +420,7 @@ export function renderStagePictureSvg(
   const rawSerialized = new XMLSerializer().serializeToString(root);
   const serialized = resolveCssVariables(rawSerialized, resolvedVars);
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${frameWidth} ${frameHeight}">
-  <foreignObject x="0" y="0" width="${frameWidth}" height="${frameHeight}">${serialized}</foreignObject>
+<svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${outWidth} ${outHeight}">
+  <foreignObject x="0" y="0" width="${outWidth}" height="${outHeight}">${serialized}</foreignObject>
 </svg>`;
 }

@@ -114,6 +114,16 @@ export function selectionWorldBounds(doc: DiagramDocument, selection: SelectionT
       const card = doc.notesCards.find((candidate) => candidate.id === id);
       if (card) rects.push(notesRect(card));
     }
+    for (const id of selection.edgeIds ?? []) {
+      const edge = doc.edges.find((candidate) => candidate.id === id);
+      if (edge) {
+        rects.push(...nodesByIds(doc, [edge.from, edge.to]));
+        if (edge.waypoint) {
+          const [wx, wy] = edge.waypoint;
+          rects.push({ x: wx - 8, y: wy - 8, width: 16, height: 16 });
+        }
+      }
+    }
     return unionRects(rects);
   }
   if (selection.type === 'notes') {
