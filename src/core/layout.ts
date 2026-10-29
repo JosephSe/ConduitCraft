@@ -1127,8 +1127,8 @@ export function expandStageToFit(doc: DiagramDocument): void {
     ? Math.max(0, ...doc.edges.map((e) => (e.waypoint ? e.waypoint[1] + 60 : 0)))
     : 0;
 
-  doc.stageWidth = Math.max(1680, maxNodeR + 140, maxZoneR + 96, maxNotesR + 96, maxEdgeR);
-  doc.stageHeight = Math.max(920, maxNodeB + 160, maxNotesB + 120, maxEdgeB);
+  doc.stageWidth = Math.max(doc.stageWidth || 0, 1680, maxNodeR + 140, maxZoneR + 96, maxNotesR + 96, maxEdgeR);
+  doc.stageHeight = Math.max(doc.stageHeight || 0, 920, maxNodeB + 160, maxNotesB + 120, maxEdgeB);
 }
 
 export function getEffectiveSimulations(doc: DiagramDocument): SimulationScenario[] {

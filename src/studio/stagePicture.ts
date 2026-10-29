@@ -374,10 +374,25 @@ export function renderStagePictureSvg(
   }
   clone.style.width = `${stageWidth}px`;
   clone.style.height = `${stageHeight}px`;
+  clone.style.maxWidth = 'none';
+  clone.style.maxInlineSize = 'none';
+
+  // Ensure wires layer covers full stage dimensions
+  const cloneWires = clone.querySelector<SVGElement>('#wires-svg, .wires-layer');
+  if (cloneWires) {
+    cloneWires.setAttribute('viewBox', `0 0 ${stageWidth} ${stageHeight}`);
+    cloneWires.setAttribute('width', String(stageWidth));
+    cloneWires.setAttribute('height', String(stageHeight));
+    cloneWires.style.width = `${stageWidth}px`;
+    cloneWires.style.height = `${stageHeight}px`;
+    cloneWires.style.maxWidth = 'none';
+    cloneWires.style.maxInlineSize = 'none';
+    cloneWires.style.overflow = 'visible';
+  }
 
   const shell = document.createElement('section');
   shell.className = 'canvas-shell';
-  shell.style.cssText = `position:relative;width:${outWidth}px;height:${outHeight}px;overflow:hidden`;
+  shell.style.cssText = `position:relative;width:${outWidth}px;height:${outHeight}px;overflow:hidden;max-width:none !important;max-inline-size:none !important;`;
   shell.appendChild(clone);
 
   const resolvedVars = getResolvedWlVariables();
@@ -412,9 +427,14 @@ export function renderStagePictureSvg(
 
   root.style.cssText = [
     customParts.join(';'),
-    'display:block',
-    `width:${outWidth}px`,
-    `height:${outHeight}px`,
+    'display:block !important',
+    `width:${outWidth}px !important`,
+    `height:${outHeight}px !important`,
+    `min-width:${outWidth}px !important`,
+    `min-inline-size:${outWidth}px !important`,
+    `max-width:none !important`,
+    `max-inline-size:none !important`,
+    `overflow:visible !important`,
     `margin:0`,
     `color:${bodyStyle?.color || '#0b1324'}`,
     `font-family:${bodyStyle?.fontFamily || "'Inter', system-ui, sans-serif"}`,
@@ -424,14 +444,48 @@ export function renderStagePictureSvg(
   ].join(';');
   root.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
 
+  const exportStyleOverrides = `
+    .workspace {
+      display: block !important;
+      width: ${outWidth}px !important;
+      height: ${outHeight}px !important;
+      min-width: ${outWidth}px !important;
+      min-inline-size: ${outWidth}px !important;
+      max-width: none !important;
+      max-inline-size: none !important;
+      overflow: visible !important;
+    }
+    .canvas-shell {
+      position: relative !important;
+      width: ${outWidth}px !important;
+      height: ${outHeight}px !important;
+      max-width: none !important;
+      max-inline-size: none !important;
+      overflow: hidden !important;
+    }
+    .stage-world {
+      width: ${stageWidth}px !important;
+      height: ${stageHeight}px !important;
+      max-width: none !important;
+      max-inline-size: none !important;
+    }
+    .wires-layer {
+      width: ${stageWidth}px !important;
+      height: ${stageHeight}px !important;
+      max-width: none !important;
+      max-inline-size: none !important;
+      overflow: visible !important;
+    }
+  `;
+
   const style = document.createElement('style');
-  style.textContent = resolveCssVariables(documentCss(), resolvedVars);
+  style.textContent = resolveCssVariables(documentCss(), resolvedVars) + '\n' + exportStyleOverrides;
   root.append(style, shell);
 
   const rawSerialized = new XMLSerializer().serializeToString(root);
   const serialized = resolveCssVariables(rawSerialized, resolvedVars);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${outWidth} ${outHeight}">
-  <foreignObject x="0" y="0" width="${outWidth}" height="${outHeight}">${serialized}</foreignObject>
+  <foreignObject x="0" y="0" width="${outWidth}" height="${outHeight}" style="width:${outWidth}px;height:${outHeight}px;overflow:visible;">${serialized}</foreignObject>
 </svg>`;
 }

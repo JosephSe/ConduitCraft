@@ -822,6 +822,72 @@ describe('portable export', () => {
     }
   });
 
+  it('ensures DOM clone export (renderStagePictureSvg without explicit size) preserves full stage width and overrides 100vw clipping', async () => {
+    const { app } = await import('../src/studio/state.ts');
+    const prevDoc = (globalThis as any).document;
+
+    const doc = createBlankDocument();
+    doc.stageWidth = 2920;
+    doc.stageHeight = 1172;
+    app.doc = doc;
+
+    const stageEl = new MockDOMNode('div');
+    stageEl.id = 'stage-world';
+    stageEl.style.width = '2920px';
+    stageEl.style.height = '1172px';
+
+    const wiresEl = new MockDOMNode('svg');
+    wiresEl.id = 'wires-svg';
+    wiresEl.className = 'wires-layer';
+    wiresEl.setAttribute('viewBox', '0 0 1680 920'); // Intentionally old/un-updated in live DOM
+    wiresEl.setAttribute('width', '1680');
+    wiresEl.setAttribute('height', '920');
+    stageEl.append(wiresEl);
+
+    const viewportEl = new MockDOMNode('div');
+    viewportEl.id = 'viewport';
+
+    const workspaceEl = new MockDOMNode('div');
+    workspaceEl.id = 'workspace';
+
+    (globalThis as any).document = {
+      getElementById: (id: string) => {
+        if (id === 'stage-world') return stageEl;
+        if (id === 'viewport') return viewportEl;
+        if (id === 'workspace') return workspaceEl;
+        return null;
+      },
+      createElement: (tag: string) => new MockDOMNode(tag),
+      documentElement: new MockDOMNode('html'),
+      body: new MockDOMNode('body'),
+      styleSheets: [],
+    };
+
+    try {
+      const svg = renderStagePictureSvg();
+
+      // 1. Root SVG dimensions and viewBox must span the entire 2920px stage
+      assert.match(svg, /width="2920" height="1172"/);
+      assert.match(svg, /viewBox="0 0 2920 1172"/);
+
+      // 2. foreignObject must have full stage dimensions and visible overflow
+      assert.match(svg, /<foreignObject[^>]+width="2920" height="1172"/);
+      assert.match(svg, /overflow:\s*visible/);
+
+      // 3. Workspace styles must override max-inline-size: 100vw and overflow: hidden
+      assert.match(svg, /max-inline-size:\s*none\s*!important/);
+      assert.match(svg, /max-width:\s*none\s*!important/);
+      assert.match(svg, /min-width:\s*2920px\s*!important/);
+      assert.match(svg, /overflow:\s*visible\s*!important/);
+
+      // 4. Cloned wires-layer must be updated to the full 2920x1172 viewBox and dimensions
+      assert.match(svg, /viewBox="0 0 2920 1172"/);
+      assert.match(svg, /class="wires-layer"[^>]+width="2920"/);
+    } finally {
+      (globalThis as any).document = prevDoc;
+    }
+  });
+
   it('preserves multi-select highlights when preserveSelection: true is passed to cleanClonedStage', () => {
     const stage = new MockDOMNode('div');
     stage.id = 'stage-world';

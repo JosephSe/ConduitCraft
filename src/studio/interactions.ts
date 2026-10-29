@@ -1901,6 +1901,7 @@ export function initEvents(): void {
 
   const openExportDialog = (): void => {
     expandStageToFit(app.doc);
+    renderAll(false);
     resetGifChoices();
     updatePngExportEstimate();
     void updateShareLinkPreview();
@@ -1909,6 +1910,7 @@ export function initEvents(): void {
   btnOpenExport.addEventListener('click', openExportDialog);
   btnExportHtml.addEventListener('click', () => {
     expandStageToFit(app.doc);
+    renderAll(false);
     const html = generateStandaloneHtml(app.doc, {
       initialSelection: app.selection.type === 'multi' ? app.selection : undefined,
     });
@@ -1927,6 +1929,7 @@ export function initEvents(): void {
   });
   btnExportSvg.addEventListener('click', () => {
     expandStageToFit(app.doc);
+    renderAll(false);
     const filename = `${getSafeFilenameSlug()}.svg`;
     downloadBlob(
       renderDiagramSvg(app.doc, undefined, app.selection.type === 'multi' ? app.selection : undefined),
@@ -1938,6 +1941,7 @@ export function initEvents(): void {
   });
   btnExportSvgClone?.addEventListener('click', () => {
     expandStageToFit(app.doc);
+    renderAll(false);
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(
       renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi' }),
@@ -1949,6 +1953,7 @@ export function initEvents(): void {
   });
   btnExportPng.addEventListener('click', () => {
     expandStageToFit(app.doc);
+    renderAll(false);
     const scale = getSelectedPngScale();
     const width = Math.max(1, Math.round(app.doc.stageWidth * scale));
     const height = Math.max(1, Math.round(app.doc.stageHeight * scale));
