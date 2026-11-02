@@ -6,7 +6,7 @@ import type { DiagramDocument, SelectionTarget } from '../types';
 
 let liveAnnouncerEl: HTMLElement | null = null;
 let lastAnnouncedMessage = '';
-let clearTimer: number | null = null;
+let clearTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function getOrCreateLiveAnnouncer(): HTMLElement | null {
   if (typeof document === 'undefined') return null;
@@ -31,7 +31,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
   if (!el || !message) return;
 
   if (clearTimer !== null) {
-    window.clearTimeout(clearTimer);
+    clearTimeout(clearTimer);
     clearTimer = null;
   }
 
@@ -40,7 +40,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
   // If the same message is announced consecutively, momentarily empty text so the screen reader re-announces
   if (message === lastAnnouncedMessage) {
     el.textContent = '';
-    window.setTimeout(() => {
+    setTimeout(() => {
       el.textContent = message;
     }, 50);
   } else {
@@ -49,7 +49,7 @@ export function announce(message: string, priority: 'polite' | 'assertive' = 'po
   }
 
   // Clear live region text after 6 seconds
-  clearTimer = window.setTimeout(() => {
+  clearTimer = setTimeout(() => {
     if (el) el.textContent = '';
     clearTimer = null;
   }, 6000);

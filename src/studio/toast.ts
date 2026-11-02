@@ -1,4 +1,5 @@
 /** Lightweight toast notifications and undo-aware user feedback. */
+import { announce } from './a11y';
 
 export interface ToastAction {
   label: string;
@@ -63,8 +64,6 @@ function getToastContainer(): HTMLElement | null {
     container = document.createElement('div');
     container.id = 'toast-container';
     container.className = 'toast-container';
-    container.setAttribute('aria-live', 'polite');
-    container.setAttribute('aria-atomic', 'true');
     document.body.appendChild(container);
   }
   trackHudClearance(container);
@@ -81,6 +80,9 @@ export function notify(message: string, options: ToastOptions = {}): () => void 
     return () => {};
   }
 
+  // The single announcer speaks every toast; the toast markup itself is silent so nothing is read twice.
+  announce(message, options.tone === 'error' ? 'assertive' : 'polite');
+
   // Cap maximum visible toasts to 4
   if (activeToasts.size >= 4) {
     const oldestKey = activeToasts.keys().next().value;
@@ -91,7 +93,6 @@ export function notify(message: string, options: ToastOptions = {}): () => void 
 
   const toast = document.createElement('div');
   toast.className = `toast-item toast-${options.tone ?? 'normal'}`;
-  toast.setAttribute('role', 'status');
 
   const textSpan = document.createElement('span');
   textSpan.className = 'toast-message';
