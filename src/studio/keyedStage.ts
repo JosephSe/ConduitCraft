@@ -311,7 +311,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     if (!current) return;
     e.stopPropagation();
     if (isToggleNotesEvent(e)) return;
-    applySelection({ type: 'notes', id: current.id }, { expectedHeading: 'NOTES / SPEC CARD' });
+    applySelection({ type: 'notes', id: current.id }, { expectedHeading: 'NOTE' });
   });
 
   let startX = 0;
@@ -556,9 +556,9 @@ function createWireGroup(edgeId: string): SVGGElement {
       if (
         app.selection.type !== 'edge' ||
         app.selection.id !== id ||
-        propPanelHeading.textContent !== 'STREAM WIRE PROPERTIES'
+        propPanelHeading.textContent !== 'WIRE PROPERTIES'
       ) {
-        applySelection({ type: 'edge', id }, { expectedHeading: 'STREAM WIRE PROPERTIES' });
+        applySelection({ type: 'edge', id }, { expectedHeading: 'WIRE PROPERTIES' });
         renderWiresOnly();
       }
     } else {
@@ -801,7 +801,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;
     g.setAttribute(
       'aria-label',
-      `Stream wire ${flowText}${edge.label ? `, ${edge.label}` : ''}, ${edge.route} routing`,
+      `Wire ${flowText}${edge.label ? `, ${edge.label}` : ''}, ${edge.route} routing`,
     );
     const laneTx =
       edge.laneOffset && (edge.laneOffset[0] !== 0 || edge.laneOffset[1] !== 0)

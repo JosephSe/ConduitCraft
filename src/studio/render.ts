@@ -121,7 +121,7 @@ export function renderAll(rebuildInspector = true): void {
     }
     if (btnRestoreSession) {
       btnRestoreSession.hidden = !isEmpty;
-      setText(btnRestoreSession, `↺ Restore Previous Session (${count} ${count === 1 ? 'node' : 'nodes'})`);
+      setText(btnRestoreSession, `↺ Restore Previous Session (${count} ${count === 1 ? 'component' : 'components'})`);
     }
   } else {
     if (restoreSessionBanner) {

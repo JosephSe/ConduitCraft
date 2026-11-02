@@ -119,9 +119,9 @@
       </div>
 
       <!-- Data View Stream Filters (Data View Mode) -->
-      <div class="tool-strip" id="data-toolbar" role="toolbar" aria-label="Telemetry stream controls" hidden>
-        <fieldset class="segmented-group" id="stream-filter-group" aria-label="Filter stream channels">
-          <legend class="visually-hidden">Stream Channel Filter</legend>
+      <div class="tool-strip" id="data-toolbar" role="toolbar" aria-label="Wire controls" hidden>
+        <fieldset class="segmented-group" id="stream-filter-group" aria-label="Filter wires by color">
+          <legend class="visually-hidden">Wire color filter</legend>
           <label class="segmented-label">
             <input type="radio" name="flow-filter" value="all" class="visually-hidden" checked>
             <span>All</span>
@@ -312,31 +312,31 @@
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
         </button>
         <div class="rail-divider"></div>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="actor" data-tip="Add Actor node" data-tip-pos="right" aria-label="Add Actor node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="actor" data-tip="Add Actor component" data-tip-pos="right" aria-label="Add Actor component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6 21v-2a6 6 0 0 1 12 0v2"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="core" data-tip="Add Core System node" data-tip-pos="right" aria-label="Add Core System node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="core" data-tip="Add Core System component" data-tip-pos="right" aria-label="Add Core System component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="service" data-tip="Add Service / API node" data-tip-pos="right" aria-label="Add Service / API node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="service" data-tip="Add Service / API component" data-tip-pos="right" aria-label="Add Service / API component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="bus" data-tip="Add Event Broker node" data-tip-pos="right" aria-label="Add Event Broker node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="bus" data-tip="Add Event Broker component" data-tip-pos="right" aria-label="Add Event Broker component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M4 15h16M8 15V9a4 4 0 0 1 8 0v6M12 9v6"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="store" data-tip="Add Data Store node" data-tip-pos="right" aria-label="Add Data Store node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="store" data-tip="Add Data Store component" data-tip-pos="right" aria-label="Add Data Store component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="gate" data-tip="Add Control Gate node" data-tip-pos="right" aria-label="Add Control Gate node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="gate" data-tip="Add Control Gate component" data-tip-pos="right" aria-label="Add Control Gate component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="client" data-tip="Add Client Device node" data-tip-pos="right" aria-label="Add Client Device node">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="client" data-tip="Add Client Device component" data-tip-pos="right" aria-label="Add Client Device component">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
         </button>
         <button type="button" class="rail-stencil-btn" data-stencil-kind="zone" data-tip="Add Swimlane Stage" data-tip-pos="right" aria-label="Add Swimlane Stage">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
         </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="notes" data-tip="Add Notes card" data-tip-pos="right" aria-label="Add Notes card">
+        <button type="button" class="rail-stencil-btn" data-stencil-kind="notes" data-tip="Add Note" data-tip-pos="right" aria-label="Add Note">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
         </button>
       </div>
@@ -373,7 +373,7 @@
                 <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
               </span>
               <span>
-                <strong>Notes / Spec Card</strong>
+                <strong>Note</strong>
                 <small>Checklist annotation box</small>
               </span>
             </button>
@@ -402,7 +402,7 @@
             <svg class="ui-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
           </span>
           <strong>Drop Mermaid (.mmd), Blueprint (.md), or .blueprint.json</strong>
-          <span>Nodes, swimlanes, and animated telemetry conduits will be built automatically</span>
+          <span>Components, swimlanes and animated wires will be built automatically</span>
         </div>
       </div>
 
@@ -503,7 +503,7 @@
         </div>
 
         <div class="hud-card hud-status-card" id="hud-status-card">
-          <span class="hud-tip" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto grid · Drag from any port dot to wire animated streams</span>
+          <span class="hud-tip" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</span>
         </div>
 
         <div class="hud-card hud-coach-card" id="hud-coach-card">
@@ -520,8 +520,8 @@
             type="search"
             class="hud-search-input"
             id="hud-search-input"
-            placeholder="Find node… (⌘F)"
-            aria-label="Find node by title, subtitle, or eyebrow"
+            placeholder="Find component… (⌘F)"
+            aria-label="Find a component by name, subtitle or label"
             autocomplete="off"
             spellcheck="false"
           />
@@ -544,7 +544,7 @@
     </section>
 
     <!-- Right Contextual Inspector (Property Editor in Design Mode / Live Telemetry Inspector in Data View Mode) -->
-    <aside class="inspector" id="inspector-panel" aria-label="Properties and telemetry inspector">
+    <aside class="inspector" id="inspector-panel" aria-label="Properties inspector">
       <!-- Collapsed Icon Rail View -->
       <div class="inspector-rail-content" id="inspector-rail-content" aria-label="Properties dock">
         <button type="button" class="btn btn-icon-only btn-rail-expand" id="btn-rail-expand-inspector" aria-label="Expand properties inspector (])" data-tip="Expand inspector (])" data-tip-pos="left">
@@ -598,7 +598,7 @@
             <p class="inspector-summary" id="insp-summary"></p>
 
             <div class="inspector-section">
-              <h3 class="section-heading">TELEMETRY &amp; METRICS</h3>
+              <h3 class="section-heading">METRICS</h3>
               <div class="metrics-grid" id="insp-metrics"></div>
             </div>
 
@@ -622,7 +622,7 @@
             <!-- Simulation Playback Controls Deck -->
             <div class="sim-playback-deck" id="sim-playback-deck" hidden>
               <div class="sim-playback-header">
-                <span class="sim-playback-title" id="sim-playback-title">Active Simulation</span>
+                <span class="sim-playback-title" id="sim-playback-title">Active Scenario</span>
                 <span class="sim-playback-step-badge" id="sim-playback-step-badge">Step 1 of 4</span>
               </div>
 
@@ -634,7 +634,7 @@
                 <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-prev" aria-label="Previous step" data-tip="Previous step">
                   <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
                 </button>
-                <button type="button" class="btn btn-compact btn-sim-play" id="btn-sim-play" aria-label="Play or pause simulation" data-tip="Play/Pause">
+                <button type="button" class="btn btn-compact btn-sim-play" id="btn-sim-play" aria-label="Play or pause scenario" data-tip="Play/Pause">
                   <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
                   <span id="btn-sim-play-label">Play</span>
                 </button>
@@ -644,7 +644,7 @@
 
                 <div class="sim-deck-spacer"></div>
 
-                <button type="button" class="btn btn-compact sim-speed-btn" id="btn-sim-speed" aria-label="Simulation speed (click to toggle)" data-tip="Playback speed">1.0×</button>
+                <button type="button" class="btn btn-compact sim-speed-btn" id="btn-sim-speed" aria-label="Scenario speed (click to toggle)" data-tip="Playback speed">1.0×</button>
                 <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-loop" aria-label="Toggle loop" data-tip="Loop simulation" aria-pressed="false">
                   <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
                 </button>
@@ -794,7 +794,7 @@
           </button>
           <button type="button" class="export-option-card" id="btn-export-html">
             <strong>Interactive Animated Data View (.html)</strong>
-            <span>Self-contained single-file web page with animated telemetry streams, pan/zoom, inspector, matrix, and live packet simulation.</span>
+            <span>Self-contained single-file web page with animated wires, pan/zoom, inspector, matrix, and live packet simulation.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-mmd">
             <strong>Mermaid Flowchart (.mmd)</strong>
@@ -823,7 +823,7 @@
           <div class="export-cards">
             <button type="button" class="export-option-card" id="btn-gif-whole">
               <strong>Whole diagram</strong>
-              <span>The full stage, with the telemetry wires moving.</span>
+              <span>The full stage, with the wires moving.</span>
             </button>
             <button type="button" class="export-option-card" id="btn-gif-view">
               <strong>Current view</strong>
@@ -960,7 +960,7 @@
           <label class="theme-option">
             <span>
               <strong>Dark Slate</strong>
-              <span class="theme-option-sub">High-contrast dark telemetry stage</span>
+              <span class="theme-option-sub">High-contrast dark stage</span>
             </span>
             <input type="radio" name="theme-choice" value="dark">
           </label>

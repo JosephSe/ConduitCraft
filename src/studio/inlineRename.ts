@@ -88,8 +88,8 @@ export function renameNotesInline(id: string): void {
     return;
   }
   const textEl = document.querySelector(`.blueprint-spec[data-notes-id="${CSS.escape(id)}"] .notes-title`);
-  startTextEdit(textEl, card.title, 'Notes card title', (value) =>
-    commitRename('Notes card', () => {
+  startTextEdit(textEl, card.title, 'Note title', (value) =>
+    commitRename('Note', () => {
       const live = app.doc.notesCards.find((c) => c.id === id);
       if (live) live.title = value;
     }, value),

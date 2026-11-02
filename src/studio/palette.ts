@@ -194,7 +194,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'add-notes',
       title: 'Add Notes / Spec Checklist Card',
-      subtitle: 'Documentation and spec card on stage',
+      subtitle: 'A note card for documentation',
       category: 'Components',
       keywords: ['notes', 'spec', 'checklist', 'card', 'annotation'],
       run: () => {
@@ -204,7 +204,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
         expandStageToFit(app.doc);
         setSelection({ type: 'notes', id: notes.id });
         renderAll(true);
-        notify('Added Notes Card');
+        notify('Added Note');
       },
     },
 
@@ -425,7 +425,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'sim-step-forward',
-      title: 'Simulation: Step Forward',
+      title: 'Scenario: Step Forward',
       subtitle: 'Advance to the next packet hop',
       category: 'Mode & View',
       keywords: ['step', 'next', 'forward', 'simulation'],
@@ -435,7 +435,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'sim-step-backward',
-      title: 'Simulation: Step Backward',
+      title: 'Scenario: Step Backward',
       subtitle: 'Go back to previous packet hop',
       category: 'Mode & View',
       keywords: ['step', 'prev', 'back', 'simulation'],
@@ -445,13 +445,13 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'sim-toggle-loop',
-      title: 'Simulation: Toggle Loop',
-      subtitle: 'Repeat simulation packet scenario continuously',
+      title: 'Scenario: Toggle Loop',
+      subtitle: 'Repeat the scenario continuously',
       category: 'Mode & View',
       keywords: ['loop', 'repeat', 'continuous', 'simulation'],
       run: () => {
         const looping = simulationPlayback.toggleLoop();
-        notify(looping ? 'Simulation loop enabled' : 'Simulation loop disabled');
+        notify(looping ? 'Scenario loop enabled' : 'Scenario loop disabled');
       },
     },
 
@@ -627,7 +627,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'open-snapshots',
       title: 'Version Snapshots & Architecture Diff',
-      subtitle: 'Browse milestones and diff against current live diagram',
+      subtitle: 'Browse snapshots and compare them with the current diagram',
       category: 'Export & Sync',
       keywords: ['snapshots', 'diff', 'compare', 'history', 'version', 'milestone'],
       run: () => {
@@ -636,7 +636,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'take-snapshot',
-      title: 'Record Version Snapshot Milestone',
+      title: 'Take Snapshot',
       subtitle: 'Save a named checkpoint of the current diagram state',
       category: 'Export & Sync',
       keywords: ['snapshot', 'save', 'checkpoint', 'milestone', 'record'],

@@ -792,7 +792,7 @@ export function deleteSelected(): void {
   if (sel.type === 'notes') {
     const card = app.doc.notesCards.find((c) => c.id === sel.id);
     if (card?.locked) {
-      notify(`Cannot delete locked notes card "${card.title}"`);
+      notify(`Cannot delete locked note "${card.title}"`);
       return;
     }
     pushHistory();
@@ -837,7 +837,7 @@ export function deleteSelected(): void {
     app.doc.edges = app.doc.edges.filter((e) => e.id !== sel.id);
     setSelection({ type: 'none' });
     renderAll(true);
-    notify('Deleted stream', { action: { label: 'Undo', onClick: () => performUndo() } });
+    notify('Deleted wire', { action: { label: 'Undo', onClick: () => performUndo() } });
   }
 }
 
@@ -1018,7 +1018,7 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
     requestAnimationFrame(fitToViewport);
     codeSyncDiagnostics.dataset.tone = 'ok';
     codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components from Blueprint JSON.`;
-    const msg = `Imported Blueprint JSON (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    const msg = `Imported Blueprint JSON (${app.doc.nodes.length} components, ${app.doc.edges.length} wires)`;
     hudStatusTip.textContent = msg;
     notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
     return true;
@@ -1058,13 +1058,13 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
     codeSyncDiagnostics.textContent = summary || warnings[0];
     const msg = `Imported ${app.doc.nodes.length} nodes (${issues.length || warnings.length} warning${(issues.length || warnings.length) === 1 ? '' : 's'}: ${formatIssue(0)})`;
     hudStatusTip.textContent = msg;
-    notify(`Imported ${app.doc.nodes.length} nodes with warnings`, { action: { label: 'Undo', onClick: () => performUndo() } });
+    notify(`Imported ${app.doc.nodes.length} components with warnings`, { action: { label: 'Undo', onClick: () => performUndo() } });
   } else {
     codeSyncDiagnostics.dataset.tone = 'ok';
-    codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} streams (0 issues).`;
-    const msg = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} animated telemetry streams`;
+    codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} wires (0 issues).`;
+    const msg = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} animated wires`;
     hudStatusTip.textContent = msg;
-    notify(`Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} streams`, { action: { label: 'Undo', onClick: () => performUndo() } });
+    notify(`Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} wires`, { action: { label: 'Undo', onClick: () => performUndo() } });
   }
   return true;
 }
@@ -1290,7 +1290,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
     }
     hudStatusTip.textContent =
       animated > 0
-        ? 'Saved a short animation of the telemetry wires.'
+        ? 'Saved a short animation of the wires.'
         : 'Saved a still picture. No wires on this diagram are animated.';
   } catch {
     hudStatusTip.textContent = 'Could not render a GIF of this diagram.';
@@ -1353,7 +1353,7 @@ export function initEvents(): void {
 
         hudStatusTip.textContent =
           app.workspaceMode === 'design'
-            ? 'Drag stencils onto grid · Drag from any port dot to wire animated streams'
+            ? 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire'
             : 'Data View · Shift-click to select several components. Connected components stay highlighted.';
 
         if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
@@ -1394,13 +1394,13 @@ export function initEvents(): void {
       app.connectSourceNodeId = null;
       hudStatusTip.textContent =
         app.pointerTool === 'connect'
-          ? 'Connect Mode · Drag from any component or port to another component to wire an animated stream'
-          : 'Drag stencils onto grid · Drag from any port dot to wire animated streams';
+          ? 'Connect Mode · Drag from any component or port to another component to draw an animated wire'
+          : 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire';
       announceToolChange(app.pointerTool);
     });
   }
 
-  // Stream Channel Filter (Data View Mode)
+  // Wire color filter (Data View Mode)
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="flow-filter"]')) {
     radio.addEventListener('change', () => {
       if (radio.checked) workspace.dataset.flow = radio.value;
@@ -1708,7 +1708,7 @@ export function initEvents(): void {
     setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
     renderAll(true);
     fitToViewport();
-    const msg = `Restored previous session (${app.doc.nodes.length} components, ${app.doc.edges.length} streams)`;
+    const msg = `Restored previous session (${app.doc.nodes.length} components, ${app.doc.edges.length} wires)`;
     hudStatusTip.textContent = msg;
     notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
   };

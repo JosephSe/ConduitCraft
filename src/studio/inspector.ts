@@ -445,7 +445,7 @@ export function renderPropertyEditor(): void {
     basicsElements.push(
       makeField(
         'prop-node-title',
-        'Title',
+        'Name',
         makeTextInput(node.title, (v) => {
           node.title = v;
           renderAll(false);
@@ -453,16 +453,7 @@ export function renderPropertyEditor(): void {
       ),
     );
 
-    basicsElements.push(
-      makeField(
-        'prop-node-subtitle',
-        'Subtitle / Role',
-        makeTextInput(node.subtitle, (v) => {
-          node.subtitle = v;
-          renderAll(false);
-        }),
-      ),
-    );
+    // Description (the long text) and Kind are added below, once their controls exist.
 
     const toneWrap = document.createElement('div');
     toneWrap.className = 'prop-field';
@@ -508,15 +499,12 @@ export function renderPropertyEditor(): void {
       const row = document.createElement('div');
       row.className = 'prop-row-2';
       row.append(
-        makeField('prop-node-kind', 'Shape Kind', kindSelect),
         makeField('prop-node-icon', 'Icon', iconPicker),
       );
       const trigger = iconPicker.querySelector('button');
       if (trigger) trigger.id = 'prop-node-icon';
       iconPicker.removeAttribute('id');
       appearanceElements.push(row);
-    } else {
-      appearanceElements.push(makeField('prop-node-kind', 'Shape Kind', kindSelect));
     }
 
     const shapeSelect = document.createElement('select');
@@ -538,7 +526,7 @@ export function renderPropertyEditor(): void {
       node.height = frame.height;
       renderAll(false);
     });
-    appearanceElements.push(makeField('prop-node-shape', 'Node Shape', shapeSelect));
+    appearanceElements.push(makeField('prop-node-shape', 'Shape', shapeSelect));
 
     // Custom Icon Upload Zone
     const fileInput = document.createElement('input');
@@ -671,7 +659,7 @@ export function renderPropertyEditor(): void {
       rowBadges.append(
         makeField(
           'prop-node-eyebrow',
-          'Eyebrow Tag',
+          'Label above title',
           makeTextInput(
             node.eyebrow,
             (v) => {
@@ -683,7 +671,7 @@ export function renderPropertyEditor(): void {
         ),
         makeField(
           'prop-node-chip',
-          'Badge Chip',
+          'Badge',
           makeTextInput(
             node.chip,
             (v) => {
@@ -713,7 +701,7 @@ export function renderPropertyEditor(): void {
     metadataElements.push(
       makeField(
         'prop-node-interface',
-        'Protocol / Interface (Matrix)',
+        'Interface (shown in the matrix)',
         makeTextInput(node.interfaceLabel, (v) => {
           node.interfaceLabel = v;
           renderMatrixTable();
@@ -721,17 +709,32 @@ export function renderPropertyEditor(): void {
       ),
     );
 
-    metadataElements.push(
+    // Name, Description and Kind are what most people need; everything else lives under "More details".
+    basicsElements.splice(
+      1,
+      0,
       makeField(
         'prop-node-summary',
-        'Inspector Description',
+        'Description',
         makeTextarea(node.summary, (v) => {
           node.summary = v;
         }),
       ),
+      makeField('prop-node-kind', 'Kind', kindSelect),
     );
 
-    // --- 4. Telemetry & Contract Section ---
+    metadataElements.unshift(
+      makeField(
+        'prop-node-subtitle',
+        'Subtitle (shown under the name)',
+        makeTextInput(node.subtitle, (v) => {
+          node.subtitle = v;
+          renderAll(false);
+        }),
+      ),
+    );
+
+    // --- 4. Metrics & Contract Section ---
     const telemetryElements: HTMLElement[] = [];
 
     // Telemetry Metrics Editor
@@ -741,7 +744,7 @@ export function renderPropertyEditor(): void {
     mHeader.className = 'prop-list-header';
     const mTitle = document.createElement('span');
     mTitle.className = 'section-heading';
-    mTitle.textContent = 'TELEMETRY METRICS';
+    mTitle.textContent = 'METRICS';
     const btnAddMetric = document.createElement('button');
     btnAddMetric.type = 'button';
     btnAddMetric.className = 'btn btn-compact';
@@ -843,8 +846,8 @@ export function renderPropertyEditor(): void {
       makeCollapsibleSection('basics', 'Basics', true, basicsElements),
       makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements),
       makeCollapsibleSection('review', 'Review & Status', true, reviewElements),
-      makeCollapsibleSection('metadata', 'Metadata & Matrix', false, metadataElements),
-      makeCollapsibleSection('telemetry', 'Telemetry & Contract', false, telemetryElements),
+      makeCollapsibleSection('metadata', 'More details', false, metadataElements),
+      makeCollapsibleSection('telemetry', 'Metrics & Contract', false, telemetryElements),
     );
   } else if (sel.type === 'edge') {
     const edge = app.doc.edges.find((e) => e.id === sel.id);
@@ -853,14 +856,14 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'STREAM WIRE PROPERTIES';
+    propPanelHeading.textContent = 'WIRE PROPERTIES';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
 
     form.appendChild(
       makeField(
         'prop-edge-label',
-        'Conduit Pill Label (optional)',
+        'Wire label (optional)',
         makeTextInput(edge.label, (v) => {
           edge.label = v;
           renderWiresOnly();
@@ -895,7 +898,7 @@ export function renderPropertyEditor(): void {
     toneWrap.className = 'prop-field';
     const toneTitle = document.createElement('span');
     toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Stream Channel Color';
+    toneTitle.textContent = 'Wire color';
     toneWrap.append(
       toneTitle,
       makeTonePicker('edge-stream-tone', edge.tone, (tone) => {
@@ -1060,19 +1063,19 @@ export function renderPropertyEditor(): void {
     flowRow.className = 'route-style-grid';
     flowRow.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
     flowRow.setAttribute('role', 'radiogroup');
-    flowRow.setAttribute('aria-label', 'Telemetry flow direction');
+    flowRow.setAttribute('aria-label', 'Flow direction');
 
     const flowOptions: Array<{ value: EdgeFlowMode; label: string; tip: string; iconPath: string }> = [
       {
         value: 'forward',
         label: 'One-way (→)',
-        tip: 'One-way stream with arrowhead',
+        tip: 'One-way wire with arrowhead',
         iconPath: 'M 3 9 h 18 M 15 4 l 6 5 l -6 5',
       },
       {
         value: 'both',
         label: 'Both ways (⇄)',
-        tip: 'Bidirectional telemetry flowing both ways (no arrows at ends)',
+        tip: 'Bidirectional: flows both ways (no arrows at ends)',
         iconPath: 'M 3 6 h 18 M 6 3 l -3 3 l 3 3 M 21 12 h -18 M 18 9 l 3 3 l -3 3',
       },
     ];
@@ -1139,7 +1142,7 @@ export function renderPropertyEditor(): void {
       edge.animated = animChk.checked;
       renderWiresOnly();
     });
-    animLabel.append(animChk, document.createTextNode('Animated dashed telemetry stream'));
+    animLabel.append(animChk, document.createTextNode('Animated dashed wire'));
     form.appendChild(animLabel);
 
     // Reverse Direction Button
@@ -1345,7 +1348,7 @@ export function renderPropertyEditor(): void {
     if (selectedNotes.length > 0) {
       const notesHeading = document.createElement('div');
       notesHeading.className = 'field-label selection-subheading';
-      notesHeading.textContent = `Notes Cards (${selectedNotes.length})`;
+      notesHeading.textContent = `Notes (${selectedNotes.length})`;
       membersSection.appendChild(notesHeading);
 
       const chipsWrap = document.createElement('div');
@@ -1355,8 +1358,8 @@ export function renderPropertyEditor(): void {
         chip.type = 'button';
         chip.className = 'selection-member-chip notes-chip';
         const label = card.title || card.code || card.id;
-        chip.title = `Click to unselect notes card ${label}`;
-        chip.setAttribute('aria-label', `Unselect notes card ${label}`);
+        chip.title = `Click to unselect note ${label}`;
+        chip.setAttribute('aria-label', `Unselect note ${label}`);
 
         const nameSpan = document.createElement('span');
         nameSpan.className = 'chip-title';
@@ -1622,7 +1625,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'NOTES / SPEC CARD';
+    propPanelHeading.textContent = 'NOTE';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -1911,7 +1914,7 @@ export function renderPropertyEditor(): void {
     tipText.style.color = 'var(--wl-ink-muted)';
     tipText.style.lineHeight = '1.5';
     tipText.textContent =
-      'Tip: Select any component, wire, swimlane, or notes card on the canvas to customize its telemetry metrics, stream color, routing style, and JSON payload.';
+      'Tip: Select any component, wire, swimlane, or note on the canvas to customize its metrics, wire color, routing style, and JSON payload.';
     tipDiv.appendChild(tipText);
     form.appendChild(tipDiv);
   }
@@ -2057,7 +2060,7 @@ export function syncDataViewInspector(): void {
     inspSummary.textContent = app.doc.overviewSummary;
     renderMetricsBoxes([
       { label: 'Components', value: `${app.doc.nodes.length} Active` },
-      { label: 'Data Conduits', value: `${app.doc.edges.length} Streams` },
+      { label: 'Wires', value: `${app.doc.edges.length} Streams` },
       { label: 'Swimlane Stages', value: `${app.doc.zones.length}` },
       { label: 'Flow Layout', value: app.doc.direction },
     ]);
