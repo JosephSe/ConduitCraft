@@ -5546,3 +5546,78 @@ body[data-presenting="true"] .canvas-hud .minimap-panel {
 
 
 
+
+/* Context menu (right-click, Shift+F10) */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 13rem;
+  padding: 0.3rem;
+  border-radius: 0.6rem;
+  background: var(--wl-surface);
+  border: 1px solid var(--wl-border-ui);
+  box-shadow: var(--wl-shadow-card);
+  color: var(--wl-ink);
+}
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  cursor: pointer;
+}
+.context-menu-item:hover,
+.context-menu-item:focus-visible {
+  background: var(--wl-blue-soft);
+  outline: none;
+}
+.context-menu-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--wl-blue);
+}
+.context-menu-item kbd {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--wl-font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--wl-ink-secondary);
+}
+.context-menu-sep {
+  height: 1px;
+  margin: 0.25rem 0.2rem;
+  background: var(--wl-border-ui);
+}
+
+/* Group outlines: dashed, shown on hover or when a member is selected */
+#group-outlines-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.group-outline {
+  position: absolute;
+  border: 1px dashed var(--wl-blue);
+  border-radius: 1.4rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.group-outline.is-visible {
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .group-outline {
+    transition: none;
+  }
+}

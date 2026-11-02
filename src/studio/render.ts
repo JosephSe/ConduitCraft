@@ -1,4 +1,5 @@
 /** Stage rendering for zones, notes, wires, and components. */
+import { paintGroupOutlines } from './groupOutlines';
 import {
   btnRestoreSession,
   canvasStatsPill,
@@ -157,6 +158,7 @@ export function renderAll(rebuildInspector = true): void {
   renderSimButtons();
   renderMatrixTable();
   updateVisualSelectionHighlights();
+  paintGroupOutlines();
 
   if (rebuildInspector) {
     if (app.workspaceMode === 'design') {
