@@ -134,7 +134,7 @@ export function renderAll(rebuildInspector = true): void {
   setText(docTitleHeadingEl, app.doc.title || 'Untitled Architecture');
   updateDocumentTitle();
   setText(docSystemTagEl, app.doc.systemTag || 'CONDUITCRAFT');
-  setText(docStatusLabelEl, app.doc.statusLabel || 'LIVE TELEMETRY');
+  setText(docStatusLabelEl, app.doc.statusLabel || 'TRAFFIC DIAGRAM');
   paintDocumentBrand();
   setText(
     canvasStatsPill,

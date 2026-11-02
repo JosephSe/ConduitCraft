@@ -1,6 +1,6 @@
 # ConduitCraft
 
-**ConduitCraft** is an open-source, interactive architecture diagramming and live telemetry studio. Build system architectures from scratch on a blank drafting canvas (like draw.io), or import/sync standard **Mermaid (`.mmd`)** and **Blueprint Markdown (`.md`)** files to render animated telemetry conduits, contextual lineage inspectors, specification matrices, and live packet simulations.
+**ConduitCraft** is an open-source, interactive architecture diagramming studio with animated traffic and scenarios. Build system architectures from scratch on a blank drafting canvas (like draw.io), or import/sync standard **Mermaid (`.mmd`)** and **Blueprint Markdown (`.md`)** files to render animated telemetry conduits, contextual lineage inspectors, specification matrices, and live packet simulations.
 
 ## Interactive Export Previews
 

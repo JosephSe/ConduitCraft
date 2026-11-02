@@ -1,7 +1,7 @@
 {
   "name": "conduitcraft",
   "version": "1.0.0",
-  "description": "ConduitCraft — Open-source interactive architecture & live telemetry diagramming studio. Build from scratch on a blank canvas or compile Mermaid (.mmd) and Blueprint (.md) files into animated, simulation-ready architecture views.",
+  "description": "ConduitCraft — Open-source interactive architecture diagramming studio with animated traffic and scenarios. Build from scratch on a blank canvas or compile Mermaid (.mmd) and Blueprint (.md) files into animated, simulation-ready architecture views.",
   "license": "MIT",
   "engines": {
     "node": ">=22.6"
