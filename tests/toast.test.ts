@@ -100,13 +100,15 @@ describe('toast notifications and status feedback', () => {
     dismissAllToasts();
   });
 
-  it('renders a toast notification with role="status" and text message', () => {
+  it('renders a toast with its text, and speaks it through the single announcer (not its own live region)', () => {
     notify('Imported 5 components');
     const container = mockDoc.getElementById('toast-container');
     assert.ok(container, 'container exists');
     assert.strictEqual(container.children.length, 1);
     const toast = container.children[0];
-    assert.strictEqual(toast.getAttribute('role'), 'status');
+    assert.strictEqual(toast.getAttribute('role'), null, 'the toast itself is silent');
+    assert.strictEqual(container.getAttribute('aria-live'), null);
+    assert.strictEqual(mockDoc.getElementById('a11y-live-announcer')?.textContent, 'Imported 5 components');
     const msg = toast.children.find((c) => c.className === 'toast-message');
     assert.ok(msg);
     assert.strictEqual(msg.textContent, 'Imported 5 components');
