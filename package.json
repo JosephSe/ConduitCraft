@@ -18,6 +18,7 @@
     "dev": "vite --port 5180",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4180",
+    "check:size": "node tools/checkBundleSize.mjs",
     "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/*.test.ts"
   },
   "dependencies": {
