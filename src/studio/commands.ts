@@ -67,6 +67,8 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['['], description: 'Toggle component palette (or send to back)', category: 'Navigation & View' },
   { keys: [']'], description: 'Toggle properties inspector (or bring to front)', category: 'Navigation & View' },
   { keys: ['⌘', '\\'], description: 'Toggle component palette rail', category: 'Navigation & View' },
+  { keys: ['Space', 'Drag'], description: 'Pan the canvas from anywhere, even over a component', category: 'Navigation & View' },
+  { keys: ['Scroll'], description: 'Zoom at the pointer; pinch zooms faster, and a sideways swipe pans', category: 'Navigation & View' },
   { keys: ['P'], description: 'Toggle presentation mode & guided tour', category: 'Navigation & View' },
   { keys: ['⌘', 'F'], description: 'Find & focus node on canvas', category: 'Navigation & View' },
   { keys: ['⌘', 'K'], description: 'Open command palette', category: 'Navigation & View' },

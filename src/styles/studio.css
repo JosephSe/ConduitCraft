@@ -1281,6 +1281,17 @@
     cursor: grabbing;
   }
 
+  /* Space held: the whole canvas is a pan surface, including components. */
+  .canvas-viewport.is-space-pan,
+  .canvas-viewport.is-space-pan * {
+    cursor: grab !important;
+  }
+
+  .canvas-viewport.is-space-pan.is-dragging,
+  .canvas-viewport.is-space-pan.is-dragging * {
+    cursor: grabbing !important;
+  }
+
   .workspace[data-tool="connect"] .canvas-viewport {
     cursor: crosshair;
   }

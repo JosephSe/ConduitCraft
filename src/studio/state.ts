@@ -17,6 +17,7 @@ import type {
 } from '../types';
 import { normalizeBrand } from '../core/brand';
 import { tightenLegacyStoreCylinder } from '../core/layout';
+import { panForViewportResize } from './camera';
 import { createBlankDocument } from '../templates/presets';
 import {
   resolveSelectionUpdate,
@@ -449,6 +450,33 @@ export function fitSelection(): void {
   app.panX = Math.round(frame.panX);
   app.panY = Math.round(frame.panY);
   applyTransform();
+}
+
+/**
+ * Keep the view steady when the viewport changes size (window resize, a panel opening or closing, switching
+ * between Design and Data View): the same world point stays at its centre and the zoom is untouched. It used to
+ * refit the whole diagram, which threw away the user's zoom and position every time.
+ */
+export function trackViewportResize(): void {
+  if (typeof ResizeObserver === 'undefined') return;
+  const measure = () => {
+    const r = viewport.getBoundingClientRect();
+    return { width: r.width, height: r.height };
+  };
+  let last = measure();
+  new ResizeObserver(() => {
+    const next = measure();
+    // A hidden viewport reports 0x0; keep the last real size so the pan is correct when it comes back.
+    if (next.width === 0 || next.height === 0) return;
+    const prev = last;
+    last = next;
+    if (prev.width === 0 || prev.height === 0) return;
+    if (next.width === prev.width && next.height === prev.height) return;
+    const pan = panForViewportResize({ panX: app.panX, panY: app.panY }, prev, next);
+    app.panX = pan.panX;
+    app.panY = pan.panY;
+    applyTransform();
+  }).observe(viewport);
 }
 
 export function zoomAround(nextScale: number, cx: number, cy: number): void {

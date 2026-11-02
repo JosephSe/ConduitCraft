@@ -136,6 +136,7 @@ import {
   setSaveErrorHandler,
   setSaveState,
   setSelection,
+  trackViewportResize,
   zoomAround,
 } from './state';
 import {
@@ -193,6 +194,7 @@ import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
 import { renameNodeInline, renameSelectionInline } from './inlineRename';
+import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -1362,7 +1364,7 @@ export function initEvents(): void {
 
         updateVisualSelectionHighlights();
         requestInspectorRefresh();
-        requestAnimationFrame(fitToViewport);
+        // No refit here: switching modes keeps the user's zoom and position (see trackViewportResize).
         announceModeChange(targetMode);
       };
 
@@ -2312,6 +2314,43 @@ export function initEvents(): void {
   let panPointerId: number | null = null;
   let panMoved = false;
 
+  // Hold Space to pan from anywhere, even starting on a component. Space is never swallowed, so it still
+  // activates a focused button; this only records that it is held.
+  let spaceHeld = false;
+  let panWithSpace = false;
+  const setSpaceHeld = (held: boolean) => {
+    spaceHeld = held;
+    viewport.classList.toggle('is-space-pan', held);
+  };
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || e.repeat) return;
+    const tag = (e.target as HTMLElement | null)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) {
+      return;
+    }
+    setSpaceHeld(true);
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') setSpaceHeld(false);
+  });
+  window.addEventListener('blur', () => setSpaceHeld(false));
+  viewport.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (!spaceHeld || e.button !== 0) return;
+      // Capture phase, ahead of the component under the pointer, so Space-drag never moves or selects it.
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      panWithSpace = true;
+      panDragStart = { x: e.clientX - app.panX, y: e.clientY - app.panY };
+      panPointerId = e.pointerId;
+      panMoved = false;
+      viewport.classList.add('is-dragging');
+      viewport.setPointerCapture(e.pointerId);
+    },
+    true,
+  );
+
   viewport.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     if (
@@ -2406,7 +2445,9 @@ export function initEvents(): void {
     panPointerId = null;
     panMoved = false;
     viewport.classList.remove('is-dragging');
-    if (e.type === 'pointerup' && !didMove && app.selection.type !== 'none') {
+    const wasSpacePan = panWithSpace;
+    panWithSpace = false;
+    if (e.type === 'pointerup' && !didMove && !wasSpacePan && app.selection.type !== 'none') {
       app.connectSourceNodeId = null;
       applySelection({ type: 'none' });
     }
@@ -2420,6 +2461,7 @@ export function initEvents(): void {
     marqueeStartWorld = null;
     panPointerId = null;
     panMoved = false;
+    panWithSpace = false;
     if (marqueeBox) marqueeBox.hidden = true;
     viewport.classList.remove('is-dragging');
   });
@@ -2524,9 +2566,16 @@ export function initEvents(): void {
     'wheel',
     (e) => {
       e.preventDefault();
+      const input = { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, ctrlKey: e.ctrlKey };
+      if (isPanGesture(input)) {
+        const { dx, dy } = wheelPan(input);
+        app.panX += dx;
+        app.panY += dy;
+        applyTransform();
+        return;
+      }
       const rect = viewport.getBoundingClientRect();
-      const factor = e.deltaY < 0 ? 1.08 : 0.92;
-      zoomAround(app.scale * factor, e.clientX - rect.left, e.clientY - rect.top);
+      zoomAround(app.scale * wheelZoomFactor(input), e.clientX - rect.left, e.clientY - rect.top);
     },
     { passive: false },
   );
@@ -2541,7 +2590,7 @@ export function initEvents(): void {
   });
   btnZoomFit.addEventListener('click', fitToViewport);
   btnZoomFitSelection.addEventListener('click', fitSelection);
-  window.addEventListener('resize', fitToViewport);
+  trackViewportResize();
 
   // Global Keyboard Shortcuts (Undo, Redo, Duplicate, Delete, Escape)
   window.addEventListener('keydown', (e) => {
