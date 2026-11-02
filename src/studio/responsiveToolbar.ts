@@ -360,7 +360,7 @@ export class ResponsiveToolbarManager {
   }
 
   /** Toggle Right Properties Inspector */
-  public toggleInspector(force?: boolean): boolean {
+  public toggleInspector(force?: boolean, persist = true): boolean {
     const ws = this.getWorkspace();
     if (!ws) return false;
 
@@ -375,11 +375,11 @@ export class ResponsiveToolbarManager {
     if (next) {
       ws.setAttribute('data-inspector-collapsed', 'true');
       this.btnToggleInspector?.setAttribute('aria-expanded', 'false');
-      this.safeSetStorage(STORAGE_INSPECTOR_KEY, 'true');
+      if (persist) this.safeSetStorage(STORAGE_INSPECTOR_KEY, 'true');
     } else {
       ws.removeAttribute('data-inspector-collapsed');
       this.btnToggleInspector?.setAttribute('aria-expanded', 'true');
-      this.safeRemoveStorage(STORAGE_INSPECTOR_KEY);
+      if (persist) this.safeRemoveStorage(STORAGE_INSPECTOR_KEY);
     }
     this.updateScrim();
     return next;
