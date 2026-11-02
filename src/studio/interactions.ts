@@ -130,11 +130,13 @@ import {
   performRedo,
   performUndo,
   pushHistory,
+  mutateWithHistory,
   screenToWorld,
   setPendingRestoreOffer,
   setSaveErrorHandler,
   setSaveState,
   setSelection,
+  trackViewportResize,
   zoomAround,
 } from './state';
 import {
@@ -191,7 +193,8 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
-import { renameSelectionInline } from './inlineRename';
+import { renameNodeInline, renameSelectionInline } from './inlineRename';
+import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -504,6 +507,14 @@ export function beginPortWireDrag(
       );
     } else if (targetNodeEl && targetNodeEl.dataset.node && targetNodeEl.dataset.node !== draft.sourceNodeId) {
       createEdgeConnection(draft.sourceNodeId, targetNodeEl.dataset.node, draft.sourcePort, 'auto');
+    } else if (
+      isEmptyCanvasPoint(hitEl) &&
+      Math.hypot(upEv.clientX - e.clientX, upEv.clientY - e.clientY) >= WIRE_DROP_MIN_DRAG_PX
+    ) {
+      // Dropping a wire on empty canvas creates a connected component there, ready to be named.
+      const [wx, wy] = screenToWorld(upEv.clientX, upEv.clientY);
+      const created = createNodeFromWireDrop(draft.sourceNodeId, draft.sourcePort, wx, wy);
+      if (created) window.setTimeout(() => renameNodeInline(created.id), 0);
     }
   };
 
@@ -514,6 +525,96 @@ export function beginPortWireDrag(
   captureEl.addEventListener('pointerup', onUp);
   captureEl.addEventListener('pointercancel', onCancel);
   captureEl.addEventListener('lostpointercapture', onLost);
+}
+
+export type WireEnd = 'from' | 'to';
+
+/** The component (and port) under a screen point, for dropping a wire end on. Null over bare canvas. */
+export function wireDropTarget(clientX: number, clientY: number): { nodeId: string; port: PortSide } | null {
+  const hit = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  const portEl = hit?.closest('.node-port') as HTMLElement | null;
+  if (portEl?.dataset.nodeId) return { nodeId: portEl.dataset.nodeId, port: (portEl.dataset.port as PortSide) || 'auto' };
+  const nodeEl = hit?.closest('.arch-node') as HTMLElement | null;
+  if (nodeEl?.dataset.node) return { nodeId: nodeEl.dataset.node, port: 'auto' };
+  return null;
+}
+
+/**
+ * Re-attach one end of a wire to another component (or another port of the same one). One undo step.
+ * Returns false, changing nothing, if the wire is gone, nothing would change, or it would join a component to itself.
+ */
+export function retargetEdgeEnd(edgeId: string, end: WireEnd, nodeId: string, port: PortSide): boolean {
+  const edge = app.doc.edges.find((e) => e.id === edgeId);
+  if (!edge || !app.doc.nodes.some((n) => n.id === nodeId)) return false;
+  const otherId = end === 'from' ? edge.to : edge.from;
+  if (nodeId === otherId) {
+    notify("A wire can't connect a component to itself");
+    return false;
+  }
+  const changed = mutateWithHistory(() => {
+    if (end === 'from') {
+      edge.from = nodeId;
+      edge.sourcePort = port;
+    } else {
+      edge.to = nodeId;
+      edge.targetPort = port;
+    }
+  });
+  if (!changed) return false;
+  renderAll(true);
+  notify('Wire reconnected');
+  return true;
+}
+
+/** Shorter drags are almost certainly a slip, not a request for a new component. */
+const WIRE_DROP_MIN_DRAG_PX = 32;
+
+/** True for a point on bare canvas: inside the viewport, and not on a component, wire, note, swimlane or control. */
+function isEmptyCanvasPoint(hitEl: Element | null): boolean {
+  if (!hitEl || !viewport.contains(hitEl)) return false;
+  return !hitEl.closest('.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a');
+}
+
+/**
+ * Create a component centred on (worldX, worldY) and wire the dragged source to it, as one undo step.
+ * Returns the new node, or null if the source no longer exists.
+ */
+export function createNodeFromWireDrop(
+  sourceId: string,
+  sourcePort: PortSide,
+  worldX: number,
+  worldY: number,
+): DiagramNode | null {
+  if (!app.doc.nodes.some((n) => n.id === sourceId)) return null;
+  let created: DiagramNode | null = null;
+  mutateWithHistory(() => {
+    const node = createNodeFromStencil('service', 0, 0, app.doc.nodes.length);
+    const snap = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
+    node.x = Math.max(24, snap(worldX - node.width / 2));
+    node.y = Math.max(32, snap(worldY - node.height / 2));
+    app.doc.nodes.push(node);
+    app.doc.edges.push({
+      id: nextUid('edge'),
+      from: sourceId,
+      to: node.id,
+      sourcePort,
+      targetPort: 'auto',
+      tone: 'blue',
+      route: 'auto',
+      label: '',
+      animated: true,
+    });
+    expandStageToFit(app.doc);
+    created = node;
+    return true;
+  });
+  if (!created) return null;
+  const node: DiagramNode = created;
+  app.connectSourceNodeId = null;
+  setSelection({ type: 'node', id: node.id });
+  renderAll(true);
+  tagEnteringNodes([node.id]);
+  return node;
 }
 
 export function createEdgeConnection(
@@ -1263,7 +1364,7 @@ export function initEvents(): void {
 
         updateVisualSelectionHighlights();
         requestInspectorRefresh();
-        requestAnimationFrame(fitToViewport);
+        // No refit here: switching modes keeps the user's zoom and position (see trackViewportResize).
         announceModeChange(targetMode);
       };
 
@@ -2213,6 +2314,43 @@ export function initEvents(): void {
   let panPointerId: number | null = null;
   let panMoved = false;
 
+  // Hold Space to pan from anywhere, even starting on a component. Space is never swallowed, so it still
+  // activates a focused button; this only records that it is held.
+  let spaceHeld = false;
+  let panWithSpace = false;
+  const setSpaceHeld = (held: boolean) => {
+    spaceHeld = held;
+    viewport.classList.toggle('is-space-pan', held);
+  };
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || e.repeat) return;
+    const tag = (e.target as HTMLElement | null)?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (e.target as HTMLElement | null)?.isContentEditable) {
+      return;
+    }
+    setSpaceHeld(true);
+  });
+  window.addEventListener('keyup', (e) => {
+    if (e.code === 'Space') setSpaceHeld(false);
+  });
+  window.addEventListener('blur', () => setSpaceHeld(false));
+  viewport.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (!spaceHeld || e.button !== 0) return;
+      // Capture phase, ahead of the component under the pointer, so Space-drag never moves or selects it.
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      panWithSpace = true;
+      panDragStart = { x: e.clientX - app.panX, y: e.clientY - app.panY };
+      panPointerId = e.pointerId;
+      panMoved = false;
+      viewport.classList.add('is-dragging');
+      viewport.setPointerCapture(e.pointerId);
+    },
+    true,
+  );
+
   viewport.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     if (
@@ -2307,7 +2445,9 @@ export function initEvents(): void {
     panPointerId = null;
     panMoved = false;
     viewport.classList.remove('is-dragging');
-    if (e.type === 'pointerup' && !didMove && app.selection.type !== 'none') {
+    const wasSpacePan = panWithSpace;
+    panWithSpace = false;
+    if (e.type === 'pointerup' && !didMove && !wasSpacePan && app.selection.type !== 'none') {
       app.connectSourceNodeId = null;
       applySelection({ type: 'none' });
     }
@@ -2321,6 +2461,7 @@ export function initEvents(): void {
     marqueeStartWorld = null;
     panPointerId = null;
     panMoved = false;
+    panWithSpace = false;
     if (marqueeBox) marqueeBox.hidden = true;
     viewport.classList.remove('is-dragging');
   });
@@ -2425,9 +2566,16 @@ export function initEvents(): void {
     'wheel',
     (e) => {
       e.preventDefault();
+      const input = { deltaX: e.deltaX, deltaY: e.deltaY, deltaMode: e.deltaMode, ctrlKey: e.ctrlKey };
+      if (isPanGesture(input)) {
+        const { dx, dy } = wheelPan(input);
+        app.panX += dx;
+        app.panY += dy;
+        applyTransform();
+        return;
+      }
       const rect = viewport.getBoundingClientRect();
-      const factor = e.deltaY < 0 ? 1.08 : 0.92;
-      zoomAround(app.scale * factor, e.clientX - rect.left, e.clientY - rect.top);
+      zoomAround(app.scale * wheelZoomFactor(input), e.clientX - rect.left, e.clientY - rect.top);
     },
     { passive: false },
   );
@@ -2442,7 +2590,7 @@ export function initEvents(): void {
   });
   btnZoomFit.addEventListener('click', fitToViewport);
   btnZoomFitSelection.addEventListener('click', fitSelection);
-  window.addEventListener('resize', fitToViewport);
+  trackViewportResize();
 
   // Global Keyboard Shortcuts (Undo, Redo, Duplicate, Delete, Escape)
   window.addEventListener('keydown', (e) => {

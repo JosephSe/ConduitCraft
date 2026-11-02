@@ -72,3 +72,26 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
     expect(await scan(page)).toEqual([]);
   });
 }
+
+test('a selected wire, with its handles and inspector, has no axe violations', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await page.locator('#btn-empty-showcase').click();
+  await expect(page.locator('.arch-node').first()).toBeVisible();
+  const target = await page.evaluate(() => {
+    for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
+      const path = group.querySelector<SVGPathElement>('.conduit-hit');
+      const ctm = path?.getScreenCTM();
+      if (!path || !ctm) continue;
+      const mid = path.getPointAtLength(path.getTotalLength() / 2);
+      const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
+      if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) return { x: pt.x, y: pt.y };
+    }
+    return null;
+  });
+  expect(target).not.toBeNull();
+  await page.mouse.click(target!.x, target!.y);
+  await expect(page.locator('.conduit-endpoint-handle')).toHaveCount(2);
+  await expect(page.locator('#prop-edge-to')).toBeVisible();
+  expect(await scan(page)).toEqual([]);
+});

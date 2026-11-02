@@ -121,6 +121,7 @@ export const marqueeBox = document.getElementById('marquee-box') as HTMLElement 
 export const zonesLayer = document.getElementById('zones-layer') as HTMLElement;
 export const notesLayer = document.getElementById('notes-layer') as HTMLElement;
 export const wiresSvg = document.getElementById('wires-svg') as unknown as SVGSVGElement;
+export const wireHandlesSvg = document.getElementById('wire-handles-svg') as unknown as SVGSVGElement;
 export const wiresGroup = document.getElementById('wires-group') as unknown as SVGGElement;
 export const draftWire = document.getElementById('draft-wire') as unknown as SVGPathElement;
 export const nodesLayer = document.getElementById('nodes-layer') as HTMLElement;
