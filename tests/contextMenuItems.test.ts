@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { MENU_SEPARATOR, contextMenuCommandIds, tidySeparators, type ContextSelectionType } from '../src/core/contextMenuItems.ts';
+import { MENU_SEPARATOR, contextMenuCommandIds, tidySeparators, contextToolbarCommandIds, type ContextSelectionType } from '../src/core/contextMenuItems.ts';
 
 const TYPES: ContextSelectionType[] = ['none', 'node', 'edge', 'zone', 'notes', 'multi'];
 
@@ -44,5 +44,16 @@ describe('context menu items', () => {
   it('tidies separators after filtering', () => {
     assert.deepEqual(tidySeparators(['-', 'a', '-', '-', 'b', '-']), ['a', '-', 'b']);
     assert.deepEqual(tidySeparators(['-']), []);
+  });
+
+  it('keeps the contextual toolbar short and made of palette actions', async () => {
+    const { readFileSync } = await import('node:fs');
+    const source = readFileSync(new URL('../src/studio/palette.ts', import.meta.url), 'utf8');
+    for (const type of TYPES) {
+      const ids = contextToolbarCommandIds(type, { grouped: true });
+      assert.ok(ids.length <= 6, `${type} has ${ids.length} buttons`);
+      for (const id of ids) assert.ok(source.includes(`id: '${id}'`), `${type}: ${id}`);
+    }
+    assert.deepEqual(contextToolbarCommandIds('none', { grouped: false }), []);
   });
 });

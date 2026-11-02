@@ -9,6 +9,7 @@ import { initContextMenu } from './studio/contextMenu';
 import { initGroupOutlines } from './studio/groupOutlines';
 import { findPaletteCommand } from './studio/palette';
 import { initToolRail } from './studio/toolRail';
+import { initContextToolbar } from './studio/contextToolbar';
 import { resolveUiVersion } from './core/uiVersion';
 
 // Choose the interface generation before anything paints: `?ui=2` is the redesign, remembered per browser.
@@ -40,6 +41,7 @@ try {
 }
 bootStudio();
 initToolRail();
+initContextToolbar();
 initRovingFocus();
 initContextMenu();
 initGroupOutlines();
