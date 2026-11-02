@@ -724,11 +724,11 @@ Answer each before the phase that needs it.
 
 1. **Collaboration hosting (phase 8).** Peer-to-peer WebRTC only (no server, and a room ends when everyone leaves), or also document a self-hosted WebSocket server? Running a hosted service would be a separate project.
 2. **AI (phase 8).** Bring-your-own-key only, or leave AI out entirely? Which providers, if any?
-3. **Brand (phase 1).** Keep the current ConduitCraft mark, or refresh the logo and accent as part of the redesign? The tokens in 6.1 make either easy.
-4. **Classic layout (phase 2).** Remove the `?ui=1` option after one release, or keep it longer?
+3. **Brand (phase 1).** *Decided: keep the current ConduitCraft mark and accent.* Revisit after phase 3 if the new chrome calls for it.
+4. **Classic layout (phase 2).** *Decided: keep the classic layout for one release after `?ui=2` becomes the default, then remove it.*
 5. **Levels and frames (phase 5).** Ship both, or only frames if levels prove too complex for undo and share links?
 6. **Icon packs (phase 8).** Which icon sets have licences that allow bundling in an MIT project?
-7. **Name (phase 1).** The product is ConduitCraft but the repo, folder and some code say `blueprint-studio`, and the text format is "Blueprint". Pick one product name and one format name before the plain-language pass (R-09), and decide whether to rename the repo.
+7. **Name (phase 1).** *Decided: the product is ConduitCraft; the text format is "Blueprint file"; the repo keeps the name `blueprint-studio`.* The word list in Appendix A already says this.
 8. **Live data and CORS (phase 5).** Many endpoints won't allow browser requests. Document a minimal proxy only, or ship one as an optional extra?
 9. **CLI distribution (phase 5).** Publish to npm as `conduitcraft`, or only ship the GitHub Action at first?
 
@@ -736,12 +736,12 @@ Answer each before the phase that needs it.
 
 ## Appendix A: Word list
 
-Use the word on the left in every label, tooltip, toast, announcement and doc. The word on the right stays only where it is a file format or a code identifier. Settle open question 7 first, then update the first two rows.
+Use the word on the left in every label, tooltip, toast, announcement and doc. The word on the right stays only where it is a file format or a code identifier. Question 7 is settled; the first two rows are final.
 
 | Use | Instead of | Note |
 |---|---|---|
-| ConduitCraft | Blueprint Studio, blueprint-studio | Product name, pending question 7 |
-| Blueprint file | Blueprint Markdown, `.md` blueprint | The text format, pending question 7 |
+| ConduitCraft | Blueprint Studio, blueprint-studio | Product name (question 7, decided) |
+| Blueprint file | Blueprint Markdown, `.md` blueprint | The text format (question 7, decided) |
 | Component | Node, arch node | `node` stays in code |
 | Wire | Conduit, stream, edge, telemetry stream | `edge` stays in code |
 | Wire colour | Tone, stream channel | `tone` stays in code |
