@@ -67,12 +67,17 @@ export function applySelection(
   if (options?.refreshIfUnchanged || headingStale) requestInspectorRefresh();
 }
 
+/** Assigning textContent replaces the text node even when the value is unchanged, dirtying layout. */
+function setText(el: Element, text: string): void {
+  if (el.textContent !== text) el.textContent = text;
+}
+
 function paintDocumentBrand(): void {
   const name = (app.doc.brand?.name || '').trim();
   const accent = normalizeBrandAccent(app.doc.brand?.accent);
   const logo = sanitizeIconImage(app.doc.brand?.logo);
   docBrandName.hidden = !name;
-  docBrandName.textContent = name;
+  setText(docBrandName, name);
   if (accent) {
     docBrandCluster.dataset.brand = 'true';
     docBrandCluster.style.setProperty('--brand-accent', accent);
@@ -82,11 +87,12 @@ function paintDocumentBrand(): void {
   }
   if (logo) {
     docBrandLogo.hidden = false;
-    docBrandLogo.src = logo;
+    // Re-assigning an identical src re-runs the image load algorithm.
+    if (docBrandLogo.getAttribute('src') !== logo) docBrandLogo.src = logo;
     docBrandGlyph.style.display = 'none';
   } else {
     docBrandLogo.hidden = true;
-    docBrandLogo.removeAttribute('src');
+    if (docBrandLogo.hasAttribute('src')) docBrandLogo.removeAttribute('src');
     docBrandGlyph.style.display = '';
   }
 }
@@ -106,14 +112,14 @@ export function renderAll(rebuildInspector = true): void {
     const count = pending.nodes.length;
     const countLabel = `${count} ${count === 1 ? 'component' : 'components'}`;
     if (restoreBannerText) {
-      restoreBannerText.textContent = `Previous session (${countLabel}) available from this browser`;
+      setText(restoreBannerText, `Previous session (${countLabel}) available from this browser`);
     }
     if (restoreSessionBanner) {
       restoreSessionBanner.hidden = false;
     }
     if (btnRestoreSession) {
       btnRestoreSession.hidden = !isEmpty;
-      btnRestoreSession.textContent = `↺ Restore Previous Session (${count} ${count === 1 ? 'node' : 'nodes'})`;
+      setText(btnRestoreSession, `↺ Restore Previous Session (${count} ${count === 1 ? 'node' : 'nodes'})`);
     }
   } else {
     if (restoreSessionBanner) {
@@ -124,12 +130,15 @@ export function renderAll(rebuildInspector = true): void {
     }
   }
 
-  docTitleHeadingEl.textContent = app.doc.title || 'Untitled Architecture';
+  setText(docTitleHeadingEl, app.doc.title || 'Untitled Architecture');
   updateDocumentTitle();
-  docSystemTagEl.textContent = app.doc.systemTag || 'CONDUITCRAFT';
-  docStatusLabelEl.textContent = app.doc.statusLabel || 'LIVE TELEMETRY';
+  setText(docSystemTagEl, app.doc.systemTag || 'CONDUITCRAFT');
+  setText(docStatusLabelEl, app.doc.statusLabel || 'LIVE TELEMETRY');
   paintDocumentBrand();
-  canvasStatsPill.textContent = `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'NODE' : 'NODES'} · ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'WIRE' : 'WIRES'}`;
+  setText(
+    canvasStatsPill,
+    `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'NODE' : 'NODES'} · ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'WIRE' : 'WIRES'}`,
+  );
 
   stageWorld.style.width = `${app.doc.stageWidth}px`;
   stageWorld.style.height = `${app.doc.stageHeight}px`;
@@ -185,8 +194,19 @@ export function renderMatrixTable(): void {
     },
     (el, node) => {
       const tr = el as HTMLTableRowElement;
-      const cells = tr.querySelectorAll('td');
       const adj = getAdjacencyLists(app.doc, node.id);
+      // Rows are only ever written here, so an unchanged signature means the cells are current.
+      const signature = JSON.stringify([
+        node.title,
+        node.subtitle,
+        node.kind,
+        node.interfaceLabel,
+        adj.upstream.map((u) => u.title),
+        adj.downstream.map((d) => d.title),
+      ]);
+      if (tr.dataset.sig === signature) return;
+      tr.dataset.sig = signature;
+      const cells = tr.querySelectorAll('td');
       cells[0].replaceChildren();
       const strong = document.createElement('strong');
       strong.textContent = node.title;
