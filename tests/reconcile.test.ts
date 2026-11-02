@@ -107,4 +107,46 @@ describe('keyed reconciliation', () => {
     assert.notEqual(parent.children[0].id, original.id);
     assert.equal(parent.children[0].getAttribute('data-structure'), 'service');
   });
+  it('does not re-insert elements that are already in order', () => {
+    const parent = fakeEl();
+    const els = ['a', 'b', 'c'].map((k) => {
+      const el = fakeEl(k);
+      el.setAttribute('data-structure', 'kind');
+      parent.appendChild(el);
+      return el;
+    });
+    let appends = 0;
+    const original = parent.appendChild.bind(parent);
+    parent.appendChild = (child: FakeEl) => {
+      appends += 1;
+      return original(child);
+    };
+
+    const run = (keys: string[]) =>
+      reconcileKeyed(
+        parent as unknown as Element,
+        keys,
+        (item) => item,
+        (el) => (el as unknown as FakeEl).key,
+        () => 'kind',
+        (item) => fakeEl(item) as unknown as Element,
+        () => {},
+      );
+
+    run(['a', 'b', 'c']);
+    assert.equal(appends, 0, 'unchanged order must cause no DOM moves');
+    assert.deepEqual(parent.children.map((c) => c.id), els.map((e) => e.id));
+
+    run(['a', 'b', 'c', 'd']);
+    assert.deepEqual(parent.children.map((c) => c.key), ['a', 'b', 'c', 'd']);
+
+    run(['a', 'c', 'd']);
+    assert.deepEqual(parent.children.map((c) => c.key), ['a', 'c', 'd']);
+
+    run(['d', 'a', 'c']);
+    assert.deepEqual(parent.children.map((c) => c.key), ['d', 'a', 'c']);
+
+    run(['b', 'a']);
+    assert.deepEqual(parent.children.map((c) => c.key), ['b', 'a']);
+  });
 });
