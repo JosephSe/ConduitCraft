@@ -33,6 +33,10 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'add-zone', key: 'z', designOnly: true, uiV2Only: true },
   { actionId: 'add-notes', key: 'n', designOnly: true, uiV2Only: true },
   { actionId: 'open-insert', key: 'c', designOnly: true, uiV2Only: true },
+  // Lenses (redesign). 3 is reserved for Review, which ships with the insights in phase 3.
+  { actionId: 'mode-design', key: '1', uiV2Only: true },
+  { actionId: 'mode-data', key: '2', uiV2Only: true },
+  { actionId: 'mode-presentation', key: '4', uiV2Only: true },
   { actionId: 'edit-rename', key: 'F2', designOnly: true },
   { actionId: 'edit-delete', key: 'Delete', designOnly: true, needsSelection: true },
   { actionId: 'edit-delete', key: 'Backspace', designOnly: true, needsSelection: true },

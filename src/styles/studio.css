@@ -5725,3 +5725,15 @@ html[data-ui="2"] .inspector-pin-btn {
   background: var(--wl-blue-soft);
   color: var(--wl-ink);
 }
+
+/* Lens switcher: the key that selects each lens, shown only in the redesigned interface. */
+.lens-key {
+  display: none;
+}
+html[data-ui="2"] .mode-switcher .lens-key {
+  display: inline;
+  margin-left: 4px;
+  font: inherit;
+  font-size: 0.72em;
+  opacity: 0.55;
+}

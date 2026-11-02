@@ -110,7 +110,7 @@ export function announceSelectionChange(selection: SelectionTarget, doc: Diagram
 
 /** Announce workspace mode switch (Design vs Data View). */
 export function announceModeChange(mode: 'design' | 'data'): void {
-  const desc = mode === 'data' ? 'Switched to Data View' : 'Switched to Canvas Design Mode';
+  const desc = mode === 'data' ? 'Switched to the Traffic lens' : 'Switched to the Design lens';
   announce(desc, 'polite');
 }
 
