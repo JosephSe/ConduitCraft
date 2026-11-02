@@ -38,7 +38,7 @@ const ROUTES: EdgeRouteMode[] = [
 const PORTS: PortSide[] = ['auto', 'top', 'right', 'bottom', 'left'];
 
 describe('lumen relay showcase', () => {
-  const raw = readFileSync(new URL('../public/examples/lumen-relay.blueprint.json', import.meta.url), 'utf8');
+  const raw = readFileSync(new URL('../src/examples/lumen-relay.blueprint.json', import.meta.url), 'utf8');
 
   it('loads as a blueprint that uses every document feature', () => {
     const parsed = parseBlueprintJson(raw);
