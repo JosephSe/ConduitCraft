@@ -62,6 +62,7 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Arrow keys'], description: 'Move focus to the nearest component in that direction', category: 'Drafting & Selection' },
   { keys: ['Alt', 'Arrow'], description: 'Nudge focused component 16px (add Shift for 4px)', category: 'Drafting & Selection' },
   { keys: ['Shift', 'F10'], description: 'Open the actions menu for the focused item (also the Menu key, or right-click)', category: 'Drafting & Selection' },
+  { keys: ['V', 'W', 'Z', 'N', 'C'], description: 'New layout (?ui=2): Select tool, Wire tool, add swimlane, add note, open component list', category: 'Drafting & Selection' },
   { keys: ['Esc'], description: 'Clear selection or Connect mode', category: 'Drafting & Selection' },
 
   // Navigation & View

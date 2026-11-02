@@ -2652,6 +2652,7 @@ export function initEvents(): void {
       const actionId = matchBinding(e, {
         mode: app.workspaceMode,
         hasSelection: app.selection.type !== 'none',
+        ui: document.documentElement.dataset.ui === '2' ? 2 : 1,
       });
       const action = actionId ? findPaletteCommand(actionId) : undefined;
       if (action) {

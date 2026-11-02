@@ -8,6 +8,7 @@ import { initRovingFocus } from './studio/rovingFocus';
 import { initContextMenu } from './studio/contextMenu';
 import { initGroupOutlines } from './studio/groupOutlines';
 import { findPaletteCommand } from './studio/palette';
+import { initToolRail } from './studio/toolRail';
 import { resolveUiVersion } from './core/uiVersion';
 
 // Choose the interface generation before anything paints: `?ui=2` is the redesign, remembered per browser.
@@ -26,7 +27,19 @@ onSelectionChange(() => {
   scheduleMinimapPaint();
   announceSelectionChange(app.selection, app.doc);
 });
+// The redesign starts with the component list folded into the rail; opening it later is remembered as usual.
+try {
+  if (document.documentElement.dataset.ui === '2' && !localStorage.getItem('conduitcraft:ui2-rail-seeded')) {
+    localStorage.setItem('conduitcraft:ui2-rail-seeded', '1');
+    if (localStorage.getItem('conduitcraft:palette-collapsed') === null) {
+      localStorage.setItem('conduitcraft:palette-collapsed', 'true');
+    }
+  }
+} catch {
+  // Storage unavailable: the palette just opens as it does in the classic layout.
+}
 bootStudio();
+initToolRail();
 initRovingFocus();
 initContextMenu();
 initGroupOutlines();

@@ -52,4 +52,17 @@ describe('keymap', () => {
     const source = readFileSync(new URL('../src/studio/palette.ts', import.meta.url), 'utf8');
     for (const b of KEY_BINDINGS) assert.ok(source.includes(`id: '${b.actionId}'`), b.actionId);
   });
+
+  it('binds the tool-rail letters only in the redesigned interface', () => {
+    const v2 = { mode: 'design', hasSelection: false, ui: 2 } as const;
+    assert.equal(matchBinding(ev('v'), v2), 'tool-select');
+    assert.equal(matchBinding(ev('W', { shiftKey: true }), v2), null, 'shifted letters are not tool keys');
+    assert.equal(matchBinding(ev('w'), v2), 'tool-connect');
+    assert.equal(matchBinding(ev('z'), v2), 'add-zone');
+    assert.equal(matchBinding(ev('n'), v2), 'add-notes');
+    assert.equal(matchBinding(ev('c'), v2), 'open-insert');
+    assert.equal(matchBinding(ev('v'), { mode: 'design', hasSelection: false }), null);
+    assert.equal(matchBinding(ev('v'), { mode: 'data', hasSelection: false, ui: 2 }), null);
+    assert.equal(matchBinding(ev('c', { ctrlKey: true }), v2), null, 'Cmd/Ctrl+C is copy, not Insert');
+  });
 });

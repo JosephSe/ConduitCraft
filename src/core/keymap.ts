@@ -12,6 +12,8 @@ export interface KeyBinding {
   designOnly?: boolean;
   /** Only when something is selected (otherwise the key keeps its default behaviour). */
   needsSelection?: boolean;
+  /** Only in the redesigned interface (`?ui=2`). */
+  uiV2Only?: boolean;
 }
 
 export const KEY_BINDINGS: KeyBinding[] = [
@@ -25,6 +27,12 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'edit-ungroup', key: 'g', mod: true, shift: true, designOnly: true },
   { actionId: 'edit-bring-forward', key: ']', mod: true, designOnly: true },
   { actionId: 'edit-send-backward', key: '[', mod: true, designOnly: true },
+  // Tool rail (redesign): one letter per tool.
+  { actionId: 'tool-select', key: 'v', designOnly: true, uiV2Only: true },
+  { actionId: 'tool-connect', key: 'w', designOnly: true, uiV2Only: true },
+  { actionId: 'add-zone', key: 'z', designOnly: true, uiV2Only: true },
+  { actionId: 'add-notes', key: 'n', designOnly: true, uiV2Only: true },
+  { actionId: 'open-insert', key: 'c', designOnly: true, uiV2Only: true },
   { actionId: 'edit-rename', key: 'F2', designOnly: true },
   { actionId: 'edit-delete', key: 'Delete', designOnly: true, needsSelection: true },
   { actionId: 'edit-delete', key: 'Backspace', designOnly: true, needsSelection: true },
@@ -41,6 +49,8 @@ export interface KeyEventLike {
 export interface KeyContext {
   mode: 'design' | 'data';
   hasSelection: boolean;
+  /** Interface generation; defaults to the classic one. */
+  ui?: 1 | 2;
 }
 
 /** The action a key press should run, or null when it is not bound (or not applicable right now). */
@@ -54,6 +64,7 @@ export function matchBinding(event: KeyEventLike, ctx: KeyContext, bindings: Key
     if (Boolean(b.shift) !== event.shiftKey) continue;
     if (b.designOnly && ctx.mode !== 'design') continue;
     if (b.needsSelection && !ctx.hasSelection) continue;
+    if (b.uiV2Only && ctx.ui !== 2) continue;
     return b.actionId;
   }
   return null;
