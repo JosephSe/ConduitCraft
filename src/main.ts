@@ -5,6 +5,8 @@ import { bootStudio } from './studio/interactions';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
 import { announceSelectionChange } from './studio/a11y';
 import { initRovingFocus } from './studio/rovingFocus';
+import { initContextMenu } from './studio/contextMenu';
+import { initGroupOutlines } from './studio/groupOutlines';
 
 setHistoryApplied(() => renderAll(true));
 onSelectionChange(() => {
@@ -17,4 +19,6 @@ onSelectionChange(() => {
 });
 bootStudio();
 initRovingFocus();
+initContextMenu();
+initGroupOutlines();
 bindMinimap();
