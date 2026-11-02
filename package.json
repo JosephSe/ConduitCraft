@@ -19,12 +19,14 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4180",
     "check:size": "node tools/checkBundleSize.mjs",
+    "test:e2e": "playwright test",
     "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/*.test.ts"
   },
   "dependencies": {
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@types/js-yaml": "^4.0.9",
     "typescript": "^5.7.3",
     "vite": "^6.2.0"
