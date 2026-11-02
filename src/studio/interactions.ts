@@ -197,6 +197,7 @@ import { renameNodeInline } from './inlineRename';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
 import { matchBinding } from '../core/keymap';
+import { holdInspectorOpen } from './inspectorAutoShow';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
@@ -1408,6 +1409,7 @@ export function initEvents(): void {
 
   // Click Topbar Title -> Focus Document Title input in Property Panel
   btnFocusDocTitle.addEventListener('click', () => {
+    holdInspectorOpen();
     applySelection({ type: 'none' }, { refreshIfUnchanged: true });
     if (app.workspaceMode === 'design') {
       document.getElementById('prop-doc-title')?.focus();

@@ -9,6 +9,7 @@ import { initContextMenu } from './studio/contextMenu';
 import { initGroupOutlines } from './studio/groupOutlines';
 import { findPaletteCommand } from './studio/palette';
 import { initToolRail } from './studio/toolRail';
+import { initInspectorAutoShow } from './studio/inspectorAutoShow';
 import { initContextToolbar } from './studio/contextToolbar';
 import { resolveUiVersion } from './core/uiVersion';
 
@@ -41,6 +42,7 @@ try {
 }
 bootStudio();
 initToolRail();
+initInspectorAutoShow();
 initContextToolbar();
 initRovingFocus();
 initContextMenu();

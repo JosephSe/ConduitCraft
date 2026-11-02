@@ -5713,3 +5713,16 @@ html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
 .context-toolbar-btn:focus-visible {
   box-shadow: inset 0 0 0 2px var(--wl-blue);
 }
+
+/* Inspector pin (?ui=2): keeps the panel open when nothing is selected */
+.inspector-pin-btn {
+  display: none;
+  margin-inline-start: auto;
+}
+html[data-ui="2"] .inspector-pin-btn {
+  display: inline-flex;
+}
+.inspector-pin-btn[aria-pressed="true"] {
+  background: var(--wl-blue-soft);
+  color: var(--wl-ink);
+}
