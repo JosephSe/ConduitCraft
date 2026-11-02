@@ -1112,3 +1112,18 @@ describe('portable export', () => {
     assert.match(html, /class="blueprint-spec is-selected"[^>]*data-notes-id="notes-1"/, 'Notes card has is-selected');
   });
 });
+
+describe('standalone export presentation text', () => {
+  it('reads the node accent, never an undefined tone, for the fallback description', () => {
+    const doc = createBlankDocument();
+    const node = createNodeFromStencil('core', 40, 40, 0);
+    node.id = 'api';
+    node.summary = '';
+    doc.nodes.push(node);
+    const html = generateStandaloneHtml(doc);
+
+    // The embedded node records carry `accent`; there is no `tone` field on them.
+    assert.ok(html.includes("' + n.accent + ' telemetry."), 'fallback must read n.accent');
+    assert.ok(!html.includes("' + n.tone + '"), 'fallback must not read the nonexistent n.tone');
+  });
+});

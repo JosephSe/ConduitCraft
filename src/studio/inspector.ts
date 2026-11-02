@@ -1465,20 +1465,20 @@ export function renderPropertyEditor(): void {
     };
 
     grid.append(
-      makeAlignBtn('left Align Left', () => {
+      makeAlignBtn('Align Left', () => {
         const minX = Math.min(...selectedNodes.map((n) => n.x));
         for (const n of selectedNodes) n.x = minX;
       }),
-      makeAlignBtn('center Align Center X', () => {
+      makeAlignBtn('Align Center', () => {
         const avgCx =
           selectedNodes.reduce((acc, n) => acc + n.x + n.width / 2, 0) / selectedNodes.length;
         for (const n of selectedNodes) n.x = Math.round(avgCx - n.width / 2);
       }),
-      makeAlignBtn('top Align Top', () => {
+      makeAlignBtn('Align Top', () => {
         const minY = Math.min(...selectedNodes.map((n) => n.y));
         for (const n of selectedNodes) n.y = minY;
       }),
-      makeAlignBtn('middle Align Middle Y', () => {
+      makeAlignBtn('Align Middle', () => {
         const avgCy =
           selectedNodes.reduce((acc, n) => acc + n.y + n.height / 2, 0) / selectedNodes.length;
         for (const n of selectedNodes) n.y = Math.round(avgCy - n.height / 2);

@@ -10,11 +10,8 @@ import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
 import { simulationPlayback } from './simulationPlayback';
+import { applyZOrder } from './zOrderActions';
 import {
-  bringToFront,
-  sendToBack,
-  bringForward,
-  sendBackward,
   toggleSelectionLock,
   canGroupSelection,
   groupSelection,
@@ -545,10 +542,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: ']',
       keywords: ['front', 'top', 'layer', 'z-index', 'order'],
       run: () => {
-        pushHistory();
-        bringToFront(app.doc, app.selection);
-        renderAll(true);
-        notify('Brought to front');
+        applyZOrder('front');
       },
     },
     {
@@ -559,10 +553,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: '[',
       keywords: ['back', 'bottom', 'layer', 'z-index', 'order'],
       run: () => {
-        pushHistory();
-        sendToBack(app.doc, app.selection);
-        renderAll(true);
-        notify('Sent to back');
+        applyZOrder('back');
       },
     },
     {
@@ -573,10 +564,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}]`,
       keywords: ['forward', 'up', 'layer', 'z-index'],
       run: () => {
-        pushHistory();
-        bringForward(app.doc, app.selection);
-        renderAll(true);
-        notify('Brought forward');
+        applyZOrder('forward');
       },
     },
     {
@@ -587,10 +575,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}[`,
       keywords: ['backward', 'down', 'layer', 'z-index'],
       run: () => {
-        pushHistory();
-        sendBackward(app.doc, app.selection);
-        renderAll(true);
-        notify('Sent backward');
+        applyZOrder('backward');
       },
     },
     {

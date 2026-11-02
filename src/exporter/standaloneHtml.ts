@@ -974,7 +974,7 @@ ${colorSchemeBoot}
           presStep.textContent = 'Step ' + presIndex + ' of ' + tourNodes.length;
           presTitle.textContent = n.title || nId;
           presSubtitle.textContent = n.subtitle || ('Component 0' + presIndex);
-          presBody.textContent = n.summary || ('Active component in system architecture transmitting ' + n.tone + ' telemetry.');
+          presBody.textContent = n.summary || ('Active component in system architecture transmitting ' + n.accent + ' telemetry.');
           selectNode(nId);
           const r = viewport.getBoundingClientRect();
           scale = 1.05;
