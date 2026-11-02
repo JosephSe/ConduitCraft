@@ -383,7 +383,7 @@ ${colorSchemeBoot}
       ${filterPillsMarkup}
       ${simButtonsMarkup}
       <button type="button" class="btn" id="btn-toggle-motion" aria-pressed="false">Pause</button>
-      <button type="button" class="btn" id="btn-enter-presentation" aria-label="Presentation mode (P)" data-tip="Present (P)">Present</button>
+      <button type="button" class="btn" id="btn-enter-presentation" aria-label="Present, presentation mode (P)" data-tip="Present (P)">Present</button>
       <button type="button" class="btn" id="btn-open-matrix">Matrix</button>
       <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings">⚙</button>
     </div>

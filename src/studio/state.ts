@@ -310,12 +310,14 @@ export function pushHistory(): void {
 }
 
 /**
- * Run a mutation and record an undo step only if it reports that it changed something, so a no-op
+ * Run a mutation and record an undo step only if it changed something, so a no-op
  * (for example "bring to front" on the top layer) doesn't leave an empty step in the history.
  */
-export function mutateWithHistory(mutate: () => boolean): boolean {
+export function mutateWithHistory(mutate: () => boolean | void): boolean {
   const before = structuredClone(app.doc);
-  const changed = mutate();
+  const result = mutate();
+  // A mutation that doesn't report whether it changed anything is judged by comparing the document itself.
+  const changed = result === undefined ? JSON.stringify(before) !== JSON.stringify(app.doc) : result;
   if (!changed) return false;
   const decision = resolveHistoryPush(historyGate, { type: 'commit' });
   historyGate = decision.gate;

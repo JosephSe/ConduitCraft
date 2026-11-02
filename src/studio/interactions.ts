@@ -191,18 +191,14 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
+import { renameSelectionInline } from './inlineRename';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
-import { applyZOrder } from './zOrderActions';
-import {
-  toggleSelectionLock,
-  canGroupSelection,
-  groupSelection,
-  ungroupSelection,
-} from './zOrderLockGroup';
+import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
+import { canGroupSelection } from './zOrderLockGroup';
 import { responsiveToolbar } from './responsiveToolbar';
 import {
   getActiveFileHandle,
@@ -1390,28 +1386,12 @@ export function initEvents(): void {
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);
 
-  btnPropLock?.addEventListener('click', () => {
-    pushHistory();
-    const locked = toggleSelectionLock(app.doc, app.selection);
-    renderAll(true);
-    requestInspectorRefresh();
-    notify(locked ? 'Locked component' : 'Unlocked component');
-  });
+  btnPropLock?.addEventListener('click', applyLockToggle);
 
+  // The one Group button groups a multi-selection, and otherwise tries to ungroup what is selected.
   btnPropGroup?.addEventListener('click', () => {
-    if (canGroupSelection(app.selection)) {
-      pushHistory();
-      groupSelection(app.doc, app.selection);
-      renderAll(true);
-      requestInspectorRefresh();
-      notify('Grouped components');
-    } else {
-      pushHistory();
-      const ungrouped = ungroupSelection(app.doc, app.selection);
-      renderAll(true);
-      requestInspectorRefresh();
-      notify(ungrouped ? 'Ungrouped components' : 'Select 2 or more items to group');
-    }
+    if (canGroupSelection(app.selection)) applyGroup();
+    else applyUngroup();
   });
 
   // Add Swimlane & Notes Card
@@ -2568,30 +2548,13 @@ export function initEvents(): void {
       }
       if (e.key.toLowerCase() === 'l' && app.workspaceMode === 'design') {
         e.preventDefault();
-        pushHistory();
-        const locked = toggleSelectionLock(app.doc, app.selection);
-        renderAll(true);
-        requestInspectorRefresh();
-        notify(locked ? 'Locked selection' : 'Unlocked selection');
+        applyLockToggle();
         return;
       }
       if (e.key.toLowerCase() === 'g' && app.workspaceMode === 'design') {
         e.preventDefault();
-        if (e.shiftKey) {
-          pushHistory();
-          const ungrouped = ungroupSelection(app.doc, app.selection);
-          renderAll(true);
-          requestInspectorRefresh();
-          notify(ungrouped ? 'Ungrouped components' : 'No group to ungroup');
-        } else if (canGroupSelection(app.selection)) {
-          pushHistory();
-          groupSelection(app.doc, app.selection);
-          renderAll(true);
-          requestInspectorRefresh();
-          notify('Grouped components');
-        } else {
-          notify('Select 2 or more components to group');
-        }
+        if (e.shiftKey) applyUngroup();
+        else applyGroup();
         return;
       }
       if (e.key === ']' && app.workspaceMode === 'design') {
@@ -2631,6 +2594,11 @@ export function initEvents(): void {
         } else {
           responsiveToolbar.togglePalette();
         }
+        return;
+      }
+      if (e.key === 'F2') {
+        e.preventDefault();
+        if (!renameSelectionInline()) notify('Select a component, swimlane, note or wire to rename');
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {

@@ -10,13 +10,8 @@ import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
 import { simulationPlayback } from './simulationPlayback';
-import { applyZOrder } from './zOrderActions';
-import {
-  toggleSelectionLock,
-  canGroupSelection,
-  groupSelection,
-  ungroupSelection,
-} from './zOrderLockGroup';
+import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
+import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
 import { saveSnapshot } from './snapshots';
 
@@ -480,6 +475,17 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: deps.duplicateSelected,
     },
     {
+      id: 'edit-rename',
+      title: 'Rename Selection',
+      subtitle: 'Edit the name of the selected component, swimlane, note or wire label',
+      category: 'Edit & History',
+      shortcut: 'F2',
+      keywords: ['rename', 'title', 'label', 'name', 'edit'],
+      run: () => {
+        if (!renameSelectionInline()) notify('Select a component, swimlane, note or wire to rename');
+      },
+    },
+    {
       id: 'edit-delete',
       title: 'Delete Selection',
       subtitle: 'Remove selected component(s) or wire',
@@ -495,12 +501,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       category: 'Edit & History',
       shortcut: `${mod}L`,
       keywords: ['lock', 'unlock', 'freeze', 'protect'],
-      run: () => {
-        pushHistory();
-        const locked = toggleSelectionLock(app.doc, app.selection);
-        renderAll(true);
-        notify(locked ? 'Locked selection' : 'Unlocked selection');
-      },
+      run: () => applyLockToggle(),
     },
     {
       id: 'edit-group',
@@ -509,16 +510,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       category: 'Edit & History',
       shortcut: `${mod}G`,
       keywords: ['group', 'combine', 'cluster'],
-      run: () => {
-        if (canGroupSelection(app.selection)) {
-          pushHistory();
-          groupSelection(app.doc, app.selection);
-          renderAll(true);
-          notify('Grouped components');
-        } else {
-          notify('Select 2 or more components to group');
-        }
-      },
+      run: () => applyGroup(),
     },
     {
       id: 'edit-ungroup',
@@ -527,12 +519,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       category: 'Edit & History',
       shortcut: isMac() ? '⌘⇧G' : 'Ctrl+Shift+G',
       keywords: ['ungroup', 'separate', 'break'],
-      run: () => {
-        pushHistory();
-        const ungrouped = ungroupSelection(app.doc, app.selection);
-        renderAll(true);
-        notify(ungrouped ? 'Ungrouped components' : 'No group to ungroup');
-      },
+      run: () => applyUngroup(),
     },
     {
       id: 'edit-bring-to-front',

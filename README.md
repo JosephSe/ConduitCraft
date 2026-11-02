@@ -44,6 +44,8 @@ The [guide](./docs/guide.md) is the Blueprint YAML schema, the wire routing mode
 
 ## Quick Start
 
+Requires Node.js 22.6 or newer (the tests use Node's built-in TypeScript support) and [pnpm](https://pnpm.io). An `.nvmrc` is included, so `nvm use` picks the right version.
+
 ```bash
 pnpm install
 pnpm dev
@@ -54,6 +56,13 @@ Run the test suite and production build:
 ```bash
 pnpm test
 pnpm build
+```
+
+The browser tests (Playwright) build the app and drive it in Chromium. Install the browser once, then run them:
+
+```bash
+pnpm exec playwright install chromium
+pnpm test:e2e
 ```
 
 ## License

@@ -60,13 +60,16 @@
     display: grid;
     place-items: center;
     background: linear-gradient(135deg var(--in-oklab), var(--wl-blue), var(--wl-emerald));
-    color: #ffffff;
+    /* White on the light dark-mode accents is ~2:1, so the text colour follows the theme. */
+    color: var(--wl-on-blue);
     box-shadow: 0 6px 18px rgba(37, 99, 235, 0.32);
     flex-shrink: 0;
   }
 
   .brand-cluster[data-brand] .brand-mark {
     background: var(--brand-accent);
+    /* A document-chosen colour can't be assumed light or dark, so keep the original white glyph there. */
+    color: #ffffff;
     box-shadow: none;
   }
 
@@ -1005,7 +1008,7 @@
 
   .btn-primary-export {
     background: linear-gradient(135deg var(--in-oklab), var(--wl-blue), var(--wl-emerald));
-    color: #ffffff;
+    color: var(--wl-on-blue);
     border-color: transparent;
     box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
   }
@@ -3946,6 +3949,25 @@
 
 .tooltip-layer[data-visible="true"] {
   opacity: 1;
+}
+
+/* Inline rename field, laid over the element being renamed (src/studio/inlineEdit.ts) */
+.inline-edit-input {
+  position: fixed;
+  z-index: 10001;
+  box-sizing: border-box;
+  padding: 0 0.6rem;
+  border: 2px solid var(--wl-blue);
+  border-radius: 6px;
+  background: var(--wl-surface-elevated);
+  color: var(--wl-ink);
+  box-shadow: var(--wl-shadow-card);
+  text-align: center;
+  outline: none;
+}
+
+.inline-edit-input::placeholder {
+  color: var(--wl-ink-muted);
 }
 
 /* Shortcuts Dialog Styling */
