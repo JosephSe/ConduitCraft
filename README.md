@@ -9,17 +9,17 @@ ConduitCraft exports self-contained, interactive standalone HTML architectures a
 ### 1. Whole Architecture View
 Full end-to-end overview of a distributed system architecture showing animated packet conduits, stage swimlanes, and multi-tier components.
 
-![Whole Architecture View](public/export/lumen-relay_whole.gif)
+![Whole Architecture View](docs/images/lumen-relay_whole.gif)
 
 ### 2. Scenario Simulation Run View
 Multi-step packet trace simulation ("Clear Night Run") dynamically animating traffic propagation across edge gateways, message brokers, and datastores with live execution highlights.
 
-![Scenario Simulation Run View](public/export/lumen-relay-clear-night_scenario.gif)
+![Scenario Simulation Run View](docs/images/lumen-relay-clear-night_scenario.gif)
 
 ### 3. Zoomed-In Inspection View
 Detailed close-up inspection view highlighting directional port wiring, custom status indicators, telemetry metrics, and multi-wire routing.
 
-![Zoomed-In Inspection View](public/export/lumen-relay-zoomed-view.gif)
+![Zoomed-In Inspection View](docs/images/lumen-relay-zoomed-view.gif)
 
 ## Highlights
 
