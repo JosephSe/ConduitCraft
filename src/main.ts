@@ -4,6 +4,7 @@ import { renderAll, renderWiresOnly, requestInspectorRefresh, updateVisualSelect
 import { bootStudio } from './studio/interactions';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
 import { announceSelectionChange } from './studio/a11y';
+import { initRovingFocus } from './studio/rovingFocus';
 
 setHistoryApplied(() => renderAll(true));
 onSelectionChange(() => {
@@ -15,4 +16,5 @@ onSelectionChange(() => {
   announceSelectionChange(app.selection, app.doc);
 });
 bootStudio();
+initRovingFocus();
 bindMinimap();
