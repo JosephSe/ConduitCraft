@@ -47,6 +47,14 @@ let activeIndex = 0;
 let currentFiltered: PaletteCommand[] = [];
 let savedDeps: PaletteDeps | null = null;
 
+function clickById(id: string): void {
+  document.getElementById(id)?.click();
+}
+
+function clickRadio(name: string, value: string): void {
+  document.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`)?.click();
+}
+
 export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
   const mod = isMac() ? '⌘' : 'Ctrl+';
   const commands: PaletteCommand[] = [
@@ -724,6 +732,60 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: '?',
       keywords: ['shortcuts', 'hotkeys', 'keys', 'help'],
       run: deps.openShortcutsDialog,
+    },
+
+    // Header controls that the redesigned top bar no longer shows: each stays one palette entry away.
+    {
+      id: 'new-canvas',
+      title: 'New Blueprint…',
+      subtitle: 'Start a blank canvas or pick a template',
+      category: 'Export & Sync',
+      keywords: ['new', 'blank', 'canvas', 'clear'],
+      run: () => clickById('btn-new-canvas'),
+    },
+    {
+      id: 'import-file',
+      title: 'Import File…',
+      subtitle: 'Load a .mmd, .md or .json diagram',
+      category: 'Export & Sync',
+      keywords: ['import', 'mermaid', 'json', 'markdown'],
+      run: () => clickById('btn-import-file'),
+    },
+    {
+      id: 'tool-select',
+      title: 'Select Tool',
+      subtitle: 'Click and drag to select and move',
+      category: 'Canvas & Layout',
+      keywords: ['select', 'pointer', 'tool', 'arrow'],
+      run: () => clickRadio('pointer-tool', 'select'),
+    },
+    {
+      id: 'tool-connect',
+      title: 'Connect Tool',
+      subtitle: 'Click two components to join them with a wire',
+      category: 'Canvas & Layout',
+      keywords: ['connect', 'wire', 'link', 'tool', 'edge'],
+      run: () => clickRadio('pointer-tool', 'connect'),
+    },
+    {
+      id: 'toggle-motion',
+      title: 'Pause / Resume Wire Animation',
+      subtitle: 'Stop or restart the flowing wires',
+      category: 'Mode & View',
+      keywords: ['pause', 'motion', 'animation', 'freeze'],
+      run: () => clickById('btn-toggle-motion'),
+    },
+    {
+      id: 'install-app',
+      title: 'Install ConduitCraft',
+      subtitle: 'Add the app to your device (when your browser offers it)',
+      category: 'Preferences',
+      keywords: ['install', 'pwa', 'app', 'offline'],
+      run: () => {
+        const btn = document.getElementById('btn-install-app') as HTMLButtonElement | null;
+        if (btn && !btn.hidden) btn.click();
+        else notify('Installing is not available in this browser right now');
+      },
     },
   ];
 
