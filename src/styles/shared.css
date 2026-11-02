@@ -220,6 +220,53 @@
   }
 }
 
+/* ConduitCraft 2.0 design tokens (REDESIGN_PLAN.md 6.1). A thin layer over --wl-*: theme switching still happens
+   there, so every --cc-* value follows the light/dark/exported-colour-scheme rules without being repeated. */
+@layer tokens {
+  :root {
+    --cc-surface-0: var(--wl-canvas);
+    --cc-surface-1: var(--wl-surface);
+    --cc-surface-2: var(--wl-surface-elevated);
+    --cc-surface-3: color-mix(in srgb, var(--wl-surface-elevated) 94%, var(--wl-ink));
+    --cc-surface-4: color-mix(in srgb, var(--wl-surface-elevated) 88%, var(--wl-ink));
+
+    --cc-ink: var(--wl-ink);
+    --cc-ink-muted: var(--wl-ink-secondary);
+    --cc-ink-faint: var(--wl-ink-muted);
+
+    --cc-accent: var(--wl-blue);
+    --cc-on-accent: var(--wl-on-blue);
+
+    --cc-shadow-1: 0 1px 2px rgba(2, 6, 23, 0.12);
+    --cc-shadow-2: 0 2px 6px rgba(2, 6, 23, 0.16), 0 8px 20px -6px rgba(2, 6, 23, 0.24);
+    --cc-shadow-3: 0 4px 12px rgba(2, 6, 23, 0.2), 0 24px 48px -12px rgba(2, 6, 23, 0.42);
+
+    --cc-radius-s: 6px;
+    --cc-radius-m: 10px;
+    --cc-radius-l: 16px;
+
+    --cc-space-1: 4px;
+    --cc-space-2: 8px;
+    --cc-space-3: 12px;
+    --cc-space-4: 16px;
+    --cc-space-5: 20px;
+    --cc-space-6: 24px;
+    --cc-space-7: 28px;
+    --cc-space-8: 32px;
+
+    --cc-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --cc-dur-fast: 120ms;
+    --cc-dur-base: 200ms;
+    --cc-dur-slow: 320ms;
+
+    @media (prefers-reduced-motion: reduce) {
+      --cc-dur-fast: 0ms;
+      --cc-dur-base: 0ms;
+      --cc-dur-slow: 0ms;
+    }
+  }
+}
+
 @layer layout {
   body {
     font-family: var(--wl-font-sans);
