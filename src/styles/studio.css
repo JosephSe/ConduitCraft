@@ -1513,6 +1513,10 @@
     z-index: 3;
   }
 
+  .wire-handles-layer {
+    z-index: 12;
+  }
+
   .conduit-hit {
     fill: none;
     stroke: transparent;
@@ -1679,6 +1683,24 @@
   .conduit-waypoint-handle.is-dragging {
     fill: var(--wl-blue);
     r: 7;
+    cursor: grabbing;
+  }
+
+  /* Grab handles on the two ends of the selected wire; solid so they read differently from the midpoint bend handle. */
+  .conduit-endpoint-handle {
+    /* --inv-zoom is 1/zoom (never below 1), so the handle stays a comfortable size on screen when zoomed out. */
+    r: calc(6.5px * var(--inv-zoom, 1));
+    fill: var(--wl-blue);
+    stroke: var(--wl-surface);
+    stroke-width: calc(2.5px * var(--inv-zoom, 1));
+    cursor: grab;
+    pointer-events: all;
+    transition: r 0.15s ease;
+  }
+
+  .conduit-endpoint-handle:hover,
+  .conduit-endpoint-handle.is-dragging {
+    r: calc(8.5px * var(--inv-zoom, 1));
     cursor: grabbing;
   }
 

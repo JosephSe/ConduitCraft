@@ -525,6 +525,45 @@ export function beginPortWireDrag(
   captureEl.addEventListener('lostpointercapture', onLost);
 }
 
+export type WireEnd = 'from' | 'to';
+
+/** The component (and port) under a screen point, for dropping a wire end on. Null over bare canvas. */
+export function wireDropTarget(clientX: number, clientY: number): { nodeId: string; port: PortSide } | null {
+  const hit = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+  const portEl = hit?.closest('.node-port') as HTMLElement | null;
+  if (portEl?.dataset.nodeId) return { nodeId: portEl.dataset.nodeId, port: (portEl.dataset.port as PortSide) || 'auto' };
+  const nodeEl = hit?.closest('.arch-node') as HTMLElement | null;
+  if (nodeEl?.dataset.node) return { nodeId: nodeEl.dataset.node, port: 'auto' };
+  return null;
+}
+
+/**
+ * Re-attach one end of a wire to another component (or another port of the same one). One undo step.
+ * Returns false, changing nothing, if the wire is gone, nothing would change, or it would join a component to itself.
+ */
+export function retargetEdgeEnd(edgeId: string, end: WireEnd, nodeId: string, port: PortSide): boolean {
+  const edge = app.doc.edges.find((e) => e.id === edgeId);
+  if (!edge || !app.doc.nodes.some((n) => n.id === nodeId)) return false;
+  const otherId = end === 'from' ? edge.to : edge.from;
+  if (nodeId === otherId) {
+    notify("A wire can't connect a component to itself");
+    return false;
+  }
+  const changed = mutateWithHistory(() => {
+    if (end === 'from') {
+      edge.from = nodeId;
+      edge.sourcePort = port;
+    } else {
+      edge.to = nodeId;
+      edge.targetPort = port;
+    }
+  });
+  if (!changed) return false;
+  renderAll(true);
+  notify('Wire reconnected');
+  return true;
+}
+
 /** Shorter drags are almost certainly a slip, not a request for a new component. */
 const WIRE_DROP_MIN_DRAG_PX = 32;
 

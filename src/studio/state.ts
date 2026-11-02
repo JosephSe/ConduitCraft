@@ -399,6 +399,8 @@ export function applyTransform(): void {
   stageWorld.style.setProperty('zoom', String(scale));
   stageWorld.style.transform = `translate(${app.panX / scale}px, ${app.panY / scale}px)`;
   stageWorld.dataset.lod = scale < 0.55 ? 'low' : scale < 0.8 ? 'medium' : 'high';
+  // Lets on-canvas grab handles keep a usable on-screen size when zoomed out (see .conduit-endpoint-handle).
+  stageWorld.style.setProperty('--inv-zoom', String(Math.max(1, 1 / scale)));
   zoomReadout.textContent = `${Math.round(scale * 100)}%`;
   minimapPainter?.();
 }

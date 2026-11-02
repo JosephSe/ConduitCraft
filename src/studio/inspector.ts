@@ -43,6 +43,7 @@ import {
 import {
   renderSimButtons,
   runSimulation,
+  retargetEdgeEnd,
 } from './interactions';
 import { isSelectionLocked, canGroupSelection } from './zOrderLockGroup';
 import {
@@ -866,6 +867,29 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
+
+    // Source / Target: the keyboard route to what dragging a wire end does on the canvas.
+    const titleCounts = new Map<string, number>();
+    for (const n of app.doc.nodes) titleCounts.set(n.title, (titleCounts.get(n.title) ?? 0) + 1);
+    const makeEndSelect = (end: 'from' | 'to'): HTMLSelectElement => {
+      const select = document.createElement('select');
+      select.className = 'prop-select';
+      for (const n of app.doc.nodes) {
+        const option = document.createElement('option');
+        option.value = n.id;
+        // Identical titles are told apart by id, so the right component can be chosen.
+        option.textContent = (titleCounts.get(n.title) ?? 0) > 1 ? `${n.title} (${n.id})` : n.title;
+        option.selected = n.id === edge[end];
+        select.appendChild(option);
+      }
+      select.addEventListener('change', () => {
+        // Rejected moves (a wire onto its own other end) put the selector back.
+        if (!retargetEdgeEnd(edge.id, end, select.value, 'auto')) select.value = edge[end];
+      });
+      return select;
+    };
+    form.appendChild(makeField('prop-edge-from', 'Source component', makeEndSelect('from')));
+    form.appendChild(makeField('prop-edge-to', 'Target component', makeEndSelect('to')));
 
     const toneWrap = document.createElement('div');
     toneWrap.className = 'prop-field';

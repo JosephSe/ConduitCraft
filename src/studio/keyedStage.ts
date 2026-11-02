@@ -14,10 +14,13 @@ import {
   SVG_NS,
   alignGuideX,
   alignGuideY,
+  draftWire,
   nodesLayer,
   notesLayer,
   propPanelHeading,
+  wireHandlesSvg,
   wiresGroup,
+  workspace,
   zonesLayer,
 } from './dom';
 import {
@@ -35,7 +38,14 @@ import {
 } from './state';
 import { renderPropertyEditor } from './inspector';
 import { applySelection, requestInspectorRefresh } from './render';
-import { beginPortWireDrag, createEdgeConnection, deleteSelected } from './interactions';
+import {
+  beginPortWireDrag,
+  createEdgeConnection,
+  deleteSelected,
+  retargetEdgeEnd,
+  wireDropTarget,
+  type WireEnd,
+} from './interactions';
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
@@ -427,10 +437,101 @@ export function renderWiresOnly(): void {
     (edge) => createWireGroup(edge.id),
     (el, edge) => paintWire(el as SVGGElement, edge),
   );
+  pruneEndpointHandles();
   scheduleMinimapPaint();
 }
 
+/** Remove handles whose wire is no longer the selected one (or no longer exists). */
+function pruneEndpointHandles(): void {
+  const sel = app.selection;
+  const selectedId =
+    app.workspaceMode === 'design' && sel.type === 'edge' && app.doc.edges.some((e) => e.id === sel.id) ? sel.id : null;
+  for (const handle of wireHandlesSvg.querySelectorAll<SVGCircleElement>('.conduit-endpoint-handle')) {
+    if (handle.dataset.edgeId !== selectedId) handle.remove();
+  }
+}
+
 const wirePainters = new WeakMap<SVGGElement, (edge: RoutedDiagramEdge) => void>();
+
+/** A smooth curve between two world points, matching the preview drawn while creating a wire. */
+function draftCurve(a: [number, number], b: [number, number]): string {
+  const midX = Math.round((a[0] + b[0]) / 2);
+  return `M ${a[0]} ${a[1]} C ${midX} ${a[1]}, ${midX} ${b[1]}, ${b[0]} ${b[1]}`;
+}
+
+/**
+ * A grab handle on one end of the selected wire, drawn in an overlay above the nodes. Dragging it onto another component (or port) re-attaches that end;
+ * releasing anywhere else, or pressing Escape, leaves the wire as it was.
+ */
+function createEndpointHandle(edgeId: string, end: WireEnd): SVGCircleElement {
+  const handle = document.createElementNS(SVG_NS, 'circle');
+  handle.setAttribute('class', 'conduit-endpoint-handle');
+  handle.setAttribute('r', '6.5');
+  handle.dataset.end = end;
+  handle.dataset.edgeId = edgeId;
+  // Pointer-only affordance: the wire inspector offers Source and Target selectors for keyboard users.
+  handle.setAttribute('aria-hidden', 'true');
+  let dragging = false;
+  let fixedPt: [number, number] = [0, 0];
+  let hoveredPort: HTMLElement | null = null;
+
+  const finish = (commit: boolean, ev?: PointerEvent): void => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('is-dragging');
+    hoveredPort?.classList.remove('is-target-port');
+    hoveredPort = null;
+    app.activeWireDraft = null;
+    delete workspace.dataset.wiring;
+    draftWire.setAttribute('hidden', '');
+    if (!commit || !ev) return;
+    const target = wireDropTarget(ev.clientX, ev.clientY);
+    if (target) retargetEdgeEnd(edgeId, end, target.nodeId, target.port);
+  };
+
+  handle.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || app.workspaceMode !== 'design') return;
+    e.stopPropagation();
+    e.preventDefault();
+    const routed = routeDiagramEdges(app.doc).find((r) => r.id === edgeId);
+    if (!routed) return;
+    fixedPt = end === 'to' ? routed.startPoint : routed.endPoint;
+    dragging = true;
+    handle.classList.add('is-dragging');
+    handle.setPointerCapture(e.pointerId);
+    workspace.dataset.wiring = 'true';
+    draftWire.removeAttribute('hidden');
+    draftWire.setAttribute('d', draftCurve(fixedPt, fixedPt));
+    // Registering as the active draft lets Escape cancel it, exactly like a wire being drawn.
+    app.activeWireDraft = {
+      sourceNodeId: end === 'to' ? routed.from : routed.to,
+      sourcePort: 'auto',
+      startPt: fixedPt,
+      hoveredPortBtn: null,
+      cancel: () => {
+        if (handle.hasPointerCapture(e.pointerId)) handle.releasePointerCapture(e.pointerId);
+      },
+    };
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!dragging || !handle.hasPointerCapture(e.pointerId)) return;
+    const [wx, wy] = screenToWorld(e.clientX, e.clientY);
+    const hit = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+    const port = hit?.closest('.node-port') as HTMLElement | null;
+    if (hoveredPort && hoveredPort !== port) hoveredPort.classList.remove('is-target-port');
+    hoveredPort = port;
+    port?.classList.add('is-target-port');
+    draftWire.setAttribute('d', end === 'to' ? draftCurve(fixedPt, [wx, wy]) : draftCurve([wx, wy], fixedPt));
+  });
+  handle.addEventListener('pointerup', (e) => {
+    e.stopPropagation();
+    finish(true, e);
+  });
+  // Escape (and any interruption) releases pointer capture, which lands here without a commit.
+  handle.addEventListener('lostpointercapture', () => finish(false));
+  return handle;
+}
 
 function createWireGroup(edgeId: string): SVGGElement {
   const g = document.createElementNS(SVG_NS, 'g');
@@ -664,6 +765,29 @@ function createWireGroup(edgeId: string): SVGGElement {
     handle.setAttribute('cy', String(wpPos[1]));
   };
 
+  const ensureEndpoints = (edge: RoutedDiagramEdge) => {
+    const selected = app.workspaceMode === 'design' && app.selection.type === 'edge' && app.selection.id === edge.id;
+    if (!selected) return; // handles of unselected wires are removed by pruneEndpointHandles()
+    const laneTx =
+      edge.laneOffset && (edge.laneOffset[0] !== 0 || edge.laneOffset[1] !== 0)
+        ? `translate(${edge.laneOffset[0]}, ${edge.laneOffset[1]})`
+        : null;
+    for (const end of ['from', 'to'] as const) {
+      let handle = Array.from(wireHandlesSvg.querySelectorAll<SVGCircleElement>('.conduit-endpoint-handle')).find(
+        (h) => h.dataset.edgeId === edge.id && h.dataset.end === end,
+      );
+      if (!handle) {
+        handle = createEndpointHandle(edge.id, end);
+        wireHandlesSvg.appendChild(handle);
+      }
+      const pt = end === 'from' ? edge.startPoint : edge.endPoint;
+      handle.setAttribute('cx', String(pt[0]));
+      handle.setAttribute('cy', String(pt[1]));
+      if (laneTx) handle.setAttribute('transform', laneTx);
+      else handle.removeAttribute('transform');
+    }
+  };
+
   wirePainters.set(g, (edge) => {
     const titles = new Map(app.doc.nodes.map((n) => [n.id, n.title]));
     const fromName = titles.get(edge.from) || edge.from;
@@ -702,6 +826,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     ensureBadge(edge);
     ensureComment(edge);
     ensureWaypoint(edge);
+    ensureEndpoints(edge);
   });
 
   return g;

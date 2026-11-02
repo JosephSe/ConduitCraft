@@ -328,3 +328,165 @@ test('a short slip, Escape, or dropping on another component does not create a c
   await expect.poll(() => wireCount(page)).toBe(wires + 1);
   expect(await nodeCount(page)).toBe(nodesBefore);
 });
+
+/** Select a wire by clicking its midpoint (one that is not covered by a component), and return its identity. */
+async function selectWire(page: Page): Promise<{ id: string; from: string; to: string }> {
+  const target = await page.evaluate(() => {
+    for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
+      const path = group.querySelector<SVGPathElement>('.conduit-hit');
+      const ctm = path?.getScreenCTM();
+      if (!path || !ctm) continue;
+      const mid = path.getPointAtLength(path.getTotalLength() / 2);
+      const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
+      if (pt.x < 0 || pt.y < 0 || pt.x > innerWidth || pt.y > innerHeight) continue;
+      if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
+        return { id: group.dataset.edgeId!, from: group.dataset.from!, to: group.dataset.to!, x: pt.x, y: pt.y };
+      }
+    }
+    return null;
+  });
+  expect(target, 'a wire that can be clicked').not.toBeNull();
+  await page.mouse.click(target!.x, target!.y);
+  await expect(page.locator(`.conduit-group[data-edge-id="${target!.id}"]`)).toHaveClass(/is-selected/);
+  return { id: target!.id, from: target!.from, to: target!.to };
+}
+
+async function handleCentre(page: Page, edgeId: string, end: 'from' | 'to') {
+  const box = await page.locator(`#wire-handles-svg .conduit-endpoint-handle[data-edge-id="${edgeId}"][data-end="${end}"]`).boundingBox();
+  expect(box, `the ${end} handle`).not.toBeNull();
+  return { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 };
+}
+
+/** A clickable component that is neither of the wire's own ends. */
+async function otherNode(page: Page, exclude: string[]): Promise<string> {
+  for (const id of await nodeIdsInDomOrder(page)) {
+    if (!exclude.includes(id) && (await clickableCentre(page, id))) return id;
+  }
+  throw new Error('no other clickable node');
+}
+
+test('dragging a wire end onto another component re-attaches it, as one undo step', async ({ page }) => {
+  await loadShowcase(page);
+  const wire = await selectWire(page);
+  const newTarget = await otherNode(page, [wire.from, wire.to]);
+  const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
+  const wiresBefore = await wireCount(page);
+
+  const handle = await handleCentre(page, wire.id, 'to');
+  const drop = (await clickableCentre(page, newTarget))!;
+  await page.mouse.move(handle.x, handle.y);
+  await page.mouse.down();
+  await page.mouse.move((handle.x + drop.x) / 2, (handle.y + drop.y) / 2, { steps: 6 });
+  await expect(page.locator('#workspace')).toHaveAttribute('data-wiring', 'true');
+  await page.mouse.move(drop.x, drop.y, { steps: 6 });
+  await page.mouse.up();
+
+  await expect(group).toHaveAttribute('data-to', newTarget);
+  await expect(group).toHaveAttribute('data-from', wire.from);
+  expect(await wireCount(page), 'no wire is added or removed').toBe(wiresBefore);
+  await expect(page.locator('#toast-container')).toContainText('Wire reconnected');
+
+  await page.locator('#btn-undo').click();
+  await expect(group).toHaveAttribute('data-to', wire.to);
+  await page.locator('#btn-redo').click();
+  await expect(group).toHaveAttribute('data-to', newTarget);
+});
+
+test('the source end can be dragged too', async ({ page }) => {
+  await loadShowcase(page);
+  const wire = await selectWire(page);
+  const newSource = await otherNode(page, [wire.from, wire.to]);
+  const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
+
+  const handle = await handleCentre(page, wire.id, 'from');
+  const drop = (await clickableCentre(page, newSource))!;
+  await page.mouse.move(handle.x, handle.y);
+  await page.mouse.down();
+  await page.mouse.move(drop.x, drop.y, { steps: 10 });
+  await page.mouse.up();
+
+  await expect(group).toHaveAttribute('data-from', newSource);
+  await expect(group).toHaveAttribute('data-to', wire.to);
+});
+
+test('dropping a wire end on bare canvas, or pressing Escape, leaves the wire alone', async ({ page }) => {
+  await loadShowcase(page);
+  const wire = await selectWire(page);
+  const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
+  const handle = await handleCentre(page, wire.id, 'to');
+  const bare = await emptyCanvasPoint(page, handle);
+  const before = await undoDepth(page);
+
+  // Select the wire again (walking the undo stack in undoDepth cleared the selection).
+  await selectWire(page);
+  const start = await handleCentre(page, wire.id, 'to');
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(bare.x, bare.y, { steps: 8 });
+  await page.mouse.up();
+  await expect(group).toHaveAttribute('data-to', wire.to);
+
+  await selectWire(page);
+  const again = await handleCentre(page, wire.id, 'to');
+  const other = (await clickableCentre(page, await otherNode(page, [wire.from, wire.to])))!;
+  await page.mouse.move(again.x, again.y);
+  await page.mouse.down();
+  await page.mouse.move(other.x, other.y, { steps: 8 });
+  await page.keyboard.press('Escape');
+  await page.mouse.up();
+  await expect(group).toHaveAttribute('data-to', wire.to);
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-wiring', 'true');
+  expect(await undoDepth(page), 'cancelled drags add no undo steps').toBe(before);
+});
+
+test('a wire end cannot be dropped onto the component at its other end', async ({ page }) => {
+  await loadShowcase(page);
+  const wire = await selectWire(page);
+  const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
+  const handle = await handleCentre(page, wire.id, 'to');
+  const onSource = (await clickableCentre(page, wire.from))!;
+
+  await page.mouse.move(handle.x, handle.y);
+  await page.mouse.down();
+  await page.mouse.move(onSource.x, onSource.y, { steps: 8 });
+  await page.mouse.up();
+
+  await expect(page.locator('#toast-container')).toContainText("can't connect a component to itself");
+  await expect(group).toHaveAttribute('data-to', wire.to);
+});
+
+test('endpoint handles appear only on the selected wire', async ({ page }) => {
+  await loadShowcase(page);
+  await expect(page.locator('.conduit-endpoint-handle')).toHaveCount(0);
+  const wire = await selectWire(page);
+  await expect(page.locator(`#wire-handles-svg .conduit-endpoint-handle[data-edge-id="${wire.id}"]`)).toHaveCount(2);
+  await expect(page.locator('.conduit-endpoint-handle')).toHaveCount(2);
+  // The showcase is framed zoomed out, where a fixed-size handle would be a couple of pixels wide.
+  const size = await page.locator('.conduit-endpoint-handle').first().boundingBox();
+  expect(size!.width, 'handles stay easy to grab when zoomed out').toBeGreaterThanOrEqual(12);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.conduit-endpoint-handle')).toHaveCount(0);
+});
+
+test('the wire inspector can re-attach either end without a mouse', async ({ page }) => {
+  await loadShowcase(page);
+  const wire = await selectWire(page);
+  const newTarget = await otherNode(page, [wire.from, wire.to]);
+  const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
+
+  await expect(page.locator('#prop-edge-from')).toHaveValue(wire.from);
+  await expect(page.locator('#prop-edge-to')).toHaveValue(wire.to);
+
+  await page.locator('#prop-edge-to').selectOption(newTarget);
+  await expect(group).toHaveAttribute('data-to', newTarget);
+  await expect(page.locator('#prop-edge-to')).toHaveValue(newTarget);
+
+  // Choosing the component at the other end is refused, and the selector goes back.
+  await page.locator('#prop-edge-to').selectOption(wire.from);
+  await expect(page.locator('#toast-container')).toContainText("can't connect a component to itself");
+  await expect(group).toHaveAttribute('data-to', newTarget);
+  await expect(page.locator('#prop-edge-to')).toHaveValue(newTarget);
+
+  await page.locator('#btn-undo').click();
+  await expect(group).toHaveAttribute('data-to', wire.to);
+});
