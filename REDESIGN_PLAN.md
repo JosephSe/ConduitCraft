@@ -614,7 +614,7 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 - [x] **Contextual toolbar** (5.5). *Done in #13.* **Still open:** colour, kind and shape buttons, which need new inspector controls first.
 - [x] **Inspector** that appears with a selection, with collapsible sections and a pin. *Done in #16* (with T-05).
 - [x] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list). *Done in #17.*
-- [ ] **Tokens** from 6.1, applied to the new chrome only.
+- [x] **Tokens** from 6.1, applied to the new chrome only.
 - [ ] Playwright: the existing 62 tests pass under both `?ui=1` and `?ui=2` (parametrise the fixtures).
 
 ### Phase 2: Lenses and the run bar (about 1.5 weeks)

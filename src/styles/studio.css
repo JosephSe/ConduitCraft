@@ -5553,12 +5553,12 @@ body[data-presenting="true"] .canvas-hud .minimap-panel {
   position: fixed;
   z-index: 1000;
   min-width: 13rem;
-  padding: 0.3rem;
-  border-radius: 0.6rem;
-  background: var(--wl-surface);
+  padding: var(--cc-space-1);
+  border-radius: var(--cc-radius-m);
+  background: var(--cc-surface-2);
   border: 1px solid var(--wl-border-ui);
-  box-shadow: var(--wl-shadow-card);
-  color: var(--wl-ink);
+  box-shadow: var(--cc-shadow-3);
+  color: var(--cc-ink);
 }
 .context-menu-item {
   display: flex;
@@ -5685,11 +5685,11 @@ html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
   z-index: 900;
   display: flex;
   gap: 0.15rem;
-  padding: 0.25rem;
-  border-radius: 0.6rem;
-  background: var(--wl-surface);
+  padding: var(--cc-space-1);
+  border-radius: var(--cc-radius-m);
+  background: var(--cc-surface-1);
   border: 1px solid var(--wl-border-ui);
-  box-shadow: var(--wl-shadow-card);
+  box-shadow: var(--cc-shadow-2);
 }
 .context-toolbar[hidden] {
   display: none;
