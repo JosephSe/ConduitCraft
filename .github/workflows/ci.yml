@@ -1,9 +1,10 @@
 name: CI
 
+# Pull requests are the trigger: a branch-push trigger as well would run everything twice per PR update.
+# Pushes to main are covered by the deploy workflow; workflow_dispatch allows a manual run of any branch.
 on:
   pull_request:
-  push:
-    branches-ignore: [main] # main is covered by the deploy workflow
+  workflow_dispatch:
 
 permissions:
   contents: read
