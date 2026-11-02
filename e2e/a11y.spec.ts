@@ -46,3 +46,16 @@ test('a visible tooltip has no axe violations', async ({ page }) => {
   await expect(page.locator('#tooltip-layer')).toHaveAttribute('role', 'tooltip');
   expect(await scan(page)).toEqual([]);
 });
+
+for (const [scheme, expected] of [
+  ['light', 'rgb(255, 255, 255)'],
+  ['dark', 'rgb(11, 18, 32)'],
+] as const) {
+  test(`primary button text colour follows the theme (${scheme})`, async ({ page }) => {
+    // Axe can't evaluate text on a gradient, so assert the computed colour directly.
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/');
+    const color = await page.locator('#btn-open-export').evaluate((el) => getComputedStyle(el).color);
+    expect(color).toBe(expected);
+  });
+}
