@@ -589,7 +589,7 @@ Build these as part of the R-items; each unblocks several features.
 | T-02 | **Lens state** replacing `workspaceMode`: `app.lens: 'design' \| 'traffic' \| 'review' \| 'present'`. | R-03 | Migrate caller by caller. Keep `workspaceMode` as a derived getter until the last caller is gone. |
 | T-03 | **Document schema version** and migrations: `doc.version` plus a `migrate(doc)` chain. | F-03, F-07, F-09, F-17, F-21, F-24, F-26, F-27 | Every new optional field gets a round-trip test through YAML, JSON and the share link. |
 | T-04 | **IndexedDB storage layer**, migrating from the `localStorage` autosave. | F-08, F-14 | Item 14 on the existing plan. |
-| T-05 | *(In review in #16: starter templates load on demand, per-chunk budgets.)* **Lazy chunk discipline.** ELK, importers, code editor, video export, viewer and AI each load on first use. Add per-chunk budgets to `tools/checkBundleSize.mjs`. | F-05, F-06, F-11, F-13, F-15, F-19, F-22, F-25 | The entry stays ≤ 480 kB. |
+| T-05 | *(Started in #16: starter templates load on demand, per-chunk budgets.)* **Lazy chunk discipline.** ELK, importers, code editor, video export, viewer and AI each load on first use. Add per-chunk budgets to `tools/checkBundleSize.mjs`. | F-05, F-06, F-11, F-13, F-15, F-19, F-22, F-25 | The entry stays ≤ 480 kB. |
 | T-06 | **One live-region announcer** used by every action ("Grouped 3 components", "Payments Queue failed"). | R-06, F-01 | `src/studio/a11y.ts` exists; make it the single path. |
 | T-07 | **Headless core.** The parser, insights, importers, diff and SVG/HTML exporters run under Node with no DOM. Move the pure snapshot diff from `src/studio/snapshots.ts` to `src/core/`. Add a unit test that imports each of these modules with no DOM globals defined. | F-23, F-24 | Keeps the CLI and the app on one code path, so the CLI can't drift from the browser export. |
 
@@ -612,8 +612,8 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 - [x] **R-01 Top bar** with at most 8 controls (5.1). Every removed control stays reachable from the palette; a unit test asserts that every registry action is reachable from at least one surface. *Done in #11.*
 - [x] **R-02 Tool rail and Insert flyout** replacing the stencil sidebar. *Done in #12.* Select and Wire tools plus V, W, Z, N and C shortcuts; the expanded palette serves as the Insert flyout for now. **Still open:** Frame, Text and Hand tools, which wait for F-09 and a text feature.
 - [x] **Contextual toolbar** (5.5). *Done in #13.* **Still open:** colour, kind and shape buttons, which need new inspector controls first.
-- [~] **Inspector** that appears with a selection, with collapsible sections and a pin. *In review in #16* (with T-05).
-- [~] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list). *In review in #17.*
+- [x] **Inspector** that appears with a selection, with collapsible sections and a pin. *Done in #16* (with T-05).
+- [x] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list). *Done in #17.*
 - [ ] **Tokens** from 6.1, applied to the new chrome only.
 - [ ] Playwright: the existing 62 tests pass under both `?ui=1` and `?ui=2` (parametrise the fixtures).
 
