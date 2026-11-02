@@ -1129,6 +1129,9 @@ function paintCustomImage(slot: HTMLElement, image: string): void {
   slot.replaceChildren(img);
 }
 
+/** Last content painted into each node element, so unchanged nodes can skip the text/badge/icon work. */
+const paintedNodeContent = new WeakMap<HTMLElement, { sig: string; image: string | undefined }>();
+
 function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.id = 'node-' + node.id;
   wrapper.dataset.node = node.id;
@@ -1147,6 +1150,25 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
 
   const isLocked = Boolean(node.locked);
   wrapper.dataset.locked = String(isLocked);
+
+  // Everything above is geometry and always re-applied, so a cancelled drag or resize is restored.
+  // The text, badges and icon below are only ever written here, so skip them when nothing changed;
+  // replacing text nodes dirties layout for every node on every render.
+  const contentSig = JSON.stringify([
+    node.kind,
+    node.locked,
+    node.status,
+    node.comment,
+    node.title,
+    node.subtitle,
+    node.chip,
+    node.icon,
+    node.eyebrow,
+    node.footerLeft,
+  ]);
+  const painted = paintedNodeContent.get(wrapper);
+  if (painted && painted.sig === contentSig && painted.image === node.iconImage) return;
+  paintedNodeContent.set(wrapper, { sig: contentSig, image: node.iconImage });
   let lockBadge = wrapper.querySelector<HTMLElement>('.node-lock-badge');
   if (isLocked) {
     if (!lockBadge) {
