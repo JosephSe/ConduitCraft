@@ -7,6 +7,7 @@ import {
   viewport,
   zoomReadout,
 } from './dom';
+import { lensOfWorkspaceMode, workspaceModeOf, type Lens, type WorkspaceMode } from '../core/lens';
 import { getActiveFileHandle, getActiveFileName, isFileDiskDirty, setDiskDirty } from './pwa';
 import type {
   DiagramDocument,
@@ -50,7 +51,15 @@ export interface ActiveWireDraft {
 
 export const app = {
   doc: createBlankDocument() as DiagramDocument,
-  workspaceMode: 'design' as 'design' | 'data',
+  lens: 'design' as Lens,
+  /** Derived from `lens` (T-02); callers move to `lens` one by one, then this goes away. */
+  get workspaceMode(): WorkspaceMode {
+    return workspaceModeOf(this.lens);
+  },
+  set workspaceMode(mode: WorkspaceMode) {
+    // Setting the old mode must not clobber a richer lens that already maps to it.
+    if (workspaceModeOf(this.lens) !== mode) this.lens = lensOfWorkspaceMode(mode);
+  },
   pointerTool: 'select' as 'select' | 'connect',
   selection: { type: 'none' } as SelectionTarget,
   connectSourceNodeId: null as string | null,
