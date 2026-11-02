@@ -198,11 +198,11 @@ test('a swimlane can be renamed by double-clicking its title', async ({ page }) 
   await expect(title).toHaveText('Edge Tier');
 });
 
-test('a notes card can be renamed by double-clicking its title', async ({ page }) => {
+test('a note can be renamed by double-clicking its title', async ({ page }) => {
   await loadShowcase(page);
   const title = page.locator('.blueprint-spec .notes-title').nth(await uncovered(page, '.blueprint-spec .notes-title'));
   await title.dblclick();
-  await expect(editor(page)).toHaveAttribute('aria-label', 'Notes card title');
+  await expect(editor(page)).toHaveAttribute('aria-label', 'Note title');
   await editor(page).fill('Runbook');
   await editor(page).press('Enter');
   await expect(title).toHaveText('Runbook');

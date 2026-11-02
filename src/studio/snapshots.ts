@@ -1,6 +1,6 @@
 /**
  * Version snapshots, timeline, and architecture diffing engine.
- * Allows saving named milestones (e.g. "Baseline V1", "Pre-refactor"),
+ * Allows saving named snapshots (e.g. "Baseline V1", "Pre-refactor"),
  * and visually computing/displaying added, removed, and modified components & wires.
  */
 import type { DiagramDocument, DiagramEdge, DiagramNode } from '../types';
@@ -146,7 +146,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
         changes.push('Review comment updated');
       }
       if (before.accent !== after.accent) {
-        changes.push(`Accent tone changed from ${before.accent || 'default'} to ${after.accent || 'default'}`);
+        changes.push(`Accent color changed from ${before.accent || 'default'} to ${after.accent || 'default'}`);
       }
       if (before.shape !== after.shape) {
         changes.push(`Shape changed from ${before.shape || 'box'} to ${after.shape || 'box'}`);
@@ -198,7 +198,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
         changes.push(`Routing mode changed from ${before.route} to ${after.route}`);
       }
       if (before.tone !== after.tone) {
-        changes.push(`Wire tone changed from ${before.tone} to ${after.tone}`);
+        changes.push(`Wire color changed from ${before.tone} to ${after.tone}`);
       }
       if (before.from !== after.from || before.to !== after.to) {
         changes.push(`Endpoints rewired to ${after.from} -> ${after.to}`);
@@ -282,7 +282,7 @@ export function renderSnapshotsDialogHtml(
         <div class="snapshots-timeline-list" id="snapshots-timeline-list">
           ${
             snapshots.length === 0
-              ? `<div class="snapshots-empty-hint">No snapshots saved yet. Click "+ Snapshot" to record a version milestone.</div>`
+              ? `<div class="snapshots-empty-hint">No snapshots saved yet. Click "+ Snapshot" to take a snapshot.</div>`
               : snapshots
                   .map((s) => {
                     const isSelected = s.id === selectedSnapshotId;

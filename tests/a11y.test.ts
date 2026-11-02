@@ -79,7 +79,7 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
     assert.ok(desc.includes('gRPC / TLS'));
   });
 
-  it('describes boundary zone and notes card selections', () => {
+  it('describes swimlane and note selections', () => {
     const doc = createBlankDocument();
     const zone: DiagramZone = {
       id: 'vpc-zone',
@@ -101,10 +101,10 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
     doc.notesCards.push(note);
 
     const zoneDesc = describeSelection({ type: 'zone', id: 'vpc-zone' }, doc);
-    assert.strictEqual(zoneDesc, 'Selected boundary zone Private VPC Subnet');
+    assert.strictEqual(zoneDesc, 'Selected swimlane Private VPC Subnet');
 
     const noteDesc = describeSelection({ type: 'notes', id: 'sla-note' }, doc);
-    assert.strictEqual(noteDesc, 'Selected notes card Production SLA Target');
+    assert.strictEqual(noteDesc, 'Selected note Production SLA Target');
   });
 
   it('verifies high-contrast ink tokens in shared.css', () => {

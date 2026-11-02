@@ -403,7 +403,7 @@ export function updatePlaybackDeckUi(state: SimulationPlaybackState): void {
     playLabel.textContent = state.isPlaying ? 'Pause' : 'Play';
   }
   if (playBtn) {
-    playBtn.setAttribute('aria-label', state.isPlaying ? 'Pause simulation' : 'Play simulation');
+    playBtn.setAttribute('aria-label', state.isPlaying ? 'Pause scenario' : 'Play scenario');
     const icon = playBtn.querySelector('svg');
     if (icon) {
       icon.innerHTML = state.isPlaying

@@ -91,11 +91,11 @@ export function describeSelection(selection: SelectionTarget, doc: DiagramDocume
     }
     case 'zone': {
       const zone = doc.zones.find((z) => z.id === selection.id);
-      return `Selected boundary zone ${zone?.title || selection.id}`;
+      return `Selected swimlane ${zone?.title || selection.id}`;
     }
     case 'notes': {
       const note = doc.notesCards.find((n) => n.id === selection.id);
-      return `Selected notes card ${note?.title || selection.id}`;
+      return `Selected note ${note?.title || selection.id}`;
     }
     default:
       return 'Selection changed';
