@@ -189,7 +189,7 @@ import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
-import { renderShortcutsHtml } from './commands';
+import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -2658,6 +2658,7 @@ export function initEvents(): void {
 }
 
 export function bootStudio(): void {
+  localizeStaticShortcuts();
   initStencilPalette();
   responsiveToolbar.init(undefined, {
     onAddStencil: (kind) => {

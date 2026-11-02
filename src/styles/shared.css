@@ -102,6 +102,7 @@
     --wl-border-subtle: var(--wl-border-subtle-light);
     --wl-grid-dot: var(--wl-grid-dot-light);
     --wl-blue: var(--wl-blue-light);
+    --wl-on-blue: #ffffff;
     --wl-blue-soft: var(--wl-blue-soft-light);
     --wl-emerald: var(--wl-emerald-light);
     --wl-emerald-soft: var(--wl-emerald-soft-light);
@@ -141,6 +142,7 @@
       --wl-border-subtle: var(--wl-border-subtle-dark);
       --wl-grid-dot: var(--wl-grid-dot-dark);
       --wl-blue: var(--wl-blue-dark);
+      --wl-on-blue: #0b1220;
       --wl-blue-soft: var(--wl-blue-soft-dark);
       --wl-emerald: var(--wl-emerald-dark);
       --wl-emerald-soft: var(--wl-emerald-soft-dark);
@@ -168,6 +170,7 @@
       --wl-border-subtle: var(--wl-border-subtle-dark);
       --wl-grid-dot: var(--wl-grid-dot-dark);
       --wl-blue: var(--wl-blue-dark);
+      --wl-on-blue: #0b1220;
       --wl-blue-soft: var(--wl-blue-soft-dark);
       --wl-emerald: var(--wl-emerald-dark);
       --wl-emerald-soft: var(--wl-emerald-soft-dark);
@@ -195,6 +198,7 @@
       --wl-border-subtle: var(--wl-border-subtle-light);
       --wl-grid-dot: var(--wl-grid-dot-light);
       --wl-blue: var(--wl-blue-light);
+      --wl-on-blue: #ffffff;
       --wl-blue-soft: var(--wl-blue-soft-light);
       --wl-emerald: var(--wl-emerald-light);
       --wl-emerald-soft: var(--wl-emerald-soft-light);

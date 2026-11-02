@@ -26,6 +26,7 @@
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
     "@types/js-yaml": "^4.0.9",
     "typescript": "^5.7.3",

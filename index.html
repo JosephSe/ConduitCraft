@@ -37,8 +37,9 @@
           <span id="doc-status-label">LIVE TELEMETRY</span>
         </div>
         <div class="title-row">
-          <button type="button" class="title-edit-trigger" id="btn-focus-doc-title" aria-label="Edit diagram title and document properties">
+          <button type="button" class="title-edit-trigger" id="btn-focus-doc-title">
             <h1 id="doc-title-heading">Untitled Architecture</h1>
+            <span class="visually-hidden">, edit title and document properties</span>
           </button>
           <span class="save-status-pill" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
           <div class="doc-history-controls" role="group" aria-label="Undo and redo history">
@@ -154,7 +155,7 @@
     </div>
 
     <div class="toolbar-actions" role="toolbar" aria-label="Document actions">
-      <input type="file" id="file-upload" name="blueprint-file" accept=".mmd,.mermaid,.md,.markdown,.txt,.json" class="visually-hidden">
+      <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md or .json)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json" class="visually-hidden">
       
       <!-- Consolidated File Dropdown Menu -->
       <div class="menu-dropdown-wrapper" id="file-menu-wrapper">

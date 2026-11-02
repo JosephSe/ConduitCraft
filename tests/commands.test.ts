@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { SHORTCUTS, renderShortcutsHtml, getModifierKey } from '../src/studio/commands.ts';
+import { SHORTCUTS, renderShortcutsHtml, getModifierKey, platformShortcut } from '../src/studio/commands.ts';
 
 describe('commands and keyboard shortcuts registry', () => {
   it('contains categorized shortcut entries with valid descriptions and keys', () => {
@@ -66,5 +66,15 @@ describe('commands and keyboard shortcuts registry', () => {
       css.includes('.workspace[data-palette-collapsed="true"] .palette-sidebar {\n    overflow: visible;'),
       'keeps collapsed palette sidebar overflow visible for rail tooltips',
     );
+  });
+
+  it('rewrites Mac modifier glyphs for other platforms and leaves Mac text alone', () => {
+    assert.equal(platformShortcut('⌘Z', false), 'Ctrl+Z');
+    assert.equal(platformShortcut('⌘⇧S', false), 'Ctrl+Shift+S');
+    assert.equal(platformShortcut('⌘⌥K', false), 'Ctrl+Alt+K');
+    assert.equal(platformShortcut('Find node… (⌘F)', false), 'Find node… (Ctrl+F)');
+    assert.equal(platformShortcut('Group / Ungroup (⌘G)', false), 'Group / Ungroup (Ctrl+G)');
+    assert.equal(platformShortcut('P', false), 'P');
+    assert.equal(platformShortcut('⌘⇧S', true), '⌘⇧S');
   });
 });

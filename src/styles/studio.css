@@ -84,6 +84,11 @@
     color: var(--brand-accent, var(--wl-ink-muted));
   }
 
+  /* A document-chosen accent can't be guaranteed readable on both themes, so blend it toward the text colour. */
+  .brand-cluster[data-brand] .brand-name {
+    color: color-mix(in srgb, var(--brand-accent) 55%, var(--wl-ink));
+  }
+
   .brand-titles {
     min-inline-size: 0;
   }
@@ -3870,7 +3875,7 @@
 
 .toast-action-btn {
   background: var(--wl-blue);
-  color: #fff;
+  color: var(--wl-on-blue);
   border: none;
   border-radius: 9999px;
   padding: 0.2rem 0.65rem;

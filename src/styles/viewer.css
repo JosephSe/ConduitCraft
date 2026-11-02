@@ -31,6 +31,7 @@
     color: #fff; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.32); flex-shrink: 0;
   }
   .topbar[data-brand] .brand-mark { background: var(--brand-accent); box-shadow: none; }
+  .topbar[data-brand] .brand-name { color: color-mix(in srgb, var(--brand-accent) 55%, var(--wl-ink)); }
   .brand-logo { inline-size: 1.45rem; block-size: 1.45rem; object-fit: contain; }
   .brand-name {
     font-family: var(--wl-font-mono); font-size: 0.75rem; font-weight: 700;

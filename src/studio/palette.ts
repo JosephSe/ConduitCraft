@@ -3,7 +3,7 @@ import { app, fitSelection, fitToViewport, performRedo, performUndo, pushHistory
 import { autoLayoutDocument, expandStageToFit } from '../core/layout';
 import { createNodeFromStencil, createSwimlaneZone, createNotesCard } from '../templates/presets';
 import { applySelection, renderAll, renderMatrixTable } from './render';
-import { isMac } from './commands';
+import { isMac, platformShortcut } from './commands';
 import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
@@ -627,7 +627,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Save Blueprint As…',
       subtitle: 'Save a new copy to disk with file picker',
       category: 'Export & Sync',
-      shortcut: `${mod}⇧S`,
+      shortcut: platformShortcut('⌘⇧S'),
       keywords: ['save as', 'disk', 'file', 'copy'],
       run: () => {
         if (deps.saveFileAs) deps.saveFileAs();
