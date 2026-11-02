@@ -1,7 +1,7 @@
 # ConduitCraft 2.0: Redesign Plan
 
 **Branch:** `redesign-vision` (cut from `main` at `e4ce9ab`, after PR #3)
-**Status:** Proposal. Nothing in this file is built yet. Revised once to add F-21 to F-31, R-09, R-10 and T-07 after a review of obvious gaps.
+**Status:** In progress. Phase 0 is done; Phase 1 is partly done (see the checkboxes in section 9: `[x]` merged, `[~]` in review, `[ ]` not started). Revised once to add F-21 to F-31, R-09, R-10 and T-07 after a review of obvious gaps.
 **How to use this file:** Each work item has an ID (`R-xx` for redesign work, `F-xx` for features, `T-xx` for technical foundations). Pick up items in the order given in [section 9](#9-delivery-plan-pr-by-pr). Each item says why it matters, what to build, how to know it is done, and where relevant the files it touches and rough effort. Tick the checkbox and add the PR number when an item ships.
 
 ---
@@ -589,7 +589,7 @@ Build these as part of the R-items; each unblocks several features.
 | T-02 | **Lens state** replacing `workspaceMode`: `app.lens: 'design' \| 'traffic' \| 'review' \| 'present'`. | R-03 | Migrate caller by caller. Keep `workspaceMode` as a derived getter until the last caller is gone. |
 | T-03 | **Document schema version** and migrations: `doc.version` plus a `migrate(doc)` chain. | F-03, F-07, F-09, F-17, F-21, F-24, F-26, F-27 | Every new optional field gets a round-trip test through YAML, JSON and the share link. |
 | T-04 | **IndexedDB storage layer**, migrating from the `localStorage` autosave. | F-08, F-14 | Item 14 on the existing plan. |
-| T-05 | **Lazy chunk discipline.** ELK, importers, code editor, video export, viewer and AI each load on first use. Add per-chunk budgets to `tools/checkBundleSize.mjs`. | F-05, F-06, F-11, F-13, F-15, F-19, F-22, F-25 | The entry stays ≤ 480 kB. |
+| T-05 | *(In review in #16: starter templates load on demand, per-chunk budgets.)* **Lazy chunk discipline.** ELK, importers, code editor, video export, viewer and AI each load on first use. Add per-chunk budgets to `tools/checkBundleSize.mjs`. | F-05, F-06, F-11, F-13, F-15, F-19, F-22, F-25 | The entry stays ≤ 480 kB. |
 | T-06 | **One live-region announcer** used by every action ("Grouped 3 components", "Payments Queue failed"). | R-06, F-01 | `src/studio/a11y.ts` exists; make it the single path. |
 | T-07 | **Headless core.** The parser, insights, importers, diff and SVG/HTML exporters run under Node with no DOM. Move the pure snapshot diff from `src/studio/snapshots.ts` to `src/core/`. Add a unit test that imports each of these modules with no DOM globals defined. | F-23, F-24 | Keeps the CLI and the app on one code path, so the CLI can't drift from the browser export. |
 
@@ -601,19 +601,19 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 
 ### Phase 0: Finish the existing plan (about 1 week)
 
-- [ ] **Honest wording now.** Until F-21 ships, change "live telemetry studio" in the README and the app to describe what it does today (animated traffic and scenarios), per principle 1. Five minutes of work.
-- [ ] **R-06 Roving tabindex** (plan item 15.4). The canvas becomes one tab stop. Arrow keys move to the nearest component in that direction; `Tab` inside the canvas cycles the focused node's wires; `Enter` selects; `Esc` returns focus to the canvas container. Announce position, for example "API Gateway, service, 3 of 14, 2 outgoing wires". Playwright check: tabbing from the toolbar to the inspector takes 6 presses or fewer on a template.
-- [ ] **R-07 Context menu and group outlines** (plan item 15.5). Right-click and `Shift+F10` open a menu built from T-01. Groups get the dashed outline from 6.4.
-- [ ] **T-06** announcer consolidation.
+- [x] **Honest wording now.** Until F-21 ships, change "live telemetry studio" in the README and the app to describe what it does today (animated traffic and scenarios), per principle 1. Five minutes of work. *Done in #6.*
+- [x] **R-06 Roving tabindex** (plan item 15.4). The canvas becomes one tab stop. Arrow keys move to the nearest component in that direction; `Tab` inside the canvas cycles the focused node's wires; `Enter` selects; `Esc` returns focus to the canvas container. Announce position, for example "API Gateway, service, 3 of 14, 2 outgoing wires". Playwright check: tabbing from the toolbar to the inspector takes 6 presses or fewer on a template. *Done in #7.*
+- [x] **R-07 Context menu and group outlines** (plan item 15.5). Right-click and `Shift+F10` open a menu built from T-01. Groups get the dashed outline from 6.4. *Done in #9.*
+- [x] **T-06** announcer consolidation. *Done in #8.*
 
 ### Phase 1: New shell (about 2 weeks, behind `?ui=2`)
 
-- [ ] **T-01 Action registry.**
-- [ ] **R-01 Top bar** with at most 8 controls (5.1). Every removed control stays reachable from the palette; a unit test asserts that every registry action is reachable from at least one surface.
-- [ ] **R-02 Tool rail and Insert flyout** replacing the stencil sidebar.
-- [ ] **Contextual toolbar** (5.5).
-- [ ] **Inspector** that appears with a selection, with collapsible sections and a pin.
-- [ ] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list).
+- [x] **T-01 Action registry.** *Done in #10* (`core/actions.ts`, `core/keymap.ts`).
+- [x] **R-01 Top bar** with at most 8 controls (5.1). Every removed control stays reachable from the palette; a unit test asserts that every registry action is reachable from at least one surface. *Done in #11.*
+- [x] **R-02 Tool rail and Insert flyout** replacing the stencil sidebar. *Done in #12.* Select and Wire tools plus V, W, Z, N and C shortcuts; the expanded palette serves as the Insert flyout for now. **Still open:** Frame, Text and Hand tools, which wait for F-09 and a text feature.
+- [x] **Contextual toolbar** (5.5). *Done in #13.* **Still open:** colour, kind and shape buttons, which need new inspector controls first.
+- [~] **Inspector** that appears with a selection, with collapsible sections and a pin. *In review in #16* (with T-05).
+- [~] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list). *In review in #17.*
 - [ ] **Tokens** from 6.1, applied to the new chrome only.
 - [ ] Playwright: the existing 62 tests pass under both `?ui=1` and `?ui=2` (parametrise the fixtures).
 
