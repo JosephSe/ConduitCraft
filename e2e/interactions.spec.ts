@@ -204,3 +204,29 @@ test('Data View inspector shows the real diagram title, not the HTML placeholder
   await expect(page.locator('#insp-badge, .inspector-badge').first()).toContainText('SYSTEM OVERVIEW');
   await expect(page.locator('#insp-title')).toHaveText(title!);
 });
+
+test('lock, group and align commands record an undo step only when something changes', async ({ page }) => {
+  await loadShowcase(page);
+  await page.keyboard.press('Escape'); // nothing selected
+  await expect(page.locator('.node-select-hit[aria-pressed="true"]')).toHaveCount(0);
+  const before = await undoDepth(page);
+
+  // Nothing to lock.
+  await page.keyboard.press('ControlOrMeta+l');
+  await expect(page.locator('#toast-container')).toContainText('Select a component to lock');
+  expect(await undoDepth(page), 'locking nothing must not add an undo step').toBe(before);
+
+  // Ungrouping a selection that is not grouped.
+  await page.keyboard.press('ControlOrMeta+Shift+g');
+  await expect(page.locator('#toast-container')).toContainText('No group to ungroup');
+  expect(await undoDepth(page), 'ungrouping nothing must not add an undo step').toBe(before);
+
+  // Aligning: the first click moves things, the second finds them already aligned. Measure only at the end,
+  // because walking the undo stack clears the multi-selection that the Align buttons belong to.
+  await page.keyboard.press('ControlOrMeta+a');
+  const alignLeft = page.getByRole('button', { name: 'Align Left', exact: true });
+  await expect(alignLeft).toBeVisible();
+  await alignLeft.click();
+  await alignLeft.click();
+  expect(await undoDepth(page), 'two aligns add one undo step: the second changed nothing').toBe(before + 1);
+});

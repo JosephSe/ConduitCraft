@@ -28,6 +28,7 @@ import {
   endHistoryGesture,
   fitToViewport,
   pushHistory,
+  mutateWithHistory,
   setSelection,
 } from './state';
 import {
@@ -1456,8 +1457,9 @@ export function renderPropertyEditor(): void {
       b.className = 'btn btn-compact';
       b.textContent = label;
       b.addEventListener('click', () => {
-        pushHistory();
-        fn();
+        // Already aligned (or too few components to distribute) changes nothing, so records no undo step.
+        const changed = mutateWithHistory(fn);
+        if (!changed) return;
         expandStageToFit(app.doc);
         renderAll(false);
       });
