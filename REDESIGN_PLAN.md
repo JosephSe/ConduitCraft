@@ -1,7 +1,7 @@
 # ConduitCraft 2.0: Redesign Plan
 
 **Branch:** `redesign-vision` (cut from `main` at `e4ce9ab`, after PR #3)
-**Status:** Proposal. Nothing in this file is built yet.
+**Status:** Proposal. Nothing in this file is built yet. Revised once to add F-21 to F-31, R-09, R-10 and T-07 after a review of obvious gaps.
 **How to use this file:** Each work item has an ID (`R-xx` for redesign work, `F-xx` for features, `T-xx` for technical foundations). Pick up items in the order given in [section 9](#9-delivery-plan-pr-by-pr). Each item says why it matters, what to build, how to know it is done, and where relevant the files it touches and rough effort. Tick the checkbox and add the PR number when an item ships.
 
 ---
@@ -20,6 +20,7 @@
 10. [Quality bars](#10-quality-bars)
 11. [What we will not do](#11-what-we-will-not-do)
 12. [Open questions](#12-open-questions)
+13. [Appendix A: Word list](#appendix-a-word-list)
 
 ---
 
@@ -63,6 +64,12 @@ These come from the code and from the reviews in `reiview notes/` and `MUST_DO_P
 | P8 | **The diagram cannot tell you anything.** It never flags a single point of failure, a cycle or an orphan, or adds up latency along a path, even though it knows the whole graph. | `core/layout.ts` already builds adjacency lists | F-02 |
 | P9 | **Code editing is a modal, not a partner.** You edit text, press Apply, and lose unapplied edits when you switch format. | `MUST_DO_PLAN.md` item 16 | F-05 |
 | P10 | **Starting is slow.** The empty state offers templates, a quick starter, a showcase, import and code: five doors and no clear first step. | `#btn-empty-*` | R-08, F-12 |
+| P11 | **"Live telemetry" is not live.** The README calls the app a live telemetry studio, but no code in `src/` makes a network request (no `fetch`, WebSocket or EventSource). Every metric and status is typed in by hand. | `grep -rE 'fetch\(\|WebSocket\|EventSource' src` → nothing | F-21, F-22, R-09 |
+| P12 | **Diagrams go stale, and the text format can't be used outside the browser.** Nothing renders a `.blueprint.md` file in a repo or checks a diagram against the real system. | No CLI or CI entry point | F-23, F-24 |
+| P13 | **Hard to switch in.** Mermaid imports, but draw.io, Excalidraw and Lucid files do not, and that is where most teams' existing diagrams live. | No `.drawio` handling in `src/` | F-25 |
+| P14 | **Colours have fixed meanings, and components link nowhere.** The five tones are hard-coded as "Primary", "Success", "Exception", "Control" and so on in `src/shared/tones.ts`. Components have no owner, repo, runbook or dashboard. | `TONE_META` in `tones.ts`; `DiagramNode` fields | F-26, F-27 |
+| P15 | **Too many fields, too much jargon.** A component has about nine text fields (title, subtitle, eyebrow, chip, footer, zone label, interface label, summary, code). Labels like "conduit", "Data View", "telemetry" and "eyebrow" mean little to a newcomer. The product is ConduitCraft but the repo is `blueprint-studio`. In-app help is only the shortcut sheet, and `docs/guide.md` is 150 lines. | `DiagramNode` in `types.ts`; `index.html` | R-09, R-10 |
+| P16 | **Exported pictures can't be read without sight.** SVG and PNG exports carry no text alternative, even though the app knows the whole graph. | `src/exporter/diagramSvg.ts` | F-28 |
 
 ---
 
@@ -234,6 +241,19 @@ Ranked by how much each makes ConduitCraft *different*, then by user value per d
 | F-18 | Diagram styles | Blueprint, sketch, high-contrast, print | M | No |
 | F-19 | Video export (WebM/MP4) | Share a scenario run in chat or a deck | S | No |
 | F-20 | Internationalisation | Translated UI, RTL-safe layout | M | No |
+| F-21 | Live data sources | Make "live telemetry" true: metrics and status from a URL | M | No (reads the user's own endpoints) |
+| F-22 | Import from traces (OpenTelemetry) | Real service map with real call counts and latencies | M | No |
+| F-23 | Diagrams in the repo: CLI and GitHub Action | Render `.blueprint.md` to SVG/HTML on every push | M | No |
+| F-24 | Drift check | Flag where the diagram no longer matches the infrastructure files | M | No |
+| F-25 | Import draw.io and Excalidraw | The easiest way for teams to switch in | M | No |
+| F-26 | Custom legend and tags | Colours mean what the team says; filter and colour by tag | S | No |
+| F-27 | Component links and ownership | Owner, repo, runbook, dashboard, on-call, clickable everywhere | S | No |
+| F-28 | Generated text description | Automatic alt text for exports and a readable outline of the canvas | S | No |
+| F-29 | Find and replace, bulk edit | Rename or restyle many things at once | S | No |
+| F-30 | PDF and print export | Architecture reviews still mean documents | S | No |
+| F-31 | Share-link hygiene | Clear "anyone with the link sees everything" notice; a fallback for huge links | S | No |
+
+**Priority note.** F-14 (collaboration) and F-15 (AI) are deliberately last. Both are expensive, need a server or a user's key, and plenty of tools already do them. F-01, F-02, F-21 to F-25 and F-28 are what would make ConduitCraft clearly better than the alternatives.
 
 ### F-01 Chaos and failure simulation *(signature feature)*
 
@@ -426,6 +446,137 @@ Record the canvas during a scenario or storyboard with `MediaRecorder`: WebM eve
 
 Move UI strings out of `index.html` and the TypeScript modules into a small message catalogue. Use logical CSS properties so right-to-left layouts work. Ship English plus one other language to prove the pipeline.
 
+### F-21 Live data sources
+
+- [ ] Shipped in PR —
+
+**Why.** The README sells a "live telemetry studio", but every number on the canvas is typed in by hand (P11). Making the data real is the shortest path from "nice picture" to "screen the team leaves open".
+
+**What to build.**
+1. A **Data** section in a component's inspector: "Metrics from: none | JSON URL | Prometheus query | pasted snapshot".
+2. **JSON URL:** fetch every N seconds (minimum 5 s, default 15 s), pause while the tab is hidden, and map fields onto metrics with simple dotted paths (`checkout.p95_ms`).
+3. **Prometheus:** an instant query against the HTTP API (`/api/v1/query`), one query per metric.
+4. **Status rules:** `value > threshold → at-risk`, `request fails → unknown`. The node shows its status and a small "updated 4 s ago" or "stale" marker.
+5. **Pasted snapshot:** drop a JSON file to apply values once, for teams that can't expose an endpoint.
+6. A document-level **Live** switch in the top bar so a diagram never makes requests the user didn't turn on.
+
+**Security and privacy.** Any header or token lives in this browser only. It never goes into `.blueprint.json`, the share link, exported HTML or the library export. Bindings themselves (URL and path, without secrets) are saved, and exported HTML includes them only if the user ticks "keep live in export". Requests go only to URLs the user typed.
+
+**Known limit.** Browsers need the endpoint to allow cross-origin requests (CORS). Many Prometheus and internal endpoints don't, so the docs should say so plainly and show a minimal proxy example. Whether to ship that proxy is open question 8.
+
+**Data model.** `DiagramNode.data?: { source: 'url' | 'prometheus' | 'snapshot'; url?: string; intervalSec?: number; metrics: { label: string; path: string; unit?: string; atRiskAbove?: number }[] }`.
+
+**Done when.** Unit tests cover path mapping and status rules. A Playwright test serves a JSON fixture from the test server, watches a metric update and the stale marker appear when the fixture stops answering. Unit tests assert that no secret appears in any export.
+
+### F-22 Import from traces (OpenTelemetry)
+
+- [ ] Shipped in PR —
+
+**Why.** Traces already describe how a system really behaves. Turning them into a diagram gives a correct service map with real numbers, and feeds F-01 and F-02 with real latencies.
+
+**What to build.** Import a trace file in OTLP JSON (`resourceSpans`) or Jaeger JSON export format. Each `service.name` becomes a component. A span whose parent belongs to another service becomes a wire, carrying its call count, p50 and p95 latency (into `latencyMs`, F-17) and error rate (above 5% → rose tone and `at-risk`). Messaging spans (`messaging.system`) become async wires through a bus node. Offer "New diagram" or "Update this diagram", matching components by title or by the `source` reference from F-24. Everything is parsed in the browser.
+
+**Done when.** Fixture traces in `tests/fixtures/` produce the expected nodes, wires and latencies (unit tests), and the import report lists anything skipped.
+
+### F-23 Diagrams in the repo: CLI and GitHub Action
+
+- [ ] Shipped in PR —
+
+**Why.** Diagrams rot because they live apart from the code (P12). The Blueprint text format already exists; it just can't be used outside the browser.
+
+**What to build.**
+1. **CLI:** `conduitcraft render <file> --format svg|html|json --out <path>` and `conduitcraft check <file>`. `check` runs the F-02 insights and exits non-zero on `error`, so it can gate a pull request.
+2. **GitHub Action** wrapping the CLI. It renders every `*.blueprint.md` in the repo and either uploads the results as an artifact or commits them to a docs folder. On pull requests it posts a short comment: "2 components added, 1 wire removed", using the snapshot diff engine in `src/studio/snapshots.ts` (move its pure diff into `src/core/`).
+3. **Later, not in this item:** a VS Code preview extension.
+
+**Technical note.** This needs a headless render path (T-07). The parser and the SVG and HTML exporters look like string builders: the `document.` calls in `standaloneHtml.ts` sit inside the script it emits, not in the exporter itself. Confirm that by running them under Node before building the CLI. PNG output needs a canvas, so leave it out of the CLI.
+
+**Done when.** The CLI renders every bundled example and the output matches the browser export (snapshot tests). The Action runs on this repo's own `src/examples/`.
+
+### F-24 Drift check
+
+- [ ] Shipped in PR —
+
+**Why.** Even a diagram stored in the repo goes out of date. A drift check tells you when.
+
+**What to build.** Components created by an importer (F-06, F-22) record where they came from: `DiagramNode.source?: { kind: 'compose' | 'k8s' | 'openapi' | 'asyncapi' | 'terraform' | 'otel'; ref: string }`. "Check for drift" re-runs the importer on a newer file and shows the differences in the Review lens with the existing diff overlay (added, removed, changed). Each difference can be accepted or ignored. The CLI gets `conduitcraft drift <diagram> --compose docker-compose.yml` (and the other importer sources), which also works in the GitHub Action.
+
+**Done when.** Unit tests change a Compose fixture and get the expected drift list. Accepting a change is one undo step.
+
+### F-25 Import draw.io and Excalidraw
+
+- [ ] Shipped in PR —
+
+**Why.** Most teams already have their diagrams in draw.io (P13). An importer is the cheapest way to win them over.
+
+**What to build.**
+- **draw.io (`.drawio`, `.xml`):** mxGraph XML. Diagram pages may be stored compressed (deflate plus base64), which the browser's `DecompressionStream` can read; the share link already uses `CompressionStream('deflate')`. Map shapes to kinds by style (cylinder → store, actor → actor, rhombus → gate, and so on), edges to wires with their labels, containers and swimlanes to frames and zones, and HTML labels to plain text. Each draw.io page becomes a diagram (or a level, once F-03 exists).
+- **Excalidraw (`.excalidraw`):** rectangles, ellipses and diamonds to shapes; arrows with bindings to wires; bound text to titles. Unbound arrows and freehand strokes are skipped.
+- Everything that couldn't be mapped goes in the import report.
+- Lucid exports only CSV and images, so it waits until there's demand.
+
+**Done when.** Fixture files of each format import with the expected counts (unit tests), and a Playwright test drops a `.drawio` file on the canvas.
+
+### F-26 Custom legend and tags
+
+- [ ] Shipped in PR —
+
+**Why.** The five colours have fixed names in `src/shared/tones.ts` (P14). Teams want them to mean "PII", "payments path" or "third party".
+
+**What to build.**
+1. `doc.legend?: { tone: StreamTone; label: string; description?: string }[]` overrides the built-in names everywhere: the filter chips, the colour pickers, the exported HTML.
+2. A **legend card** on the canvas (toggle in the View menu) and in every export.
+3. `tags?: string[]` on components and wires. Filter by tag in Traffic and Review, and add "Colour by: tone | status | tag" as a lens option.
+4. Blueprint YAML gets a `legend:` block. Mermaid maps `classDef` names to tags on import.
+
+### F-27 Component links and ownership
+
+- [ ] Shipped in PR —
+
+**Why.** A diagram is most useful as the front door to the system (P14).
+
+**What to build.** `DiagramNode.owner?: string` and `DiagramNode.links?: { label: string; url: string; kind?: 'repo' | 'runbook' | 'dashboard' | 'docs' | 'oncall' }[]`. Links appear as icons in the inspector, on a hover card in Traffic, and in exported HTML. They open in a new tab with `rel="noopener noreferrer"`.
+
+**Security.** Accept only `https:`, `http:` and `mailto:` URLs. Reject `javascript:` and `data:` on input, on import and on export. Escape every label through `src/shared/escapeHtml.ts`. Add unit tests for each rejected scheme.
+
+### F-28 Generated text description
+
+- [ ] Shipped in PR —
+
+**Why.** SVG and PNG exports have no text alternative (P16), yet the app knows the whole graph. Describing it automatically makes every export accessible, and gives screen-reader users a way to read the canvas.
+
+**What to build.** A pure `describeDiagram(doc): string` in `src/core/describe.ts`. It writes a short outline: the system summary, then each zone with its components, then the main flows ("Web App calls API Gateway over HTTP; API Gateway calls Checkout Service, which writes to Orders DB"), then the scenarios. Use it in four places:
+1. The `<title>` and `<desc>` of exported SVG.
+2. An "Alt text" box with a Copy button in the PNG export dialog.
+3. A visually hidden description in exported HTML.
+4. A **Text outline** panel in the studio: a keyboard-navigable list of components and their wires. Selecting a row selects the component on the canvas. It doubles as a second way to navigate alongside R-06.
+
+Add "Copy as text" to the command palette for pasting into design docs and PR descriptions.
+
+**Done when.** Unit tests check the outline for each bundled template, and axe still passes with the outline panel open.
+
+### F-29 Find and replace, bulk edit
+
+- [ ] Shipped in PR —
+
+`⌘⇧F` opens find and replace across titles, subtitles, wire labels, notes and comments, with match case and whole-word options and a scope (this level or all levels). "Select all matches" hands the matches to multi-select, and the multi-select inspector gains the shared fields (kind, colour, shape, status, tags), so you can recolour every async wire at once. Every replace or bulk edit is one undo step through `mutateWithHistory`.
+
+### F-30 PDF and print export
+
+- [ ] Shipped in PR —
+
+Architecture reviews still mean documents. Add an `@media print` stylesheet and a "Print or save as PDF" action, using the browser's own print-to-PDF so no library is needed. The output has a title page (title, summary from F-28, legend from F-26), then one page per level or storyboard step, then the specification matrix as a table. No chrome, no shadows, black ink by default (the `Print` style from F-18).
+
+### F-31 Share-link hygiene
+
+- [ ] Shipped in PR —
+
+The share link stores the whole diagram, compressed, in the URL hash (`src/studio/shareLink.ts`). That's good for privacy because the hash is never sent to a server, and there's already a warning above 8 KB (`LARGE_URL_WARNING_THRESHOLD`). Add:
+1. A plain notice in the Share dialog: "Anyone with this link can see the whole diagram. Nothing is uploaded."
+2. An option to leave out embedded images (custom icons and logos are what make links huge), with the size before and after.
+3. When the link is still too long, offer "Download file instead" as the main action.
+4. Once F-13 exists, a "view only" link that opens the viewer.
+
 ---
 
 ## 8. Technical foundations the redesign needs
@@ -436,10 +587,11 @@ Build these as part of the R-items; each unblocks several features.
 |---|---|---|---|
 | T-01 | **Action registry.** Every user action (rename, lock, align, fail node…) is one `Action { id, label, shortcut, when(selection, lens), run() }`. The top bar, context menu, contextual toolbar, command palette and keyboard shortcuts all read from it. | R-01, R-02, R-07, F-12 | `commands.ts` already has `SHORTCUTS` and the palette has its own commands; merge them. This is what makes removing most header buttons safe. |
 | T-02 | **Lens state** replacing `workspaceMode`: `app.lens: 'design' \| 'traffic' \| 'review' \| 'present'`. | R-03 | Migrate caller by caller. Keep `workspaceMode` as a derived getter until the last caller is gone. |
-| T-03 | **Document schema version** and migrations: `doc.version` plus a `migrate(doc)` chain. | F-03, F-07, F-09, F-17 | Every new optional field gets a round-trip test through YAML, JSON and the share link. |
+| T-03 | **Document schema version** and migrations: `doc.version` plus a `migrate(doc)` chain. | F-03, F-07, F-09, F-17, F-21, F-24, F-26, F-27 | Every new optional field gets a round-trip test through YAML, JSON and the share link. |
 | T-04 | **IndexedDB storage layer**, migrating from the `localStorage` autosave. | F-08, F-14 | Item 14 on the existing plan. |
-| T-05 | **Lazy chunk discipline.** ELK, importers, code editor, video export, viewer and AI each load on first use. Add per-chunk budgets to `tools/checkBundleSize.mjs`. | F-05, F-06, F-11, F-13, F-15, F-19 | The entry stays ≤ 480 kB. |
+| T-05 | **Lazy chunk discipline.** ELK, importers, code editor, video export, viewer and AI each load on first use. Add per-chunk budgets to `tools/checkBundleSize.mjs`. | F-05, F-06, F-11, F-13, F-15, F-19, F-22, F-25 | The entry stays ≤ 480 kB. |
 | T-06 | **One live-region announcer** used by every action ("Grouped 3 components", "Payments Queue failed"). | R-06, F-01 | `src/studio/a11y.ts` exists; make it the single path. |
+| T-07 | **Headless core.** The parser, insights, importers, diff and SVG/HTML exporters run under Node with no DOM. Move the pure snapshot diff from `src/studio/snapshots.ts` to `src/core/`. Add a unit test that imports each of these modules with no DOM globals defined. | F-23, F-24 | Keeps the CLI and the app on one code path, so the CLI can't drift from the browser export. |
 
 ---
 
@@ -449,6 +601,7 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 
 ### Phase 0: Finish the existing plan (about 1 week)
 
+- [ ] **Honest wording now.** Until F-21 ships, change "live telemetry studio" in the README and the app to describe what it does today (animated traffic and scenarios), per principle 1. Five minutes of work.
 - [ ] **R-06 Roving tabindex** (plan item 15.4). The canvas becomes one tab stop. Arrow keys move to the nearest component in that direction; `Tab` inside the canvas cycles the focused node's wires; `Enter` selects; `Esc` returns focus to the canvas container. Announce position, for example "API Gateway, service, 3 of 14, 2 outgoing wires". Playwright check: tabbing from the toolbar to the inspector takes 6 presses or fewer on a template.
 - [ ] **R-07 Context menu and group outlines** (plan item 15.5). Right-click and `Shift+F10` open a menu built from T-01. Groups get the dashed outline from 6.4.
 - [ ] **T-06** announcer consolidation.
@@ -460,6 +613,7 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 - [ ] **R-02 Tool rail and Insert flyout** replacing the stencil sidebar.
 - [ ] **Contextual toolbar** (5.5).
 - [ ] **Inspector** that appears with a selection, with collapsible sections and a pin.
+- [ ] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list).
 - [ ] **Tokens** from 6.1, applied to the new chrome only.
 - [ ] Playwright: the existing 62 tests pass under both `?ui=1` and `?ui=2` (parametrise the fixtures).
 
@@ -467,7 +621,9 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 
 - [ ] **T-02 Lens state** and **R-03 lens switcher**, keys `1` to `4`.
 - [ ] **R-04 Run bar** replacing the Simulations tab.
+- [ ] **T-03 Schema versioning** (moved up from phase 4: this phase is the first to add document fields).
 - [ ] **F-17 Wire labels and protocols** (small, and F-01 and F-02 depend on it).
+- [ ] **F-26 Custom legend and tags** and **F-27 Component links and ownership** (both small, both new fields).
 - [ ] Make `?ui=2` the default and keep "Classic layout" in settings.
 
 ### Phase 3: The signature (about 2 weeks)
@@ -475,31 +631,44 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 - [ ] **F-01 Chaos simulation.**
 - [ ] **F-02 Insights**, with the Review lens.
 - [ ] **R-08 first run** (5.4), pointing at the chaos demo.
+- [ ] **R-10 Contextual help.** A "?" on each panel opens two or three sentences and a link to the matching section of `docs/guide.md`, which grows to cover every panel. Help topics are searchable from the command palette ("help: routing styles").
+- [ ] **F-28 Generated text description** and the Text outline panel.
 - [ ] Re-record the README GIFs to show a failure run.
 
 ### Phase 4: Many diagrams, real systems (about 2.5 weeks)
 
-- [ ] **T-03 Schema versioning** and **T-04 IndexedDB**.
+- [ ] **T-04 IndexedDB**.
 - [ ] **F-08 Library and home screen.**
+- [ ] **F-25 draw.io and Excalidraw import** (first, because it's the biggest adoption win).
 - [ ] **F-06 Importers:** Docker Compose and OpenAPI first, then Kubernetes.
+- [ ] **F-22 Trace import** (OpenTelemetry and Jaeger JSON).
+- [ ] **F-31 Share-link hygiene.**
 - [ ] **F-10 Smart guides.**
 
-### Phase 5: Depth (about 3 weeks)
+### Phase 5: Keep it true (about 2.5 weeks)
+
+- [ ] **F-21 Live data sources.**
+- [ ] **T-07 Headless core**, then **F-23 CLI and GitHub Action**.
+- [ ] **F-24 Drift check** (in the app and in the CLI).
+
+### Phase 6: Depth (about 3 weeks)
 
 - [ ] **F-09 Frames**, then **F-03 Nested levels**.
 - [ ] **F-05 Live code editor.**
 - [ ] **F-11 ELK layout** (lazy).
 
-### Phase 6: Telling the story (about 2 weeks)
+### Phase 7: Telling the story (about 2.5 weeks)
 
 - [ ] **F-04 Storyboards**, **F-19 Video export**, **F-13 Embeds and viewer.**
 - [ ] **F-18 Diagram styles.**
 - [ ] **F-07 Comments** (local).
 - [ ] **F-12 Coach marks.**
+- [ ] **F-29 Find and replace, bulk edit** and **F-30 PDF and print export.**
 
-### Phase 7: Beyond one browser (answer section 12 first)
+### Phase 8: Beyond one browser (answer section 12 first)
 
-- [ ] **F-14 Collaboration**, **F-15 AI assist**, **F-16 Icon packs**, **F-20 Internationalisation.**
+- [ ] **F-16 Icon packs**, **F-20 Internationalisation.**
+- [ ] **F-14 Collaboration** and **F-15 AI assist**, lowest priority (see the priority note in section 7).
 
 ---
 
@@ -519,6 +688,8 @@ Every PR in this plan meets all of these. CI already enforces the first five.
 | Reduced motion | No animation runs under `prefers-reduced-motion: reduce` | Playwright with `reducedMotion: 'reduce'` |
 | Data safety | Nothing can lose an autosave, a library entry or unapplied code text without an Undo | Playwright tests named `never loses …` |
 | Round trip | Every new field survives JSON, YAML and the share link; anything Mermaid drops is reported | Unit round-trip tests |
+| Secrets and links | No token or header from F-21 appears in any export, share link or library export; links accept only `https:`, `http:` and `mailto:` | Unit tests over every exporter |
+| Headless | Core modules import with no DOM (T-07); CLI output matches the browser export | Unit and snapshot tests |
 
 **Award-readiness checklist** (review at the end of phases 3 and 6):
 
@@ -529,6 +700,8 @@ Every PR in this plan meets all of these. CI already enforces the first five.
 - [ ] No screen has more than 8 always-visible controls outside the canvas.
 - [ ] Every animation explains something (audit against table 6.3).
 - [ ] Exports, embeds and shared links look as good as the studio.
+- [ ] Every export carries a text description (F-28).
+- [ ] Anything the app calls "live" really is.
 
 ---
 
@@ -549,9 +722,37 @@ Every PR in this plan meets all of these. CI already enforces the first five.
 
 Answer each before the phase that needs it.
 
-1. **Collaboration hosting (phase 7).** Peer-to-peer WebRTC only (no server, and a room ends when everyone leaves), or also document a self-hosted WebSocket server? Running a hosted service would be a separate project.
-2. **AI (phase 7).** Bring-your-own-key only, or leave AI out entirely? Which providers, if any?
+1. **Collaboration hosting (phase 8).** Peer-to-peer WebRTC only (no server, and a room ends when everyone leaves), or also document a self-hosted WebSocket server? Running a hosted service would be a separate project.
+2. **AI (phase 8).** Bring-your-own-key only, or leave AI out entirely? Which providers, if any?
 3. **Brand (phase 1).** Keep the current ConduitCraft mark, or refresh the logo and accent as part of the redesign? The tokens in 6.1 make either easy.
 4. **Classic layout (phase 2).** Remove the `?ui=1` option after one release, or keep it longer?
 5. **Levels and frames (phase 5).** Ship both, or only frames if levels prove too complex for undo and share links?
-6. **Icon packs (phase 7).** Which icon sets have licences that allow bundling in an MIT project?
+6. **Icon packs (phase 8).** Which icon sets have licences that allow bundling in an MIT project?
+7. **Name (phase 1).** The product is ConduitCraft but the repo, folder and some code say `blueprint-studio`, and the text format is "Blueprint". Pick one product name and one format name before the plain-language pass (R-09), and decide whether to rename the repo.
+8. **Live data and CORS (phase 5).** Many endpoints won't allow browser requests. Document a minimal proxy only, or ship one as an optional extra?
+9. **CLI distribution (phase 5).** Publish to npm as `conduitcraft`, or only ship the GitHub Action at first?
+
+---
+
+## Appendix A: Word list
+
+Use the word on the left in every label, tooltip, toast, announcement and doc. The word on the right stays only where it is a file format or a code identifier. Settle open question 7 first, then update the first two rows.
+
+| Use | Instead of | Note |
+|---|---|---|
+| ConduitCraft | Blueprint Studio, blueprint-studio | Product name, pending question 7 |
+| Blueprint file | Blueprint Markdown, `.md` blueprint | The text format, pending question 7 |
+| Component | Node, arch node | `node` stays in code |
+| Wire | Conduit, stream, edge, telemetry stream | `edge` stays in code |
+| Wire colour | Tone, stream channel | `tone` stays in code |
+| Swimlane | Zone, stage, stage banner | `zone` stays in code |
+| Note | Notes card, spec card | |
+| Frame | Container | New in F-09 |
+| Scenario | Simulation, packet trace, run | "Run" is the verb: "Run scenario" |
+| Traffic | Data View, telemetry mode | The lens name |
+| Label above title | Eyebrow | Inspector field |
+| Badge | Chip | Inspector field |
+| Interface | Interface label | Inspector field |
+| Live | Live telemetry | Only when F-21 data is actually connected |
+| Insights | Lint, warnings | F-02 |
+| Snapshot | Milestone, version | |
