@@ -230,3 +230,101 @@ test('lock, group and align commands record an undo step only when something cha
   await alignLeft.click();
   expect(await undoDepth(page), 'two aligns add one undo step: the second changed nothing').toBe(before + 1);
 });
+
+/** A point of bare canvas at least `minGap` px from `from`, where a wire can be dropped to create a component. */
+async function emptyCanvasPoint(page: Page, from: { x: number; y: number }, minGap = 120) {
+  const point = await page.evaluate(
+    ([fx, fy, gap]) => {
+      const vp = document.getElementById('canvas-viewport')!.getBoundingClientRect();
+      const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a';
+      for (let y = vp.top + 120; y < vp.bottom - 140; y += 30) {
+        for (let x = vp.left + 40; x < vp.right - 40; x += 30) {
+          if (Math.hypot(x - (fx as number), y - (fy as number)) < (gap as number)) continue;
+          const el = document.elementFromPoint(x, y);
+          if (el && document.getElementById('canvas-viewport')!.contains(el) && !el.closest(blocked)) return { x, y };
+        }
+      }
+      return null;
+    },
+    [from.x, from.y, minGap] as const,
+  );
+  expect(point, 'a spot of bare canvas').not.toBeNull();
+  return point!;
+}
+
+const nodeCount = (page: Page) => page.locator('.arch-node').count();
+
+test('dropping a wire on empty canvas creates a connected component with its name ready to edit', async ({ page }) => {
+  await loadShowcase(page);
+  const [a] = await unconnectedPair(page);
+  const from = (await clickableCentre(page, a))!;
+  const to = await emptyCanvasPoint(page, from);
+  const nodesBefore = await nodeCount(page);
+  const wiresBefore = await wireCount(page);
+
+  await enterConnectMode(page);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 10 });
+  await page.mouse.up();
+
+  await expect.poll(() => nodeCount(page)).toBe(nodesBefore + 1);
+  expect(await wireCount(page)).toBe(wiresBefore + 1);
+  // The new component's name is open for editing straight away.
+  await expect(page.locator('.inline-edit-input')).toBeVisible();
+  await expect(page.locator('.inline-edit-input')).toHaveAttribute('aria-label', 'Component name');
+  await page.locator('.inline-edit-input').fill('Dropped Service');
+  await page.locator('.inline-edit-input').press('Enter');
+  await expect(page.locator('.arch-node .node-title', { hasText: 'Dropped Service' })).toHaveCount(1);
+
+  // The new wire runs from the dragged component to the new one.
+  const created = await page.evaluate(() => {
+    const el = [...document.querySelectorAll<HTMLElement>('.arch-node')].find((n) => n.textContent?.includes('Dropped Service'))!;
+    return el.dataset.node!;
+  });
+  await expect(page.locator(`.conduit-group[data-from="${a}"][data-to="${created}"]`)).toHaveCount(1);
+
+  // Component + wire + rename: the creation is one undo step (the rename is its own), so two undos remove it all.
+  await page.locator('#btn-undo').click();
+  await page.locator('#btn-undo').click();
+  await expect.poll(() => nodeCount(page)).toBe(nodesBefore);
+  expect(await wireCount(page)).toBe(wiresBefore);
+  await page.locator('#btn-redo').click();
+  await page.locator('#btn-redo').click();
+  await expect.poll(() => nodeCount(page)).toBe(nodesBefore + 1);
+});
+
+test('a short slip, Escape, or dropping on another component does not create a component', async ({ page }) => {
+  await loadShowcase(page);
+  const [a, b] = await unconnectedPair(page);
+  const from = (await clickableCentre(page, a))!;
+  const onB = (await clickableCentre(page, b))!;
+  const far = await emptyCanvasPoint(page, from);
+  const nodesBefore = await nodeCount(page);
+  await enterConnectMode(page);
+
+  // A tiny drag that ends on bare canvas is a slip, not a request for a component.
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 10, from.y + 6, { steps: 3 });
+  await page.mouse.up();
+  expect(await nodeCount(page)).toBe(nodesBefore);
+
+  // Escape during a long drag cancels it.
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(far.x, far.y, { steps: 8 });
+  await page.keyboard.press('Escape');
+  await page.mouse.up();
+  expect(await nodeCount(page)).toBe(nodesBefore);
+  await expect(page.locator('.inline-edit-input')).toHaveCount(0);
+
+  // Dropping on another component wires to it rather than creating a new one.
+  const wires = await wireCount(page);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(onB.x, onB.y, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(() => wireCount(page)).toBe(wires + 1);
+  expect(await nodeCount(page)).toBe(nodesBefore);
+});

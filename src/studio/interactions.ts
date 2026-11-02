@@ -130,6 +130,7 @@ import {
   performRedo,
   performUndo,
   pushHistory,
+  mutateWithHistory,
   screenToWorld,
   setPendingRestoreOffer,
   setSaveErrorHandler,
@@ -191,7 +192,7 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
-import { renameSelectionInline } from './inlineRename';
+import { renameNodeInline, renameSelectionInline } from './inlineRename';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -504,6 +505,14 @@ export function beginPortWireDrag(
       );
     } else if (targetNodeEl && targetNodeEl.dataset.node && targetNodeEl.dataset.node !== draft.sourceNodeId) {
       createEdgeConnection(draft.sourceNodeId, targetNodeEl.dataset.node, draft.sourcePort, 'auto');
+    } else if (
+      isEmptyCanvasPoint(hitEl) &&
+      Math.hypot(upEv.clientX - e.clientX, upEv.clientY - e.clientY) >= WIRE_DROP_MIN_DRAG_PX
+    ) {
+      // Dropping a wire on empty canvas creates a connected component there, ready to be named.
+      const [wx, wy] = screenToWorld(upEv.clientX, upEv.clientY);
+      const created = createNodeFromWireDrop(draft.sourceNodeId, draft.sourcePort, wx, wy);
+      if (created) window.setTimeout(() => renameNodeInline(created.id), 0);
     }
   };
 
@@ -514,6 +523,57 @@ export function beginPortWireDrag(
   captureEl.addEventListener('pointerup', onUp);
   captureEl.addEventListener('pointercancel', onCancel);
   captureEl.addEventListener('lostpointercapture', onLost);
+}
+
+/** Shorter drags are almost certainly a slip, not a request for a new component. */
+const WIRE_DROP_MIN_DRAG_PX = 32;
+
+/** True for a point on bare canvas: inside the viewport, and not on a component, wire, note, swimlane or control. */
+function isEmptyCanvasPoint(hitEl: Element | null): boolean {
+  if (!hitEl || !viewport.contains(hitEl)) return false;
+  return !hitEl.closest('.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a');
+}
+
+/**
+ * Create a component centred on (worldX, worldY) and wire the dragged source to it, as one undo step.
+ * Returns the new node, or null if the source no longer exists.
+ */
+export function createNodeFromWireDrop(
+  sourceId: string,
+  sourcePort: PortSide,
+  worldX: number,
+  worldY: number,
+): DiagramNode | null {
+  if (!app.doc.nodes.some((n) => n.id === sourceId)) return null;
+  let created: DiagramNode | null = null;
+  mutateWithHistory(() => {
+    const node = createNodeFromStencil('service', 0, 0, app.doc.nodes.length);
+    const snap = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
+    node.x = Math.max(24, snap(worldX - node.width / 2));
+    node.y = Math.max(32, snap(worldY - node.height / 2));
+    app.doc.nodes.push(node);
+    app.doc.edges.push({
+      id: nextUid('edge'),
+      from: sourceId,
+      to: node.id,
+      sourcePort,
+      targetPort: 'auto',
+      tone: 'blue',
+      route: 'auto',
+      label: '',
+      animated: true,
+    });
+    expandStageToFit(app.doc);
+    created = node;
+    return true;
+  });
+  if (!created) return null;
+  const node: DiagramNode = created;
+  app.connectSourceNodeId = null;
+  setSelection({ type: 'node', id: node.id });
+  renderAll(true);
+  tagEnteringNodes([node.id]);
+  return node;
 }
 
 export function createEdgeConnection(
