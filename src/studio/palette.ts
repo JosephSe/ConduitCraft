@@ -784,6 +784,11 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
   return commands;
 }
 
+/** The palette command with this id, for other surfaces (context menu) that reuse the same actions. */
+export function findPaletteCommand(id: string): PaletteCommand | undefined {
+  return savedDeps ? getPaletteCommands(savedDeps).find((c) => c.id === id) : undefined;
+}
+
 export function filterPaletteCommands(commands: PaletteCommand[], query: string): PaletteCommand[] {
   const q = query.trim().toLowerCase();
   if (!q) return commands;
