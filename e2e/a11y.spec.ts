@@ -59,3 +59,16 @@ for (const [scheme, expected] of [
     expect(color).toBe(expected);
   });
 }
+
+for (const scheme of ['light', 'dark'] as Scheme[]) {
+  test(`wide layout, where toolbar text labels are visible, has no axe violations (${scheme})`, async ({ page }) => {
+    // The toolbar hides its text labels at narrower widths, so label-in-name problems only show up here.
+    await page.setViewportSize({ width: 1600, height: 900 });
+    await page.emulateMedia({ colorScheme: scheme });
+    await page.goto('/');
+    await page.locator('#btn-empty-showcase').click();
+    await expect(page.locator('.arch-node').first()).toBeVisible();
+    await expect(page.locator('#btn-open-palette .btn-text-responsive')).toBeVisible();
+    expect(await scan(page)).toEqual([]);
+  });
+}
