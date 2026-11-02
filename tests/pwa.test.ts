@@ -76,7 +76,7 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     const content = fs.readFileSync(manifestPath, 'utf8');
     const manifest = JSON.parse(content);
 
-    assert.strictEqual(manifest.name, 'ConduitCraft — Architecture & Telemetry Studio');
+    assert.strictEqual(manifest.name, 'ConduitCraft — Architecture Diagramming Studio');
     assert.strictEqual(manifest.short_name, 'ConduitCraft');
     assert.strictEqual(manifest.display, 'standalone');
     assert.strictEqual(manifest.start_url, './');

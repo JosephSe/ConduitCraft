@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/web-manifest-combined.json",
-  "name": "ConduitCraft — Architecture & Telemetry Studio",
+  "name": "ConduitCraft — Architecture Diagramming Studio",
   "short_name": "ConduitCraft",
-  "description": "Interactive architecture diagramming and live telemetry studio",
+  "description": "Interactive architecture diagramming studio with animated traffic and scenarios",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
