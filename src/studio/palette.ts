@@ -14,6 +14,7 @@ import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrder
 import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
 import { saveSnapshot } from './snapshots';
+import { selectionOfStage } from './selection';
 
 export interface PaletteCommand {
   id: string;
@@ -572,13 +573,12 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}A`,
       keywords: ['select', 'all'],
       run: () => {
-        const next = {
-          type: 'multi' as const,
-          ids: app.doc.nodes.map((n) => n.id),
-          zoneIds: app.doc.zones.map((z) => z.id),
-          notesIds: app.doc.notesCards.map((c) => c.id),
-        };
-        applySelection(next);
+        const next = selectionOfStage({
+          nodes: app.doc.nodes.map((n) => n.id),
+          zones: app.doc.zones.map((z) => z.id),
+          notes: app.doc.notesCards.map((c) => c.id),
+        });
+        if (next.type !== 'none') applySelection(next);
       },
     },
 

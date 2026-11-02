@@ -193,9 +193,10 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
-import { renameNodeInline, renameSelectionInline } from './inlineRename';
+import { renameNodeInline } from './inlineRename';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
-import { initCommandPalette } from './palette';
+import { initCommandPalette, findPaletteCommand } from './palette';
+import { matchBinding } from '../core/keymap';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
@@ -2646,30 +2647,24 @@ export function initEvents(): void {
       return;
     }
 
+    // Registry shortcuts: the chord maps to an action id and the action runs exactly as from the palette or menu.
+    if (!inEditable) {
+      const actionId = matchBinding(e, {
+        mode: app.workspaceMode,
+        hasSelection: app.selection.type !== 'none',
+      });
+      const action = actionId ? findPaletteCommand(actionId) : undefined;
+      if (action) {
+        e.preventDefault();
+        action.run();
+        return;
+      }
+    }
+
     if ((e.metaKey || e.ctrlKey) && !inEditable) {
       if (e.key.toLowerCase() === 'o') {
         e.preventDefault();
         void handleOpenFile();
-        return;
-      }
-      if (e.key.toLowerCase() === 'z' && e.shiftKey) {
-        e.preventDefault();
-        performRedo();
-        return;
-      }
-      if (e.key.toLowerCase() === 'z') {
-        e.preventDefault();
-        performUndo();
-        return;
-      }
-      if (e.key.toLowerCase() === 'y') {
-        e.preventDefault();
-        performRedo();
-        return;
-      }
-      if (e.key.toLowerCase() === 'd' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        duplicateSelected();
         return;
       }
       if (e.key.toLowerCase() === 'c' && app.workspaceMode === 'design') {
@@ -2680,39 +2675,6 @@ export function initEvents(): void {
       if (e.key.toLowerCase() === 'v' && app.workspaceMode === 'design') {
         e.preventDefault();
         pasteSelection();
-        return;
-      }
-      if (e.key.toLowerCase() === 'a' && app.workspaceMode === 'design') {
-        const next = selectionOfStage({
-          nodes: app.doc.nodes.map((node) => node.id),
-          zones: app.doc.zones.map((zone) => zone.id),
-          notes: app.doc.notesCards.map((card) => card.id),
-        });
-        if (next.type !== 'none') {
-          e.preventDefault();
-          applySelection(next);
-        }
-        return;
-      }
-      if (e.key.toLowerCase() === 'l' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        applyLockToggle();
-        return;
-      }
-      if (e.key.toLowerCase() === 'g' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        if (e.shiftKey) applyUngroup();
-        else applyGroup();
-        return;
-      }
-      if (e.key === ']' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        applyZOrder('forward');
-        return;
-      }
-      if (e.key === '[' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        applyZOrder('backward');
         return;
       }
     }
@@ -2744,17 +2706,7 @@ export function initEvents(): void {
         }
         return;
       }
-      if (e.key === 'F2') {
-        e.preventDefault();
-        if (!renameSelectionInline()) notify('Select a component, swimlane, note or wire to rename');
-        return;
-      }
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (app.selection.type !== 'none') {
-          e.preventDefault();
-          deleteSelected();
-        }
-      } else if (e.key === 'Escape') {
+      if (e.key === 'Escape') {
         // Each press backs out one level: the wire being drawn, then a pending click-to-connect source,
         // then Connect mode itself, and only then the selection.
         if (app.activeWireDraft) {
