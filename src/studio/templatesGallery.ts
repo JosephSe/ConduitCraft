@@ -9,14 +9,17 @@ import { parseBlueprintJson } from '../exporter/blueprintJson';
 import { renderDiagramSvg } from '../exporter/diagramSvg';
 import { renderUiIconMarkup } from '../ui/icons';
 
-// Raw bundled JSON imports for instant offline loading and preview rendering
-import lumenRelayJson from '../examples/lumen-relay.blueprint.json?raw';
-import threeTierWebJson from '../examples/three-tier-web.blueprint.json?raw';
-import eventDrivenJson from '../examples/event-driven-microservices.blueprint.json?raw';
-import cloudDataPipelineJson from '../examples/cloud-data-pipeline.blueprint.json?raw';
-import authOidcJson from '../examples/auth-oauth-oidc.blueprint.json?raw';
-import k8sIngressJson from '../examples/kubernetes-ingress.blueprint.json?raw';
-import cicdPipelineJson from '../examples/cicd-pipeline.blueprint.json?raw';
+// Template bodies are loaded on demand, so their ~80 kB of JSON stays out of the entry bundle. Each one is its
+// own lazy chunk that the service worker precaches for offline use.
+const loaders = {
+  'three-tier-web': () => import('../examples/three-tier-web.blueprint.json?raw'),
+  'event-driven-microservices': () => import('../examples/event-driven-microservices.blueprint.json?raw'),
+  'cloud-data-pipeline': () => import('../examples/cloud-data-pipeline.blueprint.json?raw'),
+  'auth-oauth-oidc': () => import('../examples/auth-oauth-oidc.blueprint.json?raw'),
+  'kubernetes-ingress': () => import('../examples/kubernetes-ingress.blueprint.json?raw'),
+  'cicd-pipeline': () => import('../examples/cicd-pipeline.blueprint.json?raw'),
+  'lumen-relay': () => import('../examples/lumen-relay.blueprint.json?raw'),
+} as const;
 
 export type TemplateCategory =
   | 'all'
@@ -37,7 +40,8 @@ export interface TemplateDefinition {
   nodesCount: number;
   edgesCount: number;
   simulationsCount: number;
-  rawJson: string;
+  /** Resolves with the template's `.blueprint.json` text. */
+  loadRaw: () => Promise<string>;
 }
 
 export const STARTER_TEMPLATES: TemplateDefinition[] = [
@@ -52,7 +56,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 8,
     edgesCount: 9,
     simulationsCount: 2,
-    rawJson: threeTierWebJson,
+    loadRaw: async () => (await loaders['three-tier-web']()).default,
   },
   {
     id: 'event-driven-microservices',
@@ -65,7 +69,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 8,
     edgesCount: 8,
     simulationsCount: 1,
-    rawJson: eventDrivenJson,
+    loadRaw: async () => (await loaders['event-driven-microservices']()).default,
   },
   {
     id: 'cloud-data-pipeline',
@@ -78,7 +82,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 8,
     edgesCount: 8,
     simulationsCount: 1,
-    rawJson: cloudDataPipelineJson,
+    loadRaw: async () => (await loaders['cloud-data-pipeline']()).default,
   },
   {
     id: 'auth-oauth-oidc',
@@ -91,7 +95,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 6,
     edgesCount: 7,
     simulationsCount: 1,
-    rawJson: authOidcJson,
+    loadRaw: async () => (await loaders['auth-oauth-oidc']()).default,
   },
   {
     id: 'kubernetes-ingress',
@@ -104,7 +108,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 7,
     edgesCount: 7,
     simulationsCount: 1,
-    rawJson: k8sIngressJson,
+    loadRaw: async () => (await loaders['kubernetes-ingress']()).default,
   },
   {
     id: 'cicd-pipeline',
@@ -117,7 +121,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 7,
     edgesCount: 6,
     simulationsCount: 1,
-    rawJson: cicdPipelineJson,
+    loadRaw: async () => (await loaders['cicd-pipeline']()).default,
   },
   {
     id: 'lumen-relay',
@@ -130,7 +134,7 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     nodesCount: 14,
     edgesCount: 16,
     simulationsCount: 3,
-    rawJson: lumenRelayJson,
+    loadRaw: async () => (await loaders['lumen-relay']()).default,
   },
 ];
 
@@ -143,6 +147,29 @@ export const TEMPLATE_CATEGORIES: { id: TemplateCategory; label: string }[] = [
   { id: 'devops', label: 'DevOps & GitOps' },
   { id: 'showcase', label: 'Showcase' },
 ];
+
+const rawCache = new Map<string, Promise<string>>();
+
+/** Fetch (once) the JSON text of a template. */
+export function loadTemplateRaw(template: TemplateDefinition): Promise<string> {
+  let pending = rawCache.get(template.id);
+  if (!pending) {
+    pending = template.loadRaw();
+    rawCache.set(template.id, pending);
+  }
+  return pending;
+}
+
+/** Fill the preview frame of every template card under `root` once its JSON has loaded. */
+export function fillTemplatePreviews(root: ParentNode, templates: TemplateDefinition[] = STARTER_TEMPLATES): void {
+  for (const template of templates) {
+    const frame = root.querySelector<HTMLElement>(`[data-template-id="${template.id}"] .template-preview-frame`);
+    if (!frame) continue;
+    void loadTemplateRaw(template).then((raw) => {
+      if (frame.isConnected) frame.innerHTML = renderTemplatePreviewSvg(raw);
+    });
+  }
+}
 
 /**
  * Returns filtered starter templates by category.
@@ -182,8 +209,7 @@ export function renderTemplatePreviewSvg(source: string | DiagramDocument): stri
 /**
  * Renders HTML for a single template card in the gallery grid.
  */
-export function renderTemplateCardHtml(template: TemplateDefinition): string {
-  const previewSvg = renderTemplatePreviewSvg(template.rawJson);
+export function renderTemplateCardHtml(template: TemplateDefinition, previewSvg = ''): string {
   return `
     <article class="template-card" data-template-id="${template.id}">
       <div class="template-preview-frame" aria-hidden="true">

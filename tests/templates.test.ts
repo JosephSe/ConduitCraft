@@ -5,6 +5,7 @@ import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
   getStarterTemplateById,
+  loadTemplateRaw,
   renderTemplatePreviewSvg,
   renderTemplateCardHtml,
   renderBlankCanvasCardHtml,
@@ -27,7 +28,7 @@ describe('starter architecture templates gallery', () => {
     ]);
   });
 
-  it('provides complete metadata for every starter blueprint', () => {
+  it('provides complete metadata for every starter blueprint', async () => {
     for (const template of STARTER_TEMPLATES) {
       assert.ok(template.title.length > 5, `${template.id} has title`);
       assert.ok(template.description.length > 20, `${template.id} has description`);
@@ -35,7 +36,8 @@ describe('starter architecture templates gallery', () => {
       assert.ok(template.nodesCount > 0, `${template.id} has positive nodes count`);
       assert.ok(template.edgesCount > 0, `${template.id} has positive edges count`);
       assert.ok(template.simulationsCount > 0, `${template.id} has at least 1 simulation scenario`);
-      assert.ok(typeof template.rawJson === 'string' && template.rawJson.length > 100);
+      const raw = await loadTemplateRaw(template);
+      assert.ok(typeof raw === 'string' && raw.length > 100);
     }
   });
 
@@ -66,9 +68,9 @@ describe('starter architecture templates gallery', () => {
     assert.strictEqual(missing, undefined);
   });
 
-  it('validates that every template parses cleanly with matching counts and simulations', () => {
+  it('validates that every template parses cleanly with matching counts and simulations', async () => {
     for (const template of STARTER_TEMPLATES) {
-      const parsed = parseBlueprintJson(template.rawJson);
+      const parsed = parseBlueprintJson(await loadTemplateRaw(template));
       assert.strictEqual(parsed.ok, true, `Template ${template.id} parses cleanly`);
       if (parsed.ok) {
         assert.strictEqual(parsed.doc.nodes.length, template.nodesCount, `${template.id} node count matches`);
@@ -80,9 +82,9 @@ describe('starter architecture templates gallery', () => {
     }
   });
 
-  it('renders vector SVG previews with responsive viewBox and scaling attributes', () => {
+  it('renders vector SVG previews with responsive viewBox and scaling attributes', async () => {
     for (const template of STARTER_TEMPLATES) {
-      const svg = renderTemplatePreviewSvg(template.rawJson);
+      const svg = renderTemplatePreviewSvg(await loadTemplateRaw(template));
       assert.ok(svg.startsWith('<svg'), `${template.id} preview starts with <svg`);
       assert.ok(svg.endsWith('</svg>'), `${template.id} preview ends with </svg>`);
       assert.ok(svg.includes('viewBox='), `${template.id} preview has viewBox`);
@@ -96,6 +98,7 @@ describe('starter architecture templates gallery', () => {
     assert.ok(cardHtml.includes('data-template-id="three-tier-web"'));
     assert.ok(cardHtml.includes('Three-Tier Web Application'));
     assert.ok(cardHtml.includes('btn-use-template'));
+    assert.ok(cardHtml.includes('template-preview-frame'), 'preview frame is there to be filled once the JSON loads');
 
     const blankHtml = renderBlankCanvasCardHtml();
     assert.ok(blankHtml.includes('template-card-blank'));

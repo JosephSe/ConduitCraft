@@ -231,6 +231,8 @@ import {
   TEMPLATE_CATEGORIES,
   getStarterTemplates,
   getStarterTemplateById,
+  loadTemplateRaw,
+  fillTemplatePreviews,
   renderTemplateCardHtml,
   renderBlankCanvasCardHtml,
   renderEmptyStageShelfHtml,
@@ -1551,12 +1553,22 @@ export function initEvents(): void {
     const templateCards = templates.map((t) => renderTemplateCardHtml(t)).join('');
 
     templateGalleryGrid.innerHTML = `${blankCard}${templateCards}`;
+    fillTemplatePreviews(templateGalleryGrid, templates);
   };
 
-  const loadTemplateDoc = (template: TemplateDefinition): void => {
+  const loadTemplateDoc = async (template: TemplateDefinition): Promise<void> => {
+    let raw: string;
+    try {
+      raw = await loadTemplateRaw(template);
+    } catch {
+      const msg = `Could not load ${template.title}. Check your connection and try again.`;
+      hudStatusTip.textContent = msg;
+      notify(msg, { tone: 'error' });
+      return;
+    }
     resetActiveFile();
     clearPendingRestoreOffer();
-    const parsed = parseBlueprintJson(template.rawJson);
+    const parsed = parseBlueprintJson(raw);
     if (!parsed.ok) {
       hudStatusTip.textContent = parsed.error;
       notify(parsed.error, { tone: 'error' });
@@ -1596,7 +1608,7 @@ export function initEvents(): void {
   btnEmptyShowcase.addEventListener('click', () => {
     const showcase = getStarterTemplateById('lumen-relay');
     if (showcase) {
-      loadTemplateDoc(showcase);
+      void loadTemplateDoc(showcase);
     }
   });
 
@@ -1617,7 +1629,7 @@ export function initEvents(): void {
       if (templateId) {
         const template = getStarterTemplateById(templateId);
         if (template) {
-          loadTemplateDoc(template);
+          void loadTemplateDoc(template);
         }
       }
     });
@@ -1647,7 +1659,7 @@ export function initEvents(): void {
     } else {
       const template = getStarterTemplateById(templateId);
       if (template) {
-        loadTemplateDoc(template);
+        void loadTemplateDoc(template);
         if (templateGalleryDialog) void closeDialogSmoothly(templateGalleryDialog);
       }
     }
@@ -2177,13 +2189,13 @@ export function initEvents(): void {
     openTemplateGallery,
     loadTemplateById: (id) => {
       const template = getStarterTemplateById(id);
-      if (template) loadTemplateDoc(template);
+      if (template) void loadTemplateDoc(template);
     },
     deleteSelected,
     duplicateSelected,
     loadShowcase: () => {
       const showcase = getStarterTemplateById('lumen-relay');
-      if (showcase) loadTemplateDoc(showcase);
+      if (showcase) void loadTemplateDoc(showcase);
     },
     runSimulationById: (id) => runSimulation(id),
     saveFile: () => void handleSaveDiagram(false),
