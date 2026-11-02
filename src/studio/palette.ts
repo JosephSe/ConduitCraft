@@ -360,7 +360,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'mode-data',
       title: 'Switch to Data View Mode',
-      subtitle: 'Interactive live telemetry streams and trace',
+      subtitle: 'Animated traffic, metrics and trace',
       category: 'Mode & View',
       keywords: ['data', 'telemetry', 'trace', 'simulation', 'stream'],
       run: () => {
@@ -671,7 +671,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'load-showcase',
       title: 'Load Lumen Relay Showcase',
-      subtitle: 'Pre-built harbor city architecture with live telemetry',
+      subtitle: 'Pre-built harbor city architecture with animated traffic',
       category: 'Export & Sync',
       keywords: ['showcase', 'demo', 'example', 'lumen', 'sample'],
       run: deps.loadShowcase,

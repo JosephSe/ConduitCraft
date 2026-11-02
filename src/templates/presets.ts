@@ -133,7 +133,7 @@ export function createBlankDocument(): DiagramDocument {
   return {
     title: 'Untitled Architecture',
     systemTag: 'ARCHITECTURE STUDIO // V1.0',
-    statusLabel: 'LIVE TELEMETRY',
+    statusLabel: 'TRAFFIC DIAGRAM',
     direction: 'LR',
     stageWidth: 1680,
     stageHeight: 920,
