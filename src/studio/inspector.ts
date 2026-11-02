@@ -186,7 +186,7 @@ export function makeTonePicker(
   fs.className = 'swatch-picker';
   const legend = document.createElement('legend');
   legend.className = 'visually-hidden';
-  legend.textContent = 'Accent Color';
+  legend.textContent = 'Accent Colour';
   fs.appendChild(legend);
 
   for (const opt of STREAM_TONE_OPTIONS) {
@@ -459,7 +459,7 @@ export function renderPropertyEditor(): void {
     toneWrap.className = 'prop-field';
     const toneTitle = document.createElement('span');
     toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Accent Color';
+    toneTitle.textContent = 'Accent Colour';
     toneWrap.append(
       toneTitle,
       makeTonePicker('node-accent-tone', node.accent, (tone) => {
@@ -898,7 +898,7 @@ export function renderPropertyEditor(): void {
     toneWrap.className = 'prop-field';
     const toneTitle = document.createElement('span');
     toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Wire color';
+    toneTitle.textContent = 'Wire colour';
     toneWrap.append(
       toneTitle,
       makeTonePicker('edge-stream-tone', edge.tone, (tone) => {
@@ -1498,7 +1498,7 @@ export function renderPropertyEditor(): void {
         const minX = Math.min(...selectedNodes.map((n) => n.x));
         for (const n of selectedNodes) n.x = minX;
       }),
-      makeAlignBtn('Align Center', () => {
+      makeAlignBtn('Align Centre', () => {
         const avgCx =
           selectedNodes.reduce((acc, n) => acc + n.x + n.width / 2, 0) / selectedNodes.length;
         for (const n of selectedNodes) n.x = Math.round(avgCx - n.width / 2);
@@ -1538,12 +1538,12 @@ export function renderPropertyEditor(): void {
     alignSection.appendChild(grid);
     form.appendChild(alignSection);
 
-    // Batch Accent Color Picker
+    // Batch Accent Colour Picker
     const toneWrap = document.createElement('div');
     toneWrap.className = 'prop-divider';
     const toneTitle = document.createElement('span');
     toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Batch Accent Color';
+    toneTitle.textContent = 'Batch Accent Colour';
     toneWrap.append(
       toneTitle,
       makeTonePicker('multi-node-accent', selectedNodes[0].accent, (tone) => {
@@ -1841,12 +1841,12 @@ export function renderPropertyEditor(): void {
       app.doc.brand.accent = normalizeBrandAccent(accentInput.value);
       renderAll(false);
     });
-    const accentField = makeField('prop-brand-accent', 'Brand color', accentInput);
+    const accentField = makeField('prop-brand-accent', 'Brand colour', accentInput);
     if (app.doc.brand?.accent) {
       const clearAccent = document.createElement('button');
       clearAccent.type = 'button';
       clearAccent.className = 'btn btn-compact';
-      clearAccent.textContent = 'Use default color';
+      clearAccent.textContent = 'Use default colour';
       clearAccent.addEventListener('click', () => {
         pushHistory();
         app.doc.brand.accent = '';
@@ -1904,7 +1904,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(logoField);
     const brandNote = document.createElement('p');
     brandNote.className = 'prop-hint';
-    brandNote.textContent = 'The name, color, and logo appear on the exported page header. The canvas preview uses them too.';
+    brandNote.textContent = 'The name, colour and logo appear on the exported page header. The canvas preview uses them too.';
     form.appendChild(brandNote);
 
     const tipDiv = document.createElement('div');
@@ -1914,7 +1914,7 @@ export function renderPropertyEditor(): void {
     tipText.style.color = 'var(--wl-ink-muted)';
     tipText.style.lineHeight = '1.5';
     tipText.textContent =
-      'Tip: Select any component, wire, swimlane, or note on the canvas to customize its metrics, wire color, routing style, and JSON payload.';
+      'Tip: Select any component, wire, swimlane, or note on the canvas to customise its metrics, wire colour, routing style, and JSON payload.';
     tipDiv.appendChild(tipText);
     form.appendChild(tipDiv);
   }

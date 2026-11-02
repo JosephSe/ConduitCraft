@@ -78,8 +78,8 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['Drag Canvas'], description: 'Pan stage workspace', category: 'Navigation & View' },
   { keys: ['+', '−'], description: 'Zoom in or out', category: 'Navigation & View' },
   { keys: ['Fit'], description: 'Fit whole architecture to viewport', category: 'Navigation & View' },
-  { keys: ['Fit Selection'], description: 'Zoom and center selected items', category: 'Navigation & View' },
-  { keys: ['Click Minimap'], description: 'Center canvas on clicked location', category: 'Navigation & View' },
+  { keys: ['Fit Selection'], description: 'Zoom and centre selected items', category: 'Navigation & View' },
+  { keys: ['Click Minimap'], description: 'Centre canvas on clicked location', category: 'Navigation & View' },
 
   // Document & Simulation
   { keys: ['⌘', 'S'], description: 'Save diagram to disk (overwrite opened file)', category: 'Document & Simulation' },

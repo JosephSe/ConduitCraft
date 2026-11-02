@@ -1,3 +1,4 @@
+import { openExportDialog } from './helpers';
 import { expect, test as base, type Page } from '@playwright/test';
 
 /** Every test fails on uncaught page errors or console errors, so silent breakage is caught too. */
@@ -133,7 +134,7 @@ test('dragging a node moves it and undo puts it back', async ({ page }) => {
 test('exports an animated GIF (worker + lazy chunk)', async ({ page }) => {
   await captureExports(page);
   await loadShowcase(page);
-  await page.locator('#btn-open-export').click();
+  await openExportDialog(page);
   await page.locator('#btn-export-gif').click();
   await page.locator('#btn-gif-whole').click();
 
@@ -151,7 +152,7 @@ test('exports a standalone HTML file that contains the diagram', async ({ page }
   const firstTitle = (await page.locator('.arch-node .node-title').first().textContent())?.trim();
   expect(firstTitle).toBeTruthy();
 
-  await page.locator('#btn-open-export').click();
+  await openExportDialog(page);
   await page.locator('#btn-export-html').click();
 
   const file = await nextExport(page);

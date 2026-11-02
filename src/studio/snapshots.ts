@@ -146,7 +146,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
         changes.push('Review comment updated');
       }
       if (before.accent !== after.accent) {
-        changes.push(`Accent color changed from ${before.accent || 'default'} to ${after.accent || 'default'}`);
+        changes.push(`Accent colour changed from ${before.accent || 'default'} to ${after.accent || 'default'}`);
       }
       if (before.shape !== after.shape) {
         changes.push(`Shape changed from ${before.shape || 'box'} to ${after.shape || 'box'}`);
@@ -198,7 +198,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
         changes.push(`Routing mode changed from ${before.route} to ${after.route}`);
       }
       if (before.tone !== after.tone) {
-        changes.push(`Wire color changed from ${before.tone} to ${after.tone}`);
+        changes.push(`Wire colour changed from ${before.tone} to ${after.tone}`);
       }
       if (before.from !== after.from || before.to !== after.to) {
         changes.push(`Endpoints rewired to ${after.from} -> ${after.to}`);

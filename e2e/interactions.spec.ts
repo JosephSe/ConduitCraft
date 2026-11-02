@@ -1,3 +1,4 @@
+import { clearSelection } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 async function loadShowcase(page: Page): Promise<void> {
@@ -187,7 +188,7 @@ test('align buttons have clean labels', async ({ page }) => {
   const buttons = page.locator('button.btn-compact', { hasText: /^Align / });
   await expect(buttons.first()).toBeVisible();
   const labels = await buttons.allTextContents();
-  expect(labels).toEqual(expect.arrayContaining(['Align Left', 'Align Center', 'Align Top', 'Align Middle']));
+  expect(labels).toEqual(expect.arrayContaining(['Align Left', 'Align Centre', 'Align Top', 'Align Middle']));
   expect(labels.join('|')).not.toMatch(/\b(left|center|top|middle) Align/);
 });
 
@@ -331,20 +332,30 @@ test('a short slip, Escape, or dropping on another component does not create a c
 
 /** Select a wire by clicking its midpoint (one that is not covered by a component), and return its identity. */
 async function selectWire(page: Page): Promise<{ id: string; from: string; to: string }> {
-  const target = await page.evaluate(() => {
-    for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
-      const path = group.querySelector<SVGPathElement>('.conduit-hit');
-      const ctm = path?.getScreenCTM();
-      if (!path || !ctm) continue;
-      const mid = path.getPointAtLength(path.getTotalLength() / 2);
-      const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
-      if (pt.x < 0 || pt.y < 0 || pt.x > innerWidth || pt.y > innerHeight) continue;
-      if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
-        return { id: group.dataset.edgeId!, from: group.dataset.from!, to: group.dataset.to!, x: pt.x, y: pt.y };
+  const find = () =>
+    page.evaluate(() => {
+      for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
+        const path = group.querySelector<SVGPathElement>('.conduit-hit');
+        const ctm = path?.getScreenCTM();
+        if (!path || !ctm) continue;
+        const mid = path.getPointAtLength(path.getTotalLength() / 2);
+        const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
+        if (pt.x < 0 || pt.y < 0 || pt.x > innerWidth || pt.y > innerHeight) continue;
+        if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
+          return { id: group.dataset.edgeId!, from: group.dataset.from!, to: group.dataset.to!, x: pt.x, y: pt.y };
+        }
       }
-    }
-    return null;
-  });
+      return null;
+    });
+  // In the redesign the inspector slides in and out, moving the canvas; only click once the point has stopped moving.
+  let target = await find();
+  for (let i = 0; i < 20; i++) {
+    await page.waitForTimeout(100);
+    const next = await find();
+    const settled = next && target && next.id === target.id && Math.abs(next.x - target.x) < 0.5 && Math.abs(next.y - target.y) < 0.5;
+    target = next;
+    if (settled) break;
+  }
   expect(target, 'a wire that can be clicked').not.toBeNull();
   await page.mouse.click(target!.x, target!.y);
   await expect(page.locator(`.conduit-group[data-edge-id="${target!.id}"]`)).toHaveClass(/is-selected/);
@@ -367,6 +378,8 @@ async function otherNode(page: Page, exclude: string[]): Promise<string> {
 
 test('dragging a wire end onto another component re-attaches it, as one undo step', async ({ page }) => {
   await loadShowcase(page);
+  // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
+  await clearSelection(page);
   const wire = await selectWire(page);
   const newTarget = await otherNode(page, [wire.from, wire.to]);
   const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
@@ -411,6 +424,8 @@ test('the source end can be dragged too', async ({ page }) => {
 
 test('dropping a wire end on bare canvas, or pressing Escape, leaves the wire alone', async ({ page }) => {
   await loadShowcase(page);
+  // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
+  await clearSelection(page);
   const wire = await selectWire(page);
   const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
   const handle = await handleCentre(page, wire.id, 'to');
@@ -441,6 +456,8 @@ test('dropping a wire end on bare canvas, or pressing Escape, leaves the wire al
 
 test('a wire end cannot be dropped onto the component at its other end', async ({ page }) => {
   await loadShowcase(page);
+  // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
+  await clearSelection(page);
   const wire = await selectWire(page);
   const group = page.locator(`.conduit-group[data-edge-id="${wire.id}"]`);
   const handle = await handleCentre(page, wire.id, 'to');

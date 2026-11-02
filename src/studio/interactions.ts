@@ -1400,7 +1400,7 @@ export function initEvents(): void {
     });
   }
 
-  // Wire color filter (Data View Mode)
+  // Wire colour filter (Data View Mode)
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="flow-filter"]')) {
     radio.addEventListener('change', () => {
       if (radio.checked) workspace.dataset.flow = radio.value;
