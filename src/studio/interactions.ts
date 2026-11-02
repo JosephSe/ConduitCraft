@@ -2043,7 +2043,7 @@ export function initEvents(): void {
           resetActiveFile();
           clearPendingRestoreOffer();
           pushHistory();
-          app.doc = JSON.parse(JSON.stringify(target.doc));
+          app.doc = structuredClone(target.doc);
           renderAll(true);
           fitToViewport();
           snapshotsDialog?.close();

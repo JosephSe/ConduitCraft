@@ -71,7 +71,7 @@ export function saveSnapshot(name: string, doc: DiagramDocument): VersionSnapsho
     timestamp: Date.now(),
     nodeCount: doc.nodes.length,
     edgeCount: doc.edges.length,
-    doc: JSON.parse(JSON.stringify(doc)) as DiagramDocument,
+    doc: structuredClone(doc),
   };
 
   snapshots.unshift(snapshot);
