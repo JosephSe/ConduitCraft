@@ -4,6 +4,7 @@
  * and visually computing/displaying added, removed, and modified components & wires.
  */
 import type { DiagramDocument, DiagramEdge, DiagramNode } from '../types';
+import { escapeHtml } from '../shared/escapeHtml';
 
 export const SNAPSHOTS_STORAGE_KEY = 'conduitcraft-snapshots-v1';
 
@@ -292,9 +293,9 @@ export function renderSnapshotsDialogHtml(
                       minute: '2-digit',
                     });
                     return `
-                    <div class="snapshot-card ${isSelected ? 'is-selected' : ''}" data-snapshot-id="${s.id}">
+                    <div class="snapshot-card ${isSelected ? 'is-selected' : ''}" data-snapshot-id="${escapeHtml(s.id)}">
                       <div class="snapshot-card-top">
-                        <strong class="snapshot-card-title">${s.name}</strong>
+                        <strong class="snapshot-card-title">${escapeHtml(s.name)}</strong>
                         <span class="snapshot-card-date">${dateStr}</span>
                       </div>
                       <div class="snapshot-card-meta">
@@ -303,13 +304,13 @@ export function renderSnapshotsDialogHtml(
                         <span>${s.edgeCount} ${s.edgeCount === 1 ? 'wire' : 'wires'}</span>
                       </div>
                       <div class="snapshot-card-actions">
-                        <button type="button" class="btn btn-compact btn-snapshot-diff" data-diff-id="${s.id}">
+                        <button type="button" class="btn btn-compact btn-snapshot-diff" data-diff-id="${escapeHtml(s.id)}">
                           ${isSelected ? 'Diffing' : 'Diff vs Current'}
                         </button>
-                        <button type="button" class="btn btn-compact btn-snapshot-restore" data-restore-id="${s.id}">
+                        <button type="button" class="btn btn-compact btn-snapshot-restore" data-restore-id="${escapeHtml(s.id)}">
                           Restore
                         </button>
-                        <button type="button" class="btn btn-compact btn-snapshot-delete" data-delete-id="${s.id}" aria-label="Delete snapshot">
+                        <button type="button" class="btn btn-compact btn-snapshot-delete" data-delete-id="${escapeHtml(s.id)}" aria-label="Delete snapshot">
                           ✕
                         </button>
                       </div>
@@ -355,7 +356,7 @@ function renderDiffContentHtml(snapshot: VersionSnapshot, diff: DocumentDiff | n
   return `
     <div class="diff-header">
       <div>
-        <h3 class="diff-target-title">Comparing vs "${snapshot.name}"</h3>
+        <h3 class="diff-target-title">Comparing vs "${escapeHtml(snapshot.name)}"</h3>
         <p class="diff-target-subtitle">Changes between snapshot and current live canvas</p>
       </div>
       <div class="diff-summary-badges">
@@ -370,7 +371,7 @@ function renderDiffContentHtml(snapshot: VersionSnapshot, diff: DocumentDiff | n
         ? `
       <div class="diff-no-changes">
         <div class="diff-match-pill">✓ Identical</div>
-        <p>Your current architecture diagram is completely identical to <strong>"${snapshot.name}"</strong>.</p>
+        <p>Your current architecture diagram is completely identical to <strong>"${escapeHtml(snapshot.name)}"</strong>.</p>
       </div>
     `
         : `
@@ -385,9 +386,9 @@ function renderDiffContentHtml(snapshot: VersionSnapshot, diff: DocumentDiff | n
                 <div class="diff-row diff-row-${item.status}">
                   <span class="diff-row-tag diff-tag-${item.status}">${item.status.toUpperCase()}</span>
                   <div class="diff-row-body">
-                    <strong>${node?.title || item.id}</strong> <span class="diff-kind-badge">${node?.kind || 'node'}</span>
+                    <strong>${escapeHtml(node?.title || item.id)}</strong> <span class="diff-kind-badge">${escapeHtml(node?.kind || 'node')}</span>
                     <ul class="diff-change-list">
-                      ${item.changes.map((c) => `<li>${c}</li>`).join('')}
+                      ${item.changes.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}
                     </ul>
                   </div>
                 </div>
@@ -403,9 +404,9 @@ function renderDiffContentHtml(snapshot: VersionSnapshot, diff: DocumentDiff | n
                 <div class="diff-row diff-row-${item.status}">
                   <span class="diff-row-tag diff-tag-${item.status}">${item.status.toUpperCase()}</span>
                   <div class="diff-row-body">
-                    <strong>Wire: ${edge?.from} ➔ ${edge?.to}</strong>
+                    <strong>Wire: ${escapeHtml(edge?.from)} ➔ ${escapeHtml(edge?.to)}</strong>
                     <ul class="diff-change-list">
-                      ${item.changes.map((c) => `<li>${c}</li>`).join('')}
+                      ${item.changes.map((c) => `<li>${escapeHtml(c)}</li>`).join('')}
                     </ul>
                   </div>
                 </div>

@@ -209,4 +209,34 @@ describe('version snapshots and architecture diff view (suggestion 19)', () => {
     assert.ok(html.includes('WAF Gateway'));
     assert.ok(html.includes('diff-row-added'));
   });
+  it('escapes snapshot names, titles and labels so hostile content cannot inject markup', () => {
+    const evil = '<img src=x onerror=alert(1)>';
+    const doc = createBlankDocument();
+    const snap = saveSnapshot(evil, doc);
+
+    const current = createBlankDocument();
+    const a = createNodeFromStencil('gate', 0, 0, 0);
+    a.id = 'a';
+    a.title = evil;
+    const b = createNodeFromStencil('gate', 200, 0, 1);
+    b.id = 'b';
+    current.nodes.push(a, b);
+    current.edges.push({
+      id: 'e1',
+      from: 'a',
+      to: 'b',
+      sourcePort: 'auto',
+      targetPort: 'auto',
+      tone: 'cyan',
+      route: 'auto',
+      label: evil,
+      animated: true,
+    } as DiagramEdge);
+
+    const diff = computeDocumentDiff(snap.doc, current);
+    const html = renderSnapshotsDialogHtml([snap], snap.id, diff);
+
+    assert.ok(!html.includes('<img'), 'raw <img> must not appear in rendered HTML');
+    assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  });
 });
