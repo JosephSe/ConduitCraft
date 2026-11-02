@@ -1108,7 +1108,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
   hudStatusTip.textContent = 'Rendering a short animation…';
   try {
     // Loaded on demand so the encoder stays out of the initial bundle.
-    const { GIF_MAX_EDGE, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } = await import(
+    const { GIF_MAX_EDGE, encodeGifAsync, gifFrameCount, gifFrameDashOffset, gifPixelSize } = await import(
       '../exporter/gif'
     );
     if (target.kind === 'scenario') {
@@ -1128,7 +1128,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         });
         frames.push(await rasterizeSvg(svg, size.width, size.height));
       }
-      const gif = encodeGif({
+      const gif = await encodeGifAsync({
         width: size.width,
         height: size.height,
         frames,
@@ -1171,7 +1171,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
       const svg = renderStagePictureSvg(size.width, size.height, options);
       frames.push(await rasterizeSvg(svg, size.width, size.height));
     }
-    const gif = encodeGif({
+    const gif = await encodeGifAsync({
       width: size.width,
       height: size.height,
       frames,

@@ -403,3 +403,36 @@ export function encodeGif(options: {
   out.push(0x3b);
   return Uint8Array.from(out);
 }
+
+/**
+ * Encode on a Web Worker so large exports (up to ~2 s of work) don't freeze the UI.
+ * Frame buffers are transferred, so callers must not reuse them afterwards.
+ * Falls back to the synchronous encoder where workers are unavailable.
+ */
+export function encodeGifAsync(options: Parameters<typeof encodeGif>[0]): Promise<Uint8Array> {
+  if (typeof Worker === 'undefined') {
+    return Promise.resolve().then(() => encodeGif(options));
+  }
+  return new Promise<Uint8Array>((resolve, reject) => {
+    let worker: Worker;
+    try {
+      worker = new Worker(new URL('./gifWorker.ts', import.meta.url), { type: 'module' });
+    } catch {
+      resolve(encodeGif(options));
+      return;
+    }
+    worker.onmessage = (event: MessageEvent<{ ok: boolean; bytes?: Uint8Array; message?: string }>) => {
+      worker.terminate();
+      if (event.data.ok && event.data.bytes) resolve(event.data.bytes);
+      else reject(new Error(event.data.message ?? 'GIF encoding failed.'));
+    };
+    worker.onerror = (event) => {
+      worker.terminate();
+      reject(new Error(event.message || 'GIF encoding failed.'));
+    };
+    worker.postMessage(
+      options,
+      options.frames.map((frame) => frame.buffer as ArrayBuffer),
+    );
+  });
+}
