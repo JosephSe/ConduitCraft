@@ -56,3 +56,14 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
       return ['edit-undo', 'edit-redo', MENU_SEPARATOR, 'edit-select-all', 'auto-layout', 'fit-view'];
   }
 }
+
+/** Drop leading, trailing and doubled separators left behind after unavailable items are filtered out. */
+export function tidySeparators(ids: string[]): string[] {
+  const out: string[] = [];
+  for (const id of ids) {
+    if (id === MENU_SEPARATOR && (out.length === 0 || out[out.length - 1] === MENU_SEPARATOR)) continue;
+    out.push(id);
+  }
+  if (out[out.length - 1] === MENU_SEPARATOR) out.pop();
+  return out;
+}
