@@ -1,10 +1,13 @@
 // ConduitCraft Offline Service Worker
-const CACHE_NAME = 'conduitcraft-v2';
+// The build id and precache list below are filled in at build time (see tools/swPrecache.ts).
+const CACHE_NAME = 'conduitcraft-v3-__BUILD_ID__';
+const BUILD_ASSETS = [/*__PRECACHE__*/];
 const PRECACHE_ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon.svg',
+  ...BUILD_ASSETS
 ];
 
 self.addEventListener('install', (event) => {

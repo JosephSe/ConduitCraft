@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import { buildId, injectPrecache, selectPrecacheAssets } from '../tools/swPrecache';
 
 // Minimal mock document and localStorage for node test runner
 const storageMap = new Map<string, string>();
@@ -383,5 +384,33 @@ describe('PWA install, manifest, service worker and file system access (suggesti
       !document.title.startsWith('• '),
       `document.title should not have dirty bullet when saved cleanly: "${document.title}"`,
     );
+  });
+});
+
+describe('service worker precache injection', () => {
+  const sw = fs.readFileSync(path.resolve('public/sw.js'), 'utf8');
+
+  it('selects only js/css build outputs with relative paths', () => {
+    assert.deepStrictEqual(
+      selectPrecacheAssets(['index.html', 'assets/b.css', 'assets/a.js', 'icon.svg']),
+      ['./assets/a.js', './assets/b.css'],
+    );
+  });
+
+  it('fills every placeholder in sw.js and leaves valid precache entries', () => {
+    const assets = ['./assets/a.js', './assets/b.css'];
+    const out = injectPrecache(sw, assets);
+    assert.ok(!out.includes('__BUILD_ID__'), 'no build id placeholder may remain');
+    assert.ok(!out.includes('__PRECACHE__'), 'no precache placeholder may remain');
+    assert.ok(out.includes('"./assets/a.js", "./assets/b.css"'));
+    assert.match(out, new RegExp(`conduitcraft-v3-${buildId(assets)}`));
+  });
+
+  it('changes the cache name when the asset set changes', () => {
+    assert.notStrictEqual(buildId(['./assets/a.js']), buildId(['./assets/a2.js']));
+  });
+
+  it('refuses a template that lost its placeholders', () => {
+    assert.throws(() => injectPrecache('const x = 1;', []));
   });
 });

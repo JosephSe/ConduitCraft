@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
+import { injectPrecache, selectPrecacheAssets } from './tools/swPrecache';
 
 function inlineColorSchemeBoot(): Plugin {
   const bootPath = path.resolve('src/shared/colorSchemeBoot.js');
@@ -14,9 +15,31 @@ function inlineColorSchemeBoot(): Plugin {
   };
 }
 
+function precacheServiceWorker(): Plugin {
+  let outDir = 'dist';
+  const emitted: string[] = [];
+  return {
+    name: 'precache-service-worker',
+    apply: 'build',
+    configResolved(config) {
+      outDir = path.resolve(config.root, config.build.outDir);
+    },
+    generateBundle(_options, bundle) {
+      emitted.length = 0;
+      emitted.push(...Object.keys(bundle));
+    },
+    writeBundle() {
+      const swPath = path.join(outDir, 'sw.js');
+      if (!fs.existsSync(swPath)) return;
+      const source = fs.readFileSync(swPath, 'utf8');
+      fs.writeFileSync(swPath, injectPrecache(source, selectPrecacheAssets(emitted)));
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
-  plugins: [inlineColorSchemeBoot()],
+  plugins: [inlineColorSchemeBoot(), precacheServiceWorker()],
   cacheDir: path.join(os.tmpdir(), 'blueprint-studio-vite-cache'),
   publicDir: 'public',
   build: {
