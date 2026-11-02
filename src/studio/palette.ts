@@ -780,6 +780,23 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => clickRadio('pointer-tool', 'connect'),
     },
     {
+      id: 'wire-from-selection',
+      title: 'Wire From Selection',
+      subtitle: 'Start a wire from the selected component, then click its target',
+      category: 'Canvas & Layout',
+      keywords: ['wire', 'connect', 'from', 'link', 'edge'],
+      run: () => {
+        const sel = app.selection;
+        if (sel.type !== 'node') {
+          notify('Select a component to start a wire from');
+          return;
+        }
+        const id = sel.id;
+        clickRadio('pointer-tool', 'connect');
+        app.connectSourceNodeId = id;
+      },
+    },
+    {
       id: 'toggle-motion',
       title: 'Pause / Resume Wire Animation',
       subtitle: 'Stop or restart the flowing wires',

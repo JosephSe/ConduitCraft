@@ -67,3 +67,29 @@ export function tidySeparators(ids: string[]): string[] {
   if (out[out.length - 1] === MENU_SEPARATOR) out.pop();
   return out;
 }
+
+/**
+ * The few actions worth a button next to the selection. Everything else is behind "More", which opens the full
+ * context menu. Palette ids, like the menu; filtered by availability before display.
+ */
+export function contextToolbarCommandIds(type: ContextSelectionType, hints: ContextMenuHints): string[] {
+  switch (type) {
+    case 'node':
+      return ['edit-rename', 'edit-duplicate', 'edit-lock', 'wire-from-selection'];
+    case 'edge':
+      return ['edit-rename', 'edit-delete'];
+    case 'zone':
+    case 'notes':
+      return ['edit-rename', 'edit-duplicate', 'edit-lock'];
+    case 'multi':
+      return [
+        'edit-group',
+        ...(hints.grouped ? ['edit-ungroup'] : []),
+        'edit-lock',
+        'edit-duplicate',
+        'auto-layout-selection',
+      ];
+    default:
+      return [];
+  }
+}
