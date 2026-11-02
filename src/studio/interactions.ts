@@ -189,17 +189,15 @@ import { TONE_CSS } from '../shared/tones';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
-import { renderShortcutsHtml } from './commands';
+import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
+import { initTooltips } from './tooltips';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
+import { applyZOrder } from './zOrderActions';
 import {
-  bringToFront,
-  sendToBack,
-  bringForward,
-  sendBackward,
   toggleSelectionLock,
   canGroupSelection,
   groupSelection,
@@ -426,6 +424,10 @@ export function beginPortWireDrag(
     sourcePort,
     startPt,
     hoveredPortBtn: null,
+    // Releasing capture fires `lostpointercapture`, whose handler tears the draft down without connecting.
+    cancel: () => {
+      if (captureEl.hasPointerCapture(e.pointerId)) captureEl.releasePointerCapture(e.pointerId);
+    },
   };
   workspace.dataset.wiring = 'true';
   draftWire.removeAttribute('hidden');
@@ -2154,6 +2156,7 @@ export function initEvents(): void {
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
   if (shortcutsDialog) allDialogs.push(shortcutsDialog);
   if (templateGalleryDialog) allDialogs.push(templateGalleryDialog);
+  if (snapshotsDialog) allDialogs.push(snapshotsDialog);
   const cmdPaletteDialog = document.getElementById('command-palette-dialog') as HTMLDialogElement | null;
   if (cmdPaletteDialog) allDialogs.push(cmdPaletteDialog);
   for (const dlg of allDialogs) {
@@ -2593,18 +2596,12 @@ export function initEvents(): void {
       }
       if (e.key === ']' && app.workspaceMode === 'design') {
         e.preventDefault();
-        pushHistory();
-        bringForward(app.doc, app.selection);
-        renderAll(true);
-        notify('Brought forward');
+        applyZOrder('forward');
         return;
       }
       if (e.key === '[' && app.workspaceMode === 'design') {
         e.preventDefault();
-        pushHistory();
-        sendBackward(app.doc, app.selection);
-        renderAll(true);
-        notify('Sent backward');
+        applyZOrder('backward');
         return;
       }
     }
@@ -2621,10 +2618,7 @@ export function initEvents(): void {
       if (e.key === ']' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         if (app.selection.type !== 'none') {
-          pushHistory();
-          bringToFront(app.doc, app.selection);
-          renderAll(true);
-          notify('Brought to front');
+          applyZOrder('front');
         } else {
           responsiveToolbar.toggleInspector();
         }
@@ -2633,10 +2627,7 @@ export function initEvents(): void {
       if (e.key === '[' && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         if (app.selection.type !== 'none') {
-          pushHistory();
-          sendToBack(app.doc, app.selection);
-          renderAll(true);
-          notify('Sent to back');
+          applyZOrder('back');
         } else {
           responsiveToolbar.togglePalette();
         }
@@ -2648,8 +2639,16 @@ export function initEvents(): void {
           deleteSelected();
         }
       } else if (e.key === 'Escape') {
-        app.connectSourceNodeId = null;
-        if (app.selection.type !== 'none') {
+        // Each press backs out one level: the wire being drawn, then a pending click-to-connect source,
+        // then Connect mode itself, and only then the selection.
+        if (app.activeWireDraft) {
+          app.activeWireDraft.cancel?.();
+        } else if (app.connectSourceNodeId) {
+          app.connectSourceNodeId = null;
+          hudStatusTip.textContent = 'Connection cancelled';
+        } else if (app.pointerTool === 'connect') {
+          document.querySelector<HTMLInputElement>('input[name="pointer-tool"][value="select"]')?.click();
+        } else if (app.selection.type !== 'none') {
           applySelection({ type: 'none' });
         }
       }
@@ -2658,6 +2657,8 @@ export function initEvents(): void {
 }
 
 export function bootStudio(): void {
+  localizeStaticShortcuts();
+  initTooltips();
   initStencilPalette();
   responsiveToolbar.init(undefined, {
     onAddStencil: (kind) => {

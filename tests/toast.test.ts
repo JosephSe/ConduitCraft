@@ -88,7 +88,7 @@ const mockDoc = {
 // @ts-expect-error Mocking global document for test
 globalThis.document = mockDoc;
 
-import { notify, dismissAllToasts } from '../src/studio/toast.ts';
+import { notify, dismissAllToasts, toastBottomOffset, TOAST_FALLBACK_BOTTOM_PX } from '../src/studio/toast.ts';
 
 describe('toast notifications and status feedback', () => {
   beforeEach(() => {
@@ -154,5 +154,23 @@ describe('toast notifications and status feedback', () => {
     // At most 4 non-dismissing toasts
     const active = container.children.filter((c) => !c.classList.contains('is-dismissing'));
     assert.ok(active.length <= 4);
+  });
+});
+
+describe('toast placement above the canvas HUD', () => {
+  it('sits a small gap above the top of the HUD', () => {
+    // HUD top at y=700 in a 900px viewport leaves 200px below it, plus the gap.
+    assert.equal(toastBottomOffset(900, 700), 208);
+  });
+
+  it('rises when the HUD grows taller', () => {
+    assert.ok(toastBottomOffset(900, 600) > toastBottomOffset(900, 700));
+  });
+
+  it('falls back to the default offset when the HUD cannot be measured', () => {
+    assert.equal(toastBottomOffset(900, null), TOAST_FALLBACK_BOTTOM_PX);
+    assert.equal(toastBottomOffset(900, Number.NaN), TOAST_FALLBACK_BOTTOM_PX);
+    assert.equal(toastBottomOffset(900, 0), TOAST_FALLBACK_BOTTOM_PX);
+    assert.equal(toastBottomOffset(900, 950), TOAST_FALLBACK_BOTTOM_PX);
   });
 });

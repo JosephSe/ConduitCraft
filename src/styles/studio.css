@@ -84,6 +84,11 @@
     color: var(--brand-accent, var(--wl-ink-muted));
   }
 
+  /* A document-chosen accent can't be guaranteed readable on both themes, so blend it toward the text colour. */
+  .brand-cluster[data-brand] .brand-name {
+    color: color-mix(in srgb, var(--brand-accent) 55%, var(--wl-ink));
+  }
+
   .brand-titles {
     min-inline-size: 0;
   }
@@ -375,19 +380,6 @@
     padding-inline: 0.25rem;
   }
 
-  .palette-rail-content [data-tip]::after {
-    top: 50%;
-    bottom: auto;
-    left: calc(100% + 8px);
-    right: auto;
-    transform: translateY(-50%) translateX(-2px);
-  }
-
-  .palette-rail-content [data-tip]:hover::after,
-  .palette-rail-content [data-tip]:focus-visible::after {
-    transform: translateY(-50%) translateX(0);
-  }
-
   .rail-divider {
     inline-size: 1.5rem;
     block-size: 1px;
@@ -437,19 +429,6 @@
     padding-inline: 0.25rem;
     cursor: pointer;
     block-size: 100%;
-  }
-
-  .inspector-rail-content [data-tip]::after {
-    top: 50%;
-    bottom: auto;
-    right: calc(100% + 8px);
-    left: auto;
-    transform: translateY(-50%) translateX(2px);
-  }
-
-  .inspector-rail-content [data-tip]:hover::after,
-  .inspector-rail-content [data-tip]:focus-visible::after {
-    transform: translateY(-50%) translateX(0);
   }
 
   .rail-vertical-label {
@@ -3821,7 +3800,8 @@
 /* Toast Notification Stack */
 .toast-container {
   position: fixed;
-  bottom: 4.75rem;
+  /* Kept just above the canvas HUD by trackHudClearance() in toast.ts; 4.75rem when it can't be measured. */
+  bottom: var(--toast-bottom, 4.75rem);
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
@@ -3870,7 +3850,7 @@
 
 .toast-action-btn {
   background: var(--wl-blue);
-  color: #fff;
+  color: var(--wl-on-blue);
   border: none;
   border-radius: 9999px;
   padding: 0.2rem 0.65rem;
@@ -3938,98 +3918,34 @@
   }
 }
 
-/* Tooltip styling via [data-tip] */
+/* Tooltips: one shared, viewport-clamped layer driven by src/studio/tooltips.ts */
 [data-tip] {
   position: relative;
 }
 
-[data-tip]:hover,
-[data-tip]:focus-visible {
-  z-index: 100;
-}
-
-[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 50%;
-  transform: translateX(-50%) translateY(-2px);
+.tooltip-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  inline-size: max-content;
+  max-inline-size: min(22rem, calc(100vw - 16px));
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--wl-border-ui);
+  border-radius: 6px;
   background: var(--wl-surface-elevated);
   color: var(--wl-ink);
-  border: 1px solid var(--wl-border-ui);
-  padding: 0.25rem 0.55rem;
-  border-radius: 6px;
+  box-shadow: var(--wl-shadow-card);
   font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.2;
-  white-space: nowrap;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-  box-shadow: var(--wl-shadow-card);
-  z-index: 10000;
+  transition: opacity 0.15s ease;
 }
 
-[data-tip]:hover::after,
-[data-tip]:focus-visible::after {
+.tooltip-layer[data-visible="true"] {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Explicit Top Position */
-[data-tip-pos="top"]::after {
-  top: auto;
-  bottom: calc(100% + 7px);
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%) translateY(2px);
-}
-
-[data-tip-pos="top"]:hover::after,
-[data-tip-pos="top"]:focus-visible::after {
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Explicit Bottom Position */
-[data-tip-pos="bottom"]::after {
-  top: calc(100% + 7px);
-  bottom: auto;
-  left: 50%;
-  right: auto;
-  transform: translateX(-50%) translateY(-2px);
-}
-
-[data-tip-pos="bottom"]:hover::after,
-[data-tip-pos="bottom"]:focus-visible::after {
-  transform: translateX(-50%) translateY(0);
-}
-
-/* Explicit Right Position */
-[data-tip-pos="right"]::after {
-  top: 50%;
-  bottom: auto;
-  left: calc(100% + 8px);
-  right: auto;
-  transform: translateY(-50%) translateX(-2px);
-}
-
-[data-tip-pos="right"]:hover::after,
-[data-tip-pos="right"]:focus-visible::after {
-  transform: translateY(-50%) translateX(0);
-}
-
-/* Explicit Left Position */
-[data-tip-pos="left"]::after {
-  top: 50%;
-  bottom: auto;
-  left: auto;
-  right: calc(100% + 8px);
-  transform: translateY(-50%) translateX(2px);
-}
-
-[data-tip-pos="left"]:hover::after,
-[data-tip-pos="left"]:focus-visible::after {
-  transform: translateY(-50%) translateX(0);
 }
 
 /* Shortcuts Dialog Styling */

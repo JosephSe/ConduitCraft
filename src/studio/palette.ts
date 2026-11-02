@@ -3,18 +3,15 @@ import { app, fitSelection, fitToViewport, performRedo, performUndo, pushHistory
 import { autoLayoutDocument, expandStageToFit } from '../core/layout';
 import { createNodeFromStencil, createSwimlaneZone, createNotesCard } from '../templates/presets';
 import { applySelection, renderAll, renderMatrixTable } from './render';
-import { isMac } from './commands';
+import { isMac, platformShortcut } from './commands';
 import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
 import { simulationPlayback } from './simulationPlayback';
+import { applyZOrder } from './zOrderActions';
 import {
-  bringToFront,
-  sendToBack,
-  bringForward,
-  sendBackward,
   toggleSelectionLock,
   canGroupSelection,
   groupSelection,
@@ -545,10 +542,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: ']',
       keywords: ['front', 'top', 'layer', 'z-index', 'order'],
       run: () => {
-        pushHistory();
-        bringToFront(app.doc, app.selection);
-        renderAll(true);
-        notify('Brought to front');
+        applyZOrder('front');
       },
     },
     {
@@ -559,10 +553,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: '[',
       keywords: ['back', 'bottom', 'layer', 'z-index', 'order'],
       run: () => {
-        pushHistory();
-        sendToBack(app.doc, app.selection);
-        renderAll(true);
-        notify('Sent to back');
+        applyZOrder('back');
       },
     },
     {
@@ -573,10 +564,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}]`,
       keywords: ['forward', 'up', 'layer', 'z-index'],
       run: () => {
-        pushHistory();
-        bringForward(app.doc, app.selection);
-        renderAll(true);
-        notify('Brought forward');
+        applyZOrder('forward');
       },
     },
     {
@@ -587,10 +575,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}[`,
       keywords: ['backward', 'down', 'layer', 'z-index'],
       run: () => {
-        pushHistory();
-        sendBackward(app.doc, app.selection);
-        renderAll(true);
-        notify('Sent backward');
+        applyZOrder('backward');
       },
     },
     {
@@ -627,7 +612,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Save Blueprint As…',
       subtitle: 'Save a new copy to disk with file picker',
       category: 'Export & Sync',
-      shortcut: `${mod}⇧S`,
+      shortcut: platformShortcut('⌘⇧S'),
       keywords: ['save as', 'disk', 'file', 'copy'],
       run: () => {
         if (deps.saveFileAs) deps.saveFileAs();

@@ -866,6 +866,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
 
     triggerEl.addEventListener('pointermove', (e) => {
       if (!triggerEl.hasPointerCapture(e.pointerId)) return;
+      // In Connect mode this element holds pointer capture for the wire being drawn. Its drag origin was
+      // never set, so without this guard the node would jump to the pointer and add a spurious undo step.
+      if (app.activeWireDraft) return;
       const current = liveNode(nodeId);
       if (!current) return;
       const dx = (e.clientX - startClientX) / app.scale;

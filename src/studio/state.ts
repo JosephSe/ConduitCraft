@@ -43,6 +43,8 @@ export interface ActiveWireDraft {
   sourcePort: PortSide;
   startPt: [number, number];
   hoveredPortBtn: HTMLElement | null;
+  /** Abort the wire being drawn without creating a connection (Escape). */
+  cancel?: () => void;
 }
 
 export const app = {
@@ -283,8 +285,8 @@ export function getSelectedEdgeIds(): string[] {
 // ---------------------------------------------------------------------------
 // Undo / Redo History
 // ---------------------------------------------------------------------------
-function commitHistorySnapshot(): void {
-  app.undoStack.push(structuredClone(app.doc));
+function commitHistorySnapshot(snapshot: DiagramDocument = structuredClone(app.doc)): void {
+  app.undoStack.push(snapshot);
   if (app.undoStack.length > MAX_HISTORY) app.undoStack.shift();
   app.redoStack.length = 0;
   syncHistoryButtons();
@@ -305,6 +307,20 @@ export function pushHistory(): void {
   historyGate = decision.gate;
   if (!decision.capture) return;
   commitHistorySnapshot();
+}
+
+/**
+ * Run a mutation and record an undo step only if it reports that it changed something, so a no-op
+ * (for example "bring to front" on the top layer) doesn't leave an empty step in the history.
+ */
+export function mutateWithHistory(mutate: () => boolean): boolean {
+  const before = structuredClone(app.doc);
+  const changed = mutate();
+  if (!changed) return false;
+  const decision = resolveHistoryPush(historyGate, { type: 'commit' });
+  historyGate = decision.gate;
+  if (decision.capture) commitHistorySnapshot(before);
+  return true;
 }
 
 /** Arrow-key nudges inside a short window share one undo step. */

@@ -15,6 +15,31 @@ export function getModifierKey(): string {
   return isMac() ? '⌘' : 'Ctrl';
 }
 
+const GLYPH_NAMES: Record<string, string> = { '⌘': 'Ctrl', '⇧': 'Shift', '⌥': 'Alt' };
+
+/**
+ * Rewrite Mac modifier glyphs for other platforms, e.g. "⌘⇧S" becomes "Ctrl+Shift+S".
+ * Text without modifier glyphs, and everything on a Mac, is returned unchanged.
+ */
+export function platformShortcut(text: string, mac: boolean = isMac()): string {
+  if (mac) return text;
+  return text.replace(/[⌘⇧⌥]+/g, (run) => Array.from(run, (glyph) => `${GLYPH_NAMES[glyph]}+`).join(''));
+}
+
+/** Localise the shortcut hints written into the static HTML (tooltips, menu hints, placeholders). */
+export function localizeStaticShortcuts(root: ParentNode = document, mac: boolean = isMac()): void {
+  if (mac) return;
+  for (const el of root.querySelectorAll<HTMLElement>('[data-tip], [placeholder], .menu-shortcut')) {
+    for (const attr of ['data-tip', 'placeholder']) {
+      const value = el.getAttribute(attr);
+      if (value && /[⌘⇧⌥]/.test(value)) el.setAttribute(attr, platformShortcut(value, mac));
+    }
+    if (el.classList.contains('menu-shortcut') && /[⌘⇧⌥]/.test(el.textContent ?? '')) {
+      el.textContent = platformShortcut(el.textContent ?? '', mac);
+    }
+  }
+}
+
 export const SHORTCUTS: ShortcutItem[] = [
   // Drafting & Selection
   { keys: ['⌘', 'Z'], description: 'Undo last action', category: 'Drafting & Selection' },
