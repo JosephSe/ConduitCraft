@@ -20,6 +20,42 @@ export interface ToastInstance {
 let nextToastId = 1;
 const activeToasts = new Map<number, { element: HTMLElement; timer: ReturnType<typeof setTimeout> | null }>();
 
+/** Distance from the viewport bottom used when the canvas HUD can't be measured (4.75rem). */
+export const TOAST_FALLBACK_BOTTOM_PX = 76;
+const TOAST_HUD_GAP_PX = 8;
+
+/**
+ * How far above the viewport bottom toasts should sit so they clear the canvas HUD.
+ * The HUD wraps onto more rows as it fills up, so a fixed offset eventually collides with it.
+ */
+export function toastBottomOffset(viewportHeight: number, hudTop: number | null): number {
+  if (hudTop === null || !Number.isFinite(hudTop) || hudTop <= 0 || hudTop > viewportHeight) {
+    return TOAST_FALLBACK_BOTTOM_PX;
+  }
+  return Math.round(viewportHeight - hudTop + TOAST_HUD_GAP_PX);
+}
+
+let hudTracked = false;
+
+/** Keep `--toast-bottom` in step with the HUD's top edge so toasts always sit just above it. */
+function trackHudClearance(container: HTMLElement): void {
+  if (hudTracked || typeof ResizeObserver === 'undefined') return;
+  const hud = document.querySelector<HTMLElement>('.canvas-hud');
+  if (!hud) return;
+  hudTracked = true;
+  const update = () => {
+    const rect = hud.getBoundingClientRect();
+    const measurable = rect.height > 0 && getComputedStyle(hud).display !== 'none';
+    container.style.setProperty(
+      '--toast-bottom',
+      `${toastBottomOffset(window.innerHeight, measurable ? rect.top : null)}px`,
+    );
+  };
+  new ResizeObserver(update).observe(hud);
+  window.addEventListener('resize', update);
+  update();
+}
+
 function getToastContainer(): HTMLElement | null {
   if (typeof document === 'undefined') return null;
   let container = document.getElementById('toast-container');
@@ -31,6 +67,7 @@ function getToastContainer(): HTMLElement | null {
     container.setAttribute('aria-atomic', 'true');
     document.body.appendChild(container);
   }
+  trackHudClearance(container);
   return container;
 }
 

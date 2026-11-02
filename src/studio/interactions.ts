@@ -190,6 +190,7 @@ import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
+import { initTooltips } from './tooltips';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -2657,6 +2658,7 @@ export function initEvents(): void {
 
 export function bootStudio(): void {
   localizeStaticShortcuts();
+  initTooltips();
   initStencilPalette();
   responsiveToolbar.init(undefined, {
     onAddStencil: (kind) => {

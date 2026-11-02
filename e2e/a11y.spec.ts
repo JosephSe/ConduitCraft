@@ -37,3 +37,12 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
     });
   });
 }
+
+test('a visible tooltip has no axe violations', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#btn-empty-showcase').click();
+  await expect(page.locator('.arch-node').first()).toBeVisible();
+  await page.locator('#btn-prop-delete').hover();
+  await expect(page.locator('#tooltip-layer')).toHaveAttribute('role', 'tooltip');
+  expect(await scan(page)).toEqual([]);
+});
