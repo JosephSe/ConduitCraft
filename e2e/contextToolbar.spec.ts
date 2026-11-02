@@ -6,10 +6,13 @@ async function open(page: Page, query = '?ui=2') {
   await page.goto(`/${query}`);
   await page.locator('#btn-empty-showcase').click();
   await expect(page.locator('.arch-node').first()).toBeVisible();
+  // The showcase opens with a component selected; its toolbar can cover the first node, so start clean.
+  await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
 }
 
 const toolbar = (page: Page) => page.locator('.context-toolbar');
-const firstNode = (page: Page) => page.locator('.arch-node').first();
+// A component that is fully on screen at the default zoom (the first one in the DOM sits half behind the rail).
+const firstNode = (page: Page) => page.locator('.arch-node[data-node-id="night-desk"]');
 
 test('classic layout never shows the contextual toolbar', async ({ page }) => {
   await open(page, '?ui=1');
