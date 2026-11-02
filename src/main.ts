@@ -7,6 +7,15 @@ import { announceSelectionChange } from './studio/a11y';
 import { initRovingFocus } from './studio/rovingFocus';
 import { initContextMenu } from './studio/contextMenu';
 import { initGroupOutlines } from './studio/groupOutlines';
+import { findPaletteCommand } from './studio/palette';
+import { resolveUiVersion } from './core/uiVersion';
+
+// Choose the interface generation before anything paints: `?ui=2` is the redesign, remembered per browser.
+try {
+  document.documentElement.dataset.ui = String(resolveUiVersion(window.location.search, window.localStorage));
+} catch {
+  document.documentElement.dataset.ui = String(resolveUiVersion(window.location.search, null));
+}
 
 setHistoryApplied(() => renderAll(true));
 onSelectionChange(() => {
@@ -21,4 +30,5 @@ bootStudio();
 initRovingFocus();
 initContextMenu();
 initGroupOutlines();
+document.getElementById('btn-share')?.addEventListener('click', () => findPaletteCommand('copy-share-link')?.run());
 bindMinimap();
