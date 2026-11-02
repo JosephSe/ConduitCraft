@@ -5648,3 +5648,33 @@ html[data-ui="2"] .topbar .panel-rail-toggles,
 html[data-ui="2"] .topbar #header-overflow-wrapper {
   display: none !important;
 }
+
+/* Tool rail (?ui=2): select / wire tools above the component icons */
+.rail-tool-only {
+  display: none;
+}
+html[data-ui="2"] .rail-tool-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 2.2rem;
+  block-size: 2.2rem;
+  border-radius: 0.45rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--wl-ink-secondary);
+  cursor: pointer;
+}
+html[data-ui="2"] .rail-divider.rail-tool-only {
+  display: block;
+}
+html[data-ui="2"] .rail-tool-btn:hover {
+  background: var(--wl-surface-elevated);
+  border-color: var(--wl-border-subtle);
+  color: var(--wl-ink);
+}
+html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
+  background: var(--wl-blue-soft);
+  border-color: var(--wl-blue);
+  color: var(--wl-ink);
+}

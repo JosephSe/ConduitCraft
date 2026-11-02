@@ -752,6 +752,18 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => clickById('btn-import-file'),
     },
     {
+      id: 'open-insert',
+      title: 'Insert Component…',
+      subtitle: 'Open the component list',
+      category: 'Components',
+      shortcut: 'C',
+      keywords: ['insert', 'add', 'component', 'stencil'],
+      run: () => {
+        responsiveToolbar.togglePalette(false);
+        document.querySelector<HTMLElement>('#stencil-grid button')?.focus();
+      },
+    },
+    {
       id: 'tool-select',
       title: 'Select Tool',
       subtitle: 'Click and drag to select and move',
