@@ -2,7 +2,8 @@
  * Right-click / Shift+F10 / Menu-key context menu for the canvas. Items come from the command palette, so every
  * entry is an action that already exists; this file only decides which ones to show and where.
  */
-import { MENU_SEPARATOR, contextMenuCommandIds, type ContextSelectionType } from '../core/contextMenuItems';
+import { buildActionContext, isActionAvailable } from '../core/actions';
+import { MENU_SEPARATOR, contextMenuCommandIds, tidySeparators } from '../core/contextMenuItems';
 import type { SelectionTarget } from '../types';
 import { announce } from './a11y';
 import { viewport } from './dom';
@@ -54,23 +55,14 @@ function isInSelection(target: SelectionTarget): boolean {
   return false;
 }
 
-function selectionIsGrouped(): boolean {
-  const sel = app.selection;
-  const nodeIds = sel.type === 'node' ? [sel.id] : sel.type === 'multi' ? sel.ids : [];
-  const noteIds = sel.type === 'notes' ? [sel.id] : sel.type === 'multi' ? (sel.notesIds ?? []) : [];
-  return (
-    nodeIds.some((id) => app.doc.nodes.find((n) => n.id === id)?.groupId) ||
-    noteIds.some((id) => app.doc.notesCards.find((c) => c.id === id)?.groupId)
-  );
-}
-
 export function openContextMenu(x: number, y: number): void {
   closeContextMenu(false);
-  const type = (app.selection.type === 'multi' && app.selection.ids.length + (app.selection.edgeIds?.length ?? 0) +
-    (app.selection.zoneIds?.length ?? 0) + (app.selection.notesIds?.length ?? 0) === 0
-    ? 'none'
-    : app.selection.type) as ContextSelectionType;
-  const ids = contextMenuCommandIds(type, { grouped: selectionIsGrouped() });
+  const ctx = buildActionContext(app.selection, app.doc, app.workspaceMode);
+  const ids = tidySeparators(
+    contextMenuCommandIds(ctx.selection, { grouped: ctx.grouped }).filter(
+      (id) => id === MENU_SEPARATOR || isActionAvailable(id, ctx),
+    ),
+  );
 
   const menu = document.createElement('div');
   menu.className = 'context-menu';

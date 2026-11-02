@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { MENU_SEPARATOR, contextMenuCommandIds, type ContextSelectionType } from '../src/core/contextMenuItems.ts';
+import { MENU_SEPARATOR, contextMenuCommandIds, tidySeparators, type ContextSelectionType } from '../src/core/contextMenuItems.ts';
 
 const TYPES: ContextSelectionType[] = ['none', 'node', 'edge', 'zone', 'notes', 'multi'];
 
@@ -39,5 +39,10 @@ describe('context menu items', () => {
         assert.ok(source.includes(`id: '${id}'`), `${type}: ${id}`);
       }
     }
+  });
+
+  it('tidies separators after filtering', () => {
+    assert.deepEqual(tidySeparators(['-', 'a', '-', '-', 'b', '-']), ['a', '-', 'b']);
+    assert.deepEqual(tidySeparators(['-']), []);
   });
 });
