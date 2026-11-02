@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import { clearSelection } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const editor = (page: Page) => page.locator('.inline-edit-input');
@@ -200,6 +201,8 @@ test('a swimlane can be renamed by double-clicking its title', async ({ page }) 
 
 test('a note can be renamed by double-clicking its title', async ({ page }) => {
   await loadShowcase(page);
+  // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
+  await clearSelection(page);
   const title = page.locator('.blueprint-spec .notes-title').nth(await uncovered(page, '.blueprint-spec .notes-title'));
   await title.dblclick();
   await expect(editor(page)).toHaveAttribute('aria-label', 'Note title');
@@ -210,13 +213,15 @@ test('a note can be renamed by double-clicking its title', async ({ page }) => {
 
 test('a wire label can be set and cleared by double-clicking the wire', async ({ page }) => {
   await loadShowcase(page);
-  // Find a wire whose midpoint is not covered by a node, so a real double-click lands on it.
+  // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
+  await clearSelection(page);
+  // Find a wire with a clear spot a third of the way along (the middle of a selected wire holds its bend handle).
   const target = await page.evaluate(() => {
     for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
       const path = group.querySelector<SVGPathElement>('.conduit-hit');
       const ctm = path?.getScreenCTM();
       if (!path || !ctm) continue;
-      const mid = path.getPointAtLength(path.getTotalLength() / 2);
+      const mid = path.getPointAtLength(path.getTotalLength() * 0.3);
       const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
       if (pt.x < 0 || pt.y < 0 || pt.x > innerWidth || pt.y > innerHeight) continue;
       if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {

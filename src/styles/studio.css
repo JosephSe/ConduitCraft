@@ -5624,7 +5624,7 @@ body[data-presenting="true"] .canvas-hud .minimap-panel {
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Redesigned top bar (?ui=2): logo + title, mode switch, search, save status, Share. Everything else that used to
+   Redesigned top bar (?ui=2): logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
    Hidden with display:none, not removed, so existing wiring keeps working and the palette can still click them.
    --------------------------------------------------------------------------------------------- */
@@ -5635,7 +5635,6 @@ html[data-ui="2"] .btn-share-v2 {
   display: inline-flex;
 }
 html[data-ui="2"] .topbar .eyebrow-row,
-html[data-ui="2"] .topbar .doc-history-controls,
 html[data-ui="2"] .topbar #design-toolbar,
 html[data-ui="2"] .topbar #data-toolbar,
 html[data-ui="2"] .topbar #sim-buttons-slot,

@@ -5,14 +5,16 @@ async function loadShowcase(page: Page) {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await page.locator('#btn-empty-showcase').click();
-  await expect(page.locator('.arch-node').first()).toBeVisible();
+  await expect(page.locator('.arch-node[data-node-id="night-desk"]')).toBeVisible();
+  // The showcase opens with a component selected; start from a clean canvas.
+  await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
 }
 
 const menu = (page: Page) => page.locator('.context-menu');
 
 test('right-click on a component selects it and opens a menu; Escape closes it and restores focus', async ({ page }) => {
   await loadShowcase(page);
-  const node = page.locator('.arch-node').first();
+  const node = page.locator('.arch-node[data-node-id="night-desk"]');
   await node.locator('.node-select-hit').click({ button: 'right' });
   await expect(menu(page)).toBeVisible();
   await expect(menu(page).getByRole('menuitem', { name: /Rename Selection/ })).toBeVisible();
@@ -37,7 +39,7 @@ test('Shift+F10 opens the menu for the focused component and arrows move through
 
 test('a menu action runs: Rename opens the inline editor', async ({ page }) => {
   await loadShowcase(page);
-  await page.locator('.arch-node').first().locator('.node-select-hit').click({ button: 'right' });
+  await page.locator('.arch-node[data-node-id="night-desk"]').locator('.node-select-hit').click({ button: 'right' });
   await menu(page).getByRole('menuitem', { name: /Rename Selection/ }).click();
   await expect(menu(page)).toHaveCount(0);
   await expect(page.locator('input.inline-edit-input').first()).toBeVisible();
@@ -51,7 +53,7 @@ test('right-click on empty canvas offers canvas actions', async ({ page }) => {
 
 test('the open menu has no accessibility violations', async ({ page }) => {
   await loadShowcase(page);
-  await page.locator('.arch-node').first().locator('.node-select-hit').click({ button: 'right' });
+  await page.locator('.arch-node[data-node-id="night-desk"]').locator('.node-select-hit').click({ button: 'right' });
   await expect(menu(page)).toBeVisible();
   const results = await new AxeBuilder({ page }).include('.context-menu').analyze();
   expect(results.violations).toEqual([]);

@@ -21,7 +21,8 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 });
 
-test('a tooltip on a left-edge stencil card is not clipped (regression)', async ({ page }) => {
+test('a tooltip on a left-edge stencil card is not clipped (regression)', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'chromium-ui2', 'the redesign starts with the component list folded into the rail');
   // The first column of stencils sits against the left edge; its centred "top" tooltip used to start off-screen.
   const card = page.locator('.stencil-card[data-tip^="Control Gate"]');
   await card.hover();

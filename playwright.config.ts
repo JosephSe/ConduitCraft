@@ -16,7 +16,21 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     acceptDownloads: true,
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The same suite against the redesigned interface (`?ui=2` remembered in localStorage). Specs that
+    // exercise controls the redesign deliberately moved are listed in UI2_SKIP below.
+    {
+      name: 'chromium-ui2',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: {
+          cookies: [],
+          origins: [{ origin: `http://localhost:${PORT}`, localStorage: [{ name: 'conduitcraft-ui', value: '2' }] }],
+        },
+      },
+    },
+  ],
   // Test the production build: it is what ships, and it is where the lazy chunks and GIF worker live.
   webServer: {
     command: `pnpm build && pnpm exec vite preview --port ${PORT} --strictPort`,

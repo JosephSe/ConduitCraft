@@ -473,6 +473,9 @@ export function trackViewportResize(): void {
     if (prev.width === 0 || prev.height === 0) return;
     if (next.width === prev.width && next.height === prev.height) return;
     const pan = panForViewportResize({ panX: app.panX, panY: app.panY }, prev, next);
+    // Redesigned interface: the inspector opens and closes by itself with the selection. Keep the diagram where it
+    // is (the panel simply covers the right edge) rather than sliding it sideways under the user's pointer.
+    if (document.documentElement.dataset.ui === '2' && next.height === prev.height) pan.panX = app.panX;
     app.panX = pan.panX;
     app.panY = pan.panY;
     applyTransform();

@@ -1,3 +1,4 @@
+import { clearSelection } from './helpers';
 import { expect, test } from '@playwright/test';
 
 test('a component form leads with Name, Description and Kind; the rest is under More details', async ({ page }) => {
@@ -24,6 +25,8 @@ test('a wire is called a wire in its inspector', async ({ page }) => {
   await page.goto('/');
   await page.locator('#btn-empty-showcase').click();
   await expect(page.locator('.conduit-group').first()).toBeAttached();
+  // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
+  await clearSelection(page);
   await page.locator('.conduit-hit').first().click({ force: true });
   await expect(page.locator('#prop-panel-heading')).toHaveText('WIRE PROPERTIES');
 });

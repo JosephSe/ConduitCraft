@@ -18,7 +18,8 @@ const visibleControls = (page: Page) =>
       .map((el) => el.id || el.getAttribute('name') || el.tagName);
   });
 
-test('the classic top bar is still the default', async ({ page }) => {
+test('the classic top bar is still the default', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name === 'chromium-ui2', 'this project opts in to the redesign');
   await open(page, '');
   await expect(page.locator('html')).toHaveAttribute('data-ui', '1');
   await expect(page.locator('#btn-open-export')).toBeVisible();

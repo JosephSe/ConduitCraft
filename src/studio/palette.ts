@@ -214,7 +214,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Auto-Layout Architecture',
       subtitle: 'Cleanly order components with crossing minimization',
       category: 'Canvas & Layout',
-      keywords: ['arrange', 'layout', 'tidy', 'format', 'organize'],
+      keywords: ['arrange', 'layout', 'tidy', 'format', 'organise', 'organize'],
       run: () => {
         if (app.doc.nodes.length === 0) return;
         pushHistory();
@@ -313,13 +313,13 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Frame entire diagram with comfortable padding',
       category: 'Canvas & Layout',
       shortcut: 'Fit',
-      keywords: ['fit', 'zoom', 'frame', 'center'],
+      keywords: ['fit', 'zoom', 'frame', 'centre', 'center'],
       run: fitToViewport,
     },
     {
       id: 'fit-selection',
       title: 'Fit Selection to Viewport',
-      subtitle: 'Center and zoom selected components',
+      subtitle: 'Centre and zoom selected components',
       category: 'Canvas & Layout',
       keywords: ['fit', 'selection', 'focus'],
       run: fitSelection,
