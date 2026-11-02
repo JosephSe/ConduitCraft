@@ -180,8 +180,6 @@ import {
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../core/parser';
-import { GIF_MAX_EDGE, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } from '../exporter/gif';
-import { generateStandaloneHtml } from '../exporter/standaloneHtml';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
@@ -1109,6 +1107,10 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
   const doc = app.doc;
   hudStatusTip.textContent = 'Rendering a short animation…';
   try {
+    // Loaded on demand so the encoder stays out of the initial bundle.
+    const { GIF_MAX_EDGE, encodeGif, gifFrameCount, gifFrameDashOffset, gifPixelSize } = await import(
+      '../exporter/gif'
+    );
     if (target.kind === 'scenario') {
       const scenario = getEffectiveSimulations(doc).find((item) => item.id === target.id);
       if (!scenario || scenario.steps.length === 0) {
@@ -1908,9 +1910,10 @@ export function initEvents(): void {
     exportDialog.showModal();
   };
   btnOpenExport.addEventListener('click', openExportDialog);
-  btnExportHtml.addEventListener('click', () => {
+  btnExportHtml.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
+    const { generateStandaloneHtml } = await import('../exporter/standaloneHtml');
     const html = generateStandaloneHtml(app.doc, {
       initialSelection: app.selection.type === 'multi' ? app.selection : undefined,
     });
