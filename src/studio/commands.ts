@@ -47,6 +47,7 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['⌘', 'C'], description: 'Copy selected components', category: 'Drafting & Selection' },
   { keys: ['⌘', 'V'], description: 'Paste components from clipboard', category: 'Drafting & Selection' },
   { keys: ['⌘', 'D'], description: 'Duplicate selection', category: 'Drafting & Selection' },
+  { keys: ['F2'], description: 'Rename the selected component, swimlane, note or wire', category: 'Drafting & Selection' },
   { keys: ['⌘', 'G'], description: 'Group selected components', category: 'Drafting & Selection' },
   { keys: ['⌘', '⇧', 'G'], description: 'Ungroup components', category: 'Drafting & Selection' },
   { keys: ['⌘', 'L'], description: 'Lock or unlock selected components', category: 'Drafting & Selection' },

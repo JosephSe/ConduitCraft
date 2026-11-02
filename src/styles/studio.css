@@ -3951,6 +3951,25 @@
   opacity: 1;
 }
 
+/* Inline rename field, laid over the element being renamed (src/studio/inlineEdit.ts) */
+.inline-edit-input {
+  position: fixed;
+  z-index: 10001;
+  box-sizing: border-box;
+  padding: 0 0.6rem;
+  border: 2px solid var(--wl-blue);
+  border-radius: 6px;
+  background: var(--wl-surface-elevated);
+  color: var(--wl-ink);
+  box-shadow: var(--wl-shadow-card);
+  text-align: center;
+  outline: none;
+}
+
+.inline-edit-input::placeholder {
+  color: var(--wl-ink-muted);
+}
+
 /* Shortcuts Dialog Styling */
 .shortcuts-grid {
   display: grid;

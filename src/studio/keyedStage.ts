@@ -36,6 +36,7 @@ import {
 import { renderPropertyEditor } from './inspector';
 import { applySelection, requestInspectorRefresh } from './render';
 import { beginPortWireDrag, createEdgeConnection, deleteSelected } from './interactions';
+import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
 import {
@@ -142,6 +143,11 @@ function createZoneBanner(zone: DiagramZone): HTMLElement {
     if (e.shiftKey || e.metaKey || e.ctrlKey || app.selectionUnselectMode) {
       e.stopPropagation();
     }
+  });
+  banner.addEventListener('dblclick', (e) => {
+    if (app.workspaceMode !== 'design' || e.target === resizeHandle) return;
+    e.stopPropagation();
+    renameZoneInline(banner.dataset.zoneId || '');
   });
   banner.addEventListener('pointermove', (e) => {
     if (!banner.hasPointerCapture(e.pointerId)) return;
@@ -365,6 +371,11 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     endNotesDrag();
   });
   header.addEventListener('lostpointercapture', endNotesDrag);
+  header.addEventListener('dblclick', (e) => {
+    if (app.workspaceMode !== 'design') return;
+    e.stopPropagation();
+    renameNotesInline(aside.dataset.notesId || '');
+  });
 
   return aside;
 }
@@ -453,6 +464,14 @@ function createWireGroup(edgeId: string): SVGGElement {
       applySelection({ type: 'node', id: g.dataset.to || '' }, { refreshIfUnchanged: true });
     }
   };
+
+  // Double-click a wire to edit its label where you clicked. (The waypoint handle's own double-click, which
+  // resets the bend, stops propagation, so it never reaches here.)
+  g.addEventListener('dblclick', (e) => {
+    if (app.workspaceMode !== 'design') return;
+    e.stopPropagation();
+    renameWireInline(g.dataset.edgeId || '', { x: e.clientX, y: e.clientY });
+  });
 
   g.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -983,6 +1002,13 @@ function createNodeElement(node: DiagramNode): HTMLElement {
 
   attachNodeMove(selectBtn, false);
   attachNodeMove(dragHandle, true);
+  selectBtn.addEventListener('dblclick', (e) => {
+    if (app.workspaceMode !== 'design' || app.pointerTool !== 'select') return;
+    if (e.shiftKey || e.metaKey || e.ctrlKey) return;
+    e.preventDefault();
+    e.stopPropagation();
+    renameNodeInline(nodeId);
+  });
 
   selectBtn.addEventListener('click', (e) => {
     e.stopPropagation();

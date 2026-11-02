@@ -11,6 +11,7 @@ import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
 import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
+import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
 import { saveSnapshot } from './snapshots';
 
@@ -472,6 +473,17 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}D`,
       keywords: ['duplicate', 'copy', 'clone'],
       run: deps.duplicateSelected,
+    },
+    {
+      id: 'edit-rename',
+      title: 'Rename Selection',
+      subtitle: 'Edit the name of the selected component, swimlane, note or wire label',
+      category: 'Edit & History',
+      shortcut: 'F2',
+      keywords: ['rename', 'title', 'label', 'name', 'edit'],
+      run: () => {
+        if (!renameSelectionInline()) notify('Select a component, swimlane, note or wire to rename');
+      },
     },
     {
       id: 'edit-delete',

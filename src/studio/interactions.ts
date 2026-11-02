@@ -191,6 +191,7 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
+import { renameSelectionInline } from './inlineRename';
 import { initCommandPalette } from './palette';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -2593,6 +2594,11 @@ export function initEvents(): void {
         } else {
           responsiveToolbar.togglePalette();
         }
+        return;
+      }
+      if (e.key === 'F2') {
+        e.preventDefault();
+        if (!renameSelectionInline()) notify('Select a component, swimlane, note or wire to rename');
         return;
       }
       if (e.key === 'Delete' || e.key === 'Backspace') {
