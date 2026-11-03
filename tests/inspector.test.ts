@@ -9,7 +9,11 @@ class MockElement {
   textContent = '';
   open = false;
   dataset: Record<string, string> = {};
-  style: Record<string, string> = {};
+  style: Record<string, any> = {
+    setProperty: (name: string, value: string) => {
+      this.style[name] = value;
+    },
+  };
   type = '';
   value = '';
   checked = false;

@@ -49,11 +49,22 @@ export const REFERENCE_LATENCY_MS = 50;
  * The slowest wire sets the pace. A wire at the reference latency keeps the base delay, slower wires stretch it and
  * faster ones shorten it, within half and three times the base so a 5 s call cannot stall playback.
  */
-export function hopDelayMs(baseMs: number, latenciesMs: readonly number[]): number {
+export function latencyScale(latenciesMs: readonly number[]): number {
   const slowest = Math.max(...latenciesMs.filter((ms) => Number.isFinite(ms) && ms >= 0), -1);
-  if (slowest < 0) return baseMs;
-  const factor = Math.min(3, Math.max(0.5, 1 + (slowest - REFERENCE_LATENCY_MS) / 200));
-  return Math.round(baseMs * factor);
+  if (slowest < 0) return 1;
+  return Math.min(3, Math.max(0.5, 1 + (slowest - REFERENCE_LATENCY_MS) / 200));
+}
+
+export function hopDelayMs(baseMs: number, latenciesMs: readonly number[]): number {
+  return Math.round(baseMs * latencyScale(latenciesMs));
+}
+
+/**
+ * How much slower (above 1) or faster (below 1) a wire's flowing dashes move than the standard pace, from its
+ * latency. Unset latency is 1. Uses the same curve as `hopDelayMs`, so the dashes and the playback agree.
+ */
+export function flowScale(latencyMs: number | undefined): number {
+  return latencyMs === undefined ? 1 : latencyScale([latencyMs]);
 }
 
 /** Latencies of the wires that run from any component in one step to any in the next. */

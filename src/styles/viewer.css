@@ -176,16 +176,16 @@
   .conduit-glow { fill: none; stroke-width: 8; stroke-linecap: round; opacity: 0.14; filter: blur(4px); }
   .conduit-stream {
     fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 8 10;
-    animation: pulse-dash 1.35s linear infinite;
+    animation: pulse-dash calc(1.35s * var(--flow-scale, 1)) linear infinite;
     @media (prefers-reduced-motion: reduce) { animation: none; stroke-dasharray: none; }
   }
   .conduit-stream-reverse {
     fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 6 16;
     pointer-events: none; display: none;
-    animation: pulse-dash-both-rev 1.5s linear infinite;
+    animation: pulse-dash-both-rev calc(1.5s * var(--flow-scale, 1)) linear infinite;
     @media (prefers-reduced-motion: reduce) { animation: none; stroke-dasharray: none; }
   }
-  .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 6 16; animation: pulse-dash-both-fwd 1.5s linear infinite; }
+  .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 6 16; animation: pulse-dash-both-fwd calc(1.5s * var(--flow-scale, 1)) linear infinite; }
   .conduit-group[data-flow="both"] .conduit-stream-reverse { display: inline; }
   .conduit-group[data-flow="both"] .port-dot { display: none; }
   .conduit-group[data-animated="false"] .conduit-stream,
