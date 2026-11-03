@@ -117,7 +117,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 
 **Goal:** a first-time visitor watches a request travel, sees a failure ripple out, and can read the diagram without sight. It ends with the `v2.0.0` tag.
 
-#### [x] A1. Fix the failing camera resize test · S (PR pending)
+#### [x] A1. Fix the failing camera resize test · S (#30)
 - **Why:** an e2e test that always fails trains people to ignore red builds.
 - **Do:** find out why `e2e/camera.spec.ts:75` fails on a clean `main`, using the systematic-debugging approach (reproduce, isolate, fix the cause). Fix the app if the camera really does drift on resize. Fix the test only if its assumptions are wrong, and say which it was in the PR. Don't skip the test or add retries.
 - **Files:** `src/studio/camera.ts`, `src/studio/viewportFrame.ts`, `e2e/camera.spec.ts`.
