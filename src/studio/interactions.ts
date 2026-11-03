@@ -1455,7 +1455,7 @@ export function initEvents(): void {
         hudStatusTip.textContent =
           app.workspaceMode === 'design'
             ? 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire'
-            : 'Data View · Shift-click to select several components. Connected components stay highlighted.';
+            : 'Traffic · Select a component and press X (or right-click) to fail it · Alt-hover previews the blast radius';
 
         if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
           const live = new Set(app.doc.nodes.map((node) => node.id));

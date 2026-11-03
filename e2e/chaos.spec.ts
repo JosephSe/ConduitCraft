@@ -70,3 +70,17 @@ test('the inspector sets replicas, so a failure degrades instead of failing', as
   await expect(page.locator('.arch-node[data-chaos="degraded"]')).toHaveCount(1);
   await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(0);
 });
+
+test('right-click on a component in Traffic offers Fail this component', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/?ui=2');
+  await page.locator('#btn-empty-showcase').click();
+  await page.keyboard.press('2');
+  await page.locator('.arch-node').nth(2).click({ button: 'right' });
+  const item = page.getByRole('menuitem', { name: /Fail this component/ });
+  await expect(item).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: /Delete/ })).toHaveCount(0);
+  await item.click();
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(1);
+  await expect(page.locator('#chaos-summary')).toBeVisible();
+});
