@@ -5733,7 +5733,56 @@ html[data-ui="2"] .inspector-pin-btn {
 html[data-ui="2"] .mode-switcher .lens-key {
   display: inline;
   margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
   font: inherit;
   font-size: 0.72em;
   opacity: 0.55;
+}
+
+/* Run bar: scenario picker and transport for the Traffic lens (redesigned interface only). */
+.run-bar {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: 7.25rem;
+  transform: translateX(-50%);
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  inline-size: min(40rem, calc(100% - 1.75rem));
+  padding: 0.4rem 0.6rem;
+  background: var(--wl-surface);
+  border: 1px solid var(--wl-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.14);
+}
+.run-bar[hidden] {
+  display: none;
+}
+.run-bar-scenario {
+  min-inline-size: 0;
+  max-inline-size: 11rem;
+  flex: 0 1 11rem;
+}
+.run-bar-scrubber {
+  flex: 1 1 5rem;
+  min-inline-size: 3rem;
+}
+.run-bar-step {
+  flex: 0 0 auto;
+  font-family: var(--wl-font-mono);
+  font-size: 0.72rem;
+  color: var(--wl-ink-muted);
+  white-space: nowrap;
+}
+.run-bar [aria-pressed="true"] {
+  color: var(--wl-blue);
+}
+/* The run bar replaces the playback deck inside the Live Trace tab. */
+html[data-ui="2"] #sim-playback-deck {
+  display: none !important;
 }

@@ -202,6 +202,7 @@ import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
+import { initRunBar, refreshRunBar } from './runBar';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
 import { canGroupSelection } from './zOrderLockGroup';
 import { responsiveToolbar } from './responsiveToolbar';
@@ -647,6 +648,7 @@ export function createEdgeConnection(
 }
 
 export function renderSimButtons(): void {
+  refreshRunBar();
   const scenarios = getEffectiveSimulations(app.doc);
   const existing = new Map<string, HTMLButtonElement>();
   for (const child of Array.from(simButtonsSlot.children)) {
@@ -2247,6 +2249,7 @@ export function initEvents(): void {
 
   // Simulation Playback Deck & Trace Scrubbing
   initSimulationPlaybackUi();
+  initRunBar({ run: runSimulation });
 
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
