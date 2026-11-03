@@ -1,0 +1,45 @@
+/* Keyboard shortcuts dialog. Loaded when it first opens (src/studio/interactions.ts). */
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.shortcuts-category {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.shortcuts-category-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--wl-ink-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--wl-border-subtle);
+  padding-bottom: 0.35rem;
+  margin: 0;
+}
+
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.shortcut-desc {
+  color: var(--wl-ink-secondary);
+  font-size: 0.8rem;
+}
+
+.shortcut-keys {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--wl-ink-muted);
+  flex-shrink: 0;
+}
