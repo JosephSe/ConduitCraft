@@ -216,7 +216,7 @@ describe('Mermaid subgraphs as levels (D6)', () => {
     assert.deepStrictEqual(explicit.doc.zones, plain.doc.zones);
     assert.ok(plain.doc.zones.length > 0);
     assert.ok(plain.doc.nodes.every((n) => !n.child));
-    assert.strictEqual(serializeToMermaid(plain.doc), serializeToMermaid(explicit.doc, { levels: false }));
+    assert.strictEqual(serializeToMermaid(plain.doc), serializeToMermaid(explicit.doc));
   });
 
   it('matches the swimlane output recorded before levels existed (snapshot)', () => {
@@ -279,16 +279,16 @@ describe('Mermaid subgraphs as levels (D6)', () => {
     );
   });
 
-  it('round-trips Mermaid to levels to Mermaid without losing a node or wire', () => {
-    const first = importMermaidOrBlueprint(nested, { subgraphs: 'levels' }).doc;
-    const text = serializeToMermaid(first, { levels: true });
-    assert.match(text, /subgraph checkout \["Checkout API"\]/);
-    assert.match(text, /subgraph payments \["Payments"\]/);
-    const second = importMermaidOrBlueprint(text, { subgraphs: 'levels' }).doc;
-    assert.strictEqual(countNodes(second.nodes), countNodes(first.nodes));
-    assert.strictEqual(countEdges(second), countEdges(first));
-    assert.strictEqual(countNodes(first.nodes), 7);
-    assert.strictEqual(serializeToMermaid(second, { levels: true }), text);
+  it('keeps every node and wire of the source when importing as levels', () => {
+    const flat = importMermaidOrBlueprint(nested).doc;
+    const levels = importMermaidOrBlueprint(nested, { subgraphs: 'levels' }).doc;
+    const ids = (nodes: { id: string; child?: { nodes: never[] } }[]): string[] =>
+      nodes.flatMap((n) => [n.id, ...(n.child ? ids(n.child.nodes) : [])]);
+    const found = new Set(ids(levels.nodes as never));
+    for (const n of flat.nodes) assert.ok(found.has(n.id), `missing ${n.id}`);
+    // Five components plus one component for each of the two subgraphs.
+    assert.strictEqual(countNodes(levels.nodes), 7);
+    assert.strictEqual(countEdges(levels), flat.edges.length);
   });
 
   it('lets a bare reference to a subgraph id mean the subgraph component', () => {

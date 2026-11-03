@@ -1608,72 +1608,26 @@ function formatMermaidNodeShape(node: DiagramNode, safeId: string): string {
   }
 }
 
-export interface MermaidExportOptions {
-  /** Write each component that opens into a level as a `subgraph` holding that level (D6). */
-  levels?: boolean;
-}
-
-export function serializeToMermaid(doc: DiagramDocument, options: MermaidExportOptions = {}): string {
+export function serializeToMermaid(doc: DiagramDocument): string {
   const lines: string[] = [`flowchart ${doc.direction}`];
+  const idMap = new Map<string, string>();
   const usedIds = new Set<string>();
-  const edgeLines: string[] = [];
 
-  const assignIds = (nodes: DiagramNode[]): Map<string, string> => {
-    const idMap = new Map<string, string>();
-    for (const n of nodes) {
-      const base = sanitizeMermaidId(n.id);
-      let candidate = base;
-      let suffix = 2;
-      while (usedIds.has(candidate)) {
-        candidate = `${base}_${suffix++}`;
-      }
-      usedIds.add(candidate);
-      idMap.set(n.id, candidate);
+  for (const n of doc.nodes) {
+    let base = sanitizeMermaidId(n.id);
+    let candidate = base;
+    let suffix = 2;
+    while (usedIds.has(candidate)) {
+      candidate = `${base}_${suffix++}`;
     }
-    return idMap;
-  };
-
-  const rootIds = assignIds(doc.nodes);
+    usedIds.add(candidate);
+    idMap.set(n.id, candidate);
+  }
 
   if (doc.nodes.length === 0) {
     lines.push('  %% Canvas is currently empty. Add components in Design Mode or write Mermaid nodes below.');
     return lines.join('\n');
   }
-
-  const collectEdges = (edges: DiagramEdge[], idMap: Map<string, string>) => {
-    for (const e of edges) {
-      const src = idMap.get(e.from);
-      const dst = idMap.get(e.to);
-      if (!src || !dst) continue;
-
-      const labelPart = e.label.trim() ? `|${escapeMermaidText(e.label)}|` : '';
-      let arrow = '-->';
-      if (e.flow === 'both') {
-        if (e.tone === 'emerald') arrow = '===';
-        else if (e.tone === 'rose') arrow = '-.-';
-        else arrow = '---';
-      } else {
-        if (e.tone === 'emerald') arrow = '==>';
-        else if (e.tone === 'rose') arrow = '-.->';
-      }
-
-      edgeLines.push(`  ${src} ${arrow}${labelPart} ${dst}`);
-    }
-  };
-
-  const writeNode = (n: DiagramNode, idMap: Map<string, string>, indent: string) => {
-    const id = idMap.get(n.id)!;
-    const inner = options.levels ? n.child : undefined;
-    if (!inner || inner.nodes.length === 0) {
-      lines.push(`${indent}${formatMermaidNodeShape(n, id)}`);
-      return;
-    }
-    lines.push(`${indent}subgraph ${id} ["${escapeMermaidText(n.title)}"]`);
-    const innerIds = assignIds(inner.nodes);
-    for (const c of inner.nodes) writeNode(c, innerIds, `${indent}  `);
-    lines.push(`${indent}end`);
-    collectEdges(inner.edges, innerIds);
-  };
 
   // Group nodes into swimlane subgraphs if they sit horizontally inside a zone
   const assignedNodes = new Set<string>();
@@ -1692,20 +1646,36 @@ export function serializeToMermaid(doc: DiagramDocument, options: MermaidExportO
     lines.push(`  subgraph ${sgId} ["${escapeMermaidText(zone.title)}"]`);
     for (const m of members) {
       assignedNodes.add(m.id);
-      writeNode(m, rootIds, '    ');
+      lines.push(`    ${formatMermaidNodeShape(m, idMap.get(m.id)!)}`);
     }
     lines.push('  end');
   }
 
   for (const n of doc.nodes) {
     if (assignedNodes.has(n.id)) continue;
-    writeNode(n, rootIds, '  ');
+    lines.push(`  ${formatMermaidNodeShape(n, idMap.get(n.id)!)}`);
   }
 
-  collectEdges(doc.edges, rootIds);
-  if (doc.edges.length > 0 || edgeLines.length > 0) {
+  if (doc.edges.length > 0) {
     lines.push('');
-    lines.push(...edgeLines);
+    for (const e of doc.edges) {
+      const src = idMap.get(e.from);
+      const dst = idMap.get(e.to);
+      if (!src || !dst) continue;
+
+      const labelPart = e.label.trim() ? `|${escapeMermaidText(e.label)}|` : '';
+      let arrow = '-->';
+      if (e.flow === 'both') {
+        if (e.tone === 'emerald') arrow = '===';
+        else if (e.tone === 'rose') arrow = '-.-';
+        else arrow = '---';
+      } else {
+        if (e.tone === 'emerald') arrow = '==>';
+        else if (e.tone === 'rose') arrow = '-.->';
+      }
+
+      lines.push(`  ${src} ${arrow}${labelPart} ${dst}`);
+    }
   }
 
   return lines.join('\n');

@@ -139,9 +139,9 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Done when:** failures never leak into the saved document (V1 F-01 rule 6, which still holds).
 
 #### [x] A5. Mermaid subgraphs as levels (D6) · S (#33)
-- **Do:** add "Subgraphs as: Swimlanes / Levels" to the import dialog. With Levels, each `subgraph` becomes a component whose `child` holds the subgraph's nodes, and wires that cross a subgraph boundary attach to that component. Nested subgraphs become nested levels, capped at the existing 8-level limit with an `info` line when the cap is hit. Export with levels writes subgraphs back.
+- **Do:** add "Subgraphs as: Swimlanes / Levels" to the import dialog. With Levels, each `subgraph` becomes a component whose `child` holds the subgraph's nodes, and wires that cross a subgraph boundary attach to that component. Nested subgraphs become nested levels, capped at the existing 8-level limit with an `info` line when the cap is hit. *(Export of levels as subgraphs was dropped by D8: Mermaid is import only.)*
 - **Files:** `src/core/parser.ts` (`ParsedSubgraph`), the import dialog in `src/studio/interactions.ts`, `tests/mermaidCoverage.test.ts`.
-- **Done when:** a round trip with Levels selected (Mermaid → levels → Mermaid) keeps every node and wire, and the Swimlanes default produces exactly what it produced before (snapshot test).
+- **Done when:** importing with Levels selected keeps every node and wire of the source (as components inside levels, or as wires re-pointed to a subgraph component), and the Swimlanes default produces exactly what it produced before (snapshot test).
 
 #### [ ] A6. R-08 First run · M
 - **Needs:** A2.

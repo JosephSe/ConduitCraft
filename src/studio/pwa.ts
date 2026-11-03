@@ -91,7 +91,7 @@ export function serializeForFilename(
   const lower = filename.toLowerCase();
   if (lower.endsWith('.mmd') || lower.endsWith('.mermaid')) {
     return {
-      content: serializeToMermaid(doc, { levels: true }),
+      content: serializeToMermaid(doc),
       mime: 'text/plain;charset=utf-8',
       format: 'mermaid',
     };

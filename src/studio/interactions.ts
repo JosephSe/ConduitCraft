@@ -1421,7 +1421,7 @@ export function getSubgraphMode(): 'swimlanes' | 'levels' {
 export function refreshCodeModalTextarea(): void {
   const fmt = getSelectedCodeFormat();
   codeSyncTextarea.value =
-    fmt === 'blueprint' ? serializeToBlueprintMarkdown(app.doc) : serializeToMermaid(app.doc, { levels: true });
+    fmt === 'blueprint' ? serializeToBlueprintMarkdown(app.doc) : serializeToMermaid(app.doc);
   codeSyncDiagnostics.textContent =
     fmt === 'blueprint'
       ? 'Full Blueprint (.md): YAML metadata + positions + Mermaid flowchart.'
@@ -1430,10 +1430,6 @@ export function refreshCodeModalTextarea(): void {
 }
 
 export function openCodeDialog(): void {
-  if (app.doc.nodes.some((n) => n.child)) {
-    const levels = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"][value="levels"]');
-    if (levels) levels.checked = true;
-  }
   refreshCodeModalTextarea();
   codeDialog.showModal();
 }
@@ -2146,7 +2142,7 @@ export function initEvents(): void {
   });
   btnExportMmd.addEventListener('click', () => {
     expandStageToFit(app.doc);
-    const mmd = serializeToMermaid(app.doc, { levels: true });
+    const mmd = serializeToMermaid(app.doc);
     const filename = `${getSafeFilenameSlug()}.mmd`;
     downloadBlob(mmd, filename, 'text/plain;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
