@@ -1,5 +1,5 @@
 /** Command Palette (Cmd/Ctrl+K) controller. */
-import { app, fitSelection, fitToViewport, performRedo, performUndo, pushHistory, setSelection, zoomAround } from './state';
+import { app, fullDocument, goUpLevel, openComponentLevel, fitSelection, fitToViewport, performRedo, performUndo, pushHistory, setSelection, zoomAround } from './state';
 import { autoLayoutDocument, expandStageToFit } from '../core/layout';
 import { createNodeFromStencil, createSwimlaneZone, createNotesCard } from '../templates/presets';
 import { applySelection, renderAll, renderMatrixTable } from './render';
@@ -515,6 +515,30 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'level-open',
+      title: 'Open as a level',
+      subtitle: 'Drill into the selected component and draw what is inside it',
+      category: 'Mode & View',
+      shortcut: `${mod}↵`,
+      keywords: ['level', 'drill', 'nested', 'inside', 'zoom in', 'child', 'container', 'c4'],
+      run: () => {
+        const sel = app.selection;
+        if (sel.type !== 'node') notify('Select a component to open as a level');
+        else openComponentLevel(sel.id);
+      },
+    },
+    {
+      id: 'level-up',
+      title: 'Go up a level',
+      subtitle: 'Back to the diagram that contains this one',
+      category: 'Mode & View',
+      shortcut: `${mod}↑`,
+      keywords: ['level', 'up', 'parent', 'back', 'zoom out', 'breadcrumb'],
+      run: () => {
+        if (!goUpLevel()) notify('Already at the top level');
+      },
+    },
+    {
       id: 'chaos-fail',
       // Read each time the menu or palette opens, so a failed component offers to be restored instead.
       get title() {
@@ -717,7 +741,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => {
         const snap = saveSnapshot(
           `Snapshot ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-          app.doc
+          fullDocument()
         );
         notify(`Recorded snapshot "${snap.name}"`);
       },
@@ -780,7 +804,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
           return;
         }
         try {
-          const res = await createShareUrl(app.doc);
+          const res = await createShareUrl(fullDocument());
           await navigator.clipboard.writeText(res.url);
           notify('Copied shareable link to clipboard!');
         } catch {

@@ -37,6 +37,7 @@ import {
 } from './keyedStage';
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
+import { paintLevels } from './levels';
 
 export {
   renderNodes,
@@ -163,6 +164,7 @@ export function renderAll(rebuildInspector = true): void {
   renderMatrixTable();
   updateVisualSelectionHighlights();
   paintGroupOutlines();
+  paintLevels();
 
   if (rebuildInspector) {
     if (app.workspaceMode === 'design') {

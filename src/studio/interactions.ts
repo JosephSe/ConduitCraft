@@ -124,7 +124,9 @@ import {
   getPendingRestoreOffer,
   getSaveState,
   getSelectedNodeIds,
+  fullDocument,
   getViewportWorldCenter,
+  goUpLevel,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
   performRedo,
@@ -1852,7 +1854,7 @@ export function initEvents(): void {
   async function handleSaveDiagram(forceSaveAs = false): Promise<void> {
     const activeName = getActiveFileName();
     const defaultName = activeName || `${getSafeFilenameSlug()}.blueprint.json`;
-    const serializer = (name: string) => serializeForFilename(app.doc, name).content;
+    const serializer = (name: string) => serializeForFilename(fullDocument(), name).content;
 
     const res = await saveWithNativeFileSystem(serializer, defaultName, forceSaveAs);
     if (res.success) {
@@ -1860,7 +1862,7 @@ export function initEvents(): void {
       setSaveState('saved');
       notify(`Saved ${res.filename}`);
     } else if (!isFileSystemAccessSupported()) {
-      const { content, mime } = serializeForFilename(app.doc, defaultName);
+      const { content, mime } = serializeForFilename(fullDocument(), defaultName);
       downloadBlob(content, defaultName, mime);
       setDiskDirty(false);
       setSaveState('saved');
@@ -2012,7 +2014,7 @@ export function initEvents(): void {
     let timeoutId: any;
     try {
       const omitImages = Boolean(chkShareOmitImages?.checked);
-      const sharePromise = createShareUrl(app.doc, { omitImages });
+      const sharePromise = createShareUrl(fullDocument(), { omitImages });
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('Timed out generating share link (5s)')), 5000);
       });
@@ -2192,7 +2194,7 @@ export function initEvents(): void {
   btnExportJson.addEventListener('click', () => {
     const filename = `${getSafeFilenameSlug()}.blueprint.json`;
     downloadBlob(
-      serializeBlueprintJson(app.doc),
+      serializeBlueprintJson(fullDocument()),
       filename,
       'application/json;charset=utf-8',
     );
@@ -2218,7 +2220,7 @@ export function initEvents(): void {
 
     const handleCreate = () => {
       const name = inputName?.value.trim() || `Snapshot ${snapshots.length + 1}`;
-      const snap = saveSnapshot(name, app.doc);
+      const snap = saveSnapshot(name, fullDocument());
       currentDiffSnapshotId = snap.id;
       notify(`Saved version snapshot "${snap.name}"`);
       refreshSnapshotsDialog();
@@ -2843,6 +2845,8 @@ export function initEvents(): void {
           document.querySelector<HTMLInputElement>('input[name="pointer-tool"][value="select"]')?.click();
         } else if (app.selection.type !== 'none') {
           applySelection({ type: 'none' });
+        } else if (app.levelPath.length > 0) {
+          goUpLevel();
         }
       }
     }

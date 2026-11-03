@@ -163,6 +163,16 @@ export interface DiagramNode {
   links?: NodeLink[];
   /** How the component copes with failing (F-01). Absent means a single instance with no fallback. */
   resilience?: NodeResilience;
+  /** The diagram inside this component, opened as a level (F-03). Absent means the component is a leaf. */
+  child?: LevelContent;
+}
+
+/** One level's content: a sub-document without the document-level fields (F-03). */
+export interface LevelContent {
+  nodes: DiagramNode[];
+  edges: DiagramEdge[];
+  zones: DiagramZone[];
+  notesCards: DiagramNotesCard[];
 }
 
 /** Failure handling for one component. Only `replicas` and `fallbackId` change what a chaos run reaches. */

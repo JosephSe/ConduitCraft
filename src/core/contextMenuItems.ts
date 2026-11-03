@@ -23,6 +23,7 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
         'edit-bring-to-front',
         'edit-send-to-back',
         MENU_SEPARATOR,
+        'level-open',
         'chaos-fail',
         'fit-selection',
         'edit-delete',

@@ -35,6 +35,7 @@ import {
   pushHistoryNudge,
   screenToWorld,
   setSelection,
+  openComponentLevel,
 } from './state';
 import { renderPropertyEditor } from './inspector';
 import { applySelection, requestInspectorRefresh } from './render';
@@ -1422,6 +1423,25 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     delete wrapper.dataset.status;
     statusBadge?.remove();
   }
+
+  // Level badge (F-03): opens the component as a nested level. Always shown once it has one.
+  let levelBadge = wrapper.querySelector<HTMLButtonElement>('.node-level-badge');
+  if (!levelBadge) {
+    levelBadge = document.createElement('button');
+    levelBadge.type = 'button';
+    levelBadge.className = 'node-level-badge';
+    levelBadge.addEventListener('pointerdown', (e) => e.stopPropagation());
+    levelBadge.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openComponentLevel(wrapper.dataset.node || wrapper.dataset.nodeId || '');
+    });
+    wrapper.appendChild(levelBadge);
+  }
+  const innerCount = node.child ? node.child.nodes.length : 0;
+  levelBadge.textContent = node.child ? `⤵ ${innerCount}` : '⤵';
+  levelBadge.dataset.hasChild = node.child ? 'true' : 'false';
+  levelBadge.setAttribute('data-tip', node.child ? `Open level (${innerCount} inside) · ⌘↵` : 'Open as a level · ⌘↵');
+  levelBadge.setAttribute('aria-label', `Open ${node.title} as a level`);
 
   // Comment badge
   let commentBadge = wrapper.querySelector<HTMLElement>('.node-comment-badge');

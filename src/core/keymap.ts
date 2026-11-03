@@ -41,6 +41,8 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'mode-review', key: '3', uiV2Only: true },
   { actionId: 'mode-presentation', key: '4', uiV2Only: true },
   { actionId: 'chaos-fail', key: 'x', dataOnly: true, needsSelection: true, uiV2Only: true },
+  { actionId: 'level-open', key: 'Enter', mod: true, needsSelection: true },
+  { actionId: 'level-up', key: 'ArrowUp', mod: true },
   { actionId: 'edit-rename', key: 'F2', designOnly: true },
   { actionId: 'edit-delete', key: 'Delete', designOnly: true, needsSelection: true },
   { actionId: 'edit-delete', key: 'Backspace', designOnly: true, needsSelection: true },
