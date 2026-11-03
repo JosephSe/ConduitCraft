@@ -69,7 +69,9 @@ import type {
   StreamTone,
   SelectionTarget,
   NotesItemIcon,
+  WireProtocol,
 } from '../types';
+import { WIRE_PROTOCOLS, WIRE_PROTOCOL_NAMES } from '../core/wire';
 import { NOTES_ITEM_ICONS, normalizeNotesItemIcon } from '../types';
 import {
   STENCIL_CATALOG,
@@ -109,6 +111,13 @@ export function withInspectorTransition(updateFn: () => void): void {
 // ---------------------------------------------------------------------------
 // Design Mode: Right Contextual Property Editor
 // ---------------------------------------------------------------------------
+function makeOption(value: string, text: string): HTMLOptionElement {
+  const option = document.createElement('option');
+  option.value = value;
+  option.textContent = text;
+  return option;
+}
+
 export function makeField(
   id: string,
   labelText: string,
@@ -870,6 +879,49 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
+
+    // Protocol, call style and latency (F-17). Empty means "not set" and is left out of the saved file.
+    const protocolSelect = document.createElement('select');
+    protocolSelect.className = 'prop-select';
+    protocolSelect.append(makeOption('', 'Not set'));
+    for (const p of WIRE_PROTOCOLS) protocolSelect.append(makeOption(p, WIRE_PROTOCOL_NAMES[p]));
+    protocolSelect.value = edge.protocol ?? '';
+    protocolSelect.addEventListener('change', () => {
+      pushHistory();
+      edge.protocol = protocolSelect.value ? (protocolSelect.value as WireProtocol) : undefined;
+      if (!edge.protocol) delete edge.protocol;
+      renderAll(false);
+    });
+    form.appendChild(makeField('prop-edge-protocol', 'Protocol', protocolSelect));
+
+    const syncSelect = document.createElement('select');
+    syncSelect.className = 'prop-select';
+    syncSelect.append(makeOption('sync', 'Waits for a reply (sync)'), makeOption('async', "Doesn't wait (async, dashed)"));
+    syncSelect.value = edge.sync === 'async' ? 'async' : 'sync';
+    syncSelect.addEventListener('change', () => {
+      pushHistory();
+      if (syncSelect.value === 'async') edge.sync = 'async';
+      else delete edge.sync;
+      renderAll(false);
+    });
+    form.appendChild(makeField('prop-edge-sync', 'Call style', syncSelect));
+
+    const latencyInput = document.createElement('input');
+    latencyInput.type = 'number';
+    latencyInput.min = '0';
+    latencyInput.step = '1';
+    latencyInput.className = 'prop-input';
+    latencyInput.placeholder = 'e.g. 120';
+    latencyInput.value = edge.latencyMs === undefined ? '' : String(edge.latencyMs);
+    latencyInput.addEventListener('focus', () => beginHistoryGesture());
+    latencyInput.addEventListener('blur', () => endHistoryGesture());
+    latencyInput.addEventListener('input', () => {
+      pushHistory();
+      const ms = Number(latencyInput.value);
+      if (latencyInput.value !== '' && Number.isFinite(ms) && ms >= 0) edge.latencyMs = Math.round(ms);
+      else delete edge.latencyMs;
+    });
+    form.appendChild(makeField('prop-edge-latency', 'Typical latency (ms)', latencyInput));
 
     // Source / Target: the keyboard route to what dragging a wire end does on the canvas.
     const titleCounts = new Map<string, number>();

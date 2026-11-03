@@ -1553,6 +1553,11 @@
     pointer-events: none;
   }
 
+  /* Async wires (F-17) draw their rail dashed, so the call style reads without animation. */
+  .conduit-group[data-sync="async"] .conduit-rail {
+    stroke-dasharray: 7 6;
+  }
+
   .conduit-glow {
     fill: none;
     stroke-width: 8;

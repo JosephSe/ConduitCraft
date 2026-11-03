@@ -7,7 +7,7 @@
  * To change the schema: bump `CURRENT_SCHEMA_VERSION`, add `MIGRATIONS[oldVersion]` that returns the document in
  * the next version's shape, and add a round-trip test (JSON, share link) for each new field.
  */
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 
 type RawDocument = Record<string, unknown>;
 
@@ -16,6 +16,8 @@ export const MIGRATIONS: Record<number, (doc: RawDocument) => RawDocument> = {
   // 1 -> 2: version 2 is the first stamped version. The shape is unchanged; fields added from here on are optional
   // and default to absent, so older files need no rewriting.
   1: (doc) => doc,
+  // 2 -> 3: wires may carry `protocol`, `sync` and `latencyMs` (F-17). All optional, so nothing to rewrite.
+  2: (doc) => doc,
 };
 
 export type MigrateResult = { ok: true; doc: RawDocument; from: number } | { ok: false; error: string };

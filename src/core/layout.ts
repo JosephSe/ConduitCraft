@@ -1,4 +1,5 @@
 import { nodeShapeFrame, storeDrawsCylinder } from './nodeStyle';
+import { wireLabelText } from './wire';
 import type {
   DiagramDocument,
   DiagramEdge,
@@ -144,7 +145,9 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   };
 
   const routed = doc.edges
-    .map((e): RoutedDiagramEdge | null => {
+    .map((rawEdge): RoutedDiagramEdge | null => {
+      // The routed label is what the wire shows: the protocol prefix plus the label (F-17).
+      const e = { ...rawEdge, label: wireLabelText(rawEdge) };
       const src = nodeMap.get(e.from);
       const dst = nodeMap.get(e.to);
       if (!src || !dst) return null;

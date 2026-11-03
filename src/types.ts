@@ -159,6 +159,9 @@ export interface DiagramNode {
 
 export type EdgeFlowMode = 'forward' | 'both';
 
+export type WireProtocol = 'http' | 'grpc' | 'graphql' | 'kafka' | 'amqp' | 'sql' | 'custom';
+export type WireSync = 'sync' | 'async';
+
 export interface DiagramEdge {
   id: string;
   from: string;
@@ -174,6 +177,12 @@ export interface DiagramEdge {
   /** Optional manual bend point (world coordinates) the wire is nudged through. */
   waypoint?: [number, number];
   comment?: string;
+  /** What the wire carries, shown as a prefix on its label (F-17). */
+  protocol?: WireProtocol;
+  /** Async wires draw dashed and are left out of synchronous-cycle checks. Absent means sync. */
+  sync?: WireSync;
+  /** Typical latency of the call in milliseconds. */
+  latencyMs?: number;
 }
 
 export interface RoutedDiagramEdge extends DiagramEdge {

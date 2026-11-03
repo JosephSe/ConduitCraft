@@ -12,6 +12,7 @@ import type {
   StreamTone,
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
+import { normalizeWireFields } from '../core/wire';
 import { normalizeBrand } from '../core/brand';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
 import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
@@ -114,6 +115,7 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     animated: raw.animated !== false,
     flow: raw.flow === 'both' ? 'both' : 'forward',
     ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
+    ...normalizeWireFields(raw),
     ...(waypoint ? { waypoint } : {}),
   };
 }
