@@ -132,7 +132,8 @@ export function openContextMenu(x: number, y: number): void {
 
 export function initContextMenu(): void {
   viewport.addEventListener('contextmenu', (e) => {
-    if (app.workspaceMode !== 'design') return;
+    // Outside Design the menu is for components only (it carries "Fail this component"); the rest keeps the browser's.
+    if (app.workspaceMode !== 'design' && targetOf(e.target as Element)?.type !== 'node') return;
     if ((e.target as HTMLElement).closest('input, textarea, [contenteditable="true"]')) return;
     e.preventDefault();
     const target = targetOf(e.target as Element);
@@ -144,9 +145,10 @@ export function initContextMenu(): void {
   // Keyboard: Shift+F10 or the Menu key opens it at the focused component or wire.
   window.addEventListener('keydown', (e) => {
     const isMenuKey = e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey);
-    if (!isMenuKey || app.workspaceMode !== 'design') return;
+    if (!isMenuKey) return;
     const active = document.activeElement as Element | null;
     if (!active || !viewport.contains(active)) return;
+    if (app.workspaceMode !== 'design' && targetOf(active)?.type !== 'node') return;
     e.preventDefault();
     const target = targetOf(active);
     if (target && !isInSelection(target)) applySelection(target);

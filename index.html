@@ -532,6 +532,15 @@
         </select>
       </div>
 
+      <!-- Chaos summary (Traffic lens): what the current failures break -->
+      <section class="chaos-panel" id="chaos-panel" aria-label="Failure summary" hidden>
+        <div class="chaos-panel-head">
+          <button type="button" class="btn btn-compact" id="chaos-summary" aria-expanded="false" aria-controls="chaos-list"></button>
+          <button type="button" class="btn btn-compact" id="chaos-reset">Restore all</button>
+        </div>
+        <ul class="chaos-list" id="chaos-list" hidden></ul>
+      </section>
+
       <!-- Colour legend card: shown only when the document names its colours -->
       <aside class="legend-card" id="legend-card" aria-label="Colour legend" hidden>
         <h2 class="legend-card-title">Legend</h2>

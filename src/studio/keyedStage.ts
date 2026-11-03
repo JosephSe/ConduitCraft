@@ -50,6 +50,7 @@ import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline
 import { reconcileKeyed } from './reconcile';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
+import { chaosStatusOf, isPreview } from './chaos';
 import { scheduleMinimapPaint } from './minimap';
 import {
   toggleEdgeInSelection,
@@ -805,6 +806,8 @@ function createWireGroup(edgeId: string): SVGGElement {
     const byId = new Map(app.doc.nodes.map((n) => [n.id, n]));
     const endsMatch = [byId.get(edge.from), byId.get(edge.to)].every((n) => n && matchesTag(n, app.tagFilter));
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
+    const cut = app.lens === 'traffic' && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
+    g.classList.toggle('is-chaos-cut', cut);
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;
@@ -1295,6 +1298,34 @@ function paintCustomImage(slot: HTMLElement, image: string): void {
 /** Last content painted into each node element, so unchanged nodes can skip the text/badge/icon work. */
 const paintedNodeContent = new WeakMap<HTMLElement, { sig: string; image: string | undefined }>();
 
+const CHAOS_BADGES: Record<string, string> = {
+  failed: 'Failed',
+  degraded: 'Degraded',
+  unreachable: '⛓ Unreachable',
+  rerouted: '↪ Rerouted',
+};
+
+/** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */
+function paintChaos(wrapper: HTMLElement, nodeId: string): void {
+  const status = app.lens === 'traffic' ? chaosStatusOf(nodeId) : null;
+  const before = wrapper.dataset.chaos;
+  if (status) wrapper.dataset.chaos = status;
+  else delete wrapper.dataset.chaos;
+  if (status && isPreview()) wrapper.dataset.chaosPreview = 'true';
+  else delete wrapper.dataset.chaosPreview;
+  let badge = wrapper.querySelector<HTMLElement>(':scope > .chaos-badge');
+  if (!status) {
+    badge?.remove();
+    return;
+  }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'chaos-badge';
+    wrapper.appendChild(badge);
+  }
+  if (before !== status) badge.textContent = CHAOS_BADGES[status];
+}
+
 function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.id = 'node-' + node.id;
   wrapper.dataset.node = node.id;
@@ -1302,6 +1333,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.dataset.kind = node.kind;
   wrapper.dataset.accent = effectiveTone(app.doc, node, app.colourBy);
   wrapper.classList.toggle('is-tag-dimmed', !matchesTag(node, app.tagFilter));
+  paintChaos(wrapper, node.id);
   if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
   else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
   else delete wrapper.dataset.shape;

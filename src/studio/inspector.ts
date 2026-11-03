@@ -98,6 +98,7 @@ import {
   safeLinkUrl,
   toneName,
 } from '../core/meta';
+import { normalizeResilience, replicaCount } from '../core/reachability';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -204,6 +205,51 @@ function makeTagsField(id: string, tags: string[] | undefined, onChange: (next: 
   });
   input.placeholder = 'pii, payments, third party';
   return makeField(id, 'Tags', input);
+}
+
+/** How a component copes with failing (F-01): replicas, a fallback and a circuit breaker. */
+function makeResilienceFields(node: DiagramNode): HTMLElement[] {
+  const commit = (next: { replicas?: number; fallbackId?: string; circuitBreaker?: boolean }): void => {
+    pushHistory();
+    node.resilience = normalizeResilience({ ...node.resilience, ...next });
+    if (!node.resilience) delete node.resilience;
+    renderAll(false);
+  };
+
+  const replicas = document.createElement('input');
+  replicas.type = 'number';
+  replicas.min = '1';
+  replicas.max = '99';
+  replicas.step = '1';
+  replicas.className = 'prop-input';
+  replicas.value = String(replicaCount(node));
+  replicas.addEventListener('change', () => {
+    const n = Math.max(1, Math.min(99, Math.floor(Number(replicas.value)) || 1));
+    replicas.value = String(n);
+    commit({ replicas: n });
+  });
+
+  const fallback = document.createElement('select');
+  fallback.className = 'prop-select';
+  fallback.appendChild(makeOption('', 'None'));
+  for (const other of app.doc.nodes) {
+    if (other.id !== node.id) fallback.appendChild(makeOption(other.id, other.title || other.id));
+  }
+  fallback.value = node.resilience?.fallbackId ?? '';
+  fallback.addEventListener('change', () => commit({ fallbackId: fallback.value || undefined }));
+
+  const breaker = document.createElement('input');
+  breaker.type = 'checkbox';
+  breaker.checked = Boolean(node.resilience?.circuitBreaker);
+  breaker.addEventListener('change', () => commit({ circuitBreaker: breaker.checked }));
+  const breakerField = makeField('prop-node-breaker', 'Circuit breaker', breaker);
+  breakerField.classList.add('prop-field-check');
+
+  return [
+    makeField('prop-node-replicas', 'Replicas', replicas),
+    makeField('prop-node-fallback', 'Fallback', fallback),
+    breakerField,
+  ];
 }
 
 /** Ownership and links for a component (F-27): owner text, clickable link icons, and a row editor. */
@@ -994,6 +1040,7 @@ export function renderPropertyEditor(): void {
     linksTitle.textContent = 'Links';
     linksField.append(linksTitle, makeLinksEditor(node));
     reviewElements.push(linksField);
+    reviewElements.push(...makeResilienceFields(node));
 
     // Assemble Form Sections
     form.append(

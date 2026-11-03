@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
 import { normalizeWireFields } from '../core/wire';
+import { pruneDanglingChaos } from '../core/reachability';
 import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta';
 import { normalizeBrand } from '../core/brand';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
@@ -215,6 +216,11 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
   };
   const legend = normalizeLegend(source.legend);
   if (legend.length) doc.legend = legend;
+  for (const sim of doc.simulations) {
+    if (!Array.isArray(sim.failures)) delete sim.failures;
+    else sim.failures = sim.failures.filter((id): id is string => typeof id === 'string');
+  }
+  pruneDanglingChaos(doc);
   expandStageToFit(doc);
   return { ok: true, doc };
 }

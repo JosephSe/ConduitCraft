@@ -1,4 +1,5 @@
 /** Stage rendering for zones, notes, wires, and components. */
+import { invalidateChaos } from './chaos';
 import { paintGroupOutlines } from './groupOutlines';
 import {
   btnRestoreSession,
@@ -100,6 +101,7 @@ function paintDocumentBrand(): void {
 }
 
 export function renderAll(rebuildInspector = true): void {
+  invalidateChaos();
   const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
   emptyStageOverlay.hidden = !isEmpty;
   const pending = getPendingRestoreOffer();
