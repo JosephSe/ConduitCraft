@@ -8,6 +8,7 @@ import {
   zoomReadout,
 } from './dom';
 import { lensOfWorkspaceMode, workspaceModeOf, type Lens, type WorkspaceMode } from '../core/lens';
+import type { ColourBy } from '../core/meta';
 import { getActiveFileHandle, getActiveFileName, isFileDiskDirty, setDiskDirty } from './pwa';
 import type {
   DiagramDocument,
@@ -52,6 +53,10 @@ export interface ActiveWireDraft {
 export const app = {
   doc: createBlankDocument() as DiagramDocument,
   lens: 'design' as Lens,
+  /** How components are coloured in the view: by their own tone, by status, or by first tag (F-26). */
+  colourBy: 'tone' as ColourBy,
+  /** Only components and wires with this tag stay bright; empty shows everything (F-26). */
+  tagFilter: '',
   /** Derived from `lens` (T-02); callers move to `lens` one by one, then this goes away. */
   get workspaceMode(): WorkspaceMode {
     return workspaceModeOf(this.lens);

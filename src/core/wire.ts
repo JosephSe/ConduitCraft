@@ -40,3 +40,31 @@ export function normalizeWireFields(raw: Record<string, unknown>): Partial<Pick<
   }
   return out;
 }
+
+/** Latency a wire is assumed to have when none is set; the step delay is unchanged at this value. */
+export const REFERENCE_LATENCY_MS = 50;
+
+/**
+ * How long a packet takes to cross from one step to the next, given the typical latency of the wires it crosses.
+ * The slowest wire sets the pace. A wire at the reference latency keeps the base delay, slower wires stretch it and
+ * faster ones shorten it, within half and three times the base so a 5 s call cannot stall playback.
+ */
+export function hopDelayMs(baseMs: number, latenciesMs: readonly number[]): number {
+  const slowest = Math.max(...latenciesMs.filter((ms) => Number.isFinite(ms) && ms >= 0), -1);
+  if (slowest < 0) return baseMs;
+  const factor = Math.min(3, Math.max(0.5, 1 + (slowest - REFERENCE_LATENCY_MS) / 200));
+  return Math.round(baseMs * factor);
+}
+
+/** Latencies of the wires that run from any component in one step to any in the next. */
+export function latenciesBetween(
+  edges: readonly Pick<DiagramEdge, 'from' | 'to' | 'latencyMs'>[],
+  fromNodes: readonly string[],
+  toNodes: readonly string[],
+): number[] {
+  const out: number[] = [];
+  for (const e of edges) {
+    if (typeof e.latencyMs === 'number' && fromNodes.includes(e.from) && toNodes.includes(e.to)) out.push(e.latencyMs);
+  }
+  return out;
+}

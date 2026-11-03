@@ -2,7 +2,7 @@
  * Tags, ownership, links and the custom legend (F-26, F-27): what they mean and how they are read from a file.
  * Pure and DOM-free. Every link URL goes through `safeLinkUrl`, on input, on import and again on export.
  */
-import type { LegendEntry, NodeLink, NodeLinkKind, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeLinkKind, StreamTone } from '../types';
 
 export const LINK_KINDS: readonly NodeLinkKind[] = ['repo', 'runbook', 'dashboard', 'docs', 'oncall'];
 
@@ -122,4 +122,67 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
     ...(links.length ? { links } : {}),
     ...(tags.length ? { tags } : {}),
   };
+}
+
+export type ColourBy = 'tone' | 'status' | 'tag';
+
+export const COLOUR_BY_OPTIONS: readonly ColourBy[] = ['tone', 'status', 'tag'];
+
+const STATUS_TONE: Record<NonNullable<DiagramNode['status']>, StreamTone> = {
+  live: 'emerald',
+  planned: 'blue',
+  'at-risk': 'amber',
+  deprecated: 'rose',
+};
+
+const STATUS_NAMES: Record<NonNullable<DiagramNode['status']>, string> = {
+  live: 'Live',
+  planned: 'Planned',
+  'at-risk': 'At risk',
+  deprecated: 'Deprecated',
+};
+
+/** Every tag used on a component or wire, once each, in alphabetical order. */
+export function allTags(doc: Pick<DiagramDocument, 'nodes' | 'edges'>): string[] {
+  const seen = new Map<string, string>();
+  for (const item of [...doc.nodes, ...doc.edges]) {
+    for (const tag of item.tags ?? []) if (!seen.has(tag.toLowerCase())) seen.set(tag.toLowerCase(), tag);
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+/** The tone a tag is drawn in: tags take the five tones in alphabetical order, then start over. */
+function toneForTag(doc: Pick<DiagramDocument, 'nodes' | 'edges'>, tag: string): StreamTone {
+  const index = allTags(doc).findIndex((t) => t.toLowerCase() === tag.toLowerCase());
+  return TONES[Math.max(0, index) % TONES.length];
+}
+
+/**
+ * The tone a component is drawn in under "Colour by". Components with no status (or no tag) keep their own tone,
+ * so nothing disappears into a default colour.
+ */
+export function effectiveTone(doc: Pick<DiagramDocument, 'nodes' | 'edges'>, node: DiagramNode, by: ColourBy): StreamTone {
+  if (by === 'status' && node.status) return STATUS_TONE[node.status];
+  if (by === 'tag' && node.tags?.length) return toneForTag(doc, node.tags[0]);
+  return node.accent;
+}
+
+/** What each colour means under the current "Colour by", for the legend card. Empty for "tone". */
+export function colourKey(
+  doc: Pick<DiagramDocument, 'nodes' | 'edges'>,
+  by: ColourBy,
+): Array<{ tone: StreamTone; label: string }> {
+  if (by === 'status') {
+    return (Object.keys(STATUS_TONE) as Array<keyof typeof STATUS_TONE>).map((status) => ({
+      tone: STATUS_TONE[status],
+      label: STATUS_NAMES[status],
+    }));
+  }
+  if (by === 'tag') return allTags(doc).map((tag) => ({ tone: toneForTag(doc, tag), label: tag }));
+  return [];
+}
+
+/** True when the item carries the tag (ignoring case). An empty filter matches everything. */
+export function matchesTag(item: { tags?: string[] }, filter: string): boolean {
+  return !filter || (item.tags ?? []).some((tag) => tag.toLowerCase() === filter.toLowerCase());
 }

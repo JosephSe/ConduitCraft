@@ -20,6 +20,8 @@ import { normalizeNotesItemIcon } from '../types';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
+import { normalizeLegend, normalizeNodeMeta, normalizeTags } from './meta';
+import { normalizeWireFields } from './wire';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
 
@@ -51,6 +53,9 @@ interface RawNodeMeta {
   comment?: string;
   locked?: boolean;
   groupId?: string;
+  owner?: unknown;
+  tags?: unknown;
+  links?: unknown;
 }
 
 interface RawEdgeOverride {
@@ -67,6 +72,16 @@ interface RawEdgeOverride {
   flow?: string;
   waypoint?: [number, number];
   comment?: string;
+  protocol?: unknown;
+  sync?: unknown;
+  latencyMs?: unknown;
+  tags?: unknown;
+}
+
+/** Wire protocol, call style, latency and tags from a YAML edge entry, validated like a file. */
+function wireExtras(raw: RawEdgeOverride | undefined): ReturnType<typeof normalizeWireFields> & { tags?: string[] } {
+  const tags = normalizeTags(raw?.tags);
+  return { ...normalizeWireFields((raw ?? {}) as Record<string, unknown>), ...(tags.length ? { tags } : {}) };
 }
 
 interface RawBlueprintMeta {
@@ -78,6 +93,7 @@ interface RawBlueprintMeta {
   stageHeight?: number;
   overviewSummary?: string;
   brand?: { name?: string; accent?: string; logo?: string };
+  legend?: unknown;
   zones?: Array<{
     id?: string;
     number?: string | number;
@@ -917,6 +933,9 @@ export function importMermaidOrBlueprint(rawInput: string): {
     }
   }
 
+  const legend = normalizeLegend(meta.legend);
+  if (legend.length) doc.legend = legend;
+
   // Merge node IDs from Mermaid + YAML metadata
   const allNodeIds = new Set<string>([...parsedMermaid.nodes.keys()]);
   if (meta.nodes) {
@@ -1042,6 +1061,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       ...(metaNode.comment ? { comment: String(metaNode.comment) } : {}),
       ...(metaNode.locked !== undefined ? { locked: Boolean(metaNode.locked) } : {}),
       ...(metaNode.groupId ? { groupId: String(metaNode.groupId) } : {}),
+      ...normalizeNodeMeta(metaNode as Record<string, unknown>),
       title,
       subtitle,
       eyebrow,
@@ -1085,6 +1105,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       animated: ov?.animated !== false,
       flow: ov?.flow === 'both' || me.flow === 'both' ? 'both' : 'forward',
       ...(ov?.comment ? { comment: String(ov.comment) } : {}),
+      ...wireExtras(ov),
       ...waypointField(ov?.waypoint),
     });
   });
@@ -1112,6 +1133,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
       animated: ov.animated !== false,
       flow: ov.flow === 'both' ? 'both' : 'forward',
       ...(ov.comment ? { comment: String(ov.comment) } : {}),
+      ...wireExtras(ov),
       ...waypointField(ov.waypoint),
     });
   });
@@ -1475,6 +1497,9 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       ...(n.comment ? { comment: n.comment } : {}),
       ...(n.locked !== undefined ? { locked: n.locked } : {}),
       ...(n.groupId ? { groupId: n.groupId } : {}),
+      ...(n.owner ? { owner: n.owner } : {}),
+      ...(n.tags?.length ? { tags: n.tags } : {}),
+      ...(n.links?.length ? { links: n.links } : {}),
       title: n.title,
       subtitle: n.subtitle,
       eyebrow: n.eyebrow,
@@ -1506,6 +1531,14 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       ...(brand.accent ? { accent: brand.accent } : {}),
       ...(brand.logo ? { logo: brand.logo } : {}),
     };
+  }
+
+  if (doc.legend?.length) {
+    frontmatterObj.legend = doc.legend.map((entry) => ({
+      tone: entry.tone,
+      label: entry.label,
+      ...(entry.description ? { description: entry.description } : {}),
+    }));
   }
 
   if (doc.zones.length > 0) {
@@ -1550,6 +1583,10 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       animated: e.animated,
       ...(e.flow === 'both' ? { flow: 'both' } : {}),
       ...(e.comment ? { comment: e.comment } : {}),
+      ...(e.protocol ? { protocol: e.protocol } : {}),
+      ...(e.sync ? { sync: e.sync } : {}),
+      ...(e.latencyMs !== undefined ? { latencyMs: e.latencyMs } : {}),
+      ...(e.tags?.length ? { tags: e.tags } : {}),
       ...(e.waypoint ? { waypoint: [Math.round(e.waypoint[0]), Math.round(e.waypoint[1])] } : {}),
     }));
   }

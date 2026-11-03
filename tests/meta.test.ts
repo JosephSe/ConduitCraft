@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
+import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
 import {
   MAX_TAGS,
+  allTags,
+  colourKey,
+  effectiveTone,
+  matchesTag,
   normalizeLegend,
   normalizeLinks,
   normalizeTags,
@@ -190,5 +196,111 @@ describe('exported page (F-26, F-27)', () => {
     assert.doesNotMatch(html, /javascript:alert/);
     assert.doesNotMatch(html, /PII <data>/);
     assert.match(html, /Payments &lt;team&gt;|Payments \\u003cteam/);
+  });
+});
+
+describe('Blueprint Markdown carries the new fields (F-17, F-26, F-27)', () => {
+  it('round-trips tags, owner, links, legend and the wire fields', () => {
+    const doc = docWithNode();
+    doc.nodes.push({ ...doc.nodes[0], id: 'db', title: 'DB', x: 400 });
+    doc.nodes[0].tags = ['pii'];
+    doc.nodes[0].owner = 'Payments';
+    doc.nodes[0].links = [{ label: 'Repo', url: 'https://example.com/r', kind: 'repo' }];
+    doc.legend = [{ tone: 'rose', label: 'PII' }];
+    doc.edges = [
+      {
+        id: 'w1',
+        from: 'api',
+        to: 'db',
+        sourcePort: 'auto',
+        targetPort: 'auto',
+        tone: 'blue',
+        route: 'auto',
+        label: 'query',
+        animated: true,
+        protocol: 'sql',
+        sync: 'async',
+        latencyMs: 40,
+        tags: ['hot-path'],
+      },
+    ];
+    const back = importMermaidOrBlueprint(serializeToBlueprintMarkdown(doc)).doc;
+    const api = back.nodes.find((n) => n.id === 'api');
+    assert.deepEqual(api?.tags, ['pii']);
+    assert.equal(api?.owner, 'Payments');
+    assert.deepEqual(api?.links, doc.nodes[0].links);
+    assert.deepEqual(back.legend, [{ tone: 'rose', label: 'PII' }]);
+    assert.equal(back.edges[0].protocol, 'sql');
+    assert.equal(back.edges[0].sync, 'async');
+    assert.equal(back.edges[0].latencyMs, 40);
+    assert.deepEqual(back.edges[0].tags, ['hot-path']);
+  });
+
+  it('drops an unsafe link written by hand in the Markdown', () => {
+    const text = [
+      '---',
+      'title: T',
+      'nodes:',
+      '  a:',
+      '    links:',
+      '      - { label: Bad, url: "javascript:alert(1)" }',
+      '      - { label: Ok, url: "https://example.com" }',
+      '---',
+      '```mermaid',
+      'flowchart LR',
+      '  a[A] --> b[B]',
+      '```',
+    ].join('\n');
+    const a = importMermaidOrBlueprint(text).doc.nodes.find((n) => n.id === 'a');
+    assert.deepEqual(a?.links?.map((l) => l.label), ['Ok']);
+  });
+});
+
+describe('colour by and tag filter (F-26)', () => {
+  const doc = docWithNode();
+  doc.nodes.push({ ...doc.nodes[0], id: 'db', title: 'DB', tags: ['pii'], status: 'deprecated' });
+  doc.nodes[0].tags = ['payments', 'pii'];
+  doc.nodes[0].status = 'live';
+
+  it('lists tags once, alphabetically', () => {
+    assert.deepEqual(allTags(doc), ['payments', 'pii']);
+  });
+
+  it('draws a component by status or first tag, and keeps its own tone when it has none', () => {
+    assert.equal(effectiveTone(doc, doc.nodes[0], 'tone'), 'blue');
+    assert.equal(effectiveTone(doc, doc.nodes[0], 'status'), 'emerald');
+    assert.equal(effectiveTone(doc, doc.nodes[1], 'status'), 'rose');
+    assert.equal(effectiveTone(doc, doc.nodes[0], 'tag'), 'blue');
+    assert.equal(effectiveTone(doc, doc.nodes[1], 'tag'), 'emerald');
+    const untagged = { ...doc.nodes[0], tags: undefined, status: undefined, accent: 'violet' as const };
+    assert.equal(effectiveTone(doc, untagged, 'tag'), 'violet');
+    assert.equal(effectiveTone(doc, untagged, 'status'), 'violet');
+  });
+
+  it('explains the colours in use', () => {
+    assert.deepEqual(colourKey(doc, 'tone'), []);
+    assert.equal(colourKey(doc, 'status').length, 4);
+    assert.deepEqual(colourKey(doc, 'tag'), [
+      { tone: 'blue', label: 'payments' },
+      { tone: 'emerald', label: 'pii' },
+    ]);
+  });
+
+  it('matches tags ignoring case, and an empty filter matches all', () => {
+    assert.equal(matchesTag({ tags: ['PII'] }, 'pii'), true);
+    assert.equal(matchesTag({ tags: ['pii'] }, 'payments'), false);
+    assert.equal(matchesTag({}, ''), true);
+    assert.equal(matchesTag({}, 'pii'), false);
+  });
+});
+
+describe('SVG and PNG export legend (F-26)', () => {
+  it('draws the legend, escaped, and draws none without one', () => {
+    const doc = docWithNode();
+    assert.doesNotMatch(renderDiagramSvg(doc), /LEGEND/);
+    doc.legend = [{ tone: 'rose', label: 'PII <data>', description: 'Personal' }];
+    const svg = renderDiagramSvg(doc);
+    assert.match(svg, /LEGEND/);
+    assert.match(svg, /PII &lt;data&gt; — Personal/);
   });
 });

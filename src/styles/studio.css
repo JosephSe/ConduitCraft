@@ -5791,3 +5791,39 @@ html[data-ui="2"] .mode-switcher .lens-key {
 html[data-ui="2"] #sim-playback-deck {
   display: none !important;
 }
+
+/* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
+.legend-card {
+  position: absolute;
+  inset-block-start: 0.75rem;
+  inset-inline-end: 0.75rem;
+  z-index: 5;
+  max-inline-size: 18rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--wl-panel);
+  border: 1px solid var(--wl-border-subtle);
+  box-shadow: var(--wl-shadow-card);
+  font-size: 0.78rem;
+  pointer-events: none;
+}
+.legend-card[hidden] { display: none; }
+.legend-card-title {
+  margin: 0 0 0.25rem;
+  font-family: var(--wl-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--wl-ink-muted);
+}
+.legend-card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+.legend-card-list li { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Tag filter (F-26): what does not carry the chosen tag steps back. */
+.arch-node.is-tag-dimmed,
+.conduit-group.is-tag-dimmed {
+  opacity: 0.18;
+}
+
+.run-bar .js-colour-by { min-inline-size: 9.5rem; }
+.run-bar .js-tag-filter { min-inline-size: 7rem; }

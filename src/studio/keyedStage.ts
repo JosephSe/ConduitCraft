@@ -48,6 +48,7 @@ import {
 } from './interactions';
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
+import { effectiveTone, matchesTag } from '../core/meta';
 import { scheduleMinimapPaint } from './minimap';
 import {
   toggleEdgeInSelection,
@@ -797,6 +798,10 @@ function createWireGroup(edgeId: string): SVGGElement {
     g.dataset.to = edge.to;
     g.dataset.animated = edge.animated ? 'true' : 'false';
     g.dataset.sync = edge.sync === 'async' ? 'async' : 'sync';
+    // With a tag filter on, a wire stays bright when it has the tag or both of the components it joins do.
+    const byId = new Map(app.doc.nodes.map((n) => [n.id, n]));
+    const endsMatch = [byId.get(edge.from), byId.get(edge.to)].every((n) => n && matchesTag(n, app.tagFilter));
+    g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;
@@ -1292,7 +1297,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.dataset.node = node.id;
   wrapper.dataset.nodeId = node.id;
   wrapper.dataset.kind = node.kind;
-  wrapper.dataset.accent = node.accent;
+  wrapper.dataset.accent = effectiveTone(app.doc, node, app.colourBy);
+  wrapper.classList.toggle('is-tag-dimmed', !matchesTag(node, app.tagFilter));
   if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
   else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
   else delete wrapper.dataset.shape;

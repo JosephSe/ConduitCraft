@@ -1,5 +1,6 @@
 import type { SimulationScenario, SimulationStep } from '../types';
 import { getNodeCenter } from '../core/layout';
+import { hopDelayMs, latenciesBetween } from '../core/wire';
 import { TONE_CSS } from '../shared/tones';
 import { app } from './state';
 import { nodesLayer, simPacket, simPacketDot, simPacketLabel, traceList, wiresGroup } from './dom';
@@ -220,7 +221,14 @@ export class SimulationPlaybackController {
     this.clearTimer();
     if (!this.isPlaying || !this.scenario) return;
 
-    const delayMs = Math.round(this.baseStepMs / this.speedMultiplier);
+    // The wait before the next step follows the typical latency of the wires the packet is about to cross.
+    const current = this.scenario.steps[this.currentStepIndex];
+    const next = this.scenario.steps[this.currentStepIndex + 1];
+    const hopMs =
+      current && next
+        ? hopDelayMs(this.baseStepMs, latenciesBetween(app.doc.edges, current.nodes, next.nodes))
+        : this.baseStepMs;
+    const delayMs = Math.round(hopMs / this.speedMultiplier);
 
     this.timer = setTimeout(() => {
       if (!this.isPlaying || !this.scenario) return;
