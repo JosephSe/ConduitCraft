@@ -796,6 +796,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     g.dataset.from = edge.from;
     g.dataset.to = edge.to;
     g.dataset.animated = edge.animated ? 'true' : 'false';
+    g.dataset.sync = edge.sync === 'async' ? 'async' : 'sync';
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;

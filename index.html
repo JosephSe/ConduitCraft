@@ -56,17 +56,17 @@
 
     <div class="toolbar-center">
       <!-- Mode Switcher: Design vs Animated Data View -->
-      <fieldset class="segmented-group mode-switcher" aria-label="Workspace mode">
-        <legend class="visually-hidden">Workspace Mode</legend>
+      <fieldset class="segmented-group mode-switcher" aria-label="Lens">
+        <legend class="visually-hidden">Lens</legend>
         <label class="segmented-label">
           <input type="radio" name="workspace-mode" value="design" class="visually-hidden" checked>
           <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          <span>Design</span>
+          <span>Design</span><kbd class="lens-key" aria-hidden="true">1</kbd>
         </label>
         <label class="segmented-label">
           <input type="radio" name="workspace-mode" value="data" class="visually-hidden">
           <span class="pill-swatch" style="background: var(--wl-emerald);"></span>
-          <span>Data View</span>
+          <span>Traffic</span><kbd class="lens-key" aria-hidden="true">2</kbd>
         </label>
       </fieldset>
 
@@ -129,22 +129,22 @@
           <label class="segmented-label">
             <input type="radio" name="flow-filter" value="blue" class="visually-hidden">
             <span class="pill-swatch" style="background: var(--wl-blue);"></span>
-            <span>Primary</span>
+            <span data-tone-name="blue">Primary</span>
           </label>
           <label class="segmented-label">
             <input type="radio" name="flow-filter" value="emerald" class="visually-hidden">
             <span class="pill-swatch" style="background: var(--wl-emerald);"></span>
-            <span>Success</span>
+            <span data-tone-name="emerald">Success</span>
           </label>
           <label class="segmented-label">
             <input type="radio" name="flow-filter" value="rose" class="visually-hidden">
             <span class="pill-swatch" style="background: var(--wl-rose);"></span>
-            <span>Exception</span>
+            <span data-tone-name="rose">Exception</span>
           </label>
           <label class="segmented-label">
             <input type="radio" name="flow-filter" value="violet" class="visually-hidden">
             <span class="pill-swatch" style="background: var(--wl-violet);"></span>
-            <span>Control</span>
+            <span data-tone-name="violet">Control</span>
           </label>
         </fieldset>
       </div>
@@ -488,6 +488,26 @@
           <!-- Grab handles for the selected wire's ends. Above the nodes, or each node's port would swallow the press. -->
           <svg class="wires-layer wire-handles-layer" id="wire-handles-svg" viewBox="0 0 1680 920" width="1680" height="920" aria-hidden="true"></svg>
         </div>
+      </div>
+
+      <!-- Run bar (redesigned interface, Traffic lens): scenario picker and transport controls -->
+      <div class="run-bar" id="run-bar" role="region" aria-label="Run bar" hidden>
+        <select class="run-bar-scenario" id="run-bar-scenario" aria-label="Scenario"></select>
+        <button type="button" class="btn btn-icon-only btn-compact" data-run-step="-1" aria-label="Previous step" data-tip="Previous step" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+        </button>
+        <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-play" aria-label="Play" aria-pressed="false" data-tip="Play or pause" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+        </button>
+        <button type="button" class="btn btn-icon-only btn-compact" data-run-step="1" aria-label="Next step" data-tip="Next step" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+        </button>
+        <input type="range" class="run-bar-scrubber" id="run-bar-scrubber" min="0" max="0" value="0" step="1" aria-label="Scenario step">
+        <span class="run-bar-step" id="run-bar-step" aria-live="off">no run</span>
+        <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed" data-tip="Playback speed" data-tip-pos="top">1×</button>
+        <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+        </button>
       </div>
 
       <!-- Floating Bottom HUD -->
@@ -981,6 +1001,17 @@
               <span class="theme-option-sub">Keep components cleanly aligned while dragging</span>
             </span>
             <input type="checkbox" id="chk-snap-grid" name="snap-grid" checked>
+          </label>
+        </fieldset>
+
+        <fieldset class="theme-fieldset">
+          <legend style="font-weight: 700; padding-inline: 0.35rem; font-size: 0.85rem;">Layout</legend>
+          <label class="theme-option">
+            <span>
+              <strong>Classic layout</strong>
+              <span class="theme-option-sub">The original toolbar and panels. The page reloads when you change this.</span>
+            </span>
+            <input type="checkbox" id="chk-classic-layout" name="classic-layout">
           </label>
         </fieldset>
       </div>

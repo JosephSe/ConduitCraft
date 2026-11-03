@@ -65,4 +65,15 @@ describe('keymap', () => {
     assert.equal(matchBinding(ev('v'), { mode: 'data', hasSelection: false, ui: 2 }), null);
     assert.equal(matchBinding(ev('c', { ctrlKey: true }), v2), null, 'Cmd/Ctrl+C is copy, not Insert');
   });
+
+  it('binds lens keys 1, 2 and 4 in the redesigned interface from any lens, and leaves 3 for Review', () => {
+    for (const mode of ['design', 'data'] as const) {
+      const ctx = { mode, hasSelection: false, ui: 2 } as const;
+      assert.equal(matchBinding(ev('1'), ctx), 'mode-design');
+      assert.equal(matchBinding(ev('2'), ctx), 'mode-data');
+      assert.equal(matchBinding(ev('3'), ctx), null);
+      assert.equal(matchBinding(ev('4'), ctx), 'mode-presentation');
+    }
+    assert.equal(matchBinding(ev('1'), { mode: 'design', hasSelection: false }), null, 'classic UI has no lens keys');
+  });
 });

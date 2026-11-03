@@ -17,7 +17,17 @@ export default defineConfig({
     acceptDownloads: true,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    // The classic interface, kept under test now that the redesign is the default.
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: {
+          cookies: [],
+          origins: [{ origin: `http://localhost:${PORT}`, localStorage: [{ name: 'conduitcraft-ui', value: '1' }] }],
+        },
+      },
+    },
     // The same suite against the redesigned interface (`?ui=2` remembered in localStorage). Specs that
     // exercise controls the redesign deliberately moved are listed in UI2_SKIP below.
     {

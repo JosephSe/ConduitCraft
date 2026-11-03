@@ -354,7 +354,8 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     // Mode & View
     {
       id: 'mode-design',
-      title: 'Switch to Design Mode',
+      title: 'Switch to Design lens',
+      shortcut: '1',
       subtitle: 'Authoring mode with stencil palette and properties',
       category: 'Mode & View',
       keywords: ['design', 'edit', 'draft', 'author'],
@@ -368,7 +369,8 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'mode-data',
-      title: 'Switch to Data View Mode',
+      title: 'Switch to Traffic lens',
+      shortcut: '2',
       subtitle: 'Animated traffic, metrics and trace',
       category: 'Mode & View',
       keywords: ['data', 'telemetry', 'trace', 'simulation', 'stream'],

@@ -69,7 +69,9 @@ import type {
   StreamTone,
   SelectionTarget,
   NotesItemIcon,
+  WireProtocol,
 } from '../types';
+import { WIRE_PROTOCOLS, WIRE_PROTOCOL_NAMES } from '../core/wire';
 import { NOTES_ITEM_ICONS, normalizeNotesItemIcon } from '../types';
 import {
   STENCIL_CATALOG,
@@ -85,7 +87,17 @@ import {
 } from '../core/layout';
 import { normalizeBrandAccent } from '../core/brand';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
-import { TONE_CSS } from '../shared/tones';
+import { TONE_CSS, TONE_META } from '../shared/tones';
+import {
+  LINK_KINDS,
+  LINK_KIND_NAMES,
+  MAX_LEGEND_LABEL,
+  MAX_LINKS,
+  normalizeLinks,
+  parseTagInput,
+  safeLinkUrl,
+  toneName,
+} from '../core/meta';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -109,6 +121,13 @@ export function withInspectorTransition(updateFn: () => void): void {
 // ---------------------------------------------------------------------------
 // Design Mode: Right Contextual Property Editor
 // ---------------------------------------------------------------------------
+function makeOption(value: string, text: string): HTMLOptionElement {
+  const option = document.createElement('option');
+  option.value = value;
+  option.textContent = text;
+  return option;
+}
+
 export function makeField(
   id: string,
   labelText: string,
@@ -177,6 +196,114 @@ export function makeTextarea(
   return ta;
 }
 
+/** Comma-separated tags (F-26). Empty input clears the field. */
+function makeTagsField(id: string, tags: string[] | undefined, onChange: (next: string[] | undefined) => void): HTMLElement {
+  const input = makeTextInput((tags ?? []).join(', '), (value) => {
+    const next = parseTagInput(value);
+    onChange(next.length ? next : undefined);
+  });
+  input.placeholder = 'pii, payments, third party';
+  return makeField(id, 'Tags', input);
+}
+
+/** Ownership and links for a component (F-27): owner text, clickable link icons, and a row editor. */
+function makeLinksEditor(node: DiagramNode): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'prop-links';
+  const rows = (node.links ?? []).map((link) => ({ ...link }));
+
+  const openers = document.createElement('div');
+  openers.className = 'prop-link-openers';
+  const list = document.createElement('div');
+  list.className = 'prop-link-rows';
+  const hint = document.createElement('p');
+  hint.className = 'prop-hint';
+  hint.hidden = true;
+  hint.textContent = 'Only http, https and mailto links are kept.';
+
+  const commit = (): void => {
+    const kept = normalizeLinks(rows);
+    node.links = kept.length ? kept : undefined;
+    hint.hidden = rows.every((row) => !row.url.trim() || safeLinkUrl(row.url));
+    drawOpeners();
+  };
+  const drawOpeners = (): void => {
+    openers.replaceChildren();
+    for (const link of node.links ?? []) {
+      const a = document.createElement('a');
+      a.className = 'prop-link-open';
+      a.href = link.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = link.label;
+      if (link.kind) a.dataset.kind = link.kind;
+      openers.appendChild(a);
+    }
+  };
+  const drawRows = (): void => {
+    list.replaceChildren();
+    rows.forEach((row, index) => {
+      const line = document.createElement('div');
+      line.className = 'prop-link-row';
+      const kind = document.createElement('select');
+      kind.className = 'prop-select';
+      kind.setAttribute('aria-label', 'Link type');
+      kind.appendChild(makeOption('', 'Link'));
+      for (const k of LINK_KINDS) kind.appendChild(makeOption(k, LINK_KIND_NAMES[k]));
+      kind.value = row.kind ?? '';
+      kind.addEventListener('change', () => {
+        pushHistory();
+        if (kind.value) row.kind = kind.value as NonNullable<typeof row.kind>;
+        else delete row.kind;
+        commit();
+        renderAll(false);
+      });
+      const label = makeTextInput(row.label, (value) => {
+        row.label = value;
+        commit();
+      });
+      label.placeholder = 'Label';
+      label.setAttribute('aria-label', 'Link label');
+      const url = makeTextInput(row.url, (value) => {
+        row.url = value;
+        commit();
+      });
+      url.placeholder = 'https://';
+      url.setAttribute('aria-label', 'Link address');
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'btn btn-compact';
+      remove.textContent = 'Remove';
+      remove.setAttribute('aria-label', `Remove link ${index + 1}`);
+      remove.addEventListener('click', () => {
+        pushHistory();
+        rows.splice(index, 1);
+        commit();
+        drawRows();
+        renderAll(false);
+      });
+      line.append(kind, label, url, remove);
+      list.appendChild(line);
+    });
+  };
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.id = 'prop-node-link-add';
+  add.className = 'btn btn-compact';
+  add.textContent = 'Add link';
+  add.addEventListener('click', () => {
+    if (rows.length >= MAX_LINKS) return;
+    pushHistory();
+    rows.push({ label: '', url: '' });
+    drawRows();
+  });
+
+  drawOpeners();
+  drawRows();
+  wrap.append(openers, list, hint, add);
+  return wrap;
+}
+
 export function makeTonePicker(
   groupName: string,
   current: StreamTone,
@@ -192,7 +319,11 @@ export function makeTonePicker(
   for (const opt of STREAM_TONE_OPTIONS) {
     const lbl = document.createElement('label');
     lbl.className = 'swatch-option swatch-dot-only';
-    const capName = opt.id.charAt(0).toUpperCase() + opt.id.slice(1);
+    const capName = toneName(
+      app.doc.legend,
+      opt.id,
+      opt.id.charAt(0).toUpperCase() + opt.id.slice(1),
+    );
     lbl.setAttribute('data-tip', capName);
     lbl.setAttribute('aria-label', capName);
 
@@ -841,6 +972,28 @@ export function renderPropertyEditor(): void {
       ),
     );
 
+    reviewElements.push(
+      makeField(
+        'prop-node-owner',
+        'Owner',
+        makeTextInput(node.owner || '', (v) => {
+          node.owner = v.trim() || undefined;
+        }),
+      ),
+    );
+    reviewElements.push(
+      makeTagsField('prop-node-tags', node.tags, (next) => {
+        node.tags = next;
+      }),
+    );
+    const linksField = document.createElement('div');
+    linksField.className = 'prop-field';
+    const linksTitle = document.createElement('span');
+    linksTitle.className = 'field-label';
+    linksTitle.textContent = 'Links';
+    linksField.append(linksTitle, makeLinksEditor(node));
+    reviewElements.push(linksField);
+
     // Assemble Form Sections
     form.append(
       makeCollapsibleSection('basics', 'Basics', true, basicsElements),
@@ -869,6 +1022,54 @@ export function renderPropertyEditor(): void {
           renderWiresOnly();
         }),
       ),
+    );
+
+    // Protocol, call style and latency (F-17). Empty means "not set" and is left out of the saved file.
+    const protocolSelect = document.createElement('select');
+    protocolSelect.className = 'prop-select';
+    protocolSelect.append(makeOption('', 'Not set'));
+    for (const p of WIRE_PROTOCOLS) protocolSelect.append(makeOption(p, WIRE_PROTOCOL_NAMES[p]));
+    protocolSelect.value = edge.protocol ?? '';
+    protocolSelect.addEventListener('change', () => {
+      pushHistory();
+      edge.protocol = protocolSelect.value ? (protocolSelect.value as WireProtocol) : undefined;
+      if (!edge.protocol) delete edge.protocol;
+      renderAll(false);
+    });
+    form.appendChild(makeField('prop-edge-protocol', 'Protocol', protocolSelect));
+
+    const syncSelect = document.createElement('select');
+    syncSelect.className = 'prop-select';
+    syncSelect.append(makeOption('sync', 'Waits for a reply (sync)'), makeOption('async', "Doesn't wait (async, dashed)"));
+    syncSelect.value = edge.sync === 'async' ? 'async' : 'sync';
+    syncSelect.addEventListener('change', () => {
+      pushHistory();
+      if (syncSelect.value === 'async') edge.sync = 'async';
+      else delete edge.sync;
+      renderAll(false);
+    });
+    form.appendChild(makeField('prop-edge-sync', 'Call style', syncSelect));
+
+    const latencyInput = document.createElement('input');
+    latencyInput.type = 'number';
+    latencyInput.min = '0';
+    latencyInput.step = '1';
+    latencyInput.className = 'prop-input';
+    latencyInput.placeholder = 'e.g. 120';
+    latencyInput.value = edge.latencyMs === undefined ? '' : String(edge.latencyMs);
+    latencyInput.addEventListener('focus', () => beginHistoryGesture());
+    latencyInput.addEventListener('blur', () => endHistoryGesture());
+    latencyInput.addEventListener('input', () => {
+      pushHistory();
+      const ms = Number(latencyInput.value);
+      if (latencyInput.value !== '' && Number.isFinite(ms) && ms >= 0) edge.latencyMs = Math.round(ms);
+      else delete edge.latencyMs;
+    });
+    form.appendChild(makeField('prop-edge-latency', 'Typical latency (ms)', latencyInput));
+    form.appendChild(
+      makeTagsField('prop-edge-tags', edge.tags, (next) => {
+        edge.tags = next;
+      }),
     );
 
     // Source / Target: the keyboard route to what dragging a wire end does on the canvas.
@@ -1814,6 +2015,28 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
+
+    const legendHeading = document.createElement('h3');
+    legendHeading.className = 'section-heading';
+    legendHeading.textContent = 'COLOUR LEGEND';
+    form.appendChild(legendHeading);
+    for (const tone of Object.keys(TONE_META) as StreamTone[]) {
+      const input = makeTextInput(app.doc.legend?.find((entry) => entry.tone === tone)?.label ?? '', (value) => {
+        const label = value.trim().slice(0, MAX_LEGEND_LABEL);
+        const rest = (app.doc.legend ?? []).filter((entry) => entry.tone !== tone);
+        const next = label ? [...rest, { tone, label }] : rest;
+        const order = Object.keys(TONE_META);
+        next.sort((a, b) => order.indexOf(a.tone) - order.indexOf(b.tone));
+        app.doc.legend = next.length ? next : undefined;
+        renderAll(false);
+      });
+      input.placeholder = TONE_META[tone].shortLabel;
+      form.appendChild(makeField(`prop-legend-${tone}`, `${TONE_META[tone].shortLabel} means`, input));
+    }
+    const legendNote = document.createElement('p');
+    legendNote.className = 'prop-hint';
+    legendNote.textContent = 'Name what each colour means for your team. It replaces the default name in the pickers, the filter and the exported page.';
+    form.appendChild(legendNote);
 
     const brandHeading = document.createElement('h3');
     brandHeading.className = 'section-heading';

@@ -15,6 +15,13 @@ export interface SimulationPlaybackState {
   speed: SimulationSpeed;
 }
 
+const playbackListeners = new Set<(state: SimulationPlaybackState) => void>();
+
+/** Subscribe to every change of the shared playback (used by the run bar). */
+export function onPlaybackChange(listener: (state: SimulationPlaybackState) => void): void {
+  playbackListeners.add(listener);
+}
+
 export class SimulationPlaybackController {
   private scenario: SimulationScenario | null = null;
   private currentStepIndex = -1;
@@ -243,6 +250,7 @@ export class SimulationPlaybackController {
       this.onStateChange(this.getState());
     }
     updatePlaybackDeckUi(this.getState());
+    for (const listener of playbackListeners) listener(this.getState());
   }
 
   private renderCurrentStep(): void {

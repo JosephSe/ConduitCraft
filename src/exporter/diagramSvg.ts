@@ -205,7 +205,9 @@ export function renderDiagramSvg(
       const dash =
         frame && edge.animated !== false
           ? ` stroke-dasharray="8 10" stroke-dashoffset="${frame.dashOffset}"`
-          : '';
+          : edge.sync === 'async'
+            ? ' stroke-dasharray="7 6"'
+            : '';
       return `<g${wireOpacity}>${glow}<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}</g>`;
     })
     .join('');

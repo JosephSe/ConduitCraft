@@ -155,9 +155,34 @@ export interface DiagramNode {
   groupId?: string;
   status?: ComponentStatus;
   comment?: string;
+  /** Free-form labels used to filter and colour (F-26). */
+  tags?: string[];
+  /** Team or person responsible for the component (F-27). */
+  owner?: string;
+  /** Where to go from here: repository, runbook, dashboard and so on (F-27). */
+  links?: NodeLink[];
+}
+
+export type NodeLinkKind = 'repo' | 'runbook' | 'dashboard' | 'docs' | 'oncall';
+
+/** An http, https or mailto link. The URL is checked by `safeLinkUrl` wherever it enters or leaves the app. */
+export interface NodeLink {
+  label: string;
+  url: string;
+  kind?: NodeLinkKind;
+}
+
+/** What a colour means in this document (F-26). Replaces the built-in name wherever tones are named. */
+export interface LegendEntry {
+  tone: StreamTone;
+  label: string;
+  description?: string;
 }
 
 export type EdgeFlowMode = 'forward' | 'both';
+
+export type WireProtocol = 'http' | 'grpc' | 'graphql' | 'kafka' | 'amqp' | 'sql' | 'custom';
+export type WireSync = 'sync' | 'async';
 
 export interface DiagramEdge {
   id: string;
@@ -174,6 +199,14 @@ export interface DiagramEdge {
   /** Optional manual bend point (world coordinates) the wire is nudged through. */
   waypoint?: [number, number];
   comment?: string;
+  /** What the wire carries, shown as a prefix on its label (F-17). */
+  protocol?: WireProtocol;
+  /** Async wires draw dashed and are left out of synchronous-cycle checks. Absent means sync. */
+  sync?: WireSync;
+  /** Typical latency of the call in milliseconds. */
+  latencyMs?: number;
+  /** Free-form labels used to filter and colour (F-26). */
+  tags?: string[];
 }
 
 export interface RoutedDiagramEdge extends DiagramEdge {
@@ -226,6 +259,8 @@ export interface DiagramDocument {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   simulations: SimulationScenario[];
+  /** Custom names for the five colours. Absent means the built-in names. */
+  legend?: LegendEntry[];
 }
 
 export type SelectionTarget =

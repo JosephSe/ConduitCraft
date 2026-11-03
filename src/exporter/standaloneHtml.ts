@@ -11,6 +11,7 @@ import {
   storeDrawsCylinder,
 } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
+import { normalizeLinks, toneName } from '../core/meta';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
@@ -173,7 +174,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
               (tone) => `<label class="segmented-label">
             <input type="radio" name="flow-filter" value="${tone}" class="visually-hidden">
             <span class="pill-swatch" style="background: ${TONE_META[tone].cssVar};"></span>
-            <span>${escapeHtml(TONE_META[tone].shortLabel)}</span>
+            <span>${escapeHtml(toneName(doc.legend, tone, TONE_META[tone].shortLabel))}</span>
           </label>`,
             )
             .join('')}
@@ -249,7 +250,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       }
 
       return `
-        <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-flow="${escapeHtml(e.flow || 'forward')}">
+        <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-sync="${e.sync === 'async' ? 'async' : 'sync'}" data-flow="${escapeHtml(e.flow || 'forward')}">
           <path class="conduit-glow" d="${e.pathD}"/>
           <path class="conduit-rail" d="${e.pathD}"/>
           <path class="conduit-stream" d="${e.pathD}"${markerAttr}/>
@@ -305,6 +306,9 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       downstream: string[];
       code: string;
       center: [number, number];
+      owner: string;
+      tags: string[];
+      links: Array<{ label: string; url: string; kind?: string }>;
     }
   > = {};
 
@@ -320,6 +324,10 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       downstream: adj.downstream.map((d) => d.id),
       code: n.code,
       center: [Math.round(n.x + n.width / 2), Math.round(n.y + n.height / 2)],
+      owner: n.owner ?? '',
+      tags: n.tags ?? [],
+      // Checked again here so a link that slipped past import still cannot reach the page.
+      links: normalizeLinks(n.links),
     };
   }
 
@@ -449,6 +457,25 @@ ${colorSchemeBoot}
           <div class="inspector-section">
             <h3 class="section-heading">CONNECTED LINEAGE</h3>
             <div class="lineage-group" id="insp-lineage"></div>
+          </div>
+          ${
+            doc.legend?.length
+              ? `<div class="inspector-section">
+            <h3 class="section-heading">COLOUR LEGEND</h3>
+            <ul class="legend-list" id="insp-legend">${doc.legend
+              .map(
+                (entry) =>
+                  `<li><span class="pill-swatch" style="background: ${TONE_META[entry.tone].cssVar};"></span> <strong>${escapeHtml(entry.label)}</strong>${entry.description ? ` — ${escapeHtml(entry.description)}` : ''}</li>`,
+              )
+              .join('')}</ul>
+          </div>`
+              : ''
+          }
+          <div class="inspector-section" id="insp-ownership" hidden>
+            <h3 class="section-heading">OWNERSHIP &amp; LINKS</h3>
+            <p class="inspector-summary" id="insp-owner"></p>
+            <p class="inspector-summary" id="insp-tags"></p>
+            <div class="lineage-group" id="insp-links"></div>
           </div>
           <div class="inspector-section">
             <h3 class="section-heading">INTERFACE PAYLOAD</h3>
@@ -741,8 +768,30 @@ ${colorSchemeBoot}
           inspSummary.textContent = data.summary;
           renderMetrics(data.metrics);
           renderLineage(data.upstream, data.downstream);
+          renderOwnership(data);
           inspCode.textContent = data.code;
         });
+      }
+
+      function renderOwnership(data) {
+        const section = document.getElementById('insp-ownership');
+        const links = (data && data.links) || [];
+        const tags = (data && data.tags) || [];
+        const owner = (data && data.owner) || '';
+        section.hidden = !(owner || tags.length || links.length);
+        document.getElementById('insp-owner').textContent = owner ? 'Owner: ' + owner : '';
+        document.getElementById('insp-tags').textContent = tags.length ? 'Tags: ' + tags.join(', ') : '';
+        const box = document.getElementById('insp-links');
+        box.replaceChildren();
+        for (const link of links) {
+          if (!/^(https?:|mailto:)/i.test(link.url)) continue;
+          const a = document.createElement('a');
+          a.href = link.url;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = link.label;
+          box.appendChild(a);
+        }
       }
 
       function showOverview() {
@@ -758,6 +807,7 @@ ${colorSchemeBoot}
             { label: 'Streams', value: String(conduitGroups.length) }
           ]);
           renderLineage([], Object.keys(DATA.nodes));
+          renderOwnership(null);
           inspCode.textContent = JSON.stringify({ title: ${serializeScriptJson(doc.title)}, nodes: Object.keys(DATA.nodes).length, streams: conduitGroups.length }, null, 2);
         });
       }

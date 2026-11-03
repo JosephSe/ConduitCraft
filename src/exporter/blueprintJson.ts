@@ -12,7 +12,10 @@ import type {
   StreamTone,
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
+import { normalizeWireFields } from '../core/wire';
+import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta';
 import { normalizeBrand } from '../core/brand';
+import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
 import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
 import { normalizeIconName } from '../ui/icons';
@@ -88,6 +91,7 @@ function coerceNode(raw: unknown): DiagramNode | null {
       ? { status: raw.status as DiagramNode['status'] }
       : {}),
     ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
+    ...normalizeNodeMeta(raw),
     ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
     ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
   };
@@ -113,6 +117,8 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     animated: raw.animated !== false,
     flow: raw.flow === 'both' ? 'both' : 'forward',
     ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
+    ...normalizeWireFields(raw),
+    ...(normalizeTags(raw.tags).length ? { tags: normalizeTags(raw.tags) } : {}),
     ...(waypoint ? { waypoint } : {}),
   };
 }
@@ -152,7 +158,7 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
 }
 
 export function serializeBlueprintJson(doc: DiagramDocument): string {
-  return JSON.stringify({ kind: BLUEPRINT_JSON_KIND, version: 1, document: doc }, null, 2);
+  return JSON.stringify({ kind: BLUEPRINT_JSON_KIND, version: CURRENT_SCHEMA_VERSION, document: doc }, null, 2);
 }
 
 export function parseBlueprintJson(text: string): BlueprintJsonResult {
@@ -162,10 +168,15 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
   } catch {
     return { ok: false, error: 'Blueprint JSON is not valid JSON.' };
   }
-  const source = isRecord(data) && isRecord(data.document) ? data.document : data;
-  if (!isRecord(source) || !Array.isArray(source.nodes)) {
+  const enveloped = isRecord(data) && isRecord(data.document);
+  const rawSource = enveloped ? (data as Record<string, unknown>).document : data;
+  if (!isRecord(rawSource) || !Array.isArray(rawSource.nodes)) {
     return { ok: false, error: 'Blueprint JSON needs a nodes array.' };
   }
+  const migrated = migrate(rawSource, enveloped ? (data as Record<string, unknown>).version : undefined);
+  if (!migrated.ok) return migrated;
+  const source = migrated.doc;
+  if (!Array.isArray(source.nodes)) return { ok: false, error: 'Blueprint JSON needs a nodes array.' };
 
   const blank = createBlankDocument();
   const doc: DiagramDocument = {
@@ -202,6 +213,8 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
       : [],
     simulations: Array.isArray(source.simulations) ? (source.simulations as DiagramDocument['simulations']) : [],
   };
+  const legend = normalizeLegend(source.legend);
+  if (legend.length) doc.legend = legend;
   expandStageToFit(doc);
   return { ok: true, doc };
 }

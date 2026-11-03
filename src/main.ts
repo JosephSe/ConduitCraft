@@ -11,7 +11,7 @@ import { findPaletteCommand } from './studio/palette';
 import { initToolRail } from './studio/toolRail';
 import { initInspectorAutoShow } from './studio/inspectorAutoShow';
 import { initContextToolbar } from './studio/contextToolbar';
-import { resolveUiVersion } from './core/uiVersion';
+import { UI_VERSION_STORAGE_KEY, resolveUiVersion } from './core/uiVersion';
 
 // Choose the interface generation before anything paints: `?ui=2` is the redesign, remembered per browser.
 try {
@@ -39,6 +39,21 @@ try {
   }
 } catch {
   // Storage unavailable: the palette just opens as it does in the classic layout.
+}
+// "Classic layout" in settings: the chrome is chosen at boot, so the choice is stored and the page reloads.
+const classicToggle = document.getElementById('chk-classic-layout') as HTMLInputElement | null;
+if (classicToggle) {
+  classicToggle.checked = document.documentElement.dataset.ui === '1';
+  classicToggle.addEventListener('change', () => {
+    try {
+      localStorage.setItem(UI_VERSION_STORAGE_KEY, classicToggle.checked ? '1' : '2');
+    } catch {
+      // Storage unavailable: fall back to the URL, which resolveUiVersion also honours.
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.set('ui', classicToggle.checked ? '1' : '2');
+    window.location.assign(url.href);
+  });
 }
 bootStudio();
 initToolRail();
