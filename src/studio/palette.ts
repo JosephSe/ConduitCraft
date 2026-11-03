@@ -1,4 +1,5 @@
 /** Command Palette (Cmd/Ctrl+K) controller. */
+import { describeDiagram } from '../core/describe';
 import { app, fullDocument, goUpLevel, openComponentLevel, fitSelection, fitToViewport, performRedo, performUndo, pushHistory, setSelection, zoomAround } from './state';
 import { autoLayoutDocument, expandStageToFit } from '../core/layout';
 import { createNodeFromStencil, createSwimlaneZone, createNotesCard } from '../templates/presets';
@@ -790,6 +791,25 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['new', 'template', 'gallery', 'starter', 'blank', 'architecture'],
       run: () => {
         deps.openTemplateGallery ? deps.openTemplateGallery() : deps.loadShowcase();
+      },
+    },
+    {
+      id: 'copy-as-text',
+      title: 'Copy as text',
+      subtitle: 'A written description of this diagram, for design docs and pull requests',
+      category: 'Export & Sync',
+      keywords: ['text', 'describe', 'description', 'outline', 'alt', 'accessible', 'copy', 'clipboard'],
+      run: async () => {
+        if (app.doc.nodes.length === 0) {
+          notify('Canvas is empty. Add components before copying a description', { tone: 'error' });
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(describeDiagram(fullDocument()));
+          notify('Copied the description as text');
+        } catch {
+          notify('Could not copy to the clipboard', { tone: 'error' });
+        }
       },
     },
     {

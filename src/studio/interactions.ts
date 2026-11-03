@@ -75,6 +75,8 @@ import {
   exportDialogTitle,
   shareLinkInput,
   btnCopyShareLink,
+  btnCopyAltText,
+  exportAltText,
   shareLinkSize,
   chkShareOmitImages,
   fileUploadInput,
@@ -179,6 +181,7 @@ import {
   serializeToBlueprintMarkdown,
 } from '../core/parser';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
+import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
@@ -2048,10 +2051,17 @@ export function initEvents(): void {
     renderAll(false);
     resetGifChoices();
     updatePngExportEstimate();
+    if (exportAltText) exportAltText.value = describeDiagramBrief(app.doc);
     void updateShareLinkPreview();
     exportDialog.showModal();
   };
   btnOpenExport.addEventListener('click', openExportDialog);
+  btnCopyAltText?.addEventListener('click', () => {
+    void navigator.clipboard.writeText(exportAltText?.value ?? '').then(
+      () => notify('Copied alt text'),
+      () => notify('Could not copy. Select the text and copy it by hand.', { tone: 'error' }),
+    );
+  });
   btnExportHtml.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);

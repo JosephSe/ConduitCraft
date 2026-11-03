@@ -1,4 +1,5 @@
 /** Standalone SVG picture of a diagram. No studio CSS or external assets. */
+import { describeDiagram } from '../core/describe';
 import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { sanitizeIconImage } from '../core/nodeStyle';
@@ -236,7 +237,9 @@ export function renderDiagramSvg(
   const legend = legendMarkup(doc, height);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="diagram-title diagram-desc">
+  <title id="diagram-title">${escapeXml(doc.title.trim() || 'Untitled diagram')}</title>
+  <desc id="diagram-desc">${escapeXml(describeDiagram(doc))}</desc>
   <defs>${markers}</defs>
   <rect width="100%" height="100%" fill="#f8fafc"/>
   ${zones}

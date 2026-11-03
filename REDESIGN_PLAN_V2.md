@@ -168,7 +168,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Do:** in `startFirstRunIfNew` (`src/studio/firstRun.ts`), add "the library holds any entry" to `FirstRunFacts.hasSavedWork`, and read the autosave and recovery copies from the new storage layer instead of `localStorage` (B2 moves them). The check is async (IndexedDB), so wait for it before showing the card.
 - **Done when:** a Playwright test seeds a library entry with no autosave and sees no first run.
 
-#### [ ] A7. F-28 `describeDiagram` and export alt text · M
+#### [x] A7. F-28 `describeDiagram` and export alt text · M (#37)
 - **Spec:** V1 F-28, items 1 to 3 plus "Copy as text".
 - **Do:** write a pure `src/core/describe.ts` (no DOM, so it already meets T-07). The outline is: summary; each swimlane with its components; main flows grouped by source, with protocol from F-17; levels ("Checkout API opens into 6 components"); scenarios; and the legend from F-26 when one is set. Use it for `<title>` and `<desc>` in `diagramSvg.ts`, a visually hidden description in `standaloneHtml.ts`, an "Alt text" box with Copy in the PNG export dialog, and a palette command "Copy as text".
 - **Tests:** one golden-text test per bundled example in `tests/describe.test.ts`, and a test that the module imports with no DOM globals.
