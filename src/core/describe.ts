@@ -35,7 +35,7 @@ function sentence(text: string): string {
 const nameOf = (node: DiagramNode | undefined): string => txt(node?.title) || 'an untitled component';
 
 /** Which swimlane a component sits in: the one that holds its centre. */
-function zoneOf(content: LevelContent, node: DiagramNode) {
+export function zoneOf(content: LevelContent, node: DiagramNode) {
   const centre = node.x + node.width / 2;
   return (content.zones ?? []).find((zone) => centre >= zone.x && centre < zone.x + zone.width);
 }
@@ -65,6 +65,12 @@ function target(edge: DiagramEdge, to: DiagramNode | undefined): string {
   const label = txt(edge.label) ? ` for “${txt(edge.label)}”` : '';
   const latency = edge.latencyMs !== undefined ? ` (about ${edge.latencyMs} ms)` : '';
   return `${nameOf(to)}${proto}${label}${latency}`;
+}
+
+/** One wire read from its source: "calls Orders DB over SQL (about 20 ms)". Used by the text outline too. */
+export function describeWire(edge: DiagramEdge, to: DiagramNode | undefined): string {
+  const verb = edge.flow === 'both' ? 'exchanges data with' : edge.sync === 'async' ? 'sends messages to' : 'calls';
+  return `${verb} ${target(edge, to)}`;
 }
 
 function flowLines(content: LevelContent): string[] {

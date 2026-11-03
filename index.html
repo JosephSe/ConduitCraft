@@ -293,6 +293,10 @@
             <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
             <span>Fit to Viewport</span>
           </button>
+          <button type="button" class="menu-item" id="btn-overflow-outline" role="menuitemcheckbox" aria-checked="false">
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+            <span>Text Outline</span>
+          </button>
           <button type="button" class="menu-item" id="btn-overflow-layout" role="menuitem">
             <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
             <span>Auto-Layout</span>
@@ -541,6 +545,15 @@
       <aside class="insights-panel" id="insights-panel" aria-label="Insights" hidden>
         <h2 class="insights-heading" id="insights-heading"></h2>
         <div class="insights-body" id="insights-body"></div>
+      </aside>
+
+      <!-- Text outline (F-28): the diagram as a keyboard-navigable tree -->
+      <aside class="outline-panel" id="outline-panel" aria-label="Text outline" hidden>
+        <div class="outline-head">
+          <h2 class="outline-heading" id="outline-heading">Text outline</h2>
+          <button type="button" class="btn btn-compact" id="outline-close" aria-label="Close text outline">Close</button>
+        </div>
+        <div class="outline-tree" id="outline-tree" role="tree" aria-labelledby="outline-heading"></div>
       </aside>
 
       <!-- Colour legend card: shown only when the document names its colours -->

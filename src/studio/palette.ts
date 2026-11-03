@@ -14,6 +14,7 @@ import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
 import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
+import { toggleOutline } from './outlinePanel';
 import { saveSnapshot } from './snapshots';
 import { selectionOfStage } from './selection';
 import { chaosLensActive, clearFailures, failedIds, toggleFailure } from './chaos';
@@ -422,6 +423,14 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => {
         responsiveToolbar.togglePalette();
       },
+    },
+    {
+      id: 'toggle-outline',
+      title: 'Toggle Text Outline',
+      subtitle: 'A keyboard-friendly list of components, wires and levels',
+      category: 'Mode & View',
+      keywords: ['outline', 'text', 'tree', 'list', 'accessible', 'screen reader', 'navigate', 'keyboard'],
+      run: toggleOutline,
     },
     {
       id: 'toggle-inspector',

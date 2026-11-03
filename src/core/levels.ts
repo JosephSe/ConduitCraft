@@ -14,7 +14,8 @@ const LEVEL_FIELDS = ['nodes', 'edges', 'zones', 'notesCards'] as const;
 /** Shell fields a level shares with the root but sizes for itself. */
 const LEVEL_OWN_SHELL = ['stageWidth', 'stageHeight'] as const;
 
-function contentAt(root: DiagramDocument, path: LevelPath): LevelContent | null {
+/** The content (components, wires, swimlanes, notes) of the level at `path`, or null when it does not exist. */
+export function contentAt(root: DiagramDocument, path: LevelPath): LevelContent | null {
   let current: LevelContent = root;
   for (const id of path) {
     const next: LevelContent | undefined = current.nodes.find((n) => n.id === id)?.child;
