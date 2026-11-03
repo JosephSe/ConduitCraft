@@ -530,6 +530,7 @@
         <select class="run-bar-scenario js-tag-filter" aria-label="Show only components with tag">
           <option value="">All tags</option>
         </select>
+        <button type="button" class="help-btn" data-help="traffic" aria-label="Help: Traffic and scenarios" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
       </div>
 
       <!-- Chaos summary (Traffic lens): what the current failures break -->
@@ -537,13 +538,17 @@
         <div class="chaos-panel-head">
           <button type="button" class="btn btn-compact" id="chaos-summary" aria-expanded="false" aria-controls="chaos-list"></button>
           <button type="button" class="btn btn-compact" id="chaos-reset">Restore all</button>
+          <button type="button" class="help-btn" data-help="failing" aria-label="Help: Failing components" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
         </div>
         <ul class="chaos-list" id="chaos-list" hidden></ul>
       </section>
 
       <!-- Insights (Review lens): issues grouped by rule; a click selects the target -->
       <aside class="insights-panel" id="insights-panel" aria-label="Insights" hidden>
-        <h2 class="insights-heading" id="insights-heading"></h2>
+        <div class="insights-head">
+          <h2 class="insights-heading" id="insights-heading"></h2>
+          <button type="button" class="help-btn" data-help="review" aria-label="Help: Review and insights" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
+        </div>
         <div class="insights-body" id="insights-body"></div>
       </aside>
 

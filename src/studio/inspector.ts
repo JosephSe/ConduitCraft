@@ -1,4 +1,5 @@
 /** Design-mode property editor and Data View telemetry inspector. */
+import { helpButton } from './helpPopover';
 import {
   SVG_NS,
   btnPropDuplicate,
@@ -564,6 +565,17 @@ export function makeCollapsibleSection(
   return details;
 }
 
+/**
+ * A section with a `?` beside its title. The button sits next to the <summary>, not inside it, because a
+ * control nested in a <summary> is a nested interactive element (axe `nested-interactive`).
+ */
+function sectionWithHelp(details: HTMLDetailsElement, topicId: string): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'prop-section-wrap';
+  wrap.append(details, helpButton(topicId));
+  return wrap;
+}
+
 function updateSelectionActionButtons(sel: SelectionTarget): void {
   if (sel.type === 'none') {
     propSelectionActions.hidden = true;
@@ -1045,11 +1057,11 @@ export function renderPropertyEditor(): void {
 
     // Assemble Form Sections
     form.append(
-      makeCollapsibleSection('basics', 'Basics', true, basicsElements),
-      makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements),
-      makeCollapsibleSection('review', 'Review & Status', true, reviewElements),
-      makeCollapsibleSection('metadata', 'More details', false, metadataElements),
-      makeCollapsibleSection('telemetry', 'Metrics & Contract', false, telemetryElements),
+      sectionWithHelp(makeCollapsibleSection('basics', 'Basics', true, basicsElements), 'components'),
+      sectionWithHelp(makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements), 'components'),
+      sectionWithHelp(makeCollapsibleSection('review', 'Review & Status', true, reviewElements), 'links-owner'),
+      sectionWithHelp(makeCollapsibleSection('metadata', 'More details', false, metadataElements), 'components'),
+      sectionWithHelp(makeCollapsibleSection('telemetry', 'Metrics & Contract', false, telemetryElements), 'traffic'),
     );
   } else if (sel.type === 'edge') {
     const edge = app.doc.edges.find((e) => e.id === sel.id);
@@ -1062,6 +1074,11 @@ export function renderPropertyEditor(): void {
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
 
+    const wireHeading = document.createElement('h3');
+    wireHeading.className = 'section-heading';
+    wireHeading.textContent = 'WIRE FIELDS';
+    wireHeading.appendChild(helpButton('wire-fields'));
+    form.appendChild(wireHeading);
     form.appendChild(
       makeField(
         'prop-edge-label',
@@ -1167,6 +1184,7 @@ export function renderPropertyEditor(): void {
     const routeLegend = document.createElement('legend');
     routeLegend.className = 'field-label';
     routeLegend.textContent = 'Routing Style';
+    routeLegend.appendChild(helpButton('routing'));
     routeFieldset.appendChild(routeLegend);
 
     const routeGrid = document.createElement('div');
@@ -2070,6 +2088,7 @@ export function renderPropertyEditor(): void {
     const legendHeading = document.createElement('h3');
     legendHeading.className = 'section-heading';
     legendHeading.textContent = 'COLOUR LEGEND';
+    legendHeading.appendChild(helpButton('legend'));
     form.appendChild(legendHeading);
     for (const tone of Object.keys(TONE_META) as StreamTone[]) {
       const input = makeTextInput(app.doc.legend?.find((entry) => entry.tone === tone)?.label ?? '', (value) => {

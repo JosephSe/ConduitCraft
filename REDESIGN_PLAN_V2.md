@@ -180,13 +180,14 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Done when:** axe passes with the panel open in all four lenses, and a Playwright test navigates to a component by keyboard only and selects it.
 - **Shipped as:** `src/core/outline.ts` (pure tree), `src/studio/outlinePanel.ts`, opened from the palette ("Toggle Text Outline") and the More actions menu, since there is no View menu in this UI. It uses the ARIA tree pattern with one tab stop, which is the same idea as `rovingFocus.ts` but its own handler, because rows are in a panel and not on the canvas.
 
-#### [ ] A9. R-10 Contextual help · M
+#### [x] A9. R-10 Contextual help · M (#39)
 - **Needs:** A2.
 - **Do:**
   1. Grow `docs/guide.md` (194 lines today) with one section per panel or concept: Lenses, Traffic and scenarios, Failing components, Review and insights (one paragraph per rule code), Levels, Legend and tags, Links and owner, Wire fields, Text outline, Importing Mermaid, Share and export. Remove "Blueprint Markdown" in favour of "Blueprint file" (Appendix A).
   2. Add a `?` button to each inspector section, the run bar, the chaos summary and the Review panel. It opens a popover (placed with `placeTooltip`) with 2 or 3 sentences and a link to the guide section on GitHub.
   3. Keep the help text in one module, `src/core/helpTopics.ts` (`{ id, title, body, guideAnchor }`), so the palette can search it ("help: routing styles") and a unit test can check every `guideAnchor` exists in `docs/guide.md`.
 - **Done when:** the anchor test passes, and every `?` is reachable by keyboard and closes with `Esc`.
+- **Shipped as:** `src/core/helpTopics.ts` (13 topics), `src/studio/helpPopover.ts` (one popover for every `?`, placed with `placeTooltip`), 13 palette commands ("Help: Routing styles" and so on), and 12 new sections in `docs/guide.md`. A `?` is on the five node inspector sections, the wire fields and routing style, the colour legend, the run bar, the failure summary and the Review panel. "Blueprint Markdown" is gone from the guide. Guide wording that was a judgement call (rule explanations, key tables) is mine, so a maintainer should read it once.
 
 #### [ ] A10. README and media refresh · S
 - **Needs:** A6.
@@ -268,6 +269,12 @@ These are small items that make the shell complete. Each can run in parallel wit
 #### [ ] C3. F-29 Find and replace, bulk edit · M
 - **Needs:** C2 (the shared multi-select fields).
 - **Spec:** V1 F-29. Scope "this level / all levels" uses `allLevelNodes` from `core/levels.ts`.
+
+#### [ ] C4. Copy and paste components across browser tabs · M
+- **Why:** requested by the user on 2026-11-03. Copy today fills an in-memory buffer (`app.clipboardNodes` and `app.clipboardEdges`), so it is lost in another tab and nothing can be pasted into a different diagram.
+- **Do:** when the user copies, also write the selected components, the wires between them, and their nested levels to the system clipboard as text with a version marker (JSON with `conduitcraft: 1`), using `navigator.clipboard.writeText`. On paste, read the clipboard (the `paste` event, so no permission prompt), and use it when it carries that marker, otherwise fall back to the in-memory buffer. Give pasted components new ids and place them at the pointer or the view centre, as paste does now. Pasting into a diagram that has the same ids must not overwrite anything. Reject malformed or oversized input with a short message and no crash. Strip embedded images over the share-link size limit, as B5 does for links.
+- **Done when:** a Playwright test with two pages in one browser context copies two connected components in one page and pastes them in the other, with the wire intact and fresh ids; a test that pasting plain text or broken JSON changes nothing and shows a message; the copy still works when the clipboard is denied (the in-tab buffer is used).
+- **Default (section 7 rule 6):** system clipboard text, not `localStorage` or `BroadcastChannel`, so it also works between windows and after a reload.
 
 ### Milestone D: Depth (phase 6, the rest)
 
