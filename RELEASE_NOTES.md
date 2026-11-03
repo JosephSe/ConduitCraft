@@ -1,0 +1,29 @@
+# Release notes
+
+## 2.0.0
+
+The redesign: a quieter app that shows what happens when something fails.
+
+### Two things to know first
+
+- **Classic layout goes away in the next release.** The `?ui=1` layout and the "Classic layout" setting still work in 2.0.0. The next release removes them. Move to the default layout now; every action in Classic is in the new top bar, the tool rail, the context menu or the command palette (`⌘K`).
+- **Mermaid is now import only.** ConduitCraft still reads Mermaid flowcharts (paste, open or drop). It no longer writes them: there is no `.mmd` export and no Mermaid view in the code dialog. The Blueprint file (YAML or JSON) is the one text format ConduitCraft writes.
+
+### New
+
+- **First run.** A new visitor sees a packet travel in about 3 seconds and a failure ripple out within 10, with three actions: pick a template, start blank, paste Mermaid.
+- **Lenses.** Design, Traffic and Review (keys `1`, `2`, `3`), each with its own tools.
+- **Fail a component.** Press `X` in the Traffic lens (or use the menu). See what is cut off, with resilience settings (replicas, fallback, circuit breaker), a summary panel, a blast-radius preview with `Alt`, and saved scenarios. Failures cross levels in one direction: a failed component fails everything in its child level.
+- **Review lens.** Eight architecture rules, canvas badges and an issues panel, with per-rule muting.
+- **Levels.** Drill into a component with `⌘↵`, go back with `⌘↑` or `Esc`. One undo stack covers all levels. Mermaid `subgraph` blocks can import as levels.
+- **Wire protocol and latency.** Each wire has a protocol and a sync or async call style; latency sets the pace of the packets.
+- **Legend, tags, owners and links.**
+- **Text outline and diagram description.** A keyboard-friendly outline panel, and a plain-language description of the diagram used as alt text in the PNG dialog, the SVG `<desc>` and the standalone HTML export.
+- **Contextual help.** Short popovers and help topics, and a fuller guide.
+- **Quieter chrome.** A top bar with at most 8 controls, a tool rail, a contextual toolbar, a run bar, an inspector that appears with a selection, and plain-language wording throughout.
+
+### Changed
+
+- The file schema is version 7. Older files migrate on open.
+- Starter templates load on demand, and every lazy chunk has a size budget.
+- The README and its pictures show the new layout.
