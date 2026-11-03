@@ -71,7 +71,7 @@ Each item lists **why it is at this position**. Items 1–3 are small and should
 - **Why here:** this is the only confirmed path where a normal first action (clicking a stencil after reload) destroys a previous diagram.
 
 #### 5. Make file save format-aware and reset the file handle
-- `handleSaveDiagram` must choose the serializer from the active file extension: `.mmd` → Mermaid, `.md` → blueprint markdown, `.json` → JSON.
+- `handleSaveDiagram` must choose the serializer from the active file extension: `.mmd` → Mermaid, `.md` → blueprint markdown, `.json` → JSON. *(Superseded for `.mmd` by `REDESIGN_PLAN_V2.md` D8: Mermaid is import only, so `⌘S` on an opened `.mmd` goes to Save As with a Blueprint file name, item A5b.)*
 - Call `resetActiveFile()` from every path that replaces the document: template load, showcase, restore, snapshot restore, uploaded file, share-link load.
 - **Why here:** `⌘S` can currently overwrite a user's own `.mmd` or `.md` file with JSON, or overwrite their real file with a template. This is silent corruption of files outside the app.
 
