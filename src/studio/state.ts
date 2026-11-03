@@ -558,6 +558,13 @@ export function trackViewportResize(): void {
     return { width: r.width, height: r.height };
   };
   let last = measure();
+  // A window resize reflows the chrome, and panels then animate to their new width over a few hundred ms, so the
+  // viewport keeps changing after the window has stopped. Count that whole settling period as the resize.
+  const SETTLE_MS = 600;
+  let lastWindowResize = Number.NEGATIVE_INFINITY;
+  window.addEventListener('resize', () => {
+    lastWindowResize = performance.now();
+  });
   new ResizeObserver(() => {
     const next = measure();
     // A hidden viewport reports 0x0; keep the last real size so the pan is correct when it comes back.
@@ -567,9 +574,11 @@ export function trackViewportResize(): void {
     if (prev.width === 0 || prev.height === 0) return;
     if (next.width === prev.width && next.height === prev.height) return;
     const pan = panForViewportResize({ panX: app.panX, panY: app.panY }, prev, next);
+    const windowResized = performance.now() - lastWindowResize < SETTLE_MS;
     // Redesigned interface: the inspector opens and closes by itself with the selection. Keep the diagram where it
-    // is (the panel simply covers the right edge) rather than sliding it sideways under the user's pointer.
-    if (document.documentElement.dataset.ui === '2' && next.height === prev.height) pan.panX = app.panX;
+    // is (the panel simply covers the right edge) rather than sliding it sideways under the user's pointer. A real
+    // window resize is different: the layout reflows in steps, so only the window's own resize events can tell the two apart.
+    if (document.documentElement.dataset.ui === '2' && !windowResized && next.height === prev.height) pan.panX = app.panX;
     app.panX = pan.panX;
     app.panY = pan.panY;
     applyTransform();
