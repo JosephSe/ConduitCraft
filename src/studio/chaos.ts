@@ -3,6 +3,8 @@
  * saved or exported on their own, and only travel with the file when saved as a scenario's `failures`.
  * The maths is in `core/reachability.ts`; this module holds the set, repaints on change and announces results.
  */
+import { failedAncestor, failedIdsAt, failureKey, insideFailedComponent } from '../core/failures';
+import { nodesAtLevel, type LevelPath } from '../core/levels';
 import { entryPointIds, reachableFrom, type ReachabilityResult } from '../core/reachability';
 import { announce } from './a11y';
 import { app } from './state';
@@ -10,6 +12,7 @@ import { renderAll } from './render';
 
 export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk';
 
+/** Failures at every level, keyed by where they sit (`core/failures.ts`), so repeated ids at different levels never collide. */
 const failed = new Set<string>();
 /** Component under the pointer while Alt is held and nothing has failed: a what-if preview. */
 let previewId: string | null = null;
@@ -23,7 +26,30 @@ export function onChaosChange(listener: () => void): void {
 /** Forget the cached result. Call before a repaint, since the document may have changed underneath. */
 export function invalidateChaos(): void {
   cached = undefined;
-  for (const id of [...failed]) if (!app.doc.nodes.some((n) => n.id === id)) failed.delete(id);
+  if (failed.size === 0) return;
+  const root = app.levelRoot ?? app.doc;
+  for (const key of [...failed]) {
+    const parts = key.split('\u0000');
+    const id = parts.pop()!;
+    // The open level is edited live, so check it in `app.doc`; every other level lives in the saved tree.
+    const nodes = parts.join('\u0000') === app.levelPath.join('\u0000') ? app.doc.nodes : nodesAtLevel(root, parts);
+    if (!nodes?.some((n) => n.id === id)) failed.delete(key);
+  }
+}
+
+/** The failed component the open level sits inside (at any depth), or null. */
+function failedParent(): { path: LevelPath; id: string } | null {
+  return failedAncestor(failed, app.levelPath);
+}
+
+/** Has anything failed that shows on the open level, either on it or above it? */
+function hasRun(): boolean {
+  return failedParent() !== null || failedIdsAt(failed, app.levelPath).length > 0;
+}
+
+/** Did the component `id` at the level `path` fail itself (not counting what it cuts off)? */
+export function isFailedAt(path: LevelPath, id: string): boolean {
+  return failed.has(failureKey(path, id));
 }
 
 /** Failures can be run and seen in the Traffic and Review lenses. */
@@ -31,22 +57,28 @@ export function chaosLensActive(): boolean {
   return app.lens === 'traffic' || app.lens === 'review';
 }
 
+/** Failures set on the open level. Failures on other levels are not listed here. */
 export function failedIds(): string[] {
-  return [...failed];
+  return failedIdsAt(failed, app.levelPath);
 }
 
 export function isPreview(): boolean {
-  return failed.size === 0 && previewId !== null;
+  return !hasRun() && previewId !== null;
 }
 
 function effectiveFailures(): string[] {
-  if (failed.size) return [...failed];
+  const own = failedIds();
+  if (own.length) return own;
   return previewId ? [previewId] : [];
 }
 
 /** The current reachability result, or null when nothing has failed (and nothing is being previewed). */
 export function chaosResult(): ReachabilityResult | null {
   if (cached !== undefined) return cached;
+  if (failedParent()) {
+    cached = insideFailedComponent(app.doc);
+    return cached;
+  }
   const ids = effectiveFailures();
   cached = ids.length ? reachableFrom(app.doc, entryPointIds(app.doc), ids) : null;
   return cached;
@@ -65,7 +97,7 @@ export function chaosStatusOf(nodeId: string): ChaosStatus | null {
 
 /** The first of these components a packet cannot get through, or null. Used to stop playback. */
 export function blockedNodeIn(nodeIds: readonly string[]): string | null {
-  if (failed.size === 0) return null;
+  if (!hasRun()) return null;
   return nodeIds.find((id) => ['failed', 'unreachable'].includes(chaosStatusOf(id) ?? '')) ?? null;
 }
 
@@ -79,7 +111,7 @@ export interface ChaosSummary {
 
 /** Counts for the run of real failures (not the Alt preview), or null when none are set. */
 export function chaosSummary(): ChaosSummary | null {
-  if (failed.size === 0) return null;
+  if (!hasRun()) return null;
   const r = chaosResult();
   if (!r) return null;
   return {
@@ -115,10 +147,24 @@ export function repaintForLens(): void {
   if (failed.size || previewId) renderAll(false);
 }
 
+/**
+ * A level was opened. Tell the panel to recount, and say once when it sits inside a failed component, since
+ * everything in it is down and the reason is one level up.
+ */
+export function levelOpened(): void {
+  cached = undefined;
+  for (const listener of listeners) listener();
+  const parent = failedParent();
+  if (!parent || !chaosLensActive()) return;
+  const title = nodesAtLevel(app.levelRoot ?? app.doc, parent.path)?.find((n) => n.id === parent.id)?.title || parent.id;
+  announce(`Inside ${title}, which has failed.`);
+}
+
 export function toggleFailure(id: string): void {
   if (!app.doc.nodes.some((n) => n.id === id)) return;
-  const wasFailed = failed.delete(id);
-  if (!wasFailed) failed.add(id);
+  const key = failureKey(app.levelPath, id);
+  const wasFailed = failed.delete(key);
+  if (!wasFailed) failed.add(key);
   previewId = null;
   changed();
   const name = titleOf(id);
@@ -139,7 +185,7 @@ export function toggleFailure(id: string): void {
 /** Replaces the failure set (used when a saved chaos scenario runs). */
 export function setFailures(ids: readonly string[]): void {
   failed.clear();
-  for (const id of ids) if (app.doc.nodes.some((n) => n.id === id)) failed.add(id);
+  for (const id of ids) if (app.doc.nodes.some((n) => n.id === id)) failed.add(failureKey(app.levelPath, id));
   previewId = null;
   changed();
 }
@@ -152,7 +198,7 @@ export function clearFailures(): void {
 }
 
 export function setPreview(id: string | null): void {
-  const next = failed.size === 0 ? id : null;
+  const next = !hasRun() ? id : null;
   if (next === previewId) return;
   previewId = next;
   changed();

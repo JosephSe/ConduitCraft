@@ -3,6 +3,7 @@
  * and the fade when a level opens. The tree logic lives in `core/levels.ts` and the navigation in `state.ts`.
  */
 import { boundaryPorts, breadcrumb } from '../core/levels';
+import { chaosLensActive, isFailedAt, levelOpened } from './chaos';
 import { stageWorld } from './dom';
 import { app, fullDocument, goToLevel, setSelection } from './state';
 
@@ -40,7 +41,9 @@ export function paintLevels(): void {
   const root = path.length > 0 ? fullDocument() : app.doc;
   const crumbs = breadcrumb(root, path);
   const ports = boundaryPorts(root, path);
-  const key = JSON.stringify([crumbs.map((c) => c.title), ports]);
+  // A wire to an outside component that has failed leads nowhere: its port is cut off (D5).
+  const cutOff = (outsideId: string) => chaosLensActive() && isFailedAt(path.slice(0, -1), outsideId);
+  const key = JSON.stringify([crumbs.map((c) => c.title), ports, ports.map((p) => cutOff(p.outsideId))]);
   const pathKey = path.join('/');
   document.documentElement.dataset.level = path.length > 0 ? 'nested' : 'root';
   if (pathKey !== paintedPath) {
@@ -49,6 +52,7 @@ export function paintLevels(): void {
     // Restart the fade-in.
     void stageWorld.offsetWidth;
     if (path.length > 0 || paintedKey) stageWorld.classList.add('level-enter');
+    levelOpened();
   }
   if (key === paintedKey) return;
   paintedKey = key;
@@ -88,7 +92,12 @@ export function paintLevels(): void {
       const arrow = port.direction === 'in' ? '▸' : '◂';
       chip.textContent = port.direction === 'in' ? `${port.outsideTitle} ${arrow}` : `${arrow} ${port.outsideTitle}`;
       const verb = port.direction === 'in' ? 'comes in from' : 'goes out to';
-      chip.setAttribute('aria-label', `Wire ${verb} ${port.outsideTitle}${port.label ? `: ${port.label}` : ''}`);
+      const isCut = cutOff(port.outsideId);
+      if (isCut) chip.dataset.cutOff = 'true';
+      chip.setAttribute(
+        'aria-label',
+        `Wire ${verb} ${port.outsideTitle}${port.label ? `: ${port.label}` : ''}${isCut ? ', cut off because it has failed' : ''}`,
+      );
       chip.setAttribute('data-tip', port.label ? `${port.outsideTitle} · ${port.label}` : port.outsideTitle);
       chip.style.top = `${24 + rows[port.direction] * 34}px`;
       rows[port.direction] += 1;
