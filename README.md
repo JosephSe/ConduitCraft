@@ -1,35 +1,47 @@
 # ConduitCraft
 
-**ConduitCraft** is an open-source, interactive architecture diagramming studio with animated traffic and scenarios. Build system architectures from scratch on a blank drafting canvas (like draw.io), or import standard **Mermaid (`.mmd`)** flowcharts and **Blueprint Markdown (`.md`)** files to render animated telemetry conduits, contextual lineage inspectors, specification matrices, and live packet simulations.
+**ConduitCraft** is an open-source architecture diagramming studio with animated traffic and scenarios. The idea is three steps: **draw it, run it, ship it.** Draw a system on a blank canvas, or import a Mermaid flowchart. Run it, by watching requests travel and failing a component to see what breaks. Ship it as a self-contained page, a picture or a GIF.
 
-## Interactive Export Previews
+![Failing a component in the Traffic lens: the failed component, what becomes unreachable and what reroutes](docs/images/traffic-failure.png)
 
-ConduitCraft exports self-contained, interactive standalone HTML architectures and animated GIF recordings with zero external runtime dependencies. Here is how exported diagrams look in action:
+## Draw it, run it, ship it
 
-### 1. Whole Architecture View
-Full end-to-end overview of a distributed system architecture showing animated packet conduits, stage swimlanes, and multi-tier components.
+### Draw it
+The **Design** lens is a blank drafting canvas. Pick components from the palette, drag between ports to wire them, and group them in swimlanes. Open a component to see the diagram one level deeper.
 
-![Whole Architecture View](docs/images/lumen-relay_whole.gif)
+![The Design lens](docs/images/design-canvas.png)
 
-### 2. Scenario Simulation Run View
-Multi-step packet trace simulation ("Clear Night Run") dynamically animating traffic propagation across edge gateways, message brokers, and datastores with live execution highlights.
+### Run it
+The **Traffic** lens plays scenarios as moving packets. Select a component and press `X` to fail it: the summary says how many components are unreachable or rerouted. The **Review** lens lists single points of failure, cycles and orphans, and each one jumps to its target.
 
-![Scenario Simulation Run View](docs/images/lumen-relay-clear-night_scenario.gif)
+![The Review lens](docs/images/review-lens.png)
 
-### 3. Zoomed-In Inspection View
-Detailed close-up inspection view highlighting directional port wiring, custom status indicators, telemetry metrics, and multi-wire routing.
+### Ship it
+Export a self-contained interactive HTML page, SVG or PNG pictures, a looping GIF, or a Blueprint file that keeps the whole document. Every SVG and HTML export carries a text description.
 
-![Zoomed-In Inspection View](docs/images/lumen-relay-zoomed-view.gif)
+## Exported previews
+
+The GIF below was recorded with the studio's own GIF export, with one component failed.
+
+![A failure run: Relay Bus has failed, and the components behind it are unreachable or rerouted](docs/images/lumen-relay-failure.gif)
+
+More exports of the Lumen Relay example:
+
+![Whole architecture](docs/images/lumen-relay_whole.gif)
+
+![A scenario run](docs/images/lumen-relay-clear-night_scenario.gif)
+
+![A zoomed-in view](docs/images/lumen-relay-zoomed-view.gif)
 
 ## Highlights
 
-- **Blank-Canvas Visual Authoring (`✎ Design` Mode)**
+- **Blank-canvas authoring (Design lens)**
   - Drag and drop 7 architectural stencils (**Human Actor**, **Core System**, **Service**, **Event Broker**, **Decision Gate**, **Data Store**, **Client Edge**) plus **Swimlane Stage** banners and **Notes / Spec** checklist cards.
   - Drag between directional ports (`top`, `right`, `bottom`, `left`) or use **Connect** mode to wire animated telemetry streams.
   - **9 Distinct Per-Wire Routing Styles** with a visual schematic picker: `Smart Auto`, `Direct Line`, `Smooth S-Curve`, `Curved Arc`, `Vertical Fan-out`, `Rounded Elbow`, `Sharp Step`, `Under U-Loop`, and `Over U-Loop`, plus draggable wire waypoints and automatic parallel-wire lane separation.
   - **Multi-Select & Alignment**: `Shift+click` or `Shift+drag` marquee box to select multiple components, move groups together, and align/distribute from the property inspector.
   - **Autosave & Session Recovery**: Debounced local storage autosave with 1-click session restore.
-- **Animated Telemetry & Simulation (`Data View` Mode)**
+- **Animated traffic and scenarios (Traffic lens)**
   - Filter stream channels by tone (`Primary`, `Success`, `Exception`, `Control`).
   - Click any component to highlight upstream sources and downstream consumers while dimming unrelated paths, and inspect custom telemetry metrics and JSON contracts.
   - Trigger multi-step **Live Packet Simulations** with real-time execution traces.
@@ -58,6 +70,8 @@ Run the test suite and production build:
 pnpm test
 pnpm build
 ```
+
+To re-record the pictures above, run `pnpm build` and then `node tools/captureReadmeMedia.mjs`.
 
 The browser tests (Playwright) build the app and drive it in Chromium. Install the browser once, then run them:
 

@@ -189,10 +189,11 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Done when:** the anchor test passes, and every `?` is reachable by keyboard and closes with `Esc`.
 - **Shipped as:** `src/core/helpTopics.ts` (13 topics), `src/studio/helpPopover.ts` (one popover for every `?`, placed with `placeTooltip`), 13 palette commands ("Help: Routing styles" and so on), and 12 new sections in `docs/guide.md`. A `?` is on the five node inspector sections, the wire fields and routing style, the colour legend, the run bar, the failure summary and the Review panel. "Blueprint Markdown" is gone from the guide. Guide wording that was a judgement call (rule explanations, key tables) is mine, so a maintainer should read it once.
 
-#### [ ] A10. README and media refresh · S
+#### [~] A10. README and media refresh · S (#40)
 - **Needs:** A6.
 - **Do:** re-record the README GIFs to show a failure run (the existing GIF exporter can make them), refresh `docs/images/*.png` for the new chrome, and rewrite the README feature list around "draw it, run it, ship it".
 - **Done when:** no image in the README shows the classic header.
+- **Shipped as:** `tools/captureReadmeMedia.mjs` re-records the pictures from a build (design, traffic-failure and review screenshots, and `lumen-relay-failure.gif` from the GIF exporter with one component failed). The README feature list is now "draw it, run it, ship it". `docs/images/data-view.png` (classic header, unused) is deleted. The three older GIFs are stage-only exports with no header, so they stay.
 
 #### [ ] A11. Award checklist review and `v2.0.0` · S
 - **Needs:** A1 to A10, including A5b.
