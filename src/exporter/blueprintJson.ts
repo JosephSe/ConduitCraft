@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
 import { normalizeWireFields } from '../core/wire';
+import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta';
 import { normalizeBrand } from '../core/brand';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
 import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
@@ -90,6 +91,7 @@ function coerceNode(raw: unknown): DiagramNode | null {
       ? { status: raw.status as DiagramNode['status'] }
       : {}),
     ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
+    ...normalizeNodeMeta(raw),
     ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
     ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
   };
@@ -116,6 +118,7 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     flow: raw.flow === 'both' ? 'both' : 'forward',
     ...(typeof raw.comment === 'string' && raw.comment.trim() ? { comment: raw.comment.trim() } : {}),
     ...normalizeWireFields(raw),
+    ...(normalizeTags(raw.tags).length ? { tags: normalizeTags(raw.tags) } : {}),
     ...(waypoint ? { waypoint } : {}),
   };
 }
@@ -210,6 +213,8 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
       : [],
     simulations: Array.isArray(source.simulations) ? (source.simulations as DiagramDocument['simulations']) : [],
   };
+  const legend = normalizeLegend(source.legend);
+  if (legend.length) doc.legend = legend;
   expandStageToFit(doc);
   return { ok: true, doc };
 }

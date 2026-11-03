@@ -187,7 +187,8 @@ import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
 import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
-import { TONE_CSS } from '../shared/tones';
+import { TONE_CSS, TONE_META } from '../shared/tones';
+import { toneName } from '../core/meta';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -647,8 +648,17 @@ export function createEdgeConnection(
   renderAll(true);
 }
 
+/** Shows the document's legend names on the colour filter chips. */
+function syncToneLabels(): void {
+  for (const el of document.querySelectorAll<HTMLElement>('[data-tone-name]')) {
+    const tone = el.dataset.toneName as StreamTone;
+    el.textContent = toneName(app.doc.legend, tone, TONE_META[tone].shortLabel);
+  }
+}
+
 export function renderSimButtons(): void {
   refreshRunBar();
+  syncToneLabels();
   const scenarios = getEffectiveSimulations(app.doc);
   const existing = new Map<string, HTMLButtonElement>();
   for (const child of Array.from(simButtonsSlot.children)) {

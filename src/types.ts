@@ -155,6 +155,28 @@ export interface DiagramNode {
   groupId?: string;
   status?: ComponentStatus;
   comment?: string;
+  /** Free-form labels used to filter and colour (F-26). */
+  tags?: string[];
+  /** Team or person responsible for the component (F-27). */
+  owner?: string;
+  /** Where to go from here: repository, runbook, dashboard and so on (F-27). */
+  links?: NodeLink[];
+}
+
+export type NodeLinkKind = 'repo' | 'runbook' | 'dashboard' | 'docs' | 'oncall';
+
+/** An http, https or mailto link. The URL is checked by `safeLinkUrl` wherever it enters or leaves the app. */
+export interface NodeLink {
+  label: string;
+  url: string;
+  kind?: NodeLinkKind;
+}
+
+/** What a colour means in this document (F-26). Replaces the built-in name wherever tones are named. */
+export interface LegendEntry {
+  tone: StreamTone;
+  label: string;
+  description?: string;
 }
 
 export type EdgeFlowMode = 'forward' | 'both';
@@ -183,6 +205,8 @@ export interface DiagramEdge {
   sync?: WireSync;
   /** Typical latency of the call in milliseconds. */
   latencyMs?: number;
+  /** Free-form labels used to filter and colour (F-26). */
+  tags?: string[];
 }
 
 export interface RoutedDiagramEdge extends DiagramEdge {
@@ -235,6 +259,8 @@ export interface DiagramDocument {
   nodes: DiagramNode[];
   edges: DiagramEdge[];
   simulations: SimulationScenario[];
+  /** Custom names for the five colours. Absent means the built-in names. */
+  legend?: LegendEntry[];
 }
 
 export type SelectionTarget =
