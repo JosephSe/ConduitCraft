@@ -207,6 +207,7 @@ import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
 import { initInsightsPanel } from './insights';
 import { initOutlinePanel } from './outlinePanel';
+import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
@@ -2316,6 +2317,7 @@ export function initEvents(): void {
   initChaosPanel();
   initInsightsPanel();
   initOutlinePanel();
+  initHelp();
   initChaosPreview(chaosNodesLayer);
 
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)

@@ -15,6 +15,8 @@ import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrder
 import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
 import { toggleOutline } from './outlinePanel';
+import { HELP_TOPICS } from '../core/helpTopics';
+import { openHelp } from './helpPopover';
 import { saveSnapshot } from './snapshots';
 import { selectionOfStage } from './selection';
 import { chaosLensActive, clearFailures, failedIds, toggleFailure } from './chaos';
@@ -24,7 +26,7 @@ import { refreshRunBar } from './runBar';
 export interface PaletteCommand {
   id: string;
   title: string;
-  category: 'Components' | 'Canvas & Layout' | 'Mode & View' | 'Edit & History' | 'Export & Sync' | 'Preferences' | 'Nodes' | 'Templates';
+  category: 'Components' | 'Canvas & Layout' | 'Mode & View' | 'Edit & History' | 'Export & Sync' | 'Preferences' | 'Nodes' | 'Templates' | 'Help';
   subtitle?: string;
   shortcut?: string;
   keywords?: string[];
@@ -58,6 +60,13 @@ function clickById(id: string): void {
 
 function clickRadio(name: string, value: string): void {
   document.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`)?.click();
+}
+
+/** The palette's dialog gives focus back as it closes, so wait for that before the popover takes focus. */
+function showHelpAfterPalette(topicId: string): void {
+  const dlg = document.getElementById('command-palette-dialog') as HTMLDialogElement | null;
+  if (dlg?.open) dlg.addEventListener('close', () => openHelp(topicId), { once: true });
+  else openHelp(topicId);
 }
 
 export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
@@ -960,6 +969,18 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
           deps.openTemplateGallery();
         }
       },
+    });
+  }
+
+  // Help topics (R-10): "help: routing styles" finds the same text the ? buttons show.
+  for (const topic of HELP_TOPICS) {
+    commands.push({
+      id: `help-${topic.id}`,
+      title: `Help: ${topic.title}`,
+      subtitle: topic.body.split(/(?<=[.!?])\s/)[0],
+      category: 'Help',
+      keywords: ['help', 'guide', 'docs', 'how', ...(topic.keywords ?? [])],
+      run: () => showHelpAfterPalette(topic.id),
     });
   }
 
