@@ -3680,6 +3680,13 @@
     color: var(--wl-amber);
   }
 
+  .subgraph-mode {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
   .dialog-footer-row {
     display: flex;
     align-items: center;

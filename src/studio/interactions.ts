@@ -182,6 +182,7 @@ import {
 } from '../core/layout';
 import {
   importMermaidOrBlueprint,
+  type ImportOptions,
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../core/parser';
@@ -1104,7 +1105,7 @@ export function pasteSelection(): void {
 // ---------------------------------------------------------------------------
 // File Import, Drag-and-Drop, Code Sync, and Export
 // ---------------------------------------------------------------------------
-export function applyImportedText(rawText: string, fallbackTitle?: string): boolean {
+export function applyImportedText(rawText: string, fallbackTitle?: string, importOptions?: ImportOptions): boolean {
   const trimmed = rawText.trim();
   if (trimmed.startsWith('{')) {
     const parsed = parseBlueprintJson(trimmed);
@@ -1130,7 +1131,7 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
     return true;
   }
 
-  const { doc: importedDoc, warnings, issues } = importMermaidOrBlueprint(rawText);
+  const { doc: importedDoc, warnings, issues } = importMermaidOrBlueprint(rawText, importOptions);
   const formatIssue = (idx = 0): string => {
     const issue = issues[idx];
     if (!issue) return warnings[idx] || '';
@@ -1412,10 +1413,15 @@ export function getSelectedCodeFormat(): 'mermaid' | 'blueprint' {
   return checked?.value === 'blueprint' ? 'blueprint' : 'mermaid';
 }
 
+export function getSubgraphMode(): 'swimlanes' | 'levels' {
+  const checked = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"]:checked');
+  return checked?.value === 'levels' ? 'levels' : 'swimlanes';
+}
+
 export function refreshCodeModalTextarea(): void {
   const fmt = getSelectedCodeFormat();
   codeSyncTextarea.value =
-    fmt === 'blueprint' ? serializeToBlueprintMarkdown(app.doc) : serializeToMermaid(app.doc);
+    fmt === 'blueprint' ? serializeToBlueprintMarkdown(app.doc) : serializeToMermaid(app.doc, { levels: true });
   codeSyncDiagnostics.textContent =
     fmt === 'blueprint'
       ? 'Full Blueprint (.md): YAML metadata + positions + Mermaid flowchart.'
@@ -1424,6 +1430,10 @@ export function refreshCodeModalTextarea(): void {
 }
 
 export function openCodeDialog(): void {
+  if (app.doc.nodes.some((n) => n.child)) {
+    const levels = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"][value="levels"]');
+    if (levels) levels.checked = true;
+  }
   refreshCodeModalTextarea();
   codeDialog.showModal();
 }
@@ -2000,7 +2010,7 @@ export function initEvents(): void {
   });
 
   btnApplyCode.addEventListener('click', () => {
-    const ok = applyImportedText(codeSyncTextarea.value);
+    const ok = applyImportedText(codeSyncTextarea.value, undefined, { subgraphs: getSubgraphMode() });
     if (ok) void closeDialogSmoothly(codeDialog);
   });
 
@@ -2136,7 +2146,7 @@ export function initEvents(): void {
   });
   btnExportMmd.addEventListener('click', () => {
     expandStageToFit(app.doc);
-    const mmd = serializeToMermaid(app.doc);
+    const mmd = serializeToMermaid(app.doc, { levels: true });
     const filename = `${getSafeFilenameSlug()}.mmd`;
     downloadBlob(mmd, filename, 'text/plain;charset=utf-8');
     void closeDialogSmoothly(exportDialog);

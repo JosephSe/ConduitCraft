@@ -777,6 +777,19 @@
           autocapitalize="off"
         ></textarea>
         <p class="editor-diagnostics" id="code-sync-diagnostics" aria-live="polite"></p>
+        <div class="subgraph-mode">
+          <span class="field-label" id="subgraph-mode-label">Subgraphs as</span>
+          <fieldset class="segmented-group" aria-labelledby="subgraph-mode-label">
+            <label class="segmented-label">
+              <input type="radio" name="subgraph-mode" value="swimlanes" class="visually-hidden" checked>
+              <span>Swimlanes</span>
+            </label>
+            <label class="segmented-label">
+              <input type="radio" name="subgraph-mode" value="levels" class="visually-hidden">
+              <span>Levels</span>
+            </label>
+          </fieldset>
+        </div>
         <div class="dialog-footer-row">
           <button type="button" class="btn" id="btn-copy-code">Copy to Clipboard</button>
           <div class="dialog-header-actions">
