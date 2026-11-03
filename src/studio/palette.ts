@@ -501,7 +501,11 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'chaos-fail',
-      title: 'Fail this component',
+      // Read each time the menu or palette opens, so a failed component offers to be restored instead.
+      get title() {
+        const sel = app.selection;
+        return sel.type === 'node' && failedIds().includes(sel.id) ? 'Restore this component' : 'Fail this component';
+      },
       subtitle: 'Traffic lens: see what becomes unreachable (press again to restore)',
       category: 'Mode & View',
       shortcut: 'X',

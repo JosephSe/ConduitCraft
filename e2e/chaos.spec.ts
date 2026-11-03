@@ -83,6 +83,12 @@ test('right-click on a component in Traffic offers Fail this component', async (
   await item.click();
   await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(1);
   await expect(page.locator('#chaos-summary')).toBeVisible();
+
+  // Right-clicking the failed component offers to bring it back.
+  await page.locator('.arch-node[data-chaos="failed"]').click({ button: 'right' });
+  await expect(page.getByRole('menuitem', { name: /Fail this component/ })).toHaveCount(0);
+  await page.getByRole('menuitem', { name: /Restore this component/ }).click();
+  await expect(page.locator('[data-chaos="failed"]')).toHaveCount(0);
 });
 
 test('wires into and out of a failed component stop flowing', async ({ page }) => {
