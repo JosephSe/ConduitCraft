@@ -189,16 +189,56 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Done when:** the anchor test passes, and every `?` is reachable by keyboard and closes with `Esc`.
 - **Shipped as:** `src/core/helpTopics.ts` (13 topics), `src/studio/helpPopover.ts` (one popover for every `?`, placed with `placeTooltip`), 13 palette commands ("Help: Routing styles" and so on), and 12 new sections in `docs/guide.md`. A `?` is on the five node inspector sections, the wire fields and routing style, the colour legend, the run bar, the failure summary and the Review panel. "Blueprint Markdown" is gone from the guide. Guide wording that was a judgement call (rule explanations, key tables) is mine, so a maintainer should read it once.
 
-#### [~] A10. README and media refresh · S (#40)
+#### [x] A10. README and media refresh · S (#40)
 - **Needs:** A6.
 - **Do:** re-record the README GIFs to show a failure run (the existing GIF exporter can make them), refresh `docs/images/*.png` for the new chrome, and rewrite the README feature list around "draw it, run it, ship it".
 - **Done when:** no image in the README shows the classic header.
 - **Shipped as:** `tools/captureReadmeMedia.mjs` re-records the pictures from a build (design, traffic-failure and review screenshots, and `lumen-relay-failure.gif` from the GIF exporter with one component failed). The README feature list is now "draw it, run it, ship it". `docs/images/data-view.png` (classic header, unused) is deleted. The three older GIFs are stage-only exports with no header, so they stay.
 
-#### [ ] A11. Award checklist review and `v2.0.0` · S
+#### [x] A11. Award checklist review and `v2.0.0` · S (#41)
 - **Needs:** A1 to A10, including A5b.
 - **Do:** go through the award-readiness checklist in V1 section 10 and record a pass, or a gap with a new queue item, for each line in a table in this file under A11. Bump `package.json` to `2.0.0`, write release notes (they announce that Classic layout goes away in the next release, and that Mermaid is now import only: D8), and tag `v2.0.0`.
 - **Done when:** the tag exists, and any checklist gap is a queue item, not a note.
+- **Shipped as:** `package.json` is `2.0.0` and `RELEASE_NOTES.md` has the notes (Classic layout goes in the next release; Mermaid is import only). The `v2.0.0` tag goes on the merge commit of this PR (a tag on the branch would point at a commit that is not on `main`). The review, from the checks named in each row:
+
+| Award-readiness line (V1 section 10) | Result | Evidence |
+|---|---|---|
+| A new visitor sees a packet travel and a failure ripple out within 10 seconds | Pass | `e2e/firstRun.spec.ts`: packet moves in 3 s, failure summary in 10 s |
+| Every action works by keyboard alone and is announced | Pass | `e2e/roving.spec.ts`, `lensKeys.spec.ts`, `announcer.spec.ts`, `outline.spec.ts`; action registry and keymap |
+| Every action works by touch on a tablet | **Gap: A12** | `pinch.ts` and `historyGesture.ts` have unit tests, but no Playwright project uses touch |
+| The app works fully offline after the first visit | **Gap: A13** | `public/sw.js` precaches the build and `tests/pwa.test.ts` covers the helper, but no test goes offline and reloads |
+| No screen has more than 8 always-visible controls outside the canvas | **Gap: A14** | `e2e/topbar.spec.ts` caps the top bar at 8; the tool rail, run bar and side panels are not counted |
+| Every animation explains something | **Gap: A15** | Audit below |
+| Exports, embeds and shared links look as good as the studio | **Gap: A16** | No screenshot test of an export; the README pictures were checked by eye only |
+| Every export carries a text description | Pass | `describeDiagram` feeds the SVG `<desc>`, the standalone HTML note and the export dialog alt text (`e2e/describeDiagram.spec.ts`); JSON and YAML are the description |
+| Anything the app calls "live" really is | **Gap: A15** | The "live" status dot on a component pulses forever, though the status is a label the user sets |
+
+Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the camera ease, panel slides, toasts, level fade and the drop-in all explain a change. `chaos-pulse` (at-risk) and `portPulse` (wiring targets) are state cues and both respect reduced motion. `pulseLiveDot` (`studio.css`, `.node-status-badge[data-status="live"] .status-dot`) is the one that fails: it is decorative, it suggests real-time data, and it has no `prefers-reduced-motion` guard.
+
+#### [ ] A12. Touch pass on a tablet · M
+- **Needs:** A11.
+- **Do:** add a Playwright project with `hasTouch` at 768 × 1024 and 1024 × 768. Cover place, select, move, wire, pan, pinch zoom, the context menu (long press), the palette, the inspector and the export dialog. Fix what fails; target size is 44 px for anything you tap.
+- **Done when:** the project runs the same core flows as the desktop tests, and axe passes at 768 px.
+
+#### [ ] A13. Offline end-to-end test · S
+- **Needs:** A11.
+- **Do:** add a Playwright test: load once, wait for the service worker, go offline, reload, then open a template, run a simulation, export a PNG and a GIF (lazy chunks), and save a file. Fix any chunk the precache misses.
+- **Done when:** the test is named `works offline …` and passes against `vite preview`.
+
+#### [ ] A14. Count every always-visible control · S
+- **Needs:** A11.
+- **Do:** extend `e2e/topbar.spec.ts` so the count covers the whole screen outside the canvas (top bar, tool rail, run bar, any open side panel) at 1280 px. If the total is over 8, decide with the number in hand: move controls into the palette, or amend the checklist line to "per region" in V1 section 10 and say why in the PR.
+- **Done when:** the test states the rule it enforces and passes.
+
+#### [ ] A15. Motion and "live" fixes · S
+- **Needs:** A11.
+- **Do:** stop `pulseLiveDot`: no animation on the status dot, so nothing on screen suggests live data. Add an e2e test that runs with `reducedMotion: 'reduce'` and asserts no element has a running animation. If `chaos-pulse` or `portPulse` fail the test, guard them.
+- **Done when:** that test passes, and `grep -rn pulseLiveDot src` finds nothing.
+
+#### [ ] A16. Export visual check · S
+- **Needs:** A11.
+- **Do:** screenshot tests of the SVG, standalone HTML and GIF first frame for `lumen-relay`, in light and dark and in each diagram style. Compare them with the canvas by eye once and keep the images as baselines.
+- **Done when:** baselines are committed and the test fails on a change to the export look.
 
 ### Milestone B: Many diagrams, real systems (phase 4)
 
