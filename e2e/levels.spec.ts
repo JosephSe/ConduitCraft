@@ -197,3 +197,37 @@ test('a boundary port is cut off when the component outside has failed', async (
   await page.keyboard.press('ControlOrMeta+Enter');
   await expect(page.locator('.level-port')).not.toHaveAttribute('data-cut-off', 'true');
 });
+
+const SUBGRAPH = 'flowchart LR\n  subgraph checkout ["Checkout API"]\n    Gateway --> Charge\n  end\n  User --> Gateway';
+
+async function importSubgraph(page: Page, mode: 'Swimlanes' | 'Levels'): Promise<void> {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/?ui=2');
+  await page.locator('#btn-empty-code').click();
+  await page.locator('#code-sync-textarea').fill(SUBGRAPH);
+  await page.locator('.subgraph-mode .segmented-label', { hasText: mode }).click();
+  await page.locator('#btn-apply-code').click();
+}
+
+test('subgraphs import as swimlanes by default', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/?ui=2');
+  await page.locator('#btn-empty-code').click();
+  await expect(page.locator('input[name="subgraph-mode"][value="swimlanes"]')).toBeChecked();
+  await importSubgraph(page, 'Swimlanes');
+  await expect(page.locator('.arch-node')).toHaveCount(3);
+  await expect(page.locator('.node-level-badge[data-has-child="true"]')).toHaveCount(0);
+});
+
+test('"Subgraphs as: Levels" imports a subgraph as a component that opens into a level', async ({ page }) => {
+  await importSubgraph(page, 'Levels');
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+  const group = node(page, 'Checkout API');
+  await expect(group.locator('.node-level-badge')).toHaveAttribute('data-has-child', 'true');
+  await group.locator('.node-select-hit').click();
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(page.locator('#level-breadcrumb')).toBeVisible();
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+  await expect(node(page, 'Charge')).toBeVisible();
+  await expect(page.locator('.level-port')).toHaveCount(1);
+});

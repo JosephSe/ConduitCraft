@@ -182,6 +182,7 @@ import {
 } from '../core/layout';
 import {
   importMermaidOrBlueprint,
+  type ImportOptions,
   serializeToBlueprintMarkdown,
   serializeToMermaid,
 } from '../core/parser';
@@ -1104,7 +1105,7 @@ export function pasteSelection(): void {
 // ---------------------------------------------------------------------------
 // File Import, Drag-and-Drop, Code Sync, and Export
 // ---------------------------------------------------------------------------
-export function applyImportedText(rawText: string, fallbackTitle?: string): boolean {
+export function applyImportedText(rawText: string, fallbackTitle?: string, importOptions?: ImportOptions): boolean {
   const trimmed = rawText.trim();
   if (trimmed.startsWith('{')) {
     const parsed = parseBlueprintJson(trimmed);
@@ -1130,7 +1131,7 @@ export function applyImportedText(rawText: string, fallbackTitle?: string): bool
     return true;
   }
 
-  const { doc: importedDoc, warnings, issues } = importMermaidOrBlueprint(rawText);
+  const { doc: importedDoc, warnings, issues } = importMermaidOrBlueprint(rawText, importOptions);
   const formatIssue = (idx = 0): string => {
     const issue = issues[idx];
     if (!issue) return warnings[idx] || '';
@@ -1410,6 +1411,11 @@ export function getSafeFilenameSlug(): string {
 export function getSelectedCodeFormat(): 'mermaid' | 'blueprint' {
   const checked = document.querySelector<HTMLInputElement>('input[name="code-format"]:checked');
   return checked?.value === 'blueprint' ? 'blueprint' : 'mermaid';
+}
+
+export function getSubgraphMode(): 'swimlanes' | 'levels' {
+  const checked = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"]:checked');
+  return checked?.value === 'levels' ? 'levels' : 'swimlanes';
 }
 
 export function refreshCodeModalTextarea(): void {
@@ -2000,7 +2006,7 @@ export function initEvents(): void {
   });
 
   btnApplyCode.addEventListener('click', () => {
-    const ok = applyImportedText(codeSyncTextarea.value);
+    const ok = applyImportedText(codeSyncTextarea.value, undefined, { subgraphs: getSubgraphMode() });
     if (ok) void closeDialogSmoothly(codeDialog);
   });
 

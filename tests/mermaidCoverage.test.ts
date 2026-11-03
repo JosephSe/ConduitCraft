@@ -186,3 +186,141 @@ describe('Mermaid import coverage (classDef, style, linkStyle, shapes)', () => {
     assert.ok(serialized.includes('C{"Diamond Node'));
   });
 });
+
+describe('Mermaid subgraphs as levels (D6)', () => {
+  const nested = `flowchart LR
+  User([User]) --> Gateway
+  subgraph checkout ["Checkout API"]
+    Gateway[Gateway]
+    subgraph payments ["Payments"]
+      Charge[Charge]
+      Ledger[(Ledger)]
+    end
+    Gateway --> Charge
+    Charge --> Ledger
+  end
+  Ledger --> Audit[Audit log]
+  checkout --> Audit`;
+
+  type Level = { nodes: Level2[]; edges: unknown[] };
+  type Level2 = { child?: Level };
+  const countNodes = (nodes: Level2[]): number =>
+    nodes.reduce((sum, n) => sum + 1 + (n.child ? countNodes(n.child.nodes) : 0), 0);
+  const countEdges = (level: Level): number =>
+    level.edges.length + level.nodes.reduce((sum, n) => sum + (n.child ? countEdges(n.child) : 0), 0);
+
+  it('keeps swimlanes as the default, byte for byte', () => {
+    const plain = importMermaidOrBlueprint(nested);
+    const explicit = importMermaidOrBlueprint(nested, { subgraphs: 'swimlanes' });
+    assert.deepStrictEqual(explicit.doc.nodes, plain.doc.nodes);
+    assert.deepStrictEqual(explicit.doc.zones, plain.doc.zones);
+    assert.ok(plain.doc.zones.length > 0);
+    assert.ok(plain.doc.nodes.every((n) => !n.child));
+    assert.strictEqual(serializeToMermaid(plain.doc), serializeToMermaid(explicit.doc));
+  });
+
+  it('matches the swimlane output recorded before levels existed (snapshot)', () => {
+    const { doc } = importMermaidOrBlueprint(nested);
+    assert.deepStrictEqual(
+      doc.zones.map((z) => [z.id, z.title, z.subtitle]),
+      [
+        ['checkout', 'CHECKOUT API', '3 Components'],
+        ['payments', 'PAYMENTS', '2 Components'],
+      ],
+    );
+    assert.deepStrictEqual(doc.edges.map((e) => `${e.from}>${e.to}`), [
+      'User>Gateway',
+      'Gateway>Charge',
+      'Charge>Ledger',
+      'Ledger>Audit',
+      'checkout>Audit',
+    ]);
+    assert.strictEqual(
+      serializeToMermaid(doc),
+      [
+        'flowchart LR',
+        '  subgraph checkout ["CHECKOUT API"]',
+        '    Gateway["Gateway<br/>Request Processor"]',
+        '    Charge["Charge<br/>Request Processor"]',
+        '    Ledger[("Ledger<br/>Persistent Storage")]',
+        '  end',
+        '  User(["User<br/>Human Role"])',
+        '  Audit["Audit log<br/>Request Processor"]',
+        '  checkout["checkout<br/>Request Processor"]',
+        '',
+        '  User --> Gateway',
+        '  Gateway --> Charge',
+        '  Charge --> Ledger',
+        '  Ledger --> Audit',
+        '  checkout --> Audit',
+      ].join('\n'),
+    );
+  });
+
+  it('turns each subgraph into a component whose level holds its nodes', () => {
+    const { doc } = importMermaidOrBlueprint(nested, { subgraphs: 'levels' });
+    assert.deepStrictEqual(doc.zones, []);
+    assert.deepStrictEqual(doc.nodes.map((n) => n.id).sort(), ['Audit', 'User', 'checkout']);
+    const checkout = doc.nodes.find((n) => n.id === 'checkout')!;
+    assert.strictEqual(checkout.title, 'Checkout API');
+    assert.deepStrictEqual(checkout.child!.nodes.map((n) => n.id).sort(), ['Gateway', 'payments']);
+    const payments = checkout.child!.nodes.find((n) => n.id === 'payments')!;
+    assert.deepStrictEqual(payments.child!.nodes.map((n) => n.id).sort(), ['Charge', 'Ledger']);
+  });
+
+  it('attaches wires that cross a boundary to the subgraph component', () => {
+    const { doc } = importMermaidOrBlueprint(nested, { subgraphs: 'levels' });
+    const top = doc.edges.map((e) => `${e.from}>${e.to}`).sort();
+    assert.deepStrictEqual(top, ['User>checkout', 'checkout>Audit', 'checkout>Audit']);
+    const checkout = doc.nodes.find((n) => n.id === 'checkout')!;
+    assert.deepStrictEqual(
+      checkout.child!.edges.map((e) => `${e.from}>${e.to}`),
+      ['Gateway>payments'],
+    );
+  });
+
+  it('keeps every node and wire of the source when importing as levels', () => {
+    const flat = importMermaidOrBlueprint(nested).doc;
+    const levels = importMermaidOrBlueprint(nested, { subgraphs: 'levels' }).doc;
+    const ids = (nodes: { id: string; child?: { nodes: never[] } }[]): string[] =>
+      nodes.flatMap((n) => [n.id, ...(n.child ? ids(n.child.nodes) : [])]);
+    const found = new Set(ids(levels.nodes as never));
+    for (const n of flat.nodes) assert.ok(found.has(n.id), `missing ${n.id}`);
+    // Five components plus one component for each of the two subgraphs.
+    assert.strictEqual(countNodes(levels.nodes), 7);
+    assert.strictEqual(countEdges(levels), flat.edges.length);
+  });
+
+  it('lets a bare reference to a subgraph id mean the subgraph component', () => {
+    const { doc } = importMermaidOrBlueprint('flowchart LR\n  A --> grp\n  subgraph grp [Group]\n    B\n  end', {
+      subgraphs: 'levels',
+    });
+    assert.strictEqual(doc.nodes.filter((n) => n.id === 'grp').length, 1);
+    assert.ok(doc.nodes.find((n) => n.id === 'grp')!.child);
+    assert.deepStrictEqual(doc.edges.map((e) => `${e.from}>${e.to}`), ['A>grp']);
+  });
+
+  it('merges subgraphs nested past the level cap and says so', () => {
+    const depth = 10;
+    const open = Array.from({ length: depth }, (_, i) => `${'  '.repeat(i)}subgraph g${i} [G${i}]`).join('\n');
+    const close = Array.from({ length: depth }, () => 'end').join('\n');
+    const { doc, issues } = importMermaidOrBlueprint(`flowchart LR\n${open}\nLeaf\n${close}`, { subgraphs: 'levels' });
+    let levels = 0;
+    let cursor = doc.nodes[0];
+    while (cursor?.child) {
+      levels += 1;
+      cursor = cursor.child.nodes[0];
+    }
+    assert.strictEqual(levels, 8);
+    assert.ok(issues.some((i) => i.level === 'info' && i.code === 'level-cap'));
+    assert.strictEqual(cursor.id, 'Leaf');
+  });
+
+  it('ignores the levels option when there are no subgraphs', () => {
+    const src = 'flowchart LR\n  A --> B';
+    assert.deepStrictEqual(
+      importMermaidOrBlueprint(src, { subgraphs: 'levels' }).doc.nodes,
+      importMermaidOrBlueprint(src).doc.nodes,
+    );
+  });
+});

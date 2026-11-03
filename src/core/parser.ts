@@ -153,6 +153,8 @@ interface ParsedMermaidNode {
   link?: string;
   className?: string;
   subgraphTitle?: string;
+  /** The innermost subgraph this component was first written in; used by "Subgraphs as: Levels". */
+  subgraph?: ParsedSubgraph;
 }
 
 interface ParsedMermaidEdge {
@@ -168,6 +170,7 @@ interface ParsedSubgraph {
   id: string;
   title: string;
   nodeIds: string[];
+  parent?: ParsedSubgraph;
 }
 
 function normalizeNodeKind(raw: string | undefined, fallback: NodeKind = 'service'): NodeKind {
@@ -591,6 +594,7 @@ function parseMermaidFlowchart(
     inferredKind?: NodeKind,
     shape?: NodeShape,
     className?: string,
+    claim = false,
   ) => {
     const existing = nodes.get(id);
     const activeSubgraph = subgraphStack[subgraphStack.length - 1];
@@ -611,6 +615,7 @@ function parseMermaidFlowchart(
         tone: assignedTone,
         className,
         subgraphTitle: activeSubgraph?.title,
+        subgraph: activeSubgraph,
       });
     } else {
       if (label && existing.title === existing.id) {
@@ -643,6 +648,7 @@ function parseMermaidFlowchart(
       if (!existing.subgraphTitle && activeSubgraph) {
         existing.subgraphTitle = activeSubgraph.title;
       }
+      if (claim && activeSubgraph && !existing.subgraph) existing.subgraph = activeSubgraph;
     }
   };
 
@@ -778,7 +784,7 @@ function parseMermaidFlowchart(
     if (subMatch) {
       const rawId = subMatch[1].trim();
       const rawTitle = (subMatch[2] || rawId).replace(/^"(.*)"$/, '$1').trim();
-      const sg: ParsedSubgraph = { id: rawId, title: rawTitle, nodeIds: [] };
+      const sg: ParsedSubgraph = { id: rawId, title: rawTitle, nodeIds: [], parent: subgraphStack[subgraphStack.length - 1] };
       subgraphs.push(sg);
       subgraphStack.push(sg);
       continue;
@@ -791,6 +797,7 @@ function parseMermaidFlowchart(
         id: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
         title,
         nodeIds: [],
+        parent: subgraphStack[subgraphStack.length - 1],
       };
       subgraphs.push(sg);
       subgraphStack.push(sg);
@@ -859,7 +866,7 @@ function parseMermaidFlowchart(
 
     const solo = parseSingleNodeToken(line);
     if (solo) {
-      ensureNode(solo.id, solo.label, solo.inferredKind, solo.shape, solo.className);
+      ensureNode(solo.id, solo.label, solo.inferredKind, solo.shape, solo.className, true);
     } else {
       issues.push({
         level: 'warning',
@@ -928,7 +935,171 @@ function importChildLevel(raw: unknown, ownerId: string, issues: ImportIssue[]):
   }
 }
 
-export function importMermaidOrBlueprint(rawInput: string): {
+/** What "Subgraphs as: Levels" decided before components are built (D6). */
+interface SubgraphLevelPlan {
+  /** Subgraph (cut off at the level cap) to the id of the component that opens it. */
+  componentIds: Map<ParsedSubgraph, string>;
+  /** Component id (or subgraph component id) to the subgraphs, outermost first, that hold it. */
+  chains: Map<string, ParsedSubgraph[]>;
+  titles: Map<ParsedSubgraph, string>;
+}
+
+/** A bare `A --> group` mention makes a placeholder component; the group's own component replaces it. */
+function isBareReference(n: ParsedMermaidNode): boolean {
+  return n.title === n.id && !n.subtitle && !n.shape && !n.className;
+}
+
+/**
+ * Work out which subgraphs become components and where every component lives. Adds a component to
+ * `parsed.nodes` for each non-empty subgraph, so the usual node builder makes it. Returns null when
+ * the source has no subgraphs worth turning into levels.
+ */
+function planSubgraphLevels(parsed: ReturnType<typeof parseMermaidFlowchart>, issues: ImportIssue[]): SubgraphLevelPlan | null {
+  if (parsed.subgraphs.length === 0) return null;
+
+  const depthOf = (sg: ParsedSubgraph): number => {
+    let d = 1;
+    for (let p = sg.parent; p; p = p.parent) d += 1;
+    return d;
+  };
+  let capped = false;
+  const effective = (sg: ParsedSubgraph | undefined): ParsedSubgraph | undefined => {
+    let cur = sg;
+    while (cur && depthOf(cur) > MAX_CHILD_DEPTH) {
+      capped = true;
+      cur = cur.parent;
+    }
+    return cur;
+  };
+
+  const included = new Set<ParsedSubgraph>();
+  const include = (sg: ParsedSubgraph | undefined) => {
+    for (let cur = effective(sg); cur; cur = cur.parent) included.add(cur);
+  };
+  for (const n of parsed.nodes.values()) include(n.subgraph);
+  if (capped) {
+    issues.push({
+      level: 'info',
+      code: 'level-cap',
+      message: `Subgraphs nested more than ${MAX_CHILD_DEPTH} deep were merged into their level ${MAX_CHILD_DEPTH} parent.`,
+    });
+  }
+  if (included.size === 0) return null;
+
+  const chainOf = (sg: ParsedSubgraph | undefined): ParsedSubgraph[] => {
+    const chain: ParsedSubgraph[] = [];
+    for (let cur = effective(sg); cur; cur = cur.parent) chain.unshift(cur);
+    return chain;
+  };
+
+  const componentIds = new Map<ParsedSubgraph, string>();
+  const taken = new Set<string>();
+  for (const sg of parsed.subgraphs) {
+    if (!included.has(sg)) continue;
+    const bare = parsed.nodes.get(sg.id);
+    if (bare && isBareReference(bare) && !taken.has(sg.id)) parsed.nodes.delete(sg.id);
+    let id = sg.id;
+    while (parsed.nodes.has(id) || taken.has(id)) id = `${id}_group`;
+    taken.add(id);
+    componentIds.set(sg, id);
+  }
+
+  const chains = new Map<string, ParsedSubgraph[]>();
+  const titles = new Map<ParsedSubgraph, string>();
+  for (const n of parsed.nodes.values()) chains.set(n.id, chainOf(n.subgraph));
+  for (const [sg, id] of componentIds) {
+    chains.set(id, chainOf(sg).slice(0, -1));
+    titles.set(sg, sg.title);
+  }
+
+  for (const [sg, id] of componentIds) {
+    const below = [...parsed.nodes.values()].filter((n) => chainOf(n.subgraph).includes(sg)).length;
+    parsed.nodes.set(id, {
+      id,
+      title: sg.title || id,
+      subtitle: `${below} ${below === 1 ? 'component' : 'components'}`,
+      kind: 'core',
+    });
+  }
+  return { componentIds, chains, titles };
+}
+
+/** Move components into the levels of the subgraphs that held them, and re-point wires that cross a boundary. */
+function applySubgraphLevels(
+  doc: DiagramDocument,
+  plan: SubgraphLevelPlan,
+  explicitPositions: Set<string>,
+  issues: ImportIssue[],
+): void {
+  const contents = new Map<ParsedSubgraph | undefined, LevelContent>();
+  const levelFor = (sg: ParsedSubgraph | undefined): LevelContent => {
+    let content = contents.get(sg);
+    if (!content) {
+      content = { nodes: [], edges: [], zones: [], notesCards: [] };
+      contents.set(sg, content);
+    }
+    return content;
+  };
+  const idToComponent = new Map<ParsedSubgraph, string>(plan.componentIds);
+  const byId = new Map(doc.nodes.map((n) => [n.id, n]));
+
+  for (const n of doc.nodes) {
+    const chain = plan.chains.get(n.id) ?? [];
+    levelFor(chain[chain.length - 1]).nodes.push(n);
+  }
+
+  for (const edge of doc.edges) {
+    const a = plan.chains.get(edge.from) ?? [];
+    const b = plan.chains.get(edge.to) ?? [];
+    let k = 0;
+    while (k < a.length && k < b.length && a[k] === b[k]) k += 1;
+    const lift = (id: string, chain: ParsedSubgraph[]) => (chain.length === k ? id : idToComponent.get(chain[k])!);
+    const from = lift(edge.from, a);
+    const to = lift(edge.to, b);
+    if (from === to) {
+      issues.push({
+        level: 'warning',
+        code: 'self-loop',
+        message: `Edge "${edge.from} → ${edge.to}" ends up inside one group; the wire was skipped.`,
+      });
+      continue;
+    }
+    levelFor(a[k - 1]).edges.push({ ...edge, from, to });
+  }
+
+  for (const [sg, id] of plan.componentIds) {
+    const owner = byId.get(id);
+    if (owner) owner.child = levelFor(sg);
+  }
+
+  for (const [sg, content] of contents) {
+    if (!sg) continue;
+    const scratch = createBlankDocument();
+    scratch.direction = doc.direction;
+    scratch.nodes = content.nodes;
+    scratch.edges = content.edges;
+    const saved = new Map<string, [number, number]>();
+    for (const n of content.nodes) if (explicitPositions.has(n.id)) saved.set(n.id, [n.x, n.y]);
+    if (saved.size < content.nodes.length) {
+      autoLayoutDocument(scratch);
+      for (const n of content.nodes) {
+        const at = saved.get(n.id);
+        if (at) [n.x, n.y] = at;
+      }
+    }
+  }
+
+  const root = levelFor(undefined);
+  doc.nodes = root.nodes;
+  doc.edges = root.edges;
+}
+
+/** How `subgraph` blocks import: as swimlanes on one canvas (the default) or as levels you drill into (D6). */
+export interface ImportOptions {
+  subgraphs?: 'swimlanes' | 'levels';
+}
+
+export function importMermaidOrBlueprint(rawInput: string, options: ImportOptions = {}): {
   doc: DiagramDocument;
   warnings: string[];
   issues: ImportIssue[];
@@ -937,6 +1108,10 @@ export function importMermaidOrBlueprint(rawInput: string): {
   const { meta, mermaidSource } = extracted;
   const issues: ImportIssue[] = [...extracted.issues];
   const parsedMermaid = parseMermaidFlowchart(mermaidSource, extracted.mermaidLineBase, issues);
+  const levelPlan =
+    options.subgraphs === 'levels' && !(Array.isArray(meta.zones) && meta.zones.length > 0)
+      ? planSubgraphLevels(parsedMermaid, issues)
+      : null;
 
   const doc = createBlankDocument();
   doc.direction =
@@ -1229,6 +1404,8 @@ export function importMermaidOrBlueprint(rawInput: string): {
     }
   }
 
+  if (levelPlan) applySubgraphLevels(doc, levelPlan, explicitPositions, issues);
+
   // Layout nodes that do not have explicit [x, y] coordinates
   if (doc.nodes.length > 0) {
     if (explicitPositions.size === 0) {
@@ -1262,7 +1439,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
         width: typeof z.width === 'number' ? z.width : 320,
       });
     });
-  } else if (parsedMermaid.subgraphs.length > 0) {
+  } else if (!levelPlan && parsedMermaid.subgraphs.length > 0) {
     const nodeMap = new Map(doc.nodes.map((n) => [n.id, n]));
     parsedMermaid.subgraphs.forEach((sg, idx) => {
       const members = sg.nodeIds
