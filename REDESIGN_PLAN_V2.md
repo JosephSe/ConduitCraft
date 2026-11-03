@@ -123,7 +123,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Files:** `src/studio/camera.ts`, `src/studio/viewportFrame.ts`, `e2e/camera.spec.ts`.
 - **Done when:** the full Playwright suite passes locally and in CI under both UIs.
 
-#### [ ] A2. Reclaim CSS headroom · S
+#### [x] A2. Reclaim CSS headroom · S (#31)
 - **Why:** 3 kB is left and milestone A adds UI (D3).
 - **Do:** list the selectors in `src/styles/studio.css` that nothing in `index.html` or `src/` uses any more (the playback deck replaced by R-04, the old Simulations tab, the old empty-state doors kept until A6) and delete them. Move CSS used only by lazy dialogs (snapshots, matrix, GIF export) into the chunk that opens them, if the build allows it. Leave CSS used only by Classic until B1.
 - **Done when:** entry CSS is at most 104 kB, `check:size` passes, the e2e suite passes, and the axe scans still pass.

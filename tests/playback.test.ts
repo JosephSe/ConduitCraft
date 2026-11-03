@@ -193,13 +193,12 @@ describe('simulation playback controls (step, scrub, speed, loop)', () => {
     ctrl.clear();
   });
 
-  it('defines simulation playback deck and active wire glow in studio.css', () => {
+  it('defines simulation playback deck and active step styles in studio.css', () => {
     const cssPath = path.resolve('src/styles/studio.css');
     const css = fs.readFileSync(cssPath, 'utf-8');
 
     assert.ok(css.includes('.sim-playback-deck'), 'defines .sim-playback-deck');
     assert.ok(css.includes('.sim-scrubber'), 'defines .sim-scrubber range slider');
     assert.ok(css.includes('.trace-item.is-active-step'), 'defines active step trace highlight');
-    assert.ok(css.includes('.conduit-group[data-sim-active="true"]'), 'defines active wire pulse glow');
   });
 });

@@ -1431,8 +1431,11 @@ export function openCodeDialog(): void {
 // ---------------------------------------------------------------------------
 // Event Wiring
 // ---------------------------------------------------------------------------
-export function openShortcutsDialog(): void {
+let shortcutStyles: Promise<unknown> | null = null;
+export async function openShortcutsDialog(): Promise<void> {
   if (!shortcutsDialog) return;
+  shortcutStyles ??= import('../styles/shortcuts.css').catch(() => undefined);
+  await shortcutStyles;
   if (shortcutsDialogBody) {
     shortcutsDialogBody.innerHTML = renderShortcutsHtml();
   }
@@ -2278,7 +2281,11 @@ export function initEvents(): void {
     });
   }
 
-  function openSnapshotsDialog(): void {
+  let snapshotStyles: Promise<unknown> | null = null;
+  async function openSnapshotsDialog(): Promise<void> {
+    // The snapshot and diff styles are only needed here, so they stay out of the entry stylesheet.
+    snapshotStyles ??= import('../styles/snapshots.css').catch(() => undefined);
+    await snapshotStyles;
     refreshSnapshotsDialog();
     snapshotsDialog?.showModal();
   }

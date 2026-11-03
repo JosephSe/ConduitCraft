@@ -178,8 +178,9 @@ describe('presentation mode and guided tour (P key)', () => {
     manager.exit();
   });
 
-  it('defines presentation mode and caption styling in studio.css and viewer.css', () => {
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf-8');
+  it('defines presentation mode and caption styling in presentation.css and viewer.css', () => {
+    // The studio's presentation styles load on demand, so they live in their own stylesheet.
+    const studioCss = fs.readFileSync(path.resolve('src/styles/presentation.css'), 'utf-8');
     const viewerCss = fs.readFileSync(path.resolve('src/styles/viewer.css'), 'utf-8');
 
     for (const css of [studioCss, viewerCss]) {

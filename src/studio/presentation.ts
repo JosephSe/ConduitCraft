@@ -146,12 +146,17 @@ export class PresentationManager {
     }
   }
 
-  public toggle(doc: DiagramDocument): void {
+  private styles: Promise<unknown> | null = null;
+
+  public async toggle(doc: DiagramDocument): Promise<void> {
     if (this.active) {
       this.exit();
-    } else {
-      this.enter(doc);
+      return;
     }
+    // The presentation styles are only needed once a tour starts, so they stay out of the entry stylesheet.
+    this.styles ??= import('../styles/presentation.css').catch(() => undefined);
+    await this.styles;
+    if (!this.active) this.enter(doc);
   }
 
   public next(): void {
@@ -442,6 +447,6 @@ export class PresentationManager {
 
 export const presentationManager = new PresentationManager();
 
-export function togglePresentation(doc: DiagramDocument = app.doc): void {
-  presentationManager.toggle(doc);
+export function togglePresentation(doc: DiagramDocument = app.doc): Promise<void> {
+  return presentationManager.toggle(doc);
 }
