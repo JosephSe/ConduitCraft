@@ -26,6 +26,11 @@ export function invalidateChaos(): void {
   for (const id of [...failed]) if (!app.doc.nodes.some((n) => n.id === id)) failed.delete(id);
 }
 
+/** Failures can be run and seen in the Traffic and Review lenses. */
+export function chaosLensActive(): boolean {
+  return app.lens === 'traffic' || app.lens === 'review';
+}
+
 export function failedIds(): string[] {
   return [...failed];
 }
@@ -157,7 +162,7 @@ export function setPreview(id: string | null): void {
 export function initChaosPreview(layer: HTMLElement): void {
   let altDown = false;
   let hovered: string | null = null;
-  const sync = () => setPreview(altDown && hovered && app.lens === 'traffic' ? hovered : null);
+  const sync = () => setPreview(altDown && hovered && chaosLensActive() ? hovered : null);
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Alt' && !altDown) {
       altDown = true;

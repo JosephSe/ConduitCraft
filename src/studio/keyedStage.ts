@@ -50,7 +50,7 @@ import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline
 import { reconcileKeyed } from './reconcile';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
-import { chaosStatusOf, isPreview } from './chaos';
+import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { insightsFor, worstLevel } from './insights';
 import { scheduleMinimapPaint } from './minimap';
 import {
@@ -807,7 +807,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     const byId = new Map(app.doc.nodes.map((n) => [n.id, n]));
     const endsMatch = [byId.get(edge.from), byId.get(edge.to)].every((n) => n && matchesTag(n, app.tagFilter));
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
-    const cut = app.lens === 'traffic' && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
+    const cut = chaosLensActive() && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
     g.classList.toggle('is-chaos-cut', cut);
     const wireLevel = worstLevel(insightsFor('edge', edge.id));
     if (wireLevel) g.dataset.insight = wireLevel;
@@ -1312,7 +1312,7 @@ const CHAOS_BADGES: Record<string, string> = {
 
 /** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */
 function paintChaos(wrapper: HTMLElement, nodeId: string): void {
-  const status = app.lens === 'traffic' ? chaosStatusOf(nodeId) : null;
+  const status = chaosLensActive() ? chaosStatusOf(nodeId) : null;
   const before = wrapper.dataset.chaos;
   if (status) wrapper.dataset.chaos = status;
   else delete wrapper.dataset.chaos;
