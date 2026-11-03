@@ -615,16 +615,16 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 - [x] **Inspector** that appears with a selection, with collapsible sections and a pin. *Done in #16* (with T-05).
 - [x] **R-09 Plain language and a simpler inspector** (P15). A component shows Name, Description and Kind; subtitle, eyebrow (renamed "Label above title"), chip ("Badge"), footer, interface and code move under **More**. Use "wire" everywhere instead of "conduit" and "stream". Use "telemetry" only where data is real. Do a pass over every label, tooltip and toast against the word list in [Appendix A](#appendix-a-word-list). *Done in #17.*
 - [x] **Tokens** from 6.1, applied to the new chrome only.
-- [ ] Playwright: the existing 62 tests pass under both `?ui=1` and `?ui=2` (parametrise the fixtures).
+- [x] Playwright: the existing 62 tests pass under both `?ui=1` and `?ui=2` (parametrise the fixtures).
 
 ### Phase 2: Lenses and the run bar (about 1.5 weeks)
 
-- [ ] **T-02 Lens state** and **R-03 lens switcher**, keys `1` to `4`.
-- [ ] **R-04 Run bar** replacing the Simulations tab.
-- [ ] **T-03 Schema versioning** (moved up from phase 4: this phase is the first to add document fields).
-- [ ] **F-17 Wire labels and protocols** (small, and F-01 and F-02 depend on it).
-- [ ] **F-26 Custom legend and tags** and **F-27 Component links and ownership** (both small, both new fields).
-- [ ] Make `?ui=2` the default and keep "Classic layout" in settings.
+- [x] **T-02 Lens state** and **R-03 lens switcher**, keys `1`, `2` and `4` (`3` waits for the Review lens in phase 3).
+- [x] **R-04 Run bar** replacing the Simulations tab.
+- [x] **T-03 Schema versioning** (moved up from phase 4: this phase is the first to add document fields).
+- [x] **F-17 Wire labels and protocols** (small, and F-01 and F-02 depend on it).
+- [x] **F-26 Custom legend and tags** and **F-27 Component links and ownership** (both small, both new fields).
+- [x] Make `?ui=2` the default and keep "Classic layout" in settings.
 
 ### Phase 3: The signature (about 2 weeks)
 

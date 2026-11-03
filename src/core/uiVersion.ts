@@ -5,8 +5,8 @@
 export type UiVersion = 1 | 2;
 
 export const UI_VERSION_STORAGE_KEY = 'conduitcraft-ui';
-/** Flip to 2 when phase 2 ends and the new chrome becomes the default. */
-export const DEFAULT_UI_VERSION: UiVersion = 1;
+/** The redesign is the default. `?ui=1`, or "Classic layout" in settings, brings the classic chrome back. */
+export const DEFAULT_UI_VERSION: UiVersion = 2;
 
 export interface UiStorage {
   getItem(key: string): string | null;
