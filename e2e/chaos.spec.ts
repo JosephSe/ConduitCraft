@@ -148,7 +148,7 @@ test('a component that calls a failed one glows orange and pulses', async ({ pag
   const risk = page.locator('.arch-node[data-chaos="at-risk"]').first();
   await expect(risk).toBeVisible();
   await expect(risk.locator('.chaos-badge')).toHaveText(/Potential disruption/);
-  const style = await risk.locator('.node-select-hit').evaluate((el) => getComputedStyle(el));
-  expect(style.animationName).toBe('chaos-pulse');
-  expect(style.borderColor).toBe('rgb(249, 115, 22)');
+  const hit = risk.locator('.node-select-hit');
+  await expect(hit).toHaveCSS('animation-name', 'chaos-pulse');
+  await expect(hit).toHaveCSS('border-top-color', 'rgb(249, 115, 22)');
 });
