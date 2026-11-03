@@ -147,7 +147,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 #### [ ] A5b. Mermaid import only (D8) · S
 - **Needs:** A5 (both touch `parser.ts` and the code dialog).
 - **Do:**
-  1. Remove the Mermaid writers people can reach: the **Mermaid (.mmd)** card in the export dialog (`#btn-export-mmd`), the **Mermaid / Blueprint** format switch in the code dialog (`code-format`), and the `.mmd` branch of `serializeForFilename` in `src/studio/pwa.ts`. Drop `.mmd` from the save picker's types. Remove the `levels` export option that A5 added to `serializeToMermaid`.
+  1. Remove the Mermaid writers people can reach: the **Mermaid (.mmd)** card in the export dialog (`#btn-export-mmd`), the **Mermaid / Blueprint** format switch in the code dialog (`code-format`), and the `.mmd` branch of `serializeForFilename` in `src/studio/pwa.ts`. Drop `.mmd` from the save picker's types.
   2. The code dialog becomes "Blueprint file": it shows the Blueprint file, and **Apply** still accepts pasted Mermaid or a Blueprint file, so import is unchanged. Rename the palette entry ("Mermaid (.mmd) & Blueprint Code Sync") to match, and keep `mermaid` as a search keyword so "paste mermaid" still finds it.
   3. `⌘S` on a file opened from `.mmd` never writes Mermaid and never overwrites that file: it opens Save As with a `.md` Blueprint file name. Say so once in a toast.
   4. `serializeToMermaid` stays only as the writer of the Blueprint file's embedded `mermaid` block (Q12). Make it module-private, or rename it to say so.
