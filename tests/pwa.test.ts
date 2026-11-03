@@ -48,6 +48,8 @@ import {
   resetActiveFile,
   saveWithNativeFileSystem,
   serializeForFilename,
+  isMermaidFileName,
+  blueprintNameFor,
   type FileSystemFileHandleLike,
   type FileSystemWritableFileStreamLike,
 } from '../src/studio/pwa';
@@ -185,17 +187,13 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     n1.title = 'Auth Service';
     doc.nodes.push(n1);
 
-    // .mmd extension -> Mermaid flowchart
-    const mmd = serializeForFilename(doc, 'architecture.mmd');
-    assert.strictEqual(mmd.format, 'mermaid');
-    assert.strictEqual(mmd.mime, 'text/plain;charset=utf-8');
-    assert.ok(mmd.content.includes('flowchart') || mmd.content.includes('graph'));
-    assert.ok(mmd.content.includes('Auth Service'));
-
-    // .mermaid extension -> Mermaid flowchart
-    const mermaid = serializeForFilename(doc, 'cluster.mermaid');
-    assert.strictEqual(mermaid.format, 'mermaid');
-    assert.strictEqual(mermaid.mime, 'text/plain;charset=utf-8');
+    // D8: Mermaid is import only, so a Mermaid name never gets a Mermaid writer
+    assert.strictEqual(serializeForFilename(doc, 'architecture.mmd').format, 'json');
+    assert.strictEqual(serializeForFilename(doc, 'cluster.mermaid').format, 'json');
+    assert.strictEqual(isMermaidFileName('Cluster.MERMAID'), true);
+    assert.strictEqual(isMermaidFileName('notes.md'), false);
+    assert.strictEqual(blueprintNameFor('topology.mmd'), 'topology.md');
+    assert.strictEqual(blueprintNameFor('cluster.Mermaid'), 'cluster.md');
 
     // .md extension -> Blueprint Markdown
     const md = serializeForFilename(doc, 'architecture.md');
@@ -232,15 +230,15 @@ describe('PWA install, manifest, service worker and file system access (suggesti
 
     const serializer = (name: string) => serializeForFilename(doc, name).content;
 
-    // Test 1: Active file is .mmd -> saves Mermaid text directly to file stream
-    let mmdWritten = '';
+    // Test 1: Active file is .mmd -> never written (D8); without a save picker nothing is saved
+    let mmdWrites = 0;
     const mmdHandle: FileSystemFileHandleLike = {
       kind: 'file',
       name: 'topology.mmd',
       getFile: async () => new File([''], 'topology.mmd'),
       createWritable: async () => ({
-        write: async (data) => {
-          mmdWritten = String(data);
+        write: async () => {
+          mmdWrites += 1;
         },
         close: async () => {},
       }),
@@ -248,14 +246,11 @@ describe('PWA install, manifest, service worker and file system access (suggesti
 
     setActiveFile(mmdHandle, 'topology.mmd');
     setDiskDirty(true);
-    assert.strictEqual(isFileDiskDirty(), true);
-
     const resMmd = await saveWithNativeFileSystem(serializer, 'topology.mmd', false);
-    assert.strictEqual(resMmd.success, true);
-    assert.strictEqual(resMmd.directSaved, true);
-    assert.ok(mmdWritten.includes('flowchart') || mmdWritten.includes('graph'));
-    assert.ok(mmdWritten.includes('Orders DB'));
-    assert.strictEqual(isFileDiskDirty(), false, 'Save clears disk dirty state');
+    assert.strictEqual(resMmd.success, false);
+    assert.strictEqual(resMmd.filename, 'topology.md', 'Save As is offered a Blueprint file name');
+    assert.strictEqual(mmdWrites, 0, 'the opened .mmd file is never written');
+    assert.strictEqual(isFileDiskDirty(), true, 'unsaved work stays marked unsaved');
 
     // Test 2: Active file is .md -> saves Blueprint Markdown text
     let mdWritten = '';

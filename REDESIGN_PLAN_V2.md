@@ -144,7 +144,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Files:** `src/core/parser.ts` (`ParsedSubgraph`), the import dialog in `src/studio/interactions.ts`, `tests/mermaidCoverage.test.ts`.
 - **Done when:** importing with Levels selected keeps every node and wire of the source (as components inside levels, or as wires re-pointed to a subgraph component), and the Swimlanes default produces exactly what it produced before (snapshot test).
 
-#### [ ] A5b. Mermaid import only (D8) · S
+#### [x] A5b. Mermaid import only (D8) · S (#35)
 - **Needs:** A5 (both touch `parser.ts` and the code dialog).
 - **Do:**
   1. Remove the Mermaid writers people can reach: the **Mermaid (.mmd)** card in the export dialog (`#btn-export-mmd`), the **Mermaid / Blueprint** format switch in the code dialog (`code-format`), and the `.mmd` branch of `serializeForFilename` in `src/studio/pwa.ts`. Drop `.mmd` from the save picker's types.

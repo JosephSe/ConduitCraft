@@ -756,10 +756,10 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'open-code',
-      title: 'Mermaid (.mmd) & Blueprint Code Sync',
-      subtitle: 'View, edit, or copy Mermaid flowchart code',
+      title: 'Blueprint File & Mermaid Import',
+      subtitle: 'View the Blueprint file, or paste Mermaid to import it',
       category: 'Export & Sync',
-      keywords: ['code', 'mermaid', 'markdown', 'blueprint', 'mmd'],
+      keywords: ['code', 'mermaid', 'paste', 'import', 'markdown', 'blueprint', 'mmd'],
       run: deps.openCodeDialog,
     },
     {

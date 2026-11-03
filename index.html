@@ -215,7 +215,7 @@
           </button>
           <button type="button" class="menu-item" id="btn-open-code" role="menuitem">
             <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            <span>Mermaid / MD Editor</span>
+            <span>Blueprint File / Paste Mermaid</span>
           </button>
           <button type="button" class="menu-item" id="btn-open-matrix" role="menuitem">
             <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
@@ -738,25 +738,14 @@
     </aside>
   </main>
 
-  <!-- Bidirectional Mermaid (.mmd) & Blueprint (.md) Code Sync Dialog -->
+  <!-- Blueprint file dialog: shows the Blueprint file, applies pasted Mermaid or Blueprint (D8: Mermaid is import only) -->
   <dialog id="code-dialog" closedby="any" aria-labelledby="code-dialog-title">
     <div class="dialog-shell">
       <div class="dialog-header">
         <div>
-          <h2 id="code-dialog-title">Mermaid &amp; Blueprint Source</h2>
+          <h2 id="code-dialog-title">Blueprint File</h2>
         </div>
         <div class="dialog-header-actions">
-          <fieldset class="segmented-group" aria-label="Source format">
-            <legend class="visually-hidden">Source Format</legend>
-            <label class="segmented-label">
-              <input type="radio" name="code-format" value="mermaid" class="visually-hidden" checked>
-              <span>Mermaid (.mmd)</span>
-            </label>
-            <label class="segmented-label">
-              <input type="radio" name="code-format" value="blueprint" class="visually-hidden">
-              <span>Blueprint (.md)</span>
-            </label>
-          </fieldset>
           <form method="dialog">
             <button type="submit" class="btn">Close</button>
           </form>
@@ -764,7 +753,7 @@
       </div>
       <div class="dialog-body code-dialog-body">
         <p class="guide-lead">
-          Changes drawn on the canvas are automatically reflected here. You can also paste or edit a <strong>Mermaid flowchart</strong> (<code>([Actor])</code>, <code>[[Core]]</code>, <code>[Service]</code>, <code>(Broker)</code>, <code>{{Gate}}</code>, <code>[(Store)]</code>, <code>[/Client/]</code>) or a <strong>Blueprint Markdown</strong> document with YAML frontmatter and apply it directly to the canvas.
+          This is the diagram as a <strong>Blueprint file</strong>: YAML frontmatter plus a Mermaid block, kept in step with the canvas. To import, paste a Blueprint file or a <strong>Mermaid flowchart</strong> (<code>([Actor])</code>, <code>[[Core]]</code>, <code>[Service]</code>, <code>(Broker)</code>, <code>{{Gate}}</code>, <code>[(Store)]</code>, <code>[/Client/]</code>) and apply it. ConduitCraft reads Mermaid but doesn't write it.
         </p>
         <label for="code-sync-textarea" class="field-label">Diagram Definition</label>
         <textarea
@@ -876,10 +865,6 @@
           <button type="button" class="export-option-card" id="btn-export-html">
             <strong>Interactive Animated Data View (.html)</strong>
             <span>Self-contained single-file web page with animated wires, pan/zoom, inspector, matrix, and live packet simulation.</span>
-          </button>
-          <button type="button" class="export-option-card" id="btn-export-mmd">
-            <strong>Mermaid Flowchart (.mmd)</strong>
-            <span>Clean standard Mermaid syntax compatible with GitHub, Notion, GitLab, and documentation sites.</span>
           </button>
           <button type="button" class="export-option-card" id="btn-export-svg">
             <span class="export-option-kicker">Standard · Vector</span>

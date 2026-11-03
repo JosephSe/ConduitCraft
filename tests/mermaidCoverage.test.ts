@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   importMermaidOrBlueprint,
-  serializeToMermaid,
+  serializeMermaidBlock,
   colorToStreamTone,
 } from '../src/core/parser.ts';
 
@@ -179,7 +179,7 @@ describe('Mermaid import coverage (classDef, style, linkStyle, shapes)', () => {
     `;
 
     const { doc } = importMermaidOrBlueprint(mermaid);
-    const serialized = serializeToMermaid(doc);
+    const serialized = serializeMermaidBlock(doc);
 
     assert.ok(serialized.includes('A(("Circle Node'));
     assert.ok(serialized.includes('B>"Banner Node'));
@@ -216,7 +216,7 @@ describe('Mermaid subgraphs as levels (D6)', () => {
     assert.deepStrictEqual(explicit.doc.zones, plain.doc.zones);
     assert.ok(plain.doc.zones.length > 0);
     assert.ok(plain.doc.nodes.every((n) => !n.child));
-    assert.strictEqual(serializeToMermaid(plain.doc), serializeToMermaid(explicit.doc));
+    assert.strictEqual(serializeMermaidBlock(plain.doc), serializeMermaidBlock(explicit.doc));
   });
 
   it('matches the swimlane output recorded before levels existed (snapshot)', () => {
@@ -236,7 +236,7 @@ describe('Mermaid subgraphs as levels (D6)', () => {
       'checkout>Audit',
     ]);
     assert.strictEqual(
-      serializeToMermaid(doc),
+      serializeMermaidBlock(doc),
       [
         'flowchart LR',
         '  subgraph checkout ["CHECKOUT API"]',
