@@ -174,10 +174,11 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Tests:** one golden-text test per bundled example in `tests/describe.test.ts`, and a test that the module imports with no DOM globals.
 - **Done when:** every SVG and HTML export carries the description, and the output reads as sentences with no ids in it.
 
-#### [ ] A8. F-28 Text outline panel · M
+#### [x] A8. F-28 Text outline panel · M (#38)
 - **Needs:** A7, A2.
 - **Do:** a panel, opened from the palette and the View menu, that lists components as a tree (swimlane → component → its outgoing wires; child levels as expandable rows). It uses roving focus (reuse `studio/rovingFocus.ts`). Selecting a row selects the component and pans to it; Enter on a level row drills in. It updates on history commit.
 - **Done when:** axe passes with the panel open in all four lenses, and a Playwright test navigates to a component by keyboard only and selects it.
+- **Shipped as:** `src/core/outline.ts` (pure tree), `src/studio/outlinePanel.ts`, opened from the palette ("Toggle Text Outline") and the More actions menu, since there is no View menu in this UI. It uses the ARIA tree pattern with one tab stop, which is the same idea as `rovingFocus.ts` but its own handler, because rows are in a panel and not on the canvas.
 
 #### [ ] A9. R-10 Contextual help · M
 - **Needs:** A2.

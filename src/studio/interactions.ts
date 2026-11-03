@@ -206,6 +206,7 @@ import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from 
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
 import { initInsightsPanel } from './insights';
+import { initOutlinePanel } from './outlinePanel';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
@@ -2314,6 +2315,7 @@ export function initEvents(): void {
   initRunBar({ run: runSimulation });
   initChaosPanel();
   initInsightsPanel();
+  initOutlinePanel();
   initChaosPreview(chaosNodesLayer);
 
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
