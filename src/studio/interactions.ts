@@ -1,4 +1,5 @@
 /** Pointer, keyboard, palette, wiring, import/export, and simulation controls. */
+import { startFirstRunIfNew, type FirstRunDeps } from './firstRun';
 import {
   btnAddNotes,
   btnAddSimulation,
@@ -10,11 +11,6 @@ import {
   btnLayoutSelection,
   btnClearTrace,
   btnCopyCode,
-  btnEmptyCode,
-  btnEmptyImport,
-  btnEmptyShowcase,
-  btnEmptyTemplates,
-  emptyStageShelfSlot,
   templateGalleryDialog,
   templateCategoryFilters,
   templateGalleryGrid,
@@ -52,10 +48,8 @@ import {
   btnPropGroup,
   btnPropDelete,
   btnPropDuplicate,
-  btnQuickStarter,
   btnRedo,
   btnResetSelection,
-  btnRestoreSession,
   btnRestoreOpen,
   btnRestoreDiscard,
   restoreSessionBanner,
@@ -247,7 +241,6 @@ import {
   fillTemplatePreviews,
   renderTemplateCardHtml,
   renderBlankCanvasCardHtml,
-  renderEmptyStageShelfHtml,
   type TemplateCategory,
   type TemplateDefinition,
 } from './templatesGallery';
@@ -1717,36 +1710,6 @@ export function initEvents(): void {
     templateGalleryDialog.showModal();
   };
 
-  btnEmptyShowcase.addEventListener('click', () => {
-    const showcase = getStarterTemplateById('lumen-relay');
-    if (showcase) {
-      void loadTemplateDoc(showcase);
-    }
-  });
-
-  // Empty state "Browse Templates" button
-  btnEmptyTemplates?.addEventListener('click', openTemplateGallery);
-
-  // Empty state Quick Template Shelf
-  if (emptyStageShelfSlot) {
-    emptyStageShelfSlot.innerHTML = renderEmptyStageShelfHtml();
-    emptyStageShelfSlot.addEventListener('click', (e) => {
-      const target = (e.target as HTMLElement).closest<HTMLElement>('.empty-shelf-pill');
-      if (!target) return;
-      if (target.id === 'btn-empty-more-templates') {
-        openTemplateGallery();
-        return;
-      }
-      const templateId = target.getAttribute('data-template-id');
-      if (templateId) {
-        const template = getStarterTemplateById(templateId);
-        if (template) {
-          void loadTemplateDoc(template);
-        }
-      }
-    });
-  }
-
   // Template Gallery Category Filters
   templateCategoryFilters?.addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.template-filter-btn');
@@ -1777,35 +1740,6 @@ export function initEvents(): void {
     }
   });
 
-  // Starter Pair on Blank Canvas (1 generic Actor -> 1 generic Core System)
-  btnQuickStarter.addEventListener('click', () => {
-    pushHistory();
-    const actor = createNodeFromStencil('actor', 224, 304, 0);
-    actor.title = 'Actor';
-    actor.subtitle = 'Initiator';
-    const core = createNodeFromStencil('core', 496, 288, 1);
-    core.title = 'Core Service';
-    core.subtitle = 'Primary Processor';
-    app.doc.nodes.push(actor, core);
-    app.doc.edges.push({
-      id: nextUid('edge'),
-      from: actor.id,
-      to: core.id,
-      sourcePort: 'right',
-      targetPort: 'left',
-      tone: 'blue',
-      route: 'auto',
-      label: 'Event Stream',
-      animated: true,
-    });
-    expandStageToFit(app.doc);
-    setSelection({ type: 'node', id: core.id });
-    renderAll(true);
-    fitToViewport();
-    tagEnteringNodes([actor.id, core.id]);
-    notify('Added starter pair', { action: { label: 'Undo', onClick: () => performUndo() } });
-  });
-
   // Restore Previous Autosaved Session (Banner & Empty Stage Button)
   const openRestoredSession = () => {
     const saved = getPendingRestoreOffer() || loadSavedSessionDoc();
@@ -1823,12 +1757,10 @@ export function initEvents(): void {
     notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
   };
   btnRestoreOpen?.addEventListener('click', openRestoredSession);
-  btnRestoreSession?.addEventListener('click', openRestoredSession);
 
   btnRestoreDiscard?.addEventListener('click', () => {
     discardPendingRestoreOffer();
     if (restoreSessionBanner) restoreSessionBanner.hidden = true;
-    if (btnRestoreSession) btnRestoreSession.hidden = true;
     notify('Discarded previous session');
   });
 
@@ -1948,7 +1880,6 @@ export function initEvents(): void {
   const triggerFilePicker = () => fileUploadInput.click();
   btnImportFile.addEventListener('click', triggerFilePicker);
   btnPaletteImport.addEventListener('click', triggerFilePicker);
-  btnEmptyImport.addEventListener('click', triggerFilePicker);
 
   fileUploadInput.addEventListener('change', () => {
     const file = fileUploadInput.files?.[0];
@@ -1986,7 +1917,6 @@ export function initEvents(): void {
   // Blueprint file dialog (shows the Blueprint file; Apply imports Mermaid or Blueprint)
   btnOpenCode.addEventListener('click', openCodeDialog);
   btnPaletteCode.addEventListener('click', openCodeDialog);
-  btnEmptyCode.addEventListener('click', openCodeDialog);
 
   btnCopyCode.addEventListener('click', async () => {
     try {
@@ -2292,6 +2222,14 @@ export function initEvents(): void {
   });
   btnOpenSettings.addEventListener('click', () => settingsDialog.showModal());
   btnOpenShortcuts?.addEventListener('click', openShortcutsDialog);
+
+  firstRunDeps = {
+    createBlank: createBlankCanvas,
+    openTemplateGallery,
+    openCodeDialog,
+    runScenario: (id) => runSimulation(id),
+    fitToViewport,
+  };
 
   // Command Palette
   initCommandPalette({
@@ -2861,6 +2799,8 @@ export function initEvents(): void {
   });
 }
 
+let firstRunDeps: FirstRunDeps | null = null;
+
 export function bootStudio(): void {
   localizeStaticShortcuts();
   initTooltips();
@@ -2942,4 +2882,6 @@ export function bootStudio(): void {
       }
     })();
   }
+
+  if (firstRunDeps) startFirstRunIfNew(firstRunDeps);
 }

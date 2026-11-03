@@ -1128,7 +1128,7 @@
     border-radius: 9999px;
   }
 
-  /* Empty Blank Canvas Onboarding Card */
+  /* Empty canvas: a single line of hint */
   .empty-stage-overlay {
     position: absolute;
     inset: 0;
@@ -1143,128 +1143,46 @@
     display: none;
   }
 
-  .empty-stage-card {
-    pointer-events: auto;
-    max-inline-size: 44rem;
-    padding: 1.65rem 1.85rem;
-    border-radius: 1.25rem;
-    background: var(--wl-panel);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--wl-border-ui);
-    box-shadow: var(--wl-shadow-elevated);
-    text-align: center;
-    display: grid;
-    gap: 0.75rem;
-  }
-
-  .empty-stage-badge {
-    justify-self: center;
-    font-family: var(--wl-font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    padding: 0.2rem 0.65rem;
-    border-radius: 999px;
-    background: var(--wl-blue-soft);
-    color: var(--wl-blue);
-    border: 1px solid var(--wl-border-subtle);
-  }
-
-  .empty-stage-card h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  .empty-stage-card p {
+  .empty-stage-hint {
     font-size: 0.875rem;
     color: var(--wl-ink-secondary);
-    line-height: 1.55;
+    text-align: center;
   }
 
-  .empty-stage-card code {
-    font-family: var(--wl-font-mono);
-    font-size: 0.78rem;
-    padding-inline: 0.3rem;
-    border-radius: 0.3rem;
-    background: var(--wl-surface-elevated);
+  /* First run: one sentence and three small actions, over the canvas while the example plays */
+  .first-run {
+    position: fixed;
+    inset-block-end: 1.25rem;
+    inset-inline: 0;
+    margin-inline: auto;
+    inline-size: fit-content;
+    max-inline-size: calc(100vw - 2rem);
+    z-index: 40;
+    display: grid;
+    gap: 0.6rem;
+    justify-items: center;
+    padding: 0.85rem 1.1rem;
+    border-radius: 1rem;
+    background: var(--wl-panel);
+    border: 1px solid var(--wl-border-ui);
+    box-shadow: var(--wl-shadow-elevated);
   }
 
-  .empty-stage-actions {
+  .first-run[hidden] {
+    display: none;
+  }
+
+  .first-run-line {
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .first-run-actions {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
     flex-wrap: wrap;
-    margin-block-start: 0.25rem;
-  }
-
-  .empty-stage-shelf-container {
-    margin-block-start: 0.85rem;
-    padding-block-start: 0.85rem;
-    border-block-start: 1px solid var(--wl-border-subtle);
-    display: grid;
-    gap: 0.5rem;
-    text-align: left;
-  }
-
-  .empty-shelf-label {
-    font-size: 0.72rem;
-    font-family: var(--wl-font-mono);
-    color: var(--wl-ink-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .empty-shelf-pills {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-    gap: 0.45rem;
-  }
-
-  .empty-shelf-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.5rem 0.65rem;
-    border-radius: 0.55rem;
-    background: var(--wl-surface);
-    border: 1px solid var(--wl-border-subtle);
-    color: var(--wl-ink);
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s ease;
-  }
-
-  .empty-shelf-pill:hover {
-    background: var(--wl-surface-hover);
-    border-color: var(--wl-blue);
-    transform: translateY(-1px);
-    box-shadow: var(--wl-shadow-subtle);
-  }
-
-  .empty-shelf-title {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--wl-ink);
-  }
-
-  .empty-shelf-tag {
-    font-size: 0.68rem;
-    color: var(--wl-ink-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-inline-size: 100%;
-  }
-
-  .empty-shelf-pill-more {
     justify-content: center;
-    align-items: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--wl-blue);
-    border-style: dashed;
+    gap: 0.5rem;
   }
 
   .canvas-viewport {
@@ -4021,7 +3939,8 @@ kbd {
   font-family: var(--wl-font-mono);
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--wl-ink);
+  /* The code surface is dark in both themes, so the text on it is light in both (as in .code-card). */
+  color: #e2e8f0;
   background: var(--wl-surface-code);
   border: 1px solid var(--wl-border-ui);
   border-radius: 4px;

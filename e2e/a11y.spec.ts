@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 type Scheme = 'light' | 'dark';
 
@@ -29,7 +30,7 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
 
     test('loaded diagram has no axe violations', async ({ page }) => {
       await page.goto('/');
-      await page.locator('#btn-empty-showcase').click();
+      await openLumenRelay(page);
       await expect(page.locator('.arch-node').first()).toBeVisible();
       const violations = await scan(page);
       console.log(`DIAGRAM/${scheme}`, JSON.stringify(violations, null, 1));
@@ -40,7 +41,7 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
 
 test('a visible tooltip has no axe violations', async ({ page }) => {
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
   await page.locator('#btn-prop-delete').hover();
   await expect(page.locator('#tooltip-layer')).toHaveAttribute('role', 'tooltip');
@@ -66,7 +67,7 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/');
-    await page.locator('#btn-empty-showcase').click();
+    await openLumenRelay(page);
     await expect(page.locator('.arch-node').first()).toBeVisible();
     await expect(page.locator('#btn-open-palette .btn-text-responsive')).toBeVisible();
     expect(await scan(page)).toEqual([]);
@@ -76,7 +77,7 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
 test('a selected wire, with its handles and inspector, has no axe violations', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
   const target = await page.evaluate(() => {
     for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {

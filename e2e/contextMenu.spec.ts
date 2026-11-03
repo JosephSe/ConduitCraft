@@ -1,10 +1,11 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 async function loadShowcase(page: Page) {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node[data-node-id="night-desk"]')).toBeVisible();
   // The showcase opens with a component selected; start from a clean canvas.
   await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });

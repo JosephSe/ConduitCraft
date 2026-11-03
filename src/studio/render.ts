@@ -3,7 +3,6 @@ import { invalidateChaos } from './chaos';
 import { invalidateInsights } from './insights';
 import { paintGroupOutlines } from './groupOutlines';
 import {
-  btnRestoreSession,
   canvasStatsPill,
   docBrandCluster,
   docBrandGlyph,
@@ -124,16 +123,9 @@ export function renderAll(rebuildInspector = true): void {
     if (restoreSessionBanner) {
       restoreSessionBanner.hidden = false;
     }
-    if (btnRestoreSession) {
-      btnRestoreSession.hidden = !isEmpty;
-      setText(btnRestoreSession, `↺ Restore Previous Session (${count} ${count === 1 ? 'component' : 'components'})`);
-    }
   } else {
     if (restoreSessionBanner) {
       restoreSessionBanner.hidden = true;
-    }
-    if (btnRestoreSession) {
-      btnRestoreSession.hidden = true;
     }
   }
 

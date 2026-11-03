@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 test('a component takes an owner, tags and links, and the legend renames a colour', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   const node = page.locator('.arch-node').first();
   await expect(node).toBeVisible();
   await node.click();
@@ -42,7 +43,7 @@ test('a component takes an owner, tags and links, and the legend renames a colou
 test('the Traffic toolbar colours by tag and filters by tag, and the legend card shows on the canvas', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   const nodes = page.locator('.arch-node');
   await expect(nodes.first()).toBeVisible();
 

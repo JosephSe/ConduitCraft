@@ -32,3 +32,8 @@ export async function clearSelection(page: Page): Promise<void> {
     ),
   );
 }
+
+/** Load the Lumen Relay example. The empty canvas has no buttons for it any more, so go through the palette. */
+export async function openLumenRelay(page: Page): Promise<void> {
+  await runPaletteCommand(page, 'Lumen Relay');
+}

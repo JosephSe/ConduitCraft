@@ -1,9 +1,9 @@
-import { clearSelection } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 async function loadShowcase(page: Page): Promise<void> {
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 

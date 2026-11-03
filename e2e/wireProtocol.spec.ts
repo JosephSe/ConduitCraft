@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 test('a wire takes a protocol and a call style from the inspector, and shows them on the canvas', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 
   // Select the first wire through its chip, as a user clicking its label would.
@@ -27,7 +28,7 @@ test('a wire takes a protocol and a call style from the inspector, and shows the
 test('a wire\'s latency changes how fast its dashes flow', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 
   const group = page.locator('.conduit-group:has(.conduit-badge-hit)').first();

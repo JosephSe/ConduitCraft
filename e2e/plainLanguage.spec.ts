@@ -1,10 +1,10 @@
-import { clearSelection } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 import { expect, test } from '@playwright/test';
 
 test('a component form leads with Name, Description and Kind; the rest is under More details', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node[data-node-id="night-desk"]')).toBeVisible();
 
   const basics = page.locator('#prop-section-basics');
@@ -23,7 +23,7 @@ test('a component form leads with Name, Description and Kind; the rest is under 
 test('a wire is called a wire in its inspector', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.conduit-group').first()).toBeAttached();
   // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
   await clearSelection(page);

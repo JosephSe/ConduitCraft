@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { clearSelection } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const editor = (page: Page) => page.locator('.inline-edit-input');
@@ -7,7 +7,7 @@ const editor = (page: Page) => page.locator('.inline-edit-input');
 async function loadShowcase(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
