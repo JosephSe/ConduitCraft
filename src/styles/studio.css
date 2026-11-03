@@ -5845,6 +5845,17 @@ html[data-ui="2"] #sim-playback-deck {
 .arch-node[data-chaos="rerouted"] .node-select-hit {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--wl-blue) 35%, transparent);
 }
+/* Callers of a failed component: still up, but their requests may fail. A slow orange pulse. */
+.arch-node[data-chaos="at-risk"] .node-select-hit {
+  border-color: #f97316;
+  animation: chaos-pulse 2.4s ease-in-out infinite;
+}
+@keyframes chaos-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgb(249 115 22 / 0.35), 0 0 6px 1px rgb(249 115 22 / 0.25); }
+  50% { box-shadow: 0 0 0 2px rgb(249 115 22 / 0.55), 0 0 16px 4px rgb(249 115 22 / 0.45); }
+}
+.arch-node[data-chaos="at-risk"] .chaos-badge { background: #f97316; color: #fff; border-color: #f97316; }
+.chaos-item[data-status="at-risk"] { color: #c2410c; }
 .chaos-badge {
   position: absolute;
   inset-block-start: -0.7rem;
@@ -5869,6 +5880,7 @@ html[data-ui="2"] #sim-playback-deck {
 }
 @media (prefers-reduced-motion: reduce) {
   .arch-node[data-chaos="failed"] .node-select-hit { animation: none; }
+  .arch-node[data-chaos="at-risk"] .node-select-hit { animation: none; box-shadow: 0 0 0 2px rgb(249 115 22 / 0.5), 0 0 10px 2px rgb(249 115 22 / 0.35); }
 }
 
 .chaos-panel {

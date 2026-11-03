@@ -137,3 +137,18 @@ test('only the failed component\'s own wires stop, and nothing stays dimmed once
   }, id);
   expect(state).toEqual({ ownRunning: 0, othersStopped: 0, dimmedNodes: 0, dimmedWires: 0 });
 });
+
+test('a component that calls a failed one glows orange and pulses', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/?ui=2');
+  await page.locator('#btn-empty-showcase').click();
+  await page.keyboard.press('2');
+  await page.locator('.arch-node').nth(2).click({ button: 'right' });
+  await page.getByRole('menuitem', { name: /Fail this component/ }).click();
+  const risk = page.locator('.arch-node[data-chaos="at-risk"]').first();
+  await expect(risk).toBeVisible();
+  await expect(risk.locator('.chaos-badge')).toHaveText(/Potential disruption/);
+  const style = await risk.locator('.node-select-hit').evaluate((el) => getComputedStyle(el));
+  expect(style.animationName).toBe('chaos-pulse');
+  expect(style.borderColor).toBe('rgb(249, 115, 22)');
+});
