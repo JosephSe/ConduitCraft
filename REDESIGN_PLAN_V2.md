@@ -106,6 +106,7 @@ Each decision here settles something that would otherwise block an item. Change 
 | D5 | **Chaos crosses levels in one direction.** Failing a component that has a child level marks every component in that child level as failed when the child level is opened. Failing a component inside a child level does **not** fail its parent. A child level's boundary ports show as "cut off" when the outside component they connect to has failed. | This is the simplest rule that is still honest. Tracing reachability through every level is out of scope until someone asks for it. |
 | D6 | **Mermaid `subgraph` import:** the import dialog asks "Subgraphs as: Swimlanes (current) / Levels". The default stays Swimlanes, so existing imports don't change. Frames become a third option once F-09 exists. | Keeps old behaviour and the import report unchanged by default. |
 | D7 | **Phase 5 order:** T-07 headless core goes first, then F-23 CLI, then F-21 live data, then F-24 drift. | T-07 is the riskiest part (it may expose DOM coupling). F-24 needs the importers from milestone B. F-21 has an open CORS question that can be answered while T-07 is built. |
+| D8 | **Mermaid is import only.** ConduitCraft reads Mermaid flowcharts (paste, open, drop) but never writes them: no `.mmd` export, no Mermaid view in the code dialog, no `.mmd` save. The Blueprint file is the one text format we write. This replaces the export half of D6 and A5, and the Mermaid ↔ Blueprint switching in V1 F-05 rule 4. Removal is item A5b. | Keeping a lossy second writer in step with every new field (levels, frames, legend, wire fields) costs time on every item and adds little: people bring Mermaid in, and they keep working in ConduitCraft or the Blueprint file. |
 
 ---
 
@@ -143,6 +144,17 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Files:** `src/core/parser.ts` (`ParsedSubgraph`), the import dialog in `src/studio/interactions.ts`, `tests/mermaidCoverage.test.ts`.
 - **Done when:** a round trip with Levels selected (Mermaid → levels → Mermaid) keeps every node and wire, and the Swimlanes default produces exactly what it produced before (snapshot test).
 
+#### [ ] A5b. Mermaid import only (D8) · S
+- **Needs:** A5 (both touch `parser.ts` and the code dialog).
+- **Do:**
+  1. Remove the Mermaid writers people can reach: the **Mermaid (.mmd)** card in the export dialog (`#btn-export-mmd`), the **Mermaid / Blueprint** format switch in the code dialog (`code-format`), and the `.mmd` branch of `serializeForFilename` in `src/studio/pwa.ts`. Drop `.mmd` from the save picker's types. Remove the `levels` export option that A5 added to `serializeToMermaid`.
+  2. The code dialog becomes "Blueprint file": it shows the Blueprint file, and **Apply** still accepts pasted Mermaid or a Blueprint file, so import is unchanged. Rename the palette entry ("Mermaid (.mmd) & Blueprint Code Sync") to match, and keep `mermaid` as a search keyword so "paste mermaid" still finds it.
+  3. `⌘S` on a file opened from `.mmd` never writes Mermaid and never overwrites that file: it opens Save As with a `.md` Blueprint file name. Say so once in a toast.
+  4. `serializeToMermaid` stays only as the writer of the Blueprint file's embedded `mermaid` block (Q12). Make it module-private, or rename it to say so.
+  5. Update `README.md` (the "Bidirectional Mermaid" feature line and the intro) and `docs/guide.md` (the exported-Mermaid wire syntax and the `## Mermaid` section become "Importing Mermaid"). They change in this PR, not before, because they describe the shipped app.
+- **Tests:** keep every import test in `tests/mermaidCoverage.test.ts` and move it to an import-only file if that reads better. Delete tests that only check Mermaid output, except those that pin the Blueprint file's block. Add a Playwright test, `never loses an opened .mmd file`, that opens a `.mmd`, edits, presses `⌘S` and checks the original file isn't written.
+- **Done when:** `grep -rn "btn-export-mmd\|code-format" src index.html` finds nothing; every bundled example and every Mermaid fixture still imports exactly as before (snapshot); the action-registry reachability test passes.
+
 #### [ ] A6. R-08 First run · M
 - **Needs:** A2.
 - **Spec:** V1 section 5.4.
@@ -164,7 +176,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 #### [ ] A9. R-10 Contextual help · M
 - **Needs:** A2.
 - **Do:**
-  1. Grow `docs/guide.md` (194 lines today) with one section per panel or concept: Lenses, Traffic and scenarios, Failing components, Review and insights (one paragraph per rule code), Levels, Legend and tags, Links and owner, Wire fields, Text outline, Share and export. Remove "Blueprint Markdown" in favour of "Blueprint file" (Appendix A).
+  1. Grow `docs/guide.md` (194 lines today) with one section per panel or concept: Lenses, Traffic and scenarios, Failing components, Review and insights (one paragraph per rule code), Levels, Legend and tags, Links and owner, Wire fields, Text outline, Importing Mermaid, Share and export. Remove "Blueprint Markdown" in favour of "Blueprint file" (Appendix A).
   2. Add a `?` button to each inspector section, the run bar, the chaos summary and the Review panel. It opens a popover (placed with `placeTooltip`) with 2 or 3 sentences and a link to the guide section on GitHub.
   3. Keep the help text in one module, `src/core/helpTopics.ts` (`{ id, title, body, guideAnchor }`), so the palette can search it ("help: routing styles") and a unit test can check every `guideAnchor` exists in `docs/guide.md`.
 - **Done when:** the anchor test passes, and every `?` is reachable by keyboard and closes with `Esc`.
@@ -175,8 +187,8 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Done when:** no image in the README shows the classic header.
 
 #### [ ] A11. Award checklist review and `v2.0.0` · S
-- **Needs:** A1 to A10.
-- **Do:** go through the award-readiness checklist in V1 section 10 and record a pass, or a gap with a new queue item, for each line in a table in this file under A11. Bump `package.json` to `2.0.0`, write release notes (they announce that Classic layout goes away in the next release), and tag `v2.0.0`.
+- **Needs:** A1 to A10, including A5b.
+- **Do:** go through the award-readiness checklist in V1 section 10 and record a pass, or a gap with a new queue item, for each line in a table in this file under A11. Bump `package.json` to `2.0.0`, write release notes (they announce that Classic layout goes away in the next release, and that Mermaid is now import only: D8), and tag `v2.0.0`.
 - **Done when:** the tag exists, and any checklist gap is a queue item, not a note.
 
 ### Milestone B: Many diagrams, real systems (phase 4)
@@ -254,12 +266,12 @@ These are small items that make the shell complete. Each can run in parallel wit
 
 #### [ ] D1. F-09 Frames · M (part 1) + M (part 2)
 - **Part 1:** data model (`DiagramFrame`, `node.frameId`), drawing, Frame tool on the rail (`F`), moving a frame moves its contents, dropping a node in adopts it. Schema bump.
-- **Part 2:** nesting, "Group to frame", YAML and Mermaid round trip (Mermaid subgraph import gains the "Frames" option from D6), HTML export.
+- **Part 2:** nesting, "Group to frame", Blueprint file (YAML) round trip, Mermaid subgraph import gains the "Frames" option from D6 (import only, D8), HTML export.
 - Split into two PRs: D1a and D1b.
 
 #### [ ] D2. F-05 Live split code editor · M (part 1) + M (part 2)
 - **Part 1 (D2a):** the pane, live parse with a 250 ms debounce, last good canvas kept, line diagnostics, one history entry per typing pause, never discards text.
-- **Part 2 (D2b):** canvas ↔ line selection sync, a warning before switching Mermaid ↔ Blueprint drops anything. A textarea with a gutter first; CodeMirror only as a lazy chunk, and only if needed.
+- **Part 2 (D2b):** canvas ↔ line selection sync. The pane edits the Blueprint file only (D8): pasting Mermaid into it converts it once, with the import report, and there is no Mermaid ↔ Blueprint switch to warn about. A textarea with a gutter first; CodeMirror only as a lazy chunk, and only if needed.
 - **Note:** with levels, the pane edits the open level's YAML by default, with a toggle for the whole tree.
 
 #### [ ] D3. F-11 ELK layout (lazy) · M
@@ -324,7 +336,7 @@ npm run test:e2e    # Playwright + axe, all pass, no new skips or retries
 
 Also:
 
-- Every V1 section 10 quality bar applies, in particular the reduced-motion, round-trip, data-safety and secrets rows.
+- Every V1 section 10 quality bar applies, in particular the reduced-motion, round-trip, data-safety and secrets rows. Round trip means JSON, the Blueprint file and the share link. Mermaid is import only (D8): the import report lists anything it drops, and nothing is written back.
 - A new document field bumps `CURRENT_SCHEMA_VERSION` in `src/core/schema.ts` (7 today), adds a `MIGRATIONS` step, and adds a round-trip test through JSON, YAML and the share link.
 - A new user action goes through the action registry (`core/actions.ts`) so the palette, menu and shortcuts all get it. The registry reachability test must pass.
 - A new user-visible string follows the Appendix A word list.
@@ -346,5 +358,6 @@ If a question isn't answered by the time its item comes up, use the default and 
 | Q9 | CLI: publish to npm as `conduitcraft`, or Action only? | E2 | Action only at first; the CLI runs from the repo with `node` |
 | Q10 *(new)* | Should chaos reachability ever trace through levels (D5 is one-way)? | after A4 | No, until a user asks |
 | Q11 *(new)* | Is a zip dependency acceptable for "Export all", or should the zip writer be written by hand? | B3 | Write a store-only zip by hand (about 80 lines), no dependency |
+| Q12 *(new)* | Should the Blueprint file keep its embedded `mermaid` block, or become YAML only (wires in `edges:`)? | A5b | Keep the block. It lets GitHub render a Blueprint file as a diagram, and old files keep importing either way |
 
 Questions 3, 4 and 7 from V1 were already decided and are unchanged.

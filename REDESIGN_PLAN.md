@@ -339,7 +339,7 @@ Ranked by how much each makes ConduitCraft *different*, then by user value per d
 1. A resizable code pane on the right (at the bottom on narrow screens), toggled with `⌘/`.
 2. Parse on input, debounced 250 ms. Valid text updates the canvas live, one history entry per typing pause. Invalid text keeps the last good canvas and marks the bad lines using the existing line-numbered diagnostics.
 3. Selecting on the canvas highlights the matching lines. Putting the cursor in a node's block selects that node.
-4. Switching Mermaid ↔ Blueprint warns before dropping anything that cannot round-trip, and never discards unapplied text silently.
+4. ~~Switching Mermaid ↔ Blueprint warns before dropping anything that cannot round-trip~~ *(superseded by V2 decision D8: Mermaid is import only, so the pane edits the Blueprint file)*. Never discard unapplied text silently.
 5. Start with a light textarea plus a line-number gutter and simple syntax colouring. Bring in CodeMirror 6 only if that is not good enough, and only as a lazy chunk outside the entry bundle.
 
 ### F-06 Import from real infrastructure
@@ -689,7 +689,7 @@ Every PR in this plan meets all of these. CI already enforces the first five.
 | Smoothness | Drag, pan and zoom hold 60 fps on the largest template; full render stays ≤ 16 ms (today's figure) | Performance trace before and after each phase |
 | Reduced motion | No animation runs under `prefers-reduced-motion: reduce` | Playwright with `reducedMotion: 'reduce'` |
 | Data safety | Nothing can lose an autosave, a library entry or unapplied code text without an Undo | Playwright tests named `never loses …` |
-| Round trip | Every new field survives JSON, YAML and the share link; anything Mermaid drops is reported | Unit round-trip tests |
+| Round trip | Every new field survives JSON, YAML and the share link; anything a Mermaid import drops is reported (Mermaid is import only, V2 D8) | Unit round-trip tests |
 | Secrets and links | No token or header from F-21 appears in any export, share link or library export; links accept only `https:`, `http:` and `mailto:` | Unit tests over every exporter |
 | Headless | Core modules import with no DOM (T-07); CLI output matches the browser export | Unit and snapshot tests |
 
