@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { routeDiagramEdges } from '../src/core/layout.ts';
-import { isAsyncWire, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
+import { hopDelayMs, isAsyncWire, latenciesBetween, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { createBlankDocument } from '../src/templates/presets.ts';
 import type { DiagramDocument, DiagramEdge } from '../src/types.ts';
@@ -74,5 +74,32 @@ describe('wire protocol, sync and latency (F-17)', () => {
     assert.ok(back.ok);
     if (!back.ok) return;
     for (const key of ['protocol', 'sync', 'latencyMs']) assert.equal(key in back.doc.edges[0], false, key);
+  });
+});
+
+describe('latency sets the pace of a hop (F-17)', () => {
+  it('keeps the base delay with no latency, and at the reference latency', () => {
+    assert.equal(hopDelayMs(950, []), 950);
+    assert.equal(hopDelayMs(950, [50]), 950);
+  });
+
+  it('stretches slow wires, shortens fast ones, and clamps both ends', () => {
+    assert.equal(hopDelayMs(1000, [250]), 2000);
+    assert.equal(hopDelayMs(1000, [0]), 750);
+    assert.equal(hopDelayMs(1000, [5000]), 3000);
+    assert.equal(hopDelayMs(1000, [-5, Infinity]), 1000, 'bad values are ignored');
+  });
+
+  it('is set by the slowest wire crossed', () => {
+    assert.equal(hopDelayMs(1000, [10, 250]), 2000);
+  });
+
+  it('only counts wires that run from one step to the next', () => {
+    const edges = [
+      { from: 'a', to: 'b', latencyMs: 120 },
+      { from: 'b', to: 'a', latencyMs: 900 },
+      { from: 'a', to: 'c' },
+    ];
+    assert.deepEqual(latenciesBetween(edges, ['a'], ['b', 'c']), [120]);
   });
 });

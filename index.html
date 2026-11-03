@@ -147,6 +147,20 @@
             <span data-tone-name="violet">Control</span>
           </label>
         </fieldset>
+        <label class="tool-select">
+          <span class="visually-hidden">Colour components by</span>
+          <select id="colour-by" class="prop-select js-colour-by" aria-label="Colour components by">
+            <option value="tone">Colour: tone</option>
+            <option value="status">Colour: status</option>
+            <option value="tag">Colour: tag</option>
+          </select>
+        </label>
+        <label class="tool-select">
+          <span class="visually-hidden">Show only components with tag</span>
+          <select id="tag-filter" class="prop-select js-tag-filter" aria-label="Show only components with tag">
+            <option value="">All tags</option>
+          </select>
+        </label>
       </div>
 
       <!-- Live Simulation Buttons -->
@@ -508,7 +522,21 @@
         <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
           <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
         </button>
+        <select class="run-bar-scenario js-colour-by" aria-label="Colour components by">
+          <option value="tone">Colour: tone</option>
+          <option value="status">Colour: status</option>
+          <option value="tag">Colour: tag</option>
+        </select>
+        <select class="run-bar-scenario js-tag-filter" aria-label="Show only components with tag">
+          <option value="">All tags</option>
+        </select>
       </div>
+
+      <!-- Colour legend card: shown only when the document names its colours -->
+      <aside class="legend-card" id="legend-card" aria-label="Colour legend" hidden>
+        <h2 class="legend-card-title">Legend</h2>
+        <ul class="legend-card-list" id="legend-card-list"></ul>
+      </aside>
 
       <!-- Floating Bottom HUD -->
       <div class="canvas-hud">
@@ -1006,6 +1034,13 @@
 
         <fieldset class="theme-fieldset">
           <legend style="font-weight: 700; padding-inline: 0.35rem; font-size: 0.85rem;">Layout</legend>
+          <label class="theme-option">
+            <span>
+              <strong>Show colour legend on the canvas</strong>
+              <span class="theme-option-sub">Only appears when you have named your colours</span>
+            </span>
+            <input type="checkbox" id="chk-show-legend" name="show-legend" checked>
+          </label>
           <label class="theme-option">
             <span>
               <strong>Classic layout</strong>

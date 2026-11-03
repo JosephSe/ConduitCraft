@@ -188,7 +188,7 @@ import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
 import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
-import { toneName } from '../core/meta';
+import { allTags, colourKey, toneName } from '../core/meta';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -648,8 +648,93 @@ export function createEdgeConnection(
   renderAll(true);
 }
 
-/** Shows the document's legend names on the colour filter chips. */
+const SHOW_LEGEND_KEY = 'conduitcraft:show-legend';
+
+function legendCardWanted(): boolean {
+  try {
+    return localStorage.getItem(SHOW_LEGEND_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+/** Fills the canvas legend card from the document's legend; hidden when there is none or the preference is off. */
+function syncLegendCard(): void {
+  const card = document.getElementById('legend-card');
+  const list = document.getElementById('legend-card-list');
+  if (!card || !list) return;
+  // Under "Colour by status" or "tag" the card explains those colours; otherwise it shows the document's own legend.
+  const key = colourKey(app.doc, app.colourBy);
+  const entries = key.length ? key : (app.doc.legend ?? []);
+  card.hidden = entries.length === 0 || !legendCardWanted();
+  list.replaceChildren();
+  for (const entry of entries) {
+    const li = document.createElement('li');
+    const dot = document.createElement('span');
+    dot.className = 'pill-swatch';
+    dot.style.background = TONE_META[entry.tone].cssVar;
+    const text = document.createElement('span');
+    text.textContent = 'description' in entry && entry.description ? `${entry.label} — ${entry.description}` : entry.label;
+    li.append(dot, text);
+    list.appendChild(li);
+  }
+}
+
+/** The "show legend" preference in settings. */
+export function bindLegendPreference(): void {
+  const box = document.getElementById('chk-show-legend') as HTMLInputElement | null;
+  if (!box) return;
+  box.checked = legendCardWanted();
+  box.addEventListener('change', () => {
+    try {
+      localStorage.setItem(SHOW_LEGEND_KEY, String(box.checked));
+    } catch {
+      // Storage unavailable: the preference lasts until the page reloads.
+    }
+    syncLegendCard();
+  });
+}
+
+/** Keeps every tag filter's options in step with the tags in the document. */
+function syncTagFilter(): void {
+  const tags = allTags(app.doc);
+  if (app.tagFilter && !tags.some((t) => t.toLowerCase() === app.tagFilter.toLowerCase())) app.tagFilter = '';
+  const signature = tags.join('\u0000');
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-tag-filter')) {
+    if (select.dataset.sig !== signature) {
+      select.dataset.sig = signature;
+      select.replaceChildren(
+        Object.assign(document.createElement('option'), { value: '', textContent: 'All tags' }),
+        ...tags.map((tag) => Object.assign(document.createElement('option'), { value: tag, textContent: tag })),
+      );
+    }
+    select.value = app.tagFilter;
+  }
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) select.value = app.colourBy;
+}
+
+/** "Colour by" and "tag" controls: the Traffic toolbar in the classic layout, the run bar in the new one. */
+export function bindViewFilters(): void {
+  for (const colour of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) {
+    colour.addEventListener('change', () => {
+      app.colourBy = colour.value === 'status' || colour.value === 'tag' ? colour.value : 'tone';
+      renderAll(false);
+    });
+  }
+  for (const tag of document.querySelectorAll<HTMLSelectElement>('.js-tag-filter')) {
+    tag.addEventListener('focus', syncTagFilter);
+    tag.addEventListener('mousedown', syncTagFilter);
+    tag.addEventListener('change', () => {
+      app.tagFilter = tag.value;
+      renderAll(false);
+    });
+  }
+}
+
+/** Shows the document's legend names on the colour filter chips and the legend card. */
 function syncToneLabels(): void {
+  syncLegendCard();
+  syncTagFilter();
   for (const el of document.querySelectorAll<HTMLElement>('[data-tone-name]')) {
     const tone = el.dataset.toneName as StreamTone;
     el.textContent = toneName(app.doc.legend, tone, TONE_META[tone].shortLabel);

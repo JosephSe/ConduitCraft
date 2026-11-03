@@ -108,6 +108,23 @@ function nodeMarkup(
   ].join('');
 }
 
+/** The document's colour legend as a small card in the bottom-left corner (F-26). Empty without a legend. */
+function legendMarkup(doc: DiagramDocument, height: number): string {
+  const entries = doc.legend ?? [];
+  if (!entries.length) return '';
+  const rowHeight = 22;
+  const boxHeight = 34 + entries.length * rowHeight;
+  const y = Math.max(8, height - boxHeight - 16);
+  const rows = entries
+    .map((entry, i) => {
+      const cy = y + 40 + i * rowHeight;
+      const text = entry.description ? `${entry.label} — ${entry.description}` : entry.label;
+      return `<circle cx="34" cy="${cy - 4}" r="5" fill="${TONE_HEX[entry.tone]}"/><text x="48" y="${cy}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#334155">${escapeXml(text)}</text>`;
+    })
+    .join('');
+  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="#ffffff" stroke="#b6c5db"/><text x="28" y="${y + 20}" font-family="ui-monospace, monospace" font-size="11" font-weight="700" fill="#1d4ed8">LEGEND</text>${rows}</g>`;
+}
+
 export function renderDiagramSvg(
   doc: DiagramDocument,
   frame?: { dashOffset: number },
@@ -216,6 +233,8 @@ export function renderDiagramSvg(
     .map((node) => nodeMarkup(node, selection, related, spotlight))
     .join('');
 
+  const legend = legendMarkup(doc, height);
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
   <defs>${markers}</defs>
@@ -224,6 +243,7 @@ export function renderDiagramSvg(
   ${notes}
   ${wires}
   ${nodes}
+  ${legend}
 </svg>`;
 }
 

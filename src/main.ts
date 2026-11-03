@@ -1,7 +1,7 @@
 /** Studio entry. Runtime lives in `src/studio/*`. */
 import { app, onSelectionChange, setHistoryApplied } from './studio/state';
 import { renderAll, renderWiresOnly, requestInspectorRefresh, updateVisualSelectionHighlights } from './studio/render';
-import { bootStudio } from './studio/interactions';
+import { bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
 import { announceSelectionChange } from './studio/a11y';
 import { initRovingFocus } from './studio/rovingFocus';
@@ -55,6 +55,8 @@ if (classicToggle) {
     window.location.assign(url.href);
   });
 }
+bindLegendPreference();
+bindViewFilters();
 bootStudio();
 initToolRail();
 initInspectorAutoShow();

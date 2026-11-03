@@ -984,6 +984,7 @@ export function renderPropertyEditor(): void {
     reviewElements.push(
       makeTagsField('prop-node-tags', node.tags, (next) => {
         node.tags = next;
+        renderAll(false);
       }),
     );
     const linksField = document.createElement('div');
@@ -1069,6 +1070,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(
       makeTagsField('prop-edge-tags', edge.tags, (next) => {
         edge.tags = next;
+        renderAll(false);
       }),
     );
 

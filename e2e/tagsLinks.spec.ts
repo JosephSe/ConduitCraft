@@ -38,3 +38,35 @@ test('a component takes an owner, tags and links, and the legend renames a colou
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
   await expect(page.locator('[data-tone-name="rose"]')).toHaveText('PII');
 });
+
+test('the Traffic toolbar colours by tag and filters by tag, and the legend card shows on the canvas', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await page.locator('#btn-empty-showcase').click();
+  const nodes = page.locator('.arch-node');
+  await expect(nodes.first()).toBeVisible();
+
+  await nodes.first().click();
+  await page.locator('#prop-node-tags').fill('pii');
+  await page.locator('#prop-node-owner').blur();
+
+  await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
+  // The classic layout has these in the Traffic toolbar; the new one has them in the run bar.
+  const classic = (await page.locator('html').getAttribute('data-ui')) === '1';
+  const scope = classic ? page.locator('#data-toolbar') : page.locator('#run-bar');
+  const tagFilter = scope.locator('.js-tag-filter');
+  const colourBy = scope.locator('.js-colour-by');
+  await expect(tagFilter.locator('option[value="pii"]')).toHaveCount(1);
+
+  await tagFilter.selectOption('pii');
+  await expect(page.locator('.arch-node:not(.is-tag-dimmed)')).toHaveCount(1);
+  await expect(page.locator('.arch-node.is-tag-dimmed').first()).toBeVisible();
+  await tagFilter.selectOption('');
+  await expect(page.locator('.arch-node.is-tag-dimmed')).toHaveCount(0);
+
+  await colourBy.selectOption('tag');
+  await expect(page.locator('#legend-card')).toBeVisible();
+  await expect(page.locator('#legend-card-list')).toContainText('pii');
+  await colourBy.selectOption('tone');
+  await expect(page.locator('#legend-card')).toBeHidden();
+});
