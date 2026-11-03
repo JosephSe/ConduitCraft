@@ -214,3 +214,18 @@ describe('chaos actions (F-01)', () => {
     assert.equal(isActionAvailable('chaos-fail', { ...ctx, selection: 'edge' }), false);
   });
 });
+
+describe('callers of a failed component (F-01)', () => {
+  it('marks components that call the failed one as at risk, unless it has a live fallback', () => {
+    const doc = build({ u: 'actor', a: 'service', b: 'service', db: 'store' }, [
+      ['u', 'a'],
+      ['u', 'b'],
+      ['a', 'db'],
+      ['b', 'db'],
+    ]);
+    const r = reachableFrom(doc, ['u'], ['db']);
+    assert.deepEqual(r.atRisk, ['a', 'b']);
+    doc.nodes.find((n) => n.id === 'db')!.resilience = { fallbackId: 'u' };
+    assert.deepEqual(reachableFrom(doc, ['u'], ['db']).atRisk, []);
+  });
+});
