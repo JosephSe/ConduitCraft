@@ -86,6 +86,7 @@ import {
   getNodeDimensions,
 } from '../core/layout';
 import { normalizeBrandAccent } from '../core/brand';
+import { normalizeBudgetMs } from '../core/insights';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import {
@@ -2666,6 +2667,17 @@ export function renderSimulationEditor(force = false): void {
           if (live) live.name = value;
           title.textContent = value || 'Untitled Scenario';
           renderSimButtons();
+        }),
+      ),
+      makeField(
+        `sim-budget-${scenarioIndex}`,
+        'Latency budget (ms)',
+        makeTextInput(scenario.budgetMs === undefined ? '' : String(scenario.budgetMs), (value) => {
+          const live = liveScenario(scenario.id);
+          if (!live) return;
+          const ms = normalizeBudgetMs(Number(value.trim() === '' ? NaN : value));
+          if (ms === undefined) delete live.budgetMs;
+          else live.budgetMs = ms;
         }),
       ),
       makeField(

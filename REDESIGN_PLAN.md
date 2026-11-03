@@ -629,7 +629,7 @@ Each phase ends with a releasable app. Never leave `main` half redesigned. New c
 ### Phase 3: The signature (about 2 weeks)
 
 - [ ] **F-01 Chaos simulation.**
-- [ ] **F-02 Insights**, with the Review lens.
+- [x] **F-02 Insights**, with the Review lens.
 - [ ] **R-08 first run** (5.4), pointing at the chaos demo.
 - [ ] **R-10 Contextual help.** A "?" on each panel opens two or three sentences and a link to the matching section of `docs/guide.md`, which grows to cover every panel. Help topics are searchable from the command palette ("help: routing styles").
 - [ ] **F-28 Generated text description** and the Text outline panel.

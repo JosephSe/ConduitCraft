@@ -68,6 +68,11 @@
           <span class="pill-swatch" style="background: var(--wl-emerald);"></span>
           <span>Traffic</span><kbd class="lens-key" aria-hidden="true">2</kbd>
         </label>
+        <label class="segmented-label lens-review">
+          <input type="radio" name="workspace-mode" value="review" class="visually-hidden">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span>Review</span><kbd class="lens-key" aria-hidden="true">3</kbd><span class="insight-count" id="insight-count" hidden></span>
+        </label>
       </fieldset>
 
       <!-- Authoring Tools (Design Mode) -->
@@ -540,6 +545,12 @@
         </div>
         <ul class="chaos-list" id="chaos-list" hidden></ul>
       </section>
+
+      <!-- Insights (Review lens): issues grouped by rule; a click selects the target -->
+      <aside class="insights-panel" id="insights-panel" aria-label="Insights" hidden>
+        <h2 class="insights-heading" id="insights-heading"></h2>
+        <div class="insights-body" id="insights-body"></div>
+      </aside>
 
       <!-- Colour legend card: shown only when the document names its colours -->
       <aside class="legend-card" id="legend-card" aria-label="Colour legend" hidden>

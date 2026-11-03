@@ -62,5 +62,5 @@ export function initChaosPanel(): void {
   new MutationObserver(() => {
     repaintForLens();
     repaint();
-  }).observe(workspace, { attributes: true, attributeFilter: ['data-mode'] });
+  }).observe(workspace, { attributes: true, attributeFilter: ['data-mode', 'data-lens'] });
 }

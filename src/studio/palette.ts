@@ -386,6 +386,21 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'mode-review',
+      title: 'Switch to Review lens',
+      shortcut: '3',
+      subtitle: 'Insights: single points of failure, cycles, orphans and latency overruns',
+      category: 'Mode & View',
+      keywords: ['review', 'insights', 'lint', 'issues', 'spof', 'cycle', 'orphan', 'latency', 'budget'],
+      run: () => {
+        const radio = document.querySelector<HTMLInputElement>('input[name="workspace-mode"][value="review"]');
+        if (radio) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change'));
+        }
+      },
+    },
+    {
       id: 'mode-presentation',
       title: 'Toggle Presentation Mode',
       subtitle: 'Clean fullscreen canvas with guided node tour',
