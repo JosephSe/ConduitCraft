@@ -3,6 +3,8 @@ import { getNodeCenter } from '../core/layout';
 import { hopDelayMs, latenciesBetween } from '../core/wire';
 import { TONE_CSS } from '../shared/tones';
 import { app } from './state';
+import { blockedNodeIn } from './chaos';
+import { announce } from './a11y';
 import { nodesLayer, simPacket, simPacketDot, simPacketLabel, traceList, wiresGroup } from './dom';
 
 export type SimulationSpeed = 0.5 | 1 | 2;
@@ -236,6 +238,13 @@ export class SimulationPlaybackController {
       const nextIndex = this.currentStepIndex + 1;
       if (nextIndex < this.scenario.steps.length) {
         this.goToStep(nextIndex);
+        // A packet that reaches a failed or cut-off component goes no further.
+        const blocked = blockedNodeIn(this.scenario.steps[nextIndex].nodes);
+        if (blocked) {
+          this.pause();
+          announce(`Traffic stopped at ${app.doc.nodes.find((n) => n.id === blocked)?.title || blocked}.`);
+          return;
+        }
         this.scheduleNextStep();
       } else if (this.isLooping) {
         this.goToStep(0);

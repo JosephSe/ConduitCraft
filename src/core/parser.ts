@@ -21,6 +21,7 @@ import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/pres
 import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
 import { normalizeLegend, normalizeNodeMeta, normalizeTags } from './meta';
+import { pruneDanglingChaos } from './reachability';
 import { normalizeWireFields } from './wire';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
@@ -56,6 +57,7 @@ interface RawNodeMeta {
   owner?: unknown;
   tags?: unknown;
   links?: unknown;
+  resilience?: unknown;
 }
 
 interface RawEdgeOverride {
@@ -126,6 +128,7 @@ interface RawBlueprintMeta {
     id?: string;
     name?: string;
     tone?: string;
+    failures?: unknown;
     steps?: Array<{
       id?: string;
       nodes?: string[];
@@ -1313,11 +1316,15 @@ export function importMermaidOrBlueprint(rawInput: string): {
           name: sim.name || `Scenario ${idx + 1}`,
           tone: normalizeTone(sim.tone, 'emerald'),
           steps,
+          ...(Array.isArray(sim.failures) && sim.failures.length
+            ? { failures: sim.failures.filter((f): f is string => typeof f === 'string') }
+            : {}),
         });
       }
     });
     doc.simulations = sims;
   }
+  pruneDanglingChaos(doc);
 
   if (typeof meta.stageWidth === 'number' && meta.stageWidth >= 800) {
     doc.stageWidth = meta.stageWidth;
@@ -1500,6 +1507,16 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       ...(n.owner ? { owner: n.owner } : {}),
       ...(n.tags?.length ? { tags: n.tags } : {}),
       ...(n.links?.length ? { links: n.links } : {}),
+      ...(n.resilience
+        ? {
+            resilience: {
+              ...n.resilience,
+              ...(n.resilience.fallbackId
+                ? { fallbackId: idMap.get(n.resilience.fallbackId) || n.resilience.fallbackId }
+                : {}),
+            },
+          }
+        : {}),
       title: n.title,
       subtitle: n.subtitle,
       eyebrow: n.eyebrow,
@@ -1596,6 +1613,7 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       id: s.id,
       name: s.name,
       tone: s.tone,
+      ...(s.failures?.length ? { failures: s.failures.map((nid) => idMap.get(nid) || nid) } : {}),
       steps: s.steps.map((st) => ({
         id: st.id,
         nodes: st.nodes.map((nid) => idMap.get(nid) || nid),

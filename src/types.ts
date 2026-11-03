@@ -161,6 +161,18 @@ export interface DiagramNode {
   owner?: string;
   /** Where to go from here: repository, runbook, dashboard and so on (F-27). */
   links?: NodeLink[];
+  /** How the component copes with failing (F-01). Absent means a single instance with no fallback. */
+  resilience?: NodeResilience;
+}
+
+/** Failure handling for one component. Only `replicas` and `fallbackId` change what a chaos run reaches. */
+export interface NodeResilience {
+  /** Running copies. More than one means a failure degrades the component instead of taking it down. */
+  replicas?: number;
+  /** Another component that takes over this one's incoming traffic while it is down. */
+  fallbackId?: string;
+  /** Recorded for the reader. Callers upstream of a failure are unaffected either way, so it does not change reach. */
+  circuitBreaker?: boolean;
 }
 
 export type NodeLinkKind = 'repo' | 'runbook' | 'dashboard' | 'docs' | 'oncall';
@@ -234,6 +246,8 @@ export interface SimulationScenario {
   name: string;
   tone: StreamTone;
   steps: SimulationStep[];
+  /** Component ids to treat as failed when this scenario runs, saved as a named chaos scenario (F-01). */
+  failures?: string[];
 }
 
 /** Header lockup for the studio preview and the exported page. Empty fields use the defaults. */

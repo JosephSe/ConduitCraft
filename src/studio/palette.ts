@@ -15,6 +15,9 @@ import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
 import { saveSnapshot } from './snapshots';
 import { selectionOfStage } from './selection';
+import { clearFailures, failedIds, toggleFailure } from './chaos';
+import { getEffectiveSimulations } from '../core/layout';
+import { refreshRunBar } from './runBar';
 
 export interface PaletteCommand {
   id: string;
@@ -494,6 +497,56 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['rename', 'title', 'label', 'name', 'edit'],
       run: () => {
         if (!renameSelectionInline()) notify('Select a component, swimlane, note or wire to rename');
+      },
+    },
+    {
+      id: 'chaos-fail',
+      title: 'Fail this component',
+      subtitle: 'Traffic lens: see what becomes unreachable (press again to restore)',
+      category: 'Mode & View',
+      shortcut: 'X',
+      keywords: ['chaos', 'fail', 'failure', 'outage', 'blast radius', 'break', 'kill'],
+      run: () => {
+        const sel = app.selection;
+        if (app.lens !== 'traffic') notify('Switch to the Traffic lens (2) to fail a component');
+        else if (sel.type !== 'node') notify('Select a component to fail');
+        else toggleFailure(sel.id);
+      },
+    },
+    {
+      id: 'chaos-clear',
+      title: 'Restore all failed components',
+      subtitle: 'End the chaos run',
+      category: 'Mode & View',
+      keywords: ['chaos', 'reset', 'restore', 'recover', 'clear failures'],
+      run: clearFailures,
+    },
+    {
+      id: 'chaos-save-scenario',
+      title: 'Save failures as a scenario',
+      subtitle: 'Keep the current failures with the file as a named chaos scenario',
+      category: 'Mode & View',
+      keywords: ['chaos', 'save', 'scenario', 'failures'],
+      run: () => {
+        const ids = failedIds();
+        if (ids.length === 0) {
+          notify('Fail a component first');
+          return;
+        }
+        const base = simulationPlayback.activeScenario ?? getEffectiveSimulations(app.doc)[0];
+        if (!base || base.steps.length === 0) {
+          notify('Add a scenario to run the failures against');
+          return;
+        }
+        pushHistory();
+        const copy = structuredClone(base);
+        copy.id = `chaos-${Date.now().toString(36)}`;
+        copy.name = `${base.name}: ${ids.map((id) => app.doc.nodes.find((n) => n.id === id)?.title || id).join(', ')} down`;
+        copy.failures = ids;
+        const existing = app.doc.simulations.length ? app.doc.simulations : structuredClone(getEffectiveSimulations(app.doc));
+        app.doc.simulations = [...existing, copy];
+        refreshRunBar();
+        notify(`Saved scenario "${copy.name}"`);
       },
     },
     {

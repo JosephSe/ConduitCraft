@@ -10,6 +10,8 @@ export interface KeyBinding {
   shift?: boolean;
   /** Only in Design mode. */
   designOnly?: boolean;
+  /** Only in the Traffic (data) lens. */
+  dataOnly?: boolean;
   /** Only when something is selected (otherwise the key keeps its default behaviour). */
   needsSelection?: boolean;
   /** Only in the redesigned interface (`?ui=2`). */
@@ -37,6 +39,7 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'mode-design', key: '1', uiV2Only: true },
   { actionId: 'mode-data', key: '2', uiV2Only: true },
   { actionId: 'mode-presentation', key: '4', uiV2Only: true },
+  { actionId: 'chaos-fail', key: 'x', dataOnly: true, needsSelection: true, uiV2Only: true },
   { actionId: 'edit-rename', key: 'F2', designOnly: true },
   { actionId: 'edit-delete', key: 'Delete', designOnly: true, needsSelection: true },
   { actionId: 'edit-delete', key: 'Backspace', designOnly: true, needsSelection: true },
@@ -67,6 +70,7 @@ export function matchBinding(event: KeyEventLike, ctx: KeyContext, bindings: Key
     if (Boolean(b.mod) !== mod) continue;
     if (Boolean(b.shift) !== event.shiftKey) continue;
     if (b.designOnly && ctx.mode !== 'design') continue;
+    if (b.dataOnly && ctx.mode !== 'data') continue;
     if (b.needsSelection && !ctx.hasSelection) continue;
     if (b.uiV2Only && ctx.ui !== 2) continue;
     return b.actionId;

@@ -2,7 +2,8 @@
  * Tags, ownership, links and the custom legend (F-26, F-27): what they mean and how they are read from a file.
  * Pure and DOM-free. Every link URL goes through `safeLinkUrl`, on input, on import and again on export.
  */
-import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeLinkKind, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeLinkKind, NodeResilience, StreamTone } from '../types';
+import { normalizeResilience } from './reachability';
 
 export const LINK_KINDS: readonly NodeLinkKind[] = ['repo', 'runbook', 'dashboard', 'docs', 'oncall'];
 
@@ -113,14 +114,17 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
   owner?: string;
   links?: NodeLink[];
   tags?: string[];
+  resilience?: NodeResilience;
 } {
   const owner = normalizeOwner(raw.owner);
   const links = normalizeLinks(raw.links);
   const tags = normalizeTags(raw.tags);
+  const resilience = normalizeResilience(raw.resilience);
   return {
     ...(owner ? { owner } : {}),
     ...(links.length ? { links } : {}),
     ...(tags.length ? { tags } : {}),
+    ...(resilience ? { resilience } : {}),
   };
 }
 

@@ -204,6 +204,9 @@ import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
 import { initRunBar, refreshRunBar } from './runBar';
+import { initChaosPanel } from './chaosPanel';
+import { nodesLayer as chaosNodesLayer } from './dom';
+import { initChaosPreview, setFailures } from './chaos';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
 import { canGroupSelection } from './zOrderLockGroup';
 import { responsiveToolbar } from './responsiveToolbar';
@@ -844,6 +847,7 @@ export function runSimulation(simId: string): void {
   if (allFlowRadio) allFlowRadio.checked = true;
 
   populateTraceRows(scenario);
+  if (scenario.failures?.length) setFailures(scenario.failures);
   simulationPlayback.loadScenario(scenario, true);
 }
 
@@ -2345,6 +2349,8 @@ export function initEvents(): void {
   // Simulation Playback Deck & Trace Scrubbing
   initSimulationPlaybackUi();
   initRunBar({ run: runSimulation });
+  initChaosPanel();
+  initChaosPreview(chaosNodesLayer);
 
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
