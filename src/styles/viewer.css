@@ -560,3 +560,51 @@ body[data-presenting="true"] .canvas-hud {
   }
 }
 
+
+/* Nested levels (F-03) */
+.node-level-badge {
+  position: absolute;
+  bottom: -9px;
+  right: 10px;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--wl-surface-elevated);
+  color: var(--wl-ink-muted);
+  border: 1px solid var(--wl-border-subtle);
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+}
+.node-level-badge:hover,
+.node-level-badge:focus-visible {
+  color: var(--wl-ink);
+  border-color: var(--wl-blue);
+}
+.level-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+.level-crumb {
+  background: none;
+  border: 0;
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: var(--wl-ink-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.level-crumb[aria-current='page'] {
+  color: var(--wl-ink);
+  font-weight: 600;
+  cursor: default;
+}
+.level-crumb-sep {
+  color: var(--wl-ink-muted);
+}

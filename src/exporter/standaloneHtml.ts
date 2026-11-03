@@ -1,4 +1,5 @@
-import type { DiagramDocument, DiagramNode, SelectionTarget, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
+import { breadcrumb, viewOfLevel } from '../core/levels';
 import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
@@ -57,8 +58,12 @@ function nodeBoxStyle(node: DiagramNode): string {
   return `--nx: ${node.x}; --ny: ${node.y}; --nw: ${node.width}; --nh: ${node.height}${pad}`;
 }
 
-function renderNodeBadges(node: DiagramNode): string {
+function renderNodeBadges(node: DiagramNode, options?: StandaloneHtmlOptions): string {
   let html = '';
+  const target = node.child ? options?.levels?.childKey(node.id) : undefined;
+  if (target !== undefined) {
+    html += `<button type="button" class="node-level-badge" data-ccgo="${escapeHtml(target)}" aria-label="Open ${escapeHtml(node.title)} as a level">⤵ ${node.child!.nodes.length}</button>`;
+  }
   if (node.status) {
     const label = node.status === 'at-risk' ? 'At Risk' : node.status.charAt(0).toUpperCase() + node.status.slice(1);
     html += `<span class="node-status-badge" data-status="${escapeHtml(node.status)}"><span class="status-dot"></span><span class="status-text">${escapeHtml(label)}</span></span>`;
@@ -89,7 +94,7 @@ function renderExportedNode(
   const shape = nodeShapeAttr(node);
   const box = nodeBoxStyle(node);
   const plate = nodePlateMarkup(node);
-  const badges = renderNodeBadges(node);
+  const badges = renderNodeBadges(node, options);
   if (node.kind === 'actor') {
     return `
       <button type="button" class="arch-node${stateCls}" data-node="${escapeHtml(node.id)}" data-kind="actor" data-accent="${escapeHtml(node.accent)}"${shape} aria-pressed="${pressed}" style="${box}">
@@ -140,6 +145,13 @@ function renderExportedNode(
 
 export interface StandaloneHtmlOptions {
   initialSelection?: SelectionTarget;
+  /** Set when this page is one level of a drill-down export (F-03). */
+  levels?: {
+    /** Page key to open for one of this level's components. */
+    childKey: (nodeId: string) => string;
+    /** Levels from the root to this one: the title and the page key that opens it. */
+    crumbs: Array<{ title: string; key: string }>;
+  };
 }
 
 export function generateStandaloneHtml(doc: DiagramDocument, options?: StandaloneHtmlOptions): string {
@@ -262,6 +274,17 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
     })
     .join('\n');
 
+  const crumbs = options?.levels?.crumbs ?? [];
+  const levelCrumbsMarkup =
+    crumbs.length > 1
+      ? `<nav class="level-breadcrumb" aria-label="Levels">${crumbs
+          .map((c, i) =>
+            i === crumbs.length - 1
+              ? `<span class="level-crumb" aria-current="page">${escapeHtml(c.title)}</span>`
+              : `<button type="button" class="level-crumb" data-ccgo="${escapeHtml(c.key)}">${escapeHtml(c.title)}</button><span class="level-crumb-sep" aria-hidden="true">▸</span>`,
+          )
+          .join('')}</nav>`
+      : '';
   const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx, options, related)).join('\n');
 
   const simButtonsMarkup = simulations
@@ -385,6 +408,7 @@ ${colorSchemeBoot}
           <span>${escapeHtml(doc.statusLabel)}</span>
         </div>
         <h1>${escapeHtml(doc.title)}</h1>
+        ${levelCrumbsMarkup}
       </div>
     </div>
 
@@ -1114,6 +1138,52 @@ ${colorSchemeBoot}
       requestAnimationFrame(fitToViewport);
     })();
   </script>
+  ${options?.levels ? LEVEL_NAV_SCRIPT : ''}
 </body>
 </html>`;
+}
+
+/** Opens another level's page in place. The table of pages lives on `window`, which survives `document.open`. */
+const LEVEL_NAV_SCRIPT = `<script>
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest && e.target.closest('[data-ccgo]');
+      var pages = window.__ccLevels;
+      if (!b || !pages) return;
+      e.stopPropagation();
+      var html = pages[Number(b.getAttribute('data-ccgo'))];
+      if (typeof html !== 'string') return;
+      document.open();
+      document.write(html);
+      document.close();
+    }, true);
+  </script>`;
+
+/**
+ * The page for a diagram whose components may hold levels. Every level becomes its own page, and the ⤵ badges and
+ * the breadcrumb swap between them, so the export stays one file with the same drill-down as the studio.
+ */
+export function generateStandaloneHtmlWithLevels(doc: DiagramDocument, options?: StandaloneHtmlOptions): string {
+  const paths: string[][] = [];
+  const walk = (path: string[], content: LevelContent) => {
+    paths.push(path);
+    for (const node of content.nodes) if (node.child) walk([...path, node.id], node.child);
+  };
+  walk([], doc);
+  if (paths.length === 1) return generateStandaloneHtml(doc, options);
+
+  const indexOf = new Map(paths.map((p, i) => [p.join('\u0000'), i]));
+  const key = (p: string[]) => String(indexOf.get(p.join('\u0000')) ?? 0);
+  const pages = paths.map((path, i) =>
+    generateStandaloneHtml(viewOfLevel(doc, path), {
+      initialSelection: i === 0 ? options?.initialSelection : undefined,
+      levels: {
+        childKey: (id) => key([...path, id]),
+        crumbs: breadcrumb(doc, path).map((c) => ({ title: c.title, key: key(c.path) })),
+      },
+    }),
+  );
+  const table = `<script>window.__ccLevels = window.__ccLevels || ${serializeScriptJson(pages)};</script>`;
+  const root = pages[0];
+  const at = root.lastIndexOf('</body>');
+  return at < 0 ? root + table : root.slice(0, at) + table + root.slice(at);
 }

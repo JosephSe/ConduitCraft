@@ -7,7 +7,7 @@
  * To change the schema: bump `CURRENT_SCHEMA_VERSION`, add `MIGRATIONS[oldVersion]` that returns the document in
  * the next version's shape, and add a round-trip test (JSON, share link) for each new field.
  */
-export const CURRENT_SCHEMA_VERSION = 6;
+export const CURRENT_SCHEMA_VERSION = 7;
 
 type RawDocument = Record<string, unknown>;
 
@@ -25,6 +25,8 @@ export const MIGRATIONS: Record<number, (doc: RawDocument) => RawDocument> = {
   4: (doc) => doc,
   // 5 -> 6: `insights.muted` on the document and `budgetMs` on scenarios (F-02). Both optional, so nothing to rewrite.
   5: (doc) => doc,
+  // 6 -> 7: components may carry `child`, a nested level (F-03). Optional, so nothing to rewrite.
+  6: (doc) => doc,
 };
 
 export type MigrateResult = { ok: true; doc: RawDocument; from: number } | { ok: false; error: string };

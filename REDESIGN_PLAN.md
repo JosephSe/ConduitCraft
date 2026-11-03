@@ -302,7 +302,7 @@ Ranked by how much each makes ConduitCraft *different*, then by user value per d
 
 ### F-03 Nested levels (drill-down)
 
-- [ ] Shipped in PR —
+- [~] Shipped except Mermaid `subgraph` import as levels (needs an import-dialog choice): drill-down (`⌘↵`, `⌘↑`, `Esc`, badge, breadcrumb), boundary ports, cross-level undo, search and Review insights across levels with the path, YAML `children:`, HTML export with drill-down, schema v7.
 
 **Why.** Large systems turn into wallpaper. The C4 model (context → container → component) is how architects explain systems, and drilling into a box is the natural gesture for it.
 

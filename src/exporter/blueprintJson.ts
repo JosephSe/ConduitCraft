@@ -7,6 +7,7 @@ import type {
   DiagramZone,
   EdgeRouteMode,
   KeyValueMetric,
+  LevelContent,
   NodeKind,
   PortSide,
   StreamTone,
@@ -54,7 +55,7 @@ function num(value: unknown, fallback = 0): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 }
 
-function coerceNode(raw: unknown): DiagramNode | null {
+function coerceNode(raw: unknown, depth = 0): DiagramNode | null {
   if (!isRecord(raw) || typeof raw.id !== 'string' || raw.id.trim() === '') return null;
   const kind: NodeKind = typeof raw.kind === 'string' && KINDS.has(raw.kind as NodeKind) ? (raw.kind as NodeKind) : 'service';
   const dims = getNodeDimensions(kind);
@@ -97,8 +98,25 @@ function coerceNode(raw: unknown): DiagramNode | null {
     ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
     ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
   };
+  const child = depth < MAX_LEVEL_DEPTH ? coerceLevel(raw.child, depth + 1) : null;
+  if (child) node.child = child;
   tightenLegacyStoreCylinder(node);
   return node;
+}
+
+/** Nested levels deeper than this are dropped on load, so a hostile file cannot recurse without end. */
+const MAX_LEVEL_DEPTH = 8;
+
+function coerceLevel(raw: unknown, depth: number): LevelContent | null {
+  if (!isRecord(raw)) return null;
+  const list = <T>(value: unknown, coerce: (item: unknown, index: number) => T | null): T[] =>
+    Array.isArray(value) ? value.flatMap((item, index) => { const c = coerce(item, index); return c ? [c] : []; }) : [];
+  return {
+    nodes: list(raw.nodes, (item) => coerceNode(item, depth)),
+    edges: list(raw.edges, coerceEdge),
+    zones: list(raw.zones, coerceZone),
+    notesCards: list(raw.notesCards, coerceNotes),
+  };
 }
 
 function coerceEdge(raw: unknown, index: number): DiagramEdge | null {

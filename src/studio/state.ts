@@ -18,6 +18,7 @@ import type {
   SelectionTarget,
 } from '../types';
 import { normalizeBrand } from '../core/brand';
+import { emptyLevel, resolveLevelPath, viewOfLevel, writeLevelBack } from '../core/levels';
 import { tightenLegacyStoreCylinder } from '../core/layout';
 import { panForViewportResize } from './camera';
 import { createBlankDocument } from '../templates/presets';
@@ -51,7 +52,21 @@ export interface ActiveWireDraft {
 }
 
 export const app = {
-  doc: createBlankDocument() as DiagramDocument,
+  /** The level being edited, as a document. At the root this is the whole document (F-03). */
+  _doc: createBlankDocument() as DiagramDocument,
+  /** Component ids from the root to the open level; empty at the root. */
+  levelPath: [] as string[],
+  /** The whole tree while a level is open (its open-level content is stale; `fullDocument` merges it back). */
+  levelRoot: null as DiagramDocument | null,
+  get doc(): DiagramDocument {
+    return this._doc;
+  },
+  /** Replacing the document from outside (load, import, new) always lands on its root level. */
+  set doc(next: DiagramDocument) {
+    this._doc = next;
+    this.levelPath = [];
+    this.levelRoot = null;
+  },
   lens: 'design' as Lens,
   /** How components are coloured in the view: by their own tone, by status, or by first tag (F-26). */
   colourBy: 'tone' as ColourBy,
@@ -186,8 +201,9 @@ export function flushAutosave(): void {
     app.autosaveTimer = null;
   }
   app.hasPendingAutosave = false;
+  const whole = fullDocument();
   const isEmpty =
-    app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
+    whole.nodes.length === 0 && whole.zones.length === 0 && whole.notesCards.length === 0;
   if (isEmpty) {
     setSaveState('saved');
     return;
@@ -195,13 +211,13 @@ export function flushAutosave(): void {
 
   try {
     const pending = getPendingRestoreOffer();
-    if (pending && app.doc.nodes.length < pending.nodes.length) {
+    if (pending && whole.nodes.length < pending.nodes.length) {
       // Protect the larger saved session: write scratch session to recovery slot
-      localStorage.setItem(RECOVERY_KEY, JSON.stringify(app.doc));
+      localStorage.setItem(RECOVERY_KEY, JSON.stringify(whole));
       setSaveState('saved');
       return;
     }
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(app.doc));
+    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(whole));
     setSaveState('saved');
   } catch {
     setSaveState('error');
@@ -300,7 +316,37 @@ export function getSelectedEdgeIds(): string[] {
 // ---------------------------------------------------------------------------
 // Undo / Redo History
 // ---------------------------------------------------------------------------
-function commitHistorySnapshot(snapshot: DiagramDocument = structuredClone(app.doc)): void {
+/** Which level each undo snapshot was taken in, so undo can return there (F-03). */
+const snapshotPaths = new WeakMap<DiagramDocument, string[]>();
+
+/** The whole document, merging the open level back into the tree. At the root this is `app.doc` itself. */
+export function fullDocument(): DiagramDocument {
+  if (app.levelPath.length === 0 || !app.levelRoot) return app.doc;
+  const whole = structuredClone(app.levelRoot);
+  writeLevelBack(whole, app.levelPath, structuredClone(app.doc));
+  return whole;
+}
+
+function takeSnapshot(): DiagramDocument {
+  const snapshot = structuredClone(fullDocument());
+  snapshotPaths.set(snapshot, [...app.levelPath]);
+  return snapshot;
+}
+
+/** Make `whole` the document with `path` open (or the deepest part of it that still exists). */
+function applyWhole(whole: DiagramDocument, path: string[]): void {
+  const valid = resolveLevelPath(whole, path);
+  app.levelPath = valid;
+  if (valid.length === 0) {
+    app._doc = whole;
+    app.levelRoot = null;
+  } else {
+    app.levelRoot = whole;
+    app._doc = viewOfLevel(whole, valid);
+  }
+}
+
+function commitHistorySnapshot(snapshot: DiagramDocument = takeSnapshot()): void {
   app.undoStack.push(snapshot);
   if (app.undoStack.length > MAX_HISTORY) app.undoStack.shift();
   app.redoStack.length = 0;
@@ -329,10 +375,10 @@ export function pushHistory(): void {
  * (for example "bring to front" on the top layer) doesn't leave an empty step in the history.
  */
 export function mutateWithHistory(mutate: () => boolean | void): boolean {
-  const before = structuredClone(app.doc);
+  const before = takeSnapshot();
   const result = mutate();
   // A mutation that doesn't report whether it changed anything is judged by comparing the document itself.
-  const changed = result === undefined ? JSON.stringify(before) !== JSON.stringify(app.doc) : result;
+  const changed = result === undefined ? JSON.stringify(before) !== JSON.stringify(fullDocument()) : result;
   if (!changed) return false;
   const decision = resolveHistoryPush(historyGate, { type: 'commit' });
   historyGate = decision.gate;
@@ -353,12 +399,18 @@ export function syncHistoryButtons(): void {
   btnRedo.disabled = app.redoStack.length === 0;
 }
 
+function restoreSnapshot(snapshot: DiagramDocument): void {
+  const before = app.levelPath.join('/');
+  applyWhole(snapshot, snapshotPaths.get(snapshot) ?? []);
+  if (app.levelPath.join('/') !== before) setSelection({ type: 'none' });
+}
+
 export function performUndo(): void {
   const prev = app.undoStack.pop();
   if (!prev) return;
   historyGate = initialHistoryGate();
-  app.redoStack.push(structuredClone(app.doc));
-  app.doc = prev;
+  app.redoStack.push(takeSnapshot());
+  restoreSnapshot(prev);
   validateSelection();
   syncHistoryButtons();
   scheduleAutosave();
@@ -369,12 +421,40 @@ export function performRedo(): void {
   const next = app.redoStack.pop();
   if (!next) return;
   historyGate = initialHistoryGate();
-  app.undoStack.push(structuredClone(app.doc));
-  app.doc = next;
+  app.undoStack.push(takeSnapshot());
+  restoreSnapshot(next);
   validateSelection();
   syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
+}
+
+// ---------------------------------------------------------------------------
+// Nested levels (F-03)
+// ---------------------------------------------------------------------------
+/** Open the level at `path` (`[]` is the root). Not an undo step; edits inside it are. */
+export function goToLevel(path: string[]): boolean {
+  const whole = fullDocument();
+  const valid = resolveLevelPath(whole, path);
+  if (valid.length !== path.length) return false;
+  if (valid.join('/') === app.levelPath.join('/')) return false;
+  applyWhole(whole, valid);
+  setSelection({ type: 'none' });
+  historyApplied();
+  fitToViewport();
+  return true;
+}
+
+/** Open a component as a level, creating its empty child diagram first when it has none. */
+export function openComponentLevel(nodeId: string): boolean {
+  const node = app.doc.nodes.find((n) => n.id === nodeId);
+  if (!node) return false;
+  if (!node.child) mutateWithHistory(() => { node.child = emptyLevel(); });
+  return goToLevel([...app.levelPath, nodeId]);
+}
+
+export function goUpLevel(): boolean {
+  return app.levelPath.length > 0 && goToLevel(app.levelPath.slice(0, -1));
 }
 
 export function validateSelection(): void {

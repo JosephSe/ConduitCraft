@@ -74,6 +74,7 @@ const RULES: Record<string, (c: ActionContext) => boolean> = {
   'edit-bring-forward': (c) => design(c) && arrangeable(c),
   'edit-send-backward': (c) => design(c) && arrangeable(c),
   'wire-from-selection': (c) => design(c) && c.selection === 'node',
+  'level-open': (c) => c.selection === 'node',
   'chaos-fail': (c) => c.mode === 'data' && c.selection === 'node',
   'fit-selection': hasSelection,
   'auto-layout-selection': (c) => design(c) && c.selectedNodeCount >= 2,

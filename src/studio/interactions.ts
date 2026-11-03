@@ -124,7 +124,10 @@ import {
   getPendingRestoreOffer,
   getSaveState,
   getSelectedNodeIds,
+  fullDocument,
   getViewportWorldCenter,
+  goToLevel,
+  goUpLevel,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
   performRedo,
@@ -198,6 +201,7 @@ import { renameNodeInline } from './inlineRename';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
 import { matchBinding } from '../core/keymap';
+import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -1852,7 +1856,7 @@ export function initEvents(): void {
   async function handleSaveDiagram(forceSaveAs = false): Promise<void> {
     const activeName = getActiveFileName();
     const defaultName = activeName || `${getSafeFilenameSlug()}.blueprint.json`;
-    const serializer = (name: string) => serializeForFilename(app.doc, name).content;
+    const serializer = (name: string) => serializeForFilename(fullDocument(), name).content;
 
     const res = await saveWithNativeFileSystem(serializer, defaultName, forceSaveAs);
     if (res.success) {
@@ -1860,7 +1864,7 @@ export function initEvents(): void {
       setSaveState('saved');
       notify(`Saved ${res.filename}`);
     } else if (!isFileSystemAccessSupported()) {
-      const { content, mime } = serializeForFilename(app.doc, defaultName);
+      const { content, mime } = serializeForFilename(fullDocument(), defaultName);
       downloadBlob(content, defaultName, mime);
       setDiskDirty(false);
       setSaveState('saved');
@@ -2012,7 +2016,7 @@ export function initEvents(): void {
     let timeoutId: any;
     try {
       const omitImages = Boolean(chkShareOmitImages?.checked);
-      const sharePromise = createShareUrl(app.doc, { omitImages });
+      const sharePromise = createShareUrl(fullDocument(), { omitImages });
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('Timed out generating share link (5s)')), 5000);
       });
@@ -2025,7 +2029,7 @@ export function initEvents(): void {
       }
       const kb = (result.url.length / 1024).toFixed(1);
       if (result.isLarge) {
-        shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL)`;
+        shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL). For a diagram this big, export the file instead.`;
         shareLinkSize.classList.add('is-warning');
       } else {
         shareLinkSize.textContent = `${kb} KB (Safe)`;
@@ -2117,8 +2121,9 @@ export function initEvents(): void {
   btnExportHtml.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
-    const { generateStandaloneHtml } = await import('../exporter/standaloneHtml');
-    const html = generateStandaloneHtml(app.doc, {
+    const { generateStandaloneHtmlWithLevels } = await import('../exporter/standaloneHtml');
+    // The whole tree, so the page keeps the drill-down. At the root this is `app.doc` itself.
+    const html = generateStandaloneHtmlWithLevels(fullDocument(), {
       initialSelection: app.selection.type === 'multi' ? app.selection : undefined,
     });
     const filename = `${getSafeFilenameSlug()}.html`;
@@ -2192,7 +2197,7 @@ export function initEvents(): void {
   btnExportJson.addEventListener('click', () => {
     const filename = `${getSafeFilenameSlug()}.blueprint.json`;
     downloadBlob(
-      serializeBlueprintJson(app.doc),
+      serializeBlueprintJson(fullDocument()),
       filename,
       'application/json;charset=utf-8',
     );
@@ -2218,7 +2223,7 @@ export function initEvents(): void {
 
     const handleCreate = () => {
       const name = inputName?.value.trim() || `Snapshot ${snapshots.length + 1}`;
-      const snap = saveSnapshot(name, app.doc);
+      const snap = saveSnapshot(name, fullDocument());
       currentDiffSnapshotId = snap.id;
       notify(`Saved version snapshot "${snap.name}"`);
       refreshSnapshotsDialog();
@@ -2336,7 +2341,12 @@ export function initEvents(): void {
       searchCount: hudSearchCount,
       clearButton: btnClearSearch,
       getDoc: () => app.doc,
-      onFocusNode: (node, frame = false) => {
+      getOtherLevels: () => {
+        const here = app.levelPath.join('/');
+        return allLevelNodes(fullDocument()).filter((e) => e.path.join('/') !== here);
+      },
+      onFocusNode: (node, frame = false, path) => {
+        if (path) goToLevel(path);
         setSelection({ type: 'node', id: node.id });
         renderAll(false);
         if (frame) {
@@ -2843,6 +2853,8 @@ export function initEvents(): void {
           document.querySelector<HTMLInputElement>('input[name="pointer-tool"][value="select"]')?.click();
         } else if (app.selection.type !== 'none') {
           applySelection({ type: 'none' });
+        } else if (app.levelPath.length > 0) {
+          goUpLevel();
         }
       }
     }

@@ -10,6 +10,7 @@ import type {
   EdgeRouteMode,
   ImportIssue,
   KeyValueMetric,
+  LevelContent,
   NodeKind,
   NodeShape,
   PortSide,
@@ -903,6 +904,30 @@ function normalizeCodeBlock(raw: unknown, fallbackObj: Record<string, unknown>):
   return JSON.stringify(fallbackObj, null, 2);
 }
 
+/** Nested levels deeper than this are dropped, so a hostile file cannot recurse without end (F-03). */
+const MAX_CHILD_DEPTH = 8;
+let childDepth = 0;
+
+/** A component's `children:` entry is a smaller blueprint (nodes, edges, zones, notes) that imports like one. */
+function importChildLevel(raw: unknown, ownerId: string, issues: ImportIssue[]): LevelContent | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  if (childDepth >= MAX_CHILD_DEPTH) {
+    issues.push({ level: 'warning', code: 'level-too-deep', message: `Component "${ownerId}" nests levels too deep; its inner level was dropped.` });
+    return null;
+  }
+  childDepth += 1;
+  try {
+    const result = importMermaidOrBlueprint(`---\n${yaml.dump(raw)}---\n`);
+    for (const issue of result.issues) {
+      if (issue.level !== 'info') issues.push({ ...issue, line: undefined, message: `Inside "${ownerId}": ${issue.message}` });
+    }
+    const { nodes, edges, zones, notesCards } = result.doc;
+    return { nodes, edges, zones, notesCards };
+  } finally {
+    childDepth -= 1;
+  }
+}
+
 export function importMermaidOrBlueprint(rawInput: string): {
   doc: DiagramDocument;
   warnings: string[];
@@ -1058,12 +1083,15 @@ export function importMermaidOrBlueprint(rawInput: string): {
       explicitPositions.add(id);
     }
 
+    const child = importChildLevel((metaNode as Record<string, unknown>).children, id, issues);
+
     nodes.push({
       id,
       kind,
       accent,
       icon,
       ...(shape === 'card' ? {} : { shape }),
+      ...(child ? { child } : {}),
       ...(iconImage ? { iconImage } : {}),
       ...(metaNode.status ? { status: metaNode.status as ComponentStatus } : {}),
       ...(metaNode.comment ? { comment: String(metaNode.comment) } : {}),
@@ -1477,6 +1505,14 @@ export function serializeToMermaid(doc: DiagramDocument): string {
 }
 
 export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
+  const yamlDump = yaml.dump(buildFrontmatter(doc, true), { lineWidth: 100, noRefs: true }).trim();
+  const mermaidBlock = serializeToMermaid(doc);
+
+  return `---\n${yamlDump}\n---\n\n\`\`\`mermaid\n${mermaidBlock}\n\`\`\`\n`;
+}
+
+/** The YAML metadata for one level. A nested level leaves out the document-level fields (`shell` false). */
+function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Record<string, unknown> {
   const idMap = new Map<string, string>();
   const usedIds = new Set<string>();
   for (const n of doc.nodes) {
@@ -1523,6 +1559,15 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
             },
           }
         : {}),
+      ...(n.child && depth < MAX_CHILD_DEPTH
+        ? {
+            children: buildFrontmatter(
+              { ...doc, ...n.child, simulations: [], legend: undefined, insights: undefined },
+              false,
+              depth + 1,
+            ),
+          }
+        : {}),
       title: n.title,
       subtitle: n.subtitle,
       eyebrow: n.eyebrow,
@@ -1537,18 +1582,20 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
     };
   }
 
-  const frontmatterObj: Record<string, unknown> = {
-    title: doc.title,
-    systemTag: doc.systemTag,
-    statusLabel: doc.statusLabel,
-    direction: doc.direction,
-    stageWidth: doc.stageWidth,
-    stageHeight: doc.stageHeight,
-    overviewSummary: doc.overviewSummary,
-  };
+  const frontmatterObj: Record<string, unknown> = shell
+    ? {
+        title: doc.title,
+        systemTag: doc.systemTag,
+        statusLabel: doc.statusLabel,
+        direction: doc.direction,
+        stageWidth: doc.stageWidth,
+        stageHeight: doc.stageHeight,
+        overviewSummary: doc.overviewSummary,
+      }
+    : { direction: doc.direction };
 
   const brand = normalizeBrand(doc.brand);
-  if (!brandIsDefault(brand)) {
+  if (shell && !brandIsDefault(brand)) {
     frontmatterObj.brand = {
       ...(brand.name ? { name: brand.name } : {}),
       ...(brand.accent ? { accent: brand.accent } : {}),
@@ -1633,8 +1680,5 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
     }));
   }
 
-  const yamlDump = yaml.dump(frontmatterObj, { lineWidth: 100, noRefs: true }).trim();
-  const mermaidBlock = serializeToMermaid(doc);
-
-  return `---\n${yamlDump}\n---\n\n\`\`\`mermaid\n${mermaidBlock}\n\`\`\`\n`;
+  return frontmatterObj;
 }
