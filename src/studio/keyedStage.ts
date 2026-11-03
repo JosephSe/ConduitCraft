@@ -806,7 +806,7 @@ function createWireGroup(edgeId: string): SVGGElement {
     const byId = new Map(app.doc.nodes.map((n) => [n.id, n]));
     const endsMatch = [byId.get(edge.from), byId.get(edge.to)].every((n) => n && matchesTag(n, app.tagFilter));
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
-    const cut = app.lens === 'traffic' && [edge.from, edge.to].some((id) => ['failed', 'unreachable'].includes(chaosStatusOf(id) ?? ''));
+    const cut = app.lens === 'traffic' && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
     g.classList.toggle('is-chaos-cut', cut);
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);

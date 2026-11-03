@@ -5838,13 +5838,13 @@ html[data-ui="2"] #sim-playback-deck {
   border-color: var(--wl-amber, #d97706);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--wl-amber, #d97706) 40%, transparent);
 }
-.arch-node[data-chaos="unreachable"] { opacity: 0.35; filter: grayscale(0.7); }
+.arch-node[data-chaos="unreachable"] .node-select-hit {
+  outline: 2px dashed color-mix(in srgb, var(--wl-rose) 55%, transparent);
+  outline-offset: 3px;
+}
 .arch-node[data-chaos="rerouted"] .node-select-hit {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--wl-blue) 35%, transparent);
 }
-.arch-node[data-chaos-preview="true"] { opacity: 0.7; }
-.arch-node[data-chaos-preview="true"][data-chaos="unreachable"] { opacity: 0.25; }
-.conduit-group.is-chaos-cut { opacity: 0.2; }
 .chaos-badge {
   position: absolute;
   inset-block-start: -0.7rem;
@@ -5892,7 +5892,7 @@ html[data-ui="2"] #sim-playback-deck {
 .chaos-item:hover, .chaos-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--wl-blue); outline-offset: -2px; }
 .chaos-item[data-status="failed"] { color: var(--wl-rose); font-weight: 600; }
 
-/* A failed component carries nothing: the flowing dashes on every wire into or out of it stop. */
+/* A failed component carries nothing: the flowing dashes on its own wires (not those of components it cuts off) stop. */
 .conduit-group.is-chaos-cut .conduit-stream,
 .conduit-group.is-chaos-cut .conduit-stream-reverse {
   animation: none;

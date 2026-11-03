@@ -105,3 +105,29 @@ test('wires into and out of a failed component stop flowing', async ({ page }) =
   await page.keyboard.press('x');
   expect(await running(touching)).toBe(true);
 });
+
+test('only the failed component\'s own wires stop, and nothing stays dimmed once it is unselected', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/?ui=2');
+  await page.locator('#btn-empty-showcase').click();
+  await page.keyboard.press('2');
+  const node = page.locator('.arch-node').nth(2);
+  const id = (await node.getAttribute('data-node'))!;
+  await node.click();
+  await page.keyboard.press('x');
+  await page.mouse.click(1000, 120);
+  await expect(page.locator('.node-select-hit[aria-pressed="true"]')).toHaveCount(0);
+  await page.waitForTimeout(1000); // the highlight fades out
+
+  const state = await page.evaluate((failed) => {
+    const flows = (g: Element) => getComputedStyle(g.querySelector('.conduit-stream')!).animationName !== 'none';
+    const wires = [...document.querySelectorAll('.conduit-group[data-from]')];
+    return {
+      ownRunning: wires.filter((g) => [g.getAttribute('data-from'), g.getAttribute('data-to')].includes(failed) && flows(g)).length,
+      othersStopped: wires.filter((g) => ![g.getAttribute('data-from'), g.getAttribute('data-to')].includes(failed) && g.getAttribute('data-animated') === 'true' && !flows(g)).length,
+      dimmedNodes: [...document.querySelectorAll('.arch-node')].filter((n) => Number(getComputedStyle(n).opacity) < 1).length,
+      dimmedWires: wires.filter((g) => Number(getComputedStyle(g).opacity) < 1).length,
+    };
+  }, id);
+  expect(state).toEqual({ ownRunning: 0, othersStopped: 0, dimmedNodes: 0, dimmedWires: 0 });
+});
