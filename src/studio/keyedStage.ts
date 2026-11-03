@@ -1303,6 +1303,7 @@ const CHAOS_BADGES: Record<string, string> = {
   degraded: 'Degraded',
   unreachable: '⛓ Unreachable',
   rerouted: '↪ Rerouted',
+  'at-risk': '⚠ Potential disruption',
 };
 
 /** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */

@@ -17,6 +17,8 @@ export interface ReachabilityResult {
   unreachable: string[];
   /** Still reachable, but at least one incoming path went through a failed or unreachable component. */
   rerouted: string[];
+  /** Still working, but call a failed component directly, so their requests may fail. */
+  atRisk: string[];
 }
 
 /** Entry points are actors and clients; a diagram with neither falls back to components nothing points at. */
@@ -119,6 +121,16 @@ export function reachableFrom(
     );
   });
 
+  const down = new Set([...failed, ...unreachable]);
+  const atRisk = [...after].filter(
+    (id) =>
+      !failedSet.has(id) &&
+      doc.edges.some((e) => {
+        const target = e.from === id ? e.to : e.flow === 'both' && e.to === id ? e.from : null;
+        return target !== null && blocked.has(target) && !detour.has(target) && !down.has(id);
+      }),
+  );
+
   const sort = (ids: string[]) => ids.sort();
   return {
     failed: sort(failed),
@@ -126,6 +138,7 @@ export function reachableFrom(
     reachable: sort([...after]),
     unreachable: sort(unreachable),
     rerouted: sort(rerouted),
+    atRisk: sort(atRisk),
   };
 }
 

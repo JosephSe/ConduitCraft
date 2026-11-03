@@ -5,7 +5,7 @@
 import { app, panToNodeIfNeeded, setSelection } from './state';
 import { repaintForLens, chaosResult, chaosSummary, clearFailures, onChaosChange, summaryText } from './chaos';
 
-const LABELS = { failed: 'Failed', degraded: 'Degraded', unreachable: 'Unreachable', rerouted: 'Rerouted' } as const;
+const LABELS = { failed: 'Failed', degraded: 'Degraded', unreachable: 'Unreachable', rerouted: 'Rerouted', 'at-risk': 'Potential disruption' } as const;
 
 export function initChaosPanel(): void {
   const panel = document.getElementById('chaos-panel');
@@ -28,8 +28,8 @@ export function initChaosPanel(): void {
     if (list.hidden) return;
     const result = chaosResult()!;
     list.replaceChildren();
-    for (const status of ['failed', 'degraded', 'unreachable', 'rerouted'] as const) {
-      for (const id of result[status]) {
+    for (const status of ['failed', 'degraded', 'unreachable', 'rerouted', 'at-risk'] as const) {
+      for (const id of status === 'at-risk' ? result.atRisk : result[status]) {
         const node = app.doc.nodes.find((n) => n.id === id);
         const item = document.createElement('li');
         const button = document.createElement('button');

@@ -8,7 +8,7 @@ import { announce } from './a11y';
 import { app } from './state';
 import { renderAll } from './render';
 
-export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted';
+export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk';
 
 const failed = new Set<string>();
 /** Component under the pointer while Alt is held and nothing has failed: a what-if preview. */
@@ -53,6 +53,7 @@ export function chaosStatusOf(nodeId: string): ChaosStatus | null {
   if (r.failed.includes(nodeId)) return 'failed';
   if (r.degraded.includes(nodeId)) return 'degraded';
   if (r.unreachable.includes(nodeId)) return 'unreachable';
+  if (r.atRisk.includes(nodeId)) return 'at-risk';
   if (r.rerouted.includes(nodeId)) return 'rerouted';
   return null;
 }
@@ -68,6 +69,7 @@ export interface ChaosSummary {
   degraded: number;
   unreachable: number;
   rerouted: number;
+  atRisk: number;
 }
 
 /** Counts for the run of real failures (not the Alt preview), or null when none are set. */
@@ -80,6 +82,7 @@ export function chaosSummary(): ChaosSummary | null {
     degraded: r.degraded.length,
     unreachable: r.unreachable.length,
     rerouted: r.rerouted.length,
+    atRisk: r.atRisk.length,
   };
 }
 
@@ -88,6 +91,7 @@ export function summaryText(s: ChaosSummary): string {
   const parts = [`${s.failed} failed`];
   if (s.degraded) parts.push(`${s.degraded} degraded`);
   parts.push(`${s.unreachable} unreachable`, `${s.rerouted} rerouted`);
+  if (s.atRisk) parts.push(`${s.atRisk} at risk`);
   return parts.join(' · ');
 }
 
