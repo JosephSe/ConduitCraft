@@ -1,5 +1,6 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
 import { breadcrumb, viewOfLevel } from '../core/levels';
+import { describeDiagram } from '../core/describe';
 import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { renderHumanOutlineMarkup, renderIconMarkup } from '../ui/icons';
@@ -396,6 +397,7 @@ ${colorSchemeBoot}
   ${exportedStyleTag}
 </head>
 <body>
+  <div class="visually-hidden" id="diagram-description" role="note" aria-label="Diagram description" style="white-space: pre-line">${escapeHtml(describeDiagram(doc))}</div>
   <header class="topbar"${brandAttrs}>
     <div class="brand-cluster">
       ${brandMark}

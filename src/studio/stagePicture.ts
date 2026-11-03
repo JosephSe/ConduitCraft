@@ -1,9 +1,14 @@
 /** A picture of the canvas as it is drawn, not a simplified redraw. */
 import type { StreamTone } from '../types';
 import { TONE_CSS } from '../shared/tones';
+import { describeDiagram } from '../core/describe';
 import { renderDiagramSvg } from '../exporter/diagramSvg';
 import { app } from './state';
 import { stageWorld, viewport, workspace } from './dom';
+
+function escapeXmlText(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 export interface StagePictureOptions {
   /** Steps animated wires. Omit to keep the dash where it is on screen. */
@@ -485,7 +490,9 @@ export function renderStagePictureSvg(
   const rawSerialized = new XMLSerializer().serializeToString(root);
   const serialized = resolveCssVariables(rawSerialized, resolvedVars);
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${outWidth} ${outHeight}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${outWidth}" height="${outHeight}" viewBox="0 0 ${outWidth} ${outHeight}" role="img">
+  <title>${escapeXmlText(app.doc.title.trim() || 'Untitled diagram')}</title>
+  <desc>${escapeXmlText(describeDiagram(app.doc))}</desc>
   <foreignObject x="0" y="0" width="${outWidth}" height="${outHeight}" style="width:${outWidth}px;height:${outHeight}px;overflow:visible;">${serialized}</foreignObject>
 </svg>`;
 }

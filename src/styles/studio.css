@@ -4609,6 +4609,12 @@ kbd {
   box-shadow: 0 0 0 2px var(--wl-blue-soft);
 }
 
+.export-alt-text {
+  width: 100%;
+  cursor: text;
+  resize: vertical;
+}
+
 .export-png-hint {
   font-size: 0.78rem;
   color: var(--wl-ink-muted);
