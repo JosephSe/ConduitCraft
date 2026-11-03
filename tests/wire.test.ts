@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { routeDiagramEdges } from '../src/core/layout.ts';
-import { hopDelayMs, isAsyncWire, latenciesBetween, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
+import { flowScale, hopDelayMs, isAsyncWire, latenciesBetween, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { createBlankDocument } from '../src/templates/presets.ts';
 import type { DiagramDocument, DiagramEdge } from '../src/types.ts';
@@ -101,5 +101,42 @@ describe('latency sets the pace of a hop (F-17)', () => {
       { from: 'a', to: 'c' },
     ];
     assert.deepEqual(latenciesBetween(edges, ['a'], ['b', 'c']), [120]);
+  });
+});
+
+describe('latency sets how fast the wire flows (F-17)', () => {
+  it('is 1 without a latency or at the reference latency', () => {
+    assert.equal(flowScale(undefined), 1);
+    assert.equal(flowScale(50), 1);
+  });
+
+  it('slows the dashes for slow calls and speeds them for fast ones, within limits', () => {
+    assert.equal(flowScale(250), 2);
+    assert.equal(flowScale(0), 0.75);
+    assert.equal(flowScale(10_000), 3);
+  });
+
+  it('puts the scale on the exported wire', async () => {
+    const { generateStandaloneHtml } = await import('../src/exporter/standaloneHtml.ts');
+    const doc = docWithWire({ latencyMs: 250 });
+    doc.nodes = doc.nodes.map((n) => ({
+      ...n,
+      kind: 'service',
+      accent: 'blue',
+      icon: 'cpu',
+      subtitle: '',
+      eyebrow: '',
+      footerLeft: '',
+      chip: '',
+      zoneLabel: '',
+      interfaceLabel: '',
+      summary: '',
+      metrics: [],
+      code: '',
+      width: 200,
+      height: 100,
+    }));
+    const html = generateStandaloneHtml(doc);
+    assert.match(html, /style="--flow-scale: 2"/);
   });
 });

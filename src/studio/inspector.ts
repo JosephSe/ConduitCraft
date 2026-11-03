@@ -1065,6 +1065,7 @@ export function renderPropertyEditor(): void {
       const ms = Number(latencyInput.value);
       if (latencyInput.value !== '' && Number.isFinite(ms) && ms >= 0) edge.latencyMs = Math.round(ms);
       else delete edge.latencyMs;
+      renderWiresOnly();
     });
     form.appendChild(makeField('prop-edge-latency', 'Typical latency (ms)', latencyInput));
     form.appendChild(

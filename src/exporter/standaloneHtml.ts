@@ -12,6 +12,7 @@ import {
 } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { normalizeLinks, toneName } from '../core/meta';
+import { flowScale } from '../core/wire';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
@@ -250,7 +251,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       }
 
       return `
-        <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-sync="${e.sync === 'async' ? 'async' : 'sync'}" data-flow="${escapeHtml(e.flow || 'forward')}">
+        <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-sync="${e.sync === 'async' ? 'async' : 'sync'}" data-flow="${escapeHtml(e.flow || 'forward')}" style="--flow-scale: ${flowScale(e.latencyMs)}">
           <path class="conduit-glow" d="${e.pathD}"/>
           <path class="conduit-rail" d="${e.pathD}"/>
           <path class="conduit-stream" d="${e.pathD}"${markerAttr}/>
