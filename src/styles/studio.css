@@ -5574,6 +5574,12 @@ html[data-ui="1"] .lens-review { display: none; }
   color: var(--wl-ink);
   border-color: var(--wl-blue);
 }
+/* The component on the other end of this wire has failed: struck through as well as rose, so colour is not the only cue. */
+.level-port[data-cut-off='true'] {
+  color: var(--wl-rose);
+  border-color: var(--wl-rose);
+  text-decoration: line-through;
+}
 
 @keyframes level-fade-in {
   from {

@@ -137,3 +137,63 @@ test('the HTML export keeps the drill-down', async ({ page, context }) => {
   await viewer.locator('button.level-crumb').first().click();
   await expect(viewer.locator('.arch-node')).toHaveCount(2);
 });
+
+const node = (page: Page, title: string) => page.locator('.arch-node', { hasText: title });
+
+test('failing a component fails everything inside it, announces it once, and nothing leaks upward', async ({ page }) => {
+  await loadNested(page);
+  await page.keyboard.press('2');
+  await node(page, 'Payments').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await expect(node(page, 'Payments')).toHaveAttribute('data-chaos', 'failed');
+
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(page.locator('#level-breadcrumb .level-crumb').last()).toHaveText('Payments');
+  await expect(page.locator('.arch-node')).toHaveCount(3);
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(3);
+  await expect(page.locator('#a11y-live-announcer')).toContainText('Inside Payments, which has failed');
+  await expect(page.locator('#chaos-summary')).toHaveText(/^3 failed/);
+
+  // Going back up keeps the failure where it was set.
+  await page.keyboard.press('ControlOrMeta+ArrowUp');
+  await expect(node(page, 'Payments')).toHaveAttribute('data-chaos', 'failed');
+  await expect(node(page, 'Web')).not.toHaveAttribute('data-chaos', 'failed');
+});
+
+test('failing a component inside a level does not fail its parent', async ({ page }) => {
+  await loadNested(page);
+  await page.keyboard.press('2');
+  await node(page, 'Payments').locator('.node-select-hit').click();
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await node(page, 'Ledger Service').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await expect(node(page, 'Ledger Service')).toHaveAttribute('data-chaos', 'failed');
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(1);
+
+  await page.keyboard.press('ControlOrMeta+ArrowUp');
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(0);
+  // The failure is still there when the level is reopened.
+  await node(page, 'Payments').locator('.node-select-hit').click();
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(node(page, 'Ledger Service')).toHaveAttribute('data-chaos', 'failed');
+});
+
+test('a boundary port is cut off when the component outside has failed', async ({ page }) => {
+  await loadNested(page);
+  await page.keyboard.press('2');
+  await node(page, 'Web').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await node(page, 'Payments').locator('.node-select-hit').click();
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(page.locator('.level-port')).toHaveAttribute('data-cut-off', 'true');
+  await expect(page.locator('.level-port')).toHaveAttribute('aria-label', /cut off because it has failed/);
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(0);
+
+  // Restoring Web puts the port back.
+  await page.keyboard.press('ControlOrMeta+ArrowUp');
+  await node(page, 'Web').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await node(page, 'Payments').locator('.node-select-hit').click();
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(page.locator('.level-port')).not.toHaveAttribute('data-cut-off', 'true');
+});

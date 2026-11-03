@@ -24,6 +24,11 @@ function contentAt(root: DiagramDocument, path: LevelPath): LevelContent | null 
   return current;
 }
 
+/** The components of the level at `path`, or null when that level does not exist. */
+export function nodesAtLevel(root: DiagramDocument, path: LevelPath): DiagramNode[] | null {
+  return contentAt(root, path)?.nodes ?? null;
+}
+
 /** The longest leading part of `path` that exists in `root`. */
 export function resolveLevelPath(root: DiagramDocument, path: LevelPath): LevelPath {
   const out: LevelPath = [];

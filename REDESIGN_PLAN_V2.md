@@ -132,7 +132,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Do:** add a two-line banner to the top of `REDESIGN_PLAN.md` saying that status and order now live in this file. Don't edit V1's checkboxes, because V2 is the record. Update the counts in `README.md` if it quotes any.
 - **Done when:** someone who opens V1 is sent here first.
 
-#### [ ] A4. Chaos across levels (D5) · S
+#### [x] A4. Chaos across levels (D5) · S (#PR)
 - **Needs:** none.
 - **Do:** in `src/studio/chaos.ts`, keep failures keyed by level path rather than by bare node id, so ids that repeat at different levels don't collide. When a level opens under a failed ancestor, paint its contents as failed and say so once ("Inside Checkout API, which has failed"). In `src/studio/levels.ts`, mark boundary ports whose outside component has failed as cut off. Run the reachability maths in `core/reachability.ts` unchanged on each level's view.
 - **Tests:** unit tests for the failure keying, and a Playwright test that fails a parent, drills in and sees the children marked failed and announced.
