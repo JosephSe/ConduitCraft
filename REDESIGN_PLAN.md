@@ -1,5 +1,7 @@
 # ConduitCraft 2.0: Redesign Plan
 
+> **Status and order now live in [`REDESIGN_PLAN_V2.md`](REDESIGN_PLAN_V2.md).** The checkboxes in this file are out of date and are no longer updated. Use this file as the spec for how each feature behaves, and V2 for what is done and what comes next.
+
 **Branch:** `redesign-vision` (cut from `main` at `e4ce9ab`, after PR #3)
 **Status:** In progress. Phase 0 is done; Phase 1 is partly done (see the checkboxes in section 9: `[x]` merged, `[~]` in review, `[ ]` not started). Revised once to add F-21 to F-31, R-09, R-10 and T-07 after a review of obvious gaps.
 **How to use this file:** Each work item has an ID (`R-xx` for redesign work, `F-xx` for features, `T-xx` for technical foundations). Pick up items in the order given in [section 9](#9-delivery-plan-pr-by-pr). Each item says why it matters, what to build, how to know it is done, and where relevant the files it touches and rough effort. Tick the checkbox and add the PR number when an item ships.
