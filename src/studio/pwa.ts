@@ -1,5 +1,5 @@
 import type { DiagramDocument } from '../types';
-import { serializeToMermaid, serializeToBlueprintMarkdown } from '../core/parser';
+import { serializeToBlueprintMarkdown } from '../core/parser';
 import { serializeBlueprintJson } from '../exporter/blueprintJson';
 
 /**
@@ -77,25 +77,28 @@ export function resetActiveFile(): void {
   isDiskDirty = false;
 }
 
+/** Mermaid is import only (D8): a file with this name is read, never written. */
+export function isMermaidFileName(name: string | null | undefined): boolean {
+  const lower = (name ?? '').toLowerCase();
+  return lower.endsWith('.mmd') || lower.endsWith('.mermaid');
+}
+
+/** The Blueprint file name offered when saving a diagram opened from `name.mmd`. */
+export function blueprintNameFor(name: string): string {
+  return name.replace(/\.(mmd|mermaid)$/i, '') + '.md';
+}
+
 /**
  * Format-aware serializer based on chosen filename extension.
  * Resolves:
- * - .mmd / .mermaid -> Mermaid flowchart syntax
  * - .md / .markdown -> Blueprint Markdown syntax
  * - .json / other   -> Blueprint JSON syntax
  */
 export function serializeForFilename(
   doc: DiagramDocument,
   filename: string,
-): { content: string; mime: string; format: 'mermaid' | 'blueprint-md' | 'json' } {
+): { content: string; mime: string; format: 'blueprint-md' | 'json' } {
   const lower = filename.toLowerCase();
-  if (lower.endsWith('.mmd') || lower.endsWith('.mermaid')) {
-    return {
-      content: serializeToMermaid(doc),
-      mime: 'text/plain;charset=utf-8',
-      format: 'mermaid',
-    };
-  }
   if (lower.endsWith('.md') || lower.endsWith('.markdown')) {
     return {
       content: serializeToBlueprintMarkdown(doc),
@@ -118,10 +121,20 @@ export const BLUEPRINT_FILE_TYPES = [
     },
   },
   {
-    description: 'Mermaid / Blueprint Flowchart (*.mmd, *.md)',
+    description: 'Blueprint File (*.md)',
+    accept: {
+      'text/markdown': ['.md', '.markdown'],
+    },
+  },
+];
+
+/** Open also reads Mermaid; save only ever offers {@link BLUEPRINT_FILE_TYPES}. */
+export const OPEN_FILE_TYPES = [
+  ...BLUEPRINT_FILE_TYPES,
+  {
+    description: 'Mermaid Flowchart (*.mmd)',
     accept: {
       'text/plain': ['.mmd', '.mermaid', '.txt'],
-      'text/markdown': ['.md', '.markdown'],
     },
   },
 ];
@@ -140,13 +153,13 @@ export async function openWithNativeFilePicker(): Promise<{
   try {
     const win = window as unknown as {
       showOpenFilePicker(options: {
-        types: typeof BLUEPRINT_FILE_TYPES;
+        types: typeof OPEN_FILE_TYPES;
         multiple?: boolean;
       }): Promise<FileSystemFileHandleLike[]>;
     };
 
     const handles = await win.showOpenFilePicker({
-      types: BLUEPRINT_FILE_TYPES,
+      types: OPEN_FILE_TYPES,
       multiple: false,
     });
 
@@ -168,16 +181,20 @@ export async function openWithNativeFilePicker(): Promise<{
 
 /**
  * Save content to disk.
- * If activeFileHandle exists and forceSaveAs is false, overwrites the existing file directly.
+ * If activeFileHandle exists and forceSaveAs is false, overwrites the existing file directly,
+ * unless that file is Mermaid (D8): then it always goes to Save As with a Blueprint name.
  * Otherwise, prompts the native Save File Picker where supported.
  */
 export async function saveWithNativeFileSystem(
   contentOrSerializer: string | ((chosenName: string) => string),
   defaultName: string,
   forceSaveAs = false
-): Promise<{ success: boolean; filename: string; directSaved: boolean }> {
+): Promise<{ success: boolean; filename: string; directSaved: boolean; refusedMermaid?: boolean }> {
+  if (isMermaidFileName(defaultName)) defaultName = blueprintNameFor(defaultName);
+  const activeIsMermaid = isMermaidFileName(activeFileName ?? activeFileHandle?.name);
+
   // Direct overwrite of opened file
-  if (!forceSaveAs && activeFileHandle) {
+  if (!forceSaveAs && activeFileHandle && !activeIsMermaid) {
     try {
       const filename = activeFileName || activeFileHandle.name || defaultName;
       const content =
@@ -210,6 +227,9 @@ export async function saveWithNativeFileSystem(
         suggestedName: defaultName,
         types: BLUEPRINT_FILE_TYPES,
       });
+      if (isMermaidFileName(handle.name)) {
+        return { success: false, filename: handle.name, directSaved: false, refusedMermaid: true };
+      }
 
       const content =
         typeof contentOrSerializer === 'function' ? contentOrSerializer(handle.name) : contentOrSerializer;

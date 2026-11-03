@@ -20,7 +20,6 @@ import {
   templateGalleryGrid,
   btnExportHtml,
   btnExportJson,
-  btnExportMmd,
   btnExportGif,
   btnExportPng,
   btnExportSvg,
@@ -184,7 +183,6 @@ import {
   importMermaidOrBlueprint,
   type ImportOptions,
   serializeToBlueprintMarkdown,
-  serializeToMermaid,
 } from '../core/parser';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
@@ -222,6 +220,8 @@ import {
   initInstallPrompt,
   isFileDiskDirty,
   isFileSystemAccessSupported,
+  isMermaidFileName,
+  blueprintNameFor,
   openWithNativeFilePicker,
   promptInstallApp,
   registerServiceWorker,
@@ -1408,24 +1408,15 @@ export function getSafeFilenameSlug(): string {
   return filenameSlug(app.doc.title || 'architecture-diagram', 'architecture-diagram');
 }
 
-export function getSelectedCodeFormat(): 'mermaid' | 'blueprint' {
-  const checked = document.querySelector<HTMLInputElement>('input[name="code-format"]:checked');
-  return checked?.value === 'blueprint' ? 'blueprint' : 'mermaid';
-}
-
 export function getSubgraphMode(): 'swimlanes' | 'levels' {
   const checked = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"]:checked');
   return checked?.value === 'levels' ? 'levels' : 'swimlanes';
 }
 
 export function refreshCodeModalTextarea(): void {
-  const fmt = getSelectedCodeFormat();
-  codeSyncTextarea.value =
-    fmt === 'blueprint' ? serializeToBlueprintMarkdown(app.doc) : serializeToMermaid(app.doc);
+  codeSyncTextarea.value = serializeToBlueprintMarkdown(app.doc);
   codeSyncDiagnostics.textContent =
-    fmt === 'blueprint'
-      ? 'Full Blueprint (.md): YAML metadata + positions + Mermaid flowchart.'
-      : 'Standard Mermaid (.mmd): live-generated from your visual canvas.';
+    'Blueprint file (.md): YAML metadata, positions and a Mermaid block. Paste Mermaid or a Blueprint file to import it.';
   delete codeSyncDiagnostics.dataset.tone;
 }
 
@@ -1864,14 +1855,24 @@ export function initEvents(): void {
 
   async function handleSaveDiagram(forceSaveAs = false): Promise<void> {
     const activeName = getActiveFileName();
-    const defaultName = activeName || `${getSafeFilenameSlug()}.blueprint.json`;
+    // D8: an opened .mmd is never written; saving offers a Blueprint file beside it.
+    const fromMermaid = isMermaidFileName(activeName);
+    const defaultName =
+      (activeName && (fromMermaid ? blueprintNameFor(activeName) : activeName)) ||
+      `${getSafeFilenameSlug()}.blueprint.json`;
     const serializer = (name: string) => serializeForFilename(fullDocument(), name).content;
 
     const res = await saveWithNativeFileSystem(serializer, defaultName, forceSaveAs);
     if (res.success) {
       setDiskDirty(false);
       setSaveState('saved');
-      notify(`Saved ${res.filename}`);
+      notify(
+        fromMermaid
+          ? `Saved ${res.filename}. ConduitCraft reads Mermaid but doesn't write it, so ${activeName} is unchanged.`
+          : `Saved ${res.filename}`,
+      );
+    } else if (res.refusedMermaid) {
+      notify(`ConduitCraft doesn't write Mermaid files. Save as .md or .json instead.`, { tone: 'error' });
     } else if (!isFileSystemAccessSupported()) {
       const { content, mime } = serializeForFilename(fullDocument(), defaultName);
       downloadBlob(content, defaultName, mime);
@@ -1982,16 +1983,10 @@ export function initEvents(): void {
     void handleUploadedFile(e.dataTransfer.files[0]);
   });
 
-  // Code Sync Modal (`Mermaid / MD`)
+  // Blueprint file dialog (shows the Blueprint file; Apply imports Mermaid or Blueprint)
   btnOpenCode.addEventListener('click', openCodeDialog);
   btnPaletteCode.addEventListener('click', openCodeDialog);
   btnEmptyCode.addEventListener('click', openCodeDialog);
-
-  for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="code-format"]')) {
-    radio.addEventListener('change', () => {
-      if (radio.checked) refreshCodeModalTextarea();
-    });
-  }
 
   btnCopyCode.addEventListener('click', async () => {
     try {
@@ -2137,14 +2132,6 @@ export function initEvents(): void {
     });
     const filename = `${getSafeFilenameSlug()}.html`;
     downloadBlob(html, filename, 'text/html;charset=utf-8');
-    void closeDialogSmoothly(exportDialog);
-    notify(`Exported ${filename}`);
-  });
-  btnExportMmd.addEventListener('click', () => {
-    expandStageToFit(app.doc);
-    const mmd = serializeToMermaid(app.doc);
-    const filename = `${getSafeFilenameSlug()}.mmd`;
-    downloadBlob(mmd, filename, 'text/plain;charset=utf-8');
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });

@@ -1,6 +1,6 @@
 # ConduitCraft
 
-**ConduitCraft** is an open-source, interactive architecture diagramming studio with animated traffic and scenarios. Build system architectures from scratch on a blank drafting canvas (like draw.io), or import/sync standard **Mermaid (`.mmd`)** and **Blueprint Markdown (`.md`)** files to render animated telemetry conduits, contextual lineage inspectors, specification matrices, and live packet simulations.
+**ConduitCraft** is an open-source, interactive architecture diagramming studio with animated traffic and scenarios. Build system architectures from scratch on a blank drafting canvas (like draw.io), or import standard **Mermaid (`.mmd`)** flowcharts and **Blueprint Markdown (`.md`)** files to render animated telemetry conduits, contextual lineage inspectors, specification matrices, and live packet simulations.
 
 ## Interactive Export Previews
 
@@ -33,10 +33,11 @@ Detailed close-up inspection view highlighting directional port wiring, custom s
   - Filter stream channels by tone (`Primary`, `Success`, `Exception`, `Control`).
   - Click any component to highlight upstream sources and downstream consumers while dimming unrelated paths, and inspect custom telemetry metrics and JSON contracts.
   - Trigger multi-step **Live Packet Simulations** with real-time execution traces.
-- **Bidirectional Mermaid (`.mmd`) & Blueprint (`.md`) Compiler**
-  - Edit or paste standard Mermaid flowcharts or YAML-frontmatter Blueprint documents with line-numbered validation diagnostics.
+- **Mermaid Import & Blueprint (`.md`) Files**
+  - Open, drop or paste standard Mermaid flowcharts, with line-numbered validation diagnostics. Subgraphs import as swimlanes or as levels.
+  - Mermaid is import only: ConduitCraft never writes a `.mmd` file, and saving a diagram opened from one offers a Blueprint file instead. The Blueprint file (YAML frontmatter plus a Mermaid block) is the text format it writes.
 - **Zero-Dependency Exports**
-  - Export a round-trippable **Blueprint JSON (`.blueprint.json`)** file that keeps the whole document, a short looping **GIF** of the telemetry animation, self-contained **Interactive Animated HTML (`.html`)** pages, **SVG** and **PNG** pictures, or standard **Mermaid (`.mmd`)**.
+  - Export a round-trippable **Blueprint JSON (`.blueprint.json`)** file that keeps the whole document, a short looping **GIF** of the telemetry animation, self-contained **Interactive Animated HTML (`.html`)** pages, or **SVG** and **PNG** pictures.
 
 ## Documentation
 

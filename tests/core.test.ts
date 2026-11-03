@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {
   importMermaidOrBlueprint,
   serializeToBlueprintMarkdown,
-  serializeToMermaid,
+  serializeMermaidBlock,
 } from '../src/core/parser.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import {
@@ -163,7 +163,7 @@ describe('ConduitCraft Core Engine — Parser, Routing & Round-Trip Tests', () =
     assert.equal(restored.edges[0].route, 'arc');
     assert.deepEqual(restored.edges[0].waypoint, [368, 220]);
 
-    const mmd = serializeToMermaid(restored);
+    const mmd = serializeMermaidBlock(restored);
     assert.match(mmd, /flowchart LR/);
   });
 
@@ -224,7 +224,7 @@ describe('ConduitCraft Core Engine — Parser, Routing & Round-Trip Tests', () =
     assert.equal(oneWayEdge?.flow, 'forward');
 
     // Mermaid serialization: flow: 'both' produces connector without end arrowhead
-    const outMmd = serializeToMermaid(doc);
+    const outMmd = serializeMermaidBlock(doc);
     assert.match(outMmd, /n1 ---\|Sync Bus\| n2/);
     assert.match(outMmd, /n3 ===\|Solid Bus\| n4/);
     assert.match(outMmd, /n1 -\.-\|Dotted Bus\| n5/);

@@ -1608,7 +1608,12 @@ function formatMermaidNodeShape(node: DiagramNode, safeId: string): string {
   }
 }
 
-export function serializeToMermaid(doc: DiagramDocument): string {
+/**
+ * Writes the `mermaid` block embedded in the Blueprint file (Q12), so GitHub can
+ * render a Blueprint file as a diagram. Mermaid is import only (D8): nothing else
+ * may call this to write a standalone Mermaid file.
+ */
+export function serializeMermaidBlock(doc: DiagramDocument): string {
   const lines: string[] = [`flowchart ${doc.direction}`];
   const idMap = new Map<string, string>();
   const usedIds = new Set<string>();
@@ -1683,7 +1688,7 @@ export function serializeToMermaid(doc: DiagramDocument): string {
 
 export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
   const yamlDump = yaml.dump(buildFrontmatter(doc, true), { lineWidth: 100, noRefs: true }).trim();
-  const mermaidBlock = serializeToMermaid(doc);
+  const mermaidBlock = serializeMermaidBlock(doc);
 
   return `---\n${yamlDump}\n---\n\n\`\`\`mermaid\n${mermaidBlock}\n\`\`\`\n`;
 }

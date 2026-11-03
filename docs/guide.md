@@ -65,7 +65,7 @@ Tones are shared by nodes, wires, and simulation steps:
 | `violet` | Control |
 | `amber` | Async |
 
-In exported Mermaid, a Primary wire is `-->`, a Success wire is `==>`, and an Exception wire is `-.->`.
+In the Blueprint file's Mermaid block, a Primary wire is `-->`, a Success wire is `==>`, and an Exception wire is `-.->`.
 
 ## Blueprint Markdown
 
@@ -155,7 +155,7 @@ edges:
 
 An edge needs `from` and `to` ids that exist in `nodes`. The editor writes `animated` as `true` or `false`. Leaving it out on import keeps the wire animated.
 
-A swimlane stage is a `zones` entry: `id`, `number`, `title`, `subtitle`, `x`, and `width`. It has no vertical position. Nodes whose center falls inside that span are grouped under the stage when Mermaid is exported.
+A swimlane stage is a `zones` entry: `id`, `number`, `title`, `subtitle`, `x`, and `width`. It has no vertical position. Nodes whose center falls inside that span are grouped under the stage in the Blueprint file's Mermaid block.
 
 A notes card is `id`, `title`, `code`, `position: [x, y]`, and `items` of `{ title, text }`.
 
@@ -189,6 +189,8 @@ Export writes one file:
 
 `document.nodes` is an array. Each node has `id`, `x`, `y`, `width`, and `height` rather than a `position` pair. Edges, zones, notes, simulations, and `brand` use the same field names as the YAML. A file that is only the document object is accepted when it has a `nodes` array. Routing values must be the canonical names from the table above.
 
-## Mermaid
+## Importing Mermaid
 
-A `.mmd` file is a flowchart. The editor writes `flowchart LR` or `flowchart TD`. On import, `RL` is treated as left-to-right and `TB` or `BT` as top-to-bottom. Subgraphs become swimlane stages. Node shape brackets pick the kind, using the same brackets listed in the node table. A subtitle is a second line inside the label, separated by `<br/>`.
+ConduitCraft reads Mermaid but never writes it. Open, drop or paste a `.mmd` flowchart to import it. Saving a diagram opened from a `.mmd` file never changes that file: it opens Save As with a Blueprint file name (`name.md`). The only Mermaid the editor writes is the block inside a Blueprint file, which uses `flowchart LR` or `flowchart TD`.
+
+On import, `RL` is treated as left-to-right and `TB` or `BT` as top-to-bottom. Subgraphs become swimlane stages, or, with **Subgraphs as: Levels** in the Blueprint file dialog, components whose levels hold the subgraph's nodes. Node shape brackets pick the kind, using the same brackets listed in the node table. A subtitle is a second line inside the label, separated by `<br/>`.
