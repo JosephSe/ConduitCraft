@@ -13,6 +13,7 @@ import type {
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
 import { normalizeBrand } from '../core/brand';
+import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
 import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
 import { normalizeIconName } from '../ui/icons';
@@ -152,7 +153,7 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
 }
 
 export function serializeBlueprintJson(doc: DiagramDocument): string {
-  return JSON.stringify({ kind: BLUEPRINT_JSON_KIND, version: 1, document: doc }, null, 2);
+  return JSON.stringify({ kind: BLUEPRINT_JSON_KIND, version: CURRENT_SCHEMA_VERSION, document: doc }, null, 2);
 }
 
 export function parseBlueprintJson(text: string): BlueprintJsonResult {
@@ -162,10 +163,15 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
   } catch {
     return { ok: false, error: 'Blueprint JSON is not valid JSON.' };
   }
-  const source = isRecord(data) && isRecord(data.document) ? data.document : data;
-  if (!isRecord(source) || !Array.isArray(source.nodes)) {
+  const enveloped = isRecord(data) && isRecord(data.document);
+  const rawSource = enveloped ? (data as Record<string, unknown>).document : data;
+  if (!isRecord(rawSource) || !Array.isArray(rawSource.nodes)) {
     return { ok: false, error: 'Blueprint JSON needs a nodes array.' };
   }
+  const migrated = migrate(rawSource, enveloped ? (data as Record<string, unknown>).version : undefined);
+  if (!migrated.ok) return migrated;
+  const source = migrated.doc;
+  if (!Array.isArray(source.nodes)) return { ok: false, error: 'Blueprint JSON needs a nodes array.' };
 
   const blank = createBlankDocument();
   const doc: DiagramDocument = {

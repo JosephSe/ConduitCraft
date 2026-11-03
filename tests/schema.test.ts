@@ -1,0 +1,62 @@
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import { CURRENT_SCHEMA_VERSION, MIGRATIONS, migrate, readSchemaVersion } from '../src/core/schema.ts';
+import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
+import { createBlankDocument } from '../src/templates/presets.ts';
+
+describe('schema versioning (T-03)', () => {
+  it('treats a missing or odd version as 1', () => {
+    for (const declared of [undefined, null, 0, -2, 1.5, '2', NaN]) assert.equal(readSchemaVersion(declared), 1);
+    assert.equal(readSchemaVersion(2), 2);
+  });
+
+  it('has a migration step for every version below the current one', () => {
+    for (let v = 1; v < CURRENT_SCHEMA_VERSION; v++) assert.equal(typeof MIGRATIONS[v], 'function', `step ${v}`);
+  });
+
+  it('runs the chain in order and reports where the file started', () => {
+    const calls: number[] = [];
+    const steps = { ...MIGRATIONS };
+    for (let v = 1; v < CURRENT_SCHEMA_VERSION; v++) {
+      MIGRATIONS[v] = (doc) => {
+        calls.push(v);
+        return steps[v](doc);
+      };
+    }
+    try {
+      const result = migrate({ nodes: [] }, 1);
+      assert.ok(result.ok && result.from === 1);
+      assert.deepEqual(calls, Array.from({ length: CURRENT_SCHEMA_VERSION - 1 }, (_, i) => i + 1));
+    } finally {
+      Object.assign(MIGRATIONS, steps);
+    }
+  });
+
+  it('refuses a file from a newer version instead of silently dropping fields', () => {
+    const result = migrate({ nodes: [] }, CURRENT_SCHEMA_VERSION + 1);
+    assert.equal(result.ok, false);
+    const parsed = parseBlueprintJson(
+      JSON.stringify({ kind: 'conduitcraft.blueprint', version: CURRENT_SCHEMA_VERSION + 1, document: { nodes: [] } }),
+    );
+    assert.equal(parsed.ok, false);
+    assert.match(!parsed.ok ? parsed.error : '', /newer version/);
+  });
+
+  it('stamps the current version on save and round-trips the document', () => {
+    const doc = createBlankDocument();
+    doc.title = 'Round trip';
+    const text = serializeBlueprintJson(doc);
+    assert.equal(JSON.parse(text).version, CURRENT_SCHEMA_VERSION);
+    const back = parseBlueprintJson(text);
+    assert.ok(back.ok);
+    assert.equal(back.ok && back.doc.title, 'Round trip');
+  });
+
+  it('opens files saved before versioning: version 1 in an envelope, or a bare document', () => {
+    const doc = createBlankDocument();
+    const v1 = JSON.stringify({ kind: 'conduitcraft.blueprint', version: 1, document: doc });
+    const bare = JSON.stringify(doc);
+    assert.ok(parseBlueprintJson(v1).ok);
+    assert.ok(parseBlueprintJson(bare).ok);
+  });
+});
