@@ -112,3 +112,17 @@ describe('nested levels', () => {
     assert.equal(allLevelNodes(parsed.doc).length <= 10, true);
   });
 });
+
+describe('nested levels in Blueprint markdown', () => {
+  it('round-trips children through the YAML metadata', async () => {
+    const { importMermaidOrBlueprint, serializeToBlueprintMarkdown } = await import('../src/core/parser.ts');
+    const text = serializeToBlueprintMarkdown(tree());
+    assert.match(text, /children:/);
+    const { doc } = importMermaidOrBlueprint(text);
+    const pay = doc.nodes.find((n) => n.id === 'pay');
+    assert.deepEqual(pay?.child?.nodes.map((n) => n.id), ['checkout', 'ledger']);
+    assert.equal(pay?.child?.edges.length, 1);
+    assert.deepEqual(pay?.child?.nodes[0].child?.nodes.map((n) => n.id), ['validate']);
+    assert.equal(doc.title, 'Shop');
+  });
+});

@@ -4,6 +4,7 @@
  * Issues reuse the `ImportIssue` shape (`level`, `message`, `code`) and add a `target` to pan to and select.
  * `runInsights` returns every issue; `visibleInsights` drops the rules a diagram has muted.
  */
+import { viewOfLevel } from './levels';
 import type { DiagramDocument, DiagramEdge, ImportIssue, ImportIssueLevel } from '../types';
 import { entryPointIds, reachableFrom } from './reachability';
 import { getEffectiveSimulations } from './layout';
@@ -334,6 +335,25 @@ const CHECKS: Record<InsightCode, (doc: DiagramDocument) => InsightIssue[]> = {
 /** Every issue the rules find, most severe first, ignoring mutes. */
 export function runInsights(doc: DiagramDocument): InsightIssue[] {
   return INSIGHT_RULES.flatMap((rule) => CHECKS[rule.code](doc));
+}
+
+export interface LevelInsightIssue extends InsightIssue {
+  /** The level the issue is in (`[]` is the root). */
+  path: string[];
+  /** Titles of the components that lead to that level, outermost first. */
+  trail: string[];
+}
+
+/** The rules run on every level on its own, each with where it was found (F-03). */
+export function runInsightsAllLevels(root: DiagramDocument): LevelInsightIssue[] {
+  const out: LevelInsightIssue[] = [];
+  const visit = (path: string[], trail: string[]) => {
+    for (const issue of runInsights(viewOfLevel(root, path))) out.push({ ...issue, path, trail });
+    const here = path.length === 0 ? root : viewOfLevel(root, path);
+    for (const node of here.nodes) if (node.child) visit([...path, node.id], [...trail, node.title]);
+  };
+  visit([], []);
+  return out;
 }
 
 /** The issues for rules this diagram has not muted. */

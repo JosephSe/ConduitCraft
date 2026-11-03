@@ -3,9 +3,16 @@
  * keeps the count in the Review lens button, paints the list of issues and handles mute and click-to-select.
  * Recomputing waits 300 ms after the last change, and the canvas badges show in the Review lens only.
  */
-import { INSIGHT_RULES, insightCountText, insightRule, mutedRules, runInsights, type InsightIssue } from '../core/insights';
+import {
+  INSIGHT_RULES,
+  insightCountText,
+  insightRule,
+  mutedRules,
+  runInsightsAllLevels,
+  type LevelInsightIssue as InsightIssue,
+} from '../core/insights';
 import { announce } from './a11y';
-import { app, panToNodeIfNeeded, pushHistory, setSelection } from './state';
+import { app, fullDocument, goToLevel, panToNodeIfNeeded, pushHistory, setSelection } from './state';
 import { renderAll } from './render';
 
 const DEBOUNCE_MS = 300;
@@ -17,7 +24,7 @@ const listeners = new Set<() => void>();
 
 /** Every issue for the current document, ignoring mutes. Recomputed lazily after a change. */
 function allIssues(): InsightIssue[] {
-  cached ??= runInsights(app.doc);
+  cached ??= runInsightsAllLevels(fullDocument());
   return cached;
 }
 
@@ -30,7 +37,10 @@ export function currentInsights(): InsightIssue[] {
 /** Visible issues aimed at one component or wire, most severe first. */
 export function insightsFor(type: 'node' | 'edge', id: string): InsightIssue[] {
   if (app.lens !== 'review') return [];
-  return currentInsights().filter((issue) => issue.target.type === type && issue.target.id === id);
+  const here = app.levelPath.join('/');
+  return currentInsights().filter(
+    (issue) => issue.path.join('/') === here && issue.target.type === type && issue.target.id === id,
+  );
 }
 
 const LEVEL_RANK = { error: 0, warning: 1, info: 2 } as const;
@@ -48,7 +58,7 @@ export function onInsightsChange(listener: () => void): void {
 }
 
 function keyOf(issues: readonly InsightIssue[]): string {
-  return issues.map((i) => `${i.code}:${i.target.id}`).join('|');
+  return issues.map((i) => `${i.path.join('/')}:${i.code}:${i.target.id}`).join('|');
 }
 
 /** Call from every render: the cached result is dropped now, and the count and list catch up after 300 ms. */
@@ -87,6 +97,7 @@ function toggleMute(code: string): void {
 }
 
 function select(issue: InsightIssue): void {
+  if (issue.path.join('/') !== app.levelPath.join('/') && !goToLevel(issue.path)) return;
   if (issue.target.type === 'node') {
     const node = app.doc.nodes.find((n) => n.id === issue.target.id);
     if (!node) return;
@@ -154,7 +165,7 @@ export function initInsightsPanel(): void {
           button.dataset.level = issue.level;
           button.dataset.target = issue.target.id;
           button.dataset.type = issue.target.type;
-          button.textContent = issue.message;
+          button.textContent = issue.trail.length ? `${issue.trail.join(' ▸ ')}: ${issue.message}` : issue.message;
           button.addEventListener('click', () => select(issue));
           item.appendChild(button);
           list.appendChild(item);

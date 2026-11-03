@@ -7,13 +7,17 @@
  */
 import type { DiagramDocument, DiagramNode } from '../types';
 import { isMac } from './commands';
+import type { LevelNodeEntry } from '../core/levels';
 
 export interface NodeSearchOptions {
   searchInput: HTMLInputElement;
   searchCount: HTMLElement;
   clearButton: HTMLButtonElement;
   getDoc: () => DiagramDocument;
-  onFocusNode: (node: DiagramNode, shouldZoomFrame?: boolean) => void;
+  /** `path` is the level the node lives in when it is not the open one (F-03). */
+  onFocusNode: (node: DiagramNode, shouldZoomFrame?: boolean, path?: string[]) => void;
+  /** Components in every other level, so a search also finds what is nested (F-03). */
+  getOtherLevels?: () => LevelNodeEntry[];
   onClearSearch?: () => void;
 }
 
@@ -113,10 +117,25 @@ export function clearSearchHighlightsFromStage(): void {
  * Initializes the HUD search controller and binds event listeners.
  */
 export function initNodeSearch(options: NodeSearchOptions): NodeSearchController {
-  const { searchInput, searchCount, clearButton, getDoc, onFocusNode, onClearSearch } = options;
+  const { searchInput, searchCount, clearButton, getDoc, onFocusNode, onClearSearch, getOtherLevels } = options;
 
   let currentMatches: DiagramNode[] = [];
   let currentIndex = -1;
+  /** Matches that live in another level, by node, with where to find them. */
+  let otherLevel = new Map<DiagramNode, LevelNodeEntry>();
+
+  const focus = (index: number, frame: boolean) => {
+    const node = currentMatches[index];
+    const where = otherLevel.get(node);
+    onFocusNode(node, frame, where?.path);
+    if (where) {
+      // The open level changed, so what counts as "another level" did too. Rebuild, keeping this match current.
+      computeMatches(searchInput.value);
+      const again = currentMatches.findIndex((n) => n.id === node.id);
+      currentIndex = again >= 0 ? again : 0;
+      updateUiState();
+    }
+  };
 
   function updateUiState() {
     const total = currentMatches.length;
@@ -142,8 +161,9 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
       if (currentIndex < 0 || currentIndex >= total) {
         currentIndex = 0;
       }
-      searchCount.textContent = `${currentIndex + 1} of ${total}`;
-      const matchedIds = new Set(currentMatches.map((n) => n.id));
+      const where = otherLevel.get(currentMatches[currentIndex]);
+      searchCount.textContent = `${currentIndex + 1} of ${total}${where ? ` · in ${where.trail.join(' ▸ ')}` : ''}`;
+      const matchedIds = new Set(currentMatches.filter((n) => !otherLevel.has(n)).map((n) => n.id));
       const activeNode = currentMatches[currentIndex];
       applySearchHighlightsToStage(matchedIds, activeNode?.id);
     }
@@ -153,13 +173,25 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
     if (searchInput.value !== query) {
       searchInput.value = query;
     }
-    const doc = getDoc();
-    currentMatches = filterNodesByQuery(doc.nodes, query);
+    computeMatches(query);
     currentIndex = currentMatches.length > 0 ? 0 : -1;
     updateUiState();
 
-    if (currentMatches.length > 0 && currentIndex >= 0) {
-      onFocusNode(currentMatches[currentIndex], false);
+    // Typing never changes level; only stepping through matches does.
+    if (currentIndex >= 0 && !otherLevel.has(currentMatches[currentIndex])) focus(currentIndex, false);
+  }
+
+  function computeMatches(query: string) {
+    const doc = getDoc();
+    currentMatches = filterNodesByQuery(doc.nodes, query);
+    otherLevel = new Map();
+    if (getOtherLevels && query.trim()) {
+      const entries = getOtherLevels();
+      for (const node of filterNodesByQuery(entries.map((e) => e.node), query)) {
+        const entry = entries.find((e) => e.node === node);
+        if (entry) otherLevel.set(node, entry);
+      }
+      currentMatches = [...currentMatches, ...otherLevel.keys()];
     }
   }
 
@@ -167,19 +199,20 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
     if (currentMatches.length === 0) return;
     currentIndex = (currentIndex + 1) % currentMatches.length;
     updateUiState();
-    onFocusNode(currentMatches[currentIndex], true);
+    focus(currentIndex, true);
   }
 
   function prevMatch() {
     if (currentMatches.length === 0) return;
     currentIndex = (currentIndex - 1 + currentMatches.length) % currentMatches.length;
     updateUiState();
-    onFocusNode(currentMatches[currentIndex], true);
+    focus(currentIndex, true);
   }
 
   function clear() {
     searchInput.value = '';
     currentMatches = [];
+    otherLevel = new Map();
     currentIndex = -1;
     updateUiState();
     if (onClearSearch) onClearSearch();
@@ -199,7 +232,10 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
         prevMatch();
       } else {
         if (currentMatches.length === 1) {
-          onFocusNode(currentMatches[0], true);
+          focus(0, true);
+        } else if (otherLevel.has(currentMatches[currentIndex])) {
+          // A match in another level is not visited yet: Enter opens it rather than stepping past it.
+          focus(currentIndex, true);
         } else {
           nextMatch();
         }

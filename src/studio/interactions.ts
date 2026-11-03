@@ -126,6 +126,7 @@ import {
   getSelectedNodeIds,
   fullDocument,
   getViewportWorldCenter,
+  goToLevel,
   goUpLevel,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
@@ -200,6 +201,7 @@ import { renameNodeInline } from './inlineRename';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
 import { matchBinding } from '../core/keymap';
+import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
 import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
@@ -2027,7 +2029,7 @@ export function initEvents(): void {
       }
       const kb = (result.url.length / 1024).toFixed(1);
       if (result.isLarge) {
-        shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL)`;
+        shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL). For a diagram this big, export the file instead.`;
         shareLinkSize.classList.add('is-warning');
       } else {
         shareLinkSize.textContent = `${kb} KB (Safe)`;
@@ -2119,8 +2121,9 @@ export function initEvents(): void {
   btnExportHtml.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
-    const { generateStandaloneHtml } = await import('../exporter/standaloneHtml');
-    const html = generateStandaloneHtml(app.doc, {
+    const { generateStandaloneHtmlWithLevels } = await import('../exporter/standaloneHtml');
+    // The whole tree, so the page keeps the drill-down. At the root this is `app.doc` itself.
+    const html = generateStandaloneHtmlWithLevels(fullDocument(), {
       initialSelection: app.selection.type === 'multi' ? app.selection : undefined,
     });
     const filename = `${getSafeFilenameSlug()}.html`;
@@ -2338,7 +2341,12 @@ export function initEvents(): void {
       searchCount: hudSearchCount,
       clearButton: btnClearSearch,
       getDoc: () => app.doc,
-      onFocusNode: (node, frame = false) => {
+      getOtherLevels: () => {
+        const here = app.levelPath.join('/');
+        return allLevelNodes(fullDocument()).filter((e) => e.path.join('/') !== here);
+      },
+      onFocusNode: (node, frame = false, path) => {
+        if (path) goToLevel(path);
         setSelection({ type: 'node', id: node.id });
         renderAll(false);
         if (frame) {
