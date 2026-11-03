@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900 },
@@ -51,7 +52,7 @@ for (const vp of VIEWPORTS) {
   test(`bottom canvas overlays do not collide (${vp.name} ${vp.width}x${vp.height})`, async ({ page }) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto('/');
-    await page.locator('#btn-empty-showcase').click();
+    await openLumenRelay(page);
     await expect(page.locator('.arch-node').first()).toBeVisible();
 
     // Bring up everything that can share the bottom edge: a toast (z-order on a selected node) and node search.

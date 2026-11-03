@@ -17,6 +17,15 @@
   <link rel="stylesheet" href="/src/styles/studio.css">
 </head>
 <body>
+  <!-- First run (new visitors only): first in the tab order so its three actions are within reach at once. -->
+  <section class="first-run" id="first-run" aria-labelledby="first-run-line" hidden>
+    <p class="first-run-line" id="first-run-line">Watch a request travel through a real system.</p>
+    <div class="first-run-actions">
+      <button type="button" class="btn btn-primary-export btn-sm" id="first-run-blank">Start blank</button>
+      <button type="button" class="btn btn-sm" id="first-run-template">Pick a template</button>
+      <button type="button" class="btn btn-sm" id="first-run-mermaid">Paste Mermaid</button>
+    </div>
+  </section>
   <header class="topbar">
     <div class="brand-cluster" id="doc-brand-cluster">
       <div class="brand-mark" id="doc-brand-mark" aria-hidden="true">
@@ -437,27 +446,9 @@
         </div>
       </div>
 
-      <!-- Blank-Canvas Onboarding Prompt (disappears as soon as any element is placed) -->
-      <div class="empty-stage-overlay" id="empty-stage-overlay">
-        <div class="empty-stage-card">
-          <div class="empty-stage-badge">BLANK CANVAS</div>
-          <h2>Build Your Architecture From Scratch</h2>
-          <p>
-            Drag components from the left palette onto the grid, wire ports into animated conduits, import a file, or pick a production starter template.
-          </p>
-          <div class="empty-stage-actions">
-            <button type="button" class="btn btn-primary-export" id="btn-empty-templates">
-              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-              Browse Templates (7)
-            </button>
-            <button type="button" class="btn" id="btn-quick-starter">+ Add Starter Pair</button>
-            <button type="button" class="btn" id="btn-empty-showcase">Load showcase</button>
-            <button type="button" class="btn" id="btn-empty-import">Import .mmd / .md / .json</button>
-            <button type="button" class="btn" id="btn-empty-code">Paste Mermaid</button>
-            <button type="button" class="btn" id="btn-restore-session" hidden>↺ Restore Previous Session</button>
-          </div>
-          <div id="empty-stage-shelf-slot"></div>
-        </div>
+      <!-- Empty canvas: one line, no doors. First run (new visitors) has its own card. -->
+      <div class="empty-stage-overlay" id="empty-stage-overlay" hidden>
+        <p class="empty-stage-hint">Empty canvas. Drag a component in, or press <kbd>Ctrl K</kbd> to search commands and templates.</p>
       </div>
 
       <div
@@ -523,7 +514,7 @@
         </button>
         <input type="range" class="run-bar-scrubber" id="run-bar-scrubber" min="0" max="0" value="0" step="1" aria-label="Scenario step">
         <span class="run-bar-step" id="run-bar-step" aria-live="off">no run</span>
-        <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed" data-tip="Playback speed" data-tip-pos="top">1×</button>
+        <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed 1×" data-tip="Playback speed" data-tip-pos="top">1×</button>
         <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
           <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
         </button>

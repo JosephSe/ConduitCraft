@@ -155,12 +155,18 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Tests:** keep every import test in `tests/mermaidCoverage.test.ts` and move it to an import-only file if that reads better. Delete tests that only check Mermaid output, except those that pin the Blueprint file's block. Add a Playwright test, `never loses an opened .mmd file`, that opens a `.mmd`, edits, presses `⌘S` and checks the original file isn't written.
 - **Done when:** `grep -rn "btn-export-mmd\|code-format" src index.html` finds nothing; every bundled example and every Mermaid fixture still imports exactly as before (snapshot); the action-registry reachability test passes.
 
-#### [ ] A6. R-08 First run · M
+#### [x] A6. R-08 First run · M (#36)
 - **Needs:** A2.
 - **Spec:** V1 section 5.4.
 - **Do:** when there is no autosave, no share link and no `?ui=1`, open `lumen-relay` in the Traffic lens with its first scenario playing, and after one loop fail one component on a single-path branch so the ripple shows. One sentence, "Watch a request travel through a real system.", and a small card: **Start blank** · **Pick a template** · **Paste Mermaid**. Remove the five `#btn-empty-*` doors from `index.html`. The empty state after "Start blank" is a one-line hint, not doors. A visitor who has been here before (any autosave or library entry) never sees first run. Under reduced motion, play nothing: show the failed state at once with the summary.
 - **Never loses work:** first run must not overwrite an existing autosave. Add a Playwright test that seeds an autosave and checks first run doesn't appear.
 - **Done when:** in Playwright, a fresh profile sees a moving packet in under 3 s and a failure summary in under 10 s; axe passes; the card is keyboard-reachable in 3 Tab presses or fewer.
+
+#### [ ] A6b. First run counts library entries
+- **Needs:** A6, B2.
+- **Why:** A6 treats an autosave, a recovery copy or a "seen" flag (`conduitcraft-first-run-seen`, set once a visitor picks a card or edits) as "been here before". The library (B2) doesn't exist yet, so it can't be checked.
+- **Do:** in `startFirstRunIfNew` (`src/studio/firstRun.ts`), add "the library holds any entry" to `FirstRunFacts.hasSavedWork`, and read the autosave and recovery copies from the new storage layer instead of `localStorage` (B2 moves them). The check is async (IndexedDB), so wait for it before showing the card.
+- **Done when:** a Playwright test seeds a library entry with no autosave and sees no first run.
 
 #### [ ] A7. F-28 `describeDiagram` and export alt text · M
 - **Spec:** V1 F-28, items 1 to 3 plus "Copy as text".

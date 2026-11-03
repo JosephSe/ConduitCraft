@@ -160,13 +160,9 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
     );
   });
 
-  it('verifies #btn-restore-session is gated with hidden attribute and disabled copy link initial state', () => {
+  it('verifies the copy link button starts disabled and the empty-state doors are gone', () => {
     const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
-    assert.match(
-      indexHtml,
-      /<button[^>]*id="btn-restore-session"[^>]*hidden/,
-      '#btn-restore-session must start with hidden attribute in index.html',
-    );
+    assert.doesNotMatch(indexHtml, /id="btn-empty-/, 'first run replaced the empty-state doors (R-08)');
     assert.match(
       indexHtml,
       /<button[^>]*id="btn-copy-share-link"[^>]*disabled/,

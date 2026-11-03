@@ -1,11 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openExportDialog } from './helpers';
-import { runPaletteCommand } from './helpers';
+import { openExportDialog, openLumenRelay, runPaletteCommand } from './helpers';
 
 test('a component opens as a level, edits stay inside it, and undo returns to it', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/?ui=2');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   const nodes = page.locator('.arch-node');
   await expect(nodes.first()).toBeVisible();
   const rootCount = await nodes.count();
@@ -83,7 +82,7 @@ flowchart LR
 async function loadNested(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/?ui=2');
-  await page.locator('#btn-empty-code').click();
+  await runPaletteCommand(page, 'Mermaid Import');
   await page.locator('#code-sync-textarea').fill(NESTED);
   await page.locator('#btn-apply-code').click();
   await expect(page.locator('.arch-node')).toHaveCount(2);
@@ -203,7 +202,7 @@ const SUBGRAPH = 'flowchart LR\n  subgraph checkout ["Checkout API"]\n    Gatewa
 async function importSubgraph(page: Page, mode: 'Swimlanes' | 'Levels'): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/?ui=2');
-  await page.locator('#btn-empty-code').click();
+  await runPaletteCommand(page, 'Mermaid Import');
   await page.locator('#code-sync-textarea').fill(SUBGRAPH);
   await page.locator('.subgraph-mode .segmented-label', { hasText: mode }).click();
   await page.locator('#btn-apply-code').click();
@@ -212,7 +211,7 @@ async function importSubgraph(page: Page, mode: 'Swimlanes' | 'Levels'): Promise
 test('subgraphs import as swimlanes by default', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/?ui=2');
-  await page.locator('#btn-empty-code').click();
+  await runPaletteCommand(page, 'Mermaid Import');
   await expect(page.locator('input[name="subgraph-mode"][value="swimlanes"]')).toBeChecked();
   await importSubgraph(page, 'Swimlanes');
   await expect(page.locator('.arch-node')).toHaveCount(3);

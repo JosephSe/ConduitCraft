@@ -1,10 +1,11 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 async function open(page: Page, query = '?ui=2') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
@@ -33,7 +34,7 @@ test('pinning keeps the inspector open with nothing selected, and the pin is rem
   await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true');
 
   await page.reload();
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('#btn-pin-inspector')).toHaveAttribute('aria-pressed', 'true');
 });
 

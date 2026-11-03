@@ -1,10 +1,11 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 async function open(page: Page, query = '?ui=2') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
   // The showcase opens with a component selected; its toolbar can cover the first node, so start clean.
   await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });

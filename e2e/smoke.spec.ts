@@ -1,4 +1,4 @@
-import { openExportDialog } from './helpers';
+import { openExportDialog, openLumenRelay } from './helpers';
 import { expect, test as base, type Page } from '@playwright/test';
 
 /** Every test fails on uncaught page errors or console errors, so silent breakage is caught too. */
@@ -63,7 +63,7 @@ async function nextExport(page: Page) {
 
 async function loadShowcase(page: Page): Promise<void> {
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 

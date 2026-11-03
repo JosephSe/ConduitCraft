@@ -9,7 +9,6 @@ import {
   renderTemplatePreviewSvg,
   renderTemplateCardHtml,
   renderBlankCanvasCardHtml,
-  renderEmptyStageShelfHtml,
 } from '../src/studio/templatesGallery.ts';
 import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 
@@ -104,10 +103,5 @@ describe('starter architecture templates gallery', () => {
     assert.ok(blankHtml.includes('template-card-blank'));
     assert.ok(blankHtml.includes('data-template-id="blank"'));
     assert.ok(blankHtml.includes('Blank Canvas'));
-
-    const shelfHtml = renderEmptyStageShelfHtml();
-    assert.ok(shelfHtml.includes('empty-stage-shelf-container'));
-    assert.ok(shelfHtml.includes('empty-shelf-pill'));
-    assert.ok(shelfHtml.includes('btn-empty-more-templates'));
   });
 });

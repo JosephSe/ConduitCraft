@@ -346,8 +346,16 @@ function applyWhole(whole: DiagramDocument, path: string[]): void {
   }
 }
 
+const historyCommitListeners = new Set<() => void>();
+
+/** Called after every undo step is recorded: an edit, a load, a template. */
+export function onHistoryCommit(listener: () => void): void {
+  historyCommitListeners.add(listener);
+}
+
 function commitHistorySnapshot(snapshot: DiagramDocument = takeSnapshot()): void {
   app.undoStack.push(snapshot);
+  for (const listener of historyCommitListeners) listener();
   if (app.undoStack.length > MAX_HISTORY) app.undoStack.shift();
   app.redoStack.length = 0;
   syncHistoryButtons();

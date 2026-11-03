@@ -16,6 +16,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     acceptDownloads: true,
   },
+  // Both projects start as a returning visitor, so first run (R-08) doesn't change the other specs. e2e/firstRun.spec.ts
+  // opts back in with an empty profile.
   projects: [
     // The classic interface, kept under test now that the redesign is the default.
     {
@@ -24,7 +26,15 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: {
           cookies: [],
-          origins: [{ origin: `http://localhost:${PORT}`, localStorage: [{ name: 'conduitcraft-ui', value: '1' }] }],
+          origins: [
+            {
+              origin: `http://localhost:${PORT}`,
+              localStorage: [
+                { name: 'conduitcraft-ui', value: '1' },
+                { name: 'conduitcraft-first-run-seen', value: '1' },
+              ],
+            },
+          ],
         },
       },
     },
@@ -36,7 +46,15 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         storageState: {
           cookies: [],
-          origins: [{ origin: `http://localhost:${PORT}`, localStorage: [{ name: 'conduitcraft-ui', value: '2' }] }],
+          origins: [
+            {
+              origin: `http://localhost:${PORT}`,
+              localStorage: [
+                { name: 'conduitcraft-ui', value: '2' },
+                { name: 'conduitcraft-first-run-seen', value: '1' },
+              ],
+            },
+          ],
         },
       },
     },

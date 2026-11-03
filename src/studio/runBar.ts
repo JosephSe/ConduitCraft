@@ -59,6 +59,8 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
         : '<polygon points="6 4 20 12 6 20 6 4"/>';
     }
     speedBtn.textContent = `${state.speed}×`;
+    // The name must contain the visible text (WCAG 2.5.3).
+    speedBtn.setAttribute('aria-label', `Playback speed ${state.speed}×`);
     loopBtn.setAttribute('aria-pressed', String(state.isLooping));
   };
 

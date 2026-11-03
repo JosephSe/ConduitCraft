@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openLumenRelay } from './helpers';
 
 async function layerBox(page: Page) {
   const box = await page.locator('#tooltip-layer').boundingBox();
@@ -17,7 +18,7 @@ function expectInsideViewport(box: { x: number; y: number; width: number; height
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  await page.locator('#btn-empty-showcase').click();
+  await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 });
 

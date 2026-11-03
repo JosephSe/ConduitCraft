@@ -273,32 +273,3 @@ export function renderBlankCanvasCardHtml(): string {
     </article>
   `;
 }
-
-/**
- * Renders the shelf of quick template cards inside the empty-stage overlay.
- */
-export function renderEmptyStageShelfHtml(): string {
-  const quickTemplates = STARTER_TEMPLATES.slice(0, 4);
-  const cards = quickTemplates
-    .map((t) => {
-      return `
-      <button type="button" class="empty-shelf-pill" data-template-id="${t.id}" title="${t.description}">
-        <span class="empty-shelf-title">${t.title}</span>
-        <span class="empty-shelf-tag">${t.tag}</span>
-      </button>
-    `;
-    })
-    .join('');
-
-  return `
-    <div class="empty-stage-shelf-container">
-      <div class="empty-shelf-label">Or jump-start with a production template:</div>
-      <div class="empty-shelf-pills">
-        ${cards}
-        <button type="button" class="empty-shelf-pill empty-shelf-pill-more" id="btn-empty-more-templates">
-          + All Templates (7)...
-        </button>
-      </div>
-    </div>
-  `;
-}
