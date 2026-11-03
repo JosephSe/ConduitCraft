@@ -84,3 +84,24 @@ test('right-click on a component in Traffic offers Fail this component', async (
   await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(1);
   await expect(page.locator('#chaos-summary')).toBeVisible();
 });
+
+test('wires into and out of a failed component stop flowing', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/?ui=2');
+  await page.locator('#btn-empty-showcase').click();
+  await page.keyboard.press('2');
+  const node = page.locator('.arch-node').nth(2);
+  const id = await node.getAttribute('data-node');
+  const touching = page.locator(`.conduit-group[data-from="${id}"], .conduit-group[data-to="${id}"]`);
+  expect(await touching.count()).toBeGreaterThan(0);
+  const running = (loc: ReturnType<typeof page.locator>) =>
+    loc.first().locator('.conduit-stream').evaluate((el) => getComputedStyle(el).animationName !== 'none');
+  await node.click();
+  await page.keyboard.press('x');
+  for (let i = 0; i < (await touching.count()); i++) {
+    const stream = touching.nth(i).locator('.conduit-stream');
+    expect(await stream.evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
+  }
+  await page.keyboard.press('x');
+  expect(await running(touching)).toBe(true);
+});

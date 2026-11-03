@@ -5891,3 +5891,11 @@ html[data-ui="2"] #sim-playback-deck {
 .chaos-item { all: unset; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: 0.4rem; font-size: 0.78rem; color: var(--wl-ink); }
 .chaos-item:hover, .chaos-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--wl-blue); outline-offset: -2px; }
 .chaos-item[data-status="failed"] { color: var(--wl-rose); font-weight: 600; }
+
+/* A failed component carries nothing: the flowing dashes on every wire into or out of it stop. */
+.conduit-group.is-chaos-cut .conduit-stream,
+.conduit-group.is-chaos-cut .conduit-stream-reverse {
+  animation: none;
+  stroke-dasharray: none;
+  opacity: 0;
+}
