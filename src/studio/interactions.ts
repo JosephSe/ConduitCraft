@@ -205,6 +205,7 @@ import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
+import { initInsightsPanel } from './insights';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
@@ -1442,11 +1443,13 @@ export function initEvents(): void {
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="workspace-mode"]')) {
     radio.addEventListener('change', () => {
       if (!radio.checked) return;
-      const targetMode = radio.value === 'data' ? 'data' : 'design';
+      const targetMode = radio.value === 'data' || radio.value === 'review' ? 'data' : 'design';
 
       const applyMode = () => {
-        app.workspaceMode = targetMode;
+        // Review is a second flavour of the read-only mode: the same panes as Traffic with its own panels.
+        app.lens = radio.value === 'review' ? 'review' : targetMode === 'data' ? 'traffic' : 'design';
         workspace.dataset.mode = app.workspaceMode;
+        workspace.dataset.lens = app.lens;
         designToolbar.hidden = app.workspaceMode !== 'design';
         dataToolbar.hidden = app.workspaceMode !== 'data';
         designInspectorPane.hidden = app.workspaceMode !== 'design';
@@ -1455,7 +1458,9 @@ export function initEvents(): void {
         hudStatusTip.textContent =
           app.workspaceMode === 'design'
             ? 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire'
-            : 'Traffic · Select a component and press X (or right-click) to fail it · Alt-hover previews the blast radius';
+            : app.lens === 'review'
+              ? 'Review · Insights flag single points of failure, cycles, orphans and latency overruns · Click an issue to jump to it'
+              : 'Traffic · Select a component and press X (or right-click) to fail it · Alt-hover previews the blast radius';
 
         if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
           const live = new Set(app.doc.nodes.map((node) => node.id));
@@ -1470,7 +1475,7 @@ export function initEvents(): void {
         updateVisualSelectionHighlights();
         requestInspectorRefresh();
         // No refit here: switching modes keeps the user's zoom and position (see trackViewportResize).
-        announceModeChange(targetMode);
+        announceModeChange(app.lens === 'review' ? 'review' : targetMode);
       };
 
       if (
@@ -2350,6 +2355,7 @@ export function initEvents(): void {
   initSimulationPlaybackUi();
   initRunBar({ run: runSimulation });
   initChaosPanel();
+  initInsightsPanel();
   initChaosPreview(chaosNodesLayer);
 
   // Smooth Dialog Close & Reset `returnValue` (`dialog` guide)

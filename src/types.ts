@@ -248,6 +248,8 @@ export interface SimulationScenario {
   steps: SimulationStep[];
   /** Component ids to treat as failed when this scenario runs, saved as a named chaos scenario (F-01). */
   failures?: string[];
+  /** Latency budget in milliseconds for the scenario's path; the Review lens flags a path that runs over (F-02). */
+  budgetMs?: number;
 }
 
 /** Header lockup for the studio preview and the exported page. Empty fields use the defaults. */
@@ -275,6 +277,8 @@ export interface DiagramDocument {
   simulations: SimulationScenario[];
   /** Custom names for the five colours. Absent means the built-in names. */
   legend?: LegendEntry[];
+  /** Per-diagram settings for the Review lens (F-02). */
+  insights?: { muted: string[] };
 }
 
 export type SelectionTarget =

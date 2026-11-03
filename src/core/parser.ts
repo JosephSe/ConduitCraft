@@ -22,6 +22,7 @@ import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
 import { normalizeLegend, normalizeNodeMeta, normalizeTags } from './meta';
 import { pruneDanglingChaos } from './reachability';
+import { normalizeBudgetMs, normalizeInsights } from './insights';
 import { normalizeWireFields } from './wire';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
@@ -96,6 +97,7 @@ interface RawBlueprintMeta {
   overviewSummary?: string;
   brand?: { name?: string; accent?: string; logo?: string };
   legend?: unknown;
+  insights?: unknown;
   zones?: Array<{
     id?: string;
     number?: string | number;
@@ -129,6 +131,7 @@ interface RawBlueprintMeta {
     name?: string;
     tone?: string;
     failures?: unknown;
+    budgetMs?: unknown;
     steps?: Array<{
       id?: string;
       nodes?: string[];
@@ -938,6 +941,8 @@ export function importMermaidOrBlueprint(rawInput: string): {
 
   const legend = normalizeLegend(meta.legend);
   if (legend.length) doc.legend = legend;
+  const insights = normalizeInsights(meta.insights);
+  if (insights) doc.insights = insights;
 
   // Merge node IDs from Mermaid + YAML metadata
   const allNodeIds = new Set<string>([...parsedMermaid.nodes.keys()]);
@@ -1319,6 +1324,7 @@ export function importMermaidOrBlueprint(rawInput: string): {
           ...(Array.isArray(sim.failures) && sim.failures.length
             ? { failures: sim.failures.filter((f): f is string => typeof f === 'string') }
             : {}),
+          ...(normalizeBudgetMs(sim.budgetMs) !== undefined ? { budgetMs: normalizeBudgetMs(sim.budgetMs) } : {}),
         });
       }
     });
@@ -1558,6 +1564,8 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
     }));
   }
 
+  if (doc.insights?.muted.length) frontmatterObj.insights = { muted: [...doc.insights.muted] };
+
   if (doc.zones.length > 0) {
     frontmatterObj.zones = doc.zones.map((z) => ({
       id: z.id,
@@ -1614,6 +1622,7 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
       name: s.name,
       tone: s.tone,
       ...(s.failures?.length ? { failures: s.failures.map((nid) => idMap.get(nid) || nid) } : {}),
+      ...(s.budgetMs !== undefined ? { budgetMs: s.budgetMs } : {}),
       steps: s.steps.map((st) => ({
         id: st.id,
         nodes: st.nodes.map((nid) => idMap.get(nid) || nid),

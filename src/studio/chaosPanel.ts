@@ -3,7 +3,7 @@
  * pans to the component, and a button to restore everything. Shown in the Traffic lens while anything has failed.
  */
 import { app, panToNodeIfNeeded, setSelection } from './state';
-import { repaintForLens, chaosResult, chaosSummary, clearFailures, onChaosChange, summaryText } from './chaos';
+import { chaosLensActive, repaintForLens, chaosResult, chaosSummary, clearFailures, onChaosChange, summaryText } from './chaos';
 
 const LABELS = { failed: 'Failed', degraded: 'Degraded', unreachable: 'Unreachable', rerouted: 'Rerouted', 'at-risk': 'Potential disruption' } as const;
 
@@ -17,7 +17,7 @@ export function initChaosPanel(): void {
 
   const repaint = () => {
     const counts = chaosSummary();
-    const visible = Boolean(counts) && app.lens === 'traffic' && document.documentElement.dataset.ui === '2';
+    const visible = Boolean(counts) && chaosLensActive() && document.documentElement.dataset.ui === '2';
     panel.hidden = !visible;
     if (!counts || !visible) {
       list.hidden = true;
@@ -62,5 +62,5 @@ export function initChaosPanel(): void {
   new MutationObserver(() => {
     repaintForLens();
     repaint();
-  }).observe(workspace, { attributes: true, attributeFilter: ['data-mode'] });
+  }).observe(workspace, { attributes: true, attributeFilter: ['data-mode', 'data-lens'] });
 }

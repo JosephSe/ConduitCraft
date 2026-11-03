@@ -25,7 +25,7 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
   let optionsKey = '';
 
   const syncVisibility = () => {
-    bar.hidden = !(isV2() && app.workspaceMode === 'data');
+    bar.hidden = !(isV2() && app.lens === 'traffic');
   };
 
   const syncScenarios = () => {
@@ -78,7 +78,7 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
     syncScenarios();
     syncTransport(state);
   });
-  new MutationObserver(syncVisibility).observe(workspace, { attributes: true, attributeFilter: ['data-mode'] });
+  new MutationObserver(syncVisibility).observe(workspace, { attributes: true, attributeFilter: ['data-mode', 'data-lens'] });
 
   const refresh = () => {
     syncVisibility();

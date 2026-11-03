@@ -14,6 +14,7 @@ import type {
 import { normalizeNotesItemIcon } from '../types';
 import { normalizeWireFields } from '../core/wire';
 import { pruneDanglingChaos } from '../core/reachability';
+import { normalizeBudgetMs, normalizeInsights } from '../core/insights';
 import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta';
 import { normalizeBrand } from '../core/brand';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
@@ -216,7 +217,12 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
   };
   const legend = normalizeLegend(source.legend);
   if (legend.length) doc.legend = legend;
+  const insights = normalizeInsights(source.insights);
+  if (insights) doc.insights = insights;
   for (const sim of doc.simulations) {
+    const budget = normalizeBudgetMs(sim.budgetMs);
+    if (budget === undefined) delete sim.budgetMs;
+    else sim.budgetMs = budget;
     if (!Array.isArray(sim.failures)) delete sim.failures;
     else sim.failures = sim.failures.filter((id): id is string => typeof id === 'string');
   }

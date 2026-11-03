@@ -15,7 +15,7 @@ import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
 import { saveSnapshot } from './snapshots';
 import { selectionOfStage } from './selection';
-import { clearFailures, failedIds, toggleFailure } from './chaos';
+import { chaosLensActive, clearFailures, failedIds, toggleFailure } from './chaos';
 import { getEffectiveSimulations } from '../core/layout';
 import { refreshRunBar } from './runBar';
 
@@ -386,6 +386,21 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'mode-review',
+      title: 'Switch to Review lens',
+      shortcut: '3',
+      subtitle: 'Insights: single points of failure, cycles, orphans and latency overruns',
+      category: 'Mode & View',
+      keywords: ['review', 'insights', 'lint', 'issues', 'spof', 'cycle', 'orphan', 'latency', 'budget'],
+      run: () => {
+        const radio = document.querySelector<HTMLInputElement>('input[name="workspace-mode"][value="review"]');
+        if (radio) {
+          radio.checked = true;
+          radio.dispatchEvent(new Event('change'));
+        }
+      },
+    },
+    {
       id: 'mode-presentation',
       title: 'Toggle Presentation Mode',
       subtitle: 'Clean fullscreen canvas with guided node tour',
@@ -506,13 +521,13 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
         const sel = app.selection;
         return sel.type === 'node' && failedIds().includes(sel.id) ? 'Restore this component' : 'Fail this component';
       },
-      subtitle: 'Traffic lens: see what becomes unreachable (press again to restore)',
+      subtitle: 'Traffic and Review lenses: see what becomes unreachable (press again to restore)',
       category: 'Mode & View',
       shortcut: 'X',
       keywords: ['chaos', 'fail', 'failure', 'outage', 'blast radius', 'break', 'kill'],
       run: () => {
         const sel = app.selection;
-        if (app.lens !== 'traffic') notify('Switch to the Traffic lens (2) to fail a component');
+        if (!chaosLensActive()) notify('Switch to the Traffic (2) or Review (3) lens to fail a component');
         else if (sel.type !== 'node') notify('Select a component to fail');
         else toggleFailure(sel.id);
       },
