@@ -135,6 +135,10 @@ The **colour legend** is in the inspector when nothing is selected. Give each wi
 
 Under **Review & Status**, **Owner** names the team or person responsible for a component. **Links** point to where to read more: a repository, runbook, dashboard, docs page or on-call rota. Only `http`, `https` and `mailto` links are kept, and they open in a new tab.
 
+## Where a component came from
+
+A component made by an importer (Docker Compose, OpenAPI and the others) remembers where it came from: the kind of file and the name inside it, for example `docker-compose` and `payments-api`. It is saved in the file as `source` and is what a later import matches on. You can ignore it; nothing on the canvas changes.
+
 ## Wire fields
 
 Select a wire to edit it. A wire has a **label**, a **protocol**, a **call style** (synchronous or async), a typical **latency** in milliseconds, its **source** and **target** components, the **ports** it leaves and enters by, and its **routing** (see [Wire routing](#wire-routing)). Latency adds up along a scenario for the budget check, and a loop of synchronous wires is reported by Review.

@@ -60,6 +60,7 @@ interface RawNodeMeta {
   tags?: unknown;
   links?: unknown;
   resilience?: unknown;
+  source?: unknown;
 }
 
 interface RawEdgeOverride {
@@ -1731,6 +1732,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       ...(n.owner ? { owner: n.owner } : {}),
       ...(n.tags?.length ? { tags: n.tags } : {}),
       ...(n.links?.length ? { links: n.links } : {}),
+      ...(n.source ? { source: n.source } : {}),
       ...(n.resilience
         ? {
             resilience: {

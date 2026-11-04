@@ -163,6 +163,8 @@ export interface DiagramNode {
   links?: NodeLink[];
   /** How the component copes with failing (F-01). Absent means a single instance with no fallback. */
   resilience?: NodeResilience;
+  /** Where the component was imported from (F-06), so a later import or drift check can match it again. */
+  source?: NodeSource;
   /** The diagram inside this component, opened as a level (F-03). Absent means the component is a leaf. */
   child?: LevelContent;
 }
@@ -183,6 +185,14 @@ export interface NodeResilience {
   fallbackId?: string;
   /** Recorded for the reader. Callers upstream of a failure are unaffected either way, so it does not change reach. */
   circuitBreaker?: boolean;
+}
+
+/** What a component was imported from: the kind of file and a stable reference inside it. */
+export interface NodeSource {
+  /** `docker-compose`, `openapi`, `kubernetes`, `asyncapi`, `otlp` and so on. */
+  kind: string;
+  /** The service name, tag, resource name or similar: what to match on when importing the same thing again. */
+  ref: string;
 }
 
 export type NodeLinkKind = 'repo' | 'runbook' | 'dashboard' | 'docs' | 'oncall';

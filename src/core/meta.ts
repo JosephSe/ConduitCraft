@@ -2,7 +2,7 @@
  * Tags, ownership, links and the custom legend (F-26, F-27): what they mean and how they are read from a file.
  * Pure and DOM-free. Every link URL goes through `safeLinkUrl`, on input, on import and again on export.
  */
-import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeLinkKind, NodeResilience, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeLinkKind, NodeResilience, NodeSource, StreamTone } from '../types';
 import { normalizeResilience } from './reachability';
 
 export const LINK_KINDS: readonly NodeLinkKind[] = ['repo', 'runbook', 'dashboard', 'docs', 'oncall'];
@@ -109,14 +109,31 @@ export function toneName(legend: readonly LegendEntry[] | undefined, tone: Strea
   return legend?.find((entry) => entry.tone === tone)?.label || fallback;
 }
 
+export const MAX_SOURCE_KIND = 32;
+export const MAX_SOURCE_REF = 200;
+
+/** Where a component was imported from. Anything that is not a short kind and a short reference is dropped. */
+export function normalizeSource(raw: unknown): NodeSource | undefined {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return undefined;
+  const { kind, ref } = raw as Record<string, unknown>;
+  if (typeof kind !== 'string' || typeof ref !== 'string') return undefined;
+  const cleanKind = kind.trim().toLowerCase();
+  const cleanRef = ref.trim();
+  if (!/^[a-z0-9][a-z0-9._-]*$/.test(cleanKind) || cleanKind.length > MAX_SOURCE_KIND) return undefined;
+  if (!cleanRef || cleanRef.length > MAX_SOURCE_REF) return undefined;
+  return { kind: cleanKind, ref: cleanRef };
+}
+
 /** Fields shared by components and wires that the editor and the file format both carry. */
 export function normalizeNodeMeta(raw: Record<string, unknown>): {
   owner?: string;
   links?: NodeLink[];
   tags?: string[];
   resilience?: NodeResilience;
+  source?: NodeSource;
 } {
   const owner = normalizeOwner(raw.owner);
+  const source = normalizeSource(raw.source);
   const links = normalizeLinks(raw.links);
   const tags = normalizeTags(raw.tags);
   const resilience = normalizeResilience(raw.resilience);
@@ -125,6 +142,7 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
     ...(links.length ? { links } : {}),
     ...(tags.length ? { tags } : {}),
     ...(resilience ? { resilience } : {}),
+    ...(source ? { source } : {}),
   };
 }
 

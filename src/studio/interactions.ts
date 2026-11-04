@@ -177,8 +177,8 @@ import {
   openLibraryDialog,
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
-import { importDrawioText, importExcalidrawText } from './fileImports';
-import { looksLikeDrawio, looksLikeExcalidraw } from '../importers/sniff';
+import { importComposeText, importDrawioText, importExcalidrawText, importOpenApiText } from './fileImports';
+import { looksLikeCompose, looksLikeDrawio, looksLikeExcalidraw, looksLikeOpenApi } from '../importers/sniff';
 import { restoreDiagram } from './library';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
@@ -1160,7 +1160,7 @@ export async function handleUploadedFile(file: File): Promise<void> {
   importFileText(file.name, text, titleFromFile);
 }
 
-/** A draw.io or Excalidraw file goes to its own importer (a lazy chunk); everything else is Blueprint JSON, Blueprint file or Mermaid. */
+/** A draw.io, Excalidraw, OpenAPI or Compose file goes to its own importer (a lazy chunk); everything else is Blueprint JSON, Blueprint file or Mermaid. */
 function importFileText(fileName: string, text: string, title: string | undefined): void {
   if (looksLikeDrawio(fileName, text)) {
     void importDrawioText(text, title ?? 'Imported draw.io');
@@ -1168,6 +1168,14 @@ function importFileText(fileName: string, text: string, title: string | undefine
   }
   if (looksLikeExcalidraw(fileName, text)) {
     void importExcalidrawText(text, title ?? 'Imported Excalidraw');
+    return;
+  }
+  if (looksLikeOpenApi(fileName, text)) {
+    void importOpenApiText(text, title ?? 'Imported API');
+    return;
+  }
+  if (looksLikeCompose(fileName, text)) {
+    void importComposeText(text, title ?? 'Imported Compose');
     return;
   }
   applyImportedText(text, title, undefined, true);
