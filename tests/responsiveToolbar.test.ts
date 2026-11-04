@@ -280,7 +280,7 @@ describe('responsive and compact toolbar', () => {
     assert.ok(css.includes('workspace[data-inspector-collapsed="true"]'), 'CSS defines inspector collapsed rail layout');
     assert.ok(css.includes('@media (max-width: 82rem)'), 'CSS defines 82rem breakpoint');
     assert.ok(css.includes('@media (max-width: 66rem)'), 'CSS defines 66rem breakpoint');
-    assert.ok(css.includes('@media (max-width: 52rem)'), 'CSS defines 52rem breakpoint');
+    assert.ok(css.includes('@media (max-width: 47.9rem)'), 'CSS defines the phone breakpoint just below a 768 px tablet');
   });
 
   it('verifies canvas takes at least 92% of workspace width across all 5 responsive breakpoints (390, 768, 1024, 1312, 1440 px) when no drawer is open (item 7)', () => {

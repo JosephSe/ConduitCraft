@@ -227,10 +227,11 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** a touch test places a component from the palette drawer and opens the inspector without the command palette, and a test measures canvas hit areas at 100% zoom.
 - **Shipped as:** two edge tabs (`#btn-drawer-palette`, `#btn-drawer-inspector`) on the canvas edges, shown only for a coarse pointer at 66rem or narrower and hidden while their drawer is open, so the top bar is unchanged. Also fixed: the palette drawer sat under its own scrim (the palette layer's `z-index: 14` beat the layout layer's 40), so it could not be tapped. The drag handle and level badge get a 44 px touch area (a `::after`) only while shown; ports were already 44 px. New tests in `e2e/touch.spec.ts`: place from the palette drawer, tab sizes, hit areas at 100% zoom; the inspector test now opens its drawer by tap. Entry CSS is 106.0 kB.
 
-#### [ ] A12c. Tablet portrait keeps the full top bar · S
+#### [x] A12c. Tablet portrait keeps the full top bar · S (#45)
 - **Needs:** A12.
 - **Do:** at 768 px (below the 52rem phone breakpoint) the top bar loses the lens switch. Moving the breakpoint to 47.9rem made the page hang at 768 px (the cause was not found), so it was reverted in A12. Find the loop, then lower the breakpoint so an iPad in portrait gets the same bar as in landscape.
 - **Done when:** `tablet-portrait` shows the lens switch and undo/redo, and the `layout.spec.ts` overlap test passes at 768 × 1024.
+- **Shipped as:** the phone breakpoint in `studio.css` is now `max-width: 47.9rem` (was 52rem), so 768 px keeps the lens switch, undo/redo and the full bar. The hang A12 saw did not appear: with the new breakpoint all 13 touch tests pass at 768 × 1024, and so does the layout overlap test, which now also runs at 768 × 1024. The cause of that hang was never found, so if it comes back, look first at what lays out at exactly 768 px. New test: "the top bar keeps the lens switch and undo/redo" (fails on the old breakpoint).
 
 #### [ ] A13. Offline end-to-end test · S
 - **Needs:** A11.
