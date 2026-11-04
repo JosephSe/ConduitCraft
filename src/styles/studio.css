@@ -5426,3 +5426,20 @@ kbd {
     inset: -12px;
   }
 }
+
+/* Find and replace (F-29) */
+.find-replace-dialog .dialog-shell { inline-size: min(40rem, 92vw); }
+.find-replace-body { display: grid; gap: 0.5rem; }
+.find-replace-options { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.85rem; }
+.find-replace-options label { display: inline-flex; align-items: center; gap: 0.35rem; }
+.find-replace-results { list-style: none; margin: 0; padding: 0; max-block-size: 40vh; overflow: auto; display: grid; gap: 0.25rem; }
+.find-replace-row { display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--wl-border-subtle); border-radius: 0.5rem; padding: 0.25rem 0.5rem; }
+.find-replace-go { flex: 1; min-inline-size: 0; display: grid; text-align: start; background: none; border: 0; color: inherit; cursor: pointer; font: inherit; padding: 0.25rem 0; }
+.find-replace-go > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.find-replace-where { font-size: 0.72rem; opacity: 0.75; }
+.find-replace-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+.bulk-row { display: grid; gap: 0.25rem; margin-block-start: 0.5rem; }
+.bulk-tag-row { display: flex; gap: 0.4rem; align-items: center; }
+.bulk-tag-row .prop-input { flex: 1; min-inline-size: 0; }
+.bulk-tag-buttons { display: inline-flex; gap: 0.25rem; }

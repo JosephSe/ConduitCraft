@@ -973,6 +973,16 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => setPointerTool('connect'),
     },
     {
+      id: 'open-find-replace',
+      title: 'Find and Replace',
+      subtitle: 'Search titles, wire labels, notes and comments, and change them all at once',
+      category: 'Canvas & Layout',
+      keywords: ['find', 'replace', 'search', 'rename', 'bulk', 'all', 'text'],
+      run: () => {
+        void import('./findReplaceDialog').then((m) => m.openFindReplace());
+      },
+    },
+    {
       id: 'tool-hand',
       title: 'Hand Tool',
       subtitle: 'Drag anywhere to pan the canvas',

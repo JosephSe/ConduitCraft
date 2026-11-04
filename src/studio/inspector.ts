@@ -1821,6 +1821,18 @@ export function renderPropertyEditor(): void {
     );
     form.appendChild(toneWrap);
     }
+
+    // Shared fields (kind, shape, status, tags, wire colour and timing) load on demand (F-29).
+    if (selectedNodes.length > 0 || activeEdges.length > 0) {
+      const bulkHost = document.createElement('div');
+      bulkHost.className = 'prop-divider bulk-fields';
+      form.appendChild(bulkHost);
+      const nodeIds = selectedNodes.map((n) => n.id);
+      const edgeIds = activeEdges.map((e) => e.id);
+      void import('./bulkFields').then((m) => {
+        if (bulkHost.isConnected) m.mountBulkFields(bulkHost, nodeIds, edgeIds);
+      });
+    }
   } else if (sel.type === 'zone') {
     const zone = app.doc.zones.find((z) => z.id === sel.id);
     if (!zone) {
