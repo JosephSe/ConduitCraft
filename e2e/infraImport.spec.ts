@@ -35,3 +35,24 @@ test('a YAML file that is neither is refused with a plain message', async ({ pag
   await expect(page.locator('#toast-container')).toContainText('no "services" section');
   await expect(page.locator('.arch-node')).toHaveCount(0);
 });
+
+test('dropping Kubernetes manifests draws workloads in a swimlane per namespace, and never shows secrets', async ({ page }) => {
+  await dropFile(page, 'shop.yaml', read('kubernetes/shop.yaml'));
+  await expect(page.locator('.arch-node')).toHaveCount(7);
+  await expect(page.locator('#toast-container')).toContainText('from Kubernetes');
+  await expect(page.locator('.arch-node', { hasText: 'web-ingress' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'See report' }).click();
+  const report = page.locator('#import-report-dialog');
+  await expect(report).toContainText('Secrets and ConfigMaps are never read');
+  const html = await page.content();
+  expect(html).not.toContain('topsecret-password');
+  expect(html).not.toContain('super-secret-token-value');
+});
+
+test('dropping an AsyncAPI file draws channels as buses', async ({ page }) => {
+  await dropFile(page, 'orders.yaml', read('asyncapi/orders-v2.yaml'));
+  await expect(page.locator('.arch-node')).toHaveCount(4);
+  await expect(page.locator('#toast-container')).toContainText('from AsyncAPI');
+  await expect(page.locator('.arch-node', { hasText: 'orders.created' })).toBeVisible();
+});

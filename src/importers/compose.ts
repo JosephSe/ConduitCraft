@@ -5,10 +5,10 @@
  * Loaded on demand.
  */
 import yaml from 'js-yaml';
-import type { DiagramDocument, DiagramNode, ImportIssue, NodeKind } from '../types';
+import type { DiagramDocument, DiagramNode, ImportIssue } from '../types';
 import { normalizeTags } from '../core/meta';
 import { createBlankDocument } from '../templates/presets';
-import { issue, layoutImported, makeEdge, makeNode } from './common';
+import { issue, kindForImage, layoutImported, makeEdge, makeNode } from './common';
 
 export interface ComposeResult {
   doc: DiagramDocument;
@@ -21,20 +21,6 @@ const MAX_SERVICES = 200;
 const MAX_DRAWN_NETWORK = 4;
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
-
-const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'memcached', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd'];
-const BUS_IMAGES = ['kafka', 'rabbitmq', 'nats', 'activemq', 'redpanda', 'pulsar', 'mosquitto', 'zookeeper'];
-const GATE_IMAGES = ['nginx', 'traefik', 'haproxy', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
-
-function kindForImage(image: string): NodeKind {
-  const name = image.toLowerCase().split('@')[0].split(':')[0];
-  const last = name.split('/').pop() ?? name;
-  const has = (list: string[]) => list.some((word) => last.includes(word));
-  if (has(STORE_IMAGES)) return 'store';
-  if (has(BUS_IMAGES)) return 'bus';
-  if (has(GATE_IMAGES)) return 'gate';
-  return 'service';
-}
 
 /** `depends_on` is a list of names or a map keyed by name; `links` is a list that may say `name:alias`. */
 function dependencyNames(value: unknown, stripAlias: boolean): string[] {
