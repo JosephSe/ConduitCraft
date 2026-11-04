@@ -9,6 +9,7 @@ import {
   btnClearTrace,
   btnCopyCode,
   templateGalleryDialog,
+  homeDialog,
   templateCategoryFilters,
   templateGalleryGrid,
   btnExportHtml,
@@ -172,6 +173,7 @@ import {
   openAsNewDiagram,
   openLibraryDialog,
 } from './libraryUi';
+import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
@@ -1647,6 +1649,16 @@ export function initEvents(): void {
   });
 
   initLibrary({ clearSimulation, downloadBytes });
+  initHome({
+    useTemplate: (id) => {
+      if (id === 'blank') return createBlankCanvas();
+      const template = getStarterTemplateById(id);
+      if (template) void loadTemplateDoc(template);
+    },
+    openFile: () => void handleOpenFile(),
+    pasteMermaid: openCodeDialog,
+    importFile: () => triggerFilePicker(),
+  });
 
   // Other writes (snapshots, discarding a session) report here. Autosave has its own handler above.
   setStorageFailureHandler(({ quota, what }) => {
@@ -2144,6 +2156,7 @@ export function initEvents(): void {
     openFile: () => void handleOpenFile(),
     openSnapshotsDialog,
     openLibrary: () => void openLibraryDialog(),
+    openHome: () => void openHome(),
     newDiagram: () => void newDiagram(),
     duplicateDiagram: () => void duplicateActiveDiagram(),
     deleteDiagram: deleteActiveDiagram,
@@ -2211,6 +2224,7 @@ export function initEvents(): void {
   const allDialogs = [codeDialog, exportDialog, matrixDialog, settingsDialog];
   if (shortcutsDialog) allDialogs.push(shortcutsDialog);
   if (templateGalleryDialog) allDialogs.push(templateGalleryDialog);
+  if (homeDialog) allDialogs.push(homeDialog);
   if (snapshotsDialog) allDialogs.push(snapshotsDialog);
   const cmdPaletteDialog = document.getElementById('command-palette-dialog') as HTMLDialogElement | null;
   if (cmdPaletteDialog) allDialogs.push(cmdPaletteDialog);
@@ -2630,7 +2644,7 @@ export function initEvents(): void {
     if ((e.metaKey || e.ctrlKey) && !inEditable) {
       if (e.key.toLowerCase() === 'o') {
         e.preventDefault();
-        void handleOpenFile();
+        void openHome();
         return;
       }
       if (e.key.toLowerCase() === 'c' && app.workspaceMode === 'design') {
@@ -2728,6 +2742,7 @@ export function bootStudio(): void {
       renderAll(true);
     }
     if (firstRunDeps) startFirstRunIfNew(firstRunDeps);
+    openHomeAtBootIfReturning();
   });
 
   renderAll(true);

@@ -1,0 +1,133 @@
+/* The home screen. Loaded the first time it opens (src/studio/homeScreen.ts). Nothing here animates. */
+.home-dialog-shell {
+  inline-size: min(72rem, 94vw);
+  max-inline-size: 72rem;
+}
+.home-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-block-size: 76vh;
+  overflow-y: auto;
+}
+.home-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.home-search {
+  flex: 1 1 14rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.home-search-label {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.home-search input {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--wl-border-ui);
+  border-radius: 0.5rem;
+  background: var(--wl-surface);
+  color: var(--wl-ink);
+}
+.home-warning {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--wl-border-ui);
+  border-radius: 0.5rem;
+  background: var(--wl-surface-elevated);
+  color: var(--wl-ink);
+}
+.home-section h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.home-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+.home-card {
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  font: inherit;
+  text-align: start;
+  color: var(--wl-ink);
+  border: 1px solid var(--wl-border-subtle);
+  border-radius: 0.5rem;
+  background: var(--wl-surface);
+  cursor: pointer;
+}
+.home-card:hover,
+.home-card:focus-visible {
+  border-color: var(--wl-blue);
+}
+.home-card[aria-current='true'] {
+  border-color: var(--wl-border-ui);
+  background: var(--wl-surface-elevated);
+}
+.home-thumb {
+  inline-size: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: contain;
+  border-radius: 0.25rem;
+  background: var(--wl-canvas);
+}
+.home-thumb-empty {
+  display: block;
+  border: 1px dashed var(--wl-border-subtle);
+}
+.home-card-title {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.home-card-when {
+  font-size: 0.8rem;
+  color: var(--wl-ink-muted);
+}
+.home-card-new {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  min-block-size: 9rem;
+  border-style: dashed;
+}
+.home-card-plus {
+  font-size: 2rem;
+  line-height: 1;
+}
+.home-note {
+  margin: 0.5rem 0 0;
+  color: var(--wl-ink-muted);
+}
+.home-templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1rem;
+}
+/* Template cards are shared with the template gallery; on Home they must not move on hover. */
+.home-templates .template-card,
+.home-templates .template-card:hover {
+  transition: none;
+  transform: none;
+}
+.home-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

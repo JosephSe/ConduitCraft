@@ -36,6 +36,8 @@ const doc = (title: string, nodes: number) => ({
 /** Put values in localStorage once per tab, the way an older release would have left them. */
 async function seedLegacy(page: Page, values: Record<string, unknown>): Promise<void> {
   await page.addInitScript((entries) => {
+    // These tests are not about Home, so it counts as already shown in this tab.
+    sessionStorage.setItem('conduitcraft-home-shown', '1');
     if (sessionStorage.getItem('seeded')) return;
     sessionStorage.setItem('seeded', '1');
     for (const [key, value] of Object.entries(entries)) localStorage.setItem(key, JSON.stringify(value));

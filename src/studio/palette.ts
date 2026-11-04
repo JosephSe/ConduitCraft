@@ -48,6 +48,7 @@ export interface PaletteDeps {
   saveFile?: () => void;
   saveFileAs?: () => void;
   openFile?: () => void;
+  openHome?: () => void;
   openSnapshotsDialog?: () => void;
   openLibrary?: () => void;
   newDiagram?: () => void;
@@ -737,11 +738,19 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Open File from Disk',
       subtitle: 'Open .blueprint.json, .mmd or .md architecture file',
       category: 'Export & Sync',
-      shortcut: `${mod}O`,
       keywords: ['open', 'load', 'import', 'disk', 'file'],
       run: () => {
         if (deps.openFile) deps.openFile();
       },
+    },
+    {
+      id: 'open-home',
+      title: 'Home',
+      subtitle: 'Recent diagrams, templates, and ways to open or import',
+      category: 'Export & Sync',
+      shortcut: `${mod}O`,
+      keywords: ['home', 'recent', 'open', 'start', 'templates', 'diagrams'],
+      run: () => deps.openHome?.(),
     },
     {
       id: 'open-library',
