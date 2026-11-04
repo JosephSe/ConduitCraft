@@ -137,6 +137,12 @@ export const OPEN_FILE_TYPES = [
       'text/plain': ['.mmd', '.mermaid', '.txt'],
     },
   },
+  {
+    description: 'draw.io diagram (*.drawio, *.xml)',
+    accept: {
+      'application/xml': ['.drawio', '.xml'],
+    },
+  },
 ];
 
 /**

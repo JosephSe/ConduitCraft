@@ -17,6 +17,7 @@ const lazyBudgets = [
   { pattern: /^gifWorker-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF worker' },
   { pattern: /^gif-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF exporter chunk' },
   { pattern: /\.blueprint-.*\.js$/, maxBytes: 30 * 1024, label: 'template chunk' },
+  { pattern: /^drawio-.*\.js$/, maxBytes: 24 * 1024, label: 'draw.io importer chunk' },
 ];
 const DEFAULT_LAZY_MAX_BYTES = 60 * 1024;
 
