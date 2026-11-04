@@ -243,7 +243,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** extend `e2e/topbar.spec.ts` so the count covers the whole screen outside the canvas (top bar, tool rail, run bar, any open side panel) at 1280 px. If the total is over 8, decide with the number in hand: move controls into the palette, or amend the checklist line to "per region" in V1 section 10 and say why in the PR.
 - **Done when:** the test states the rule it enforces and passes.
 
-#### [x] A15. Motion and "live" fixes · S (#PR)
+#### [x] A15. Motion and "live" fixes · S (#48)
 - **Needs:** A11.
 - **Do:** stop `pulseLiveDot`: no animation on the status dot, so nothing on screen suggests live data. Add an e2e test that runs with `reducedMotion: 'reduce'` and asserts no element has a running animation. If `chaos-pulse` or `portPulse` fail the test, guard them.
 - **Done when:** that test passes, and `grep -rn pulseLiveDot src` finds nothing.
