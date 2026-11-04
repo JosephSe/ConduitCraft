@@ -290,6 +290,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 
 #### [ ] B2b. Retire the old `localStorage` document copies · S
 - **Needs:** B2, and at least one release since B2 shipped.
+- **Blocked:** no release since B2 shipped. `v2.0.0` was tagged before B2 merged and no later tag exists, so deleting the old `localStorage` copies now would remove the only fallback for a visitor who rolls back. Take it after the next tagged release.
 - **Do:** stop reading `readLegacyContents` and delete the old keys after the first successful IndexedDB load, then drop the `localStorage` fallback's legacy-key mapping in favour of its own namespace. Keep the memory fallback and its notice.
 - **Done when:** `grep -rn "conduitcraft-autosave-v1\|blueprint-studio-autosave-v1" src` finds nothing, and a Playwright test shows a returning visitor's work survives the release.
 
@@ -299,11 +300,18 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** unit tests cover the record operations; a Playwright test opens two diagrams, switches between them and loses neither.
 - **Shipped as:** `src/studio/library.ts` holds one record per diagram in the `diagrams` store (`id`, `title`, `updatedAt`, `thumbnail`, `doc`); the old autosave keeps its id (`autosave`) and is the first entry, the `recovery` scratch copy is not listed, and which diagram is open is remembered in `meta`. Autosave writes to the open diagram's record (`state.ts`; the recovery-slot rule is unchanged). The `localStorage` fallback now keeps extra entries under `conduitcraft-diagram:<id>`. Commands (palette: Your Diagrams…, New Diagram, Duplicate This Diagram, Delete This Diagram, Export All Diagrams (.zip)) and a small "Your diagrams" dialog (`libraryUi.ts`, styles lazy in `library.css`) cover new, open, rename, duplicate and delete. Every delete shows a 10-second Undo, as a toast and inside the dialog (the toast sits under an open dialog); discarding the previous session from the restore banner now has the same Undo. Opening a diagram saves the one before it, clears undo history (it can't cross diagrams) and hides the restore offer. The thumbnail is 320 × 200, drawn from `stagePicture.ts` on idle 1.5 s after a save and kept as a small WebP data URL (not the SVG, which was 186 kB for Lumen Relay); it is skipped when storage is not IndexedDB, when a sub-level is open, or while the tab is hidden. "Export all as .zip" writes a store-only zip by hand (`core/zip.ts`, about 100 lines, no dependency; Q11 default) holding one `.blueprint.json` per diagram. Tests: `tests/library.test.ts` (12) and `e2e/library.spec.ts` (four `never loses …` tests, including switching between two diagrams). Numbers: entry JS 461.5 kB (was 450.4), entry CSS 101.2 kB. Section-7 default used: Q11.
 
-#### [ ] B3b. Templates and imports open as new diagrams · S
+#### [x] B3b. Templates and imports open as new diagrams · S (#56)
 - **Needs:** B3.
 - **Why:** New Blueprint, the template gallery, Import File and Open File still replace the open diagram in place (undoable, but the old one is overwritten in the library). With a library they should add an entry and open it, as New Diagram does.
 - **Do:** route `createBlankCanvas`, `loadTemplateDoc`, file open and import through `createDiagram` + `openDiagram` (flushing the open one first), keeping the Undo toast meaning "go back to the previous diagram".
 - **Done when:** a Playwright test loads a template and the previous diagram is still in the library, unchanged.
+- **Shipped as:** `openAsNewDiagram(doc, message, {pickSelection})` in `libraryUi.ts` saves the open diagram, adds the document as a library entry, opens it, and shows a toast whose Undo opens the previous diagram again (the new one stays in the library). The gallery's blank card (`createBlankCanvas`), `loadTemplateDoc`, and file open and import (`handleUploadedFile`, `handleOpenFile`, through a new `asNewDiagram` flag on `applyImportedText`) use it. The Code panel's "apply" still edits the open diagram in place, and snapshot restore stays in place on purpose (it is a step in one diagram's history). Playwright: two new `never loses …` tests in `e2e/library.spec.ts` (a template and a blank canvas leave the previous diagram unchanged and Undo returns to it; an imported file becomes a new diagram). No section-7 default was needed.
+
+#### [ ] B3c. Opening a shared link adds a library entry · S
+- **Needs:** B3b.
+- **Why:** when the visitor already has work open, the "Open" action on a shared-link toast still replaces the open diagram in place.
+- **Do:** route that action through `openAsNewDiagram`. An empty canvas at boot may still take the shared document directly.
+- **Done when:** a Playwright test boots with work open and a share link, picks Open, and finds the earlier diagram still in the library.
 
 #### [ ] B4. F-08 Home screen · M
 - **Needs:** B3, A6.

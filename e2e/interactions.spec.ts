@@ -46,6 +46,8 @@ async function selectNode(page: Page, nodeId: string): Promise<void> {
 
 test('z-order shortcuts only add an undo step when the order really changes', async ({ page }) => {
   await loadShowcase(page);
+  // The loaded example has its first component selected, and the open inspector covers the right of the canvas.
+  await clearSelection(page);
   const before = await undoDepth(page);
 
   // The last node in document order is already on the top layer, so "bring to front" is a no-op.
