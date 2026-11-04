@@ -329,6 +329,14 @@
     <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
     <div class="drawer-scrim" id="drawer-scrim" hidden></div>
 
+    <!-- Edge tabs that open the side drawers by touch (shown for a coarse pointer, below 66rem) -->
+    <button type="button" class="drawer-tab drawer-tab-start" id="btn-drawer-palette" aria-label="Open component palette" aria-controls="palette-sidebar" aria-expanded="false">
+      <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+    </button>
+    <button type="button" class="drawer-tab drawer-tab-end" id="btn-drawer-inspector" aria-label="Open properties inspector" aria-controls="inspector-panel" aria-expanded="false">
+      <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
+    </button>
+
     <!-- Left Stencil Palette (Design Mode) -->
     <aside class="palette-sidebar" id="palette-sidebar" aria-label="Component stencil palette">
       <!-- Collapsed Icon Rail View -->

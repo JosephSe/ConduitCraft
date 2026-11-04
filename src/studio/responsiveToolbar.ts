@@ -233,6 +233,14 @@ export class ResponsiveToolbarManager {
       this.toggleInspector();
     });
 
+    // Edge tabs: the touch way to open each drawer, since the top bar hides the toggles
+    document.getElementById('btn-drawer-palette')?.addEventListener('click', () => {
+      this.togglePalette(false);
+    });
+    document.getElementById('btn-drawer-inspector')?.addEventListener('click', () => {
+      this.toggleInspector(false);
+    });
+
     // Left Palette Collapse/Expand buttons
     const btnCollapsePalette = document.getElementById('btn-collapse-palette');
     btnCollapsePalette?.addEventListener('click', () => {
@@ -349,10 +357,12 @@ export class ResponsiveToolbarManager {
     if (next) {
       ws.setAttribute('data-palette-collapsed', 'true');
       this.btnTogglePalette?.setAttribute('aria-expanded', 'false');
+      document.getElementById('btn-drawer-palette')?.setAttribute('aria-expanded', 'false');
       this.safeSetStorage(STORAGE_PALETTE_KEY, 'true');
     } else {
       ws.removeAttribute('data-palette-collapsed');
       this.btnTogglePalette?.setAttribute('aria-expanded', 'true');
+      document.getElementById('btn-drawer-palette')?.setAttribute('aria-expanded', 'true');
       this.safeRemoveStorage(STORAGE_PALETTE_KEY);
     }
     this.updateScrim();
@@ -375,10 +385,12 @@ export class ResponsiveToolbarManager {
     if (next) {
       ws.setAttribute('data-inspector-collapsed', 'true');
       this.btnToggleInspector?.setAttribute('aria-expanded', 'false');
+      document.getElementById('btn-drawer-inspector')?.setAttribute('aria-expanded', 'false');
       if (persist) this.safeSetStorage(STORAGE_INSPECTOR_KEY, 'true');
     } else {
       ws.removeAttribute('data-inspector-collapsed');
       this.btnToggleInspector?.setAttribute('aria-expanded', 'true');
+      document.getElementById('btn-drawer-inspector')?.setAttribute('aria-expanded', 'true');
       if (persist) this.safeRemoveStorage(STORAGE_INSPECTOR_KEY);
     }
     this.updateScrim();

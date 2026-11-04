@@ -5615,3 +5615,43 @@ html[data-ui="1"] .lens-review { display: none; }
   .hud-search-input { min-block-size: 2.75rem; font-size: 1rem; }
   .context-toolbar-btn, .toast-action-btn { display: inline-flex; align-items: center; justify-content: center; }
 }
+
+/* The palette layer sets z-index 14 after the layout layer set 40, which put the palette drawer under its own scrim. */
+@media (max-width: 66rem) {
+  .palette-sidebar { z-index: 40; }
+}
+
+/* Edge tabs (A12b): open the palette and inspector drawers by touch. Not shown on a mouse, or when the panels sit beside the canvas. */
+.drawer-tab { display: none; }
+@media (pointer: coarse) and (max-width: 66rem) {
+  .drawer-tab {
+    position: absolute;
+    inset-block-start: 50%;
+    z-index: 30;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    margin-block-start: -1.375rem;
+    padding: 0;
+    color: var(--wl-ink);
+    background: var(--wl-panel);
+    border: 1px solid var(--wl-border-subtle);
+    cursor: pointer;
+  }
+  .drawer-tab-start { inset-inline-start: 0; border-start-end-radius: 0.75rem; border-end-end-radius: 0.75rem; border-inline-start: 0; }
+  .drawer-tab-end { inset-inline-end: 0; border-start-start-radius: 0.75rem; border-end-start-radius: 0.75rem; border-inline-end: 0; }
+  .drawer-tab[aria-expanded="true"] { display: none; }
+}
+
+/* Canvas hit areas (A12b): the drag handle and level badge look small but take a 44px touch area at 100% zoom.
+   Only while they are shown, so an invisible one never steals a tap meant for the component. */
+@media (pointer: coarse) {
+  .arch-node .node-select-hit[aria-pressed="true"] ~ .node-drag-handle::after,
+  .arch-node .node-select-hit[aria-pressed="true"] ~ .node-level-badge::after,
+  .node-level-badge[data-has-child='true']::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
+}

@@ -221,10 +221,11 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** the project runs the same core flows as the desktop tests, and axe passes at 768 px.
 - **Shipped as:** projects `tablet-portrait` (768 × 1024) and `tablet-landscape` (1024 × 768), touch plus a coarse pointer, running `e2e/touch.spec.ts` with real touch events (DevTools protocol). Flows: every control outside the canvas is 44 px, place (command palette), select with the contextual toolbar, inspector drawer, one-finger move, wire (toolbar Wire, then drag), pan, pinch in and out, long press for the menu, the export dialog and axe. Fixes: the 44 px rule was overridden by later layers (top bar 34 px, toolbar and toast buttons 28 px), so it is restated last in `studio.css`; context menu items are 44 px; a long press opens the context menu, timed in `contextMenu.ts` because Safari on iPad sends no `contextmenu` event for touch.
 
-#### [ ] A12b. Open the component palette and inspector by touch · S
+#### [x] A12b. Open the component palette and inspector by touch · S (#PR)
 - **Needs:** A12.
 - **Do:** on a tablet the palette and inspector are drawers, and the redesigned top bar hides the buttons that open them (`.panel-rail-toggles`). A touch user can add components only by searching the command palette. Add a touch-reachable way to open each drawer (a button that shows only for a coarse pointer, or an edge tab), without raising the top bar past 8 controls (A14 counts them). Also check the canvas hit areas (ports 15 px, drag handle 9 px, level badge 9 × 7 px before the camera scale) and give them 44 px touch areas.
 - **Done when:** a touch test places a component from the palette drawer and opens the inspector without the command palette, and a test measures canvas hit areas at 100% zoom.
+- **Shipped as:** two edge tabs (`#btn-drawer-palette`, `#btn-drawer-inspector`) on the canvas edges, shown only for a coarse pointer at 66rem or narrower and hidden while their drawer is open, so the top bar is unchanged. Also fixed: the palette drawer sat under its own scrim (the palette layer's `z-index: 14` beat the layout layer's 40), so it could not be tapped. The drag handle and level badge get a 44 px touch area (a `::after`) only while shown; ports were already 44 px. New tests in `e2e/touch.spec.ts`: place from the palette drawer, tab sizes, hit areas at 100% zoom; the inspector test now opens its drawer by tap. Entry CSS is 106.0 kB.
 
 #### [ ] A12c. Tablet portrait keeps the full top bar · S
 - **Needs:** A12.
