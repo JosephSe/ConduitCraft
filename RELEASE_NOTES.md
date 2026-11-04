@@ -1,5 +1,9 @@
 # Release notes
 
+## Unreleased
+
+- **The Classic layout is removed.** `?ui=1` and the "Classic layout" setting are gone, and so is the old header's overflow menu. A saved Classic preference is dropped once, with a notice. Nothing in your diagrams changes.
+
 ## 2.0.0
 
 The redesign: a quieter app that shows what happens when something fails.

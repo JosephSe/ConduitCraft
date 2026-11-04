@@ -2,14 +2,13 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4281; // distinct from `pnpm preview` (4180) so a running dev/preview server is never reused
 
-/** The redesigned interface, as a returning visitor (first run would otherwise cover the canvas). */
-const ui2State = {
+/** A returning visitor (first run would otherwise cover the canvas). */
+const returningVisitor = {
   cookies: [],
   origins: [
     {
       origin: `http://localhost:${PORT}`,
       localStorage: [
-        { name: 'conduitcraft-ui', value: '2' },
         { name: 'conduitcraft-first-run-seen', value: '1' },
       ],
     },
@@ -23,7 +22,7 @@ const tablet = (width: number, height: number) => ({
   hasTouch: true,
   isMobile: true,
   deviceScaleFactor: 2,
-  storageState: ui2State,
+  storageState: returningVisitor,
 });
 
 export default defineConfig({
@@ -44,48 +43,10 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     acceptDownloads: true,
   },
-  // Both projects start as a returning visitor, so first run (R-08) doesn't change the other specs. e2e/firstRun.spec.ts
+  // Every project starts as a returning visitor, so first run (R-08) doesn't change the other specs. e2e/firstRun.spec.ts
   // opts back in with an empty profile.
   projects: [
-    // The classic interface, kept under test now that the redesign is the default.
-    {
-      name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: {
-          cookies: [],
-          origins: [
-            {
-              origin: `http://localhost:${PORT}`,
-              localStorage: [
-                { name: 'conduitcraft-ui', value: '1' },
-                { name: 'conduitcraft-first-run-seen', value: '1' },
-              ],
-            },
-          ],
-        },
-      },
-    },
-    // The same suite against the redesigned interface (`?ui=2` remembered in localStorage). Specs that
-    // exercise controls the redesign deliberately moved are listed in UI2_SKIP below.
-    {
-      name: 'chromium-ui2',
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: {
-          cookies: [],
-          origins: [
-            {
-              origin: `http://localhost:${PORT}`,
-              localStorage: [
-                { name: 'conduitcraft-ui', value: '2' },
-                { name: 'conduitcraft-first-run-seen', value: '1' },
-              ],
-            },
-          ],
-        },
-      },
-    },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], storageState: returningVisitor } },
     // Tablets (A12): the core flows by touch, portrait and landscape.
     { name: 'tablet-portrait', testIgnore: [], testMatch: ['**/touch.spec.ts'], use: tablet(768, 1024) },
     { name: 'tablet-landscape', testIgnore: [], testMatch: ['**/touch.spec.ts'], use: tablet(1024, 768) },

@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
-async function open(page: Page, query = '?ui=2') {
+async function open(page: Page, query = '') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
   await openLumenRelay(page);
@@ -14,12 +14,6 @@ async function open(page: Page, query = '?ui=2') {
 const toolbar = (page: Page) => page.locator('.context-toolbar');
 // A component that is fully on screen at the default zoom (the first one in the DOM sits half behind the rail).
 const firstNode = (page: Page) => page.locator('.arch-node[data-node-id="night-desk"]');
-
-test('classic layout never shows the contextual toolbar', async ({ page }) => {
-  await open(page, '?ui=1');
-  await firstNode(page).locator('.node-select-hit').click();
-  await expect(toolbar(page)).toBeHidden();
-});
 
 test('selecting a component shows a toolbar just above it; clearing the selection hides it', async ({ page }) => {
   await open(page);

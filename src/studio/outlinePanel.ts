@@ -190,7 +190,6 @@ export function setOutlineOpen(open: boolean): void {
   const el = panel();
   if (!el) return;
   el.hidden = !open;
-  document.getElementById('btn-overflow-outline')?.setAttribute('aria-checked', String(open));
   if (open) {
     paint(true);
     if (focusKey) focusRow(focusKey);
@@ -206,5 +205,4 @@ export function toggleOutline(): void {
 export function initOutlinePanel(): void {
   tree()?.addEventListener('keydown', onKeydown);
   document.getElementById('outline-close')?.addEventListener('click', () => setOutlineOpen(false));
-  document.getElementById('btn-overflow-outline')?.addEventListener('click', toggleOutline);
 }

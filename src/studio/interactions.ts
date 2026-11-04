@@ -720,7 +720,7 @@ function syncTagFilter(): void {
   for (const select of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) select.value = app.colourBy;
 }
 
-/** "Colour by" and "tag" controls: the Traffic toolbar in the classic layout, the run bar in the new one. */
+/** "Colour by" and "tag" controls: the run bar. */
 export function bindViewFilters(): void {
   for (const colour of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) {
     colour.addEventListener('change', () => {
@@ -2743,7 +2743,6 @@ export function initEvents(): void {
       const actionId = matchBinding(e, {
         mode: app.workspaceMode,
         hasSelection: app.selection.type !== 'none',
-        ui: document.documentElement.dataset.ui === '2' ? 2 : 1,
       });
       const action = actionId ? findPaletteCommand(actionId) : undefined;
       if (action) {

@@ -1,7 +1,6 @@
 /**
- * Redesigned interface: the inspector slides in while something is selected and folds away when nothing is,
- * unless the user pins it. It never changes the saved open/closed preference of the classic layout, so
- * switching back with `?ui=1` finds the panel as it was left.
+ * The inspector slides in while something is selected and folds away when nothing is,
+ * unless the user pins it.
  */
 import { responsiveToolbar } from './responsiveToolbar';
 import { app, onSelectionChange } from './state';
@@ -10,8 +9,6 @@ const PIN_KEY = 'conduitcraft:inspector-pinned';
 
 let pinned = false;
 let hold = false;
-
-const isV2 = () => document.documentElement.dataset.ui === '2';
 
 function readPinned(): boolean {
   try {
@@ -23,13 +20,12 @@ function readPinned(): boolean {
 
 /** Keep the inspector open until the next selection change, e.g. after the user clicks the document title. */
 export function holdInspectorOpen(): void {
-  if (!isV2()) return;
   hold = true;
   responsiveToolbar.toggleInspector(false, false);
 }
 
 function sync(): void {
-  if (!isV2() || app.workspaceMode !== 'design') return;
+  if (app.workspaceMode !== 'design') return;
   // On narrow screens the inspector is an overlay with a scrim; opening it unasked would cover the canvas.
   if (responsiveToolbar.isNarrowScreen()) return;
   const hasSelection = app.selection.type !== 'none';

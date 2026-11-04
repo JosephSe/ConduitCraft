@@ -573,10 +573,6 @@
     #btn-open-settings {
       display: none;
     }
-
-    .header-overflow-wrapper {
-      display: inline-block;
-    }
   }
 
   .drawer-scrim {
@@ -597,11 +593,6 @@
     .drawer-scrim {
       display: none !important;
     }
-  }
-
-  .header-overflow-wrapper {
-    display: none;
-    position: relative;
   }
 }
 
@@ -5039,36 +5030,29 @@ kbd {
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Redesigned top bar (?ui=2): logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
+   Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
-   Hidden with display:none, not removed, so existing wiring keeps working and the palette can still click them.
+   Hidden with display:none, not removed, so existing wiring keeps working and the palette can still click them (B1b).
    --------------------------------------------------------------------------------------------- */
 .btn-share-v2 {
-  display: none;
-}
-html[data-ui="2"] .btn-share-v2 {
   display: inline-flex;
 }
-html[data-ui="2"] .topbar .eyebrow-row,
-html[data-ui="2"] .topbar #design-toolbar,
-html[data-ui="2"] .topbar #data-toolbar,
-html[data-ui="2"] .topbar #sim-buttons-slot,
-html[data-ui="2"] .topbar #btn-toggle-motion,
-html[data-ui="2"] .topbar #file-menu-wrapper,
-html[data-ui="2"] .topbar #btn-open-export,
-html[data-ui="2"] .topbar #btn-enter-presentation,
-html[data-ui="2"] .topbar #btn-open-shortcuts,
-html[data-ui="2"] .topbar #btn-open-settings,
-html[data-ui="2"] .topbar .panel-rail-toggles,
-html[data-ui="2"] .topbar #header-overflow-wrapper {
+.topbar .eyebrow-row,
+.topbar #design-toolbar,
+.topbar #data-toolbar,
+.topbar #sim-buttons-slot,
+.topbar #btn-toggle-motion,
+.topbar #file-menu-wrapper,
+.topbar #btn-open-export,
+.topbar #btn-enter-presentation,
+.topbar #btn-open-shortcuts,
+.topbar #btn-open-settings,
+.topbar .panel-rail-toggles {
   display: none !important;
 }
 
-/* Tool rail (?ui=2): select / wire tools above the component icons */
-.rail-tool-only {
-  display: none;
-}
-html[data-ui="2"] .rail-tool-btn {
+/* Tool rail: select / wire tools above the component icons */
+.rail-tool-btn {
   position: relative;
   display: grid;
   place-items: center;
@@ -5080,21 +5064,21 @@ html[data-ui="2"] .rail-tool-btn {
   color: var(--wl-ink-secondary);
   cursor: pointer;
 }
-html[data-ui="2"] .rail-divider.rail-tool-only {
+.rail-divider.rail-tool-only {
   display: block;
 }
-html[data-ui="2"] .rail-tool-btn:hover {
+.rail-tool-btn:hover {
   background: var(--wl-surface-elevated);
   border-color: var(--wl-border-subtle);
   color: var(--wl-ink);
 }
-html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
+.rail-tool-btn[aria-pressed="true"] {
   background: var(--wl-blue-soft);
   border-color: var(--wl-blue);
   color: var(--wl-ink);
 }
 
-/* Contextual toolbar (?ui=2): actions floating beside the selection */
+/* Contextual toolbar: actions floating beside the selection */
 .context-toolbar {
   position: fixed;
   z-index: 900;
@@ -5128,24 +5112,18 @@ html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
   box-shadow: inset 0 0 0 2px var(--wl-blue);
 }
 
-/* Inspector pin (?ui=2): keeps the panel open when nothing is selected */
+/* Inspector pin: keeps the panel open when nothing is selected */
 .inspector-pin-btn {
-  display: none;
-  margin-inline-start: auto;
-}
-html[data-ui="2"] .inspector-pin-btn {
   display: inline-flex;
+  margin-inline-start: auto;
 }
 .inspector-pin-btn[aria-pressed="true"] {
   background: var(--wl-blue-soft);
   color: var(--wl-ink);
 }
 
-/* Lens switcher: the key that selects each lens, shown only in the redesigned interface. */
-.lens-key {
-  display: none;
-}
-html[data-ui="2"] .mode-switcher .lens-key {
+/* Lens switcher: the key that selects each lens. */
+.mode-switcher .lens-key {
   display: inline;
   margin-left: 4px;
   padding: 0;
@@ -5202,7 +5180,7 @@ html[data-ui="2"] .mode-switcher .lens-key {
   color: var(--wl-blue);
 }
 /* The run bar replaces the playback deck inside the Live Trace tab. */
-html[data-ui="2"] #sim-playback-deck {
+#sim-playback-deck {
   display: none !important;
 }
 
@@ -5327,7 +5305,6 @@ html[data-ui="2"] #sim-playback-deck {
 }
 
 /* Insights (F-02): the Review lens lists what the rules found; badges sit on the components they are about. */
-html[data-ui="1"] .lens-review { display: none; }
 .insight-count {
   margin-inline-start: 0.35rem;
   padding: 0 0.4rem;

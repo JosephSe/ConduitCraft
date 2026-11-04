@@ -12,8 +12,6 @@ export const FIRST_RUN_TEMPLATE_ID = 'lumen-relay';
 export const FIRST_RUN_SEEN_KEY = 'conduitcraft-first-run-seen';
 
 export interface FirstRunFacts {
-  /** The redesigned interface is showing (`data-ui="2"`). Classic keeps its plain blank canvas. */
-  redesign: boolean;
   /** Any autosave or recovery copy exists in this browser. */
   hasSavedWork: boolean;
   /** The URL carries a share link. */
@@ -26,7 +24,7 @@ export interface FirstRunFacts {
 
 /** First run shows only for a visitor with nothing of their own to come back to. It must never replace work. */
 export function shouldShowFirstRun(f: FirstRunFacts): boolean {
-  return f.redesign && f.documentEmpty && !f.hasSavedWork && !f.hasShareLink && !f.seenBefore;
+  return f.documentEmpty && !f.hasSavedWork && !f.hasShareLink && !f.seenBefore;
 }
 
 /**
