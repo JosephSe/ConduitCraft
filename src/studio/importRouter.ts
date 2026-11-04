@@ -10,6 +10,7 @@ import {
   looksLikeExcalidraw,
   looksLikeKubernetes,
   looksLikeOpenApi,
+  looksLikeTrace,
 } from '../importers/sniff';
 import {
   importAsyncApiText,
@@ -18,6 +19,7 @@ import {
   importExcalidrawText,
   importKubernetesText,
   importOpenApiText,
+  importTraceText,
 } from './fileImports';
 
 type Import = (text: string, title: string) => Promise<boolean>;
@@ -26,6 +28,7 @@ type Import = (text: string, title: string) => Promise<boolean>;
 const ROUTES: Array<{ matches: (name: string, text: string) => boolean; run: Import; fallbackTitle: string }> = [
   { matches: looksLikeDrawio, run: importDrawioText, fallbackTitle: 'Imported draw.io' },
   { matches: looksLikeExcalidraw, run: importExcalidrawText, fallbackTitle: 'Imported Excalidraw' },
+  { matches: looksLikeTrace, run: importTraceText, fallbackTitle: 'Imported traces' },
   { matches: looksLikeOpenApi, run: importOpenApiText, fallbackTitle: 'Imported API' },
   { matches: looksLikeAsyncApi, run: importAsyncApiText, fallbackTitle: 'Imported messaging API' },
   { matches: looksLikeKubernetes, run: importKubernetesText, fallbackTitle: 'Imported cluster' },

@@ -144,9 +144,9 @@ export const OPEN_FILE_TYPES = [
     },
   },
   {
-    description: 'Excalidraw scene (*.excalidraw)',
+    description: 'Excalidraw scene or trace export (*.excalidraw, *.jsonl)',
     accept: {
-      'application/json': ['.excalidraw'],
+      'application/json': ['.excalidraw', '.jsonl', '.ndjson'],
     },
   },
   {
