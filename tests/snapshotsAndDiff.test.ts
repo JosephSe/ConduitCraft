@@ -1,7 +1,6 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import {
-  SNAPSHOTS_STORAGE_KEY,
   listSnapshots,
   saveSnapshot,
   getSnapshot,
@@ -9,23 +8,14 @@ import {
   computeDocumentDiff,
   renderSnapshotsDialogHtml,
 } from '../src/studio/snapshots';
+import { createMemoryBackend, initStorage, resetStorageForTests } from '../src/studio/storage';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets';
 import type { DiagramDocument, DiagramEdge } from '../src/types';
 
 describe('version snapshots and architecture diff view (suggestion 19)', () => {
-  // In-memory localStorage mock for node test runner
-  const storageMap = new Map<string, string>();
-  globalThis.localStorage = {
-    getItem: (key: string) => storageMap.get(key) ?? null,
-    setItem: (key: string, value: string) => storageMap.set(key, String(value)),
-    removeItem: (key: string) => storageMap.delete(key),
-    clear: () => storageMap.clear(),
-    key: (index: number) => Array.from(storageMap.keys())[index] ?? null,
-    length: 0,
-  } as Storage;
-
-  beforeEach(() => {
-    storageMap.clear();
+  beforeEach(async () => {
+    resetStorageForTests();
+    await initStorage({ backend: createMemoryBackend() });
   });
 
   it('saves, lists, retrieves, and deletes named version snapshots', () => {

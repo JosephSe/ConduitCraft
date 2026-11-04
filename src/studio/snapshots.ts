@@ -5,8 +5,7 @@
  */
 import type { DiagramDocument, DiagramEdge, DiagramNode } from '../types';
 import { escapeHtml } from '../shared/escapeHtml';
-
-export const SNAPSHOTS_STORAGE_KEY = 'conduitcraft-snapshots-v1';
+import { listRecords, putRecord, getRecord, removeRecord, reportStorageFailure } from './storage';
 
 export interface VersionSnapshot {
   id: string;
@@ -47,25 +46,14 @@ export interface DocumentDiff {
   hasChanges: boolean;
 }
 
-/** Retrieve all saved version snapshots from localStorage. */
+/** Retrieve all saved version snapshots, newest first. */
 export function listSnapshots(): VersionSnapshot[] {
-  if (typeof localStorage === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(SNAPSHOTS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed.sort((a, b) => b.timestamp - a.timestamp);
-    }
-  } catch {
-    // Return empty list on parse error
-  }
-  return [];
+  // Reversed first so that snapshots taken in the same millisecond still list newest first.
+  return listRecords<VersionSnapshot>('snapshots').reverse().sort((a, b) => b.timestamp - a.timestamp);
 }
 
-/** Save a named version snapshot of the current document. */
+/** Save a named version snapshot of the current document. A failed write is reported, never swallowed. */
 export function saveSnapshot(name: string, doc: DiagramDocument): VersionSnapshot {
-  const snapshots = listSnapshots();
   const snapshot: VersionSnapshot = {
     id: `snap-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
     name: name.trim() || `Snapshot ${new Date().toLocaleTimeString()}`,
@@ -74,32 +62,18 @@ export function saveSnapshot(name: string, doc: DiagramDocument): VersionSnapsho
     edgeCount: doc.edges.length,
     doc: structuredClone(doc),
   };
-
-  snapshots.unshift(snapshot);
-  if (typeof localStorage !== 'undefined') {
-    try {
-      localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(snapshots));
-    } catch {
-      // If storage quota exceeded, prune oldest snapshot and retry
-      if (snapshots.length > 1) {
-        snapshots.pop();
-        localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(snapshots));
-      }
-    }
-  }
+  putRecord('snapshots', snapshot).catch((err) => reportStorageFailure(err, 'snapshot'));
   return snapshot;
 }
 
 /** Delete a snapshot by ID. */
 export function deleteSnapshot(id: string): void {
-  if (typeof localStorage === 'undefined') return;
-  const snapshots = listSnapshots().filter((s) => s.id !== id);
-  localStorage.setItem(SNAPSHOTS_STORAGE_KEY, JSON.stringify(snapshots));
+  removeRecord('snapshots', id).catch((err) => reportStorageFailure(err, 'snapshot'));
 }
 
 /** Retrieve a specific snapshot by ID. */
 export function getSnapshot(id: string): VersionSnapshot | undefined {
-  return listSnapshots().find((s) => s.id === id);
+  return getRecord<VersionSnapshot>('snapshots', id);
 }
 
 /** Compute differences between a base document (e.g. past snapshot) and current document. */

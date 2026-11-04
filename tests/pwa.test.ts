@@ -55,8 +55,6 @@ import {
 } from '../src/studio/pwa';
 const {
   app,
-  AUTOSAVE_KEY,
-  RECOVERY_KEY,
   setPendingRestoreOffer,
   getPendingRestoreOffer,
   clearPendingRestoreOffer,
@@ -67,6 +65,17 @@ const {
   setSaveErrorHandler,
   updateDocumentTitle,
 } = await import('../src/studio/state.ts');
+import {
+  AUTOSAVE_ID,
+  RECOVERY_ID,
+  createMemoryBackend,
+  flushWrites,
+  getRecord,
+  initStorage,
+  resetStorageForTests,
+  type Backend,
+  type DiagramRecord,
+} from '../src/studio/storage';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets';
 import type { DiagramDocument } from '../src/types';
 
@@ -279,10 +288,9 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     assert.strictEqual(isFileDiskDirty(), false);
   });
 
-  it('protects larger saved session from being overwritten by smaller session before acceptance (item 4)', () => {
-    storageMap.clear();
-
-    // User previously had a diagram with 3 nodes in local storage
+  it('protects larger saved session from being overwritten by smaller session before acceptance (item 4)', async () => {
+    resetStorageForTests();
+    // User previously had a diagram with 3 nodes saved in this browser
     const previousSavedDoc: DiagramDocument = {
       ...createBlankDocument(),
       title: 'Previous Saved Production Architecture',
@@ -292,7 +300,11 @@ describe('PWA install, manifest, service worker and file system access (suggesti
         createNodeFromStencil('queue', 450, 50),
       ],
     };
-    storageMap.set(AUTOSAVE_KEY, JSON.stringify(previousSavedDoc));
+    await initStorage({
+      backend: createMemoryBackend({
+        diagrams: [{ id: AUTOSAVE_ID, title: previousSavedDoc.title, updatedAt: 1, doc: previousSavedDoc } as DiagramRecord],
+      }),
+    });
 
     // Offer is registered at boot
     setPendingRestoreOffer(previousSavedDoc);
@@ -307,50 +319,70 @@ describe('PWA install, manifest, service worker and file system access (suggesti
 
     // Autosave triggers
     flushAutosave();
+    await flushWrites();
 
-    // AUTOSAVE_KEY MUST NOT be overwritten by the smaller scratch session!
-    const preservedRaw = storageMap.get(AUTOSAVE_KEY);
-    assert.ok(preservedRaw, 'AUTOSAVE_KEY must still exist');
-    const preserved = JSON.parse(preservedRaw!) as DiagramDocument;
+    // The autosave record MUST NOT be overwritten by the smaller scratch session!
+    const preserved = getRecord<DiagramRecord>('diagrams', AUTOSAVE_ID)?.doc;
+    assert.ok(preserved, 'the autosave record must still exist');
     assert.strictEqual(preserved.title, 'Previous Saved Production Architecture');
     assert.strictEqual(preserved.nodes.length, 3, 'Preserved session must still have 3 nodes');
 
-    // The smaller scratch session is safely routed to RECOVERY_KEY
-    const recoveryRaw = storageMap.get(RECOVERY_KEY);
-    assert.ok(recoveryRaw, 'RECOVERY_KEY must hold the smaller scratch session');
-    const recovery = JSON.parse(recoveryRaw!) as DiagramDocument;
+    // The smaller scratch session is safely routed to the recovery record
+    const recovery = getRecord<DiagramRecord>('diagrams', RECOVERY_ID)?.doc;
+    assert.ok(recovery, 'the recovery record must hold the smaller scratch session');
     assert.strictEqual(recovery.title, 'Quick Scratch');
     assert.strictEqual(recovery.nodes.length, 1);
 
-    // Discarding the pending offer deletes AUTOSAVE_KEY and clears the offer
+    // Discarding the pending offer deletes the autosave record and clears the offer
     discardPendingRestoreOffer();
+    await flushWrites();
     assert.strictEqual(getPendingRestoreOffer(), null);
-    assert.strictEqual(fakeStorage.getItem(AUTOSAVE_KEY), null);
-    assert.strictEqual(storageMap.has(AUTOSAVE_KEY), false);
+    assert.strictEqual(getRecord('diagrams', AUTOSAVE_ID), undefined);
 
-    // Once discarded, future autosaves write normally to AUTOSAVE_KEY
+    // Once discarded, future autosaves write normally
     flushAutosave();
-    assert.ok(fakeStorage.getItem(AUTOSAVE_KEY), 'Normal autosave resumes after offer is resolved');
+    await flushWrites();
+    assert.ok(getRecord('diagrams', AUTOSAVE_ID), 'Normal autosave resumes after offer is resolved');
   });
 
-  it('manages save states, document title dirty indicator, and honest quota failure (item 6)', () => {
+  it('waits for storage to be read before writing, so a saved session is never replaced (item 5)', async () => {
+    resetStorageForTests();
+    const saved: DiagramDocument = { ...createBlankDocument(), title: 'Saved', nodes: [createNodeFromStencil('service', 1, 1), createNodeFromStencil('queue', 90, 1)] };
+    const backend = createMemoryBackend({
+      diagrams: [{ id: AUTOSAVE_ID, title: 'Saved', updatedAt: 1, doc: saved } as DiagramRecord],
+    });
+    app.doc = { ...createBlankDocument(), title: 'Early edit', nodes: [createNodeFromStencil('queue', 5, 5)] };
+    clearPendingRestoreOffer();
+    // Boot starts reading first and registers the restore offer; an edit made meanwhile has to wait its turn.
+    const booted = initStorage({ backend }).then(() => setPendingRestoreOffer(saved));
+    flushAutosave();
+    assert.strictEqual(app.hasPendingAutosave, true, 'the edit stays pending');
+    await booted;
+    await flushWrites();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.strictEqual(getRecord<DiagramRecord>('diagrams', AUTOSAVE_ID)?.doc.title, 'Saved');
+  });
+
+  it('manages save states, document title dirty indicator, and honest quota failure (item 6)', async () => {
+    resetStorageForTests();
+    const failing: Backend = {
+      ...createMemoryBackend(),
+      async put() {
+        throw Object.assign(new Error('The quota has been exceeded.'), { name: 'QuotaExceededError' });
+      },
+    };
+    await initStorage({ backend: failing });
+
     setSaveState('saving');
     assert.strictEqual(getSaveState(), 'saving');
 
     setSaveState('saved');
     assert.strictEqual(getSaveState(), 'saved');
 
-    // Test honest error reporting when localStorage quota is exceeded
-    let errorHandlerCalled = false;
-    setSaveErrorHandler(() => {
-      errorHandlerCalled = true;
+    let quotaReported: boolean | null = null;
+    setSaveErrorHandler((quota) => {
+      quotaReported = quota;
     });
-
-    const originalSetItem = fakeStorage.setItem;
-    // Simulate quota exceeded
-    fakeStorage.setItem = () => {
-      throw new Error('QuotaExceededError: storage is full');
-    };
 
     app.doc = {
       ...createBlankDocument(),
@@ -360,9 +392,12 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     clearPendingRestoreOffer();
 
     flushAutosave();
+    await flushWrites();
+    await new Promise((r) => setTimeout(r, 0));
 
     assert.strictEqual(getSaveState(), 'error', 'Save state transitions to error on storage quota failure');
-    assert.strictEqual(errorHandlerCalled, true, 'Error handler is called to surface Save to file toast');
+    assert.strictEqual(quotaReported, true, 'Error handler is told the storage is full');
+    assert.strictEqual(getRecord('diagrams', AUTOSAVE_ID), undefined, 'a failed write leaves nothing in the copy');
 
     // Document title dirty indicator
     updateDocumentTitle();
@@ -371,8 +406,6 @@ describe('PWA install, manifest, service worker and file system access (suggesti
       `document.title should have dirty bullet when saveState is error: "${document.title}"`,
     );
 
-    // Restore fakeStorage.setItem
-    fakeStorage.setItem = originalSetItem;
     setSaveState('saved');
     updateDocumentTitle();
     assert.ok(

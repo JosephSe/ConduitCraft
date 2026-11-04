@@ -8,7 +8,8 @@ import { FIRST_RUN_SEEN_KEY, FIRST_RUN_TEMPLATE_ID, pickFirstRunFailure, shouldS
 import { parseBlueprintJson } from '../exporter/blueprintJson';
 import { announce } from './a11y';
 import { setFailures } from './chaos';
-import { app, AUTOSAVE_KEY, RECOVERY_KEY, onHistoryCommit, setSelection } from './state';
+import { app, onHistoryCommit, setSelection } from './state';
+import { AUTOSAVE_ID, RECOVERY_ID, hasRecord } from './storage';
 import { onPlaybackChange, simulationPlayback } from './simulationPlayback';
 import { getStarterTemplateById, loadTemplateRaw } from './templatesGallery';
 import { renderAll } from './render';
@@ -47,12 +48,12 @@ function switchToTraffic(): void {
   document.querySelector<HTMLInputElement>('input[name="workspace-mode"][value="data"]')?.click();
 }
 
-/** Show first run if this visitor qualifies. Call once at boot, after the share link and autosave checks. */
+/** Show first run if this visitor qualifies. Call once at boot, after storage has been read (`initStorage`). */
 export function startFirstRunIfNew(deps: FirstRunDeps): void {
   const card = document.getElementById('first-run');
   if (!card) return;
   const facts = {
-    hasSavedWork: storageHas(AUTOSAVE_KEY) || storageHas(RECOVERY_KEY) || storageHas('blueprint-studio-autosave-v1'),
+    hasSavedWork: hasRecord('diagrams', AUTOSAVE_ID) || hasRecord('diagrams', RECOVERY_ID),
     hasShareLink: window.location.hash.length > 1,
     seenBefore: storageHas(FIRST_RUN_SEEN_KEY),
     documentEmpty: isEmpty(app.doc),
