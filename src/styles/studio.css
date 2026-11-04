@@ -5178,6 +5178,10 @@ html[data-ui="2"] .mode-switcher .lens-key {
 .run-bar[hidden] {
   display: none;
 }
+/* A14: the groups name the bar's two regions for the control count and for assistive tech; they add no box. */
+.run-bar-group {
+  display: contents;
+}
 .run-bar-scenario {
   min-inline-size: 0;
   max-inline-size: 11rem;
