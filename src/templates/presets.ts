@@ -212,6 +212,19 @@ export function createSwimlaneZone(index: number, x: number): DiagramZone {
   };
 }
 
+/** A free text label (the Text tool): a note card with no border, background or items. The words are the title. */
+export function createTextCard(x: number, y: number): DiagramNotesCard {
+  return {
+    id: nextUid('text'),
+    title: 'Text',
+    code: '',
+    x: Math.max(24, Math.round(x)),
+    y: Math.max(24, Math.round(y)),
+    items: [],
+    variant: 'text',
+  };
+}
+
 export function createNotesCard(x: number, y: number): DiagramNotesCard {
   return {
     id: nextUid('notes'),

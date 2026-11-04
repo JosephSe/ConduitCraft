@@ -147,6 +147,7 @@ import {
   createBlankDocument,
   createNodeFromStencil,
   createNotesCard,
+  createTextCard,
   createSwimlaneZone,
   nextUid,
 } from '../templates/presets';
@@ -186,7 +187,8 @@ import { createHumanOutlineSvg,
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
-import { renameNodeInline } from './inlineRename';
+import { renameNodeInline, renameNotesInline } from './inlineRename';
+import { serializeClip, type Clip } from '../core/clipboard';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
 import { setPointerTool } from './pointerTool';
@@ -1002,7 +1004,12 @@ export function duplicateSelected(): void {
   }
 }
 
-export function copySelection(): void {
+/**
+ * Copy the selected components and the wires between them. They go in the in-tab buffer and, as text with a
+ * `conduitcraft` marker, on the system clipboard (through the `copy` event's data, so no permission is needed), which is
+ * what lets another tab, window or diagram paste them.
+ */
+export function copySelection(data?: DataTransfer | null): void {
   const ids = getSelectedNodeIds();
   if (ids.length === 0) return;
   const idSet = new Set(ids);
@@ -1010,39 +1017,41 @@ export function copySelection(): void {
   app.clipboardEdges = structuredClone(
     app.doc.edges.filter((e) => idSet.has(e.from) && idSet.has(e.to)),
   );
+  const { text, droppedImages } = serializeClip(app.clipboardNodes, app.clipboardEdges);
+  if (data) data.setData('text/plain', text);
+  else void navigator.clipboard?.writeText(text).catch(() => undefined);
   const count = app.clipboardNodes.length;
-  const msg = `Copied ${count} ${count === 1 ? 'component' : 'components'} to clipboard`;
+  const msg = `Copied ${count} ${count === 1 ? 'component' : 'components'} to clipboard${
+    droppedImages ? ' (pictures left out: too large)' : ''
+  }`;
   hudStatusTip.textContent = msg;
   notify(msg);
 }
 
-export function pasteSelection(): void {
-  if (app.clipboardNodes.length === 0) return;
-  pushHistory();
-  const idMap = new Map<string, string>();
-  const newIds: string[] = [];
-  for (const orig of app.clipboardNodes) {
-    const copy = structuredClone(orig);
-    copy.id = nextUid(orig.kind);
-    copy.x += 32;
-    copy.y += 32;
-    orig.x += 32;
-    orig.y += 32;
-    idMap.set(orig.id, copy.id);
-    newIds.push(copy.id);
-    app.doc.nodes.push(copy);
-  }
-  for (const edge of app.clipboardEdges) {
-    const nf = idMap.get(edge.from);
-    const nt = idMap.get(edge.to);
-    if (nf && nt) {
-      const edgeCopy = structuredClone(edge);
-      edgeCopy.id = nextUid('edge');
-      edgeCopy.from = nf;
-      edgeCopy.to = nt;
-      app.doc.edges.push(edgeCopy);
+/** Paste what the clipboard text carries; with nothing of ours there, fall back to the in-tab buffer. */
+export async function pasteSelection(clipboardText = ''): Promise<void> {
+  let clip: Clip | null = null;
+  const { parseClip, materializeClip } = await import('../core/clipboardPaste');
+  if (clipboardText.trim()) {
+    const parsed = parseClip(clipboardText);
+    if (parsed.ok) clip = parsed.clip;
+    else if (parsed.reason === 'invalid') {
+      notify(parsed.message, { tone: 'error' });
+      return;
     }
   }
+  if (!clip && app.clipboardNodes.length > 0) {
+    clip = { nodes: app.clipboardNodes, edges: app.clipboardEdges, droppedImages: false };
+  }
+  if (!clip) {
+    if (clipboardText.trim()) notify('The clipboard does not hold components.');
+    return;
+  }
+  pushHistory();
+  const made = materializeClip(clip, app.doc.nodes, nextUid);
+  app.doc.nodes.push(...made.nodes);
+  app.doc.edges.push(...made.edges);
+  const newIds = made.nodes.map((n) => n.id);
   expandStageToFit(app.doc);
   setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
   renderAll(true);
@@ -1429,7 +1438,26 @@ export async function openShortcutsDialog(): Promise<void> {
 // Re-export serialization helper
 export { serializeForFilename } from './pwa';
 
+/** Copy and paste through the browser's own events, so the clipboard text works across tabs and needs no permission. */
+function initClipboardEvents(): void {
+  const editing = (target: EventTarget | null) => {
+    const el = target as HTMLElement | null;
+    return !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
+  };
+  document.addEventListener('copy', (e) => {
+    if (app.workspaceMode !== 'design' || editing(e.target) || getSelectedNodeIds().length === 0) return;
+    e.preventDefault();
+    copySelection(e.clipboardData);
+  });
+  document.addEventListener('paste', (e) => {
+    if (app.workspaceMode !== 'design' || editing(e.target)) return;
+    e.preventDefault();
+    void pasteSelection(e.clipboardData?.getData('text/plain') ?? '');
+  });
+}
+
 export function initEvents(): void {
+  initClipboardEvents();
   // Workspace Mode Switcher (Design vs Data View with View Transitions)
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="workspace-mode"]')) {
     radio.addEventListener('change', () => {
@@ -2347,8 +2375,8 @@ export function initEvents(): void {
   viewport.addEventListener(
     'pointerdown',
     (e) => {
-      if (!spaceHeld || e.button !== 0) return;
-      // Capture phase, ahead of the component under the pointer, so Space-drag never moves or selects it.
+      if ((!spaceHeld && app.pointerTool !== 'hand') || e.button !== 0) return;
+      // Capture phase, ahead of the component under the pointer, so Space-drag (or the Hand tool) never moves or selects it.
       e.stopImmediatePropagation();
       e.preventDefault();
       panWithSpace = true;
@@ -2368,6 +2396,21 @@ export function initEvents(): void {
         '.arch-node, .zone-banner, .blueprint-spec, .conduit-hit, .conduit-badge-hit, .conduit-waypoint-handle, button',
       )
     ) {
+      return;
+    }
+
+    if (app.pointerTool === 'text' && app.workspaceMode === 'design') {
+      // The Text tool: a click on bare canvas puts a text label there and opens it for typing.
+      e.preventDefault();
+      const [wx, wy] = screenToWorld(e.clientX, e.clientY);
+      pushHistory();
+      const label = createTextCard(wx, wy);
+      app.doc.notesCards.push(label);
+      expandStageToFit(app.doc);
+      setSelection({ type: 'notes', id: label.id });
+      setPointerTool('select');
+      renderAll(true);
+      window.setTimeout(() => renameNotesInline(label.id), 0);
       return;
     }
 
@@ -2676,16 +2719,7 @@ export function initEvents(): void {
         void openHome();
         return;
       }
-      if (e.key.toLowerCase() === 'c' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        copySelection();
-        return;
-      }
-      if (e.key.toLowerCase() === 'v' && app.workspaceMode === 'design') {
-        e.preventDefault();
-        pasteSelection();
-        return;
-      }
+      // Copy and paste go through the browser's own `copy` and `paste` events (see initClipboardEvents).
     }
 
     if (!inEditable) {
@@ -2742,12 +2776,6 @@ export function bootStudio(): void {
   initTooltips();
   initStencilPalette();
   responsiveToolbar.init(undefined, {
-    onAddStencil: (kind) => {
-      const [cx, cy] = getViewportWorldCenter();
-      const dims = getNodeDimensions(kind as NodeKind);
-      const cascade = (app.doc.nodes.length % 5) * 24;
-      addNodeAt(kind as NodeKind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
-    },
     onAddZone: () => {
       btnAddZone.click();
     },

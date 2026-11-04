@@ -9,6 +9,7 @@ import {
 } from './dom';
 import { lensOfWorkspaceMode, workspaceModeOf, type Lens, type WorkspaceMode } from '../core/lens';
 import type { ColourBy } from '../core/meta';
+import type { PointerTool } from './pointerTool';
 import { getActiveDiagramId } from './library';
 import {
   RECOVERY_ID,
@@ -92,7 +93,7 @@ export const app = {
     // Setting the old mode must not clobber a richer lens that already maps to it.
     if (workspaceModeOf(this.lens) !== mode) this.lens = lensOfWorkspaceMode(mode);
   },
-  pointerTool: 'select' as 'select' | 'connect',
+  pointerTool: 'select' as PointerTool,
   selection: { type: 'none' } as SelectionTarget,
   connectSourceNodeId: null as string | null,
   snapToGrid: true,

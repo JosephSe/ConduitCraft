@@ -398,6 +398,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
 function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   aside.style.setProperty('--bx', String(card.x));
   aside.style.setProperty('--by', String(card.y));
+  aside.classList.toggle('is-text', card.variant === 'text');
   const title = aside.querySelector('.notes-title');
   if (title) title.textContent = card.title;
   const code = aside.querySelector('.notes-code');

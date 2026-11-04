@@ -5,7 +5,12 @@
  */
 import { findPaletteCommand } from './palette';
 
-const TOOL_ACTION: Record<string, string> = { select: 'tool-select', connect: 'tool-connect' };
+const TOOL_ACTION: Record<string, string> = {
+  select: 'tool-select',
+  connect: 'tool-connect',
+  hand: 'tool-hand',
+  text: 'tool-text',
+};
 
 export function initToolRail(): void {
   const rail = document.getElementById('palette-rail-content');

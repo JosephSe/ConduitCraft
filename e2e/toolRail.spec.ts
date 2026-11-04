@@ -70,3 +70,12 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 }
+
+test('clicking a component on the collapsed rail adds exactly one', async ({ page }) => {
+  await open(page);
+  const before = await page.locator('.arch-node').count();
+  await page.locator('.rail-stencil-btn[data-stencil-kind="service"]').click();
+  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+  await page.waitForTimeout(300);
+  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+});

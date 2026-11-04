@@ -116,6 +116,7 @@ interface RawBlueprintMeta {
     x?: number;
     y?: number;
     items?: Array<{ title?: string; text?: string; icon?: string }>;
+    variant?: string;
   }>;
   specCard?: {
     id?: string;
@@ -1470,20 +1471,22 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
       : [];
 
   rawNotesList.forEach((rc, idx) => {
-    if (!rc.items || rc.items.length === 0) return;
+    const isText = (rc as { variant?: string }).variant === 'text';
+    if (!isText && (!rc.items || rc.items.length === 0)) return;
     const x = Array.isArray(rc.position) ? Number(rc.position[0]) || 48 : (rc.x ?? 48);
     const y = Array.isArray(rc.position) ? Number(rc.position[1]) || 600 : (rc.y ?? 600);
     notesCards.push({
       id: rc.id || `notes-${idx + 1}`,
-      title: rc.title || 'ARCHITECTURE NOTES',
-      code: rc.code || `SPEC-0${idx + 1}`,
+      title: rc.title || (isText ? 'Text' : 'ARCHITECTURE NOTES'),
+      code: rc.code || (isText ? '' : `SPEC-0${idx + 1}`),
       x,
       y,
-      items: rc.items.map((item, itemIdx) => ({
+      items: (rc.items ?? []).map((item, itemIdx) => ({
         title: item.title || `Note ${itemIdx + 1}`,
         text: item.text || '',
         ...(item.icon ? { icon: normalizeNotesItemIcon(item.icon) } : {}),
       })),
+      ...(isText ? { variant: 'text' as const } : {}),
     });
   });
   doc.notesCards = notesCards;
@@ -1814,6 +1817,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       title: c.title,
       code: c.code,
       position: [Math.round(c.x), Math.round(c.y)],
+      ...(c.variant === 'text' ? { variant: 'text' } : {}),
       items: c.items.map((it) => ({
         title: it.title,
         text: it.text,

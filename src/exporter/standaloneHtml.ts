@@ -210,7 +210,13 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
   const notesMarkup = doc.notesCards
     .map((card) => {
       const isSel = isMulti && selectedNotes.has(card.id);
-      const selCls = isSel ? ' is-selected' : '';
+      const selCls = (isSel ? ' is-selected' : '') + (card.variant === 'text' ? ' is-text' : '');
+      if (card.variant === 'text') {
+        return `
+      <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};" aria-label="${escapeHtml(card.title)}">
+        <div class="blueprint-spec-header"><span>${escapeHtml(card.title)}</span></div>
+      </aside>`;
+      }
       return `
       <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};" aria-label="${escapeHtml(card.title)}">
         <div class="blueprint-spec-header">

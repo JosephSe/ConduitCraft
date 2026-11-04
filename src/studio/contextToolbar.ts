@@ -11,6 +11,7 @@ import { findPaletteCommand } from './palette';
 import { app, onSelectionChange } from './state';
 import { placeTooltip } from './tooltips';
 
+
 const SHORT_LABEL: Record<string, string> = {
   'edit-rename': 'Rename',
   'edit-duplicate': 'Duplicate',
@@ -65,7 +66,18 @@ function ensureBar(): HTMLElement {
   return bar;
 }
 
-function rebuild(host: HTMLElement, ids: string[]): void {
+/** Close an open Colour, Kind or Shape menu, if its code has been loaded. */
+function closePicker(): void {
+  if (document.querySelector('.appearance-popover')) void import('./appearancePickers').then((m) => m.closeAppearancePopover());
+}
+
+function selectionHasNodes(): boolean {
+  const sel = app.selection;
+  return sel.type === 'node' || (sel.type === 'multi' && sel.ids.length > 0);
+}
+
+function rebuild(host: HTMLElement, ids: string[], withPickers: boolean): void {
+  closePicker();
   host.replaceChildren();
   for (const id of ids) {
     const button = document.createElement('button');
@@ -75,6 +87,26 @@ function rebuild(host: HTMLElement, ids: string[]): void {
     button.textContent = SHORT_LABEL[id] ?? id;
     button.addEventListener('click', () => findPaletteCommand(id)?.run());
     host.appendChild(button);
+  }
+  if (withPickers) {
+    for (const [which, label] of [
+      ['colour', 'Colour'],
+      ['kind', 'Kind'],
+      ['shape', 'Shape'],
+    ] as const) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'context-toolbar-btn';
+      button.dataset.picker = which;
+      button.textContent = label;
+      button.setAttribute('aria-haspopup', 'menu');
+      button.setAttribute('aria-expanded', 'false');
+      // The menus and their code load the first time one is opened.
+      button.addEventListener('click', () => {
+        void import('./appearancePickers').then((m) => m.openAppearancePicker(button, which));
+      });
+      host.appendChild(button);
+    }
   }
   const more = document.createElement('button');
   more.type = 'button';
@@ -94,6 +126,7 @@ function update(): void {
   const editing = document.querySelector('.inline-edit-input') !== null;
   if (app.workspaceMode !== 'design' || pointerDown || editing || app.selection.type === 'none') {
     host.hidden = true;
+    closePicker();
     return;
   }
   const ctx = buildActionContext(app.selection, app.doc, app.workspaceMode);
@@ -106,9 +139,10 @@ function update(): void {
     return;
   }
 
-  const key = `${app.selection.type}|${ids.join(',')}`;
+  const withPickers = selectionHasNodes();
+  const key = `${app.selection.type}|${ids.join(',')}|${withPickers}`;
   if (key !== builtFor) {
-    rebuild(host, ids);
+    rebuild(host, ids, withPickers);
     builtFor = key;
   }
 

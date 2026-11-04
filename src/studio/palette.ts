@@ -973,6 +973,22 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => setPointerTool('connect'),
     },
     {
+      id: 'tool-hand',
+      title: 'Hand Tool',
+      subtitle: 'Drag anywhere to pan the canvas',
+      category: 'Canvas & Layout',
+      keywords: ['hand', 'pan', 'move', 'scroll', 'tool', 'grab'],
+      run: () => setPointerTool('hand'),
+    },
+    {
+      id: 'tool-text',
+      title: 'Text Tool',
+      subtitle: 'Click the canvas to add a text label',
+      category: 'Canvas & Layout',
+      keywords: ['text', 'label', 'type', 'annotation', 'tool', 'caption'],
+      run: () => setPointerTool('text'),
+    },
+    {
       id: 'wire-from-selection',
       title: 'Wire From Selection',
       subtitle: 'Start a wire from the selected component, then click its target',

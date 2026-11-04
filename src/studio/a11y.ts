@@ -116,7 +116,14 @@ export function announceModeChange(mode: 'design' | 'data' | 'review'): void {
 }
 
 /** Announce pointer tool switch (Select vs Connect). */
-export function announceToolChange(tool: 'select' | 'connect'): void {
-  const desc = tool === 'connect' ? 'Connect wire tool active: click or drag between ports' : 'Select pointer tool active';
+export function announceToolChange(tool: 'select' | 'connect' | 'hand' | 'text'): void {
+  const desc =
+    tool === 'connect'
+      ? 'Connect wire tool active: click or drag between ports'
+      : tool === 'hand'
+        ? 'Hand tool active: drag to move around the canvas'
+        : tool === 'text'
+          ? 'Text tool active: click the canvas to add a text label'
+          : 'Select pointer tool active';
   announce(desc, 'polite');
 }
