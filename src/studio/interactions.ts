@@ -61,6 +61,9 @@ import {
   exportAltText,
   shareLinkSize,
   chkShareOmitImages,
+  shareLinkOptions,
+  shareImageSizes,
+  btnShareDownloadFile,
   fileUploadInput,
   gifExportPanel,
   gifScenarioEmpty,
@@ -190,7 +193,7 @@ import { setPointerTool } from './pointerTool';
 import { matchBinding } from '../core/keymap';
 import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
-import { createShareUrl, decodeSharedDiagramFromHash } from './shareLink';
+import { createShareUrl, decodeSharedDiagramFromHash, describeShareSize, docHasImages } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
 import { presentationManager } from './presentation';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
@@ -1854,25 +1857,34 @@ export function initEvents(): void {
     let timeoutId: any;
     try {
       const omitImages = Boolean(chkShareOmitImages?.checked);
-      const sharePromise = createShareUrl(fullDocument(), { omitImages });
+      const shareDoc = fullDocument();
+      const hasImages = docHasImages(shareDoc);
+      const sharePromise = createShareUrl(shareDoc, { omitImages: hasImages && omitImages });
+      // The other size, so the dialog can show the link with and without images.
+      const otherPromise = hasImages ? createShareUrl(shareDoc, { omitImages: !omitImages }) : sharePromise;
       const timeoutPromise = new Promise<never>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('Timed out generating share link (5s)')), 5000);
       });
-      const result = await Promise.race([sharePromise, timeoutPromise]);
+      const [result, other] = await Promise.race([Promise.all([sharePromise, otherPromise]), timeoutPromise]);
       clearTimeout(timeoutId);
       shareLinkInput.value = result.url;
       const origin = typeof window !== 'undefined' && window.location ? window.location.origin : '';
       if (btnCopyShareLink) {
         btnCopyShareLink.disabled = !origin || !result.url.startsWith(origin);
       }
-      const kb = (result.url.length / 1024).toFixed(1);
-      if (result.isLarge) {
-        shareLinkSize.textContent = `⚠️ ${kb} KB (Large URL). For a diagram this big, export the file instead.`;
-        shareLinkSize.classList.add('is-warning');
-      } else {
-        shareLinkSize.textContent = `${kb} KB (Safe)`;
-        shareLinkSize.classList.remove('is-warning');
-      }
+      const notice = describeShareSize({
+        withImages: (omitImages ? other : result).url.length,
+        withoutImages: (omitImages ? result : other).url.length,
+        hasImages,
+        omitting: omitImages,
+      });
+      shareLinkSize.textContent = notice.size;
+      shareLinkSize.classList.toggle('is-warning', notice.preferFile);
+      if (shareLinkOptions) shareLinkOptions.hidden = !hasImages;
+      if (shareImageSizes) shareImageSizes.textContent = notice.images;
+      // Too long: the file is the main action and the link is still there as a smaller one.
+      btnShareDownloadFile?.classList.toggle('btn-primary-export', notice.preferFile);
+      btnCopyShareLink?.classList.toggle('btn-primary-export', !notice.preferFile);
     } catch {
       clearTimeout(timeoutId);
       shareLinkInput.value = 'Error generating link';
@@ -2030,7 +2042,7 @@ export function initEvents(): void {
     void downloadDiagramGif({ kind: 'view' });
     void closeDialogSmoothly(exportDialog);
   });
-  btnExportJson.addEventListener('click', () => {
+  const downloadBlueprintFile = (): void => {
     const filename = `${getSafeFilenameSlug()}.blueprint.json`;
     downloadBlob(
       serializeBlueprintJson(fullDocument()),
@@ -2039,7 +2051,9 @@ export function initEvents(): void {
     );
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
-  });
+  };
+  btnExportJson.addEventListener('click', downloadBlueprintFile);
+  btnShareDownloadFile?.addEventListener('click', downloadBlueprintFile);
 
   // Version Snapshots & Diff Controller
   let currentDiffSnapshotId: string | null = null;

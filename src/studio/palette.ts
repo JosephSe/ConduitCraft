@@ -894,8 +894,14 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
         }
         try {
           const res = await createShareUrl(fullDocument());
+          if (res.isLarge) {
+            // Too long for many apps: the Share dialog makes the file the main action and offers to drop images.
+            notify(`That link is ${(res.url.length / 1024).toFixed(1)} KB, too long for many apps. Download the file instead.`);
+            deps.openExportDialog();
+            return;
+          }
           await navigator.clipboard.writeText(res.url);
-          notify('Copied shareable link to clipboard!');
+          notify('Copied the link. Anyone with it can see the whole diagram; nothing is uploaded.');
         } catch {
           deps.openExportDialog();
         }

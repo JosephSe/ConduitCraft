@@ -564,7 +564,7 @@
             <span class="share-link-size" id="share-link-size"></span>
           </div>
           <p class="share-link-desc">
-            Compresses this architecture into the browser address bar. Anyone with the link opens this diagram directly.
+            Anyone with this link can see the whole diagram. Nothing is uploaded.
           </p>
           <div class="share-link-input-row">
             <input
@@ -580,11 +580,15 @@
               <span>Copy Link</span>
             </button>
           </div>
-          <div class="share-link-options">
+          <div class="share-link-options" id="share-link-options" hidden>
             <label class="share-link-checkbox-label">
               <input type="checkbox" id="chk-share-omit-images" />
-              <span>Omit custom image icons (makes URL more compact)</span>
+              <span>Leave out embedded images (logo and custom icons)</span>
             </label>
+            <span class="share-link-size" id="share-image-sizes" aria-live="polite"></span>
+          </div>
+          <div class="share-link-file-row" id="share-link-file-row">
+            <button type="button" class="btn" id="btn-share-download-file">Download file instead</button>
           </div>
         </div>
 

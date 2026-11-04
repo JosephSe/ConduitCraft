@@ -7,6 +7,9 @@ import {
   createShareUrl,
   decodeSharedDiagramFromHash,
   SHARE_HASH_PREFIX,
+  LARGE_URL_WARNING_THRESHOLD,
+  describeShareSize,
+  docHasImages,
   ALT_HASH_PREFIX,
 } from '../src/studio/shareLink.ts';
 import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
@@ -263,5 +266,31 @@ describe('shareable link (diagram in URL hash)', () => {
     assert.strictEqual(decoded.zones[0].title, 'Public Perimeter Zone');
     assert.strictEqual(decoded.notesCards.length, 1);
     assert.strictEqual(decoded.notesCards[0].title, 'PCI-DSS 4.0 Audit');
+  });
+
+  it('knows whether a diagram has embedded images', () => {
+    const blank = createBlankDocument();
+    assert.equal(docHasImages(blank), false);
+    assert.equal(docHasImages({ ...blank, brand: { ...blank.brand, logo: 'data:image/png;base64,AAAA' } }), true);
+    const node = { id: 'n1', title: 'Node', iconImage: 'data:image/png;base64,AAAA' } as unknown as DiagramDocument['nodes'][number];
+    assert.equal(docHasImages({ ...blank, nodes: [node] }), true);
+  });
+
+  it('describes link sizes, with and without images, and prefers the file when too long', () => {
+    const small = describeShareSize({ withImages: 2048, withoutImages: 2048, hasImages: false, omitting: false });
+    assert.equal(small.size, '2.0 KB');
+    assert.equal(small.images, '');
+    assert.equal(small.preferFile, false);
+
+    const big = LARGE_URL_WARNING_THRESHOLD + 4096;
+    const heavy = describeShareSize({ withImages: big, withoutImages: 3072, hasImages: true, omitting: false });
+    assert.equal(heavy.preferFile, true);
+    assert.match(heavy.size, /Download the file instead/);
+    assert.match(heavy.images, /With images 12\.0 KB, without 3\.0 KB/);
+
+    // Leaving the images out brings it back under the limit, so the link is the main action again.
+    const light = describeShareSize({ withImages: big, withoutImages: 3072, hasImages: true, omitting: true });
+    assert.equal(light.preferFile, false);
+    assert.equal(light.size, '3.0 KB');
   });
 });
