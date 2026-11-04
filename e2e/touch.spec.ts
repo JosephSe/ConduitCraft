@@ -147,6 +147,52 @@ test('tap places a component from the command palette', async ({ page }) => {
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
+test('tap places a component from the palette drawer', async ({ page }) => {
+  await open(page);
+  const before = await page.locator('.arch-node').count();
+  await expect(page.locator('#palette-sidebar')).toBeHidden();
+  await page.locator('#btn-drawer-palette').tap();
+  await expect(page.locator('#palette-sidebar')).toBeVisible();
+  await expect(page.locator('#btn-drawer-palette')).toBeHidden();
+  await page.locator('#palette-sidebar .stencil-card').first().tap();
+  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+});
+
+test('the drawer tabs are full-size targets that never overlap the top bar', async ({ page }) => {
+  await open(page);
+  for (const id of ['#btn-drawer-palette', '#btn-drawer-inspector']) {
+    const box = await page.locator(id).boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(43.5);
+    expect(box!.height).toBeGreaterThanOrEqual(43.5);
+  }
+  // The top bar stays at 8 controls or fewer: the panel toggles are not brought back to it.
+  await expect(page.locator('.topbar .panel-rail-toggles')).toBeHidden();
+});
+
+test('canvas hit areas are 44 px at 100% zoom', async ({ page }) => {
+  await open(page);
+  const [a] = await freePair(page);
+  await page.touchscreen.tap((await nodeCentre(page, a)).x, (await nodeCentre(page, a)).y);
+  const small = await page.evaluate((id) => {
+    const node = document.querySelector<HTMLElement>(`.arch-node[data-node="${id}"]`)!;
+    const out: string[] = [];
+    const scale = (Number.parseInt(document.getElementById('zoom-readout')!.textContent ?? '100', 10) || 100) / 100;
+    for (const el of node.querySelectorAll<HTMLElement>('.node-port, .node-drag-handle, .node-level-badge')) {
+      const cs = getComputedStyle(el);
+      if (cs.display === 'none') continue;
+      // Hit area = the box plus any ::after inset, measured at 100% zoom.
+      const r = el.getBoundingClientRect();
+      const after = getComputedStyle(el, '::after');
+      const inset = after.content !== 'none' ? Math.abs(Number.parseFloat(after.top) || 0) : 0;
+      const w = r.width / scale + inset * 2;
+      const h = r.height / scale + inset * 2;
+      if (w < 43.5 || h < 43.5) out.push(`${el.className} ${Math.round(w)}x${Math.round(h)}`);
+    }
+    return out;
+  }, a);
+  expect(small).toEqual([]);
+});
+
 test('tap selects a component and the inspector shows it', async ({ page }) => {
   await open(page);
   const [a] = await freePair(page);
@@ -154,8 +200,8 @@ test('tap selects a component and the inspector shows it', async ({ page }) => {
   await page.touchscreen.tap(c.x, c.y);
   await expect(page.locator(`.arch-node[data-node="${a}"] .node-select-hit`)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.context-toolbar')).toBeVisible();
-  // On a tablet the inspector is a drawer, opened from the command palette.
-  await runCommandByTap(page, 'Toggle Properties Inspector');
+  // On a tablet the inspector is a drawer, opened from its edge tab.
+  await page.locator('#btn-drawer-inspector').tap();
   await expect(page.locator('#inspector-panel')).toBeVisible();
 });
 
