@@ -243,10 +243,11 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** extend `e2e/topbar.spec.ts` so the count covers the whole screen outside the canvas (top bar, tool rail, run bar, any open side panel) at 1280 px. If the total is over 8, decide with the number in hand: move controls into the palette, or amend the checklist line to "per region" in V1 section 10 and say why in the PR.
 - **Done when:** the test states the rule it enforces and passes.
 
-#### [ ] A15. Motion and "live" fixes · S
+#### [x] A15. Motion and "live" fixes · S (#PR)
 - **Needs:** A11.
 - **Do:** stop `pulseLiveDot`: no animation on the status dot, so nothing on screen suggests live data. Add an e2e test that runs with `reducedMotion: 'reduce'` and asserts no element has a running animation. If `chaos-pulse` or `portPulse` fail the test, guard them.
 - **Done when:** that test passes, and `grep -rn pulseLiveDot src` finds nothing.
+- **Shipped as:** `pulseLiveDot` and its animation are gone; the live status dot keeps a still ring. New `e2e/reducedMotion.spec.ts` runs with `reducedMotion: 'reduce'` and, once finite animations have finished, asserts that `document.getAnimations()` has nothing running in three states: a component marked live, wiring targets (`portPulse`), and a failure with at-risk callers (`chaos-pulse`) while a scenario plays. It failed on `pulseLiveDot` before the fix. `chaos-pulse` and `portPulse` already pass, so they need no guard. A fourth test checks the dot has no animation even when motion is allowed. The test sees CSS animations and transitions only (not SMIL or script-driven drawing); the playing scenario is in it, and the first-run test also checks the packet is hidden under reduced motion.
 
 #### [ ] A16. Export visual check · S
 - **Needs:** A11.
