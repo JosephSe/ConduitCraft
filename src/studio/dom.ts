@@ -84,8 +84,6 @@ export const snapshotsDialogBody = document.getElementById('snapshots-dialog-bod
 
 export const viewport = document.getElementById('canvas-viewport') as HTMLElement;
 export const stageWorld = document.getElementById('stage-world') as HTMLElement;
-export const alignGuideX = document.getElementById('align-guide-x') as HTMLElement;
-export const alignGuideY = document.getElementById('align-guide-y') as HTMLElement;
 export const marqueeBox = document.getElementById('marquee-box') as HTMLElement | null;
 export const zonesLayer = document.getElementById('zones-layer') as HTMLElement;
 export const notesLayer = document.getElementById('notes-layer') as HTMLElement;
