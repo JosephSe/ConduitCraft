@@ -91,7 +91,7 @@
   </header>
 
   <main class="workspace" id="workspace" data-mode="design" data-tool="select" data-flow="all">
-  <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md or .json)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json" class="visually-hidden">
+  <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md, .json or .drawio)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json,.drawio,.xml" class="visually-hidden">
     <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
     <div class="drawer-scrim" id="drawer-scrim" hidden></div>
 
@@ -740,6 +740,38 @@
         <div class="template-category-filters" id="template-category-filters" role="tablist" aria-label="Template categories"></div>
       </div>
       <div class="dialog-body template-gallery-body" id="template-gallery-grid" role="region" aria-label="Available templates"></div>
+    </div>
+  </dialog>
+
+  <!-- draw.io import: which way to bring in a file with several pages -->
+  <dialog id="drawio-pages-dialog" closedby="any" aria-labelledby="drawio-pages-title">
+    <div class="dialog-shell" style="max-inline-size: 34rem; inline-size: 92vw;">
+      <div class="dialog-header">
+        <h2 id="drawio-pages-title">This draw.io file has several pages</h2>
+      </div>
+      <div class="dialog-body">
+        <p id="drawio-pages-text" style="margin: 0 0 1rem;"></p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          <button type="button" class="btn btn-primary" data-drawio-mode="separate" autofocus>One diagram per page</button>
+          <button type="button" class="btn" data-drawio-mode="levels">Pages as levels</button>
+          <button type="button" class="btn" data-drawio-mode="cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Import report: what an import could not bring across -->
+  <dialog id="import-report-dialog" closedby="any" aria-labelledby="import-report-title">
+    <div class="dialog-shell" style="max-inline-size: 40rem; inline-size: 92vw;">
+      <div class="dialog-header">
+        <h2 id="import-report-title">Import report</h2>
+        <form method="dialog">
+          <button type="submit" class="btn" autofocus>Done</button>
+        </form>
+      </div>
+      <div class="dialog-body">
+        <ul id="import-report-list" style="margin: 0; padding-inline-start: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;"></ul>
+      </div>
     </div>
   </dialog>
 
