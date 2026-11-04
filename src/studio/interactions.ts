@@ -2761,14 +2761,10 @@ export function bootStudio(): void {
             action: {
               label: 'Open',
               onClick: () => {
-                resetActiveFile();
-                clearPendingRestoreOffer();
-                pushHistory();
-                app.doc = sharedDoc;
-                setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
-                renderAll(true);
-                fitToViewport();
-                notify(`Opened shared architecture "${sharedDoc.title}"`);
+                // A new library entry, so the diagram that was open is kept and Undo returns to it.
+                void openAsNewDiagram(sharedDoc, `Opened shared architecture "${sharedDoc.title}"`, {
+                  pickSelection: firstNodeSelection,
+                });
               },
             },
           });

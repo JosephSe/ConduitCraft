@@ -307,11 +307,12 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** a Playwright test loads a template and the previous diagram is still in the library, unchanged.
 - **Shipped as:** `openAsNewDiagram(doc, message, {pickSelection})` in `libraryUi.ts` saves the open diagram, adds the document as a library entry, opens it, and shows a toast whose Undo opens the previous diagram again (the new one stays in the library). The gallery's blank card (`createBlankCanvas`), `loadTemplateDoc`, and file open and import (`handleUploadedFile`, `handleOpenFile`, through a new `asNewDiagram` flag on `applyImportedText`) use it. The Code panel's "apply" still edits the open diagram in place, and snapshot restore stays in place on purpose (it is a step in one diagram's history). Playwright: two new `never loses …` tests in `e2e/library.spec.ts` (a template and a blank canvas leave the previous diagram unchanged and Undo returns to it; an imported file becomes a new diagram). No section-7 default was needed.
 
-#### [ ] B3c. Opening a shared link adds a library entry · S
+#### [x] B3c. Opening a shared link adds a library entry · S (#57)
 - **Needs:** B3b.
 - **Why:** when the visitor already has work open, the "Open" action on a shared-link toast still replaces the open diagram in place.
 - **Do:** route that action through `openAsNewDiagram`. An empty canvas at boot may still take the shared document directly.
 - **Done when:** a Playwright test boots with work open and a share link, picks Open, and finds the earlier diagram still in the library.
+- **Shipped as:** the shared-link toast's "Open" calls `openAsNewDiagram`, so the diagram that was open stays in the library and the toast's Undo returns to it. The boot path for an empty canvas is unchanged. The "Open" toast only appears when work arrives on the canvas before the link has been decoded (for example the visitor restores their session in that gap), so the Playwright test (`e2e/library.spec.ts`) holds the decoding with an init script to make that happen, and it fails without the change. No section-7 default was needed.
 
 #### [ ] B4. F-08 Home screen · M
 - **Needs:** B3, A6.
