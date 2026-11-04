@@ -215,7 +215,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 
 Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the camera ease, panel slides, toasts, level fade and the drop-in all explain a change. `chaos-pulse` (at-risk) and `portPulse` (wiring targets) are state cues and both respect reduced motion. `pulseLiveDot` (`studio.css`, `.node-status-badge[data-status="live"] .status-dot`) is the one that fails: it is decorative, it suggests real-time data, and it has no `prefers-reduced-motion` guard.
 
-#### [x] A12. Touch pass on a tablet · M (#PR)
+#### [x] A12. Touch pass on a tablet · M (#42)
 - **Needs:** A11.
 - **Do:** add a Playwright project with `hasTouch` at 768 × 1024 and 1024 × 768. Cover place, select, move, wire, pan, pinch zoom, the context menu (long press), the palette, the inspector and the export dialog. Fix what fails; target size is 44 px for anything you tap.
 - **Done when:** the project runs the same core flows as the desktop tests, and axe passes at 768 px.
