@@ -251,10 +251,16 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** that test passes, and `grep -rn pulseLiveDot src` finds nothing.
 - **Shipped as:** `pulseLiveDot` and its animation are gone; the live status dot keeps a still ring. New `e2e/reducedMotion.spec.ts` runs with `reducedMotion: 'reduce'` and, once finite animations have finished, asserts that `document.getAnimations()` has nothing running in three states: a component marked live, wiring targets (`portPulse`), and a failure with at-risk callers (`chaos-pulse`) while a scenario plays. It failed on `pulseLiveDot` before the fix. `chaos-pulse` and `portPulse` already pass, so they need no guard. A fourth test checks the dot has no animation even when motion is allowed. The test sees CSS animations and transitions only (not SMIL or script-driven drawing); the playing scenario is in it, and the first-run test also checks the packet is hidden under reduced motion.
 
-#### [ ] A16. Export visual check · S
+#### [x] A16. Export visual check · S (#49)
 - **Needs:** A11.
 - **Do:** screenshot tests of the SVG, standalone HTML and GIF first frame for `lumen-relay`, in light and dark and in each diagram style. Compare them with the canvas by eye once and keep the images as baselines.
 - **Done when:** baselines are committed and the test fails on a change to the export look.
+- **Shipped as:** `e2e/exportVisual.spec.ts` exports Lumen Relay as SVG, standalone HTML and GIF, draws each file in a clean page (the GIF first frame decoded onto a canvas so the animation cannot move it) and compares with six committed baselines in `e2e/__screenshots__/exportVisual.spec.ts/`: light and dark for each format. Diagram styles (F-18) do not exist yet, so the one style is `studio`; the test loops over a `STYLES` list, and F4 must add each new style to it. Checked: changing the node fill in `diagramSvg.ts` fails the test (12% of pixels differ), and three repeat runs pass. Baselines are shared by all platforms (`snapshotPathTemplate` in `playwright.config.ts`) with a tolerance of 3% of pixels at colour threshold 0.05, because text uses system fonts and CI is Linux; they were taken on macOS, so the first CI run is the check that the tolerance is wide enough. By-eye comparison with the canvas: the GIF first frame and the standalone HTML match the studio; the **SVG is plainer** (no icons, kind labels or chips, and a diamond's text sits outside it), and it ignores light and dark (the two baselines are identical). That is the next item. The test duplicates the export capture from `smoke.spec.ts` so that it stands alone; A13 moves that capture into `helpers.ts`, so unify them once both are in.
+
+#### [ ] A16b. SVG export matches the canvas · M
+- **Needs:** A16.
+- **Do:** compare `renderDiagramSvg` with the canvas for Lumen Relay and close the gap: component icons, kind labels and chips, text inside non-rectangular shapes, and the colour scheme (today the SVG is the same in light and dark). Retake the SVG baselines from A16 once and say so in the PR.
+- **Done when:** the SVG baselines show the same details as the canvas and the GIF first frame, and the A16 test passes with the new baselines.
 
 ### Milestone B: Many diagrams, real systems (phase 4)
 
@@ -377,7 +383,7 @@ Each item follows its V1 spec. They are listed in the order to build them.
 - [ ] **F1. F-04 Storyboards** · M. Build in the Present lens. Steps can hold a level path as well as a camera, so a story can drill down.
 - [ ] **F2. F-19 Video export** · S. Needs F1.
 - [ ] **F3. F-13 Read-only viewer and embeds** · M. Then finish B5 item 4 (the view-only link).
-- [ ] **F4. F-18 Diagram styles** · M. Add each style to `tests/contrast.test.ts`.
+- [ ] **F4. F-18 Diagram styles** · M. Add each style to `tests/contrast.test.ts` and to the `STYLES` list in `e2e/exportVisual.spec.ts` (with new baselines).
 - [ ] **F5. F-07 Comments (local)** · M. Migrate `node.comment` into the first thread, with a schema bump.
 - [ ] **F6. F-12 Coach marks** · S. Last in this milestone. Every coach mark has a Playwright test.
 - [ ] **F7. F-30 PDF and print export** · S. Needs A7 and F4 (the Print style).
