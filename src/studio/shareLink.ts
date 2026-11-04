@@ -31,6 +31,11 @@ export function stripDocImages(doc: DiagramDocument): DiagramDocument {
   };
 }
 
+/** True when the diagram carries an embedded picture (a logo or a custom component icon). */
+export function docHasImages(doc: DiagramDocument): boolean {
+  return Boolean(doc.brand?.logo) || doc.nodes.some((node) => Boolean(node.iconImage));
+}
+
 /**
  * Compresses a UTF-8 text string into a URL-safe Base64URL string
  * using the browser's native CompressionStream('deflate').
@@ -70,6 +75,41 @@ export async function decompressBase64UrlToString(base64url: string): Promise<st
 
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
   return await new Response(stream).text();
+}
+
+/** Kilobytes with one decimal, for the Share dialog. */
+export function formatKb(chars: number): string {
+  return `${(chars / 1024).toFixed(1)} KB`;
+}
+
+export interface ShareSizeNotice {
+  /** The line next to the size: what the link weighs and what to do about it. */
+  size: string;
+  /** The line under the image option, or an empty string when the diagram has no images. */
+  images: string;
+  /** The link is too long for many apps, so the file is the main action. */
+  preferFile: boolean;
+}
+
+/**
+ * What the Share dialog says about link size. `withImages` and `withoutImages` are URL lengths; `withoutImages` is
+ * only meaningful when the diagram has images. `omitting` is whether the images option is ticked.
+ */
+export function describeShareSize(opts: {
+  withImages: number;
+  withoutImages: number;
+  hasImages: boolean;
+  omitting: boolean;
+}): ShareSizeNotice {
+  const current = opts.hasImages && opts.omitting ? opts.withoutImages : opts.withImages;
+  const preferFile = current > LARGE_URL_WARNING_THRESHOLD;
+  const size = preferFile
+    ? `${formatKb(current)}. Too long for many apps. Download the file instead.`
+    : `${formatKb(current)}`;
+  const images = opts.hasImages
+    ? `With images ${formatKb(opts.withImages)}, without ${formatKb(opts.withoutImages)}.`
+    : '';
+  return { size, images, preferFile };
 }
 
 export interface ShareUrlResult {
