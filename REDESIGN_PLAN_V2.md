@@ -238,7 +238,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** add a Playwright test: load once, wait for the service worker, go offline, reload, then open a template, run a simulation, export a PNG and a GIF (lazy chunks), and save a file. Fix any chunk the precache misses.
 - **Done when:** the test is named `works offline …` and passes against `vite preview`.
 
-#### [x] A14. Count every always-visible control · S (#PR)
+#### [x] A14. Count every always-visible control · S (#47)
 - **Needs:** A11.
 - **Do:** extend `e2e/topbar.spec.ts` so the count covers the whole screen outside the canvas (top bar, tool rail, run bar, any open side panel) at 1280 px. If the total is over 8, decide with the number in hand: move controls into the palette, or amend the checklist line to "per region" in V1 section 10 and say why in the PR.
 - **Done when:** the test states the rule it enforces and passes.
