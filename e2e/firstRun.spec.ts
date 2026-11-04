@@ -79,6 +79,41 @@ test('never loses work: an existing autosave means no first run', async ({ page 
   await expect(page.locator('#restore-banner-text')).toContainText('1 component');
 });
 
+test('never loses work: a library entry with no autosave means no first run', async ({ page }) => {
+  // Seed the database from a static page of the same origin, so it is in place before the app starts.
+  await page.goto('/icon.svg');
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('conduitcraft', 1);
+        open.onupgradeneeded = () => {
+          for (const name of ['diagrams', 'snapshots', 'meta']) open.result.createObjectStore(name, { keyPath: 'id' });
+        };
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const tx = open.result.transaction('diagrams', 'readwrite');
+          tx.objectStore('diagrams').put({
+            id: 'd-seeded',
+            title: 'Library only',
+            updatedAt: 1,
+            doc: { title: 'Library only', nodes: [], edges: [], zones: [], notesCards: [], simulations: [] },
+          });
+          tx.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+  );
+  await page.goto('/');
+  await expect(page.locator('#canvas-viewport')).toBeVisible();
+  await page.waitForTimeout(1_500);
+  await expect(page.locator('#first-run')).toBeHidden();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-mode', 'design');
+  expect(await page.evaluate(() => localStorage.getItem('conduitcraft-first-run-seen'))).toBeNull();
+});
+
 test('a share link means no first run', async ({ page }) => {
   await page.goto('/#s=notreal');
   await page.waitForTimeout(800);
