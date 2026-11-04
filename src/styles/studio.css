@@ -5364,6 +5364,7 @@ html[data-ui="1"] .lens-review { display: none; }
 .insights-heading { margin: 0 0 0.4rem; font-size: 0.9rem; }
 .insights-body { display: grid; gap: 0.6rem; }
 .insight-group-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.insight-mute { margin-inline-start: auto; flex: none; padding-inline: 0.5rem; display: inline-grid; place-items: center; }
 .insight-group-head h3 { margin: 0; font-size: 0.78rem; font-weight: 700; }
 .insight-group[data-level="error"] .insight-group-head h3 { color: var(--wl-rose); }
 .insight-group[data-level="warning"] .insight-group-head h3 { color: var(--wl-amber-ink, #92400e); }

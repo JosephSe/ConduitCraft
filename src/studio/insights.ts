@@ -150,8 +150,15 @@ export function initInsightsPanel(): void {
       mute.type = 'button';
       mute.className = 'btn btn-compact insight-mute';
       mute.dataset.rule = rule.code;
-      mute.textContent = isMuted ? 'Show' : 'Mute';
-      mute.setAttribute('aria-label', `${isMuted ? 'Show' : 'Mute'} ${rule.title}`);
+      const verb = isMuted ? 'Show' : 'Mute';
+      const svg = (paths: string) =>
+        `<svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+      // Bell with a slash to mute; an eye to show a muted rule again.
+      mute.innerHTML = isMuted
+        ? svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>')
+        : svg('<path d="M8.7 3A6 6 0 0 1 18 8c0 2.2.4 3.9.9 5.1M6.3 6.3A6 6 0 0 0 6 8c0 7-3 9-3 9h14M10.3 21a1.94 1.94 0 0 0 3.4 0M2 2l20 20"/>');
+      mute.setAttribute('aria-label', `${verb} ${rule.title}`);
+      mute.setAttribute('data-tip', `${verb} this rule`);
       head.append(title, mute);
       section.appendChild(head);
       if (!isMuted) {
