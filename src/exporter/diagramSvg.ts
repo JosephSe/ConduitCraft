@@ -320,6 +320,9 @@ export function renderDiagramSvg(
   const notes = doc.notesCards
     .map((card) => {
       const isSel = isMulti && selectedNotes.has(card.id);
+      if (card.variant === 'text') {
+        return `<text x="${card.x + 8}" y="${card.y + 22}" font-family="${SANS}" font-size="16" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>`;
+      }
       const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}" stroke-dasharray="5 4"`;
       const boxHeight = notesHeight(card.items.length);
       const items = (card.items || [])

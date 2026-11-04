@@ -174,6 +174,7 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
     x: num(raw.x),
     y: num(raw.y),
     items,
+    ...(raw.variant === 'text' ? { variant: 'text' as const } : {}),
   };
 }
 

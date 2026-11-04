@@ -112,6 +112,8 @@ export interface DiagramNotesCard {
   locked?: boolean;
   z?: number;
   groupId?: string;
+  /** `text`: a free text label (the Text tool). Its words are `title`; it has no border, background or items. */
+  variant?: 'text';
 }
 
 export interface DiagramZone {

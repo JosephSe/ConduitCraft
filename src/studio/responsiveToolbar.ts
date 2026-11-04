@@ -124,18 +124,9 @@ export class ResponsiveToolbarManager {
         const btnAddNotes = document.getElementById('btn-add-notes');
         if (btnAddNotes) btnAddNotes.click();
         else if (this.options.onAddNotes) this.options.onAddNotes();
-      } else {
-        if (this.options.onAddStencil) {
-          this.options.onAddStencil(kind);
-        } else {
-          // Trigger stencil card pointer events or click
-          const card = document.querySelector<HTMLButtonElement>(`.stencil-card[data-kind="${kind}"]`);
-          if (card) {
-            card.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true }));
-            card.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true }));
-          }
-        }
       }
+      // Any other kind is a component stencil. Its own pointer handler (attachStencilDragAndDrop) already added it,
+      // so adding it again here would put two on the canvas.
 
       if (this.isNarrowScreen() || (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches)) {
         this.togglePalette(true);

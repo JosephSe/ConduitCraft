@@ -30,6 +30,8 @@ export const KEY_BINDINGS: KeyBinding[] = [
   // Tool rail: one letter per tool.
   { actionId: 'tool-select', key: 'v', designOnly: true },
   { actionId: 'tool-connect', key: 'w', designOnly: true },
+  { actionId: 'tool-hand', key: 'h', designOnly: true },
+  { actionId: 'tool-text', key: 't', designOnly: true },
   { actionId: 'add-zone', key: 'z', designOnly: true },
   { actionId: 'add-notes', key: 'n', designOnly: true },
   { actionId: 'open-insert', key: 'c', designOnly: true },

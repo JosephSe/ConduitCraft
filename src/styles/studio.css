@@ -1031,6 +1031,20 @@
     cursor: crosshair;
   }
 
+  .workspace[data-tool="text"] .canvas-viewport {
+    cursor: text;
+  }
+
+  /* Hand tool: like Space held, the whole canvas pans. */
+  .workspace[data-tool="hand"] .canvas-viewport,
+  .workspace[data-tool="hand"] .canvas-viewport * {
+    cursor: grab !important;
+  }
+  .workspace[data-tool="hand"] .canvas-viewport.is-dragging,
+  .workspace[data-tool="hand"] .canvas-viewport.is-dragging * {
+    cursor: grabbing !important;
+  }
+
   .canvas-viewport:focus-visible {
     outline: 3px solid var(--wl-blue);
     outline-offset: -3px;
@@ -1143,6 +1157,31 @@
     border-style: solid;
     border-color: var(--wl-blue);
     box-shadow: 0 0 0 3px var(--wl-blue-soft), var(--wl-shadow-card);
+  }
+
+  /* A free text label (the Text tool): just the words, no card. */
+  .blueprint-spec.is-text {
+    width: max-content;
+    max-width: 404px;
+    padding: 0.25rem 0.5rem;
+    background: none;
+    border: 1px dashed transparent;
+    backdrop-filter: none;
+  }
+  .blueprint-spec.is-text.is-selected {
+    border-color: var(--wl-blue);
+    box-shadow: none;
+  }
+  .blueprint-spec.is-text .blueprint-spec-header {
+    margin-block-end: 0;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--wl-ink);
+  }
+  .blueprint-spec.is-text .notes-code,
+  .blueprint-spec.is-text .blueprint-spec-list {
+    display: none;
   }
 
   .blueprint-spec-header {
@@ -4838,6 +4877,44 @@ kbd {
 }
 .context-toolbar-btn:focus-visible {
   box-shadow: inset 0 0 0 2px var(--wl-blue);
+}
+
+/* Colour, kind and shape pickers opened from the contextual toolbar */
+.appearance-popover {
+  position: fixed;
+  z-index: 910;
+  display: grid;
+  min-width: 11rem;
+  max-height: 60vh;
+  overflow: auto;
+  padding: var(--cc-space-1);
+  border-radius: var(--cc-radius-m);
+  background: var(--cc-surface-1);
+  border: 1px solid var(--wl-border-ui);
+  box-shadow: var(--cc-shadow-2);
+}
+.appearance-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--wl-ink);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  cursor: pointer;
+}
+.appearance-choice:hover,
+.appearance-choice:focus-visible {
+  background: var(--wl-blue-soft);
+  outline: none;
+}
+.appearance-choice[aria-checked="true"] {
+  font-weight: 700;
+  color: var(--wl-blue);
 }
 
 /* Inspector pin: keeps the panel open when nothing is selected */

@@ -142,6 +142,9 @@
     padding: 1.125rem 1.25rem; border-radius: 1rem; background: var(--wl-panel); border: 1px dashed var(--wl-border-ui); backdrop-filter: blur(12px); pointer-events: none;
   }
   .blueprint-spec.is-selected { border-style: solid; border-color: var(--wl-blue); box-shadow: 0 0 0 3px var(--wl-blue-soft), var(--wl-shadow-card); }
+  .blueprint-spec.is-text { width: max-content; max-width: 404px; padding: 0.25rem 0.5rem; background: none; border-color: transparent; backdrop-filter: none; }
+  .blueprint-spec.is-text .blueprint-spec-header { margin-block-end: 0; font-family: inherit; font-size: 1rem; font-weight: 600; color: var(--wl-ink); }
+  .blueprint-spec.is-text .blueprint-spec-list { display: none; }
   .blueprint-spec-header { display: flex; align-items: center; justify-content: space-between; margin-block-end: 0.625rem; font-size: 0.75rem; font-family: var(--wl-font-mono); font-weight: 700; color: var(--wl-blue); }
   .blueprint-spec-list { display: grid; gap: 0.5rem; }
   .blueprint-spec-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.78rem; line-height: 1.4; color: var(--wl-ink-secondary); }
