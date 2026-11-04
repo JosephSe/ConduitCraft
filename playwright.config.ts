@@ -30,6 +30,8 @@ export default defineConfig({
   testDir: './e2e',
   // The touch flows run on the tablet projects only; the desktop projects skip them.
   testIgnore: ['**/touch.spec.ts'],
+  // Visual baselines (e2e/exportVisual.spec.ts) are shared by every platform; the spec compares with a tolerance.
+  snapshotPathTemplate: '{testDir}/__screenshots__/{testFileName}/{arg}{ext}',
   timeout: 45_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
