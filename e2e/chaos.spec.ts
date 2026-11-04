@@ -4,7 +4,7 @@ import { openLumenRelay } from './helpers';
 
 test('Traffic lens: failing a component shows the blast radius, announces it, and restores', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 
@@ -44,7 +44,7 @@ test('Traffic lens: failing a component shows the blast radius, announces it, an
 
 test('Alt + hover previews the blast radius without failing anything', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await page.keyboard.press('2');
   const node = page.locator('.arch-node').first();
@@ -58,7 +58,7 @@ test('Alt + hover previews the blast radius without failing anything', async ({ 
 
 test('the inspector sets replicas, so a failure degrades instead of failing', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   const node = page.locator('.arch-node').first();
   await node.click();
@@ -74,7 +74,7 @@ test('the inspector sets replicas, so a failure degrades instead of failing', as
 
 test('right-click on a component in Traffic offers Fail this component', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await page.keyboard.press('2');
   await page.locator('.arch-node').nth(2).click({ button: 'right' });
@@ -94,7 +94,7 @@ test('right-click on a component in Traffic offers Fail this component', async (
 
 test('wires into and out of a failed component stop flowing', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await page.keyboard.press('2');
   const node = page.locator('.arch-node').nth(2);
@@ -115,7 +115,7 @@ test('wires into and out of a failed component stop flowing', async ({ page }) =
 
 test('only the failed component\'s own wires stop, and nothing stays dimmed once it is unselected', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await page.keyboard.press('2');
   const node = page.locator('.arch-node').nth(2);
@@ -141,7 +141,7 @@ test('only the failed component\'s own wires stop, and nothing stays dimmed once
 
 test('a component that calls a failed one glows orange and pulses', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await page.keyboard.press('2');
   await page.locator('.arch-node').nth(2).click({ button: 'right' });

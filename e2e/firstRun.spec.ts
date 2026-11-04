@@ -1,16 +1,12 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-// A brand-new visitor: the redesign, and nothing remembered. The other specs start as a returning visitor.
+// A brand-new visitor: nothing remembered. The other specs start as a returning visitor.
 test.use({
   storageState: {
     cookies: [],
-    origins: [{ origin: 'http://localhost:4281', localStorage: [{ name: 'conduitcraft-ui', value: '2' }] }],
+    origins: [],
   },
-});
-
-test.beforeEach(({}, testInfo) => {
-  test.skip(testInfo.project.name === 'chromium', 'First run belongs to the redesign.');
 });
 
 test('a fresh profile sees a packet move in 3 s and a failure summary in 10 s', async ({ page }) => {

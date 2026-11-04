@@ -19,7 +19,7 @@ const EXPECTED: Record<string, string> = {
   'plain-mermaid-demo.mmd (levels)': '7cebac775efd99d5',
   'sample-blueprint.md': '59facbb3cb5ebc92',
   'sample-blueprint.md (levels)': '12ec449fbb94cfe1',
-  'three-tier-web.blueprint.json': '0356d972ba8d20b6',
+  'three-tier-web.blueprint.json': '0b73c193a9da7983',
 };
 
 const examplesDir = new URL('../src/examples/', import.meta.url);

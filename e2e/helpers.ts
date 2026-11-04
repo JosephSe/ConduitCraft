@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
-/** Run a command-palette action by typing part of its name. Works in both layouts. */
+/** Run a command-palette action by typing part of its name.  */
 export async function runPaletteCommand(page: Page, query: string): Promise<void> {
   await page.keyboard.press('ControlOrMeta+k');
   await page.locator('#cmd-palette-input').fill(query);
@@ -8,11 +8,9 @@ export async function runPaletteCommand(page: Page, query: string): Promise<void
   await page.locator('#command-palette-dialog').waitFor({ state: 'hidden' });
 }
 
-/** Open the export dialog: the header button in the classic layout, the palette in the redesign. */
+/** Open the export dialog from the command palette (the top bar has no Export button). */
 export async function openExportDialog(page: Page): Promise<void> {
-  const button = page.locator('#btn-open-export');
-  if (await button.isVisible()) await button.click();
-  else await runPaletteCommand(page, 'Export Diagram Modal');
+  await runPaletteCommand(page, 'Export Diagram Modal');
 }
 
 /**

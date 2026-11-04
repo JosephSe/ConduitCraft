@@ -91,9 +91,8 @@ function rebuild(host: HTMLElement, ids: string[]): void {
 
 function update(): void {
   const host = ensureBar();
-  const isV2 = document.documentElement.dataset.ui === '2';
   const editing = document.querySelector('.inline-edit-input') !== null;
-  if (!isV2 || app.workspaceMode !== 'design' || pointerDown || editing || app.selection.type === 'none') {
+  if (app.workspaceMode !== 'design' || pointerDown || editing || app.selection.type === 'none') {
     host.hidden = true;
     return;
   }

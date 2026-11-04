@@ -25,7 +25,7 @@ describe('keymap', () => {
   });
 
   it('ignores unbound chords, extra modifiers and Alt', () => {
-    assert.equal(matchBinding(ev('z'), design), null);
+    assert.equal(matchBinding(ev('q'), design), null);
     assert.equal(matchBinding(ev('z', { ctrlKey: true, altKey: true }), design), null);
     assert.equal(matchBinding(ev('d', { ctrlKey: true, shiftKey: true }), design), null);
     assert.equal(matchBinding(ev(']'), design), null, 'bare ] keeps its panel/z-order behaviour elsewhere');
@@ -53,27 +53,25 @@ describe('keymap', () => {
     for (const b of KEY_BINDINGS) assert.ok(source.includes(`id: '${b.actionId}'`), b.actionId);
   });
 
-  it('binds the tool-rail letters only in the redesigned interface', () => {
-    const v2 = { mode: 'design', hasSelection: false, ui: 2 } as const;
+  it('binds the tool-rail letters in Design mode only', () => {
+    const v2 = { mode: 'design', hasSelection: false } as const;
     assert.equal(matchBinding(ev('v'), v2), 'tool-select');
     assert.equal(matchBinding(ev('W', { shiftKey: true }), v2), null, 'shifted letters are not tool keys');
     assert.equal(matchBinding(ev('w'), v2), 'tool-connect');
     assert.equal(matchBinding(ev('z'), v2), 'add-zone');
     assert.equal(matchBinding(ev('n'), v2), 'add-notes');
     assert.equal(matchBinding(ev('c'), v2), 'open-insert');
-    assert.equal(matchBinding(ev('v'), { mode: 'design', hasSelection: false }), null);
-    assert.equal(matchBinding(ev('v'), { mode: 'data', hasSelection: false, ui: 2 }), null);
+    assert.equal(matchBinding(ev('v'), { mode: 'data', hasSelection: false }), null);
     assert.equal(matchBinding(ev('c', { ctrlKey: true }), v2), null, 'Cmd/Ctrl+C is copy, not Insert');
   });
 
-  it('binds lens keys 1 to 4 in the redesigned interface from any lens', () => {
+  it('binds lens keys 1 to 4 from any lens', () => {
     for (const mode of ['design', 'data'] as const) {
-      const ctx = { mode, hasSelection: false, ui: 2 } as const;
+      const ctx = { mode, hasSelection: false } as const;
       assert.equal(matchBinding(ev('1'), ctx), 'mode-design');
       assert.equal(matchBinding(ev('2'), ctx), 'mode-data');
       assert.equal(matchBinding(ev('3'), ctx), 'mode-review');
       assert.equal(matchBinding(ev('4'), ctx), 'mode-presentation');
     }
-    assert.equal(matchBinding(ev('1'), { mode: 'design', hasSelection: false }), null, 'classic UI has no lens keys');
   });
 });

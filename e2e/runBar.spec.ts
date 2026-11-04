@@ -1,15 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
-async function open(page: Page, query: string) {
+async function open(page: Page, query = '') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
-test('?ui=2: the run bar appears in the Traffic lens and drives a scenario', async ({ page }) => {
-  await open(page, '?ui=2');
+test('the run bar appears in the Traffic lens and drives a scenario', async ({ page }) => {
+  await open(page);
   const bar = page.locator('#run-bar');
   await expect(bar).toBeHidden();
   await page.keyboard.press('2');
@@ -31,8 +31,3 @@ test('?ui=2: the run bar appears in the Traffic lens and drives a scenario', asy
   await expect(bar).toBeHidden();
 });
 
-test('the classic interface has no run bar', async ({ page }) => {
-  await open(page, '?ui=1');
-  await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
-  await expect(page.locator('#run-bar')).toBeHidden();
-});

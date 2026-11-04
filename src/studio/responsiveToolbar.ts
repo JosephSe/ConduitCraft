@@ -22,12 +22,9 @@ export class ResponsiveToolbarManager {
   private workspaceEl: HTMLElement | null = null;
   private btnFileMenu: HTMLButtonElement | null = null;
   private fileMenuPopup: HTMLElement | null = null;
-  private btnHeaderOverflow: HTMLButtonElement | null = null;
-  private headerOverflowPopup: HTMLElement | null = null;
   private btnTogglePalette: HTMLButtonElement | null = null;
   private btnToggleInspector: HTMLButtonElement | null = null;
   private isMenuOpen = false;
-  private isOverflowOpen = false;
   private options: ResponsiveToolbarOptions;
 
   constructor(options: ResponsiveToolbarOptions = {}) {
@@ -44,13 +41,10 @@ export class ResponsiveToolbarManager {
     this.workspaceEl = container || (document.getElementById('workspace') as HTMLElement | null);
     this.btnFileMenu = document.getElementById('btn-file-menu') as HTMLButtonElement | null;
     this.fileMenuPopup = document.getElementById('file-menu-popup') as HTMLElement | null;
-    this.btnHeaderOverflow = document.getElementById('btn-header-overflow') as HTMLButtonElement | null;
-    this.headerOverflowPopup = document.getElementById('header-overflow-popup') as HTMLElement | null;
     this.btnTogglePalette = document.getElementById('btn-toggle-palette') as HTMLButtonElement | null;
     this.btnToggleInspector = document.getElementById('btn-toggle-inspector') as HTMLButtonElement | null;
 
     this.initFileMenu();
-    this.initHeaderOverflow();
     this.initPanelToggles();
     this.initRailQuickActions();
     this.restoreSavedState();
@@ -63,87 +57,6 @@ export class ResponsiveToolbarManager {
       (typeof window.innerWidth === 'number' && window.innerWidth <= 1056) ||
       Boolean(window.matchMedia && window.matchMedia('(max-width: 66rem)').matches)
     );
-  }
-
-  /** Initialize Header Overflow menu for narrow/mobile screens */
-  private initHeaderOverflow(): void {
-    if (!this.btnHeaderOverflow || !this.headerOverflowPopup) return;
-
-    this.btnHeaderOverflow.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleHeaderOverflow();
-    });
-
-    // Close when clicking any menu item inside overflow popup
-    this.headerOverflowPopup.addEventListener('click', (e) => {
-      const target = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>('.menu-item');
-      if (!target) return;
-      this.closeHeaderOverflow();
-
-      const id = target.id;
-      if (id === 'btn-overflow-search') {
-        document.getElementById('btn-open-palette')?.click();
-      } else if (id === 'btn-overflow-present') {
-        document.getElementById('btn-enter-presentation')?.click();
-      } else if (id === 'btn-overflow-fit') {
-        document.getElementById('btn-fit-viewport')?.click();
-      } else if (id === 'btn-overflow-layout') {
-        document.getElementById('btn-auto-layout')?.click();
-      } else if (id === 'btn-overflow-snap') {
-        document.getElementById('btn-toggle-snap')?.click();
-      } else if (id === 'btn-overflow-shortcuts') {
-        document.getElementById('btn-open-shortcuts')?.click();
-      } else if (id === 'btn-overflow-settings') {
-        document.getElementById('btn-open-settings')?.click();
-      } else if (id === 'btn-overflow-clear') {
-        document.getElementById('btn-clear-canvas')?.click();
-      }
-    });
-
-    // Close on outside click
-    document.addEventListener('click', (e) => {
-      if (this.isOverflowOpen) {
-        const target = e.target as HTMLElement | null;
-        if (!target?.closest('#header-overflow-wrapper')) {
-          this.closeHeaderOverflow();
-        }
-      }
-    });
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isOverflowOpen) {
-        this.closeHeaderOverflow();
-        this.btnHeaderOverflow?.focus();
-      }
-    });
-  }
-
-  public toggleHeaderOverflow(force?: boolean): boolean {
-    const next = typeof force === 'boolean' ? force : !this.isOverflowOpen;
-    this.isOverflowOpen = next;
-    if (this.headerOverflowPopup) {
-      if (next) {
-        this.headerOverflowPopup.removeAttribute('hidden');
-        this.btnHeaderOverflow?.setAttribute('aria-expanded', 'true');
-        const firstItem = this.headerOverflowPopup.querySelector<HTMLButtonElement>('.menu-item');
-        firstItem?.focus();
-      } else {
-        this.headerOverflowPopup.setAttribute('hidden', '');
-        this.btnHeaderOverflow?.setAttribute('aria-expanded', 'false');
-      }
-    }
-    return this.isOverflowOpen;
-  }
-
-  public closeHeaderOverflow(): void {
-    if (this.isOverflowOpen) {
-      this.toggleHeaderOverflow(false);
-    }
-  }
-
-  public isHeaderOverflowOpen(): boolean {
-    return this.isOverflowOpen;
   }
 
   /** Initialize File Menu dropdown toggle and outside-click dismiss. */

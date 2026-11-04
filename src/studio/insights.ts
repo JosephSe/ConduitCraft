@@ -122,12 +122,11 @@ export function initInsightsPanel(): void {
   if (!panel || !heading || !body || !count || !workspace) return;
 
   const repaint = () => {
-    const isV2 = document.documentElement.dataset.ui === '2';
     const issues = currentInsights();
-    count.hidden = !(isV2 && issues.length);
+    count.hidden = !issues.length;
     count.textContent = `⚠ ${issues.length}`;
     count.setAttribute('aria-label', insightCountText(issues.length));
-    const visible = isV2 && app.lens === 'review';
+    const visible = app.lens === 'review';
     panel.hidden = !visible;
     if (!visible) return;
 

@@ -4,7 +4,7 @@ import { clearSelection, openLumenRelay, runPaletteCommand } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 });

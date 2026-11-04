@@ -8,7 +8,7 @@
     "direction": "LR",
     "stageWidth": 1680,
     "stageHeight": 920,
-    "overviewSummary": "Classic scalable 3-tier web topology featuring an Edge CDN and WAF, dual Application Load Balancers, horizontally scaled web application servers, a distributed Redis caching layer, and a high-availability PostgreSQL cluster with primary-replica replication.",
+    "overviewSummary": "Standard scalable 3-tier web topology featuring an Edge CDN and WAF, dual Application Load Balancers, horizontally scaled web application servers, a distributed Redis caching layer, and a high-availability PostgreSQL cluster with primary-replica replication.",
     "brand": {
       "name": "Cloud Native Corp",
       "accent": "#2563eb",

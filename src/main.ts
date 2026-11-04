@@ -11,14 +11,7 @@ import { findPaletteCommand } from './studio/palette';
 import { initToolRail } from './studio/toolRail';
 import { initInspectorAutoShow } from './studio/inspectorAutoShow';
 import { initContextToolbar } from './studio/contextToolbar';
-import { UI_VERSION_STORAGE_KEY, resolveUiVersion } from './core/uiVersion';
-
-// Choose the interface generation before anything paints: `?ui=2` is the redesign, remembered per browser.
-try {
-  document.documentElement.dataset.ui = String(resolveUiVersion(window.location.search, window.localStorage));
-} catch {
-  document.documentElement.dataset.ui = String(resolveUiVersion(window.location.search, null));
-}
+import { notify } from './studio/toast';
 
 setHistoryApplied(() => renderAll(true));
 onSelectionChange(() => {
@@ -29,31 +22,26 @@ onSelectionChange(() => {
   scheduleMinimapPaint();
   announceSelectionChange(app.selection, app.doc);
 });
-// The redesign starts with the component list folded into the rail; opening it later is remembered as usual.
+// The component list starts folded into the rail; opening it later is remembered as usual.
 try {
-  if (document.documentElement.dataset.ui === '2' && !localStorage.getItem('conduitcraft:ui2-rail-seeded')) {
+  if (!localStorage.getItem('conduitcraft:ui2-rail-seeded')) {
     localStorage.setItem('conduitcraft:ui2-rail-seeded', '1');
     if (localStorage.getItem('conduitcraft:palette-collapsed') === null) {
       localStorage.setItem('conduitcraft:palette-collapsed', 'true');
     }
   }
 } catch {
-  // Storage unavailable: the palette just opens as it does in the classic layout.
+  // Storage unavailable: the palette just opens.
 }
-// "Classic layout" in settings: the chrome is chosen at boot, so the choice is stored and the page reloads.
-const classicToggle = document.getElementById('chk-classic-layout') as HTMLInputElement | null;
-if (classicToggle) {
-  classicToggle.checked = document.documentElement.dataset.ui === '1';
-  classicToggle.addEventListener('change', () => {
-    try {
-      localStorage.setItem(UI_VERSION_STORAGE_KEY, classicToggle.checked ? '1' : '2');
-    } catch {
-      // Storage unavailable: fall back to the URL, which resolveUiVersion also honours.
-    }
-    const url = new URL(window.location.href);
-    url.searchParams.set('ui', classicToggle.checked ? '1' : '2');
-    window.location.assign(url.href);
-  });
+// The old layout is gone (see RELEASE_NOTES.md). A stored preference for it is dropped once, with a note.
+try {
+  if (localStorage.getItem('conduitcraft-ui') !== null) {
+    const wasOld = localStorage.getItem('conduitcraft-ui') === '1';
+    localStorage.removeItem('conduitcraft-ui');
+    if (wasOld) notify('The old layout has been retired. You are now using the new layout.');
+  }
+} catch {
+  // Storage unavailable: nothing was stored that we could read.
 }
 bindLegendPreference();
 bindViewFilters();

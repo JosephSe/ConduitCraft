@@ -21,11 +21,10 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
   const loopBtn = bar.querySelector<HTMLButtonElement>('#run-bar-loop')!;
   const stepLabel = bar.querySelector<HTMLElement>('#run-bar-step')!;
 
-  const isV2 = () => document.documentElement.dataset.ui === '2';
   let optionsKey = '';
 
   const syncVisibility = () => {
-    bar.hidden = !(isV2() && app.lens === 'traffic');
+    bar.hidden = app.lens !== 'traffic';
   };
 
   const syncScenarios = () => {

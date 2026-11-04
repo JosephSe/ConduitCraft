@@ -15,10 +15,6 @@ const STYLES = ['studio'] as const;
 const SCHEMES = ['light', 'dark'] as const;
 const TOLERANCE = { maxDiffPixelRatio: 0.03, threshold: 0.05 } as const;
 
-test.beforeEach(async ({}, testInfo) => {
-  test.skip(testInfo.project.name !== 'chromium-ui2', 'exports do not depend on the layout, so one project is enough');
-});
-
 /**
  * Keep the blob behind every export download, so the test can read the file the app produced instead of the
  * browser's saved copy. (smoke.spec.ts has the same capture; it is kept here so each spec stands alone.)

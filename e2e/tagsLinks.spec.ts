@@ -52,9 +52,7 @@ test('the Traffic toolbar colours by tag and filters by tag, and the legend card
   await page.locator('#prop-node-owner').blur();
 
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
-  // The classic layout has these in the Traffic toolbar; the new one has them in the run bar.
-  const classic = (await page.locator('html').getAttribute('data-ui')) === '1';
-  const scope = classic ? page.locator('#data-toolbar') : page.locator('#run-bar');
+  const scope = page.locator('#run-bar');
   const tagFilter = scope.locator('.js-tag-filter');
   const colourBy = scope.locator('.js-colour-by');
   await expect(tagFilter.locator('option[value="pii"]')).toHaveCount(1);

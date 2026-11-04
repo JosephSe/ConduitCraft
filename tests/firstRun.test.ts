@@ -5,10 +5,10 @@ import { FIRST_RUN_TEMPLATE_ID, pickFirstRunFailure, shouldShowFirstRun } from '
 import { reachableFrom, entryPointIds } from '../src/core/reachability.ts';
 import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 
-const fresh = { redesign: true, hasSavedWork: false, hasShareLink: false, seenBefore: false, documentEmpty: true };
+const fresh = { hasSavedWork: false, hasShareLink: false, seenBefore: false, documentEmpty: true };
 
 describe('shouldShowFirstRun', () => {
-  it('shows for a fresh visitor in the redesign', () => {
+  it('shows for a fresh visitor', () => {
     assert.equal(shouldShowFirstRun(fresh), true);
   });
   it('never shows over an autosave, a share link, a returning visitor or a document with content', () => {
@@ -16,9 +16,6 @@ describe('shouldShowFirstRun', () => {
     assert.equal(shouldShowFirstRun({ ...fresh, hasShareLink: true }), false);
     assert.equal(shouldShowFirstRun({ ...fresh, seenBefore: true }), false);
     assert.equal(shouldShowFirstRun({ ...fresh, documentEmpty: false }), false);
-  });
-  it('stays out of the classic layout', () => {
-    assert.equal(shouldShowFirstRun({ ...fresh, redesign: false }), false);
   });
 });
 
