@@ -248,7 +248,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** stop `pulseLiveDot`: no animation on the status dot, so nothing on screen suggests live data. Add an e2e test that runs with `reducedMotion: 'reduce'` and asserts no element has a running animation. If `chaos-pulse` or `portPulse` fail the test, guard them.
 - **Done when:** that test passes, and `grep -rn pulseLiveDot src` finds nothing.
 
-#### [x] A16. Export visual check · S (#PR)
+#### [x] A16. Export visual check · S (#49)
 - **Needs:** A11.
 - **Do:** screenshot tests of the SVG, standalone HTML and GIF first frame for `lumen-relay`, in light and dark and in each diagram style. Compare them with the canvas by eye once and keep the images as baselines.
 - **Done when:** baselines are committed and the test fails on a change to the export look.
