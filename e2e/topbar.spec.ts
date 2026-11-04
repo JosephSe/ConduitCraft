@@ -24,7 +24,7 @@ test('the top bar shows at most 8 controls', async ({ page }) => {
   const controls = await visibleControls(page);
   expect(controls.length, controls.join(', ')).toBeLessThanOrEqual(8);
   for (const id of ['btn-open-palette', 'btn-share', 'btn-focus-doc-title']) expect(controls).toContain(id);
-  await expect(page.locator('#btn-open-export')).toBeHidden();
+  await expect(page.locator('#btn-open-export')).toHaveCount(0);
 });
 
 test('controls removed from the top bar are still one palette search away', async ({ page }) => {

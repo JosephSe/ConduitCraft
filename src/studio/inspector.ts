@@ -5,8 +5,6 @@ import {
   btnPropDuplicate,
   btnPropLock,
   btnPropGroup,
-  docStatusLabelEl,
-  docSystemTagEl,
   docTitleHeadingEl,
   inspBadge,
   inspCode,
@@ -2034,7 +2032,6 @@ export function renderPropertyEditor(): void {
           app.doc.systemTag,
           (v) => {
             app.doc.systemTag = v;
-            docSystemTagEl.textContent = v;
           },
           { identifier: true },
         ),
@@ -2046,7 +2043,6 @@ export function renderPropertyEditor(): void {
           app.doc.statusLabel,
           (v) => {
             app.doc.statusLabel = v;
-            docStatusLabelEl.textContent = v;
           },
           { identifier: true },
         ),

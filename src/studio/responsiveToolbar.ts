@@ -2,7 +2,6 @@
  * Responsive and Compact Toolbar Manager.
  *
  * Handles:
- * - File menu dropdown (New, Import, Open code, Matrix, Export)
  * - Collapsible side panels (Palette and Inspector) into compact icon rails
  * - Keyboard shortcuts ([ and ] when unselected, or panel toggle buttons)
  * - Persistence of panel states in localStorage
@@ -15,16 +14,10 @@ export interface ResponsiveToolbarOptions {
   onAddStencil?: (kind: string) => void;
   onAddZone?: () => void;
   onAddNotes?: () => void;
-  onOpenExport?: () => void;
 }
 
 export class ResponsiveToolbarManager {
   private workspaceEl: HTMLElement | null = null;
-  private btnFileMenu: HTMLButtonElement | null = null;
-  private fileMenuPopup: HTMLElement | null = null;
-  private btnTogglePalette: HTMLButtonElement | null = null;
-  private btnToggleInspector: HTMLButtonElement | null = null;
-  private isMenuOpen = false;
   private options: ResponsiveToolbarOptions;
 
   constructor(options: ResponsiveToolbarOptions = {}) {
@@ -39,12 +32,7 @@ export class ResponsiveToolbarManager {
     }
 
     this.workspaceEl = container || (document.getElementById('workspace') as HTMLElement | null);
-    this.btnFileMenu = document.getElementById('btn-file-menu') as HTMLButtonElement | null;
-    this.fileMenuPopup = document.getElementById('file-menu-popup') as HTMLElement | null;
-    this.btnTogglePalette = document.getElementById('btn-toggle-palette') as HTMLButtonElement | null;
-    this.btnToggleInspector = document.getElementById('btn-toggle-inspector') as HTMLButtonElement | null;
 
-    this.initFileMenu();
     this.initPanelToggles();
     this.initRailQuickActions();
     this.restoreSavedState();
@@ -59,94 +47,9 @@ export class ResponsiveToolbarManager {
     );
   }
 
-  /** Initialize File Menu dropdown toggle and outside-click dismiss. */
-  private initFileMenu(): void {
-    if (!this.btnFileMenu || !this.fileMenuPopup) return;
-
-    this.btnFileMenu.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleFileMenu();
-    });
-
-    // Close when clicking any menu item inside popup
-    this.fileMenuPopup.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement | null;
-      if (target?.closest('.menu-item')) {
-        this.closeFileMenu();
-      }
-    });
-
-    // Close on outside click
-    document.addEventListener('click', (e) => {
-      if (this.isMenuOpen) {
-        const target = e.target as HTMLElement | null;
-        if (!target?.closest('#file-menu-wrapper')) {
-          this.closeFileMenu();
-        }
-      }
-    });
-
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.isMenuOpen) {
-        this.closeFileMenu();
-        this.btnFileMenu?.focus();
-      }
-    });
-
-    // Export trigger button inside file menu
-    const btnFileExport = document.getElementById('btn-file-export');
-    if (btnFileExport) {
-      btnFileExport.addEventListener('click', () => {
-        const primaryExport = document.getElementById('btn-open-export');
-        if (primaryExport) {
-          primaryExport.click();
-        } else if (this.options.onOpenExport) {
-          this.options.onOpenExport();
-        }
-      });
-    }
-  }
-
-  public toggleFileMenu(force?: boolean): boolean {
-    const next = typeof force === 'boolean' ? force : !this.isMenuOpen;
-    this.isMenuOpen = next;
-    if (this.fileMenuPopup) {
-      if (next) {
-        this.fileMenuPopup.removeAttribute('hidden');
-        this.btnFileMenu?.setAttribute('aria-expanded', 'true');
-        // Auto-focus first menu item
-        const firstItem = this.fileMenuPopup.querySelector<HTMLButtonElement>('.menu-item');
-        firstItem?.focus();
-      } else {
-        this.fileMenuPopup.setAttribute('hidden', '');
-        this.btnFileMenu?.setAttribute('aria-expanded', 'false');
-      }
-    }
-    return this.isMenuOpen;
-  }
-
-  public closeFileMenu(): void {
-    if (this.isMenuOpen) {
-      this.toggleFileMenu(false);
-    }
-  }
-
-  public isFileMenuOpen(): boolean {
-    return this.isMenuOpen;
-  }
-
   /** Initialize Panel Toggle Buttons */
   private initPanelToggles(): void {
-    this.btnTogglePalette?.addEventListener('click', () => {
-      this.togglePalette();
-    });
-
-    this.btnToggleInspector?.addEventListener('click', () => {
-      this.toggleInspector();
-    });
-
-    // Edge tabs: the touch way to open each drawer, since the top bar hides the toggles
+    // Edge tabs: the touch way to open each drawer
     document.getElementById('btn-drawer-palette')?.addEventListener('click', () => {
       this.togglePalette(false);
     });
@@ -269,12 +172,10 @@ export class ResponsiveToolbarManager {
 
     if (next) {
       ws.setAttribute('data-palette-collapsed', 'true');
-      this.btnTogglePalette?.setAttribute('aria-expanded', 'false');
       document.getElementById('btn-drawer-palette')?.setAttribute('aria-expanded', 'false');
       this.safeSetStorage(STORAGE_PALETTE_KEY, 'true');
     } else {
       ws.removeAttribute('data-palette-collapsed');
-      this.btnTogglePalette?.setAttribute('aria-expanded', 'true');
       document.getElementById('btn-drawer-palette')?.setAttribute('aria-expanded', 'true');
       this.safeRemoveStorage(STORAGE_PALETTE_KEY);
     }
@@ -297,12 +198,10 @@ export class ResponsiveToolbarManager {
 
     if (next) {
       ws.setAttribute('data-inspector-collapsed', 'true');
-      this.btnToggleInspector?.setAttribute('aria-expanded', 'false');
       document.getElementById('btn-drawer-inspector')?.setAttribute('aria-expanded', 'false');
       if (persist) this.safeSetStorage(STORAGE_INSPECTOR_KEY, 'true');
     } else {
       ws.removeAttribute('data-inspector-collapsed');
-      this.btnToggleInspector?.setAttribute('aria-expanded', 'true');
       document.getElementById('btn-drawer-inspector')?.setAttribute('aria-expanded', 'true');
       if (persist) this.safeRemoveStorage(STORAGE_INSPECTOR_KEY);
     }

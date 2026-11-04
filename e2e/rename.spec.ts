@@ -184,7 +184,7 @@ test('a locked component cannot be renamed', async ({ page }) => {
 test('double-clicking in Connect mode does not open the editor', async ({ page }) => {
   await loadShowcase(page);
   const { id } = await renameableNode(page);
-  await page.locator('input[name="pointer-tool"][value="connect"]').evaluate((el: HTMLElement) => el.click());
+  await page.locator('[data-rail-tool="connect"]').first().evaluate((el: HTMLElement) => el.click());
   await nodeTitle(page, id).dblclick();
   await expect(editor(page)).toHaveCount(0);
 });

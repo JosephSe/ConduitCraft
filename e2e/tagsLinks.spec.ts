@@ -36,8 +36,7 @@ test('a component takes an owner, tags and links, and the legend renames a colou
   const expand = page.locator('#btn-rail-expand-inspector');
   if (await expand.isVisible()) await expand.click();
   await page.locator('#prop-legend-rose').fill('PII');
-  await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
-  await expect(page.locator('[data-tone-name="rose"]')).toHaveText('PII');
+  await expect(page.locator('#legend-card-list')).toContainText('PII');
 });
 
 test('the Traffic toolbar colours by tag and filters by tag, and the legend card shows on the canvas', async ({ page }) => {
