@@ -216,6 +216,51 @@ test('never loses the open diagram when a template or blank canvas is chosen: it
   await expect(page.locator('.arch-node')).toHaveCount(2);
 });
 
+test('never loses the open diagram when a shared link is opened: the link becomes a new diagram', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await seedAutosave(page, 'Mine', 2);
+  await page.goto('/');
+  await page.locator('#btn-restore-open').click();
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+
+  // Make a share link from a template, then go back to the diagram that was already there.
+  await openLumenRelay(page);
+  const lumenTitle = await page.locator('#doc-title-heading').innerText();
+  await page.locator('#btn-share').click();
+  await expect(page.locator('#toast-container')).toContainText(/link/i);
+  const link = await page.evaluate(() => navigator.clipboard.readText());
+  expect(link).toContain('#share=');
+  await openFromLibrary(page, 'Mine');
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+  await expect(page.locator('#save-status-pill')).toHaveAttribute('data-status', 'saved');
+
+  // Arrive by the link. Whatever the boot does with it, the earlier diagram stays in the library.
+  // Hold the link's decoding until the saved work has been brought back, so the canvas is not empty when it lands.
+  await page.addInitScript(() => {
+    const text = Response.prototype.text;
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    (window as unknown as { __releaseShare: () => void }).__releaseShare = release;
+    Response.prototype.text = async function (this: Response) {
+      const value = await text.call(this);
+      if (value.includes('"nodes"')) await held;
+      return value;
+    };
+  });
+  await page.goto('about:blank');
+  await page.goto(link);
+  await page.locator('#btn-restore-open').click();
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+  await page.evaluate(() => (window as unknown as { __releaseShare: () => void }).__releaseShare());
+  // Work is open, so the link is offered rather than forced in; opening it adds an entry.
+  await page.locator('.toast-action-btn', { hasText: 'Open' }).last().click();
+  await expect(page.locator('#doc-title-heading')).toHaveText(lumenTitle);
+  await expect(page.locator('#save-status-pill')).toHaveAttribute('data-status', 'saved');
+  await expect.poll(async () => (await diagrams(page)).map((r) => r.title).sort()).toEqual([lumenTitle, 'Mine', lumenTitle].sort());
+  const kept = (await diagrams(page)).find((r) => r.title === 'Mine')!;
+  expect(kept.doc.nodes.length).toBe(2);
+});
+
 test('never loses the open diagram when a file is imported: the file becomes a new diagram', async ({ page }) => {
   await seedAutosave(page, 'Mine', 2);
   await page.goto('/');
