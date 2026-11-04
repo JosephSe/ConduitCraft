@@ -13,11 +13,13 @@ import type {
   ImportIssue,
   NodeKind,
   NodeShape,
-  StreamTone,
 } from '../types';
-import { autoLayoutDocument, expandStageToFit } from '../core/layout';
+import { expandStageToFit } from '../core/layout';
 import { STENCIL_CATALOG, createBlankDocument, createNodeFromStencil } from '../templates/presets';
 import { childrenNamed, decodeEntities, parseXml, type XmlNode } from './xml';
+import { colourToTone, issue, placeShapes, slugOf, uniqueId, type Geo } from './common';
+
+export { colourToTone };
 
 export type DrawioPageMode = 'separate' | 'levels';
 
@@ -41,7 +43,6 @@ export interface DrawioResult {
 const MAX_CELLS = 3000;
 const MAX_INFLATED_BYTES = 40_000_000;
 
-const issue = (level: ImportIssue['level'], code: string, message: string): ImportIssue => ({ level, code, message });
 
 // ---------------------------------------------------------------------------------------------------------------
 // Reading the file
@@ -123,13 +124,6 @@ export async function readDrawio(text: string): Promise<DrawioFile> {
 
 // ---------------------------------------------------------------------------------------------------------------
 // Cells
-
-interface Geo {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 interface Cell {
   id: string;
@@ -224,31 +218,6 @@ export function labelToText(value: string): string {
 // ---------------------------------------------------------------------------------------------------------------
 // Style to component
 
-/** Nearest of the five wire colours for a `#rrggbb` colour, or undefined for none, default or greys. */
-export function colourToTone(raw: string | undefined): StreamTone | undefined {
-  if (!raw) return undefined;
-  const hex = /^#([0-9a-f]{6})$/i.exec(raw.trim());
-  if (!hex) return undefined;
-  const r = parseInt(hex[1].slice(0, 2), 16) / 255;
-  const g = parseInt(hex[1].slice(2, 4), 16) / 255;
-  const b = parseInt(hex[1].slice(4, 6), 16) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const delta = max - min;
-  // draw.io's pastel palette is pale (saturation 0.07 to 0.2), so only near-greys, blacks and whites are dropped.
-  if (delta < 0.035 || max < 0.15) return undefined;
-  let hue: number;
-  if (max === r) hue = ((g - b) / delta) % 6;
-  else if (max === g) hue = (b - r) / delta + 2;
-  else hue = (r - g) / delta + 4;
-  hue = (hue * 60 + 360) % 360;
-  if (hue < 20 || hue >= 330) return 'rose';
-  if (hue < 75) return 'amber';
-  if (hue < 190) return 'emerald';
-  if (hue < 260) return 'blue';
-  return 'violet';
-}
-
 interface Mapped {
   kind: NodeKind;
   shape?: NodeShape;
@@ -276,30 +245,6 @@ function mapShape(cell: Cell): Mapped {
 
 // ---------------------------------------------------------------------------------------------------------------
 // Page to document
-
-const slugOf = (text: string): string =>
-  text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 32) || 'item';
-
-function uniqueId(base: string, used: Set<string>): string {
-  let id = base;
-  for (let i = 2; used.has(id); i++) id = `${base}-${i}`;
-  used.add(id);
-  return id;
-}
-
-function rectsOverlap(a: DiagramNode, b: DiagramNode, gap: number): boolean {
-  return a.x < b.x + b.width + gap && b.x < a.x + a.width + gap && a.y < b.y + b.height + gap && b.y < a.y + a.height + gap;
-}
-
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)];
-}
 
 /** Turn one page into a diagram. Issues are added to `issues`. */
 export function convertPage(model: XmlNode, title: string, issues: ImportIssue[]): DiagramDocument {
@@ -429,50 +374,7 @@ export function convertPage(model: XmlNode, title: string, issues: ImportIssue[]
   if (imageShapes > 0) issues.push(issue('info', 'drawio-image-shape', `${imageShapes} image shape${imageShapes === 1 ? '' : 's'} became plain components; pictures are not imported.`));
 
   // Position: keep the draw.io layout, scaled so components of the default size do not collide.
-  const drawioWidths = [...nodeFor.values()].map((n) => origin.get(n.id)!.width);
-  const defaultWidths = [...nodeFor.values()].map((n) => n.width);
-  const scale = drawioWidths.length ? Math.min(2.5, Math.max(1, median(defaultWidths) / Math.max(1, median(drawioWidths)))) : 1;
-  let minX = Infinity;
-  let minY = Infinity;
-  for (const node of doc.nodes) {
-    const g = origin.get(node.id)!;
-    node.x = (g.x + g.width / 2) * scale - node.width / 2;
-    node.y = (g.y + g.height / 2) * scale - node.height / 2;
-    minX = Math.min(minX, node.x);
-    minY = Math.min(minY, node.y);
-  }
-  for (const note of notes) {
-    const g = origin.get(`note:${note.id}`)!;
-    note.x = g.x * scale;
-    note.y = g.y * scale;
-    minX = Math.min(minX, note.x);
-    minY = Math.min(minY, note.y);
-  }
-  if (Number.isFinite(minX)) {
-    const shiftX = 96 - minX;
-    const shiftY = 128 - minY;
-    for (const node of doc.nodes) {
-      node.x = Math.round((node.x + shiftX) / 16) * 16;
-      node.y = Math.round((node.y + shiftY) / 16) * 16;
-    }
-    for (const note of notes) {
-      note.x = Math.round((note.x + shiftX) / 16) * 16;
-      note.y = Math.round((note.y + shiftY) / 16) * 16;
-    }
-  }
-  let relaidOut = false;
-  outer: for (let a = 0; a < doc.nodes.length; a++) {
-    for (let b = a + 1; b < doc.nodes.length; b++) {
-      if (rectsOverlap(doc.nodes[a], doc.nodes[b], 16)) {
-        relaidOut = true;
-        break outer;
-      }
-    }
-  }
-  if (relaidOut) {
-    autoLayoutDocument(doc);
-    issues.push(issue('info', 'drawio-relayout', 'Some shapes were too close together at their original size, so the components were laid out again.'));
-  }
+  const { scale, shiftX } = placeShapes(doc, notes, origin, issues, 'drawio');
 
   // Wires.
   let danglingEdges = 0;
@@ -538,7 +440,7 @@ export function convertPage(model: XmlNode, title: string, issues: ImportIssue[]
         width = Math.max(...members.map((m) => m.x + m.width)) + 32 - x;
       } else {
         const g = absolute(entry.cell)!;
-        x = g.x * scale + (Number.isFinite(minX) ? 96 - minX : 0);
+        x = g.x * scale + shiftX;
         width = g.width * scale;
       }
       const zone: DiagramZone = {

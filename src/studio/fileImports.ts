@@ -1,6 +1,7 @@
 /**
- * Bringing a draw.io file into the library (F-25, B6). The importer itself (`importers/drawio.ts`) is a lazy chunk;
- * this file asks how to treat several pages, opens the result as new diagrams, and shows the import report.
+ * Bringing draw.io and Excalidraw files into the library (F-25, B6 and B7). The importers (`importers/drawio.ts`,
+ * `importers/excalidraw.ts`) are lazy chunks; this file asks how to treat several pages, opens the result as new
+ * diagrams, and shows the import report.
  */
 import type { DiagramDocument, ImportIssue, SelectionTarget } from '../types';
 import type { DrawioPageMode } from '../importers/drawio';
@@ -54,6 +55,37 @@ function showReport(issues: ImportIssue[]): void {
   reportDialog.showModal();
 }
 
+/**
+ * Open converted documents as new diagrams, the first one left open, and offer the report of what was skipped.
+ * `source` names the format in messages. Returns false when there was nothing to import.
+ */
+async function openConverted(docs: DiagramDocument[], issues: ImportIssue[], source: string): Promise<boolean> {
+  const nodes = docs.reduce((sum, d) => sum + d.nodes.length, 0);
+  const empty = docs.every((d) => d.nodes.length === 0 && d.zones.length === 0 && d.notesCards.length === 0);
+  if (empty) {
+    notify(`No shapes could be imported from this ${source} file`, {
+      tone: 'error',
+      action: issues.length ? { label: 'See report', onClick: () => showReport(issues) } : undefined,
+    });
+    return false;
+  }
+  // Extra pages go to the library first, so the first page is the one left open (and Undo goes back to what was open).
+  for (const extra of docs.slice(1)) await createDiagram(extra);
+  const wires = docs.reduce((sum, d) => sum + d.edges.length, 0);
+  const more = docs.length > 1 ? `; ${docs.length - 1} more ${docs.length === 2 ? 'page is' : 'pages are'} in Your diagrams` : '';
+  const ok = await openAsNewDiagram(docs[0], `Imported ${nodes} components and ${wires} wires from ${source}${more}`, {
+    pickSelection: firstNode,
+    keepFile: true,
+  });
+  if (ok && issues.length > 0) {
+    notify(`${issues.length} ${issues.length === 1 ? 'thing was' : 'things were'} not imported exactly`, {
+      duration: 12000,
+      action: { label: 'See report', onClick: () => showReport(issues) },
+    });
+  }
+  return ok;
+}
+
 /** Import draw.io text as new diagrams. Returns false when nothing could be imported. */
 export async function importDrawioText(text: string, title: string): Promise<boolean> {
   let importer: typeof import('../importers/drawio');
@@ -72,31 +104,24 @@ export async function importDrawioText(text: string, title: string): Promise<boo
   }
   const mode = file.pages.length > 1 ? await askPageMode(file.pages.length) : 'separate';
   if (!mode) return false;
-
   const { docs, issues } = importer.convertDrawio(file, mode, title);
-  const nodes = docs.reduce((sum, d) => sum + d.nodes.length, 0);
-  const empty = docs.every((d) => d.nodes.length === 0 && d.zones.length === 0 && d.notesCards.length === 0);
-  if (empty) {
-    notify('No shapes could be imported from this draw.io file', {
-      tone: 'error',
-      action: issues.length ? { label: 'See report', onClick: () => showReport(issues) } : undefined,
-    });
+  return openConverted(docs, issues, 'draw.io');
+}
+
+/** Import an Excalidraw scene as a new diagram. Returns false when nothing could be imported. */
+export async function importExcalidrawText(text: string, title: string): Promise<boolean> {
+  let importer: typeof import('../importers/excalidraw');
+  try {
+    importer = await import('../importers/excalidraw');
+  } catch {
+    notify('Could not load the Excalidraw importer. Check your connection and try again.', { tone: 'error' });
     return false;
   }
-
-  // Extra pages go to the library first, so the first page is the one left open (and Undo goes back to what was open).
-  for (const extra of docs.slice(1)) await createDiagram(extra);
-  const wires = docs.reduce((sum, d) => sum + d.edges.length, 0);
-  const more = docs.length > 1 ? `; ${docs.length - 1} more ${docs.length === 2 ? 'page is' : 'pages are'} in Your diagrams` : '';
-  const ok = await openAsNewDiagram(docs[0], `Imported ${nodes} components and ${wires} wires from draw.io${more}`, {
-    pickSelection: firstNode,
-    keepFile: true,
-  });
-  if (ok && issues.length > 0) {
-    notify(`${issues.length} ${issues.length === 1 ? 'thing was' : 'things were'} not imported exactly`, {
-      duration: 12000,
-      action: { label: 'See report', onClick: () => showReport(issues) },
-    });
+  try {
+    const { doc, issues } = importer.convertExcalidraw(text, title);
+    return openConverted([doc], issues, 'Excalidraw');
+  } catch (err) {
+    notify(err instanceof Error ? err.message : 'Could not read this Excalidraw file.', { tone: 'error' });
+    return false;
   }
-  return ok;
 }

@@ -82,3 +82,17 @@ export async function nextExport(page: Page) {
     };
   });
 }
+
+/** Drop a file on the window the way the browser does: dragenter, dragover, then drop. */
+export async function dropFile(page: Page, name: string, text: string): Promise<void> {
+  await page.evaluate(
+    ({ name, text }) => {
+      const data = new DataTransfer();
+      data.items.add(new File([text], name, { type: 'application/xml' }));
+      for (const type of ['dragenter', 'dragover', 'drop']) {
+        window.dispatchEvent(new DragEvent(type, { dataTransfer: data, bubbles: true, cancelable: true }));
+      }
+    },
+    { name, text },
+  );
+}

@@ -75,6 +75,7 @@ test('Ctrl/Cmd+O opens Home, search narrows Recent, and New starts a blank diagr
   await page.setViewportSize({ width: 1440, height: 900 });
   await seedAutosave(page, 'Payments', 1);
   await page.goto('/');
+  await expect(home(page)).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(home(page)).toBeHidden();
 

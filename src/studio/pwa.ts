@@ -143,6 +143,12 @@ export const OPEN_FILE_TYPES = [
       'application/xml': ['.drawio', '.xml'],
     },
   },
+  {
+    description: 'Excalidraw scene (*.excalidraw)',
+    accept: {
+      'application/json': ['.excalidraw'],
+    },
+  },
 ];
 
 /**
