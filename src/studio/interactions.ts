@@ -177,8 +177,6 @@ import {
   openLibraryDialog,
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
-import { importAsyncApiText, importComposeText, importDrawioText, importExcalidrawText, importKubernetesText, importOpenApiText } from './fileImports';
-import { looksLikeAsyncApi, looksLikeCompose, looksLikeDrawio, looksLikeExcalidraw, looksLikeKubernetes, looksLikeOpenApi } from '../importers/sniff';
 import { restoreDiagram } from './library';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
@@ -1157,34 +1155,20 @@ export async function handleUploadedFile(file: File): Promise<void> {
   const titleFromFile = baseName
     ? baseName.replace(/\b\w/g, (ch) => ch.toUpperCase())
     : undefined;
-  importFileText(file.name, text, titleFromFile);
+  await importFileText(file.name, text, titleFromFile);
 }
 
-/** A draw.io, Excalidraw, OpenAPI, AsyncAPI, Kubernetes or Compose file goes to its own importer (a lazy chunk); everything else is Blueprint JSON, Blueprint file or Mermaid. */
-function importFileText(fileName: string, text: string, title: string | undefined): void {
-  if (looksLikeDrawio(fileName, text)) {
-    void importDrawioText(text, title ?? 'Imported draw.io');
-    return;
-  }
-  if (looksLikeExcalidraw(fileName, text)) {
-    void importExcalidrawText(text, title ?? 'Imported Excalidraw');
-    return;
-  }
-  if (looksLikeOpenApi(fileName, text)) {
-    void importOpenApiText(text, title ?? 'Imported API');
-    return;
-  }
-  if (looksLikeAsyncApi(fileName, text)) {
-    void importAsyncApiText(text, title ?? 'Imported messaging API');
-    return;
-  }
-  if (looksLikeKubernetes(fileName, text)) {
-    void importKubernetesText(text, title ?? 'Imported cluster');
-    return;
-  }
-  if (looksLikeCompose(fileName, text)) {
-    void importComposeText(text, title ?? 'Imported Compose');
-    return;
+/**
+ * A file one of the importers recognises (draw.io, Excalidraw, OpenAPI, AsyncAPI, Kubernetes, Compose) goes to it; the
+ * routing and the importers load on demand. Everything else is Blueprint JSON, a Blueprint file or Mermaid. If the
+ * router cannot load (offline and not cached), the file is read as one of those.
+ */
+async function importFileText(fileName: string, text: string, title: string | undefined): Promise<void> {
+  try {
+    const { routeImportedFile } = await import('./importRouter');
+    if (routeImportedFile(fileName, text, title)) return;
+  } catch {
+    // Not available right now: fall through to the built-in formats.
   }
   applyImportedText(text, title, undefined, true);
 }
@@ -1783,7 +1767,7 @@ export function initEvents(): void {
           const titleFromFile = baseName
             ? baseName.replace(/\b\w/g, (ch) => ch.toUpperCase())
             : undefined;
-          importFileText(fileData.name, fileData.content, titleFromFile);
+          await importFileText(fileData.name, fileData.content, titleFromFile);
           return;
         }
       } catch (err) {
