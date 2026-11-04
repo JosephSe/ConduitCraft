@@ -2,8 +2,34 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4281; // distinct from `pnpm preview` (4180) so a running dev/preview server is never reused
 
+/** The redesigned interface, as a returning visitor (first run would otherwise cover the canvas). */
+const ui2State = {
+  cookies: [],
+  origins: [
+    {
+      origin: `http://localhost:${PORT}`,
+      localStorage: [
+        { name: 'conduitcraft-ui', value: '2' },
+        { name: 'conduitcraft-first-run-seen', value: '1' },
+      ],
+    },
+  ],
+};
+
+/** A tablet: touch input and a coarse pointer, so `(pointer: coarse)` rules apply. Only e2e/touch.spec.ts runs on these. */
+const tablet = (width: number, height: number) => ({
+  ...devices['Desktop Chrome'],
+  viewport: { width, height },
+  hasTouch: true,
+  isMobile: true,
+  deviceScaleFactor: 2,
+  storageState: ui2State,
+});
+
 export default defineConfig({
   testDir: './e2e',
+  // The touch flows run on the tablet projects only; the desktop projects skip them.
+  testIgnore: ['**/touch.spec.ts'],
   timeout: 45_000,
   expect: { timeout: 10_000 },
   fullyParallel: true,
@@ -58,6 +84,9 @@ export default defineConfig({
         },
       },
     },
+    // Tablets (A12): the core flows by touch, portrait and landscape.
+    { name: 'tablet-portrait', testIgnore: [], testMatch: ['**/touch.spec.ts'], use: tablet(768, 1024) },
+    { name: 'tablet-landscape', testIgnore: [], testMatch: ['**/touch.spec.ts'], use: tablet(1024, 768) },
   ],
   // Test the production build: it is what ships, and it is where the lazy chunks and GIF worker live.
   webServer: {

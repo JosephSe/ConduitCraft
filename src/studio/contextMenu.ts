@@ -130,17 +130,58 @@ export function openContextMenu(x: number, y: number): void {
   announce(`${menu.querySelectorAll('[role="menuitem"]').length} actions`, 'polite');
 }
 
+/** How long a finger must rest, and how far it may drift, for a touch to count as a long press. */
+const LONG_PRESS_MS = 500;
+const LONG_PRESS_SLOP_PX = 10;
+
 export function initContextMenu(): void {
-  viewport.addEventListener('contextmenu', (e) => {
+  /** Open the menu for what is under (x, y): select it if it is not already, then show the actions. */
+  const openFor = (el: Element, x: number, y: number): boolean => {
     // Outside Design the menu is for components only (it carries "Fail this component"); the rest keeps the browser's.
-    if (app.workspaceMode !== 'design' && targetOf(e.target as Element)?.type !== 'node') return;
-    if ((e.target as HTMLElement).closest('input, textarea, [contenteditable="true"]')) return;
-    e.preventDefault();
-    const target = targetOf(e.target as Element);
+    if (app.workspaceMode !== 'design' && targetOf(el)?.type !== 'node') return false;
+    if (el.closest('input, textarea, [contenteditable="true"]')) return false;
+    const target = targetOf(el);
     if (target && !isInSelection(target)) applySelection(target);
     else if (!target) applySelection({ type: 'none' });
-    openContextMenu(e.clientX, e.clientY);
+    openContextMenu(x, y);
+    return true;
+  };
+
+  viewport.addEventListener('contextmenu', (e) => {
+    if (openFor(e.target as Element, e.clientX, e.clientY)) e.preventDefault();
   });
+
+  // Touch: Safari on iPad sends no contextmenu event for a long press, so the press is timed here. A second finger,
+  // movement or lifting the finger before the time is up cancels it (that is a pinch, a drag or a tap).
+  let press: { id: number; x: number; y: number; timer: number } | null = null;
+  const cancelPress = (): void => {
+    if (press) window.clearTimeout(press.timer);
+    press = null;
+  };
+  viewport.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'touch' && e.pointerType !== 'pen') return;
+    if (!e.isPrimary) {
+      cancelPress();
+      return;
+    }
+    cancelPress();
+    const el = e.target as Element;
+    const { pointerId: id, clientX: x, clientY: y } = e;
+    press = {
+      id,
+      x,
+      y,
+      timer: window.setTimeout(() => {
+        press = null;
+        openFor(el, x, y);
+      }, LONG_PRESS_MS),
+    };
+  }, true); // capture: components stop pointerdown from bubbling to the canvas
+  viewport.addEventListener('pointermove', (e) => {
+    if (press && e.pointerId === press.id && Math.hypot(e.clientX - press.x, e.clientY - press.y) > LONG_PRESS_SLOP_PX) cancelPress();
+  }, true);
+  viewport.addEventListener('pointerup', cancelPress, true);
+  viewport.addEventListener('pointercancel', cancelPress, true);
 
   // Keyboard: Shift+F10 or the Menu key opens it at the focused component or wire.
   window.addEventListener('keydown', (e) => {
