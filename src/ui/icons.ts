@@ -87,6 +87,19 @@ export function normalizeIconName(raw: string | undefined, fallback: NodeIconNam
   return key in ICON_PRIMITIVES ? key : fallback;
 }
 
+/** The shapes of a built-in icon as SVG markup in a 24 x 24 box, drawn with stroke only. Used by the SVG export. */
+export function nodeIconShapes(icon: NodeIconName): string {
+  const primitives = ICON_PRIMITIVES[icon] || ICON_PRIMITIVES.server;
+  return primitives
+    .map((prim) => {
+      const attrs = Object.entries(prim.attrs)
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(' ');
+      return `<${prim.tag} ${attrs}/>`;
+    })
+    .join('');
+}
+
 export function createNodeIconSvg(icon: NodeIconName, size = 18): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('width', String(size));
