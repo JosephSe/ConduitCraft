@@ -33,6 +33,7 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'tool-connect', key: 'w', designOnly: true },
   { actionId: 'tool-hand', key: 'h', designOnly: true },
   { actionId: 'tool-text', key: 't', designOnly: true },
+  { actionId: 'tool-frame', key: 'f', designOnly: true },
   { actionId: 'add-zone', key: 'z', designOnly: true },
   { actionId: 'add-notes', key: 'n', designOnly: true },
   { actionId: 'open-insert', key: 'c', designOnly: true },

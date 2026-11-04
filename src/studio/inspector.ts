@@ -583,7 +583,7 @@ function updateSelectionActionButtons(sel: SelectionTarget): void {
   if (btnPropLock) {
     const locked = isSelectionLocked(app.doc, sel);
     btnPropLock.textContent = locked ? 'Unlock' : 'Lock';
-    btnPropLock.hidden = sel.type === 'edge';
+    btnPropLock.hidden = sel.type === 'edge' || sel.type === 'frame';
   }
   if (btnPropGroup) {
     if (sel.type === 'node') {
@@ -1898,6 +1898,18 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
+  } else if (sel.type === 'frame') {
+    const frame = app.doc.frames?.find((f) => f.id === sel.id);
+    if (!frame) {
+      setSelection({ type: 'none' });
+      return;
+    }
+    propPanelHeading.textContent = 'FRAME';
+    propSelectionActions.hidden = false;
+    btnPropDuplicate.hidden = true;
+    void import('./frameStage').then((m) => {
+      if (form.isConnected) m.mountFrameFields(form, sel.id);
+    });
   } else if (sel.type === 'notes') {
     const card = app.doc.notesCards.find((c) => c.id === sel.id);
     if (!card) {

@@ -10,6 +10,7 @@ const TOOL_ACTION: Record<string, string> = {
   connect: 'tool-connect',
   hand: 'tool-hand',
   text: 'tool-text',
+  frame: 'tool-frame',
 };
 
 export function initToolRail(): void {

@@ -127,6 +127,23 @@ export interface DiagramZone {
   z?: number;
 }
 
+/**
+ * A titled box that owns the components inside it (F-09). Unlike a swimlane it is free-form: it has a position
+ * and a size on both axes, it can sit inside another frame, and moving it moves what it owns.
+ */
+export interface DiagramFrame {
+  id: string;
+  title: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  tone: StreamTone;
+  /** The frame this one sits inside. Absent means a top-level frame. */
+  parentId?: string;
+  locked?: boolean;
+}
+
 export type ComponentStatus = 'planned' | 'live' | 'deprecated' | 'at-risk';
 
 export interface DiagramNode {
@@ -155,6 +172,8 @@ export interface DiagramNode {
   locked?: boolean;
   z?: number;
   groupId?: string;
+  /** The frame that owns this component (F-09). Set when the component is dropped inside a frame. */
+  frameId?: string;
   status?: ComponentStatus;
   comment?: string;
   /** Free-form labels used to filter and colour (F-26). */
@@ -177,6 +196,8 @@ export interface LevelContent {
   edges: DiagramEdge[];
   zones: DiagramZone[];
   notesCards: DiagramNotesCard[];
+  /** Frames on this level (F-09). Absent means none. */
+  frames?: DiagramFrame[];
 }
 
 /** Failure handling for one component. Only `replicas` and `fallbackId` change what a chaos run reaches. */
@@ -296,6 +317,8 @@ export interface DiagramDocument {
   notesCards: DiagramNotesCard[];
   nodes: DiagramNode[];
   edges: DiagramEdge[];
+  /** Frames (F-09). Absent means none. */
+  frames?: DiagramFrame[];
   simulations: SimulationScenario[];
   /** Custom names for the five colours. Absent means the built-in names. */
   legend?: LegendEntry[];
@@ -316,6 +339,7 @@ export type SelectionTarget =
     }
   | { type: 'edge'; id: string }
   | { type: 'zone'; id: string }
+  | { type: 'frame'; id: string }
   | { type: 'notes'; id: string };
 
 export type ImportIssueLevel = 'error' | 'warning' | 'info';

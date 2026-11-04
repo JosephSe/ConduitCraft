@@ -93,6 +93,10 @@ export function describeSelection(selection: SelectionTarget, doc: DiagramDocume
       const zone = doc.zones.find((z) => z.id === selection.id);
       return `Selected swimlane ${zone?.title || selection.id}`;
     }
+    case 'frame': {
+      const frame = doc.frames?.find((f) => f.id === selection.id);
+      return `Selected frame ${frame?.title || selection.id}`;
+    }
     case 'notes': {
       const note = doc.notesCards.find((n) => n.id === selection.id);
       return `Selected note ${note?.title || selection.id}`;
@@ -116,7 +120,7 @@ export function announceModeChange(mode: 'design' | 'data' | 'review'): void {
 }
 
 /** Announce pointer tool switch (Select vs Connect). */
-export function announceToolChange(tool: 'select' | 'connect' | 'hand' | 'text'): void {
+export function announceToolChange(tool: 'select' | 'connect' | 'hand' | 'text' | 'frame'): void {
   const desc =
     tool === 'connect'
       ? 'Connect wire tool active: click or drag between ports'
@@ -124,6 +128,8 @@ export function announceToolChange(tool: 'select' | 'connect' | 'hand' | 'text')
         ? 'Hand tool active: drag to move around the canvas'
         : tool === 'text'
           ? 'Text tool active: click the canvas to add a text label'
-          : 'Select pointer tool active';
+          : tool === 'frame'
+            ? 'Frame tool active: drag on the canvas to draw a frame'
+            : 'Select pointer tool active';
   announce(desc, 'polite');
 }

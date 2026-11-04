@@ -5,7 +5,7 @@
  */
 import type { DiagramDocument, SelectionTarget } from '../types';
 
-export type SelectionKind = 'none' | 'node' | 'edge' | 'zone' | 'notes' | 'multi';
+export type SelectionKind = 'none' | 'node' | 'edge' | 'zone' | 'frame' | 'notes' | 'multi';
 
 export interface ActionContext {
   mode: 'design' | 'data';
@@ -38,6 +38,7 @@ export function buildActionContext(
       break;
     case 'edge':
     case 'zone':
+    case 'frame':
       count = 1;
       break;
     case 'multi':
@@ -59,12 +60,12 @@ export function buildActionContext(
 
 const hasSelection = (c: ActionContext) => c.selection !== 'none';
 const design = (c: ActionContext) => c.mode === 'design';
-const arrangeable = (c: ActionContext) => c.selection !== 'none' && c.selection !== 'edge';
+const arrangeable = (c: ActionContext) => c.selection !== 'none' && c.selection !== 'edge' && c.selection !== 'frame';
 
 /** Rules for actions that depend on the situation. An action not listed here is always available. */
 const RULES: Record<string, (c: ActionContext) => boolean> = {
   'edit-rename': (c) => design(c) && hasSelection(c) && c.selection !== 'multi',
-  'edit-duplicate': (c) => design(c) && c.selection !== 'edge' && hasSelection(c),
+  'edit-duplicate': (c) => design(c) && c.selection !== 'edge' && c.selection !== 'frame' && hasSelection(c),
   'edit-delete': (c) => design(c) && hasSelection(c),
   'edit-lock': (c) => design(c) && arrangeable(c),
   'edit-group': (c) => design(c) && c.selection === 'multi' && c.selectedCount >= 2,

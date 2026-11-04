@@ -2,7 +2,7 @@
  * Which actions the right-click menu offers for a selection. Entries are command-palette ids, so the menu and
  * the palette stay one list of actions; '-' is a separator. Pure, so it is unit tested without a DOM.
  */
-export type ContextSelectionType = 'none' | 'node' | 'edge' | 'zone' | 'notes' | 'multi';
+export type ContextSelectionType = 'none' | 'node' | 'edge' | 'zone' | 'frame' | 'notes' | 'multi';
 
 export interface ContextMenuHints {
   /** The selection contains a grouped component or note, so "Ungroup" is meaningful. */
@@ -29,6 +29,7 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
         'edit-delete',
       ];
     case 'edge':
+    case 'frame':
       return ['edit-rename', MENU_SEPARATOR, 'edit-delete'];
     case 'zone':
     case 'notes':
@@ -79,6 +80,7 @@ export function contextToolbarCommandIds(type: ContextSelectionType, hints: Cont
     case 'node':
       return ['edit-rename', 'edit-duplicate', 'edit-lock', 'wire-from-selection'];
     case 'edge':
+    case 'frame':
       return ['edit-rename', 'edit-delete'];
     case 'zone':
     case 'notes':

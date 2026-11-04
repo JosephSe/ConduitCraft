@@ -19,6 +19,7 @@ import {
   wireHandlesSvg,
   wiresGroup,
   workspace,
+  framesLayer,
   zonesLayer,
 } from './dom';
 import {
@@ -1120,6 +1121,8 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       wrapper.classList.remove('is-dragging-node');
       dragHandle.classList.remove('dragging');
       if (movedDuringDrag) {
+        // A component dropped inside (or pulled out of) a frame joins (or leaves) it.
+        if (app.doc.frames?.length) void import('./frameStage').then((m) => m.settleFrames());
         endHistoryGesture();
         renderPropertyEditor();
       }
@@ -1552,6 +1555,9 @@ export function updateVisualSelectionHighlights(): void {
   const zoneBanners = Array.from(zonesLayer.querySelectorAll<HTMLElement>('.zone-banner'));
   const notesCards = Array.from(notesLayer.querySelectorAll<HTMLElement>('.blueprint-spec'));
 
+  for (const fb of framesLayer.querySelectorAll<HTMLElement>('.frame-box')) {
+    fb.classList.toggle('is-selected', app.selection.type === 'frame' && fb.dataset.frameId === app.selection.id);
+  }
   for (const zb of zoneBanners) {
     const zoneSelected =
       (app.selection.type === 'zone' && zb.dataset.zoneId === app.selection.id) ||

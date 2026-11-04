@@ -512,6 +512,8 @@ export function validateSelection(): void {
     setSelection({ type: 'none' });
   } else if (sel.type === 'zone' && !app.doc.zones.some((z) => z.id === sel.id)) {
     setSelection({ type: 'none' });
+  } else if (sel.type === 'frame' && !app.doc.frames?.some((f) => f.id === sel.id)) {
+    setSelection({ type: 'none' });
   } else if (sel.type === 'notes' && !app.doc.notesCards.some((c) => c.id === sel.id)) {
     setSelection({ type: 'none' });
   }

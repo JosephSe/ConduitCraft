@@ -39,6 +39,8 @@ function targetOf(el: Element | null): SelectionTarget | null {
   if (wire?.dataset.edgeId) return { type: 'edge', id: wire.dataset.edgeId };
   const zone = el?.closest<HTMLElement>('.zone-banner');
   if (zone?.dataset.zoneId) return { type: 'zone', id: zone.dataset.zoneId };
+  const frame = el?.closest<HTMLElement>('.frame-title-bar')?.parentElement;
+  if (frame?.dataset.frameId) return { type: 'frame', id: frame.dataset.frameId };
   const note = el?.closest<HTMLElement>('.blueprint-spec');
   if (note?.dataset.notesId) return { type: 'notes', id: note.dataset.notesId };
   return null;

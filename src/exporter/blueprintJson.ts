@@ -18,6 +18,7 @@ import { pruneDanglingChaos } from '../core/reachability';
 import { normalizeBudgetMs, normalizeInsights } from '../core/insights';
 import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta';
 import { normalizeBrand } from '../core/brand';
+import { coerceFrames, dropDanglingFrameIds } from '../core/frames';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
 import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
@@ -97,6 +98,7 @@ function coerceNode(raw: unknown, depth = 0): DiagramNode | null {
     ...normalizeNodeMeta(raw),
     ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
     ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
+    ...(typeof raw.frameId === 'string' && raw.frameId.trim() ? { frameId: raw.frameId.trim() } : {}),
   };
   const child = depth < MAX_LEVEL_DEPTH ? coerceLevel(raw.child, depth + 1) : null;
   if (child) node.child = child;
@@ -111,12 +113,16 @@ function coerceLevel(raw: unknown, depth: number): LevelContent | null {
   if (!isRecord(raw)) return null;
   const list = <T>(value: unknown, coerce: (item: unknown, index: number) => T | null): T[] =>
     Array.isArray(value) ? value.flatMap((item, index) => { const c = coerce(item, index); return c ? [c] : []; }) : [];
-  return {
+  const level: LevelContent = {
     nodes: list(raw.nodes, (item) => coerceNode(item, depth)),
     edges: list(raw.edges, coerceEdge),
     zones: list(raw.zones, coerceZone),
     notesCards: list(raw.notesCards, coerceNotes),
   };
+  const frames = coerceFrames(raw.frames);
+  if (frames.length) level.frames = frames;
+  dropDanglingFrameIds(level.nodes, frames);
+  return level;
 }
 
 function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
@@ -234,6 +240,9 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
       : [],
     simulations: Array.isArray(source.simulations) ? (source.simulations as DiagramDocument['simulations']) : [],
   };
+  const frames = coerceFrames(source.frames);
+  if (frames.length) doc.frames = frames;
+  dropDanglingFrameIds(doc.nodes, frames);
   const legend = normalizeLegend(source.legend);
   if (legend.length) doc.legend = legend;
   const insights = normalizeInsights(source.insights);

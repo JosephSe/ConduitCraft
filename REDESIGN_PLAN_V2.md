@@ -66,7 +66,7 @@ Checked against the source, the PR list and a local run on 2026-11-03: `npm test
 
 | Item | Leftover | Queue ID |
 |---|---|---|
-| R-02 tool rail | Hand tool, Text tool, Frame tool (the Frame tool needs F-09) | C1, D1 |
+| R-02 tool rail | Hand tool, Text tool, Frame tool (the Frame tool needs F-09) | C1, D1a |
 | Contextual toolbar | Colour, kind and shape buttons | C2 |
 | F-03 levels | Mermaid `subgraph` import as levels; chaos doesn't cross levels (it runs on `app.doc`, the open level only) | A4, A5 |
 | Classic layout | To be removed "after one release", but no release has been defined | A11, B1 |
@@ -333,12 +333,12 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Shipped as:** the Share box in the export dialog now says "Anyone with this link can see the whole diagram. Nothing is uploaded." (V1 item 1). When the diagram has embedded images (`docHasImages`), the option "Leave out embedded images (logo and custom icons)" appears with a line giving both sizes ("With images 12.0 KB, without 3.0 KB"); it is hidden when there are none (item 2; the option itself already existed). Above 8 KB the size line says to download the file, "Download file instead" (same save as Blueprint file) becomes the primary button and Copy Link turns secondary; ticking the option can bring it back under the limit (item 3). The top-bar Share and the "Copy Shareable Link" command no longer copy a link over 8 KB: they open this dialog with a toast. The copied-link toast repeats the notice. The pure wording lives in `describeShareSize` (`shareLink.ts`). Link sizes of the bundled examples, with levels in the format: auth-oauth-oidc 3.5 KB, cicd-pipeline 3.7, cloud-data-pipeline 3.8, event-driven-microservices 3.8, kubernetes-ingress 3.5, three-tier-web 3.9, lumen-relay 6.3 (5.6 without images); none is over the 8 KB warning. Tests: two more in `tests/shareLink.test.ts`; `e2e/share.spec.ts` (four). Item 4 (view-only link) stays with F3. No section-7 default was needed.
 
 #### [x] B6. F-25 draw.io import · M (#60)
-- **Do:** read uncompressed and compressed (`DecompressionStream('deflate-raw')`) mxGraph pages. Map shapes to kinds by style, edges with labels to wires, swimlanes to zones, and containers to zones for now (frames once D1 lands). Multiple pages: ask "one diagram per page" or "pages as levels"; the second is possible now because F-03 exists. Load it as a lazy chunk with its own budget, and report everything skipped.
+- **Do:** read uncompressed and compressed (`DecompressionStream('deflate-raw')`) mxGraph pages. Map shapes to kinds by style, edges with labels to wires, swimlanes to zones, and containers to zones for now (frames once D1a lands). Multiple pages: ask "one diagram per page" or "pages as levels"; the second is possible now because F-03 exists. Load it as a lazy chunk with its own budget, and report everything skipped.
 - **Tests:** fixtures in `tests/fixtures/drawio/` (plain, compressed, multi-page, container) with expected counts, and a Playwright test that drops a `.drawio` file on the canvas.
 - **Shipped as:** `src/importers/drawio.ts` (lazy chunk, 13.3 kB of a 24 kB budget in `tools/checkBundleSize.mjs`) reads `.drawio` and `.xml` files, plain or compressed (`DecompressionStream('deflate-raw')`, capped at 40 MB), with a small hand-written XML reader (`importers/xml.ts`; no DTD or entity expansion, so a hostile file cannot reach out). Shapes map by style: cylinder or database → store, actor → actor, rhombus → gate (diamond), ellipse → circle, hexagon, rounded; unknown stencils become plain components and are reported once. Fill or stroke colour picks the nearest of the five colours. HTML labels become plain text (first line title, second line subtitle). Edges become wires with their label (including labels held in child shapes), dashed → async, a start arrow only → reversed, both arrows → two-way. Text shapes become notes. Swimlanes, containers and groups become swimlanes (a column spanning the shapes inside); nesting is flattened and reported. Shapes keep their draw.io layout, scaled up for the default component size, and are laid out again (reported) if any still collide. A file with several pages asks "One diagram per page" or "Pages as levels" (one overview whose components open the pages); the rest of the pages go to Your diagrams. Dropping, Open File and Import all route to it (`looksLikeDrawio` in `importers/sniff.ts`); the result opens as a new diagram, with Undo going back to the previous one. Everything skipped or changed is listed in a new Import report dialog, behind a "See report" action on a toast. Lines not attached at both ends, lines attached to a group, shapes with no size, pictures and unmapped shapes are all reported. Tests: `tests/drawio.test.ts` (14; fixtures `tests/fixtures/drawio/` plain, compressed, container, multi-page) and `e2e/drawio.spec.ts` (6, including dropping a `.drawio` file). Numbers: entry JS 473.0 kB (was 470.5; 7 kB of headroom left), entry CSS 101.2 kB. Leftover: containers become swimlanes only until frames exist (D1).
 
 #### [ ] B6b. draw.io containers as frames · S
-- **Needs:** D1.
+- **Needs:** D1a.
 - **Do:** import groups, containers and swimlanes as frames instead of swimlanes, keeping nesting, and drop the "nesting is lost" note from the import report.
 
 #### [x] B7. F-25 Excalidraw import · S (#61)
@@ -402,10 +402,14 @@ These are small items that make the shell complete. Each can run in parallel wit
 
 ### Milestone D: Depth (phase 6, the rest)
 
-#### [ ] D1. F-09 Frames · M (part 1) + M (part 2)
-- **Part 1:** data model (`DiagramFrame`, `node.frameId`), drawing, Frame tool on the rail (`F`), moving a frame moves its contents, dropping a node in adopts it. Schema bump.
-- **Part 2:** nesting, "Group to frame", Blueprint file (YAML) round trip, Mermaid subgraph import gains the "Frames" option from D6 (import only, D8), HTML export.
-- Split into two PRs: D1a and D1b.
+#### [x] D1a. F-09 Frames, part 1 · M (#70)
+- **Part 1:** data model (`DiagramFrame`, `node.frameId`), drawing, Frame tool on the rail (`F`), moving a frame moves its contents, dropping a node in adds it. Schema bump.
+- **Shipped as:** `DiagramFrame { id, title, x, y, width, height, tone, parentId?, locked? }` on the document and on each level, and `node.frameId` (schema 10). A component belongs to the smallest frame that holds its centre; the rule is in `core/frameOps.ts` (`adoptByGeometry`, also nesting: a frame belongs to the smallest larger frame that holds all of it) and is applied whenever the stage is drawn and after a component is dropped, so ownership always follows what the canvas shows. The Frame tool (`F`, rail button, "Frame Tool" in the palette) draws a frame by dragging, or a default one by clicking, then returns to Select. A frame has a title strip: drag it to move the frame with the frames and components it owns (one undo step, kept on the canvas), double-click or `F2` to rename, and a corner handle to resize. The inspector has a Frame panel (name, colour). `Delete` removes the frame and leaves its components (Undo restores it). Frames are read tolerantly (`coerceFrames`: repeated ids, cycles, missing parents and tiny sizes are fixed) and saved in Blueprint JSON, the Blueprint file (`frames:` and `frame:` on a component), the share link, nested levels (`children:`), and drawn in the SVG and HTML exports. The canvas code (`studio/frameStage.ts`, 7.3 kB) and `styles/frames.css` are a lazy chunk, loaded the first time a diagram has a frame or the tool is picked. Tests: `tests/frames.test.ts` (15) and `e2e/frames.spec.ts` (6). Selection is a new type `{ type: 'frame' }` and a frame is selected on its own (not in multi-selections).
+- **Entry size:** the frame code cost 5 kB of entry JS that the 480 kB budget did not have (1 kB of headroom). To pay for it the Version Snapshots dialog moved to a lazy chunk (`studio/snapshotsDialog.ts`, 10.5 kB). Numbers: entry JS 473.8 kB (was 479.1), entry CSS 103.8 kB. No section-7 default was needed.
+
+#### [ ] D1b. F-09 Frames, part 2 · M
+- **Do:** "Group to frame" (selected components become one frame, bounding box plus padding, `edit-group-frame` in the registry and the menu for a multi-selection); keep text labels and notes inside a frame moving with it (they have no `frameId` yet: use their centre); frames in the outline panel and `describeDiagram` ("Frame VPC holds …"); keyboard: select a frame from the outline and move it with the arrow keys; lock and duplicate for frames; frames on the minimap; the Mermaid import option "Subgraphs as: Frames" (D6; nested subgraphs become nested frames; import only, D8).
+- **Done when:** each of these has a test, the registry reachability test passes, and `e2e/a11y.spec.ts` scans a diagram with frames.
 
 #### [ ] D2. F-05 Live split code editor · M (part 1) + M (part 2)
 - **Part 1 (D2a):** the pane, live parse with a 250 ms debounce, last good canvas kept, line diagnostics, one history entry per typing pause, never discards text.
@@ -476,7 +480,7 @@ npm run test:e2e    # Playwright + axe, all pass, no new skips or retries
 Also:
 
 - Every V1 section 10 quality bar applies, in particular the reduced-motion, round-trip, data-safety and secrets rows. Round trip means JSON, the Blueprint file and the share link. Mermaid is import only (D8): the import report lists anything it drops, and nothing is written back.
-- A new document field bumps `CURRENT_SCHEMA_VERSION` in `src/core/schema.ts` (8 today), adds a `MIGRATIONS` step, and adds a round-trip test through JSON, YAML and the share link.
+- A new document field bumps `CURRENT_SCHEMA_VERSION` in `src/core/schema.ts` (10 today), adds a `MIGRATIONS` step, and adds a round-trip test through JSON, YAML and the share link.
 - A new user action goes through the action registry (`core/actions.ts`) so the palette, menu and shortcuts all get it. The registry reachability test must pass.
 - A new user-visible string follows the Appendix A word list.
 - This file is updated in the same PR (rule 4 in section 1).
