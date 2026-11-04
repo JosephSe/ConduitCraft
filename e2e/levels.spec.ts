@@ -3,7 +3,7 @@ import { openExportDialog, openLumenRelay, runPaletteCommand } from './helpers';
 
 test('a component opens as a level, edits stay inside it, and undo returns to it', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   const nodes = page.locator('.arch-node');
   await expect(nodes.first()).toBeVisible();
@@ -81,7 +81,7 @@ flowchart LR
 
 async function loadNested(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await runPaletteCommand(page, 'Mermaid Import');
   await page.locator('#code-sync-textarea').fill(NESTED);
   await page.locator('#btn-apply-code').click();
@@ -201,7 +201,7 @@ const SUBGRAPH = 'flowchart LR\n  subgraph checkout ["Checkout API"]\n    Gatewa
 
 async function importSubgraph(page: Page, mode: 'Swimlanes' | 'Levels'): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await runPaletteCommand(page, 'Mermaid Import');
   await page.locator('#code-sync-textarea').fill(SUBGRAPH);
   await page.locator('.subgraph-mode .segmented-label', { hasText: mode }).click();
@@ -210,7 +210,7 @@ async function importSubgraph(page: Page, mode: 'Swimlanes' | 'Levels'): Promise
 
 test('subgraphs import as swimlanes by default', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await runPaletteCommand(page, 'Mermaid Import');
   await expect(page.locator('input[name="subgraph-mode"][value="swimlanes"]')).toBeChecked();
   await importSubgraph(page, 'Swimlanes');

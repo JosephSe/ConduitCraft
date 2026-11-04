@@ -200,10 +200,9 @@ describe('chaos actions (F-01)', () => {
   it('binds X to Fail this component in the Traffic lens of the new layout only', async () => {
     const { matchBinding } = await import('../src/core/keymap.ts');
     const key = { key: 'x', metaKey: false, ctrlKey: false, shiftKey: false, altKey: false };
-    assert.equal(matchBinding(key, { mode: 'data', hasSelection: true, ui: 2 }), 'chaos-fail');
-    assert.equal(matchBinding(key, { mode: 'design', hasSelection: true, ui: 2 }), null);
-    assert.equal(matchBinding(key, { mode: 'data', hasSelection: false, ui: 2 }), null);
-    assert.equal(matchBinding(key, { mode: 'data', hasSelection: true, ui: 1 }), null);
+    assert.equal(matchBinding(key, { mode: 'data', hasSelection: true }), 'chaos-fail');
+    assert.equal(matchBinding(key, { mode: 'design', hasSelection: true }), null);
+    assert.equal(matchBinding(key, { mode: 'data', hasSelection: false }), null);
   });
 
   it('offers the action for one selected component in the Traffic lens only', async () => {

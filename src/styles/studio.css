@@ -96,24 +96,6 @@
     min-inline-size: 0;
   }
 
-  .eyebrow-row {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-family: var(--wl-font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
-    color: var(--wl-ink-muted);
-  }
-
-  .live-dot {
-    inline-size: 0.5rem;
-    block-size: 0.5rem;
-    border-radius: 999px;
-    background: var(--wl-emerald);
-    box-shadow: 0 0 0 3px var(--wl-emerald-soft);
-  }
-
   .title-edit-trigger {
     background: transparent;
     border: none;
@@ -202,17 +184,6 @@
     flex-wrap: wrap;
   }
 
-  .tool-strip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-  }
-
-  .tool-strip[hidden] {
-    display: none;
-  }
-
   .toolbar-actions {
     display: flex;
     align-items: center;
@@ -220,113 +191,10 @@
     flex-wrap: wrap;
   }
 
-  .menu-dropdown-wrapper {
-    position: relative;
-    display: inline-block;
-  }
-
-  .btn-menu-trigger {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-weight: 500;
-  }
-
-  .ui-icon-chevron {
-    transition: transform 0.15s ease;
-  }
-
-  .btn-menu-trigger[aria-expanded="true"] .ui-icon-chevron {
-    transform: rotate(180deg);
-  }
-
-  .menu-dropdown-popup {
-    position: absolute;
-    inset-block-start: calc(100% + 0.35rem);
-    inset-inline-start: 0;
-    min-inline-size: 13.5rem;
-    background: var(--wl-panel);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--wl-border-subtle);
-    border-radius: 0.65rem;
-    padding: 0.35rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-
-  .menu-dropdown-popup[hidden] {
-    display: none;
-  }
-
-  .menu-item {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding-inline: 0.65rem;
-    padding-block: 0.45rem;
-    background: transparent;
-    border: none;
-    border-radius: 0.45rem;
-    color: var(--wl-ink);
-    font-family: inherit;
-    font-size: 0.82rem;
-    font-weight: 500;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.12s ease, color 0.12s ease;
-  }
-
-  .menu-item:hover,
-  .menu-item:focus-visible {
-    background: var(--wl-surface-elevated);
-    outline: none;
-  }
-
-  .menu-item .ui-icon {
-    color: var(--wl-ink-muted);
-    flex-shrink: 0;
-  }
-
-  .menu-item:hover .ui-icon,
-  .menu-item:focus-visible .ui-icon {
-    color: var(--wl-blue);
-  }
-
-  .menu-shortcut {
-    margin-inline-start: auto;
-    font-family: var(--wl-font-mono);
-    font-size: 0.68rem;
-    color: var(--wl-ink-muted);
-  }
-
-  .menu-divider {
-    block-size: 1px;
-    background: var(--wl-border-subtle);
-    margin-block: 0.25rem;
-  }
-
   .btn-action-compact {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-  }
-
-  .panel-rail-toggles {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.2rem;
-    padding-inline-start: 0.25rem;
-    border-inline-start: 1px solid var(--wl-border-subtle);
-  }
-
-  .sim-buttons-slot {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    flex-wrap: wrap;
   }
 
   .workspace {
@@ -487,10 +355,6 @@
       padding-inline: 0.75rem;
     }
 
-    .brand-titles .eyebrow-row {
-      display: none;
-    }
-
     .title-edit-trigger {
       max-inline-size: 10rem;
     }
@@ -573,10 +437,6 @@
     #btn-open-settings {
       display: none;
     }
-
-    .header-overflow-wrapper {
-      display: inline-block;
-    }
   }
 
   .drawer-scrim {
@@ -597,11 +457,6 @@
     .drawer-scrim {
       display: none !important;
     }
-  }
-
-  .header-overflow-wrapper {
-    display: none;
-    position: relative;
   }
 }
 
@@ -890,43 +745,6 @@
     flex-shrink: 0;
   }
 
-  .split-btn-group {
-    display: inline-flex;
-    align-items: center;
-    position: relative;
-  }
-
-  .split-btn-group .btn-split-main {
-    border-start-end-radius: 0;
-    border-end-end-radius: 0;
-  }
-
-  .split-btn-group .btn-split-toggle {
-    border-start-start-radius: 0;
-    border-end-start-radius: 0;
-    border-inline-start: none;
-    min-inline-size: 1.8rem;
-    padding-inline: 0.25rem;
-  }
-
-  .auto-layout-menu {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    min-inline-size: 12rem;
-    z-index: 50;
-  }
-
-  .menu-heading-label {
-    padding-inline: 0.75rem;
-    padding-block: 0.35rem 0.15rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--wl-ink-muted);
-  }
-
   /* Smooth node position animation during Auto-Layout */
   #stage-world.layout-animating .arch-node,
   #stage-world.layout-animating .notes-card {
@@ -981,7 +799,6 @@
   .stencil-card:focus-visible,
   .stencil-aux-btn:focus-visible,
   .tab-btn:focus-visible,
-  .menu-item:focus-visible,
   .dialog-close:focus-visible {
     outline: 2px solid var(--brand-accent, var(--wl-blue));
     outline-offset: 2px;
@@ -2138,8 +1955,7 @@
     .rail-stencil-btn,
     .coach-dismiss-btn,
     .tab-btn,
-    .prop-header-btn,
-    .menu-item {
+    .prop-header-btn {
       min-inline-size: 2.75rem;
       min-block-size: 2.75rem;
     }
@@ -4741,85 +4557,8 @@ kbd {
 }
 
 /* ==========================================================================
-   Simulation Playback Deck & Active Wire Glow
+   Active Wire Glow & Trace Highlight
    ========================================================================== */
-.sim-playback-deck {
-  margin-block: 0.75rem;
-  padding: 0.75rem 0.85rem;
-  border-radius: 0.75rem;
-  background: var(--wl-surface-elevated);
-  border: 1px solid var(--wl-border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.sim-playback-deck[hidden] {
-  display: none !important;
-}
-
-.sim-playback-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.sim-playback-title {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  color: var(--wl-ink);
-  letter-spacing: -0.01em;
-}
-
-.sim-playback-step-badge {
-  font-family: var(--wl-font-mono, monospace);
-  font-size: 0.725rem;
-  font-weight: 600;
-  color: var(--wl-ink-secondary);
-  background: var(--wl-panel);
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  border: 1px solid var(--wl-border-subtle);
-}
-
-.sim-playback-scrubber-row {
-  width: 100%;
-}
-
-.sim-scrubber {
-  width: 100%;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--wl-border-subtle);
-  outline: none;
-  cursor: pointer;
-  accent-color: var(--wl-blue);
-}
-
-.sim-playback-controls-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.btn-sim-play {
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding-inline: 0.75rem;
-}
-
-.sim-deck-spacer {
-  flex: 1;
-}
-
-.sim-speed-btn {
-  font-family: var(--wl-font-mono, monospace);
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding-inline: 0.5rem;
-}
 
 /* Trace item interactive styles & active step highlight */
 .trace-item {
@@ -5039,36 +4778,15 @@ kbd {
 }
 
 /* ---------------------------------------------------------------------------------------------
-   Redesigned top bar (?ui=2): logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
+   Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
-   Hidden with display:none, not removed, so existing wiring keeps working and the palette can still click them.
    --------------------------------------------------------------------------------------------- */
 .btn-share-v2 {
-  display: none;
-}
-html[data-ui="2"] .btn-share-v2 {
   display: inline-flex;
 }
-html[data-ui="2"] .topbar .eyebrow-row,
-html[data-ui="2"] .topbar #design-toolbar,
-html[data-ui="2"] .topbar #data-toolbar,
-html[data-ui="2"] .topbar #sim-buttons-slot,
-html[data-ui="2"] .topbar #btn-toggle-motion,
-html[data-ui="2"] .topbar #file-menu-wrapper,
-html[data-ui="2"] .topbar #btn-open-export,
-html[data-ui="2"] .topbar #btn-enter-presentation,
-html[data-ui="2"] .topbar #btn-open-shortcuts,
-html[data-ui="2"] .topbar #btn-open-settings,
-html[data-ui="2"] .topbar .panel-rail-toggles,
-html[data-ui="2"] .topbar #header-overflow-wrapper {
-  display: none !important;
-}
 
-/* Tool rail (?ui=2): select / wire tools above the component icons */
-.rail-tool-only {
-  display: none;
-}
-html[data-ui="2"] .rail-tool-btn {
+/* Tool rail: select / wire tools above the component icons */
+.rail-tool-btn {
   position: relative;
   display: grid;
   place-items: center;
@@ -5080,21 +4798,21 @@ html[data-ui="2"] .rail-tool-btn {
   color: var(--wl-ink-secondary);
   cursor: pointer;
 }
-html[data-ui="2"] .rail-divider.rail-tool-only {
+.rail-divider.rail-tool-only {
   display: block;
 }
-html[data-ui="2"] .rail-tool-btn:hover {
+.rail-tool-btn:hover {
   background: var(--wl-surface-elevated);
   border-color: var(--wl-border-subtle);
   color: var(--wl-ink);
 }
-html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
+.rail-tool-btn[aria-pressed="true"] {
   background: var(--wl-blue-soft);
   border-color: var(--wl-blue);
   color: var(--wl-ink);
 }
 
-/* Contextual toolbar (?ui=2): actions floating beside the selection */
+/* Contextual toolbar: actions floating beside the selection */
 .context-toolbar {
   position: fixed;
   z-index: 900;
@@ -5128,24 +4846,18 @@ html[data-ui="2"] .rail-tool-btn[aria-pressed="true"] {
   box-shadow: inset 0 0 0 2px var(--wl-blue);
 }
 
-/* Inspector pin (?ui=2): keeps the panel open when nothing is selected */
+/* Inspector pin: keeps the panel open when nothing is selected */
 .inspector-pin-btn {
-  display: none;
-  margin-inline-start: auto;
-}
-html[data-ui="2"] .inspector-pin-btn {
   display: inline-flex;
+  margin-inline-start: auto;
 }
 .inspector-pin-btn[aria-pressed="true"] {
   background: var(--wl-blue-soft);
   color: var(--wl-ink);
 }
 
-/* Lens switcher: the key that selects each lens, shown only in the redesigned interface. */
-.lens-key {
-  display: none;
-}
-html[data-ui="2"] .mode-switcher .lens-key {
+/* Lens switcher: the key that selects each lens. */
+.mode-switcher .lens-key {
   display: inline;
   margin-left: 4px;
   padding: 0;
@@ -5201,11 +4913,6 @@ html[data-ui="2"] .mode-switcher .lens-key {
 .run-bar [aria-pressed="true"] {
   color: var(--wl-blue);
 }
-/* The run bar replaces the playback deck inside the Live Trace tab. */
-html[data-ui="2"] #sim-playback-deck {
-  display: none !important;
-}
-
 /* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
 .legend-card {
   position: absolute;
@@ -5327,7 +5034,6 @@ html[data-ui="2"] #sim-playback-deck {
 }
 
 /* Insights (F-02): the Review lens lists what the rules found; badges sit on the components they are about. */
-html[data-ui="1"] .lens-review { display: none; }
 .insight-count {
   margin-inline-start: 0.35rem;
   padding: 0 0.4rem;
@@ -5602,7 +5308,7 @@ html[data-ui="1"] .lens-review { display: none; }
 /* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
 @media (pointer: coarse) {
   .btn, .btn-icon-only, .btn-action-compact, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
-  .title-edit-trigger, .menu-item, .context-menu-item, .rail-tool-btn, .rail-stencil-btn, .stencil-aux-btn, .help-popover-link {
+  .title-edit-trigger, .context-menu-item, .rail-tool-btn, .rail-stencil-btn, .stencil-aux-btn, .help-popover-link {
     min-inline-size: 2.75rem;
     min-block-size: 2.75rem;
   }

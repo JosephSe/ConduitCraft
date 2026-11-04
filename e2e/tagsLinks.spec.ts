@@ -36,8 +36,7 @@ test('a component takes an owner, tags and links, and the legend renames a colou
   const expand = page.locator('#btn-rail-expand-inspector');
   if (await expand.isVisible()) await expand.click();
   await page.locator('#prop-legend-rose').fill('PII');
-  await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
-  await expect(page.locator('[data-tone-name="rose"]')).toHaveText('PII');
+  await expect(page.locator('#legend-card-list')).toContainText('PII');
 });
 
 test('the Traffic toolbar colours by tag and filters by tag, and the legend card shows on the canvas', async ({ page }) => {
@@ -52,9 +51,7 @@ test('the Traffic toolbar colours by tag and filters by tag, and the legend card
   await page.locator('#prop-node-owner').blur();
 
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
-  // The classic layout has these in the Traffic toolbar; the new one has them in the run bar.
-  const classic = (await page.locator('html').getAttribute('data-ui')) === '1';
-  const scope = classic ? page.locator('#data-toolbar') : page.locator('#run-bar');
+  const scope = page.locator('#run-bar');
   const tagFilter = scope.locator('.js-tag-filter');
   const colourBy = scope.locator('.js-colour-by');
   await expect(tagFilter.locator('option[value="pii"]')).toHaveCount(1);

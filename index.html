@@ -38,13 +38,6 @@
         <img id="doc-brand-logo" class="brand-logo" alt="" hidden>
       </div>
       <div class="brand-titles">
-        <div class="eyebrow-row">
-          <span class="brand-name" id="doc-brand-name" hidden></span>
-          <span class="live-dot" aria-hidden="true"></span>
-          <span id="doc-system-tag">CONDUITCRAFT // V1.0</span>
-          <span aria-hidden="true">·</span>
-          <span id="doc-status-label">TRAFFIC DIAGRAM</span>
-        </div>
         <div class="title-row">
           <button type="button" class="title-edit-trigger" id="btn-focus-doc-title">
             <h1 id="doc-title-heading">Untitled Architecture</h1>
@@ -84,248 +77,21 @@
         </label>
       </fieldset>
 
-      <!-- Authoring Tools (Design Mode) -->
-      <div class="tool-strip" id="design-toolbar" role="toolbar" aria-label="Canvas drawing tools">
-        <fieldset class="segmented-group" aria-label="Pointer tool">
-          <legend class="visually-hidden">Pointer Tool</legend>
-          <label class="segmented-label">
-            <input type="radio" name="pointer-tool" value="select" class="visually-hidden" checked>
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
-            <span>Select</span>
-          </label>
-          <label class="segmented-label">
-            <input type="radio" name="pointer-tool" value="connect" class="visually-hidden">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
-            <span>Connect</span>
-          </label>
-        </fieldset>
-
-        <div class="split-btn-group" id="auto-layout-cluster">
-          <button type="button" class="btn btn-split-main" id="btn-auto-layout" data-tip="Auto-arrange diagram flow">Auto-Layout</button>
-          <button type="button" class="btn btn-icon-only btn-split-toggle" id="btn-auto-layout-menu" aria-label="Auto-layout options" data-tip="Layout options" aria-haspopup="menu" aria-expanded="false">
-            <svg class="ui-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-          </button>
-          <div class="menu-dropdown-popup auto-layout-menu" id="auto-layout-popup" role="menu" hidden>
-            <div class="menu-heading-label">Direction</div>
-            <button type="button" class="menu-item" id="btn-layout-dir-lr" data-layout-dir="LR" role="menuitem">
-              <span>Left to Right (LR)</span>
-            </button>
-            <button type="button" class="menu-item" id="btn-layout-dir-td" data-layout-dir="TD" role="menuitem">
-              <span>Top to Bottom (TD)</span>
-            </button>
-            <div class="menu-divider" role="separator"></div>
-            <div class="menu-heading-label">Spacing</div>
-            <button type="button" class="menu-item" id="btn-layout-sp-compact" data-layout-spacing="compact" role="menuitem">
-              <span>Compact</span>
-            </button>
-            <button type="button" class="menu-item" id="btn-layout-sp-comfortable" data-layout-spacing="comfortable" role="menuitem">
-              <span>Comfortable</span>
-            </button>
-            <button type="button" class="menu-item" id="btn-layout-sp-spacious" data-layout-spacing="spacious" role="menuitem">
-              <span>Spacious</span>
-            </button>
-            <div class="menu-divider" role="separator"></div>
-            <button type="button" class="menu-item" id="btn-layout-selection" role="menuitem">
-              <span>Layout Selection Only</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data View Stream Filters (Data View Mode) -->
-      <div class="tool-strip" id="data-toolbar" role="toolbar" aria-label="Wire controls" hidden>
-        <fieldset class="segmented-group" id="stream-filter-group" aria-label="Filter wires by colour">
-          <legend class="visually-hidden">Wire colour filter</legend>
-          <label class="segmented-label">
-            <input type="radio" name="flow-filter" value="all" class="visually-hidden" checked>
-            <span>All</span>
-          </label>
-          <label class="segmented-label">
-            <input type="radio" name="flow-filter" value="blue" class="visually-hidden">
-            <span class="pill-swatch" style="background: var(--wl-blue);"></span>
-            <span data-tone-name="blue">Primary</span>
-          </label>
-          <label class="segmented-label">
-            <input type="radio" name="flow-filter" value="emerald" class="visually-hidden">
-            <span class="pill-swatch" style="background: var(--wl-emerald);"></span>
-            <span data-tone-name="emerald">Success</span>
-          </label>
-          <label class="segmented-label">
-            <input type="radio" name="flow-filter" value="rose" class="visually-hidden">
-            <span class="pill-swatch" style="background: var(--wl-rose);"></span>
-            <span data-tone-name="rose">Exception</span>
-          </label>
-          <label class="segmented-label">
-            <input type="radio" name="flow-filter" value="violet" class="visually-hidden">
-            <span class="pill-swatch" style="background: var(--wl-violet);"></span>
-            <span data-tone-name="violet">Control</span>
-          </label>
-        </fieldset>
-        <label class="tool-select">
-          <span class="visually-hidden">Colour components by</span>
-          <select id="colour-by" class="prop-select js-colour-by" aria-label="Colour components by">
-            <option value="tone">Colour: tone</option>
-            <option value="status">Colour: status</option>
-            <option value="tag">Colour: tag</option>
-          </select>
-        </label>
-        <label class="tool-select">
-          <span class="visually-hidden">Show only components with tag</span>
-          <select id="tag-filter" class="prop-select js-tag-filter" aria-label="Show only components with tag">
-            <option value="">All tags</option>
-          </select>
-        </label>
-      </div>
-
-      <!-- Live Simulation Buttons -->
-      <div class="sim-buttons-slot" id="sim-buttons-slot"></div>
-      <button type="button" class="btn" id="btn-toggle-motion" aria-pressed="false">Pause</button>
     </div>
 
     <div class="toolbar-actions" role="toolbar" aria-label="Document actions">
-      <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md or .json)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json" class="visually-hidden">
-      
-      <!-- Consolidated File Dropdown Menu -->
-      <div class="menu-dropdown-wrapper" id="file-menu-wrapper">
-        <button type="button" class="btn btn-menu-trigger" id="btn-file-menu" aria-haspopup="menu" aria-expanded="false" data-tip="File actions">
-          <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
-          <span>File</span>
-          <svg class="ui-icon-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-        <div class="menu-dropdown-popup" id="file-menu-popup" role="menu" hidden>
-          <button type="button" class="menu-item" id="btn-new-canvas" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            <span>New Blueprint…</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-open-file" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-            <span>Open File…</span>
-            <span class="menu-shortcut">⌘O</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-file-save" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            <span>Save</span>
-            <span class="menu-shortcut">⌘S</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-file-save-as" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            <span>Save As…</span>
-            <span class="menu-shortcut">⌘⇧S</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-open-snapshots" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Snapshots &amp; Diff…</span>
-          </button>
-          <div class="menu-divider" role="separator"></div>
-          <button type="button" class="menu-item" id="btn-import-file" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            <span>Import File…</span>
-            <span class="menu-shortcut">.mmd / .json</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-open-code" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            <span>Blueprint File / Paste Mermaid</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-open-matrix" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-            <span>Connectivity Matrix</span>
-          </button>
-          <div class="menu-divider" role="separator"></div>
-          <button type="button" class="menu-item" id="btn-file-export" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            <span>Export Dialog…</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-install-app" role="menuitem" hidden>
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="20" x="4" y="2" rx="2"/><circle cx="12" cy="18" r="1"/><path d="M12 6v6m-3-3 3 3 3-3"/></svg>
-            <span>Install ConduitCraft</span>
-          </button>
-        </div>
-      </div>
-
       <!-- Share (shown by the redesigned top bar only) -->
       <button type="button" class="btn btn-share-v2" id="btn-share" data-tip="Copy a link to this diagram">Share</button>
-
-      <!-- Primary Export Button -->
-      <button type="button" class="btn btn-primary-export" id="btn-open-export">Export</button>
 
       <button type="button" class="btn btn-action-compact" id="btn-open-palette" aria-label="Search commands (Cmd/Ctrl+K)" data-tip="Commands (⌘K)">
         <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="btn-text-responsive">Search</span>
       </button>
-      <button type="button" class="btn btn-action-compact" id="btn-enter-presentation" aria-label="Present, presentation mode (P)" data-tip="Present (P)">
-        <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-        <span class="btn-text-responsive">Present</span>
-      </button>
-      <button type="button" class="btn btn-icon-only" id="btn-open-shortcuts" aria-label="Keyboard shortcuts (?)" data-tip="Shortcuts (?)">
-        <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
-      </button>
-      <button type="button" class="btn btn-icon-only" id="btn-open-settings" aria-label="Display settings" data-tip="Settings">
-        <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      </button>
-
-      <!-- Panel Rail Toggles -->
-      <div class="panel-rail-toggles" role="group" aria-label="Toggle side panels">
-        <button type="button" class="btn btn-icon-only" id="btn-toggle-palette" aria-label="Toggle component palette ([)" data-tip="Toggle palette ([)" aria-expanded="true">
-          <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
-        </button>
-        <button type="button" class="btn btn-icon-only" id="btn-toggle-inspector" aria-label="Toggle properties inspector (])" data-tip="Toggle inspector (])" aria-expanded="true">
-          <svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
-        </button>
-      </div>
-
-      <!-- Header Overflow Menu (Narrow screens / Mobile) -->
-      <div class="menu-dropdown-wrapper header-overflow-wrapper" id="header-overflow-wrapper">
-        <button type="button" class="btn btn-icon-only" id="btn-header-overflow" aria-label="More actions" aria-haspopup="menu" aria-expanded="false" data-tip="More actions">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
-        </button>
-        <div class="menu-dropdown-popup menu-dropdown-right" id="header-overflow-popup" role="menu" hidden>
-          <button type="button" class="menu-item" id="btn-overflow-search" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <span>Search &amp; Commands</span>
-            <span class="menu-shortcut">⌘K</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-overflow-present" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-            <span>Presentation Mode</span>
-            <span class="menu-shortcut">P</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-overflow-fit" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-            <span>Fit to Viewport</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-overflow-outline" role="menuitemcheckbox" aria-checked="false">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-            <span>Text Outline</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-overflow-layout" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>
-            <span>Auto-Layout</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-overflow-snap" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v18H3zM3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-            <span>Toggle Grid Snap</span>
-          </button>
-          <div class="menu-divider" role="separator"></div>
-          <button type="button" class="menu-item" id="btn-overflow-shortcuts" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
-            <span>Keyboard Shortcuts</span>
-            <span class="menu-shortcut">?</span>
-          </button>
-          <button type="button" class="menu-item" id="btn-overflow-settings" role="menuitem">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span>Display Settings</span>
-          </button>
-          <div class="menu-divider" role="separator"></div>
-          <button type="button" class="menu-item" id="btn-overflow-clear" role="menuitem" style="color: var(--wl-rose);">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-            <span>Clear Canvas</span>
-          </button>
-        </div>
-      </div>
     </div>
   </header>
 
   <main class="workspace" id="workspace" data-mode="design" data-tool="select" data-flow="all">
+  <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md or .json)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json" class="visually-hidden">
     <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
     <div class="drawer-scrim" id="drawer-scrim" hidden></div>
 
@@ -708,38 +474,6 @@
               <button type="button" class="btn btn-compact" id="btn-clear-trace" style="flex: 0 0 auto;">Clear</button>
             </div>
 
-            <!-- Simulation Playback Controls Deck -->
-            <div class="sim-playback-deck" id="sim-playback-deck" hidden>
-              <div class="sim-playback-header">
-                <span class="sim-playback-title" id="sim-playback-title">Active Scenario</span>
-                <span class="sim-playback-step-badge" id="sim-playback-step-badge">Step 1 of 4</span>
-              </div>
-
-              <div class="sim-playback-scrubber-row">
-                <input type="range" class="sim-scrubber" id="sim-scrubber" min="0" max="0" value="0" step="1" aria-label="Simulation step scrubber">
-              </div>
-
-              <div class="sim-playback-controls-row">
-                <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-prev" aria-label="Previous step" data-tip="Previous step">
-                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-                </button>
-                <button type="button" class="btn btn-compact btn-sim-play" id="btn-sim-play" aria-label="Play or pause scenario" data-tip="Play/Pause">
-                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-                  <span id="btn-sim-play-label">Play</span>
-                </button>
-                <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-next" aria-label="Next step" data-tip="Next step">
-                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-                </button>
-
-                <div class="sim-deck-spacer"></div>
-
-                <button type="button" class="btn btn-compact sim-speed-btn" id="btn-sim-speed" aria-label="Scenario speed (click to toggle)" data-tip="Playback speed">1.0×</button>
-                <button type="button" class="btn btn-icon-only btn-compact" id="btn-sim-loop" aria-label="Toggle loop" data-tip="Loop simulation" aria-pressed="false">
-                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-                </button>
-              </div>
-            </div>
-
             <p class="inspector-summary" id="sim-trace-hint">
               Trigger a simulation from the toolbar or the Scenarios tab to watch live packets traverse your architecture.
             </p>
@@ -1085,13 +819,6 @@
               <span class="theme-option-sub">Only appears when you have named your colours</span>
             </span>
             <input type="checkbox" id="chk-show-legend" name="show-legend" checked>
-          </label>
-          <label class="theme-option">
-            <span>
-              <strong>Classic layout</strong>
-              <span class="theme-option-sub">The original toolbar and panels. The page reloads when you change this.</span>
-            </span>
-            <input type="checkbox" id="chk-classic-layout" name="classic-layout">
           </label>
         </fieldset>
       </div>

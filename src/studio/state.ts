@@ -583,10 +583,10 @@ export function trackViewportResize(): void {
     if (next.width === prev.width && next.height === prev.height) return;
     const pan = panForViewportResize({ panX: app.panX, panY: app.panY }, prev, next);
     const windowResized = performance.now() - lastWindowResize < SETTLE_MS;
-    // Redesigned interface: the inspector opens and closes by itself with the selection. Keep the diagram where it
+    // The inspector opens and closes by itself with the selection. Keep the diagram where it
     // is (the panel simply covers the right edge) rather than sliding it sideways under the user's pointer. A real
     // window resize is different: the layout reflows in steps, so only the window's own resize events can tell the two apart.
-    if (document.documentElement.dataset.ui === '2' && !windowResized && next.height === prev.height) pan.panX = app.panX;
+    if (!windowResized && next.height === prev.height) pan.panX = app.panX;
     app.panX = pan.panX;
     app.panY = pan.panY;
     applyTransform();

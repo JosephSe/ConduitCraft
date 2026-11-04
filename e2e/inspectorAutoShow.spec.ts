@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
-async function open(page: Page, query = '?ui=2') {
+async function open(page: Page, query = '') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
   await openLumenRelay(page);
@@ -12,7 +12,7 @@ async function open(page: Page, query = '?ui=2') {
 const workspace = (page: Page) => page.locator('#workspace');
 const clearSelection = (page: Page) => page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
 
-test('?ui=2: the inspector opens with a selection and folds away without one', async ({ page }) => {
+test('the inspector opens with a selection and folds away without one', async ({ page }) => {
   await open(page);
   await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true'); // showcase opens selected
   await clearSelection(page);
@@ -52,13 +52,6 @@ test('the inspector does not auto-hide in Data View', async ({ page }) => {
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
   await clearSelection(page);
   await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true');
-});
-
-test('classic layout: the inspector stays open and there is no pin', async ({ page }) => {
-  await open(page, '?ui=1');
-  await clearSelection(page);
-  await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true');
-  await expect(page.locator('#btn-pin-inspector')).toBeHidden();
 });
 
 for (const scheme of ['light', 'dark'] as const) {

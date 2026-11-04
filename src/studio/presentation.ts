@@ -110,12 +110,8 @@ export class PresentationManager {
         );
         if (dataRadio) dataRadio.checked = true;
 
-        const designToolbar = document.getElementById('design-toolbar');
-        const dataToolbar = document.getElementById('data-toolbar');
         const designPane = document.getElementById('design-inspector-pane');
         const dataPane = document.getElementById('data-inspector-pane');
-        if (designToolbar) designToolbar.hidden = true;
-        if (dataToolbar) dataToolbar.hidden = false;
         if (designPane) designPane.hidden = true;
         if (dataPane) dataPane.hidden = false;
       }

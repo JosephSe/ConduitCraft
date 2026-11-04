@@ -4,7 +4,7 @@ import { openLumenRelay } from './helpers';
 
 test('Review lens lists insights, selects the target on click, and mutes a rule', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 

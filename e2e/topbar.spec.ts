@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { clearSelection, openLumenRelay } from './helpers';
 
-async function open(page: Page, query = '?ui=2') {
+async function open(page: Page, query = '') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
   await openLumenRelay(page);
@@ -19,27 +19,12 @@ const visibleControls = (page: Page) =>
       .map((el) => el.id || el.getAttribute('name') || el.tagName);
   });
 
-test('the classic top bar is still the default', async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name === 'chromium-ui2', 'this project opts in to the redesign');
-  await open(page, '');
-  await expect(page.locator('html')).toHaveAttribute('data-ui', '1');
-  await expect(page.locator('#btn-open-export')).toBeVisible();
-  await expect(page.locator('#btn-share')).toBeHidden();
-});
-
-test('?ui=2 shows a top bar with at most 8 controls, and remembers the choice', async ({ page }) => {
+test('the top bar shows at most 8 controls', async ({ page }) => {
   await open(page);
-  await expect(page.locator('html')).toHaveAttribute('data-ui', '2');
   const controls = await visibleControls(page);
   expect(controls.length, controls.join(', ')).toBeLessThanOrEqual(8);
   for (const id of ['btn-open-palette', 'btn-share', 'btn-focus-doc-title']) expect(controls).toContain(id);
-  await expect(page.locator('#btn-open-export')).toBeHidden();
-
-  // Reload without the parameter: the choice sticks until ?ui=1.
-  await page.goto('/');
-  await expect(page.locator('html')).toHaveAttribute('data-ui', '2');
-  await page.goto('/?ui=1');
-  await expect(page.locator('html')).toHaveAttribute('data-ui', '1');
+  await expect(page.locator('#btn-open-export')).toHaveCount(0);
 });
 
 test('controls removed from the top bar are still one palette search away', async ({ page }) => {
@@ -132,7 +117,7 @@ const countByRegion = (page: Page) =>
 for (const [lens, key] of [['Design', '1'], ['Traffic', '2'], ['Review', '3']] as const) {
   test(`${lens} lens at 1280 px: no region has more than 8 always-visible controls`, async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/?ui=2');
+    await page.goto('/');
     await openLumenRelay(page);
     await clearSelection(page);
     await page.keyboard.press(key);
@@ -147,3 +132,19 @@ for (const [lens, key] of [['Design', '1'], ['Traffic', '2'], ['Review', '3']] a
     }
   });
 }
+
+test('a saved Classic layout preference is dropped once, with a notice', async ({ page }) => {
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem('seeded')) {
+      sessionStorage.setItem('seeded', '1');
+      localStorage.setItem('conduitcraft-ui', '1');
+    }
+  });
+  await page.goto('/?ui=1');
+  await expect(page.locator('#toast-container')).toContainText('The old layout has been retired');
+  expect(await page.evaluate(() => localStorage.getItem('conduitcraft-ui'))).toBeNull();
+  // The new layout is what shows, whatever the URL says.
+  await expect(page.locator('#btn-share')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#toast-container')).not.toContainText('The old layout has been retired');
+});

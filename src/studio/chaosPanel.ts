@@ -17,7 +17,7 @@ export function initChaosPanel(): void {
 
   const repaint = () => {
     const counts = chaosSummary();
-    const visible = Boolean(counts) && chaosLensActive() && document.documentElement.dataset.ui === '2';
+    const visible = Boolean(counts) && chaosLensActive();
     panel.hidden = !visible;
     if (!counts || !visible) {
       list.hidden = true;

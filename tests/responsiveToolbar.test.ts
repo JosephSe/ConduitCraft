@@ -147,13 +147,7 @@ const { ResponsiveToolbarManager } = await import('../src/studio/responsiveToolb
 
 describe('responsive and compact toolbar', () => {
   let workspace: MockElement;
-  let btnFileMenu: MockElement;
-  let fileMenuPopup: MockElement;
-  let btnTogglePalette: MockElement;
-  let btnToggleInspector: MockElement;
   let drawerScrim: MockElement;
-  let btnHeaderOverflow: MockElement;
-  let headerOverflowPopup: MockElement;
 
   beforeEach(() => {
     mockStorage.clear();
@@ -168,50 +162,6 @@ describe('responsive and compact toolbar', () => {
     drawerScrim.id = 'drawer-scrim';
     drawerScrim.setAttribute('hidden', '');
     elementsById.set('drawer-scrim', drawerScrim);
-
-    btnFileMenu = new MockElement('BUTTON');
-    btnFileMenu.id = 'btn-file-menu';
-    elementsById.set('btn-file-menu', btnFileMenu);
-
-    fileMenuPopup = new MockElement('DIV');
-    fileMenuPopup.id = 'file-menu-popup';
-    fileMenuPopup.setAttribute('hidden', '');
-    elementsById.set('file-menu-popup', fileMenuPopup);
-
-    btnHeaderOverflow = new MockElement('BUTTON');
-    btnHeaderOverflow.id = 'btn-header-overflow';
-    elementsById.set('btn-header-overflow', btnHeaderOverflow);
-
-    headerOverflowPopup = new MockElement('DIV');
-    headerOverflowPopup.id = 'header-overflow-popup';
-    headerOverflowPopup.setAttribute('hidden', '');
-    elementsById.set('header-overflow-popup', headerOverflowPopup);
-
-    btnTogglePalette = new MockElement('BUTTON');
-    btnTogglePalette.id = 'btn-toggle-palette';
-    elementsById.set('btn-toggle-palette', btnTogglePalette);
-
-    btnToggleInspector = new MockElement('BUTTON');
-    btnToggleInspector.id = 'btn-toggle-inspector';
-    elementsById.set('btn-toggle-inspector', btnToggleInspector);
-  });
-
-  it('toggles the File dropdown menu open and closed', () => {
-    const manager = new ResponsiveToolbarManager();
-    manager.init(workspace as unknown as HTMLElement);
-
-    assert.strictEqual(manager.isFileMenuOpen(), false);
-    assert.strictEqual(fileMenuPopup.hasAttribute('hidden'), true);
-
-    manager.toggleFileMenu();
-    assert.strictEqual(manager.isFileMenuOpen(), true);
-    assert.strictEqual(fileMenuPopup.hasAttribute('hidden'), false);
-    assert.strictEqual(btnFileMenu.getAttribute('aria-expanded'), 'true');
-
-    manager.closeFileMenu();
-    assert.strictEqual(manager.isFileMenuOpen(), false);
-    assert.strictEqual(fileMenuPopup.hasAttribute('hidden'), true);
-    assert.strictEqual(btnFileMenu.getAttribute('aria-expanded'), 'false');
   });
 
   it('toggles palette collapsed state and persists in localStorage', () => {
@@ -225,14 +175,12 @@ describe('responsive and compact toolbar', () => {
     assert.strictEqual(collapsed, true);
     assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
     assert.strictEqual(mockStorage.get('conduitcraft:palette-collapsed'), 'true');
-    assert.strictEqual(btnTogglePalette.getAttribute('aria-expanded'), 'false');
 
     // Expand
     const expanded = manager.togglePalette();
     assert.strictEqual(expanded, false);
     assert.strictEqual(workspace.hasAttribute('data-palette-collapsed'), false);
     assert.strictEqual(mockStorage.has('conduitcraft:palette-collapsed'), false);
-    assert.strictEqual(btnTogglePalette.getAttribute('aria-expanded'), 'true');
   });
 
   it('toggles inspector collapsed state and persists in localStorage', () => {
@@ -246,14 +194,12 @@ describe('responsive and compact toolbar', () => {
     assert.strictEqual(collapsed, true);
     assert.strictEqual(workspace.getAttribute('data-inspector-collapsed'), 'true');
     assert.strictEqual(mockStorage.get('conduitcraft:inspector-collapsed'), 'true');
-    assert.strictEqual(btnToggleInspector.getAttribute('aria-expanded'), 'false');
 
     // Expand
     const expanded = manager.toggleInspector();
     assert.strictEqual(expanded, false);
     assert.strictEqual(workspace.hasAttribute('data-inspector-collapsed'), false);
     assert.strictEqual(mockStorage.has('conduitcraft:inspector-collapsed'), false);
-    assert.strictEqual(btnToggleInspector.getAttribute('aria-expanded'), 'true');
   });
 
   it('restores collapsed states from localStorage on initialization', () => {
@@ -273,8 +219,6 @@ describe('responsive and compact toolbar', () => {
     const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
     const css = readFileSync(cssPath, 'utf8');
 
-    assert.ok(css.includes('.menu-dropdown-wrapper'), 'CSS defines menu dropdown wrapper');
-    assert.ok(css.includes('.menu-dropdown-popup'), 'CSS defines menu dropdown popup');
     assert.ok(css.includes('.doc-history-controls'), 'CSS defines doc history controls next to title');
     assert.ok(css.includes('workspace[data-palette-collapsed="true"]'), 'CSS defines palette collapsed rail layout');
     assert.ok(css.includes('workspace[data-inspector-collapsed="true"]'), 'CSS defines inspector collapsed rail layout');
@@ -375,24 +319,6 @@ describe('responsive and compact toolbar', () => {
     assert.strictEqual(manager.isPaletteCollapsed(), true, 'Palette must close on scrim tap');
     assert.strictEqual(manager.isInspectorCollapsed(), true, 'Inspector must close on scrim tap');
     assert.strictEqual(drawerScrim.hasAttribute('hidden'), true, 'Scrim must be hidden when both drawers close');
-  });
-
-  it('toggles header overflow menu open and closed (item 8)', () => {
-    const manager = new ResponsiveToolbarManager();
-    manager.init(workspace as unknown as HTMLElement);
-
-    assert.strictEqual(manager.isHeaderOverflowOpen(), false);
-    assert.strictEqual(headerOverflowPopup.hasAttribute('hidden'), true);
-
-    manager.toggleHeaderOverflow();
-    assert.strictEqual(manager.isHeaderOverflowOpen(), true);
-    assert.strictEqual(headerOverflowPopup.hasAttribute('hidden'), false);
-    assert.strictEqual(btnHeaderOverflow.getAttribute('aria-expanded'), 'true');
-
-    manager.closeHeaderOverflow();
-    assert.strictEqual(manager.isHeaderOverflowOpen(), false);
-    assert.strictEqual(headerOverflowPopup.hasAttribute('hidden'), true);
-    assert.strictEqual(btnHeaderOverflow.getAttribute('aria-expanded'), 'false');
   });
 
   it('verifies 44px minimum tap targets inside @media (pointer: coarse) (item 8)', () => {

@@ -27,7 +27,7 @@ async function running(page: Page): Promise<string[]> {
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto('/?ui=2');
+  await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 });

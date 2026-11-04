@@ -52,7 +52,6 @@ export function startFirstRunIfNew(deps: FirstRunDeps): void {
   const card = document.getElementById('first-run');
   if (!card) return;
   const facts = {
-    redesign: document.documentElement.dataset.ui === '2',
     hasSavedWork: storageHas(AUTOSAVE_KEY) || storageHas(RECOVERY_KEY) || storageHas('blueprint-studio-autosave-v1'),
     hasShareLink: window.location.hash.length > 1,
     seenBefore: storageHas(FIRST_RUN_SEEN_KEY),

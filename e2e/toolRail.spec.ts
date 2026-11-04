@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
-async function open(page: Page, query = '?ui=2') {
+async function open(page: Page, query = '') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
   await openLumenRelay(page);
@@ -11,15 +11,7 @@ async function open(page: Page, query = '?ui=2') {
 
 const tool = (page: Page, name: string) => page.locator(`[data-rail-tool="${name}"]`);
 
-test('classic layout has no tool buttons in the rail', async ({ page }) => {
-  await open(page, '?ui=1');
-  await expect(tool(page, 'select')).toBeHidden();
-  await page.locator('.node-select-hit[tabindex="0"]').focus();
-  await page.keyboard.press('w');
-  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'select');
-});
-
-test('?ui=2 starts with the component list folded into a rail that has Select and Wire tools', async ({ page }) => {
+test('starts with the component list folded into a rail that has Select and Wire tools', async ({ page }) => {
   await open(page);
   await expect(page.locator('#workspace')).toHaveAttribute('data-palette-collapsed', 'true');
   await expect(tool(page, 'select')).toHaveAttribute('aria-pressed', 'true');

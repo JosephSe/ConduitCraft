@@ -3,8 +3,7 @@ import { captureExports, nextExport, openExportDialog, openLumenRelay } from './
 
 // A13. The award checklist says the app works fully offline after the first visit. This runs the production build
 // (vite preview): the service worker precaches every built chunk, including the lazy ones.
-test('works offline after the first visit: template, simulation, PNG and GIF export, save', async ({ page, context }, testInfo) => {
-  test.skip(testInfo.project.name === 'chromium', 'the run bar is part of the redesign; offline support is the same in both layouts');
+test('works offline after the first visit: template, simulation, PNG and GIF export, save', async ({ page, context }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
 

@@ -100,13 +100,18 @@ export const WL_RESOLVED_TOKENS: Record<string, string> = {
  * Returns a complete map of resolved `--wl-*` CSS custom properties,
  * taking into account current computed document styles and active color-scheme.
  */
-export function getResolvedWlVariables(): Record<string, string> {
-  const isDark =
+export function currentScheme(): 'light' | 'dark' {
+  const dark =
     typeof document !== 'undefined' &&
     document.documentElement &&
     (document.documentElement.getAttribute('data-theme') === 'dark' ||
       document.documentElement.classList.contains('dark') ||
       (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches));
+  return dark ? 'dark' : 'light';
+}
+
+export function getResolvedWlVariables(): Record<string, string> {
+  const isDark = currentScheme() === 'dark';
 
   const vars: Record<string, string> = { ...WL_RESOLVED_TOKENS };
   if (isDark) {
@@ -305,7 +310,7 @@ export function renderStagePictureSvg(
   const liveStage = stageWorld ?? (typeof document !== 'undefined' ? (document.getElementById('stage-world') as HTMLElement) : null);
   if (!liveStage) {
     // If called outside DOM environment or before stage is mounted, fallback to vector SVG
-    return renderDiagramSvg(app.doc);
+    return renderDiagramSvg(app.doc, undefined, undefined, currentScheme());
   }
 
   const liveViewport = viewport ?? (typeof document !== 'undefined' ? (document.getElementById('viewport') as HTMLElement) : null);
