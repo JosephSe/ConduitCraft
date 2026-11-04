@@ -103,6 +103,8 @@ export function isEdgeActiveInSelection(
 
 /** Toggle individual node selection (add if absent, unselect if present). */
 export function toggleNodeInSelection(current: SelectionTarget, nodeId: string): SelectionTarget {
+  // A frame is only ever selected on its own, so toggling anything else replaces it.
+  if (current.type === 'frame') current = { type: 'none' };
   if (current.type === 'none') {
     return { type: 'node', id: nodeId };
   }
@@ -153,6 +155,8 @@ export function toggleEdgeInSelection(
   edgeId: string,
   docEdges: readonly DiagramEdge[],
 ): SelectionTarget {
+  // A frame is only ever selected on its own, so toggling anything else replaces it.
+  if (current.type === 'frame') current = { type: 'none' };
   if (current.type === 'none') {
     return { type: 'edge', id: edgeId };
   }
@@ -250,6 +254,8 @@ export function excludeAllEdgesInSelection(
 
 /** Toggle individual swimlane stage selection (add if absent, unselect if present). */
 export function toggleZoneInSelection(current: SelectionTarget, zoneId: string): SelectionTarget {
+  // A frame is only ever selected on its own, so toggling anything else replaces it.
+  if (current.type === 'frame') current = { type: 'none' };
   if (current.type === 'none') {
     return { type: 'zone', id: zoneId };
   }
@@ -297,6 +303,8 @@ export function toggleZoneInSelection(current: SelectionTarget, zoneId: string):
 
 /** Toggle individual notes card selection (add if absent, unselect if present). */
 export function toggleNotesInSelection(current: SelectionTarget, notesId: string): SelectionTarget {
+  // A frame is only ever selected on its own, so toggling anything else replaces it.
+  if (current.type === 'frame') current = { type: 'none' };
   if (current.type === 'none') {
     return { type: 'notes', id: notesId };
   }

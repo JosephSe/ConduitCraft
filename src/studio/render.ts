@@ -9,6 +9,7 @@ import {
   docBrandLogo,
   docTitleHeadingEl,
   emptyStageOverlay,
+  framesLayer,
   matrixTbody,
   propPanelHeading,
   restoreBannerText,
@@ -96,6 +97,13 @@ function paintDocumentBrand(): void {
   }
 }
 
+/** Frames are drawn by a lazy chunk, loaded only for a diagram that has frames (or still shows some to clear). */
+function paintFrames(): void {
+  const has = Boolean(app.doc.frames?.length);
+  if (!has && framesLayer.childElementCount === 0) return;
+  void import('./frameStage').then((m) => m.renderFrames());
+}
+
 export function renderAll(rebuildInspector = true): void {
   invalidateChaos();
   invalidateInsights();
@@ -141,6 +149,7 @@ export function renderAll(rebuildInspector = true): void {
   wireHandlesSvg.setAttribute('width', String(app.doc.stageWidth));
   wireHandlesSvg.setAttribute('height', String(app.doc.stageHeight));
 
+  paintFrames();
   renderZones();
   renderNotesCards();
   renderWiresOnly();

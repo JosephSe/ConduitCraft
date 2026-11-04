@@ -18,7 +18,6 @@ import { responsiveToolbar } from './responsiveToolbar';
 import { toggleOutline } from './outlinePanel';
 import { HELP_TOPICS } from '../core/helpTopics';
 import { openHelp } from './helpPopover';
-import { saveSnapshot } from './snapshots';
 import { selectionOfStage } from './selection';
 import { chaosLensActive, clearFailures, failedIds, toggleFailure } from './chaos';
 import { getEffectiveSimulations } from '../core/layout';
@@ -809,11 +808,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       category: 'Export & Sync',
       keywords: ['snapshot', 'save', 'checkpoint', 'milestone', 'record'],
       run: () => {
-        const snap = saveSnapshot(
-          `Snapshot ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-          fullDocument()
-        );
-        notify(`Recorded snapshot "${snap.name}"`);
+        void import('./snapshotsDialog').then((m) => m.takeQuickSnapshot());
       },
     },
     {
@@ -997,6 +992,14 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       category: 'Canvas & Layout',
       keywords: ['text', 'label', 'type', 'annotation', 'tool', 'caption'],
       run: () => setPointerTool('text'),
+    },
+    {
+      id: 'tool-frame',
+      title: 'Frame Tool',
+      subtitle: 'Drag on the canvas to draw a frame around components',
+      category: 'Canvas & Layout',
+      keywords: ['frame', 'box', 'container', 'group', 'vpc', 'subnet', 'cluster', 'boundary', 'tool'],
+      run: () => setPointerTool('frame'),
     },
     {
       id: 'wire-from-selection',

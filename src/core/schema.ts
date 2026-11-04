@@ -7,7 +7,7 @@
  * To change the schema: bump `CURRENT_SCHEMA_VERSION`, add `MIGRATIONS[oldVersion]` that returns the document in
  * the next version's shape, and add a round-trip test (JSON, share link) for each new field.
  */
-export const CURRENT_SCHEMA_VERSION = 9;
+export const CURRENT_SCHEMA_VERSION = 10;
 
 type RawDocument = Record<string, unknown>;
 
@@ -31,6 +31,8 @@ export const MIGRATIONS: Record<number, (doc: RawDocument) => RawDocument> = {
   7: (doc) => doc,
   // 8 -> 9: note cards may carry `variant: 'text'`, a free text label (C1). Optional, so nothing to rewrite.
   8: (doc) => doc,
+  // 9 -> 10: the document and each level may carry `frames`, and components `frameId` (F-09). Optional, so nothing to rewrite.
+  9: (doc) => doc,
 };
 
 export type MigrateResult = { ok: true; doc: RawDocument; from: number } | { ok: false; error: string };

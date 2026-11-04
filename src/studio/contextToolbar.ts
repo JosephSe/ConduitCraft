@@ -42,6 +42,9 @@ function selectedElements(sel: SelectionTarget): Element[] {
     case 'zone':
       out.push(q(`.zone-banner[data-zone-id="${CSS.escape(sel.id)}"]`));
       break;
+    case 'frame':
+      out.push(q(`.frame-box[data-frame-id="${CSS.escape(sel.id)}"] .frame-title-bar`));
+      break;
     case 'notes':
       out.push(q(`.blueprint-spec[data-notes-id="${CSS.escape(sel.id)}"]`));
       break;

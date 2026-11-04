@@ -25,6 +25,7 @@ import { normalizeLegend, normalizeNodeMeta, normalizeTags } from './meta';
 import { pruneDanglingChaos } from './reachability';
 import { normalizeBudgetMs, normalizeInsights } from './insights';
 import { normalizeWireFields } from './wire';
+import { coerceFrames, dropDanglingFrameIds } from './frames';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
 
@@ -56,6 +57,7 @@ interface RawNodeMeta {
   comment?: string;
   locked?: boolean;
   groupId?: string;
+  frame?: string;
   owner?: unknown;
   tags?: unknown;
   links?: unknown;
@@ -100,6 +102,7 @@ interface RawBlueprintMeta {
   brand?: { name?: string; accent?: string; logo?: string };
   legend?: unknown;
   insights?: unknown;
+  frames?: unknown;
   zones?: Array<{
     id?: string;
     number?: string | number;
@@ -930,8 +933,8 @@ function importChildLevel(raw: unknown, ownerId: string, issues: ImportIssue[]):
     for (const issue of result.issues) {
       if (issue.level !== 'info') issues.push({ ...issue, line: undefined, message: `Inside "${ownerId}": ${issue.message}` });
     }
-    const { nodes, edges, zones, notesCards } = result.doc;
-    return { nodes, edges, zones, notesCards };
+    const { nodes, edges, zones, notesCards, frames } = result.doc;
+    return { nodes, edges, zones, notesCards, ...(frames?.length ? { frames } : {}) };
   } finally {
     childDepth -= 1;
   }
@@ -1274,6 +1277,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
       ...(metaNode.comment ? { comment: String(metaNode.comment) } : {}),
       ...(metaNode.locked !== undefined ? { locked: Boolean(metaNode.locked) } : {}),
       ...(metaNode.groupId ? { groupId: String(metaNode.groupId) } : {}),
+      ...(typeof metaNode.frame === 'string' && metaNode.frame.trim() ? { frameId: metaNode.frame.trim() } : {}),
       ...normalizeNodeMeta(metaNode as Record<string, unknown>),
       title,
       subtitle,
@@ -1461,6 +1465,11 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
     });
   }
   doc.zones = zones;
+
+  // Frames (F-09)
+  const frames = coerceFrames(meta.frames);
+  if (frames.length > 0) doc.frames = frames;
+  dropDanglingFrameIds(doc.nodes, frames);
 
   // Notes cards
   const notesCards: DiagramNotesCard[] = [];
@@ -1732,6 +1741,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       ...(n.comment ? { comment: n.comment } : {}),
       ...(n.locked !== undefined ? { locked: n.locked } : {}),
       ...(n.groupId ? { groupId: n.groupId } : {}),
+      ...(n.frameId ? { frame: n.frameId } : {}),
       ...(n.owner ? { owner: n.owner } : {}),
       ...(n.tags?.length ? { tags: n.tags } : {}),
       ...(n.links?.length ? { links: n.links } : {}),
@@ -1749,7 +1759,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       ...(n.child && depth < MAX_CHILD_DEPTH
         ? {
             children: buildFrontmatter(
-              { ...doc, ...n.child, simulations: [], legend: undefined, insights: undefined },
+              { ...doc, frames: undefined, ...n.child, simulations: [], legend: undefined, insights: undefined },
               false,
               depth + 1,
             ),
@@ -1808,6 +1818,20 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       subtitle: z.subtitle,
       x: Math.round(z.x),
       width: Math.round(z.width),
+    }));
+  }
+
+  if (doc.frames?.length) {
+    frontmatterObj.frames = doc.frames.map((f) => ({
+      id: f.id,
+      title: f.title,
+      x: Math.round(f.x),
+      y: Math.round(f.y),
+      width: Math.round(f.width),
+      height: Math.round(f.height),
+      tone: f.tone,
+      ...(f.parentId ? { parentId: f.parentId } : {}),
+      ...(f.locked ? { locked: true } : {}),
     }));
   }
 

@@ -307,6 +307,14 @@ export function renderDiagramSvg(
     )
     .join('');
 
+  const frames = [...(doc.frames ?? [])]
+    .sort((a, b) => b.width * b.height - a.width * a.height)
+    .map((f) => {
+      const color = pal.tone[f.tone];
+      return `<g><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}" rx="14" fill="${color}" fill-opacity="0.07" stroke="${color}" stroke-width="1.5" stroke-dasharray="6 5"/><text x="${f.x + 12}" y="${f.y + 19}" font-family="${SANS}" font-size="12" font-weight="700" fill="${color}">${escapeXml(f.title)}</text></g>`;
+    })
+    .join('');
+
   const zones = doc.zones
     .map((zone) => {
       const isSel = isMulti && selectedZones.has(zone.id);
@@ -400,6 +408,7 @@ export function renderDiagramSvg(
   <desc id="diagram-desc">${escapeXml(describeDiagram(doc))}</desc>
   <defs>${markers}</defs>
   <rect width="100%" height="100%" fill="${pal.canvas}"/>
+  ${frames}
   ${zones}
   ${notes}
   ${wires}

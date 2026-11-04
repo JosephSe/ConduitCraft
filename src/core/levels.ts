@@ -10,7 +10,7 @@ export type LevelPath = string[];
 export const emptyLevel = (): LevelContent => ({ nodes: [], edges: [], zones: [], notesCards: [] });
 
 /** Document-level fields that belong to the whole tree, not to one level. */
-const LEVEL_FIELDS = ['nodes', 'edges', 'zones', 'notesCards'] as const;
+const LEVEL_FIELDS = ['nodes', 'edges', 'zones', 'notesCards', 'frames'] as const;
 /** Shell fields a level shares with the root but sizes for itself. */
 const LEVEL_OWN_SHELL = ['stageWidth', 'stageHeight'] as const;
 
@@ -50,6 +50,7 @@ export function viewOfLevel(root: DiagramDocument, path: LevelPath): DiagramDocu
   const view = structuredClone(root) as DiagramDocument;
   if (path.length === 0) return view;
   for (const field of LEVEL_FIELDS) (view as unknown as Record<string, unknown>)[field] = structuredClone(content[field]);
+  if (!content.frames) delete view.frames;
   return view;
 }
 
@@ -67,6 +68,7 @@ export function writeLevelBack(root: DiagramDocument, path: LevelPath, view: Dia
     edges: view.edges,
     zones: view.zones,
     notesCards: view.notesCards,
+    ...(view.frames?.length ? { frames: view.frames } : {}),
   };
   const skip = new Set<string>([...LEVEL_FIELDS, ...LEVEL_OWN_SHELL]);
   for (const [key, value] of Object.entries(view)) if (!skip.has(key)) (root as unknown as Record<string, unknown>)[key] = value;

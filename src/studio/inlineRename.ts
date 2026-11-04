@@ -23,13 +23,13 @@ function textStyleOf(el: Element): Partial<InlineEditTextStyle> {
   };
 }
 
-function commitRename(what: string, mutate: () => void, value: string): void {
+export function commitRename(what: string, mutate: () => void, value: string): void {
   if (!mutateWithHistory(mutate)) return;
   renderAll(true);
   announce(`${what} renamed to ${value || 'no label'}`);
 }
 
-function startTextEdit(
+export function startTextEdit(
   textEl: Element | null,
   current: string,
   ariaLabel: string,
@@ -130,6 +130,7 @@ export function renameSelectionInline(): boolean {
   const sel = app.selection;
   if (sel.type === 'node') renameNodeInline(sel.id);
   else if (sel.type === 'zone') renameZoneInline(sel.id);
+  else if (sel.type === 'frame') void import('./frameStage').then((m) => m.renameFrameInline(sel.id));
   else if (sel.type === 'notes') renameNotesInline(sel.id);
   else if (sel.type === 'edge') renameWireInline(sel.id);
   else return false;

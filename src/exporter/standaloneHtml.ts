@@ -17,6 +17,7 @@ import { normalizeLinks, toneName } from '../core/meta';
 import { flowScale } from '../core/wire';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
+import framesCss from '../styles/frames.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
 
 function escapeHtml(value?: string | null): string {
@@ -194,6 +195,16 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
             .join('')}
         </fieldset>`
       : '';
+
+  const framesMarkup = [...(doc.frames ?? [])]
+    .sort((a, b) => b.width * b.height - a.width * a.height)
+    .map(
+      (f) => `
+      <div class="frame-box" data-tone="${f.tone}" style="--fx: ${f.x}; --fy: ${f.y}; --fw: ${f.width}; --fh: ${f.height};" aria-hidden="true">
+        <div class="frame-title-bar">${escapeHtml(f.title)}</div>
+      </div>`,
+    )
+    .join('\n');
 
   const zonesMarkup = doc.zones
     .map((z) => {
@@ -375,6 +386,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
 
 ${sharedCss}
 ${viewerCss}
+${doc.frames?.length ? framesCss : ''}
 </style>`;
 
   const brand = normalizeBrand(doc.brand);
@@ -434,6 +446,7 @@ ${colorSchemeBoot}
     <section class="canvas-shell" aria-label="Interactive architecture diagram">
       <div class="canvas-viewport" id="canvas-viewport" tabindex="0" role="region" aria-label="Interactive architecture canvas. Drag to pan, scroll to zoom.">
         <div class="stage-world" id="stage-world" style="--stage-w: ${doc.stageWidth}px; --stage-h: ${doc.stageHeight}px">
+          <div id="frames-layer">${framesMarkup}</div>
           ${zonesMarkup}
           ${notesMarkup}
           <svg class="wires-layer" viewBox="0 0 ${doc.stageWidth} ${doc.stageHeight}" width="${doc.stageWidth}" height="${doc.stageHeight}" aria-hidden="true">
