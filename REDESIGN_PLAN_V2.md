@@ -233,7 +233,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** `tablet-portrait` shows the lens switch and undo/redo, and the `layout.spec.ts` overlap test passes at 768 × 1024.
 - **Shipped as:** the phone breakpoint in `studio.css` is now `max-width: 47.9rem` (was 52rem), so 768 px keeps the lens switch, undo/redo and the full bar. The hang A12 saw did not appear: with the new breakpoint all 13 touch tests pass at 768 × 1024, and so does the layout overlap test, which now also runs at 768 × 1024. The cause of that hang was never found, so if it comes back, look first at what lays out at exactly 768 px. New test: "the top bar keeps the lens switch and undo/redo" (fails on the old breakpoint).
 
-#### [x] A13. Offline end-to-end test · S (#PR)
+#### [x] A13. Offline end-to-end test · S (#46)
 - **Needs:** A11.
 - **Do:** add a Playwright test: load once, wait for the service worker, go offline, reload, then open a template, run a simulation, export a PNG and a GIF (lazy chunks), and save a file. Fix any chunk the precache misses.
 - **Done when:** the test is named `works offline …` and passes against `vite preview`.
