@@ -182,3 +182,20 @@ test('with reduced motion, nothing on Home animates', async ({ page }) => {
   });
   expect(running).toEqual([]);
 });
+
+test('Import infrastructure… opens the file picker and imports a Compose file', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await seedAutosave(page, 'Payments', 1);
+  await page.goto('/');
+  await expect(home(page)).toBeVisible();
+  const link = page.getByRole('button', { name: 'Import infrastructure…' });
+  await expect(link).toBeVisible();
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), link.click()]);
+  await chooser.setFiles({
+    name: 'docker-compose.yml',
+    mimeType: 'text/yaml',
+    buffer: Buffer.from('services:\n  web:\n    image: nginx\n    depends_on: [api]\n  api:\n    image: node:20\n'),
+  });
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+  await expect(home(page)).toBeHidden();
+});
