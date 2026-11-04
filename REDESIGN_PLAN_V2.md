@@ -268,7 +268,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 
 **Goal:** many diagrams per browser, and a first diagram that takes seconds because it's imported.
 
-#### [x] B1. Remove Classic layout · M (#PR)
+#### [x] B1. Remove Classic layout · M (#51)
 - **Needs:** A11 (D2).
 - **Do:** delete the `?ui=1` path: the classic header and overflow menu in `index.html`, the `uiV2Only` flags in `core/keymap.ts`, the branches on UI version in `interactions.ts`, `inspectorAutoShow.ts`, `main.ts` and `core/uiVersion.ts`, the "Classic layout" setting, the classic-only CSS, and the `?ui=1` e2e project. A stored "classic" preference is silently dropped, with a one-time toast.
 - **Done when:** `grep -ri classic src index.html` finds nothing except the release-notes reference, the e2e suite runs once (not twice), and entry CSS and JS have both dropped (record the numbers).
