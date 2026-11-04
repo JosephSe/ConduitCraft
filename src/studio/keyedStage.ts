@@ -12,8 +12,6 @@ import {
 } from '../core/nodeStyle';
 import {
   SVG_NS,
-  alignGuideX,
-  alignGuideY,
   draftWire,
   nodesLayer,
   notesLayer,
@@ -54,6 +52,8 @@ import { flowScale } from '../core/wire';
 import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { insightsFor, worstLevel } from './insights';
 import { scheduleMinimapPaint } from './minimap';
+import { clearGuides, paintGuides } from './guideOverlay';
+import { distancesTo, snapToGuides } from './guides';
 import {
   toggleEdgeInSelection,
   toggleNodeInSelection,
@@ -1094,7 +1094,10 @@ function createNodeElement(node: DiagramNode): HTMLElement {
           }
         }
       } else {
-        const [snappedX, snappedY] = computeSnappedPosition(current, origX + dx, origY + dy);
+        const [snappedX, snappedY] = computeSnappedPosition(current, origX + dx, origY + dy, {
+          suspend: e.metaKey || e.ctrlKey,
+          distances: e.altKey,
+        });
         current.x = snappedX;
         current.y = snappedY;
         wrapper.style.setProperty('--nx', String(current.x));
@@ -1112,8 +1115,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       groupStartPositions = null;
       groupZonePositions = null;
       groupNotesPositions = null;
-      alignGuideX.hidden = true;
-      alignGuideY.hidden = true;
+      clearGuides();
       wrapper.classList.remove('is-dragging-node');
       dragHandle.classList.remove('dragging');
       if (movedDuringDrag) {
@@ -1514,50 +1516,33 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   }
 }
 
-function computeSnappedPosition(movingNode: DiagramNode, rawX: number, rawY: number): [number, number] {
-  let nextX = Math.max(16, rawX);
-  let nextY = Math.max(24, rawY);
-  alignGuideX.hidden = true;
-  alignGuideY.hidden = true;
-  if (!app.snapToGrid) return [Math.round(nextX), Math.round(nextY)];
+/** How close, in screen pixels, an edge or centre must be to another component's before it snaps. */
+const SNAP_SCREEN_PX = 6;
 
-  let snappedX = false;
-  let snappedY = false;
-  const tol = 8;
-  const cx = nextX + movingNode.width / 2;
-  const cy = nextY + movingNode.height / 2;
-
-  for (const other of app.doc.nodes) {
-    if (other.id === movingNode.id) continue;
-    const ocx = other.x + other.width / 2;
-    const ocy = other.y + other.height / 2;
-    if (!snappedX && Math.abs(cx - ocx) <= tol) {
-      nextX = Math.round(ocx - movingNode.width / 2);
-      alignGuideX.hidden = false;
-      alignGuideX.style.setProperty('--gx', String(Math.round(ocx)));
-      snappedX = true;
-    } else if (!snappedX && Math.abs(nextX - other.x) <= tol) {
-      nextX = other.x;
-      alignGuideX.hidden = false;
-      alignGuideX.style.setProperty('--gx', String(other.x));
-      snappedX = true;
-    }
-    if (!snappedY && Math.abs(cy - ocy) <= tol) {
-      nextY = Math.round(ocy - movingNode.height / 2);
-      alignGuideY.hidden = false;
-      alignGuideY.style.setProperty('--gy', String(Math.round(ocy)));
-      snappedY = true;
-    } else if (!snappedY && Math.abs(nextY - other.y) <= tol) {
-      nextY = other.y;
-      alignGuideY.hidden = false;
-      alignGuideY.style.setProperty('--gy', String(other.y));
-      snappedY = true;
-    }
+/**
+ * Where a dragged component lands: snapped to the other components' edges and centres (and to equal spacing), else to
+ * the grid. Holding Cmd or Ctrl suspends snapping; holding Alt shows the distance to the nearest neighbours.
+ */
+function computeSnappedPosition(
+  movingNode: DiagramNode,
+  rawX: number,
+  rawY: number,
+  modifiers: { suspend: boolean; distances: boolean },
+): [number, number] {
+  const nextX = Math.max(16, rawX);
+  const nextY = Math.max(24, rawY);
+  const grid = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
+  if (modifiers.suspend) {
+    clearGuides();
+    return [grid(nextX), grid(nextY)];
   }
-
-  if (!snappedX) nextX = Math.round(nextX / 16) * 16;
-  if (!snappedY) nextY = Math.round(nextY / 16) * 16;
-  return [nextX, nextY];
+  const others = app.doc.nodes.filter((n) => n.id !== movingNode.id);
+  const rect = { x: nextX, y: nextY, width: movingNode.width, height: movingNode.height };
+  const result = snapToGuides(rect, others, SNAP_SCREEN_PX / app.scale);
+  const x = result.snappedX ? Math.round(result.x) : grid(nextX);
+  const y = result.snappedY ? Math.round(result.y) : grid(nextY);
+  paintGuides(result, modifiers.distances ? distancesTo({ ...rect, x, y }, others) : []);
+  return [x, y];
 }
 
 export function updateVisualSelectionHighlights(): void {

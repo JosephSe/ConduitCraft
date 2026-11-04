@@ -193,7 +193,7 @@ export function cleanClonedStage(clone: HTMLElement, options?: { preserveSelecti
 
   // 2. Remove selection overlays, boxes, rings, guides, draft wire, and drag ghosts
   const overlays = clone.querySelectorAll(
-    '.align-guide, .marquee-box, #draft-wire, .selection-box, .selection-ring, .selection-indicator, .stencil-drag-ghost, .is-drag-ghost, .drag-ghost'
+    '.align-guide, #guides-g, .marquee-box, #draft-wire, .selection-box, .selection-ring, .selection-indicator, .stencil-drag-ghost, .is-drag-ghost, .drag-ghost'
   );
   overlays.forEach((el) => el.remove());
 
