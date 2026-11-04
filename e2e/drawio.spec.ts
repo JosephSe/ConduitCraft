@@ -1,22 +1,8 @@
 import { readFileSync } from 'node:fs';
-import { expect, test, type Page } from '@playwright/test';
-import { runPaletteCommand } from './helpers';
+import { expect, test } from '@playwright/test';
+import { dropFile, runPaletteCommand } from './helpers';
 
 const fixture = (name: string) => readFileSync(new URL(`../tests/fixtures/drawio/${name}`, import.meta.url), 'utf8');
-
-/** Drop a file on the window the way the browser does: dragenter, dragover, then drop. */
-async function dropFile(page: Page, name: string, text: string): Promise<void> {
-  await page.evaluate(
-    ({ name, text }) => {
-      const data = new DataTransfer();
-      data.items.add(new File([text], name, { type: 'application/xml' }));
-      for (const type of ['dragenter', 'dragover', 'drop']) {
-        window.dispatchEvent(new DragEvent(type, { dataTransfer: data, bubbles: true, cancelable: true }));
-      }
-    },
-    { name, text },
-  );
-}
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

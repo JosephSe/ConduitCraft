@@ -340,9 +340,10 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Needs:** D1.
 - **Do:** import groups, containers and swimlanes as frames instead of swimlanes, keeping nesting, and drop the "nesting is lost" note from the import report.
 
-#### [ ] B7. F-25 Excalidraw import · S
+#### [x] B7. F-25 Excalidraw import · S (#61)
 - **Needs:** B6 (shares the import-report and lazy-chunk plumbing).
 - **Spec:** V1 F-25.
+- **Shipped as:** `src/importers/excalidraw.ts` (lazy chunk, 5.1 kB) reads `.excalidraw` scenes (and a scene saved as `.json`, found by its `"type": "excalidraw"` marker). Rectangles become components (rounded when the shape has rounded corners), ellipses circles, diamonds gates; text inside a shape is its title, second line its subtitle, the rest its summary; fill or stroke colour picks the nearest of the five colours. Arrows attached to two shapes become wires (label from text on the arrow, dashed or dotted → async, a start head only → reversed, two heads → two-way). Frames become swimlanes; free text becomes notes. Unattached arrows, plain lines, freehand strokes, pictures and embeds are skipped and listed in the Import report. Deleted elements are ignored. The helpers B6 and B7 share (ids, colour, placing shapes on the stage) moved to `importers/common.ts`; `studio/drawioImport.ts` became `studio/fileImports.ts` and holds both importers' studio side (`openConverted` opens the result and offers the report). Open File accepts `.excalidraw`. Tests: `tests/excalidraw.test.ts` (6, fixture `tests/fixtures/excalidraw/scene.excalidraw`) and `e2e/excalidraw.spec.ts` (3); the drop helper moved to `e2e/helpers.ts`. Numbers: entry JS 473.8 kB (was 473.0), entry CSS 101.2 kB. No section-7 default was needed.
 
 #### [ ] B8. F-06 Docker Compose and OpenAPI import · M
 - **Do:** one lazy chunk per importer, using the existing `js-yaml`. Every created component records `source: { kind, ref }` now, so F-24 drift needs no migration later. Bump the schema to v8 and add a round-trip test.
