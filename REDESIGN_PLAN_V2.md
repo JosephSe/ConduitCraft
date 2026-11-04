@@ -162,7 +162,7 @@ Status key: `[ ]` todo, `[~]` in review, `[x]` merged. Add the PR number after t
 - **Never loses work:** first run must not overwrite an existing autosave. Add a Playwright test that seeds an autosave and checks first run doesn't appear.
 - **Done when:** in Playwright, a fresh profile sees a moving packet in under 3 s and a failure summary in under 10 s; axe passes; the card is keyboard-reachable in 3 Tab presses or fewer.
 
-#### [ ] A6b. First run counts library entries
+#### [x] A6b. First run counts library entries (#55)
 - **Needs:** A6, B3 (library entries are the records B3 adds; B2 only has the autosave and recovery copies).
 - **Why:** A6 treats an autosave, a recovery copy or a "seen" flag (`conduitcraft-first-run-seen`, set once a visitor picks a card or edits) as "been here before". The library (B2) doesn't exist yet, so it can't be checked.
 - **Do:** in `startFirstRunIfNew` (`src/studio/firstRun.ts`), add "the library holds any entry" to `FirstRunFacts.hasSavedWork`. (B2 already moved the autosave and recovery check onto the storage layer, and boot waits for storage before first run, so no extra waiting is needed.)

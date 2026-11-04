@@ -7,6 +7,7 @@ import type { DiagramDocument } from '../types';
 import { FIRST_RUN_SEEN_KEY, FIRST_RUN_TEMPLATE_ID, pickFirstRunFailure, shouldShowFirstRun } from '../core/firstRun';
 import { parseBlueprintJson } from '../exporter/blueprintJson';
 import { announce } from './a11y';
+import { listLibrary } from './library';
 import { setFailures } from './chaos';
 import { app, onHistoryCommit, setSelection } from './state';
 import { AUTOSAVE_ID, RECOVERY_ID, hasRecord } from './storage';
@@ -53,7 +54,7 @@ export function startFirstRunIfNew(deps: FirstRunDeps): void {
   const card = document.getElementById('first-run');
   if (!card) return;
   const facts = {
-    hasSavedWork: hasRecord('diagrams', AUTOSAVE_ID) || hasRecord('diagrams', RECOVERY_ID),
+    hasSavedWork: hasRecord('diagrams', AUTOSAVE_ID) || hasRecord('diagrams', RECOVERY_ID) || listLibrary().length > 0,
     hasShareLink: window.location.hash.length > 1,
     seenBefore: storageHas(FIRST_RUN_SEEN_KEY),
     documentEmpty: isEmpty(app.doc),
