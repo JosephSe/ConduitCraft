@@ -74,7 +74,9 @@ test('never loses work: an existing autosave means no first run', async ({ page 
   await page.waitForTimeout(1_500);
   await expect(page.locator('#first-run')).toBeHidden();
   await expect(page.locator('#workspace')).toHaveAttribute('data-mode', 'design');
+  // The old copy is untouched, and the same work is now in the database too.
   expect(await page.evaluate(() => localStorage.getItem('conduitcraft-autosave-v1'))).toBe(saved);
+  await expect(page.locator('#restore-banner-text')).toContainText('1 component');
 });
 
 test('a share link means no first run', async ({ page }) => {

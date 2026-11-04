@@ -1,5 +1,6 @@
 /** Pointer, keyboard, palette, wiring, import/export, and simulation controls. */
 import { startFirstRunIfNew, type FirstRunDeps } from './firstRun';
+import { initStorage, setStorageFailureHandler } from './storage';
 import {
   btnAddNotes,
   btnAddSimulation,
@@ -1609,6 +1610,18 @@ export function initEvents(): void {
     notify('Discarded previous session');
   });
 
+  // Other writes (snapshots, discarding a session) report here. Autosave has its own handler above.
+  setStorageFailureHandler(({ quota, what }) => {
+    notify(quota ? `Browser storage is full, so the ${what} was not saved` : `The ${what} could not be saved`, {
+      tone: 'error',
+    });
+  });
+
+  // Start the write as the tab is hidden or closed: IndexedDB finishes a write that has begun.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && app.hasPendingAutosave) flushAutosave();
+  });
+
   // Flush pending autosave on page unload, and prompt on unsaved disk changes
   window.addEventListener('beforeunload', (e) => {
     if (app.hasPendingAutosave) {
@@ -1665,8 +1678,8 @@ export function initEvents(): void {
   });
 
   // Register honest storage quota error notification
-  setSaveErrorHandler(() => {
-    notify('Local storage is full — autosave failed', {
+  setSaveErrorHandler((quota) => {
+    notify(quota ? 'Browser storage is full, so autosave failed' : 'Autosave failed, so your latest changes are not saved', {
       tone: 'error',
       action: {
         label: 'Save to file',
@@ -2659,17 +2672,21 @@ export function bootStudio(): void {
   });
   initEvents();
 
-  // Check if a saved session exists and should be offered on blank canvas
-  const saved = loadSavedSessionDoc();
-  if (
-    saved &&
-    (saved.nodes.length > 0 || (saved.zones && saved.zones.length > 0) || (saved.notesCards && saved.notesCards.length > 0)) &&
-    app.doc.nodes.length === 0 &&
-    app.doc.zones.length === 0 &&
-    app.doc.notesCards.length === 0
-  ) {
-    setPendingRestoreOffer(saved);
-  }
+  // Saved work is read from storage first; the offer to restore it and first run both wait for that.
+  void initStorage().then((status) => {
+    if (status.notice) notify(status.notice, { tone: 'error', duration: 12000 });
+    const saved = loadSavedSessionDoc();
+    if (
+      saved &&
+      app.doc.nodes.length === 0 &&
+      app.doc.zones.length === 0 &&
+      app.doc.notesCards.length === 0
+    ) {
+      setPendingRestoreOffer(saved);
+      renderAll(true);
+    }
+    if (firstRunDeps) startFirstRunIfNew(firstRunDeps);
+  });
 
   renderAll(true);
   requestAnimationFrame(fitToViewport);
@@ -2717,6 +2734,4 @@ export function bootStudio(): void {
       }
     })();
   }
-
-  if (firstRunDeps) startFirstRunIfNew(firstRunDeps);
 }

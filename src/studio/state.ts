@@ -9,6 +9,18 @@ import {
 } from './dom';
 import { lensOfWorkspaceMode, workspaceModeOf, type Lens, type WorkspaceMode } from '../core/lens';
 import type { ColourBy } from '../core/meta';
+import {
+  AUTOSAVE_ID,
+  RECOVERY_ID,
+  getRecord,
+  isQuotaError,
+  isStorageReady,
+  putRecord,
+  removeRecord,
+  reportStorageFailure,
+  whenStorageReady,
+  type DiagramRecord,
+} from './storage';
 import { getActiveFileHandle, getActiveFileName, isFileDiskDirty, setDiskDirty } from './pwa';
 import type {
   DiagramDocument,
@@ -133,20 +145,18 @@ export function setHistoryApplied(fn: () => void): void {
   historyApplied = fn;
 }
 
-// Debounced LocalStorage Autosave, Session Recovery & Save State
-export const AUTOSAVE_KEY = 'conduitcraft-autosave-v1';
-export const RECOVERY_KEY = 'conduitcraft-recovery-v1';
+// Debounced autosave, session recovery and save state. Records live in storage.ts (IndexedDB).
 
 export type SaveState = 'saving' | 'saved' | 'error';
 let currentSaveState: SaveState = 'saved';
 let pendingRestoreOffer: DiagramDocument | null = null;
-let saveErrorHandler: (() => void) | null = null;
+let saveErrorHandler: ((quota: boolean) => void) | null = null;
 
 export function getSaveState(): SaveState {
   return currentSaveState;
 }
 
-export function setSaveErrorHandler(handler: () => void): void {
+export function setSaveErrorHandler(handler: (quota: boolean) => void): void {
   saveErrorHandler = handler;
 }
 
@@ -188,17 +198,19 @@ export function clearPendingRestoreOffer(): void {
 
 export function discardPendingRestoreOffer(): void {
   pendingRestoreOffer = null;
-  try {
-    localStorage.removeItem(AUTOSAVE_KEY);
-  } catch {
-    // Ignore storage errors
-  }
+  removeRecord('diagrams', AUTOSAVE_ID).catch((err) => reportStorageFailure(err, 'discard the previous session'));
 }
 
 export function flushAutosave(): void {
   if (app.autosaveTimer !== null) {
     window.clearTimeout(app.autosaveTimer);
     app.autosaveTimer = null;
+  }
+  if (!isStorageReady()) {
+    // Boot has not finished reading what is already saved. Writing now could replace it, so wait.
+    app.hasPendingAutosave = true;
+    void whenStorageReady().then(flushAutosave);
+    return;
   }
   app.hasPendingAutosave = false;
   const whole = fullDocument();
@@ -209,22 +221,23 @@ export function flushAutosave(): void {
     return;
   }
 
-  try {
-    const pending = getPendingRestoreOffer();
-    if (pending && whole.nodes.length < pending.nodes.length) {
-      // Protect the larger saved session: write scratch session to recovery slot
-      localStorage.setItem(RECOVERY_KEY, JSON.stringify(whole));
-      setSaveState('saved');
-      return;
-    }
-    localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(whole));
-    setSaveState('saved');
-  } catch {
-    setSaveState('error');
-    if (saveErrorHandler) {
-      saveErrorHandler();
-    }
-  }
+  // Protect the larger saved session: a smaller scratch session goes to the recovery slot instead.
+  const pending = getPendingRestoreOffer();
+  const slot = pending && whole.nodes.length < pending.nodes.length ? RECOVERY_ID : AUTOSAVE_ID;
+  putRecord('diagrams', { id: slot, title: whole.title, updatedAt: Date.now(), doc: whole } as DiagramRecord).then(
+    () => {
+      // A newer edit is already waiting: it will report its own result.
+      if (!app.hasPendingAutosave) setSaveState('saved');
+    },
+    (err: unknown) => {
+      setSaveState('error');
+      reportAutosaveFailure(err);
+    },
+  );
+}
+
+function reportAutosaveFailure(err: unknown): void {
+  saveErrorHandler?.(isQuotaError(err));
 }
 
 export function scheduleAutosave(): void {
@@ -239,23 +252,16 @@ export function scheduleAutosave(): void {
 }
 
 export function loadSavedSessionDoc(): DiagramDocument | null {
-  try {
-    const raw =
-      localStorage.getItem(AUTOSAVE_KEY) || localStorage.getItem('blueprint-studio-autosave-v1');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as DiagramDocument;
-    if (
-      parsed &&
-      Array.isArray(parsed.nodes) &&
-      Array.isArray(parsed.edges) &&
-      (parsed.nodes.length > 0 || parsed.zones?.length > 0 || parsed.notesCards?.length > 0)
-    ) {
-      parsed.brand = normalizeBrand(parsed.brand);
-      for (const node of parsed.nodes) tightenLegacyStoreCylinder(node);
-      return parsed;
-    }
-  } catch {
-    // Ignore malformed saved state
+  const parsed = getRecord<DiagramRecord>('diagrams', AUTOSAVE_ID)?.doc;
+  if (
+    parsed &&
+    Array.isArray(parsed.nodes) &&
+    Array.isArray(parsed.edges) &&
+    (parsed.nodes.length > 0 || parsed.zones?.length > 0 || parsed.notesCards?.length > 0)
+  ) {
+    parsed.brand = normalizeBrand(parsed.brand);
+    for (const node of parsed.nodes) tightenLegacyStoreCylinder(node);
+    return parsed;
   }
   return null;
 }
