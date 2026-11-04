@@ -17,6 +17,7 @@ export interface KeyBinding {
 }
 
 export const KEY_BINDINGS: KeyBinding[] = [
+  { actionId: 'open-find-replace', key: 'f', mod: true, shift: true, designOnly: true },
   { actionId: 'edit-undo', key: 'z', mod: true },
   { actionId: 'edit-redo', key: 'z', mod: true, shift: true },
   { actionId: 'edit-redo', key: 'y', mod: true },

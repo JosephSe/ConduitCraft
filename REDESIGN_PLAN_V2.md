@@ -388,9 +388,10 @@ These are small items that make the shell complete. Each can run in parallel wit
 - **Done when:** a Playwright test recolours three selected components in one undo step.
 - **Shipped as:** the contextual toolbar shows Colour, Kind and Shape when the selection has components (one or several). Each opens a small menu of radio choices (the current value ticked; Escape or a click outside closes it); a choice changes every selected component in one undo step through `mutateWithHistory`. The change itself is pure (`core/appearance.ts`: `setAccent`, `setKind`, `setShape`; a kind or shape change resizes and keeps the component's centre). The inspector keeps its own controls. The menus load lazily (2.6 kB chunk). Tests: `tests/appearance.test.ts` and `e2e/appearancePickers.spec.ts` (recolours three in one undo step; Kind and Shape pickers; Escape).
 
-#### [ ] C3. F-29 Find and replace, bulk edit · M
+#### [x] C3. F-29 Find and replace, bulk edit · M (#69)
 - **Needs:** C2 (the shared multi-select fields).
 - **Spec:** V1 F-29. Scope "this level / all levels" uses `allLevelNodes` from `core/levels.ts`.
+- **Shipped as:** Cmd/Ctrl+Shift+F (also "Find and Replace" in the palette) opens a dialog that searches component titles and subtitles, wire labels, note titles and lines, swimlane titles and subtitles, and comments, with Match case and Whole word (plain text, never a pattern) and a scope of This level or All levels. The matches are listed with where they are; clicking one jumps there (opening the right level), its own Replace button changes just that one, Replace all changes every match in one undo step, and Select all matches hands the matches in the open level to multi-select. Pure search and replace is `core/findReplace.ts` (the open level stands in for its stale copy in the tree); the dialog is built on first use as a lazy chunk (`studio/findReplaceDialog.ts`). The multi-select inspector gains "Edit shared fields" (lazy `studio/bulkFields.ts`): Kind, Shape and Status for the selected components, Add or Remove a tag on components and wires, and colour and sync/async for the selected wires, each one undo step (`core/appearance.ts`). The plain Cmd/Ctrl+F search no longer also fires on Shift. Tests: `tests/findReplace.test.ts` (11) and `e2e/findReplace.spec.ts` (5, including axe on the dialog). Numbers: entry JS 479.1 kB (0.9 kB of headroom left), entry CSS 103.8 kB. Leftover: replace does not touch tags, owners or code fields.
 
 #### [x] C4. Copy and paste components across browser tabs · M (#68)
 - **Why:** requested by the user on 2026-11-03. Copy today fills an in-memory buffer (`app.clipboardNodes` and `app.clipboardEdges`), so it is lost in another tab and nothing can be pasted into a different diagram.
@@ -416,8 +417,9 @@ These are small items that make the shell complete. Each can run in parallel wit
 
 ### Milestone E: Keep it true (phase 5, order from D7)
 
-#### [ ] E1. T-07 Headless core · M
+#### [x] E1. T-07 Headless core · M (#69)
 - **Do:** move the pure diff out of `studio/snapshots.ts` into `src/core/diff.ts`. Add `tests/headless.test.ts`, which imports the parser, insights, reachability, describe, diff, each importer and the SVG and HTML exporters with no DOM globals defined, and renders every example. Fix any DOM coupling it finds.
+- **Shipped as:** the pure diff moved from `studio/snapshots.ts` to `core/diff.ts` (the snapshot dialog re-exports it, so nothing else changed). `tests/headless.test.ts` runs under plain Node with no `document` or `window`: it loads every module in `core/`, `importers/` and `exporter/`, then takes every bundled example through parse, insights (every level), reachability, plain-language description, the SVG and HTML exports, the Blueprint file and JSON round trips and the diff (no change against itself, one change after an edit), and converts a small Compose, Kubernetes, OpenAPI, AsyncAPI and Excalidraw input. No DOM coupling was found, so nothing else needed fixing. This unblocks E2.
 
 #### [ ] E2. F-23 CLI · M
 - **Needs:** E1, and question Q9 answered (the default is in section 7).

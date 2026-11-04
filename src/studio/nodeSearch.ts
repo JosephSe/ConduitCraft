@@ -257,7 +257,8 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
   if (typeof window !== 'undefined') {
     window.addEventListener('keydown', (e) => {
       const isCmd = isMac() ? e.metaKey : e.ctrlKey;
-      if (isCmd && (e.key === 'f' || e.key === 'F')) {
+      // Cmd/Ctrl+Shift+F is Find and replace (F-29).
+      if (isCmd && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
         const active = typeof document !== 'undefined' ? document.activeElement : null;
         // If focused inside a multi-line code editor or dialog textarea, don't hijack unless desired
         if (active && (active.id === 'code-sync-textarea' || active.tagName === 'TEXTAREA')) {
