@@ -185,7 +185,7 @@ import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
-import { renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey, toneName } from '../core/meta';
 import { createHumanOutlineSvg,
@@ -2082,7 +2082,12 @@ export function initEvents(): void {
     renderAll(false);
     const filename = `${getSafeFilenameSlug()}.svg`;
     downloadBlob(
-      renderDiagramSvg(app.doc, undefined, app.selection.type === 'multi' ? app.selection : undefined),
+      renderDiagramSvg(
+        app.doc,
+        undefined,
+        app.selection.type === 'multi' ? app.selection : undefined,
+        currentScheme(),
+      ),
       filename,
       'image/svg+xml;charset=utf-8',
     );

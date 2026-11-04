@@ -2,15 +2,60 @@
 import { describeDiagram } from '../core/describe';
 import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
-import { sanitizeIconImage } from '../core/nodeStyle';
+import { cylinderPlate, sanitizeIconImage, storeDrawsCylinder } from '../core/nodeStyle';
+import { nodeIconShapes } from '../ui/icons';
 
-const TONE_HEX: Record<StreamTone, string> = {
-  blue: '#1d4ed8',
-  emerald: '#047857',
-  rose: '#be123c',
-  violet: '#5b21b6',
-  amber: '#b45309',
+export type SvgScheme = 'light' | 'dark';
+
+/** The studio's colours for each scheme, resolved to plain values because an exported file has no stylesheet. */
+interface Palette {
+  canvas: string;
+  surface: string;
+  elevated: string;
+  ink: string;
+  secondary: string;
+  muted: string;
+  border: string;
+  subtle: string;
+  tone: Record<StreamTone, string>;
+}
+
+const PALETTES: Record<SvgScheme, Palette> = {
+  light: {
+    canvas: '#f4f7fb',
+    surface: '#ffffff',
+    elevated: '#eef3fa',
+    ink: '#0b1324',
+    secondary: '#334155',
+    muted: '#485973',
+    border: '#b6c5db',
+    subtle: '#dce5f2',
+    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309' },
+  },
+  dark: {
+    canvas: '#070b14',
+    surface: '#101829',
+    elevated: '#17223a',
+    ink: '#f1f5f9',
+    secondary: '#cbd5e1',
+    muted: '#9bb0d0',
+    border: '#2a3b5c',
+    subtle: '#1b2842',
+    tone: { blue: '#60a5fa', emerald: '#34d399', rose: '#fb7185', violet: '#a78bfa', amber: '#fbbf24' },
+  },
 };
+
+const SANS = 'ui-sans-serif, system-ui, sans-serif';
+const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+
+/** `amount` (0 to 1) of colour `a` over colour `b`, both as #rrggbb. */
+function mix(a: string, b: string, amount: number): string {
+  const parse = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const [ar, ag, ab] = parse(a);
+  const [br, bg, bb] = parse(b);
+  const channel = (x: number, y: number) => Math.round(x * amount + y * (1 - amount)).toString(16).padStart(2, '0');
+  return `#${channel(ar, br)}${channel(ag, bg)}${channel(ab, bb)}`;
+}
 
 function escapeXml(value: unknown): string {
   return String(value ?? '')
@@ -24,12 +69,24 @@ function notesHeight(itemCount: number): number {
   return 72 + Math.max(0, itemCount) * 40;
 }
 
-function nodeOutline(node: DiagramNode, isSelected = false): string {
+function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false): string {
   const { x, y, width, height } = node;
   const shape = node.shape || 'card';
-  const strokeColor = TONE_HEX[node.accent] || TONE_HEX.blue;
+  const accent = pal.tone[node.accent] || pal.tone.blue;
+  const strokeColor = isSelected ? accent : pal.border;
   const strokeWidth = isSelected ? '2.75' : '1.75';
-  const common = `fill="#ffffff" stroke="${strokeColor}" stroke-width="${strokeWidth}"`;
+  const tinted = node.kind === 'core' || node.kind === 'gate' || node.kind === 'store';
+  const fill = tinted ? mix(accent, pal.surface, 0.09) : pal.surface;
+  if (storeDrawsCylinder(node.kind, node.shape)) {
+    const c = cylinderPlate(width, height);
+    const body = mix(accent, pal.surface, 0.16);
+    const lid = mix(accent, pal.surface, 0.07);
+    return (
+      `<g transform="translate(${x} ${y})"><path d="${c.body}" fill="${body}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>` +
+      `<ellipse cx="${c.cx}" cy="${c.cy}" rx="${c.rx}" ry="${c.ry}" fill="${lid}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/></g>`
+    );
+  }
+  const common = `fill="${fill}" stroke="${strokeColor}" stroke-width="${strokeWidth}"`;
   let outline = '';
   if (shape === 'diamond') {
     const points = `${x + width / 2},${y} ${x + width},${y + height / 2} ${x + width / 2},${y + height} ${x},${y + height / 2}`;
@@ -78,8 +135,70 @@ function nodeOutline(node: DiagramNode, isSelected = false): string {
   return outline;
 }
 
+/** Width of `text` set in a monospace face at `size`, close enough to size a chip around it. */
+function monoWidth(text: string, size: number): number {
+  return Math.ceil(text.length * size * 0.6);
+}
+
+function chipMarkup(text: string, right: number, midY: number, pal: Palette): string {
+  const w = monoWidth(text, 11) + 14;
+  return `<rect x="${right - w}" y="${midY - 10}" width="${w}" height="20" rx="6" fill="${pal.elevated}" stroke="${pal.subtle}"/><text x="${right - w / 2}" y="${midY + 4}" text-anchor="middle" font-family="${SANS}" font-size="11" fill="${pal.secondary}">${escapeXml(text)}</text>`;
+}
+
+/** Icon in a tinted square, or the node's own picture. `size` is the square's side. */
+function iconMarkup(node: DiagramNode, x: number, y: number, size: number, pal: Palette): string {
+  const image = sanitizeIconImage(node.iconImage);
+  if (image) {
+    return `<image x="${x}" y="${y}" width="${size}" height="${size}" href="${escapeXml(image)}" xlink:href="${escapeXml(image)}"/>`;
+  }
+  const color = pal.tone[node.accent] || pal.tone.blue;
+  const glyph = Math.round(size * 0.6);
+  const offset = (size - glyph) / 2;
+  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${mix(color, pal.surface, 0.14)}"/><g transform="translate(${x + offset} ${y + offset}) scale(${glyph / 24})" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${nodeIconShapes(node.icon)}</g>`;
+}
+
+const CENTERED = new Set(['circle', 'diamond', 'hexagon']);
+
+/** Text of a node drawn inside a circle, diamond or hexagon: centred, stacked, no icon box. */
+function centeredText(node: DiagramNode, pal: Palette): string {
+  const cx = node.x + node.width / 2;
+  const lines: Array<{ text: string; size: number; weight: number; color: string; mono?: boolean; gap: number }> = [];
+  if (node.eyebrow) lines.push({ text: node.eyebrow, size: 11, weight: 600, color: pal.muted, mono: true, gap: 14 });
+  lines.push({ text: node.title, size: 16, weight: 700, color: pal.ink, gap: 22 });
+  if (node.subtitle) lines.push({ text: node.subtitle, size: 12, weight: 400, color: pal.secondary, gap: 18 });
+  const foot = [node.footerLeft, node.chip].filter(Boolean).join('  ·  ');
+  if (foot) lines.push({ text: foot, size: 11, weight: 400, color: pal.muted, mono: true, gap: 16 });
+  const total = lines.reduce((sum, line) => sum + line.gap, 0);
+  let y = node.y + node.height / 2 - total / 2;
+  return lines
+    .map((line) => {
+      y += line.gap;
+      return `<text x="${cx}" y="${y - 5}" text-anchor="middle" font-family="${line.mono ? MONO : SANS}" font-size="${line.size}" font-weight="${line.weight}" fill="${line.color}">${escapeXml(line.text)}</text>`;
+    })
+    .join('');
+}
+
+function actorMarkup(node: DiagramNode, pal: Palette): string {
+  const color = pal.tone[node.accent] || pal.tone.blue;
+  const cx = node.x + node.width / 2;
+  const figureH = Math.min(78, node.height - 40);
+  const scale = figureH / 82;
+  const fx = cx - 35 * scale;
+  const fy = node.y + 4;
+  const captionY = fy + figureH + 22;
+  const caption = escapeXml(node.title);
+  const w = Math.max(60, caption.length * 7 + 20);
+  const role = node.subtitle ? `<text x="${cx}" y="${captionY + 14}" text-anchor="middle" font-family="${SANS}" font-size="11" fill="${pal.secondary}">${escapeXml(node.subtitle)}</text>` : '';
+  const image = sanitizeIconImage(node.iconImage);
+  const figure = image
+    ? `<image x="${cx - 38}" y="${fy}" width="76" height="${figureH}" href="${escapeXml(image)}" xlink:href="${escapeXml(image)}" preserveAspectRatio="xMidYMid meet"/>`
+    : `<g transform="translate(${fx} ${fy}) scale(${scale})" fill="${pal.canvas}" stroke="${color}" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="35" cy="18" r="12.5"/><path d="M 14 74 C 14 53 22.5 38 35 38 C 47.5 38 56 53 56 74 C 56 77.5 53 79.5 49 79.5 H 21 C 17 79.5 14 77.5 14 74 Z"/></g>`;
+  return `${figure}<rect x="${cx - w / 2}" y="${captionY - 16}" width="${w}" height="${node.subtitle ? 36 : 24}" rx="10" fill="${pal.surface}" stroke="${pal.border}"/><text x="${cx}" y="${captionY}" text-anchor="middle" font-family="${SANS}" font-size="15" font-weight="700" fill="${pal.ink}">${caption}</text>${role}`;
+}
+
 function nodeMarkup(
   node: DiagramNode,
+  pal: Palette,
   selection?: SelectionTarget,
   related?: Set<string>,
   spotlight = false,
@@ -87,30 +206,60 @@ function nodeMarkup(
   const isSelected = selection?.type === 'multi' && selection.ids.includes(node.id);
   const isRelated = Boolean(related?.has(node.id));
   const isDimmed = spotlight && !isSelected && !isRelated;
-
-  const image = sanitizeIconImage(node.iconImage);
-  const icon = image
-    ? `<image x="${node.x + 14}" y="${node.y + 14}" width="28" height="28" href="${escapeXml(image)}" xlink:href="${escapeXml(image)}"/>`
-    : '';
-  const titleX = node.x + (image ? 50 : 16);
-  const title = escapeXml(node.title);
-  const subtitle = node.subtitle ? escapeXml(node.subtitle) : '';
   const opacityAttr = isDimmed ? ' opacity="0.28"' : '';
+
+  if (node.kind === 'actor') {
+    return `<g${opacityAttr}>${actorMarkup(node, pal)}</g>`;
+  }
+  const cylinder = storeDrawsCylinder(node.kind, node.shape);
+  if (cylinder || CENTERED.has(node.shape ?? '')) {
+    // The canvas hides a drum's eyebrow and icon, so its text is just the title, subtitle and footer.
+    const text = cylinder ? { ...node, eyebrow: '', y: node.y + 10, height: node.height - 10 } : node;
+    return `<g${opacityAttr}>${nodeOutline(node, pal, isSelected)}${centeredText(text, pal)}</g>`;
+  }
+
+  const { x, y, width, height } = node;
+  const isClient = node.kind === 'client';
+  const right = x + width - 16;
+  const titleSize = isClient ? 15 : node.kind === 'core' || node.kind === 'gate' || node.kind === 'store' ? 20 : 18;
+  const iconSize = isClient ? 28 : 32;
+  const topMid = y + 14 + iconSize / 2;
+  // The corner holds the eyebrow, or on a client the chip.
+  const corner = isClient
+    ? node.chip
+      ? chipMarkup(node.chip, right, topMid, pal)
+      : ''
+    : node.eyebrow
+      ? `<text x="${right}" y="${topMid + 4}" text-anchor="end" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.muted}">${escapeXml(node.eyebrow)}</text>`
+      : '';
+  const titleY = y + 14 + iconSize + 26;
+  const hasFooter = !isClient && (node.footerLeft || node.chip) && height >= titleY - y + (node.subtitle ? 22 : 0) + 38;
+  const footerMid = y + height - 22;
+  const footer = hasFooter
+    ? `<line x1="${x + 16}" y1="${y + height - 40}" x2="${right}" y2="${y + height - 40}" stroke="${pal.subtle}"/>` +
+      (node.footerLeft
+        ? `<text x="${x + 16}" y="${footerMid + 4}" font-family="${MONO}" font-size="11" fill="${pal.muted}">${escapeXml(node.footerLeft)}</text>`
+        : '') +
+      (node.chip ? chipMarkup(node.chip, right, footerMid, pal) : '')
+    : '';
+  const sub = node.subtitle
+    ? `<text x="${x + 16}" y="${titleY + 22}" font-family="${SANS}" font-size="12.5" fill="${pal.secondary}">${escapeXml(node.subtitle)}</text>`
+    : '';
 
   return [
     `<g${opacityAttr}>`,
-    nodeOutline(node, isSelected),
-    icon,
-    `<text x="${titleX}" y="${node.y + 36}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" font-weight="700" fill="#0b1324">${title}</text>`,
-    subtitle
-      ? `<text x="${titleX}" y="${node.y + 58}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#3e4e68">${subtitle}</text>`
-      : '',
+    nodeOutline(node, pal, isSelected),
+    iconMarkup(node, x + 14, y + 14, iconSize, pal),
+    corner,
+    `<text x="${x + 16}" y="${titleY}" font-family="${SANS}" font-size="${titleSize}" font-weight="700" fill="${pal.ink}">${escapeXml(node.title)}</text>`,
+    sub,
+    footer,
     `</g>`,
   ].join('');
 }
 
 /** The document's colour legend as a small card in the bottom-left corner (F-26). Empty without a legend. */
-function legendMarkup(doc: DiagramDocument, height: number): string {
+function legendMarkup(doc: DiagramDocument, height: number, pal: Palette): string {
   const entries = doc.legend ?? [];
   if (!entries.length) return '';
   const rowHeight = 22;
@@ -120,17 +269,19 @@ function legendMarkup(doc: DiagramDocument, height: number): string {
     .map((entry, i) => {
       const cy = y + 40 + i * rowHeight;
       const text = entry.description ? `${entry.label} — ${entry.description}` : entry.label;
-      return `<circle cx="34" cy="${cy - 4}" r="5" fill="${TONE_HEX[entry.tone]}"/><text x="48" y="${cy}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#334155">${escapeXml(text)}</text>`;
+      return `<circle cx="34" cy="${cy - 4}" r="5" fill="${pal.tone[entry.tone]}"/><text x="48" y="${cy}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">${escapeXml(text)}</text>`;
     })
     .join('');
-  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="#ffffff" stroke="#b6c5db"/><text x="28" y="${y + 20}" font-family="ui-monospace, monospace" font-size="11" font-weight="700" fill="#1d4ed8">LEGEND</text>${rows}</g>`;
+  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="${pal.surface}" stroke="${pal.border}"/><text x="28" y="${y + 20}" font-family="${MONO}" font-size="11" font-weight="700" fill="${pal.tone.blue}">LEGEND</text>${rows}</g>`;
 }
 
 export function renderDiagramSvg(
   doc: DiagramDocument,
   frame?: { dashOffset: number },
   selection?: SelectionTarget,
+  scheme: SvgScheme = 'light',
 ): string {
+  const pal = PALETTES[scheme];
   const width = Math.max(1, doc.stageWidth);
   const height = Math.max(1, doc.stageHeight);
   const routed = routeDiagramEdges(doc);
@@ -149,27 +300,27 @@ export function renderDiagramSvg(
     (selectedNodes.size > 1 || hasEdges || excludedEdges.size > 0);
   const related = spotlight ? relatedNodeIds(doc, selection.ids) : new Set<string>();
 
-  const markers = (Object.keys(TONE_HEX) as StreamTone[])
+  const markers = (Object.keys(pal.tone) as StreamTone[])
     .map(
       (tone) =>
-        `<marker id="arrow-${tone}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="${TONE_HEX[tone]}"/></marker>`,
+        `<marker id="arrow-${tone}" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="${pal.tone[tone]}"/></marker>`,
     )
     .join('');
 
   const zones = doc.zones
     .map((zone) => {
       const isSel = isMulti && selectedZones.has(zone.id);
-      const stroke = isSel ? ' stroke="#1d4ed8" stroke-width="2.5"' : '';
+      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : '';
       const fillOpacity = isSel ? '0.14' : '0.05';
-      const numColor = isSel ? '#1d4ed8' : '#596b87';
-      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="#1d4ed8" fill-opacity="${fillOpacity}"${stroke}/><text x="${zone.x + 16}" y="32" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" font-weight="700" fill="${numColor}">${escapeXml(zone.number)} ${escapeXml(zone.title)}</text></g>`;
+      const numColor = isSel ? pal.tone.blue : pal.muted;
+      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="${pal.tone.blue}" fill-opacity="${fillOpacity}"${stroke}/><text x="${zone.x + 16}" y="32" font-family="${SANS}" font-size="13" font-weight="700" fill="${numColor}">${escapeXml(zone.number)} ${escapeXml(zone.title)}</text></g>`;
     })
     .join('');
 
   const notes = doc.notesCards
     .map((card) => {
       const isSel = isMulti && selectedNotes.has(card.id);
-      const stroke = isSel ? ' stroke="#1d4ed8" stroke-width="2.5"' : ' stroke="#b6c5db" stroke-dasharray="5 4"';
+      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}" stroke-dasharray="5 4"`;
       const boxHeight = notesHeight(card.items.length);
       const items = (card.items || [])
         .map((item, idx) => {
@@ -179,16 +330,16 @@ export function renderDiagramSvg(
               : item && typeof item === 'object'
                 ? (item.title ? `${item.title}: ` : '') + (item.text || '')
                 : '';
-          return `<text x="${card.x + 18}" y="${card.y + 54 + idx * 24}" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#334155">• ${escapeXml(itemText)}</text>`;
+          return `<text x="${card.x + 18}" y="${card.y + 54 + idx * 24}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">• ${escapeXml(itemText)}</text>`;
         })
         .join('');
-      return `<g><rect x="${card.x}" y="${card.y}" width="404" height="${boxHeight}" rx="16" fill="#ffffff"${stroke}/><text x="${card.x + 18}" y="${card.y + 28}" font-family="ui-monospace, monospace" font-size="12" font-weight="700" fill="#1d4ed8">${escapeXml(card.title)}</text>${items}</g>`;
+      return `<g><rect x="${card.x}" y="${card.y}" width="404" height="${boxHeight}" rx="16" fill="${pal.surface}"${stroke}/><text x="${card.x + 18}" y="${card.y + 28}" font-family="${MONO}" font-size="12" font-weight="700" fill="${pal.tone.blue}">${escapeXml(card.title)}</text>${items}</g>`;
     })
     .join('');
 
   const wires = routed
     .map((edge) => {
-      const color = TONE_HEX[edge.tone] || TONE_HEX.blue;
+      const color = pal.tone[edge.tone] || pal.tone.blue;
       const touches = selectedNodes.has(edge.from) || selectedNodes.has(edge.to);
       const isExplicit = multiEdges.has(edge.id);
       const isExcluded = excludedEdges.has(edge.id);
@@ -202,7 +353,11 @@ export function renderDiagramSvg(
 
       const label =
         edge.label && edge.badgePos
-          ? `<text x="${edge.badgePos[0]}" y="${edge.badgePos[1]}" text-anchor="middle" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" fill="#0b1324">${escapeXml(edge.label)}</text>`
+          ? (() => {
+              const w = monoWidth(edge.label, 11) + 20;
+              const [bx, by] = edge.badgePos;
+              return `<rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="11" fill="${pal.surface}" stroke="${pal.subtle}"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.ink}">${escapeXml(edge.label)}</text>`;
+            })()
           : '';
       const isBoth = edge.flow === 'both';
       if (isBoth) {
@@ -231,17 +386,17 @@ export function renderDiagramSvg(
     .join('');
 
   const nodes = doc.nodes
-    .map((node) => nodeMarkup(node, selection, related, spotlight))
+    .map((node) => nodeMarkup(node, pal, selection, related, spotlight))
     .join('');
 
-  const legend = legendMarkup(doc, height);
+  const legend = legendMarkup(doc, height, pal);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="diagram-title diagram-desc">
   <title id="diagram-title">${escapeXml(doc.title.trim() || 'Untitled diagram')}</title>
   <desc id="diagram-desc">${escapeXml(describeDiagram(doc))}</desc>
   <defs>${markers}</defs>
-  <rect width="100%" height="100%" fill="#f8fafc"/>
+  <rect width="100%" height="100%" fill="${pal.canvas}"/>
   ${zones}
   ${notes}
   ${wires}
