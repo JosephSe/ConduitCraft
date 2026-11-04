@@ -21,31 +21,41 @@ const reportList = document.getElementById('import-report-list');
 const firstNode = (doc: DiagramDocument): SelectionTarget =>
   doc.nodes.length > 0 ? { type: 'node', id: doc.nodes[0].id } : { type: 'none' };
 
+/**
+ * Show a dialog whose buttons carry `data-<key>="<choice>"` and resolve with the choice, or null if it is dismissed
+ * (Esc, backdrop). It resolves on the click itself, and a `close` event only counts while the dialog is really shut,
+ * so a late `close` from the previous use cannot cancel this one.
+ */
+function askChoice<T extends string>(dialog: HTMLDialogElement, datasetKey: string, choices: readonly T[]): Promise<T | null> {
+  const attribute = `data-${datasetKey.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+  return new Promise((resolve) => {
+    const finish = (value: T | null): void => {
+      dialog.removeEventListener('click', onClick);
+      dialog.removeEventListener('close', onClose);
+      resolve(value);
+    };
+    const onClick = (event: Event): void => {
+      const value = (event.target as HTMLElement).closest<HTMLElement>(`[${attribute}]`)?.dataset[datasetKey];
+      if (value === undefined) return;
+      finish(choices.find((c) => c === value) ?? null);
+      dialog.close();
+    };
+    const onClose = (): void => {
+      if (!dialog.open) finish(null);
+    };
+    dialog.addEventListener('click', onClick);
+    dialog.addEventListener('close', onClose);
+    dialog.showModal();
+  });
+}
+
 /** Ask how to bring in a file with several pages. Resolves null when the visitor cancels. */
 function askPageMode(pageCount: number): Promise<DrawioPageMode | null> {
   if (!pagesDialog) return Promise.resolve('separate');
   if (pagesText) {
     pagesText.textContent = `It has ${pageCount} pages. Make each page its own diagram, or one overview whose components open the pages as levels?`;
   }
-  return new Promise((resolve) => {
-    let choice: DrawioPageMode | null = null;
-    const onClick = (event: Event): void => {
-      const mode = (event.target as HTMLElement).closest<HTMLElement>('[data-drawio-mode]')?.dataset.drawioMode;
-      if (!mode) return;
-      choice = mode === 'separate' || mode === 'levels' ? mode : null;
-      pagesDialog.close();
-    };
-    pagesDialog.addEventListener('click', onClick);
-    pagesDialog.addEventListener(
-      'close',
-      () => {
-        pagesDialog.removeEventListener('click', onClick);
-        resolve(choice);
-      },
-      { once: true },
-    );
-    pagesDialog.showModal();
-  });
+  return askChoice<DrawioPageMode>(pagesDialog, 'drawioMode', ['separate', 'levels']);
 }
 
 const LEVEL_LABEL: Record<ImportIssue['level'], string> = { error: 'Not imported', warning: 'Changed', info: 'Note' };
@@ -167,25 +177,7 @@ type TraceMode = 'new' | 'update';
 /** Ask whether to start a new diagram or fold the traces into the open one. Resolves null when cancelled. */
 function askTraceMode(): Promise<TraceMode | null> {
   if (!traceDialog) return Promise.resolve('new');
-  return new Promise((resolve) => {
-    let choice: TraceMode | null = null;
-    const onClick = (event: Event): void => {
-      const mode = (event.target as HTMLElement).closest<HTMLElement>('[data-trace-mode]')?.dataset.traceMode;
-      if (!mode) return;
-      choice = mode === 'new' || mode === 'update' ? mode : null;
-      traceDialog.close();
-    };
-    traceDialog.addEventListener('click', onClick);
-    traceDialog.addEventListener(
-      'close',
-      () => {
-        traceDialog.removeEventListener('click', onClick);
-        resolve(choice);
-      },
-      { once: true },
-    );
-    traceDialog.showModal();
-  });
+  return askChoice<TraceMode>(traceDialog, 'traceMode', ['new', 'update']);
 }
 
 /**
