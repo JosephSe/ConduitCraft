@@ -38,6 +38,8 @@ const doc = (title: string, nodes: number) => ({
 async function seedAutosave(page: Page, title: string, nodes: number): Promise<void> {
   await page.addInitScript(
     ({ value }) => {
+      // These tests are not about Home, so it counts as already shown in this tab.
+      sessionStorage.setItem('conduitcraft-home-shown', '1');
       if (sessionStorage.getItem('seeded')) return;
       sessionStorage.setItem('seeded', '1');
       localStorage.setItem('conduitcraft-autosave-v1', JSON.stringify(value));

@@ -314,11 +314,17 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Done when:** a Playwright test boots with work open and a share link, picks Open, and finds the earlier diagram still in the library.
 - **Shipped as:** the shared-link toast's "Open" calls `openAsNewDiagram`, so the diagram that was open stays in the library and the toast's Undo returns to it. The boot path for an empty canvas is unchanged. The "Open" toast only appears when work arrives on the canvas before the link has been decoded (for example the visitor restores their session in that gap), so the Playwright test (`e2e/library.spec.ts`) holds the decoding with an init script to make that happen, and it fails without the change. No section-7 default was needed.
 
-#### [ ] B4. F-08 Home screen · M
+#### [x] B4. F-08 Home screen · M (#58)
 - **Needs:** B3, A6.
 - **Spec:** V1 section 5.3.
 - **Do:** it opens when the URL holds no diagram and the user has been here before (otherwise first run from A6 shows), or with `⌘O`. It has a Recent grid with search, the template gallery (reuse `templatesGallery.ts`), and Open file, Paste Mermaid and Import links. Show a storage warning above 80% of `navigator.storage.estimate()`.
 - **Done when:** axe passes at 375, 1280 and 1600 px; the grid works with arrow keys; with reduced motion nothing animates.
+- **Shipped as:** `src/studio/homeScreen.ts` (a dialog, `#home-dialog`; styles lazy in `home.css`) with the rules in `src/core/home.ts`. It has a search box and New diagram button, a Recent grid (thumbnail, title, "2 min ago" style time, and a "New diagram" card), the starter templates with their category filters (the same card markup as the template gallery, which stays for the palette), and the links Open file…, Paste Mermaid…, Import… and Manage diagrams… (the old Your diagrams dialog, which still does rename, duplicate and delete). A storage warning shows above the grid once `navigator.storage.estimate()` is over 80%. It opens at boot for a returning visitor (saved diagrams, no share link) on the first load of a tab only, so a reload while working goes straight to the canvas and the restore banner; first run still covers a visitor with nothing saved. Cmd/Ctrl+O now opens Home (it used to open a file; "Open File from Disk" stays in the palette with no shortcut, and is a link on Home). Picking the open diagram on an empty canvas loads it. Section-7 default used: none; the once-per-tab rule is a choice made here. Tests: `tests/home.test.ts` (5) and `e2e/home.spec.ts` (axe at 375, 1280 and 1600 px, arrow keys, search, templates, storage warning, reduced motion); `e2e/library.spec.ts` and `e2e/storage.spec.ts` mark Home as already shown in their seeding. Numbers: entry JS 469.4 kB (was 461.5), entry CSS 101.2 kB; `home.css` loads on first open.
+
+#### [ ] B4b. Home: "Import infrastructure…" link · S
+- **Needs:** B8.
+- **Why:** the V1 mock shows an "Import infrastructure…" link beside Open file and Paste Mermaid. Home has a generic Import… link now; the infrastructure importers (Docker Compose, OpenAPI, Kubernetes) arrive in B8 and B9.
+- **Do:** once B8 lands, point Import… at a short list of importers (file types the importers accept) and rename it.
 
 #### [ ] B5. F-31 Share-link hygiene · S
 - **Spec:** V1 F-31, items 1 to 3. Item 4 waits for F-13.
