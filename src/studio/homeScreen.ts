@@ -125,7 +125,7 @@ function renderShell(): void {
     <nav class="home-links" aria-label="More ways to start">
       <button type="button" class="btn" data-home-link="open-file">Open file…</button>
       <button type="button" class="btn" data-home-link="mermaid">Paste Mermaid…</button>
-      <button type="button" class="btn" data-home-link="import">Import…</button>
+      <button type="button" class="btn" data-home-link="import" title="Docker Compose, OpenAPI, AsyncAPI, Kubernetes, OpenTelemetry or Jaeger traces, draw.io, Excalidraw">Import infrastructure…</button>
       <button type="button" class="btn" data-home-link="manage">Manage diagrams…</button>
     </nav>`;
   renderRecent();
