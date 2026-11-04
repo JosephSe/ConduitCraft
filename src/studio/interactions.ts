@@ -1,6 +1,6 @@
 /** Pointer, keyboard, palette, wiring, import/export, and simulation controls. */
 import { startFirstRunIfNew, type FirstRunDeps } from './firstRun';
-import { initStorage, setStorageFailureHandler } from './storage';
+import { initStorage, reportStorageFailure, setStorageFailureHandler } from './storage';
 import {
   btnAddNotes,
   btnAddSimulation,
@@ -161,6 +161,15 @@ import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
+import {
+  deleteActiveDiagram,
+  duplicateActiveDiagram,
+  exportAllDiagrams,
+  initLibrary,
+  newDiagram,
+  openLibraryDialog,
+} from './libraryUi';
+import { restoreDiagram } from './library';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey } from '../core/meta';
@@ -1605,10 +1614,23 @@ export function initEvents(): void {
   btnRestoreOpen?.addEventListener('click', openRestoredSession);
 
   btnRestoreDiscard?.addEventListener('click', () => {
-    discardPendingRestoreOffer();
+    const removed = discardPendingRestoreOffer();
     if (restoreSessionBanner) restoreSessionBanner.hidden = true;
-    notify('Discarded previous session');
+    notify('Discarded previous session', {
+      duration: 10_000,
+      action: removed
+        ? {
+            label: 'Undo',
+            onClick: () => {
+              restoreDiagram(removed).catch((err) => reportStorageFailure(err, 'restored session'));
+              notify('Brought back the previous session');
+            },
+          }
+        : undefined,
+    });
   });
+
+  initLibrary({ clearSimulation, downloadBytes });
 
   // Other writes (snapshots, discarding a session) report here. Autosave has its own handler above.
   setStorageFailureHandler(({ quota, what }) => {
@@ -2106,6 +2128,11 @@ export function initEvents(): void {
     saveFileAs: () => void handleSaveDiagram(true),
     openFile: () => void handleOpenFile(),
     openSnapshotsDialog,
+    openLibrary: () => void openLibraryDialog(),
+    newDiagram: () => void newDiagram(),
+    duplicateDiagram: () => void duplicateActiveDiagram(),
+    deleteDiagram: deleteActiveDiagram,
+    exportAllDiagrams,
     newBlueprint,
     importFile: triggerFilePicker,
     toggleMotion,

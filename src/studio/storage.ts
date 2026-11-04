@@ -25,6 +25,7 @@ export const LEGACY_KEYS = {
   snapshots: 'conduitcraft-snapshots-v1',
 } as const;
 const META_PREFIX = 'conduitcraft-meta:';
+const DIAGRAM_PREFIX = 'conduitcraft-diagram:';
 
 export const AUTOSAVE_ID = 'autosave';
 export const RECOVERY_ID = 'recovery';
@@ -35,6 +36,8 @@ export interface DiagramRecord {
   title: string;
   updatedAt: number;
   doc: DiagramDocument;
+  /** A 320 × 200 picture of the diagram (a `data:image/webp` URL), made on idle after a save (B3). */
+  thumbnail?: string;
 }
 export interface MetaRecord {
   id: string;
@@ -188,7 +191,10 @@ export function readLegacyContents(storage: Storage | null): StoreContents {
 export function createLocalStorageBackend(storage: Storage): Backend {
   let snapshots: StoredRecord[] = [];
   const keyFor = (store: StoreName, id: string): string | null => {
-    if (store === 'diagrams') return id === RECOVERY_ID ? LEGACY_KEYS.recovery : LEGACY_KEYS.autosave;
+    if (store === 'diagrams') {
+      if (id === RECOVERY_ID) return LEGACY_KEYS.recovery;
+      return id === AUTOSAVE_ID ? LEGACY_KEYS.autosave : DIAGRAM_PREFIX + id;
+    }
     if (store === 'meta') return META_PREFIX + id;
     return null;
   };
@@ -199,7 +205,15 @@ export function createLocalStorageBackend(storage: Storage): Backend {
       snapshots = [...out.snapshots];
       for (let i = 0; i < storage.length; i += 1) {
         const key = storage.key(i);
-        if (key?.startsWith(META_PREFIX)) {
+        if (key?.startsWith(DIAGRAM_PREFIX)) {
+          // Library entries other than the first (B3) keep the whole record, so title and time survive.
+          try {
+            const record = JSON.parse(storage.getItem(key) ?? 'null') as DiagramRecord | null;
+            if (record && typeof record.id === 'string' && record.doc) out.diagrams.push(record);
+          } catch {
+            // An unreadable entry is skipped; the others still load.
+          }
+        } else if (key?.startsWith(META_PREFIX)) {
           try {
             out.meta.push({ id: key.slice(META_PREFIX.length), value: JSON.parse(storage.getItem(key) ?? 'null') } as MetaRecord);
           } catch {
@@ -218,7 +232,13 @@ export function createLocalStorageBackend(storage: Storage): Backend {
       }
       const key = keyFor(store, record.id);
       if (!key) return;
-      storage.setItem(key, JSON.stringify(store === 'diagrams' ? (record as DiagramRecord).doc : (record as MetaRecord).value));
+      const value =
+        store === 'diagrams'
+          ? key.startsWith(DIAGRAM_PREFIX)
+            ? record
+            : (record as DiagramRecord).doc
+          : (record as MetaRecord).value;
+      storage.setItem(key, JSON.stringify(value));
     },
     async remove(store, id) {
       if (store === 'snapshots') {

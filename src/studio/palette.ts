@@ -49,6 +49,11 @@ export interface PaletteDeps {
   saveFileAs?: () => void;
   openFile?: () => void;
   openSnapshotsDialog?: () => void;
+  openLibrary?: () => void;
+  newDiagram?: () => void;
+  duplicateDiagram?: () => void;
+  deleteDiagram?: () => void;
+  exportAllDiagrams?: () => void;
   newBlueprint: () => void;
   importFile: () => void;
   toggleMotion: () => void;
@@ -737,6 +742,46 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => {
         if (deps.openFile) deps.openFile();
       },
+    },
+    {
+      id: 'open-library',
+      title: 'Your Diagrams…',
+      subtitle: 'Open, rename, copy or delete a saved diagram',
+      category: 'Export & Sync',
+      keywords: ['library', 'diagrams', 'open', 'switch', 'saved', 'recent', 'rename'],
+      run: () => deps.openLibrary?.(),
+    },
+    {
+      id: 'new-diagram',
+      title: 'New Diagram',
+      subtitle: 'Start an empty diagram and keep this one',
+      category: 'Export & Sync',
+      keywords: ['library', 'new', 'blank', 'another'],
+      run: () => deps.newDiagram?.(),
+    },
+    {
+      id: 'duplicate-diagram',
+      title: 'Duplicate This Diagram',
+      subtitle: 'Save a copy of the open diagram and open it',
+      category: 'Export & Sync',
+      keywords: ['library', 'copy', 'clone', 'duplicate'],
+      run: () => deps.duplicateDiagram?.(),
+    },
+    {
+      id: 'delete-diagram',
+      title: 'Delete This Diagram',
+      subtitle: 'Remove the open diagram from your saved diagrams (you can undo for 10 seconds)',
+      category: 'Export & Sync',
+      keywords: ['library', 'delete', 'remove', 'trash'],
+      run: () => deps.deleteDiagram?.(),
+    },
+    {
+      id: 'export-all-diagrams',
+      title: 'Export All Diagrams (.zip)',
+      subtitle: 'Download every saved diagram as Blueprint files in one zip',
+      category: 'Export & Sync',
+      keywords: ['library', 'export', 'backup', 'zip', 'all'],
+      run: () => deps.exportAllDiagrams?.(),
     },
     {
       id: 'open-snapshots',
