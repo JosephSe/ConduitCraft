@@ -1,6 +1,7 @@
 /** Helpers shared by the file importers (draw.io, Excalidraw): ids, colours and placing shapes on the stage. */
-import { autoLayoutDocument } from '../core/layout';
-import type { DiagramDocument, DiagramNode, DiagramNotesCard, ImportIssue, StreamTone } from '../types';
+import { autoLayoutDocument, expandStageToFit } from '../core/layout';
+import type { DiagramDocument, DiagramEdge, DiagramNode, DiagramNotesCard, ImportIssue, NodeKind, StreamTone } from '../types';
+import { STENCIL_CATALOG, createNodeFromStencil } from '../templates/presets';
 
 export interface Geo {
   x: number;
@@ -119,4 +120,37 @@ export function placeShapes(
     issues.push(issue('info', `${codePrefix}-relayout`, 'Some shapes were too close together at their original size, so the components were laid out again.'));
   }
   return { scale, shiftX };
+}
+
+/** A component made from text alone (no layout in the source). The caller sets the position through `layoutImported`. */
+export function makeNode(kind: NodeKind, title: string, used: Set<string>, source: { kind: string; ref: string }): DiagramNode {
+  const node = createNodeFromStencil(kind, 0, 0, 0);
+  const name = title.trim().slice(0, 60) || STENCIL_CATALOG.find((s) => s.kind === kind)?.defaultTitle || 'Component';
+  node.id = uniqueId(slugOf(name), used);
+  node.title = name;
+  node.summary = `${name} imported from ${source.kind}.`;
+  node.code = JSON.stringify({ id: node.id, component: name, source: source.kind }, null, 2);
+  node.source = { kind: source.kind, ref: source.ref.slice(0, 200) };
+  return node;
+}
+
+export function makeEdge(from: DiagramNode, to: DiagramNode, used: Set<string>, extra: Partial<DiagramEdge> = {}): DiagramEdge {
+  return {
+    id: uniqueId(`wire-${used.size + 1}`, used),
+    from: from.id,
+    to: to.id,
+    sourcePort: 'auto',
+    targetPort: 'auto',
+    tone: 'blue',
+    route: 'auto',
+    label: '',
+    animated: true,
+    ...extra,
+  };
+}
+
+/** Lay out a document that came from text with no positions, and size the stage to fit. */
+export function layoutImported(doc: DiagramDocument): void {
+  autoLayoutDocument(doc);
+  expandStageToFit(doc);
 }

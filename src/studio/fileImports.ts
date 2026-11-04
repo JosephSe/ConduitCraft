@@ -108,20 +108,43 @@ export async function importDrawioText(text: string, title: string): Promise<boo
   return openConverted(docs, issues, 'draw.io');
 }
 
-/** Import an Excalidraw scene as a new diagram. Returns false when nothing could be imported. */
-export async function importExcalidrawText(text: string, title: string): Promise<boolean> {
-  let importer: typeof import('../importers/excalidraw');
+/**
+ * Import a file that becomes a single diagram, through a lazy importer chunk. `convert` runs the importer and
+ * throws a plain Error when the text is not the right kind of file.
+ */
+async function importSingle(
+  source: string,
+  load: () => Promise<{ convert: (text: string, title: string) => { doc: DiagramDocument; issues: ImportIssue[] } }>,
+  text: string,
+  title: string,
+): Promise<boolean> {
+  let importer: Awaited<ReturnType<typeof load>>;
   try {
-    importer = await import('../importers/excalidraw');
+    importer = await load();
   } catch {
-    notify('Could not load the Excalidraw importer. Check your connection and try again.', { tone: 'error' });
+    notify(`Could not load the ${source} importer. Check your connection and try again.`, { tone: 'error' });
     return false;
   }
   try {
-    const { doc, issues } = importer.convertExcalidraw(text, title);
-    return openConverted([doc], issues, 'Excalidraw');
+    const { doc, issues } = importer.convert(text, title);
+    return openConverted([doc], issues, source);
   } catch (err) {
-    notify(err instanceof Error ? err.message : 'Could not read this Excalidraw file.', { tone: 'error' });
+    notify(err instanceof Error ? err.message : `Could not read this ${source} file.`, { tone: 'error' });
     return false;
   }
+}
+
+/** Import an Excalidraw scene as a new diagram. Returns false when nothing could be imported. */
+export function importExcalidrawText(text: string, title: string): Promise<boolean> {
+  return importSingle('Excalidraw', async () => ({ convert: (await import('../importers/excalidraw')).convertExcalidraw }), text, title);
+}
+
+/** Import a Docker Compose file as a new diagram. Returns false when nothing could be imported. */
+export function importComposeText(text: string, title: string): Promise<boolean> {
+  return importSingle('Docker Compose', async () => ({ convert: (await import('../importers/compose')).convertCompose }), text, title);
+}
+
+/** Import an OpenAPI 3 description as a new diagram. Returns false when nothing could be imported. */
+export function importOpenApiText(text: string, title: string): Promise<boolean> {
+  return importSingle('OpenAPI', async () => ({ convert: (await import('../importers/openapi')).convertOpenApi }), text, title);
 }

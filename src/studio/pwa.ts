@@ -149,6 +149,12 @@ export const OPEN_FILE_TYPES = [
       'application/json': ['.excalidraw'],
     },
   },
+  {
+    description: 'Docker Compose or OpenAPI (*.yml, *.yaml)',
+    accept: {
+      'application/yaml': ['.yml', '.yaml'],
+    },
+  },
 ];
 
 /**

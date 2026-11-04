@@ -1,0 +1,58 @@
+name: shop
+services:
+  web:
+    image: nginx:1.27
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    networks: [front]
+  api:
+    build: ./api
+    ports:
+      - target: 3000
+        published: 3000
+    environment:
+      DATABASE_URL: postgres://admin:hunter2@db/shop
+      API_KEY: sk-live-should-never-appear
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+      queue: {}
+    links:
+      - cache:redis
+    networks: [front, back]
+    volumes:
+      - uploads:/srv/uploads
+      - ./config:/etc/api:ro
+  worker:
+    build:
+      context: ./worker
+    deploy:
+      replicas: 3
+    depends_on: [queue, db, ghost]
+    networks: [back]
+    volumes:
+      - uploads:/srv/uploads
+  db:
+    image: postgres:16
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [back]
+  cache:
+    image: redis:7
+    networks: [back]
+  queue:
+    image: rabbitmq:3-management
+    networks: [back]
+volumes:
+  pgdata:
+  uploads:
+networks:
+  front:
+  back:
+secrets:
+  token:
+    file: ./token.txt

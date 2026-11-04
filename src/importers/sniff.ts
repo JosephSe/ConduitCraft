@@ -12,3 +12,17 @@ export function looksLikeExcalidraw(fileName: string, text: string): boolean {
   if (/\.excalidraw$/i.test(fileName)) return true;
   return /"type"\s*:\s*"excalidraw/.test(text.slice(0, 1000));
 }
+
+/** An OpenAPI 3 description, as YAML or JSON, by its `openapi` line near the top. */
+export function looksLikeOpenApi(_fileName: string, text: string): boolean {
+  const head = text.slice(0, 3000);
+  return /(^|[{,])\s*"?openapi"?\s*:\s*['"]?3/m.test(head);
+}
+
+/** A Docker Compose file, by name (`docker-compose.yml`, `compose.yaml`) or by a top-level `services:` section. */
+export function looksLikeCompose(fileName: string, text: string): boolean {
+  if (/(^|[\\/])(docker-)?compose[^\\/]*\.ya?ml$/i.test(fileName)) return true;
+  if (!/\.ya?ml$/i.test(fileName)) return false;
+  const head = text.slice(0, 6000);
+  return /^services:/m.test(head) && !/^\s*"?openapi"?\s*:/m.test(head) && !/^apiVersion:/m.test(head);
+}

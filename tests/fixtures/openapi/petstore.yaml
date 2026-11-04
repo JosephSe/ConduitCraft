@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: Pet Store
+  description: Sells pets.
+  version: 1.0.0
+servers:
+  - url: https://api.petstore.example/v1
+    description: Production
+  - url: https://staging.petstore.example/v1
+tags:
+  - name: pets
+    description: Everything about pets
+  - name: store
+paths:
+  /pets:
+    get:
+      tags: [pets]
+      summary: List pets
+      operationId: listPets
+    post:
+      tags: [pets]
+      summary: Add a pet
+  /pets/{id}:
+    get:
+      tags: [pets]
+      operationId: getPet
+    delete:
+      tags: [pets]
+      deprecated: true
+      summary: Remove a pet
+  /orders:
+    post:
+      tags: [store]
+      summary: Place an order
+      callbacks:
+        shipped:
+          '{$request.body#/url}':
+            post:
+              summary: Shipped notification
+  /health:
+    get:
+      summary: Liveness probe
