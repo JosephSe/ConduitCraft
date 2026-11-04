@@ -4920,19 +4920,8 @@ kbd {
 }
 
 .node-status-badge[data-status="live"] .status-dot {
+  /* A15: a still ring. The status is a label the user sets, so nothing here may move and suggest live data. */
   box-shadow: 0 0 0 2px var(--wl-emerald-soft);
-  animation: pulseLiveDot 2s infinite ease-in-out;
-}
-
-@keyframes pulseLiveDot {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.35);
-    opacity: 0.7;
-  }
 }
 
 .node-comment-badge {
@@ -5188,6 +5177,10 @@ html[data-ui="2"] .mode-switcher .lens-key {
 }
 .run-bar[hidden] {
   display: none;
+}
+/* A14: the groups name the bar's two regions for the control count and for assistive tech; they add no box. */
+.run-bar-group {
+  display: contents;
 }
 .run-bar-scenario {
   min-inline-size: 0;

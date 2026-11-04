@@ -699,7 +699,7 @@ Every PR in this plan meets all of these. CI already enforces the first five.
 - [ ] Every action works by keyboard alone and is announced to a screen reader.
 - [ ] Every action works by touch on a tablet.
 - [ ] The app works fully offline after the first visit.
-- [ ] No screen has more than 8 always-visible controls outside the canvas.
+- [x] No region of a screen has more than 8 always-visible controls outside the canvas. *Amended in A14 (#47): the whole screen has 18 (Design), 25 (Traffic) and 18 (Review) counted controls at 1280 px, so the rule is per region; see `e2e/topbar.spec.ts`.*
 - [ ] Every animation explains something (audit against table 6.3).
 - [ ] Exports, embeds and shared links look as good as the studio.
 - [ ] Every export carries a text description (F-28).

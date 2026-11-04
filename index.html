@@ -514,31 +514,35 @@
 
       <!-- Run bar (redesigned interface, Traffic lens): scenario picker and transport controls -->
       <div class="run-bar" id="run-bar" role="region" aria-label="Run bar" hidden>
-        <select class="run-bar-scenario" id="run-bar-scenario" aria-label="Scenario"></select>
-        <button type="button" class="btn btn-icon-only btn-compact" data-run-step="-1" aria-label="Previous step" data-tip="Previous step" data-tip-pos="top">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-        </button>
-        <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-play" aria-label="Play" aria-pressed="false" data-tip="Play or pause" data-tip-pos="top">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-        </button>
-        <button type="button" class="btn btn-icon-only btn-compact" data-run-step="1" aria-label="Next step" data-tip="Next step" data-tip-pos="top">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-        </button>
-        <input type="range" class="run-bar-scrubber" id="run-bar-scrubber" min="0" max="0" value="0" step="1" aria-label="Scenario step">
-        <span class="run-bar-step" id="run-bar-step" aria-live="off">no run</span>
-        <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed 1×" data-tip="Playback speed" data-tip-pos="top">1×</button>
-        <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-        </button>
-        <select class="run-bar-scenario js-colour-by" aria-label="Colour components by">
-          <option value="tone">Colour: tone</option>
-          <option value="status">Colour: status</option>
-          <option value="tag">Colour: tag</option>
-        </select>
-        <select class="run-bar-scenario js-tag-filter" aria-label="Show only components with tag">
-          <option value="">All tags</option>
-        </select>
-        <button type="button" class="help-btn" data-help="traffic" aria-label="Help: Traffic and scenarios" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
+        <div class="run-bar-group" role="group" aria-label="Playback">
+          <select class="run-bar-scenario" id="run-bar-scenario" aria-label="Scenario"></select>
+          <button type="button" class="btn btn-icon-only btn-compact" data-run-step="-1" aria-label="Previous step" data-tip="Previous step" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-play" aria-label="Play" aria-pressed="false" data-tip="Play or pause" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+          </button>
+          <button type="button" class="btn btn-icon-only btn-compact" data-run-step="1" aria-label="Next step" data-tip="Next step" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+          <input type="range" class="run-bar-scrubber" id="run-bar-scrubber" min="0" max="0" value="0" step="1" aria-label="Scenario step">
+          <span class="run-bar-step" id="run-bar-step" aria-live="off">no run</span>
+          <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed 1×" data-tip="Playback speed" data-tip-pos="top">1×</button>
+          <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+        </div>
+        <div class="run-bar-group" role="group" aria-label="View">
+          <select class="run-bar-scenario js-colour-by" aria-label="Colour components by">
+            <option value="tone">Colour: tone</option>
+            <option value="status">Colour: status</option>
+            <option value="tag">Colour: tag</option>
+          </select>
+          <select class="run-bar-scenario js-tag-filter" aria-label="Show only components with tag">
+            <option value="">All tags</option>
+          </select>
+          <button type="button" class="help-btn" data-help="traffic" aria-label="Help: Traffic and scenarios" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
+        </div>
       </div>
 
       <!-- Chaos summary (Traffic lens): what the current failures break -->
