@@ -1,4 +1,4 @@
-import { openExportDialog, openLumenRelay } from './helpers';
+import { captureExports, nextExport, openExportDialog, openLumenRelay } from './helpers';
 import { expect, test as base, type Page } from '@playwright/test';
 
 /** Every test fails on uncaught page errors or console errors, so silent breakage is caught too. */
@@ -13,53 +13,6 @@ const test = base.extend<{ errors: string[] }>({
     expect(errors, 'the page must not log errors').toEqual([]);
   },
 });
-
-/**
- * Record the blob behind every export download. Asserting on what the app produced (rather than on the
- * browser's saved file) tests the exporters directly and does not depend on the browser's download handling.
- */
-async function captureExports(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const w = window as unknown as {
-      __blobs: Map<string, Blob>;
-      __exports: { name: string; url: string }[];
-    };
-    w.__blobs = new Map();
-    w.__exports = [];
-    const create = URL.createObjectURL.bind(URL);
-    URL.createObjectURL = (obj: Blob | MediaSource) => {
-      const url = create(obj);
-      if (obj instanceof Blob) w.__blobs.set(url, obj);
-      return url;
-    };
-    const click = HTMLAnchorElement.prototype.click;
-    HTMLAnchorElement.prototype.click = function (this: HTMLAnchorElement) {
-      if (this.download && this.href.startsWith('blob:')) {
-        w.__exports.push({ name: this.download, url: this.href });
-      }
-      return click.call(this);
-    };
-  });
-}
-
-async function nextExport(page: Page) {
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__exports.length), { message: 'an export download' })
-    .toBeGreaterThan(0);
-  return page.evaluate(async () => {
-    const w = window as any;
-    const { name, url } = w.__exports[w.__exports.length - 1];
-    const blob: Blob = w.__blobs.get(url);
-    const bytes = new Uint8Array(await blob.arrayBuffer());
-    return {
-      name: name as string,
-      size: bytes.length,
-      head: String.fromCharCode(...bytes.subarray(0, 6)),
-      last: bytes[bytes.length - 1],
-      text: blob.type.startsWith('text/') ? new TextDecoder().decode(bytes) : '',
-    };
-  });
-}
 
 async function loadShowcase(page: Page): Promise<void> {
   await page.goto('/');
