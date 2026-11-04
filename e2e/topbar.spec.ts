@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 
 async function open(page: Page, query = '?ui=2') {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -82,5 +82,68 @@ for (const scheme of ['light', 'dark'] as const) {
     await open(page);
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
     expect(results.violations.map((v) => v.id)).toEqual([]);
+  });
+}
+
+/**
+ * The rule (A14, V1 section 10): at 1280 px, with a diagram open and nothing selected, no region of the screen outside
+ * the canvas has more than 8 always-visible controls. A region is the top bar, the tool rail, the canvas HUD, a side
+ * panel, or one labelled group of the run bar. The screen as a whole has far more than 8 (see the logged totals), so the
+ * rule is per region: each region is something the eye takes in at once.
+ *
+ * Not counted, and why: component stencils in the rail (the component library as a strip, a list of things to place, not
+ * actions; the palette lists the same items), findings in the Review panel (a list of content), the inspector's property
+ * fields (they belong to the selected component, and the inspector is folded when nothing is selected), toasts (they come
+ * and go) and anything inside the canvas. Every other visible control must belong to a region, so new chrome cannot
+ * slip past the count.
+ */
+const REGIONS: Array<[name: string, selector: string]> = [
+  ['top bar', '.topbar'],
+  ['tool rail', '#palette-sidebar'],
+  ['canvas HUD', '.canvas-hud'],
+  ['inspector', '#inspector-panel'],
+  ['run bar: playback', '#run-bar [role="group"][aria-label="Playback"]'],
+  ['run bar: view', '#run-bar [role="group"][aria-label="View"]'],
+  ['failure summary', '#chaos-panel'],
+  ['review panel', '#insights-panel'],
+  ['text outline', '#outline-panel'],
+];
+const NOT_COUNTED = '.rail-stencil-btn, .insight-item, #toast-container, #canvas-stage, .arch-node';
+
+const countByRegion = (page: Page) =>
+  page.evaluate(
+    ([regions, notCounted]) => {
+      const counts: Record<string, string[]> = {};
+      const orphans: string[] = [];
+      const all = document.querySelectorAll<HTMLElement>('button, a[href], select, input:not([type="file"]), textarea');
+      for (const el of all) {
+        if (el.getClientRects().length === 0 || getComputedStyle(el).visibility === 'hidden') continue;
+        if (el.closest('[hidden], [inert], dialog:not([open])') || el.matches(notCounted) || el.closest(notCounted)) continue;
+        const label = el.id || el.getAttribute('aria-label') || el.className;
+        const region = (regions as Array<[string, string]>).find(([, selector]) => el.closest(selector));
+        if (region) (counts[region[0]] ??= []).push(label);
+        else orphans.push(label);
+      }
+      return { counts, orphans };
+    },
+    [REGIONS, NOT_COUNTED] as const,
+  );
+
+for (const [lens, key] of [['Design', '1'], ['Traffic', '2'], ['Review', '3']] as const) {
+  test(`${lens} lens at 1280 px: no region has more than 8 always-visible controls`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/?ui=2');
+    await openLumenRelay(page);
+    await clearSelection(page);
+    await page.keyboard.press(key);
+    await page.waitForTimeout(300); // the lens panels slide in
+
+    const { counts, orphans } = await countByRegion(page);
+    expect(orphans, 'every visible control outside the canvas belongs to a counted region').toEqual([]);
+    const total = Object.values(counts).reduce((sum, list) => sum + list.length, 0);
+    console.log(`${lens}: ${total} counted controls`, JSON.stringify(Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v.length]))));
+    for (const [name, list] of Object.entries(counts)) {
+      expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(8);
+    }
   });
 }

@@ -238,10 +238,11 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** add a Playwright test: load once, wait for the service worker, go offline, reload, then open a template, run a simulation, export a PNG and a GIF (lazy chunks), and save a file. Fix any chunk the precache misses.
 - **Done when:** the test is named `works offline …` and passes against `vite preview`.
 
-#### [ ] A14. Count every always-visible control · S
+#### [x] A14. Count every always-visible control · S (#PR)
 - **Needs:** A11.
 - **Do:** extend `e2e/topbar.spec.ts` so the count covers the whole screen outside the canvas (top bar, tool rail, run bar, any open side panel) at 1280 px. If the total is over 8, decide with the number in hand: move controls into the palette, or amend the checklist line to "per region" in V1 section 10 and say why in the PR.
 - **Done when:** the test states the rule it enforces and passes.
+- **Shipped as:** three tests in `e2e/topbar.spec.ts` (Design, Traffic, Review, at 1280 × 800, diagram open, nothing selected). The numbers: top bar 8, tool rail 3, canvas HUD 6, inspector 1 (folded), run bar 10, Review panel 3, so the whole screen is 18 (Design), 25 (Traffic) and 18 (Review), and no layout that keeps a tool rail and a zoom HUD can reach 8 in total. **Decision: amend the checklist line to "per region"** (V1 section 10, ticked with the reason), because the 8 is a limit on what the eye takes in at once and each region is taken in on its own. The test states the rule in its comment and enforces 8 per region, and it fails on any visible control that belongs to no counted region, so new chrome cannot slip past. The one region over 8 was the run bar (10): it is now two labelled groups, Playback (7) and View (colour, tag filter, help: 3), with `display: contents` so the layout is unchanged. Not counted, with reasons in the test: component stencils in the rail (9: the component library as a strip, a list of things to place), findings in the Review panel (content), the inspector's property fields (the selected component's data; the inspector is folded when nothing is selected), toasts and anything inside the canvas.
 
 #### [ ] A15. Motion and "live" fixes · S
 - **Needs:** A11.
