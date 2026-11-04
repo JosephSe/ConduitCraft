@@ -3,6 +3,7 @@
  * 10-second Undo), Export all as .zip, and a thumbnail made on idle after a save. The data lives in `library.ts`.
  */
 import { createBlankDocument } from '../templates/presets';
+import type { DiagramDocument, SelectionTarget } from '../types';
 import { expandStageToFit } from '../core/layout';
 import { escapeHtml } from '../shared/escapeHtml';
 import {
@@ -19,7 +20,7 @@ import {
   setActiveDiagramId,
   setThumbnail,
 } from './library';
-import { getRecord, getStorageStatus, reportStorageFailure, type DiagramRecord } from './storage';
+import { AUTOSAVE_ID, getRecord, getStorageStatus, reportStorageFailure, type DiagramRecord } from './storage';
 import {
   app,
   clearPendingRestoreOffer,
@@ -61,26 +62,65 @@ function failed(err: unknown, what: string): void {
 }
 
 /** Put a saved diagram on the canvas. The one before it is saved first, and undo does not cross the switch. */
-export function openDiagram(id: string): boolean {
+export function openDiagram(
+  id: string,
+  { selection = { type: 'none' }, force = false, keepFile = false }: { selection?: SelectionTarget; force?: boolean; keepFile?: boolean } = {},
+): boolean {
   const record = hasDiagram(id) ? getRecord<DiagramRecord>('diagrams', id) : undefined;
   if (!record) return false;
   const doc = structuredClone(record.doc);
-  if (id === getActiveDiagramId()) return true;
+  if (!force && id === getActiveDiagramId()) return true;
   if (app.hasPendingAutosave) flushAutosave();
   setActiveDiagramId(id).catch((err) => failed(err, 'choice of open diagram'));
   clearPendingRestoreOffer();
   if (restoreSessionBanner) restoreSessionBanner.hidden = true;
-  resetActiveFile();
+  if (!keepFile) resetActiveFile();
   deps?.clearSimulation();
   app.undoStack.length = 0;
   app.redoStack.length = 0;
   app.doc = usableStoredDoc(doc) ?? doc;
   expandStageToFit(app.doc);
-  setSelection({ type: 'none' });
+  setSelection(selection);
   traceList.replaceChildren();
   syncHistoryButtons();
   renderAll(true);
   fitToViewport();
+  return true;
+}
+
+/**
+ * Add a document to the library as a new diagram and open it, so what was open stays in the library untouched.
+ * Used by New Blueprint, templates, and file open and import. The toast's Undo goes back to the previous diagram.
+ * `pickSelection` chooses what is selected once the new diagram is open.
+ */
+export async function openAsNewDiagram(
+  doc: DiagramDocument,
+  message: string,
+  options: { pickSelection?: (doc: DiagramDocument) => SelectionTarget; keepFile?: boolean } = {},
+): Promise<boolean> {
+  if (app.hasPendingAutosave) flushAutosave();
+  // Nothing saved yet (a fresh visit): there is no earlier diagram, so Undo opens a new blank one.
+  const previousId = hasDiagram(getActiveDiagramId()) ? getActiveDiagramId() : null;
+  try {
+    // The very first diagram keeps the old autosave's id, so it stays the first entry (and the old storage key).
+    const record = await createDiagram(doc, Date.now(), listLibrary().length === 0 ? AUTOSAVE_ID : undefined);
+    openDiagram(record.id, { selection: options.pickSelection?.(record.doc) ?? { type: 'none' }, force: true, keepFile: options.keepFile });
+    notify(message, {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          if (previousId && openDiagram(previousId)) return;
+          if (previousId) notify('The previous diagram is no longer in the library', { tone: 'error' });
+          else void newDiagram();
+        },
+      },
+    });
+  } catch (err) {
+    failed(err, 'new diagram');
+    return false;
+  } finally {
+    refreshLibraryDialog();
+  }
   return true;
 }
 

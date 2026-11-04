@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { captureExports, nextExport, runPaletteCommand } from './helpers';
+import { captureExports, nextExport, openLumenRelay, runPaletteCommand } from './helpers';
 
 const node = (i: number) => ({
   id: `n${i}`,
@@ -186,4 +186,49 @@ test('never loses the picture: a thumbnail appears in the library after a save',
   await expect.poll(async () => (await diagrams(page))[0]?.thumbnail?.startsWith('data:image/') ?? false, { timeout: 15_000 }).toBe(true);
   await openLibrary(page);
   await expect(rowFor(page, 'Pictured').locator('img.library-thumb')).toBeVisible();
+});
+
+test('never loses the open diagram when a template or blank canvas is chosen: it stays in the library', async ({ page }) => {
+  await seedAutosave(page, 'Before', 2);
+  await page.goto('/');
+  await page.locator('#btn-restore-open').click();
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+
+  // A template opens as its own diagram; the one that was open is still there, unchanged.
+  await openLumenRelay(page);
+  await expect(page.locator('#doc-title-heading')).not.toHaveText('Before');
+  await expect.poll(async () => (await diagrams(page)).length).toBe(2);
+  const kept = (await diagrams(page)).find((r) => r.title === 'Before')!;
+  expect(kept.doc.nodes.length).toBe(2);
+
+  // Undo on the toast goes back to the previous diagram, and the template stays in the library.
+  await page.locator('.toast-action-btn', { hasText: 'Undo' }).last().click();
+  await expect(page.locator('#doc-title-heading')).toHaveText('Before');
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+  expect((await diagrams(page)).length).toBe(2);
+
+  // A blank canvas from the gallery does the same.
+  await runPaletteCommand(page, 'Starter Templates');
+  await page.locator('.template-card-blank').click();
+  await expect(page.locator('.arch-node')).toHaveCount(0);
+  await expect.poll(async () => (await diagrams(page)).length).toBe(3);
+  await openFromLibrary(page, 'Before');
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+});
+
+test('never loses the open diagram when a file is imported: the file becomes a new diagram', async ({ page }) => {
+  await seedAutosave(page, 'Mine', 2);
+  await page.goto('/');
+  await page.locator('#btn-restore-open').click();
+  await expect(page.locator('.arch-node')).toHaveCount(2);
+
+  await page.locator('#file-upload').setInputFiles({
+    name: 'incoming-plan.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(doc('Incoming', 3))),
+  });
+  await expect(page.locator('.arch-node')).toHaveCount(3);
+  await expect.poll(async () => (await diagrams(page)).map((r) => r.title).sort()).toEqual(['Incoming', 'Mine']);
+  await openFromLibrary(page, 'Mine');
+  await expect(page.locator('.arch-node')).toHaveCount(2);
 });

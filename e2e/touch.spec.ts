@@ -4,7 +4,7 @@
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type CDPSession, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 
 type Pt = { x: number; y: number };
 
@@ -55,6 +55,8 @@ async function open(page: Page): Promise<void> {
   await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
+  // The loaded example has its first component selected, with its toolbar and inspector open over the canvas.
+  await clearSelection(page);
 }
 
 /** Centre of a node's hit area, only if nothing else covers it. */

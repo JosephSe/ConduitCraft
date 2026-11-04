@@ -64,8 +64,8 @@ export function newDiagramId(): string {
 }
 
 /** Add a diagram to the library. The caller decides whether to open it. */
-export async function createDiagram(doc: DiagramDocument, now: number = Date.now()): Promise<DiagramRecord> {
-  const record: DiagramRecord = { id: newDiagramId(), title: doc.title || 'Untitled', updatedAt: now, doc: structuredClone(doc) };
+export async function createDiagram(doc: DiagramDocument, now: number = Date.now(), id?: string): Promise<DiagramRecord> {
+  const record: DiagramRecord = { id: id ?? newDiagramId(), title: doc.title || 'Untitled', updatedAt: now, doc: structuredClone(doc) };
   await putRecord('diagrams', record);
   return record;
 }

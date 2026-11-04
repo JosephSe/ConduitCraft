@@ -128,6 +128,8 @@ import {
   withInspectorTransition,
 } from './inspector';
 import type {
+  DiagramDocument,
+  SelectionTarget,
   DiagramEdge,
   DiagramNode,
   DiagramNotesCard,
@@ -167,6 +169,7 @@ import {
   exportAllDiagrams,
   initLibrary,
   newDiagram,
+  openAsNewDiagram,
   openLibraryDialog,
 } from './libraryUi';
 import { restoreDiagram } from './library';
@@ -1047,7 +1050,19 @@ export function pasteSelection(): void {
 // ---------------------------------------------------------------------------
 // File Import, Drag-and-Drop, Code Sync, and Export
 // ---------------------------------------------------------------------------
-export function applyImportedText(rawText: string, fallbackTitle?: string, importOptions?: ImportOptions): boolean {
+const firstNodeSelection = (doc: DiagramDocument): SelectionTarget =>
+  doc.nodes.length > 0 ? { type: 'node', id: doc.nodes[0].id } : { type: 'none' };
+
+/**
+ * Read Blueprint JSON or Mermaid text into the open diagram, or (`asNewDiagram`, for files) into a new library entry
+ * so the open diagram stays as it was.
+ */
+export function applyImportedText(
+  rawText: string,
+  fallbackTitle?: string,
+  importOptions?: ImportOptions,
+  asNewDiagram = false,
+): boolean {
   const trimmed = rawText.trim();
   if (trimmed.startsWith('{')) {
     const parsed = parseBlueprintJson(trimmed);
@@ -1058,18 +1073,22 @@ export function applyImportedText(rawText: string, fallbackTitle?: string, impor
       notify(parsed.error, { tone: 'error' });
       return false;
     }
-    pushHistory();
     if (fallbackTitle && parsed.doc.title === 'Untitled Architecture') parsed.doc.title = fallbackTitle;
+    const jsonMsg = `Imported Blueprint JSON (${parsed.doc.nodes.length} components, ${parsed.doc.edges.length} wires)`;
+    codeSyncDiagnostics.dataset.tone = 'ok';
+    codeSyncDiagnostics.textContent = `Imported ${parsed.doc.nodes.length} components from Blueprint JSON.`;
+    hudStatusTip.textContent = jsonMsg;
+    if (asNewDiagram) {
+      void openAsNewDiagram(parsed.doc, jsonMsg, { pickSelection: firstNodeSelection, keepFile: true });
+      return true;
+    }
+    pushHistory();
     app.doc = parsed.doc;
-    setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
+    setSelection(firstNodeSelection(app.doc));
     clearSimulation();
     renderAll(true);
     requestAnimationFrame(fitToViewport);
-    codeSyncDiagnostics.dataset.tone = 'ok';
-    codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components from Blueprint JSON.`;
-    const msg = `Imported Blueprint JSON (${app.doc.nodes.length} components, ${app.doc.edges.length} wires)`;
-    hudStatusTip.textContent = msg;
-    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
+    notify(jsonMsg, { action: { label: 'Undo', onClick: () => performUndo() } });
     return true;
   }
 
@@ -1088,15 +1107,21 @@ export function applyImportedText(rawText: string, fallbackTitle?: string, impor
     return false;
   }
 
-  pushHistory();
   if (fallbackTitle && importedDoc.title === 'Imported Architecture') {
     importedDoc.title = fallbackTitle;
   }
-  app.doc = importedDoc;
-  setSelection(app.doc.nodes.length > 0 ? { type: 'node', id: app.doc.nodes[0].id } : { type: 'none' });
-  clearSimulation();
-  renderAll(true);
-  requestAnimationFrame(fitToViewport);
+  const finishImport = (message: string): void => {
+    if (asNewDiagram) void openAsNewDiagram(importedDoc, message, { pickSelection: firstNodeSelection, keepFile: true });
+    else notify(message, { action: { label: 'Undo', onClick: () => performUndo() } });
+  };
+  if (!asNewDiagram) {
+    pushHistory();
+    app.doc = importedDoc;
+    setSelection(firstNodeSelection(app.doc));
+    clearSimulation();
+    renderAll(true);
+    requestAnimationFrame(fitToViewport);
+  }
 
   if (issues.length > 0 || warnings.length > 0) {
     codeSyncDiagnostics.dataset.tone = 'warn';
@@ -1105,15 +1130,15 @@ export function applyImportedText(rawText: string, fallbackTitle?: string, impor
       .map((_, i) => formatIssue(i))
       .join(' · ');
     codeSyncDiagnostics.textContent = summary || warnings[0];
-    const msg = `Imported ${app.doc.nodes.length} nodes (${issues.length || warnings.length} warning${(issues.length || warnings.length) === 1 ? '' : 's'}: ${formatIssue(0)})`;
+    const msg = `Imported ${importedDoc.nodes.length} nodes (${issues.length || warnings.length} warning${(issues.length || warnings.length) === 1 ? '' : 's'}: ${formatIssue(0)})`;
     hudStatusTip.textContent = msg;
-    notify(`Imported ${app.doc.nodes.length} components with warnings`, { action: { label: 'Undo', onClick: () => performUndo() } });
+    finishImport(`Imported ${importedDoc.nodes.length} components with warnings`);
   } else {
     codeSyncDiagnostics.dataset.tone = 'ok';
-    codeSyncDiagnostics.textContent = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} wires (0 issues).`;
-    const msg = `Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} animated wires`;
+    codeSyncDiagnostics.textContent = `Imported ${importedDoc.nodes.length} components and ${importedDoc.edges.length} wires (0 issues).`;
+    const msg = `Imported ${importedDoc.nodes.length} components and ${importedDoc.edges.length} animated wires`;
     hudStatusTip.textContent = msg;
-    notify(`Imported ${app.doc.nodes.length} components and ${app.doc.edges.length} wires`, { action: { label: 'Undo', onClick: () => performUndo() } });
+    finishImport(`Imported ${importedDoc.nodes.length} components and ${importedDoc.edges.length} wires`);
   }
   return true;
 }
@@ -1125,7 +1150,7 @@ export async function handleUploadedFile(file: File): Promise<void> {
   const titleFromFile = baseName
     ? baseName.replace(/\b\w/g, (ch) => ch.toUpperCase())
     : undefined;
-  applyImportedText(text, titleFromFile);
+  applyImportedText(text, titleFromFile, undefined, true);
 }
 
 function downloadUrl(url: string, filename: string): void {
@@ -1534,29 +1559,20 @@ export function initEvents(): void {
       notify(parsed.error, { tone: 'error' });
       return;
     }
-    pushHistory();
-    clearSimulation();
-    app.doc = parsed.doc;
-    const focus = app.doc.nodes.find((node) => node.id === 'night-desk') ?? app.doc.nodes[0];
-    setSelection(focus ? { type: 'node', id: focus.id } : { type: 'none' });
-    renderAll(true);
-    requestAnimationFrame(fitToViewport);
     const msg = `Loaded ${template.title}`;
     hudStatusTip.textContent = msg;
-    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
+    await openAsNewDiagram(parsed.doc, msg, {
+      pickSelection: (doc) => {
+        const focus = doc.nodes.find((node) => node.id === 'night-desk') ?? doc.nodes[0];
+        return focus ? { type: 'node', id: focus.id } : { type: 'none' };
+      },
+    });
   };
 
   const createBlankCanvas = (): void => {
     resetActiveFile();
     clearPendingRestoreOffer();
-    pushHistory();
-    clearSimulation();
-    app.doc = createBlankDocument();
-    setSelection({ type: 'none' });
-    traceList.replaceChildren();
-    renderAll(true);
-    fitToViewport();
-    notify('Created blank canvas', { action: { label: 'Undo', onClick: () => performUndo() } });
+    void openAsNewDiagram(createBlankDocument(), 'Created blank canvas');
   };
 
   const openTemplateGallery = (): void => {
@@ -1721,8 +1737,7 @@ export function initEvents(): void {
           const titleFromFile = baseName
             ? baseName.replace(/\b\w/g, (ch) => ch.toUpperCase())
             : undefined;
-          applyImportedText(fileData.content, titleFromFile);
-          notify(`Opened ${fileData.name}`);
+          applyImportedText(fileData.content, titleFromFile, undefined, true);
           return;
         }
       } catch (err) {
