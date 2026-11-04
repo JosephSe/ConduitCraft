@@ -293,10 +293,17 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** stop reading `readLegacyContents` and delete the old keys after the first successful IndexedDB load, then drop the `localStorage` fallback's legacy-key mapping in favour of its own namespace. Keep the memory fallback and its notice.
 - **Done when:** `grep -rn "conduitcraft-autosave-v1\|blueprint-studio-autosave-v1" src` finds nothing, and a Playwright test shows a returning visitor's work survives the release.
 
-#### [ ] B3. F-08 Library: data and commands · M
+#### [x] B3. F-08 Library: data and commands · M (#54)
 - **Needs:** B2.
 - **Do:** one record per diagram (`id`, `title`, `updatedAt`, `thumbnail`, `doc`). Autosave writes to the open diagram's record. Add commands for new, open, rename, duplicate and delete; delete always comes with a 10-second Undo toast. The thumbnail is 320 × 200, made with `stagePicture.ts` on idle after a save. The existing autosave becomes the first entry. Add "Export all as .zip" (write a store-only zip by hand, with no compression, or ask first if a dependency is wanted).
 - **Done when:** unit tests cover the record operations; a Playwright test opens two diagrams, switches between them and loses neither.
+- **Shipped as:** `src/studio/library.ts` holds one record per diagram in the `diagrams` store (`id`, `title`, `updatedAt`, `thumbnail`, `doc`); the old autosave keeps its id (`autosave`) and is the first entry, the `recovery` scratch copy is not listed, and which diagram is open is remembered in `meta`. Autosave writes to the open diagram's record (`state.ts`; the recovery-slot rule is unchanged). The `localStorage` fallback now keeps extra entries under `conduitcraft-diagram:<id>`. Commands (palette: Your Diagrams…, New Diagram, Duplicate This Diagram, Delete This Diagram, Export All Diagrams (.zip)) and a small "Your diagrams" dialog (`libraryUi.ts`, styles lazy in `library.css`) cover new, open, rename, duplicate and delete. Every delete shows a 10-second Undo, as a toast and inside the dialog (the toast sits under an open dialog); discarding the previous session from the restore banner now has the same Undo. Opening a diagram saves the one before it, clears undo history (it can't cross diagrams) and hides the restore offer. The thumbnail is 320 × 200, drawn from `stagePicture.ts` on idle 1.5 s after a save and kept as a small WebP data URL (not the SVG, which was 186 kB for Lumen Relay); it is skipped when storage is not IndexedDB, when a sub-level is open, or while the tab is hidden. "Export all as .zip" writes a store-only zip by hand (`core/zip.ts`, about 100 lines, no dependency; Q11 default) holding one `.blueprint.json` per diagram. Tests: `tests/library.test.ts` (12) and `e2e/library.spec.ts` (four `never loses …` tests, including switching between two diagrams). Numbers: entry JS 461.5 kB (was 450.4), entry CSS 101.2 kB. Section-7 default used: Q11.
+
+#### [ ] B3b. Templates and imports open as new diagrams · S
+- **Needs:** B3.
+- **Why:** New Blueprint, the template gallery, Import File and Open File still replace the open diagram in place (undoable, but the old one is overwritten in the library). With a library they should add an entry and open it, as New Diagram does.
+- **Do:** route `createBlankCanvas`, `loadTemplateDoc`, file open and import through `createDiagram` + `openDiagram` (flushing the open one first), keeping the Undo toast meaning "go back to the previous diagram".
+- **Done when:** a Playwright test loads a template and the previous diagram is still in the library, unchanged.
 
 #### [ ] B4. F-08 Home screen · M
 - **Needs:** B3, A6.

@@ -9,8 +9,8 @@ import {
 } from './dom';
 import { lensOfWorkspaceMode, workspaceModeOf, type Lens, type WorkspaceMode } from '../core/lens';
 import type { ColourBy } from '../core/meta';
+import { getActiveDiagramId } from './library';
 import {
-  AUTOSAVE_ID,
   RECOVERY_ID,
   getRecord,
   isQuotaError,
@@ -196,9 +196,13 @@ export function clearPendingRestoreOffer(): void {
   pendingRestoreOffer = null;
 }
 
-export function discardPendingRestoreOffer(): void {
+/** Drop the offer and the saved session behind it. Returns what was removed so the caller can offer Undo. */
+export function discardPendingRestoreOffer(): DiagramRecord | undefined {
   pendingRestoreOffer = null;
-  removeRecord('diagrams', AUTOSAVE_ID).catch((err) => reportStorageFailure(err, 'discard the previous session'));
+  const id = getActiveDiagramId();
+  const removed = getRecord<DiagramRecord>('diagrams', id);
+  removeRecord('diagrams', id).catch((err) => reportStorageFailure(err, 'discard the previous session'));
+  return removed;
 }
 
 export function flushAutosave(): void {
@@ -223,11 +227,19 @@ export function flushAutosave(): void {
 
   // Protect the larger saved session: a smaller scratch session goes to the recovery slot instead.
   const pending = getPendingRestoreOffer();
-  const slot = pending && whole.nodes.length < pending.nodes.length ? RECOVERY_ID : AUTOSAVE_ID;
-  putRecord('diagrams', { id: slot, title: whole.title, updatedAt: Date.now(), doc: whole } as DiagramRecord).then(
+  const slot = pending && whole.nodes.length < pending.nodes.length ? RECOVERY_ID : getActiveDiagramId();
+  const record: DiagramRecord = {
+    id: slot,
+    title: whole.title,
+    updatedAt: Date.now(),
+    doc: whole,
+    thumbnail: getRecord<DiagramRecord>('diagrams', slot)?.thumbnail,
+  };
+  putRecord('diagrams', record).then(
     () => {
       // A newer edit is already waiting: it will report its own result.
       if (!app.hasPendingAutosave) setSaveState('saved');
+      for (const listener of savedListeners) listener(slot);
     },
     (err: unknown) => {
       setSaveState('error');
@@ -238,6 +250,13 @@ export function flushAutosave(): void {
 
 function reportAutosaveFailure(err: unknown): void {
   saveErrorHandler?.(isQuotaError(err));
+}
+
+const savedListeners = new Set<(id: string) => void>();
+
+/** Called after each autosave is stored, with the record it went to. The library uses it to refresh thumbnails. */
+export function onAutosaved(listener: (id: string) => void): void {
+  savedListeners.add(listener);
 }
 
 export function scheduleAutosave(): void {
@@ -251,8 +270,8 @@ export function scheduleAutosave(): void {
   app.autosaveTimer = window.setTimeout(flushAutosave, 320);
 }
 
-export function loadSavedSessionDoc(): DiagramDocument | null {
-  const parsed = getRecord<DiagramRecord>('diagrams', AUTOSAVE_ID)?.doc;
+/** A stored document if it is a usable diagram, tidied the way a load always tidies it. */
+export function usableStoredDoc(parsed: DiagramDocument | undefined): DiagramDocument | null {
   if (
     parsed &&
     Array.isArray(parsed.nodes) &&
@@ -265,6 +284,11 @@ export function loadSavedSessionDoc(): DiagramDocument | null {
   }
   return null;
 }
+
+export function loadSavedSessionDoc(): DiagramDocument | null {
+  return usableStoredDoc(getRecord<DiagramRecord>('diagrams', getActiveDiagramId())?.doc);
+}
+
 
 export function isSelectedNode(nodeId: string): boolean {
   if (app.selection.type === 'node') return app.selection.id === nodeId;
