@@ -3,6 +3,7 @@ import { openLumenRelay } from './helpers';
 
 const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900 },
+  { name: 'tablet portrait', width: 768, height: 1024 },
   { name: 'laptop', width: 1024, height: 768 },
   { name: 'phone', width: 390, height: 844 },
 ];

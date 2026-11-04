@@ -169,6 +169,18 @@ test('the drawer tabs are full-size targets that never overlap the top bar', asy
   await expect(page.locator('.topbar .panel-rail-toggles')).toBeHidden();
 });
 
+test('the top bar keeps the lens switch and undo/redo', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('.topbar .mode-switcher')).toBeVisible();
+  await expect(page.locator('.topbar .doc-history-controls')).toBeVisible();
+  // Nothing in the bar is cut off: it fits the viewport width.
+  const overflow = await page.evaluate(() => {
+    const bar = document.querySelector('.topbar') as HTMLElement;
+    return bar.scrollWidth - bar.clientWidth;
+  });
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
 test('canvas hit areas are 44 px at 100% zoom', async ({ page }) => {
   await open(page);
   const [a] = await freePair(page);

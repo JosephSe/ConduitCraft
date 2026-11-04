@@ -534,8 +534,8 @@
     }
   }
 
-  /* Phone layout. A 768px tablet in portrait keeps the full top bar (A12), so this stops just below it. */
-  @media (max-width: 52rem) {
+  /* Phone layout. A 768px tablet in portrait keeps the full top bar (A12c), so this stops just below it. */
+  @media (max-width: 47.9rem) {
     .topbar {
       flex-wrap: nowrap;
       gap: 0.35rem;
