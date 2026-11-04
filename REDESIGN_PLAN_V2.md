@@ -293,7 +293,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 - **Do:** stop reading `readLegacyContents` and delete the old keys after the first successful IndexedDB load, then drop the `localStorage` fallback's legacy-key mapping in favour of its own namespace. Keep the memory fallback and its notice.
 - **Done when:** `grep -rn "conduitcraft-autosave-v1\|blueprint-studio-autosave-v1" src` finds nothing, and a Playwright test shows a returning visitor's work survives the release.
 
-#### [x] B3. F-08 Library: data and commands · M (#PR)
+#### [x] B3. F-08 Library: data and commands · M (#54)
 - **Needs:** B2.
 - **Do:** one record per diagram (`id`, `title`, `updatedAt`, `thumbnail`, `doc`). Autosave writes to the open diagram's record. Add commands for new, open, rename, duplicate and delete; delete always comes with a 10-second Undo toast. The thumbnail is 320 × 200, made with `stagePicture.ts` on idle after a save. The existing autosave becomes the first entry. Add "Export all as .zip" (write a store-only zip by hand, with no compression, or ask first if a dependency is wanted).
 - **Done when:** unit tests cover the record operations; a Playwright test opens two diagrams, switches between them and loses neither.
