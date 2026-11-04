@@ -266,7 +266,6 @@ export class SimulationPlaybackController {
     if (this.onStateChange) {
       this.onStateChange(this.getState());
     }
-    updatePlaybackDeckUi(this.getState());
     for (const listener of playbackListeners) listener(this.getState());
   }
 
@@ -389,99 +388,9 @@ export function populateTraceRows(scenario: SimulationScenario): void {
   }
 }
 
-/**
- * Updates playback deck HTML elements (scrubber, buttons, badges).
- */
-export function updatePlaybackDeckUi(state: SimulationPlaybackState): void {
-  if (typeof document === 'undefined') return;
-
-  const deck = document.getElementById('sim-playback-deck');
-  if (!deck) return;
-
-  if (!state.scenario || state.totalSteps === 0) {
-    deck.hidden = true;
-    return;
-  }
-
-  deck.hidden = false;
-
-  const title = deck.querySelector('#sim-playback-title');
-  const badge = deck.querySelector('#sim-playback-step-badge');
-  const scrubber = deck.querySelector<HTMLInputElement>('#sim-scrubber');
-  const playLabel = deck.querySelector('#btn-sim-play-label');
-  const playBtn = deck.querySelector('#btn-sim-play');
-  const speedBtn = deck.querySelector('#btn-sim-speed');
-  const loopBtn = deck.querySelector('#btn-sim-loop');
-
-  if (title) title.textContent = state.scenario.name;
-  if (badge) {
-    const current1Based = Math.max(1, state.currentStepIndex + 1);
-    badge.textContent = `Step ${current1Based} of ${state.totalSteps}`;
-  }
-
-  if (scrubber) {
-    scrubber.max = String(Math.max(0, state.totalSteps - 1));
-    scrubber.value = String(Math.max(0, state.currentStepIndex));
-  }
-
-  if (playLabel) {
-    playLabel.textContent = state.isPlaying ? 'Pause' : 'Play';
-  }
-  if (playBtn) {
-    playBtn.setAttribute('aria-label', state.isPlaying ? 'Pause scenario' : 'Play scenario');
-    const icon = playBtn.querySelector('svg');
-    if (icon) {
-      icon.innerHTML = state.isPlaying
-        ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
-        : '<polygon points="6 4 20 12 6 20 6 4"/>';
-    }
-  }
-
-  if (speedBtn) {
-    speedBtn.textContent = `${state.speed.toFixed(1)}×`;
-  }
-
-  if (loopBtn) {
-    loopBtn.setAttribute('aria-pressed', String(state.isLooping));
-    (loopBtn as HTMLElement).style.color = state.isLooping
-      ? 'var(--wl-blue)'
-      : 'var(--wl-ink-secondary)';
-  }
-}
-
-/**
- * Initializes simulation playback deck events (scrubber change, step prev/next, speed, loop).
- */
+/** Lets a click on a row of the trace list jump to that step. */
 export function initSimulationPlaybackUi(): void {
   if (typeof document === 'undefined') return;
-
-  const deck = document.getElementById('sim-playback-deck');
-  if (!deck) return;
-
-  deck.querySelector('#btn-sim-play')?.addEventListener('click', () => {
-    simulationPlayback.togglePlay();
-  });
-
-  deck.querySelector('#btn-sim-prev')?.addEventListener('click', () => {
-    simulationPlayback.stepBackward();
-  });
-
-  deck.querySelector('#btn-sim-next')?.addEventListener('click', () => {
-    simulationPlayback.stepForward();
-  });
-
-  deck.querySelector('#sim-scrubber')?.addEventListener('input', (e) => {
-    const val = parseInt((e.target as HTMLInputElement).value, 10);
-    simulationPlayback.goToStep(val);
-  });
-
-  deck.querySelector('#btn-sim-speed')?.addEventListener('click', () => {
-    simulationPlayback.toggleSpeed();
-  });
-
-  deck.querySelector('#btn-sim-loop')?.addEventListener('click', () => {
-    simulationPlayback.toggleLoop();
-  });
 
   // Clicking a row in the trace list jumps directly to that step
   traceList?.addEventListener('click', (e) => {

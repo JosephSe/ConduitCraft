@@ -56,7 +56,7 @@ for (const [scheme, expected] of [
     // Axe can't evaluate text on a gradient, so assert the computed colour directly.
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/');
-    const color = await page.locator('#btn-open-export').evaluate((el) => getComputedStyle(el).color);
+    const color = await page.locator('#btn-apply-code').evaluate((el) => getComputedStyle(el).color);
     expect(color).toBe(expected);
   });
 }

@@ -7,9 +7,6 @@ import {
   docBrandCluster,
   docBrandGlyph,
   docBrandLogo,
-  docBrandName,
-  docStatusLabelEl,
-  docSystemTagEl,
   docTitleHeadingEl,
   emptyStageOverlay,
   matrixTbody,
@@ -78,11 +75,8 @@ function setText(el: Element, text: string): void {
 }
 
 function paintDocumentBrand(): void {
-  const name = (app.doc.brand?.name || '').trim();
   const accent = normalizeBrandAccent(app.doc.brand?.accent);
   const logo = sanitizeIconImage(app.doc.brand?.logo);
-  docBrandName.hidden = !name;
-  setText(docBrandName, name);
   if (accent) {
     docBrandCluster.dataset.brand = 'true';
     docBrandCluster.style.setProperty('--brand-accent', accent);
@@ -132,8 +126,6 @@ export function renderAll(rebuildInspector = true): void {
 
   setText(docTitleHeadingEl, app.doc.title || 'Untitled Architecture');
   updateDocumentTitle();
-  setText(docSystemTagEl, app.doc.systemTag || 'CONDUITCRAFT');
-  setText(docStatusLabelEl, app.doc.statusLabel || 'TRAFFIC DIAGRAM');
   paintDocumentBrand();
   setText(
     canvasStatsPill,

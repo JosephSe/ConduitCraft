@@ -5,10 +5,6 @@ import {
   btnAddSimulation,
   btnAddZone,
   btnApplyCode,
-  btnAutoLayout,
-  btnAutoLayoutMenu,
-  autoLayoutPopup,
-  btnLayoutSelection,
   btnClearTrace,
   btnCopyCode,
   templateGalleryDialog,
@@ -27,21 +23,8 @@ import {
   btnGifBack,
   btnGifView,
   btnGifWhole,
-  btnImportFile,
-  btnNewCanvas,
-  btnOpenFile,
-  btnFileSave,
-  btnFileSaveAs,
-  btnInstallApp,
-  btnOpenSnapshots,
   snapshotsDialog,
   snapshotsDialogBody,
-  btnOpenCode,
-  btnOpenExport,
-  btnEnterPresentation,
-  btnOpenMatrix,
-  btnOpenSettings,
-  btnOpenShortcuts,
   btnPaletteCode,
   btnPaletteImport,
   btnPropLock,
@@ -54,7 +37,6 @@ import {
   btnRestoreDiscard,
   restoreSessionBanner,
   saveStatusPill,
-  btnToggleMotion,
   btnUndo,
   btnZoomFit,
   btnZoomFitSelection,
@@ -66,9 +48,7 @@ import {
   codeSyncDiagnostics,
   codeSyncTextarea,
   dataInspectorPane,
-  dataToolbar,
   designInspectorPane,
-  designToolbar,
   draftWire,
   exportCards,
   exportDialog,
@@ -97,14 +77,12 @@ import {
   settingsDialog,
   shortcutsDialog,
   shortcutsDialogBody,
-  simButtonsSlot,
   stencilGrid,
   tabInspector,
   tabSimulations,
   tabTrace,
   traceList,
   viewport,
-  stageWorld,
   windowDropVeil,
   workspace,
 } from './dom';
@@ -140,7 +118,6 @@ import {
 import {
   applySelection,
   renderAll,
-  renderMatrixTable,
   requestInspectorRefresh,
   updateVisualSelectionHighlights,
 } from './render';
@@ -167,13 +144,11 @@ import {
   nextUid,
 } from '../templates/presets';
 import {
-  autoLayoutDocument,
   expandStageToFit,
   getEffectiveSimulations,
   getNodeCenter,
   getNodeDimensions,
   getPortPoint,
-  type AutoLayoutOptions,
 } from '../core/layout';
 import {
   importMermaidOrBlueprint,
@@ -187,7 +162,7 @@ import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
-import { allTags, colourKey, toneName } from '../core/meta';
+import { allTags, colourKey } from '../core/meta';
 import { createHumanOutlineSvg,
   createNodeIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -196,6 +171,7 @@ import { initTooltips } from './tooltips';
 import { renameNodeInline } from './inlineRename';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
+import { setPointerTool } from './pointerTool';
 import { matchBinding } from '../core/keymap';
 import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
@@ -229,7 +205,7 @@ import {
   serializeForFilename,
   setDiskDirty,
 } from './pwa';
-import { announceModeChange, announceToolChange } from './a11y';
+import { announceModeChange } from './a11y';
 import {
   listSnapshots,
   saveSnapshot,
@@ -742,49 +718,11 @@ export function bindViewFilters(): void {
 function syncToneLabels(): void {
   syncLegendCard();
   syncTagFilter();
-  for (const el of document.querySelectorAll<HTMLElement>('[data-tone-name]')) {
-    const tone = el.dataset.toneName as StreamTone;
-    el.textContent = toneName(app.doc.legend, tone, TONE_META[tone].shortLabel);
-  }
 }
 
 export function renderSimButtons(): void {
   refreshRunBar();
   syncToneLabels();
-  const scenarios = getEffectiveSimulations(app.doc);
-  const existing = new Map<string, HTMLButtonElement>();
-  for (const child of Array.from(simButtonsSlot.children)) {
-    if (child instanceof HTMLElement && child.dataset.simId) {
-      existing.set(child.dataset.simId, child as HTMLButtonElement);
-    }
-  }
-  const seen = new Set<string>();
-  for (const sim of scenarios) {
-    seen.add(sim.id);
-    let btn = existing.get(sim.id);
-    if (!btn) {
-      btn = document.createElement('button');
-      btn.type = 'button';
-      btn.dataset.simId = sim.id;
-      const dot = document.createElement('span');
-      dot.className = 'pill-swatch';
-      const label = document.createElement('span');
-      label.className = 'sim-label';
-      btn.append(dot, label);
-      btn.addEventListener('click', () => runSimulation(btn?.dataset.simId || ''));
-    }
-    btn.className =
-      sim.tone === 'rose' ? 'btn btn-reject' : sim.tone === 'emerald' ? 'btn btn-approve' : 'btn';
-    const [dotCss] = TONE_CSS[sim.tone] || TONE_CSS.emerald;
-    const dot = btn.querySelector<HTMLElement>('.pill-swatch');
-    if (dot) dot.style.background = dotCss;
-    const label = btn.querySelector('.sim-label');
-    if (label) label.textContent = sim.name;
-    simButtonsSlot.appendChild(btn);
-  }
-  for (const [id, btn] of existing) {
-    if (!seen.has(id)) btn.remove();
-  }
 }
 
 export function clearSimulation(): void {
@@ -845,10 +783,6 @@ export function runSimulation(simId: string): void {
     switchDataViewTab('trace');
   }
   workspace.dataset.flow = 'all';
-  const allFlowRadio = document.querySelector<HTMLInputElement>(
-    'input[name="flow-filter"][value="all"]',
-  );
-  if (allFlowRadio) allFlowRadio.checked = true;
 
   populateTraceRows(scenario);
   if (scenario.failures?.length) setFailures(scenario.failures);
@@ -1452,8 +1386,6 @@ export function initEvents(): void {
         app.lens = radio.value === 'review' ? 'review' : targetMode === 'data' ? 'traffic' : 'design';
         workspace.dataset.mode = app.workspaceMode;
         workspace.dataset.lens = app.lens;
-        designToolbar.hidden = app.workspaceMode !== 'design';
-        dataToolbar.hidden = app.workspaceMode !== 'data';
         designInspectorPane.hidden = app.workspaceMode !== 'design';
         dataInspectorPane.hidden = app.workspaceMode !== 'data';
 
@@ -1493,28 +1425,6 @@ export function initEvents(): void {
     });
   }
 
-  // Pointer Tool Switcher (Select vs Connect)
-  for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="pointer-tool"]')) {
-    radio.addEventListener('change', () => {
-      if (!radio.checked) return;
-      app.pointerTool = radio.value === 'connect' ? 'connect' : 'select';
-      workspace.dataset.tool = app.pointerTool;
-      app.connectSourceNodeId = null;
-      hudStatusTip.textContent =
-        app.pointerTool === 'connect'
-          ? 'Connect Mode · Drag from any component or port to another component to draw an animated wire'
-          : 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire';
-      announceToolChange(app.pointerTool);
-    });
-  }
-
-  // Wire colour filter (Data View Mode)
-  for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="flow-filter"]')) {
-    radio.addEventListener('change', () => {
-      if (radio.checked) workspace.dataset.flow = radio.value;
-    });
-  }
-
   // Click Topbar Title -> Focus Document Title input in Property Panel
   btnFocusDocTitle.addEventListener('click', () => {
     holdInspectorOpen();
@@ -1524,79 +1434,9 @@ export function initEvents(): void {
     }
   });
 
-  // Undo / Redo / Auto-Layout / Delete / Duplicate
+  // Undo / Redo / Delete / Duplicate
   btnUndo.addEventListener('click', performUndo);
   btnRedo.addEventListener('click', performRedo);
-  function runAutoLayout(options?: AutoLayoutOptions): void {
-    if (app.doc.nodes.length === 0) return;
-    pushHistory();
-    stageWorld.classList.add('layout-animating');
-    autoLayoutDocument(app.doc, options);
-    renderAll(true);
-    fitToViewport();
-    window.setTimeout(() => {
-      stageWorld.classList.remove('layout-animating');
-      renderAll(true);
-    }, 450);
-    const msg = options?.selectionOnly
-      ? 'Auto-arranged selected components'
-      : `Auto-arranged layout (${options?.direction || app.doc.direction || 'LR'})`;
-    notify(msg, { action: { label: 'Undo', onClick: () => performUndo() } });
-  }
-
-  btnAutoLayout.addEventListener('click', () => {
-    runAutoLayout();
-  });
-
-  btnAutoLayoutMenu?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (!autoLayoutPopup) return;
-    const isHidden = autoLayoutPopup.hidden;
-    autoLayoutPopup.hidden = !isHidden;
-    btnAutoLayoutMenu?.setAttribute('aria-expanded', String(isHidden));
-  });
-
-  autoLayoutPopup?.querySelectorAll<HTMLButtonElement>('[data-layout-dir]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const dir = btn.getAttribute('data-layout-dir') as 'LR' | 'TD';
-      if (autoLayoutPopup) autoLayoutPopup.hidden = true;
-      btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
-      runAutoLayout({ direction: dir });
-    });
-  });
-
-  autoLayoutPopup?.querySelectorAll<HTMLButtonElement>('[data-layout-spacing]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const sp = btn.getAttribute('data-layout-spacing') as 'compact' | 'comfortable' | 'spacious';
-      if (autoLayoutPopup) autoLayoutPopup.hidden = true;
-      btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
-      runAutoLayout({ spacing: sp });
-    });
-  });
-
-  btnLayoutSelection?.addEventListener('click', () => {
-    if (autoLayoutPopup) autoLayoutPopup.hidden = true;
-    btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
-    const selectedIds = app.selection.type === 'multi'
-      ? app.selection.ids
-      : app.selection.type === 'node'
-        ? [app.selection.id]
-        : [];
-    if (selectedIds.length < 2) {
-      notify('Select 2 or more components to layout selection', { tone: 'normal' });
-      return;
-    }
-    runAutoLayout({ selectionOnly: true, selectedNodeIds: selectedIds });
-  });
-
-  window.addEventListener('click', (e) => {
-    if (autoLayoutPopup && !autoLayoutPopup.hidden) {
-      if (!autoLayoutPopup.contains(e.target as Node) && e.target !== btnAutoLayoutMenu) {
-        autoLayoutPopup.hidden = true;
-        btnAutoLayoutMenu?.setAttribute('aria-expanded', 'false');
-      }
-    }
-  });
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);
 
@@ -1782,11 +1622,11 @@ export function initEvents(): void {
     }
   });
 
-  // New Canvas button opens Template Gallery
-  btnNewCanvas.addEventListener('click', () => {
+  // New Blueprint opens the template gallery
+  const newBlueprint = (): void => {
     resetActiveFile();
     openTemplateGallery();
-  });
+  };
 
   // Native File System & PWA actions
 
@@ -1857,33 +1697,31 @@ export function initEvents(): void {
     fileUploadInput.click();
   }
 
-  btnOpenFile?.addEventListener('click', () => {
-    void handleOpenFile();
-  });
-  btnFileSave?.addEventListener('click', () => {
-    void handleSaveDiagram(false);
-  });
-  btnFileSaveAs?.addEventListener('click', () => {
-    void handleSaveDiagram(true);
-  });
-  btnInstallApp?.addEventListener('click', async () => {
+  let canInstallApp = false;
+  const installApp = async (): Promise<void> => {
+    if (!canInstallApp) {
+      notify('Installing is not available in this browser right now');
+      return;
+    }
     const accepted = await promptInstallApp();
     if (accepted) {
       notify('ConduitCraft installed!');
     }
-  });
+  };
 
   // PWA Service Worker & Install prompt setup
   void registerServiceWorker();
   initInstallPrompt((canInstall) => {
-    if (btnInstallApp) {
-      btnInstallApp.hidden = !canInstall;
-    }
+    canInstallApp = canInstall;
   });
+
+  // Pause / Resume Stream Pulse Motion
+  const toggleMotion = (): void => {
+    document.body.classList.toggle('motion-paused');
+  };
 
   // File Import Triggers
   const triggerFilePicker = () => fileUploadInput.click();
-  btnImportFile.addEventListener('click', triggerFilePicker);
   btnPaletteImport.addEventListener('click', triggerFilePicker);
 
   fileUploadInput.addEventListener('change', () => {
@@ -1920,7 +1758,6 @@ export function initEvents(): void {
   });
 
   // Blueprint file dialog (shows the Blueprint file; Apply imports Mermaid or Blueprint)
-  btnOpenCode.addEventListener('click', openCodeDialog);
   btnPaletteCode.addEventListener('click', openCodeDialog);
 
   btnCopyCode.addEventListener('click', async () => {
@@ -2010,11 +1847,6 @@ export function initEvents(): void {
     void updateShareLinkPreview();
   });
 
-  // Presentation Mode Trigger
-  btnEnterPresentation?.addEventListener('click', () => {
-    presentationManager.toggle(app.doc);
-  });
-
   // Export Modal & Actions
   const getSelectedPngScale = (): number => {
     const raw = exportPngScale?.value;
@@ -2057,7 +1889,6 @@ export function initEvents(): void {
     void updateShareLinkPreview();
     exportDialog.showModal();
   };
-  btnOpenExport.addEventListener('click', openExportDialog);
   btnCopyAltText?.addEventListener('click', () => {
     void navigator.clipboard.writeText(exportAltText?.value ?? '').then(
       () => notify('Copied alt text'),
@@ -2230,15 +2061,7 @@ export function initEvents(): void {
     snapshotsDialog?.showModal();
   }
 
-  btnOpenSnapshots?.addEventListener('click', openSnapshotsDialog);
-
   // Matrix & Settings Dialogs
-  btnOpenMatrix.addEventListener('click', () => {
-    renderMatrixTable();
-    matrixDialog.showModal();
-  });
-  btnOpenSettings.addEventListener('click', () => settingsDialog.showModal());
-  btnOpenShortcuts?.addEventListener('click', openShortcutsDialog);
 
   firstRunDeps = {
     createBlank: createBlankCanvas,
@@ -2270,6 +2093,10 @@ export function initEvents(): void {
     saveFileAs: () => void handleSaveDiagram(true),
     openFile: () => void handleOpenFile(),
     openSnapshotsDialog,
+    newBlueprint,
+    importFile: triggerFilePicker,
+    toggleMotion,
+    installApp: () => void installApp(),
   });
 
   // Dismissible Coach Mark Card
@@ -2375,13 +2202,6 @@ export function initEvents(): void {
 
   chkSnapGrid.addEventListener('change', () => {
     app.snapToGrid = chkSnapGrid.checked;
-  });
-
-  // Pause / Resume Stream Pulse Motion
-  btnToggleMotion.addEventListener('click', () => {
-    const paused = document.body.classList.toggle('motion-paused');
-    btnToggleMotion.setAttribute('aria-pressed', String(paused));
-    btnToggleMotion.textContent = paused ? 'Resume' : 'Pause';
   });
 
   // Data View Tabs & Overview Reset
@@ -2806,7 +2626,7 @@ export function initEvents(): void {
           app.connectSourceNodeId = null;
           hudStatusTip.textContent = 'Connection cancelled';
         } else if (app.pointerTool === 'connect') {
-          document.querySelector<HTMLInputElement>('input[name="pointer-tool"][value="select"]')?.click();
+          setPointerTool('select');
         } else if (app.selection.type !== 'none') {
           applySelection({ type: 'none' });
         } else if (app.levelPath.length > 0) {
@@ -2835,9 +2655,6 @@ export function bootStudio(): void {
     },
     onAddNotes: () => {
       btnAddNotes.click();
-    },
-    onOpenExport: () => {
-      btnOpenExport.click();
     },
   });
   initEvents();

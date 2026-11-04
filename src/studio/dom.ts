@@ -44,14 +44,11 @@ export async function closeDialogSmoothly(dialog: HTMLDialogElement): Promise<vo
 // DOM Elements
 // ---------------------------------------------------------------------------
 export const workspace = document.getElementById('workspace') as HTMLElement;
-export const docSystemTagEl = document.getElementById('doc-system-tag') as HTMLElement;
-export const docStatusLabelEl = document.getElementById('doc-status-label') as HTMLElement;
 export const docTitleHeadingEl = document.getElementById('doc-title-heading') as HTMLElement;
 export const docBrandCluster = document.getElementById('doc-brand-cluster') as HTMLElement;
 export const docBrandMark = document.getElementById('doc-brand-mark') as HTMLElement;
 export const docBrandGlyph = document.getElementById('doc-brand-glyph') as unknown as SVGSVGElement;
 export const docBrandLogo = document.getElementById('doc-brand-logo') as HTMLImageElement;
-export const docBrandName = document.getElementById('doc-brand-name') as HTMLElement;
 export const btnFocusDocTitle = document.getElementById('btn-focus-doc-title') as HTMLButtonElement;
 export const saveStatusPill = document.getElementById('save-status-pill') as HTMLElement | null;
 export const restoreSessionBanner = document.getElementById('restore-session-banner') as HTMLElement | null;
@@ -59,35 +56,10 @@ export const restoreBannerText = document.getElementById('restore-banner-text') 
 export const btnRestoreOpen = document.getElementById('btn-restore-open') as HTMLButtonElement | null;
 export const btnRestoreDiscard = document.getElementById('btn-restore-discard') as HTMLButtonElement | null;
 
-export const designToolbar = document.getElementById('design-toolbar') as HTMLElement;
-export const dataToolbar = document.getElementById('data-toolbar') as HTMLElement;
 export const btnUndo = document.getElementById('btn-undo') as HTMLButtonElement;
 export const btnRedo = document.getElementById('btn-redo') as HTMLButtonElement;
-export const btnAutoLayout = document.getElementById('btn-auto-layout') as HTMLButtonElement;
-export const btnAutoLayoutMenu = document.getElementById('btn-auto-layout-menu') as HTMLButtonElement | null;
-export const autoLayoutPopup = document.getElementById('auto-layout-popup') as HTMLElement | null;
-export const btnLayoutSelection = document.getElementById('btn-layout-selection') as HTMLButtonElement | null;
-export const simButtonsSlot = document.getElementById('sim-buttons-slot') as HTMLElement;
-export const btnToggleMotion = document.getElementById('btn-toggle-motion') as HTMLButtonElement;
 
 export const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement;
-export const btnFileMenu = document.getElementById('btn-file-menu') as HTMLButtonElement | null;
-export const fileMenuPopup = document.getElementById('file-menu-popup') as HTMLElement | null;
-export const btnFileExport = document.getElementById('btn-file-export') as HTMLButtonElement | null;
-export const btnOpenSnapshots = document.getElementById('btn-open-snapshots') as HTMLButtonElement | null;
-export const btnTogglePalette = document.getElementById('btn-toggle-palette') as HTMLButtonElement | null;
-export const btnToggleInspector = document.getElementById('btn-toggle-inspector') as HTMLButtonElement | null;
-export const btnNewCanvas = document.getElementById('btn-new-canvas') as HTMLButtonElement;
-export const btnOpenFile = document.getElementById('btn-open-file') as HTMLButtonElement | null;
-export const btnFileSave = document.getElementById('btn-file-save') as HTMLButtonElement | null;
-export const btnFileSaveAs = document.getElementById('btn-file-save-as') as HTMLButtonElement | null;
-export const btnInstallApp = document.getElementById('btn-install-app') as HTMLButtonElement | null;
-export const btnImportFile = document.getElementById('btn-import-file') as HTMLButtonElement;
-export const btnOpenCode = document.getElementById('btn-open-code') as HTMLButtonElement;
-export const btnOpenMatrix = document.getElementById('btn-open-matrix') as HTMLButtonElement;
-export const btnEnterPresentation = document.getElementById('btn-enter-presentation') as HTMLButtonElement | null;
-export const btnOpenExport = document.getElementById('btn-open-export') as HTMLButtonElement;
-export const btnOpenSettings = document.getElementById('btn-open-settings') as HTMLButtonElement;
 export const paletteSidebar = document.getElementById('palette-sidebar') as HTMLElement | null;
 export const inspectorPanel = document.getElementById('inspector-panel') as HTMLElement | null;
 
@@ -205,7 +177,6 @@ export const matrixTbody = document.getElementById('matrix-tbody') as HTMLTableS
 export const settingsDialog = document.getElementById('settings-dialog') as HTMLDialogElement;
 export const chkSnapGrid = document.getElementById('chk-snap-grid') as HTMLInputElement;
 
-export const btnOpenShortcuts = document.getElementById('btn-open-shortcuts') as HTMLButtonElement | null;
 export const shortcutsDialog = document.getElementById('shortcuts-dialog') as HTMLDialogElement | null;
 export const shortcutsDialogBody = document.getElementById('shortcuts-dialog-body') as HTMLElement | null;
 export const btnDismissHudCoach = document.getElementById('btn-dismiss-hud-coach') as HTMLButtonElement | null;

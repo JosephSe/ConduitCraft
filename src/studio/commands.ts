@@ -26,16 +26,13 @@ export function platformShortcut(text: string, mac: boolean = isMac()): string {
   return text.replace(/[⌘⇧⌥]+/g, (run) => Array.from(run, (glyph) => `${GLYPH_NAMES[glyph]}+`).join(''));
 }
 
-/** Localise the shortcut hints written into the static HTML (tooltips, menu hints, placeholders). */
+/** Localise the shortcut hints written into the static HTML (tooltips, placeholders). */
 export function localizeStaticShortcuts(root: ParentNode = document, mac: boolean = isMac()): void {
   if (mac) return;
-  for (const el of root.querySelectorAll<HTMLElement>('[data-tip], [placeholder], .menu-shortcut')) {
+  for (const el of root.querySelectorAll<HTMLElement>('[data-tip], [placeholder]')) {
     for (const attr of ['data-tip', 'placeholder']) {
       const value = el.getAttribute(attr);
       if (value && /[⌘⇧⌥]/.test(value)) el.setAttribute(attr, platformShortcut(value, mac));
-    }
-    if (el.classList.contains('menu-shortcut') && /[⌘⇧⌥]/.test(el.textContent ?? '')) {
-      el.textContent = platformShortcut(el.textContent ?? '', mac);
     }
   }
 }

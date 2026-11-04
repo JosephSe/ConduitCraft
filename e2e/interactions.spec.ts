@@ -106,7 +106,7 @@ const wireCount = async (page: Page) =>
   Number(/(\d+)\s*WIRES?/.exec((await page.locator('#canvas-stats-pill').textContent()) ?? '')?.[1]);
 const currentTool = (page: Page) => page.locator('#workspace').getAttribute('data-tool');
 const enterConnectMode = (page: Page) =>
-  page.locator('input[name="pointer-tool"][value="connect"]').evaluate((el: HTMLElement) => el.click());
+  page.locator('[data-rail-tool="connect"]').first().evaluate((el: HTMLElement) => el.click());
 
 test('dragging between two nodes in Connect mode creates a wire (control)', async ({ page }) => {
   await loadShowcase(page);

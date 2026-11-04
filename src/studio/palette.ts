@@ -10,6 +10,7 @@ import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentation';
+import { setPointerTool } from './pointerTool';
 import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
 import { renameSelectionInline } from './inlineRename';
@@ -48,19 +49,15 @@ export interface PaletteDeps {
   saveFileAs?: () => void;
   openFile?: () => void;
   openSnapshotsDialog?: () => void;
+  newBlueprint: () => void;
+  importFile: () => void;
+  toggleMotion: () => void;
+  installApp: () => void;
 }
 
 let activeIndex = 0;
 let currentFiltered: PaletteCommand[] = [];
 let savedDeps: PaletteDeps | null = null;
-
-function clickById(id: string): void {
-  document.getElementById(id)?.click();
-}
-
-function clickRadio(name: string, value: string): void {
-  document.querySelector<HTMLInputElement>(`input[name="${name}"][value="${value}"]`)?.click();
-}
 
 /** The palette's dialog gives focus back as it closes, so wait for that before the popover takes focus. */
 function showHelpAfterPalette(topicId: string): void {
@@ -877,7 +874,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Start a blank canvas or pick a template',
       category: 'Export & Sync',
       keywords: ['new', 'blank', 'canvas', 'clear'],
-      run: () => clickById('btn-new-canvas'),
+      run: deps.newBlueprint,
     },
     {
       id: 'import-file',
@@ -885,7 +882,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Load a .mmd, .md or .json diagram',
       category: 'Export & Sync',
       keywords: ['import', 'mermaid', 'json', 'markdown'],
-      run: () => clickById('btn-import-file'),
+      run: deps.importFile,
     },
     {
       id: 'open-insert',
@@ -905,7 +902,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Click and drag to select and move',
       category: 'Canvas & Layout',
       keywords: ['select', 'pointer', 'tool', 'arrow'],
-      run: () => clickRadio('pointer-tool', 'select'),
+      run: () => setPointerTool('select'),
     },
     {
       id: 'tool-connect',
@@ -913,7 +910,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Click two components to join them with a wire',
       category: 'Canvas & Layout',
       keywords: ['connect', 'wire', 'link', 'tool', 'edge'],
-      run: () => clickRadio('pointer-tool', 'connect'),
+      run: () => setPointerTool('connect'),
     },
     {
       id: 'wire-from-selection',
@@ -928,7 +925,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
           return;
         }
         const id = sel.id;
-        clickRadio('pointer-tool', 'connect');
+        setPointerTool('connect');
         app.connectSourceNodeId = id;
       },
     },
@@ -938,7 +935,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Stop or restart the flowing wires',
       category: 'Mode & View',
       keywords: ['pause', 'motion', 'animation', 'freeze'],
-      run: () => clickById('btn-toggle-motion'),
+      run: deps.toggleMotion,
     },
     {
       id: 'install-app',
@@ -946,11 +943,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Add the app to your device (when your browser offers it)',
       category: 'Preferences',
       keywords: ['install', 'pwa', 'app', 'offline'],
-      run: () => {
-        const btn = document.getElementById('btn-install-app') as HTMLButtonElement | null;
-        if (btn && !btn.hidden) btn.click();
-        else notify('Installing is not available in this browser right now');
-      },
+      run: deps.installApp,
     },
   ];
 

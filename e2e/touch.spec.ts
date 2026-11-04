@@ -166,7 +166,7 @@ test('the drawer tabs are full-size targets that never overlap the top bar', asy
     expect(box!.height).toBeGreaterThanOrEqual(43.5);
   }
   // The top bar stays at 8 controls or fewer: the panel toggles are not brought back to it.
-  await expect(page.locator('.topbar .panel-rail-toggles')).toBeHidden();
+  await expect(page.locator('.topbar .panel-rail-toggles')).toHaveCount(0);
 });
 
 test('the top bar keeps the lens switch and undo/redo', async ({ page }) => {
