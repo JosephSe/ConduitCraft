@@ -13,8 +13,11 @@ const popover = (page: Page) => page.locator('#help-popover');
 
 /** Reach the button by keyboard alone, open it with Enter, check the popover, close it with Esc. */
 async function checkHelpButton(page: Page, button: Locator, title: RegExp): Promise<void> {
-  await button.focus();
-  await expect(button).toBeFocused();
+  // The panel can re-render just after a lens or selection change and drop focus, so focus again until it sticks.
+  await expect(async () => {
+    await button.focus();
+    await expect(button).toBeFocused({ timeout: 500 });
+  }).toPass({ timeout: 10_000 });
   await page.keyboard.press('Enter');
   await expect(popover(page)).toBeVisible();
   await expect(popover(page)).toBeFocused();
