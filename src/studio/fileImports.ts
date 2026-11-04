@@ -148,3 +148,13 @@ export function importComposeText(text: string, title: string): Promise<boolean>
 export function importOpenApiText(text: string, title: string): Promise<boolean> {
   return importSingle('OpenAPI', async () => ({ convert: (await import('../importers/openapi')).convertOpenApi }), text, title);
 }
+
+/** Import Kubernetes manifests as a new diagram. Returns false when nothing could be imported. */
+export function importKubernetesText(text: string, title: string): Promise<boolean> {
+  return importSingle('Kubernetes', async () => ({ convert: (await import('../importers/kubernetes')).convertKubernetes }), text, title);
+}
+
+/** Import an AsyncAPI description as a new diagram. Returns false when nothing could be imported. */
+export function importAsyncApiText(text: string, title: string): Promise<boolean> {
+  return importSingle('AsyncAPI', async () => ({ convert: (await import('../importers/asyncapi')).convertAsyncApi }), text, title);
+}

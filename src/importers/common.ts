@@ -154,3 +154,56 @@ export function layoutImported(doc: DiagramDocument): void {
   autoLayoutDocument(doc);
   expandStageToFit(doc);
 }
+
+const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'memcached', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd'];
+const BUS_IMAGES = ['kafka', 'rabbitmq', 'nats', 'activemq', 'redpanda', 'pulsar', 'mosquitto', 'zookeeper'];
+const GATE_IMAGES = ['nginx', 'traefik', 'haproxy', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
+
+/** The kind of component a container image most likely is: a data store, a message bus, a gateway, else a service. */
+export function kindForImage(image: string): NodeKind {
+  const name = image.toLowerCase().split('@')[0].split(':')[0];
+  const last = name.split('/').pop() ?? name;
+  const has = (list: string[]) => list.some((word) => last.includes(word));
+  if (has(STORE_IMAGES)) return 'store';
+  if (has(BUS_IMAGES)) return 'bus';
+  if (has(GATE_IMAGES)) return 'gate';
+  return 'service';
+}
+
+
+export interface GroupExtent {
+  name: string;
+  x: number;
+  width: number;
+}
+
+/**
+ * Lay out each group of components on its own and put the groups side by side, so a swimlane per group covers only
+ * its members. Wires between groups are drawn across. Returns each group's column, in order.
+ */
+export function layoutByGroup(doc: DiagramDocument, groups: Map<string, DiagramNode[]>): GroupExtent[] {
+  const extents: GroupExtent[] = [];
+  const GAP = 96;
+  const PAD = 32;
+  let cursor = 96;
+  for (const [name, members] of groups) {
+    if (members.length === 0) continue;
+    const ids = new Set(members.map((m) => m.id));
+    const part: DiagramDocument = {
+      ...doc,
+      nodes: members,
+      edges: doc.edges.filter((e) => ids.has(e.from) && ids.has(e.to)),
+      zones: [],
+      notesCards: [],
+    };
+    autoLayoutDocument(part);
+    const minX = Math.min(...members.map((m) => m.x));
+    const maxX = Math.max(...members.map((m) => m.x + m.width));
+    const shift = cursor + PAD - minX;
+    for (const m of members) m.x = Math.round((m.x + shift) / 16) * 16;
+    extents.push({ name, x: cursor, width: Math.round((maxX - minX + PAD * 2) / 16) * 16 });
+    cursor += maxX - minX + PAD * 2 + GAP;
+  }
+  expandStageToFit(doc);
+  return extents;
+}

@@ -150,7 +150,7 @@ export const OPEN_FILE_TYPES = [
     },
   },
   {
-    description: 'Docker Compose or OpenAPI (*.yml, *.yaml)',
+    description: 'Compose, Kubernetes, OpenAPI or AsyncAPI (*.yml, *.yaml)',
     accept: {
       'application/yaml': ['.yml', '.yaml'],
     },

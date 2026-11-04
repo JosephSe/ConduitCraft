@@ -26,3 +26,15 @@ export function looksLikeCompose(fileName: string, text: string): boolean {
   const head = text.slice(0, 6000);
   return /^services:/m.test(head) && !/^\s*"?openapi"?\s*:/m.test(head) && !/^apiVersion:/m.test(head);
 }
+
+/** An AsyncAPI 2 or 3 description, as YAML or JSON, by its `asyncapi` line near the top. */
+export function looksLikeAsyncApi(_fileName: string, text: string): boolean {
+  return /(^|[{,])\s*"?asyncapi"?\s*:\s*['"]?[23]/m.test(text.slice(0, 3000));
+}
+
+/** Kubernetes manifests: a YAML file with a top-level `apiVersion` and `kind`, not Compose and not OpenAPI. */
+export function looksLikeKubernetes(fileName: string, text: string): boolean {
+  if (!/\.ya?ml$/i.test(fileName)) return false;
+  const head = text.slice(0, 6000);
+  return /^apiVersion:\s*\S+/m.test(head) && /^kind:\s*\w+/m.test(head) && !/^services:/m.test(head);
+}

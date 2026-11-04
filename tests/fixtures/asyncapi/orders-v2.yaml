@@ -1,0 +1,30 @@
+asyncapi: 2.6.0
+info:
+  title: Order Service
+  description: Takes orders and announces them.
+  version: 1.0.0
+servers:
+  broker:
+    url: kafka.example.com:9092
+    protocol: kafka
+channels:
+  orders.created:
+    description: A new order was placed.
+    subscribe:
+      operationId: orderCreated
+      message:
+        $ref: '#/components/messages/OrderCreated'
+  payments.settled:
+    publish:
+      message:
+        oneOf:
+          - $ref: '#/components/messages/PaymentSettled'
+          - name: PaymentRefunded
+  audit.log:
+    description: Nothing uses this yet.
+components:
+  messages:
+    OrderCreated:
+      payload: {type: object}
+    PaymentSettled:
+      payload: {type: object}

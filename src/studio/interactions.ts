@@ -177,8 +177,8 @@ import {
   openLibraryDialog,
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
-import { importComposeText, importDrawioText, importExcalidrawText, importOpenApiText } from './fileImports';
-import { looksLikeCompose, looksLikeDrawio, looksLikeExcalidraw, looksLikeOpenApi } from '../importers/sniff';
+import { importAsyncApiText, importComposeText, importDrawioText, importExcalidrawText, importKubernetesText, importOpenApiText } from './fileImports';
+import { looksLikeAsyncApi, looksLikeCompose, looksLikeDrawio, looksLikeExcalidraw, looksLikeKubernetes, looksLikeOpenApi } from '../importers/sniff';
 import { restoreDiagram } from './library';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
@@ -1160,7 +1160,7 @@ export async function handleUploadedFile(file: File): Promise<void> {
   importFileText(file.name, text, titleFromFile);
 }
 
-/** A draw.io, Excalidraw, OpenAPI or Compose file goes to its own importer (a lazy chunk); everything else is Blueprint JSON, Blueprint file or Mermaid. */
+/** A draw.io, Excalidraw, OpenAPI, AsyncAPI, Kubernetes or Compose file goes to its own importer (a lazy chunk); everything else is Blueprint JSON, Blueprint file or Mermaid. */
 function importFileText(fileName: string, text: string, title: string | undefined): void {
   if (looksLikeDrawio(fileName, text)) {
     void importDrawioText(text, title ?? 'Imported draw.io');
@@ -1172,6 +1172,14 @@ function importFileText(fileName: string, text: string, title: string | undefine
   }
   if (looksLikeOpenApi(fileName, text)) {
     void importOpenApiText(text, title ?? 'Imported API');
+    return;
+  }
+  if (looksLikeAsyncApi(fileName, text)) {
+    void importAsyncApiText(text, title ?? 'Imported messaging API');
+    return;
+  }
+  if (looksLikeKubernetes(fileName, text)) {
+    void importKubernetesText(text, title ?? 'Imported cluster');
     return;
   }
   if (looksLikeCompose(fileName, text)) {
