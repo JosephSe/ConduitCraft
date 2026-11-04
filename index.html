@@ -91,7 +91,7 @@
   </header>
 
   <main class="workspace" id="workspace" data-mode="design" data-tool="select" data-flow="all">
-  <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md, .json, .drawio, .excalidraw, .yml or .yaml)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json,.drawio,.xml,.excalidraw,.yml,.yaml" class="visually-hidden">
+  <input type="file" id="file-upload" name="blueprint-file" aria-label="Import a diagram file (.mmd, .md, .json, .jsonl, .drawio, .excalidraw, .yml or .yaml)" accept=".mmd,.mermaid,.md,.markdown,.txt,.json,.jsonl,.ndjson,.drawio,.xml,.excalidraw,.yml,.yaml" class="visually-hidden">
     <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
     <div class="drawer-scrim" id="drawer-scrim" hidden></div>
 
@@ -755,6 +755,23 @@
           <button type="button" class="btn btn-primary" data-drawio-mode="separate" autofocus>One diagram per page</button>
           <button type="button" class="btn" data-drawio-mode="levels">Pages as levels</button>
           <button type="button" class="btn" data-drawio-mode="cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Trace import: a new diagram, or fold the numbers into the open one -->
+  <dialog id="trace-mode-dialog" closedby="any" aria-labelledby="trace-mode-title">
+    <div class="dialog-shell" style="max-inline-size: 34rem; inline-size: 92vw;">
+      <div class="dialog-header">
+        <h2 id="trace-mode-title">Import traces</h2>
+      </div>
+      <div class="dialog-body">
+        <p style="margin: 0 0 1rem;">Make a new diagram from these traces, or update the open diagram? Updating keeps your layout and names, matches components by title, and adds call counts, latency and errors to the wires.</p>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          <button type="button" class="btn btn-primary" data-trace-mode="new" autofocus>New diagram</button>
+          <button type="button" class="btn" data-trace-mode="update">Update this diagram</button>
+          <button type="button" class="btn" data-trace-mode="cancel">Cancel</button>
         </div>
       </div>
     </div>

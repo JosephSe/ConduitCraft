@@ -38,3 +38,9 @@ export function looksLikeKubernetes(fileName: string, text: string): boolean {
   const head = text.slice(0, 6000);
   return /^apiVersion:\s*\S+/m.test(head) && /^kind:\s*\w+/m.test(head) && !/^services:/m.test(head);
 }
+
+/** A trace export: OpenTelemetry OTLP JSON (`resourceSpans`) or a Jaeger JSON export (`data` with `spans` and `processes`). */
+export function looksLikeTrace(_fileName: string, text: string): boolean {
+  const head = text.slice(0, 4000);
+  return /"resourceSpans"\s*:/.test(head) || (/"traceID"\s*:/.test(text.slice(0, 20000)) && /"processes"\s*:/.test(text));
+}

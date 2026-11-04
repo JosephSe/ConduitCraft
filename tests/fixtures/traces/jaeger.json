@@ -1,0 +1,404 @@
+{
+ "data": [
+  {
+   "traceID": "multi",
+   "spans": [
+    {
+     "traceID": "00000000000000000000000000000001",
+     "spanID": "00000000000003e8",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000000000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000001",
+     "spanID": "00000000000003e9",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000001",
+       "spanID": "00000000000003e8"
+      }
+     ],
+     "startTime": 1700000000005000,
+     "duration": 20000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000002",
+     "spanID": "00000000000003ea",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000001000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000002",
+     "spanID": "00000000000003eb",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000002",
+       "spanID": "00000000000003ea"
+      }
+     ],
+     "startTime": 1700000001005000,
+     "duration": 22000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000003",
+     "spanID": "00000000000003ec",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000002000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000003",
+     "spanID": "00000000000003ed",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000003",
+       "spanID": "00000000000003ec"
+      }
+     ],
+     "startTime": 1700000002005000,
+     "duration": 24000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000004",
+     "spanID": "00000000000003ee",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000003000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000004",
+     "spanID": "00000000000003ef",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000004",
+       "spanID": "00000000000003ee"
+      }
+     ],
+     "startTime": 1700000003005000,
+     "duration": 26000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000005",
+     "spanID": "00000000000003f0",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000004000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000005",
+     "spanID": "00000000000003f1",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000005",
+       "spanID": "00000000000003f0"
+      }
+     ],
+     "startTime": 1700000004005000,
+     "duration": 28000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      },
+      {
+       "key": "error",
+       "type": "bool",
+       "value": true
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000006",
+     "spanID": "00000000000003f2",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000005000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000006",
+     "spanID": "00000000000003f3",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000006",
+       "spanID": "00000000000003f2"
+      }
+     ],
+     "startTime": 1700000005005000,
+     "duration": 30000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000007",
+     "spanID": "00000000000003f4",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000006000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000007",
+     "spanID": "00000000000003f5",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000007",
+       "spanID": "00000000000003f4"
+      }
+     ],
+     "startTime": 1700000006005000,
+     "duration": 32000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000008",
+     "spanID": "00000000000003f6",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000007000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000008",
+     "spanID": "00000000000003f7",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000008",
+       "spanID": "00000000000003f6"
+      }
+     ],
+     "startTime": 1700000007005000,
+     "duration": 34000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "00000000000000000000000000000009",
+     "spanID": "00000000000003f8",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000008000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "00000000000000000000000000000009",
+     "spanID": "00000000000003f9",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "00000000000000000000000000000009",
+       "spanID": "00000000000003f8"
+      }
+     ],
+     "startTime": 1700000008005000,
+     "duration": 36000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    },
+    {
+     "traceID": "0000000000000000000000000000000a",
+     "spanID": "00000000000003fa",
+     "operationName": "GET /users",
+     "references": [],
+     "startTime": 1700000009000000,
+     "duration": 50000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p1"
+    },
+    {
+     "traceID": "0000000000000000000000000000000a",
+     "spanID": "00000000000003fb",
+     "operationName": "lookup",
+     "references": [
+      {
+       "refType": "CHILD_OF",
+       "traceID": "0000000000000000000000000000000a",
+       "spanID": "00000000000003fa"
+      }
+     ],
+     "startTime": 1700000009005000,
+     "duration": 38000,
+     "tags": [
+      {
+       "key": "span.kind",
+       "type": "string",
+       "value": "server"
+      }
+     ],
+     "processID": "p2"
+    }
+   ],
+   "processes": {
+    "p1": {
+     "serviceName": "gateway",
+     "tags": []
+    },
+    "p2": {
+     "serviceName": "users",
+     "tags": []
+    }
+   }
+  }
+ ]
+}

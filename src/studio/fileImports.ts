@@ -8,15 +8,46 @@ import type { DrawioPageMode } from '../importers/drawio';
 import { escapeHtml } from '../shared/escapeHtml';
 import { createDiagram } from './library';
 import { openAsNewDiagram } from './libraryUi';
+import { app, performUndo, pushHistory } from './state';
+import { renderAll } from './render';
 import { notify } from './toast';
 
 const pagesDialog = document.getElementById('drawio-pages-dialog') as HTMLDialogElement | null;
 const pagesText = document.getElementById('drawio-pages-text');
+const traceDialog = document.getElementById('trace-mode-dialog') as HTMLDialogElement | null;
 const reportDialog = document.getElementById('import-report-dialog') as HTMLDialogElement | null;
 const reportList = document.getElementById('import-report-list');
 
 const firstNode = (doc: DiagramDocument): SelectionTarget =>
   doc.nodes.length > 0 ? { type: 'node', id: doc.nodes[0].id } : { type: 'none' };
+
+/**
+ * Show a dialog whose buttons carry `data-<key>="<choice>"` and resolve with the choice, or null if it is dismissed
+ * (Esc, backdrop). It resolves on the click itself, and a `close` event only counts while the dialog is really shut,
+ * so a late `close` from the previous use cannot cancel this one.
+ */
+function askChoice<T extends string>(dialog: HTMLDialogElement, datasetKey: string, choices: readonly T[]): Promise<T | null> {
+  const attribute = `data-${datasetKey.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`)}`;
+  return new Promise((resolve) => {
+    const finish = (value: T | null): void => {
+      dialog.removeEventListener('click', onClick);
+      dialog.removeEventListener('close', onClose);
+      resolve(value);
+    };
+    const onClick = (event: Event): void => {
+      const value = (event.target as HTMLElement).closest<HTMLElement>(`[${attribute}]`)?.dataset[datasetKey];
+      if (value === undefined) return;
+      finish(choices.find((c) => c === value) ?? null);
+      dialog.close();
+    };
+    const onClose = (): void => {
+      if (!dialog.open) finish(null);
+    };
+    dialog.addEventListener('click', onClick);
+    dialog.addEventListener('close', onClose);
+    dialog.showModal();
+  });
+}
 
 /** Ask how to bring in a file with several pages. Resolves null when the visitor cancels. */
 function askPageMode(pageCount: number): Promise<DrawioPageMode | null> {
@@ -24,25 +55,7 @@ function askPageMode(pageCount: number): Promise<DrawioPageMode | null> {
   if (pagesText) {
     pagesText.textContent = `It has ${pageCount} pages. Make each page its own diagram, or one overview whose components open the pages as levels?`;
   }
-  return new Promise((resolve) => {
-    let choice: DrawioPageMode | null = null;
-    const onClick = (event: Event): void => {
-      const mode = (event.target as HTMLElement).closest<HTMLElement>('[data-drawio-mode]')?.dataset.drawioMode;
-      if (!mode) return;
-      choice = mode === 'separate' || mode === 'levels' ? mode : null;
-      pagesDialog.close();
-    };
-    pagesDialog.addEventListener('click', onClick);
-    pagesDialog.addEventListener(
-      'close',
-      () => {
-        pagesDialog.removeEventListener('click', onClick);
-        resolve(choice);
-      },
-      { once: true },
-    );
-    pagesDialog.showModal();
-  });
+  return askChoice<DrawioPageMode>(pagesDialog, 'drawioMode', ['separate', 'levels']);
 }
 
 const LEVEL_LABEL: Record<ImportIssue['level'], string> = { error: 'Not imported', warning: 'Changed', info: 'Note' };
@@ -157,4 +170,55 @@ export function importKubernetesText(text: string, title: string): Promise<boole
 /** Import an AsyncAPI description as a new diagram. Returns false when nothing could be imported. */
 export function importAsyncApiText(text: string, title: string): Promise<boolean> {
   return importSingle('AsyncAPI', async () => ({ convert: (await import('../importers/asyncapi')).convertAsyncApi }), text, title);
+}
+
+type TraceMode = 'new' | 'update';
+
+/** Ask whether to start a new diagram or fold the traces into the open one. Resolves null when cancelled. */
+function askTraceMode(): Promise<TraceMode | null> {
+  if (!traceDialog) return Promise.resolve('new');
+  return askChoice<TraceMode>(traceDialog, 'traceMode', ['new', 'update']);
+}
+
+/**
+ * Import a trace export (OpenTelemetry or Jaeger). With something on the canvas it asks whether to make a new diagram
+ * or update the open one (matching components by their trace source, then by title); inside a level it always makes a
+ * new diagram.
+ */
+export async function importTraceText(text: string, title: string): Promise<boolean> {
+  let importer: typeof import('../importers/traces');
+  try {
+    importer = await import('../importers/traces');
+  } catch {
+    notify('Could not load the trace importer. Check your connection and try again.', { tone: 'error' });
+    return false;
+  }
+  let result: ReturnType<typeof importer.convertTraces>;
+  try {
+    result = importer.convertTraces(text, title);
+  } catch (err) {
+    notify(err instanceof Error ? err.message : 'Could not read this trace file.', { tone: 'error' });
+    return false;
+  }
+  const canUpdate = app.levelPath.length === 0 && app.doc.nodes.length > 0;
+  const mode = canUpdate ? await askTraceMode() : 'new';
+  if (!mode) return false;
+  if (mode === 'new') return openConverted([result.doc], result.issues, 'traces');
+
+  const merge = importer.mergeTraceDiagram(app.doc, result.doc);
+  pushHistory();
+  app.doc = merge.doc;
+  renderAll(true);
+  const part = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
+  notify(
+    `Updated ${part(merge.updatedNodes, 'component')} and ${part(merge.updatedEdges, 'wire')} from traces; added ${part(merge.addedNodes, 'component')} and ${part(merge.addedEdges, 'wire')}`,
+    { action: { label: 'Undo', onClick: () => performUndo() } },
+  );
+  if (result.issues.length > 0) {
+    notify(`${result.issues.length} ${result.issues.length === 1 ? 'thing was' : 'things were'} not imported exactly`, {
+      duration: 12000,
+      action: { label: 'See report', onClick: () => showReport(result.issues) },
+    });
+  }
+  return true;
 }
