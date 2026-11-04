@@ -40,8 +40,10 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Never intercept local development or HMR requests
-  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+  // Never intercept local development or HMR requests, unless the page registered us with ?localhost=1
+  // (the offline end-to-end test runs the production build on localhost).
+  const allowLocalhost = new URL(self.location.href).searchParams.get('localhost') === '1';
+  if (!allowLocalhost && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
     return;
   }
 
@@ -64,7 +66,9 @@ self.addEventListener('fetch', (event) => {
     }
 
     event.respondWith(
-      caches.match(event.request).then((cachedResponse) => {
+      // ignoreVary: a precached file has no Origin header, a module script or stylesheet with `crossorigin` can send one,
+      // and a host that answers `Vary: Origin` would otherwise make every precached chunk miss.
+      caches.match(event.request, { ignoreVary: true }).then((cachedResponse) => {
         if (cachedResponse) {
           // Serve cached asset immediately, then fetch and update cache in background
           fetch(event.request)

@@ -261,8 +261,19 @@ export async function saveWithNativeFileSystem(
 export async function registerServiceWorker(swPath = './sw.js'): Promise<ServiceWorkerRegistration | null> {
   if (!isServiceWorkerSupported()) return null;
 
-  // In local development, unregister any service worker so Vite HMR works immediately
-  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+  // In local development, unregister any service worker so Vite HMR works immediately. The offline end-to-end test
+  // (A13) runs the production build on localhost and opts in with this flag; the worker is then told to serve localhost.
+  const onLocalhost =
+    typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  let optIn = false;
+  if (onLocalhost) {
+    try {
+      optIn = window.localStorage.getItem('conduitcraft-sw-localhost') === '1';
+    } catch {
+      // storage blocked: not opted in
+    }
+  }
+  if (onLocalhost && !optIn) {
     try {
       const registrations = await navigator.serviceWorker.getRegistrations();
       for (const reg of registrations) {
@@ -275,7 +286,7 @@ export async function registerServiceWorker(swPath = './sw.js'): Promise<Service
   }
 
   try {
-    const reg = await navigator.serviceWorker.register(swPath, { scope: './' });
+    const reg = await navigator.serviceWorker.register(onLocalhost ? `${swPath}?localhost=1` : swPath, { scope: './' });
     return reg;
   } catch (err) {
     console.warn('ConduitCraft Service Worker registration failed:', err);
