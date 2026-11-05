@@ -1,0 +1,75 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test, type Page } from '@playwright/test';
+import { runPaletteCommand } from './helpers';
+
+const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
+
+async function openThreeTier(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await runPaletteCommand(page, 'Three-Tier Web');
+  await expect(node(page, 'alb')).toBeVisible();
+}
+
+test('a Load Balancer from the rail draws as a trapezoid with its own icon and chip', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  const balancer = page.locator('.rail-stencil-btn[data-stencil-id="balancer"]');
+  await expect(balancer).toBeVisible();
+  await balancer.click();
+  const added = page.locator('.arch-node[data-kind="balancer"]');
+  await expect(added).toHaveCount(1);
+  await expect(added).toHaveAttribute('data-shape', 'trapezoid');
+  await expect(added.locator('.node-shape-plate polygon')).toHaveCount(1);
+  await expect(added.locator('.micro-chip')).toHaveText('RR');
+});
+
+test('the example load balancer is a trapezoid, and failing one of its targets keeps traffic flowing', async ({ page }) => {
+  await openThreeTier(page);
+  await expect(node(page, 'alb')).toHaveAttribute('data-shape', 'trapezoid');
+
+  await page.keyboard.press('2');
+  await node(page, 'app-01').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+
+  await expect(node(page, 'app-01')).toHaveAttribute('data-chaos', 'failed');
+  await expect(node(page, 'app-02')).toHaveAttribute('data-chaos', 'rerouted');
+  await expect(node(page, 'alb')).not.toHaveAttribute('data-chaos', 'at-risk');
+  await expect(node(page, 'cdn-waf')).not.toHaveAttribute('data-chaos', 'at-risk');
+});
+
+test('failing both targets puts the balancer at risk', async ({ page }) => {
+  await openThreeTier(page);
+  await page.keyboard.press('2');
+  await node(page, 'app-01').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await node(page, 'app-02').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await expect(node(page, 'alb')).toHaveAttribute('data-chaos', 'at-risk');
+});
+
+test('a scenario with one target failed is sent to the other and does not stop', async ({ page }) => {
+  await openThreeTier(page);
+  await page.keyboard.press('2');
+  await node(page, 'app-02').locator('.node-select-hit').click();
+  await page.keyboard.press('x');
+  await expect(node(page, 'app-02')).toHaveAttribute('data-chaos', 'failed');
+
+  await page.locator('#run-bar-scenario').selectOption('sim-order-write');
+  await expect(page.locator('#a11y-live-announcer')).toContainText(/sent traffic to App Service Alpha instead of App Service Beta/);
+  await expect(node(page, 'app-01')).toHaveAttribute('data-sim-active', 'true');
+  await expect(node(page, 'app-02')).not.toHaveAttribute('data-sim-active', 'true');
+});
+
+test('the Strategy field in the inspector changes the chip, and has no axe violations', async ({ page }) => {
+  await openThreeTier(page);
+  await page.keyboard.press('1');
+  await node(page, 'alb').locator('.node-select-hit').click();
+  const strategy = page.locator('#prop-node-balancer-strategy');
+  await expect(strategy).toBeVisible();
+  await expect(strategy).toHaveValue('round-robin');
+  await strategy.selectOption('hash');
+  await expect(node(page, 'alb').locator('.micro-chip')).toHaveText('HASH');
+  const results = await new AxeBuilder({ page }).include('#inspector-panel').withTags(['wcag2a', 'wcag2aa']).analyze();
+  expect(results.violations.map((v) => v.id)).toEqual([]);
+});
