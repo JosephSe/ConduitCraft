@@ -650,6 +650,27 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: deps.deleteSelected,
     },
     {
+      id: 'queue-add-dlq',
+      title: 'Add dead-letter queue',
+      subtitle: 'Create a queue to the right for overflow and set it on this queue',
+      category: 'Components',
+      keywords: ['queue', 'dead letter', 'dlq', 'overflow', 'poison'],
+      run: () => {
+        const sel = app.selection;
+        const source = sel.type === 'node' ? app.doc.nodes.find((n) => n.id === sel.id) : undefined;
+        if (!source || source.kind !== 'queue') return;
+        pushHistory();
+        const dlq = createNodeFromStencil('queue', source.x + source.width + 64, source.y, app.doc.nodes.length);
+        dlq.title = `${source.title} DLQ`;
+        app.doc.nodes.push(dlq);
+        source.queue = { ...source.queue, deadLetterId: dlq.id };
+        expandStageToFit(app.doc);
+        setSelection({ type: 'node', id: dlq.id });
+        renderAll(true);
+        notify(`Added ${dlq.title}`);
+      },
+    },
+    {
       id: 'edit-lock',
       title: 'Lock / Unlock Selection',
       subtitle: 'Toggle lock to prevent moving or deleting',

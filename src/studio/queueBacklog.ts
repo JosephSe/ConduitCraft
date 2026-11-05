@@ -4,6 +4,7 @@
  * The maths (`enqueue`, `drainCount`, `holdingQueue`) is pure and lives in `core/queues.ts`.
  */
 import { failureKey } from '../core/failures';
+import { getNodeCenter } from '../core/layout';
 import { drainCount, enqueue, queueConsumers, type BacklogState, type EnqueueOutcome } from '../core/queues';
 import type { DiagramNode } from '../types';
 import { announce } from './a11y';
@@ -95,6 +96,7 @@ export function holdMessage(queueId: string): { outcome: EnqueueOutcome; deadLet
   if (outcome === 'held') announce(`Message held in ${name}. ${state.depth} waiting.`);
   else if (outcome === 'dead-lettered') announce(`${name} is full. Message sent to ${titleOf(dlq!)}.`);
   else announce(`${name} is full. Message dropped.`);
+  if (outcome === 'dead-lettered') flashDlqLink(queueId);
   changed();
   return { outcome, ...(outcome === 'dead-lettered' ? { deadLetterId: dlq } : {}) };
 }
@@ -218,4 +220,42 @@ export function paintBacklog(wrapper: HTMLElement, node: DiagramNode): void {
   );
   chip.textContent = max ? `${depth} / ${max}` : `${depth} waiting`;
   chip.dataset.level = max && depth >= max ? 'full' : max && depth >= max * 0.8 ? 'warn' : 'ok';
+}
+
+/** Queues whose dead-letter link shows because a message has just been sent down it (Traffic lens). */
+const dlqFlash = new Set<string>();
+
+function flashDlqLink(queueId: string): void {
+  dlqFlash.add(queueId);
+  setTimeout(() => {
+    dlqFlash.delete(queueId);
+    paintDlqLinks();
+  }, 1500);
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * A thin dashed rose line from a queue to its dead-letter queue, shown while the queue is selected and while a
+ * message is being dead-lettered. It is not a wire: it is not saved, not routed and not counted by insights.
+ */
+export function paintDlqLinks(): void {
+  const layer = document.getElementById('dlq-links');
+  if (!layer) return;
+  const ids = new Set(dlqFlash);
+  if (app.selection.type === 'node') ids.add(app.selection.id);
+  const lines: SVGPathElement[] = [];
+  for (const id of ids) {
+    const queue = app.doc.nodes.find((n) => n.id === id);
+    const dlq = queue?.queue?.deadLetterId ? app.doc.nodes.find((n) => n.id === queue.queue!.deadLetterId) : undefined;
+    if (!queue || queue.kind !== 'queue' || !dlq || dlq.id === queue.id) continue;
+    const [x1, y1] = getNodeCenter(queue);
+    const [x2, y2] = getNodeCenter(dlq);
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('class', 'queue-dlq-link');
+    path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
+    path.setAttribute('aria-hidden', 'true');
+    lines.push(path);
+  }
+  layer.replaceChildren(...lines);
 }

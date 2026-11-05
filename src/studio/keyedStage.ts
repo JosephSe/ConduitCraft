@@ -53,7 +53,7 @@ import { reconcileKeyed } from './reconcile';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText } from '../core/queues';
-import { paintBacklog } from './queueBacklog';
+import { paintBacklog, paintDlqLinks } from './queueBacklog';
 import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { insightsFor, worstLevel } from './insights';
 import { scheduleMinimapPaint } from './minimap';
@@ -1581,6 +1581,7 @@ function computeSnappedPosition(
 }
 
 export function updateVisualSelectionHighlights(): void {
+  paintDlqLinks();
   const nodeWrappers = Array.from(nodesLayer.querySelectorAll<HTMLElement>('.arch-node'));
   const conduitGroups = Array.from(wiresGroup.querySelectorAll<SVGGElement>('.conduit-group'));
   const zoneBanners = Array.from(zonesLayer.querySelectorAll<HTMLElement>('.zone-banner'));

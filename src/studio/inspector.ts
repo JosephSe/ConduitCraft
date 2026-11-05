@@ -99,6 +99,7 @@ import {
   toneName,
 } from '../core/meta';
 import { normalizeResilience, replicaCount } from '../core/reachability';
+import { MAX_QUEUE_DEPTH, MAX_QUEUE_RETENTION, QUEUE_ORDERINGS, normalizeQueue } from '../core/queues';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -249,6 +250,70 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
     makeField('prop-node-replicas', 'Replicas', replicas),
     makeField('prop-node-fallback', 'Fallback', fallback),
     breakerField,
+  ];
+}
+
+/** How a queue holds messages (K1): ordering, a size limit, where overflow goes and how long messages are kept. */
+function makeQueueFields(node: DiagramNode): HTMLElement[] {
+  const commit = (next: Record<string, unknown>): void => {
+    pushHistory();
+    node.queue = normalizeQueue({ ...node.queue, ...next });
+    if (!node.queue) delete node.queue;
+    renderAll(false);
+  };
+
+  const ordering = document.createElement('select');
+  ordering.className = 'prop-select';
+  for (const o of QUEUE_ORDERINGS) ordering.appendChild(makeOption(o, o === 'fifo' ? 'FIFO' : o[0].toUpperCase() + o.slice(1)));
+  ordering.value = node.queue?.ordering ?? 'standard';
+  ordering.addEventListener('change', () => commit({ ordering: ordering.value }));
+
+  const depth = document.createElement('input');
+  depth.type = 'number';
+  depth.min = '1';
+  depth.max = String(MAX_QUEUE_DEPTH);
+  depth.step = '1';
+  depth.className = 'prop-input';
+  depth.placeholder = 'Unbounded';
+  depth.value = node.queue?.maxDepth ? String(node.queue.maxDepth) : '';
+  depth.addEventListener('change', () => {
+    const n = Math.floor(Number(depth.value));
+    const next = depth.value.trim() === '' || !Number.isFinite(n) ? undefined : Math.max(1, Math.min(MAX_QUEUE_DEPTH, n));
+    depth.value = next ? String(next) : '';
+    commit({ maxDepth: next });
+  });
+
+  const dead = document.createElement('select');
+  dead.className = 'prop-select';
+  dead.appendChild(makeOption('', 'None'));
+  const others = app.doc.nodes.filter((n) => n.id !== node.id);
+  // Queues first: a dead-letter target is nearly always another queue.
+  for (const other of [...others.filter((n) => n.kind === 'queue'), ...others.filter((n) => n.kind !== 'queue')]) {
+    dead.appendChild(makeOption(other.id, other.title || other.id));
+  }
+  dead.value = node.queue?.deadLetterId ?? '';
+  dead.addEventListener('change', () => commit({ deadLetterId: dead.value || undefined }));
+
+  const retention = makeTextInput(node.queue?.retention ?? '', (value) => {
+    node.queue = normalizeQueue({ ...node.queue, retention: value });
+    if (!node.queue) delete node.queue;
+    renderAll(false);
+  });
+  retention.maxLength = MAX_QUEUE_RETENTION;
+  retention.placeholder = '4 days';
+
+  const heading = document.createElement('span');
+  heading.className = 'field-label';
+  heading.textContent = 'Queue';
+  const group = document.createElement('div');
+  group.className = 'prop-field prop-queue-heading';
+  group.appendChild(heading);
+  return [
+    group,
+    makeField('prop-node-queue-ordering', 'Ordering', ordering),
+    makeField('prop-node-queue-depth', 'Max depth', depth),
+    makeField('prop-node-queue-dlq', 'Dead-letter queue', dead),
+    makeField('prop-node-queue-retention', 'Retention', retention),
   ];
 }
 
@@ -700,7 +765,12 @@ export function renderPropertyEditor(): void {
     for (const shape of NODE_SHAPES) {
       const opt = document.createElement('option');
       opt.value = shape;
-      opt.textContent = shape === 'card' && node.kind === 'store' ? 'Cylinder' : NODE_SHAPE_LABELS[shape];
+      opt.textContent =
+        shape === 'card' && node.kind === 'store'
+          ? 'Cylinder'
+          : shape === 'card' && node.kind === 'queue'
+            ? 'Pipe'
+            : NODE_SHAPE_LABELS[shape];
       opt.selected = (node.shape || 'card') === shape;
       shapeSelect.appendChild(opt);
     }
@@ -1052,6 +1122,7 @@ export function renderPropertyEditor(): void {
     linksField.append(linksTitle, makeLinksEditor(node));
     reviewElements.push(linksField);
     reviewElements.push(...makeResilienceFields(node));
+    if (node.kind === 'queue') reviewElements.push(...makeQueueFields(node));
 
     // Assemble Form Sections
     form.append(

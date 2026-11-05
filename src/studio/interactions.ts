@@ -204,6 +204,7 @@ import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from 
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
 import { initQueueBacklog } from './queueBacklog';
+import { queueWireDefaults } from '../core/appearance';
 import { initInsightsPanel } from './insights';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
@@ -608,6 +609,7 @@ export function createNodeFromWireDrop(
       route: 'auto',
       label: '',
       animated: true,
+      ...queueWireDefaults(app.doc.nodes, sourceId, node.id),
     });
     expandStageToFit(app.doc);
     created = node;
@@ -640,6 +642,7 @@ export function createEdgeConnection(
     route: 'auto',
     label: '',
     animated: true,
+    ...queueWireDefaults(app.doc.nodes, fromId, toId),
   };
   app.doc.edges.push(newEdge);
   setSelection({ type: 'edge', id: newEdge.id });

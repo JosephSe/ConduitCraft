@@ -24,6 +24,7 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
         'edit-send-to-back',
         MENU_SEPARATOR,
         'level-open',
+        'queue-add-dlq',
         'chaos-fail',
         'fit-selection',
         'edit-delete',
