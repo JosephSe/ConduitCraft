@@ -907,7 +907,9 @@ function dropNodesFromSimulations(ids: Set<string>): void {
 
 export function duplicateSelected(): void {
   const sel = app.selection;
-  if (sel.type === 'node') {
+  if (sel.type === 'frame') {
+    void import('./frameStage').then((m) => m.duplicateSelectedFrame());
+  } else if (sel.type === 'node') {
     const orig = app.doc.nodes.find((n) => n.id === sel.id);
     if (!orig) return;
     pushHistory();
@@ -1401,9 +1403,9 @@ export function getSafeFilenameSlug(): string {
   return filenameSlug(app.doc.title || 'architecture-diagram', 'architecture-diagram');
 }
 
-export function getSubgraphMode(): 'swimlanes' | 'levels' {
+export function getSubgraphMode(): 'swimlanes' | 'levels' | 'frames' {
   const checked = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"]:checked');
-  return checked?.value === 'levels' ? 'levels' : 'swimlanes';
+  return checked?.value === 'levels' || checked?.value === 'frames' ? checked.value : 'swimlanes';
 }
 
 export function refreshCodeModalTextarea(): void {
@@ -2581,6 +2583,17 @@ export function initEvents(): void {
     if (e.key === '?' && !e.metaKey && !e.ctrlKey && !e.altKey && !inEditable) {
       e.preventDefault();
       openShortcutsDialog();
+      return;
+    }
+
+    // A selected frame moves with Alt+Arrow, like a component does; the frame code loads when it is first needed.
+    if (app.selection.type === 'frame' && e.altKey && !e.metaKey && !e.ctrlKey && !inEditable && e.key.startsWith('Arrow')) {
+      const id = app.selection.id;
+      const step = e.shiftKey ? 4 : 16;
+      const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+      const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+      e.preventDefault();
+      void import('./frameStage').then((m) => m.nudgeFrame(id, dx, dy));
       return;
     }
 

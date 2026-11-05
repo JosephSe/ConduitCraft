@@ -3,6 +3,7 @@ import type {
   ComponentStatus,
   DiagramDocument,
   DiagramEdge,
+  DiagramFrame,
   DiagramNode,
   DiagramNotesCard,
   DiagramPage,
@@ -27,6 +28,7 @@ import { pruneDanglingChaos } from './reachability';
 import { normalizeBudgetMs, normalizeInsights } from './insights';
 import { normalizeWireFields } from './wire';
 import { coerceFrames, dropDanglingFrameIds } from './frames';
+import { adoptByGeometry, createFrame, frameAround } from './frameOps';
 import { MAX_PAGES, normalizePages } from './pages';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
@@ -973,6 +975,50 @@ function importPages(raw: unknown[], doc: DiagramDocument, issues: ImportIssue[]
   if (pages.length) doc.pages = pages;
 }
 
+const FRAME_TONES: StreamTone[] = ['blue', 'emerald', 'violet', 'amber', 'rose'];
+
+/**
+ * "Subgraphs as: Frames" (D1b): each subgraph becomes a frame around its components, and a subgraph inside another
+ * becomes a frame inside that frame. A frame is sized from what it holds (a parent is always larger than the frames
+ * in it). Returns the frames, outermost first; ownership is then settled from the geometry like any frame.
+ */
+function framesFromSubgraphs(
+  subgraphs: ParsedSubgraph[],
+  nodes: DiagramNode[],
+): { frames: DiagramFrame[]; ids: Map<ParsedSubgraph, string> } {
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  const ids = new Map<ParsedSubgraph, string>();
+  const used = new Set<string>();
+  for (const sg of subgraphs) {
+    const base = `frame-${sg.id.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'group'}`;
+    let id = base;
+    for (let n = 2; used.has(id); n += 1) id = `${base}-${n}`;
+    used.add(id);
+    ids.set(sg, id);
+  }
+  const rects = new Map<ParsedSubgraph, ReturnType<typeof frameAround> | null>();
+  const rectOf = (sg: ParsedSubgraph): ReturnType<typeof frameAround> | null => {
+    if (rects.has(sg)) return rects.get(sg) ?? null;
+    rects.set(sg, null);
+    const own = sg.nodeIds.map((nid) => byId.get(nid)).filter((n): n is DiagramNode => Boolean(n));
+    const inner = subgraphs.filter((child) => child.parent === sg).map(rectOf).filter((r): r is NonNullable<typeof r> => Boolean(r));
+    const boxes = [...own, ...inner];
+    const rect = boxes.length ? frameAround(boxes) : null;
+    rects.set(sg, rect);
+    return rect;
+  };
+  const out: DiagramFrame[] = [];
+  subgraphs.forEach((sg, index) => {
+    const rect = rectOf(sg);
+    if (!rect) return;
+    const frame = createFrame(ids.get(sg)!, rect, FRAME_TONES[index % FRAME_TONES.length], sg.title || sg.id);
+    // A parent that was dropped for being empty leaves the frame at the top level.
+    if (sg.parent && rectOf(sg.parent)) frame.parentId = ids.get(sg.parent);
+    out.push(frame);
+  });
+  return { frames: out, ids };
+}
+
 /** What "Subgraphs as: Levels" decided before components are built (D6). */
 interface SubgraphLevelPlan {
   /** Subgraph (cut off at the level cap) to the id of the component that opens it. */
@@ -1134,7 +1180,7 @@ function applySubgraphLevels(
 
 /** How `subgraph` blocks import: as swimlanes on one canvas (the default) or as levels you drill into (D6). */
 export interface ImportOptions {
-  subgraphs?: 'swimlanes' | 'levels';
+  subgraphs?: 'swimlanes' | 'levels' | 'frames';
 }
 
 export function importMermaidOrBlueprint(rawInput: string, options: ImportOptions = {}): {
@@ -1478,6 +1524,8 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
         width: typeof z.width === 'number' ? z.width : 320,
       });
     });
+  } else if (options.subgraphs === 'frames' && !levelPlan && parsedMermaid.subgraphs.length > 0 && !(Array.isArray(meta.frames) && meta.frames.length > 0)) {
+    // Frames instead of swimlanes: no zones are made for the subgraphs.
   } else if (!levelPlan && parsedMermaid.subgraphs.length > 0) {
     const nodeMap = new Map(doc.nodes.map((n) => [n.id, n]));
     parsedMermaid.subgraphs.forEach((sg, idx) => {
@@ -1499,10 +1547,22 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
   }
   doc.zones = zones;
 
-  // Frames (F-09)
+  // Frames (F-09), or the file's subgraphs as frames (D1b)
   const frames = coerceFrames(meta.frames);
   if (frames.length > 0) doc.frames = frames;
-  dropDanglingFrameIds(doc.nodes, frames);
+  else if (options.subgraphs === 'frames' && !levelPlan && parsedMermaid.subgraphs.length > 0) {
+    const { frames: made, ids } = framesFromSubgraphs(parsedMermaid.subgraphs, doc.nodes);
+    if (made.length > 0) {
+      doc.frames = made;
+      adoptByGeometry(doc);
+      const byId = new Map(doc.nodes.map((n) => [n.id, n]));
+      const stray = parsedMermaid.subgraphs.some((sg) => sg.nodeIds.some((nid) => byId.has(nid) && byId.get(nid)!.frameId !== ids.get(sg)));
+      if (stray) {
+        issues.push({ level: 'info', code: 'frames-overlap', message: 'Some groups overlap after layout, so a component may sit inside the frame of a neighbouring group. Drag it to put it right.' });
+      }
+    }
+  }
+  dropDanglingFrameIds(doc.nodes, doc.frames ?? []);
 
   // Notes cards
   const notesCards: DiagramNotesCard[] = [];

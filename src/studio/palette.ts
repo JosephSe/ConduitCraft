@@ -641,6 +641,14 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => applyGroup(),
     },
     {
+      id: 'edit-group-frame',
+      title: 'Group into Frame',
+      subtitle: 'Draw a frame around the selected components and notes',
+      category: 'Edit & History',
+      keywords: ['frame', 'group', 'box', 'container', 'vpc'],
+      run: () => void import('./frameStage').then((m) => m.groupSelectionToFrame()),
+    },
+    {
       id: 'edit-ungroup',
       title: 'Ungroup Components',
       subtitle: 'Separate grouped components',

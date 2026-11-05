@@ -65,9 +65,10 @@ const arrangeable = (c: ActionContext) => c.selection !== 'none' && c.selection 
 /** Rules for actions that depend on the situation. An action not listed here is always available. */
 const RULES: Record<string, (c: ActionContext) => boolean> = {
   'edit-rename': (c) => design(c) && hasSelection(c) && c.selection !== 'multi',
-  'edit-duplicate': (c) => design(c) && c.selection !== 'edge' && c.selection !== 'frame' && hasSelection(c),
+  'edit-duplicate': (c) => design(c) && c.selection !== 'edge' && hasSelection(c),
   'edit-delete': (c) => design(c) && hasSelection(c),
-  'edit-lock': (c) => design(c) && arrangeable(c),
+  'edit-lock': (c) => design(c) && (arrangeable(c) || c.selection === 'frame'),
+  'edit-group-frame': (c) => design(c) && (c.selection === 'multi' || c.selection === 'notes' || c.selection === 'node') && c.selectedCount >= 1,
   'edit-group': (c) => design(c) && c.selection === 'multi' && c.selectedCount >= 2,
   'edit-ungroup': (c) => design(c) && c.grouped,
   'edit-bring-to-front': (c) => design(c) && arrangeable(c),

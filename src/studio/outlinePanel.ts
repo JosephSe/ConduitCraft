@@ -6,7 +6,7 @@
  * Enter selects the component or wire and pans to it, and on a level row Enter opens that level. Escape closes.
  * The tree is one tab stop (roving focus, reusing the idea in `rovingFocus.ts`).
  */
-import { buildOutline, flattenOutline, pageItems, zoneKeys, type OutlineItem, type OutlineRow } from '../core/outline';
+import { buildOutline, flattenOutline, frameItems, pageItems, zoneKeys, type OutlineItem, type OutlineRow } from '../core/outline';
 import { announce } from './a11y';
 import { app, goToLevel, goToPage, openPageDocument, panToNodeIfNeeded, setSelection } from './state';
 
@@ -29,6 +29,10 @@ function activate(row: OutlineRow): void {
   const { item } = row;
   if (item.kind === 'zone') {
     toggle(row);
+    return;
+  }
+  if (item.kind === 'frame') {
+    if (item.targetId) setSelection({ type: 'frame', id: item.targetId });
     return;
   }
   if (item.kind === 'page') {
@@ -118,7 +122,7 @@ function onKeydown(e: KeyboardEvent): void {
 function paint(force = false): void {
   const root = tree();
   if (!root || !isOutlineOpen()) return;
-  const items = [...pageItems(app.pageRoot ?? app.levelRoot ?? app.doc, app.pageIndex), ...buildOutline(openPageDocument(), app.levelPath)];
+  const items = [...pageItems(app.pageRoot ?? app.levelRoot ?? app.doc, app.pageIndex), ...frameItems(app.doc, app.levelPath), ...buildOutline(openPageDocument(), app.levelPath)];
   // Swimlanes start open; later toggles are the reader's choice.
   for (const key of zoneKeys(items)) {
     if (!knownZones.has(key)) {
@@ -181,7 +185,8 @@ function rowElement(row: OutlineRow): HTMLElement {
 function isSelected(item: OutlineItem): boolean {
   if (item.path.join('/') !== app.levelPath.join('/')) return false;
   const sel = app.selection;
-  return (sel.type === 'node' && item.kind === 'component' && sel.id === item.targetId) ||
+  return (sel.type === 'frame' && item.kind === 'frame' && sel.id === item.targetId) ||
+    (sel.type === 'node' && item.kind === 'component' && sel.id === item.targetId) ||
     (sel.type === 'edge' && item.kind === 'wire' && sel.id === item.targetId);
 }
 

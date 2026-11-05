@@ -82,6 +82,19 @@ export function renderMinimap(): void {
   }
   ctx.restore();
 
+  // Frames (D1b): a faint tinted box with an outline, under the components.
+  ctx.save();
+  for (const frame of app.doc.frames ?? []) {
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = tones[frame.tone] || blue;
+    fillWorld(ctx, map, frame);
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = tones[frame.tone] || blue;
+    ctx.lineWidth = 1;
+    strokeWorld(ctx, map, frame);
+  }
+  ctx.restore();
+
   ctx.strokeStyle = ink;
   ctx.lineWidth = 1;
   ctx.setLineDash([2, 2]);
