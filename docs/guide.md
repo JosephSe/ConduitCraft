@@ -48,6 +48,16 @@ One undo step covers a whole drag, a text-edit gesture, or a burst of arrow nudg
 
 The wheel zooms toward the pointer. The HUD also zooms, fits the diagram, and fits the selection. On a touch screen or with a pen, two fingers pan, and spreading them zooms. A click on the minimap recenters the view and leaves the zoom alone.
 
+## Auto-layout
+
+The command palette has several ways to tidy a diagram. **Auto-Layout Architecture** (and its Left-to-Right, Top-to-Bottom, Compact and Spacious variants) is the built-in arranger and stays the default.
+
+**Auto-Layout: Layered (ELK)** uses the ELK library for fewer crossings on busy diagrams. It loads the first time you use it (about 440 kB over the wire, and nothing at all if you never do). It arranges the whole diagram in layers and animates the move over 320 ms (not at all if your system asks for reduced motion). It is one undo step.
+
+- A wire end fixed to a side (not "Auto") stays on that side.
+- In a left-to-right diagram, zones run as layers in order: a component stays in the zone it is in.
+- Locked components stay exactly where they are and are left out of the arranging; the rest are laid out starting where they began.
+
 ## Wire routing
 
 Each wire has one routing mode. A Blueprint file accepts the aliases below. Blueprint JSON accepts only the canonical name. An unknown value in a Blueprint file becomes `auto`.

@@ -301,6 +301,17 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'auto-layout-elk',
+      title: 'Auto-Layout: Layered (ELK)',
+      subtitle: 'Fewer crossings; fixed wire ends, zones and locked components are respected',
+      category: 'Canvas & Layout',
+      keywords: ['elk', 'layered', 'sugiyama', 'crossings', 'layout', 'arrange', 'tidy'],
+      run: () => {
+        if (app.doc.nodes.length === 0) return;
+        void import('./elkArrange').then((m) => m.arrangeWithElk());
+      },
+    },
+    {
       id: 'auto-layout-selection',
       title: 'Auto-Layout Selection Only',
       subtitle: 'Re-arrange only currently selected components',
