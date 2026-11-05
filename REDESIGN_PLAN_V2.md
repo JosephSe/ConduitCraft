@@ -102,11 +102,13 @@ Each decision here settles something that would otherwise block an item. Change 
 | D1 | **Finish phase 3 before starting phase 4.** Milestone A covers the rest of phase 3 plus the F-03 leftovers. | The phase-3 award checklist ("a new visitor sees a failure ripple out within 10 seconds") depends on R-08, and F-01 is already built for it. |
 | D2 | **"One release" means a `v2.0.0` tag.** Tag it at the end of milestone A (item A11). Classic layout is removed in B1, the first item after the tag. | V1 promised one release of Classic but never defined a release. `package.json` is still `1.0.0`. |
 | D3 | **CSS budget:** reclaim at least 8 kB before adding new UI (A2). Raise the budget only as a last resort, by at most 5 kB, with the reason in the PR. B1 (removing Classic) should free much more. | Every item in milestone A adds CSS. |
-| D4 | **Levels before frames is fine (open question 5).** Frames (F-09) still ship, in milestone D, as free-form boxes on one level. "Open frame as level" is a later option, not a requirement. | Levels already shipped and undo across levels works. Frames are a layout tool, not a structure tool. |
+| D4 | **Levels before frames is fine (open question 5).** Frames (F-09) still ship, in milestone D, as free-form boxes on one level. ~~"Open frame as level" is a later option, not a requirement.~~ Dropped by D9. | Levels already shipped and undo across levels works. Frames are a layout tool, not a structure tool. |
 | D5 | **Chaos crosses levels in one direction.** Failing a component that has a child level marks every component in that child level as failed when the child level is opened. Failing a component inside a child level does **not** fail its parent. A child level's boundary ports show as "cut off" when the outside component they connect to has failed. | This is the simplest rule that is still honest. Tracing reachability through every level is out of scope until someone asks for it. |
 | D6 | **Mermaid `subgraph` import:** the import dialog asks "Subgraphs as: Swimlanes (current) / Levels". The default stays Swimlanes, so existing imports don't change. Frames become a third option once F-09 exists. | Keeps old behaviour and the import report unchanged by default. |
 | D7 | **Phase 5 order:** T-07 headless core goes first, then F-23 CLI, then F-21 live data, then F-24 drift. | T-07 is the riskiest part (it may expose DOM coupling). F-24 needs the importers from milestone B. F-21 has an open CORS question that can be answered while T-07 is built. |
 | D8 | **Mermaid is import only.** ConduitCraft reads Mermaid flowcharts (paste, open, drop) but never writes them: no `.mmd` export, no Mermaid view in the code dialog, no `.mmd` save. The Blueprint file is the one text format we write. This replaces the export half of D6 and A5, and the Mermaid ↔ Blueprint switching in V1 F-05 rule 4. Removal is item A5b. | Keeping a lossy second writer in step with every new field (levels, frames, legend, wire fields) costs time on every item and adds little: people bring Mermaid in, and they keep working in ConduitCraft or the Blueprint file. |
+| D9 | **Nested levels are on hold (2026-11-05, owner's call).** What shipped in F-03, A4 and A5 stays and keeps working: old files with `children:` open, drill-down, breadcrumb and boundary ports still behave, and level bugs get fixed. Nothing new is built for levels: no "Open frame as level" (D4), no cross-level chaos (Q10), no storyboard steps that drill down (F1), no whole-tree toggle in the code pane (D2), and draw.io pages become tabs rather than levels (P1c). New features work on the open level and don't have to reach into child levels, but must not break a document that has them. Levels are not promoted in first run, templates, help or the README. Lifting the hold, or removing levels, is its own decision in this section. | The owner isn't keen on multi-level diagrams. Holding keeps saved work safe without spending more time on a feature that may not stay. |
+| D10 | **Pages: several diagrams in one file, shown as tabs (2026-11-05, owner's request).** A strip of page tabs along the bottom of the canvas, as in draw.io. Items P1a to P1c come next, before D1b. This is not the *multi-document tabs* that `MUST_DO_PLAN.md` section 3 rejected: one document is still open at a time, and the pages live inside it. The library (F-08) keeps holding separate diagrams. | Pages are the familiar way to keep related views (overview, deployment, data flow) together, and they give a flat alternative to levels (D9). |
 
 ---
 
@@ -400,6 +402,28 @@ These are small items that make the shell complete. Each can run in parallel wit
 - **Default (section 7 rule 6):** system clipboard text, not `localStorage` or `BroadcastChannel`, so it also works between windows and after a reload.
 - **Shipped as:** copy and paste now use the browser's own `copy` and `paste` events (no permission prompt; the Ctrl/Cmd+C and V key handlers are gone). `core/clipboard.ts` writes `{ conduitcraft: 1, nodes, edges }` (the wires between the copied components; nested levels travel inside each component) and reads it back with checks: not our text is ignored with a short message; broken JSON, a newer marker, no components, more than 500 or missing fields show a message and change nothing. Pasted components get new ids, wires follow, and the copy is moved by 32 px steps until it is not exactly on an existing component, so pasting into the same diagram never overwrites anything. Pictures are left out of the copy when the text passes 8 KB (the share-link limit) and the copy toast says so. If the clipboard holds nothing of ours, the in-tab buffer is used, so copy and paste still work with the clipboard unavailable. This also fixes paste moving the buffer's own copies. Tests: `tests/clipboard.test.ts` (6) and `e2e/crossTabPaste.spec.ts` (4: two tabs in one context, plain text, broken JSON, clipboard unavailable). Reading and placing a paste is a lazy chunk (`core/clipboardPaste.ts`). Numbers for the PR (C1, C2, C4 together): entry JS 478.2 kB (1.8 kB of headroom: the next items should lazy-load), entry CSS 102.7 kB. Not covered: nested levels' own ids are not renumbered (they are scoped to the level).
 
+### Milestone P: Pages (D10)
+
+Comes before D1b at the owner's request. Each item is an M or S; P1a changes the schema, so it gets its own PR.
+
+#### [ ] P1a. Pages: data model and tab strip · M
+- **Data:** `DiagramPage { id, title, nodes, edges, zones, notesCards, frames?, stageWidth?, stageHeight? }`. The document's own content is the first page, so old files, every importer, the CLI and the headless core keep working unchanged; `doc.pages?: DiagramPage[]` holds the second page onwards and `doc.pageTitle?` names the first (default "Page 1"). The open page is edited as an ordinary document with the same view and write-back pattern as levels (`viewOfLevel` and `writeLevelBack` in `core/levels.ts`; put the page version in a new pure `core/pages.ts`). Schema 11, with a `MIGRATIONS` step and round-trip tests through JSON, the Blueprint file (`pages:`) and the share link. Read tolerantly: repeated page ids and empty titles are fixed, not rejected. A page can still hold components with child levels (D9), so a level path is now scoped to its page.
+- **Tab strip:** along the bottom edge of the canvas, always shown (even with one page) so people find it; it sits above the run bar in the Traffic lens. Each tab shows the page title. Click to switch; `+` adds a blank page and opens it; double-click or `F2` renames; drag to reorder; right-click (and `Shift+F10`, long-press on touch) for Rename, Duplicate, Delete, Move left, Move right. Delete has the 10-second Undo toast and is refused for the last page. The strip is a `role="tablist"` with roving focus (`studio/rovingFocus.ts`), one tab stop, and page switches are announced (`studio/a11y.ts`).
+- **Actions:** every page command goes through the registry (`core/actions.ts`): add, duplicate, delete, rename, next page and previous page. Next and previous default to `Alt+PageDown` and `Alt+PageUp`, because the browser keeps `Ctrl+PageUp/PageDown` for its own tabs.
+- **Behaviour:** one undo stack for the whole file, as with levels; undoing a change on another page switches to that page first. Switching clears the selection, stops a running scenario and keeps each page's camera for the session. Failed components stay failed per page. Wires never cross pages.
+- **Budget:** entry JS has about 6 kB left. Keep only the strip in the entry; page commands, the menu and drag-to-reorder load lazily. The strip's controls count toward the always-visible limit (A14), so update that test.
+- **Words:** "Page" is in V1 Appendix A (added with D10); the strip is labelled "Pages".
+- **Tests:** `tests/pages.test.ts` (model, coercion, round trips) and `e2e/pages.spec.ts` (add, rename, reorder, delete with Undo, switch by key, undo across pages, a page holding a level still drills down, an axe scan with three pages).
+
+#### [ ] P1b. Pages everywhere else · M
+- **Needs:** P1a.
+- **Do:** find and replace gets a "This page / All pages" scope; the outline panel and `describeDiagram` list pages ("Page Deployment holds …"); the Review lens and issues panel cover the open page, with a count for the others and a jump to them; the library thumbnail shows the first page and the home screen shows a page count; the SVG and PNG exports take the open page, with "All pages" as an option for SVG (one file per page, zipped with `core/zip.ts`); the HTML export carries every page with its own tab strip; copy and paste between pages uses the existing clipboard path. The share link carries all pages: measure every bundled example and a three-page diagram, and record the sizes in the PR.
+- **Done when:** each of these has a test and the registry reachability test passes.
+
+#### [ ] P1c. draw.io pages as tabs · S
+- **Needs:** P1a.
+- **Do:** a draw.io file with several pages opens as one diagram with one tab per page, keeping the page names and order. The import choice becomes "One diagram per file, pages as tabs" (default) or "One diagram per page". Remove "Pages as levels" (`DrawioPageMode 'levels'` in `importers/drawio.ts`) under D9, and update `tests/drawio.test.ts`, `e2e/drawio.spec.ts` and the import report.
+
 ### Milestone D: Depth (phase 6, the rest)
 
 #### [x] D1a. F-09 Frames, part 1 · M (#70)
@@ -408,13 +432,14 @@ These are small items that make the shell complete. Each can run in parallel wit
 - **Entry size:** the frame code cost 5 kB of entry JS that the 480 kB budget did not have (1 kB of headroom). To pay for it the Version Snapshots dialog moved to a lazy chunk (`studio/snapshotsDialog.ts`, 10.5 kB). Numbers: entry JS 473.8 kB (was 479.1), entry CSS 103.8 kB. No section-7 default was needed.
 
 #### [ ] D1b. F-09 Frames, part 2 · M
+- **Needs:** P1a to P1c (D10).
 - **Do:** "Group to frame" (selected components become one frame, bounding box plus padding, `edit-group-frame` in the registry and the menu for a multi-selection); keep text labels and notes inside a frame moving with it (they have no `frameId` yet: use their centre); frames in the outline panel and `describeDiagram` ("Frame VPC holds …"); keyboard: select a frame from the outline and move it with the arrow keys; lock and duplicate for frames; frames on the minimap; the Mermaid import option "Subgraphs as: Frames" (D6; nested subgraphs become nested frames; import only, D8).
 - **Done when:** each of these has a test, the registry reachability test passes, and `e2e/a11y.spec.ts` scans a diagram with frames.
 
 #### [ ] D2. F-05 Live split code editor · M (part 1) + M (part 2)
 - **Part 1 (D2a):** the pane, live parse with a 250 ms debounce, last good canvas kept, line diagnostics, one history entry per typing pause, never discards text.
 - **Part 2 (D2b):** canvas ↔ line selection sync. The pane edits the Blueprint file only (D8): pasting Mermaid into it converts it once, with the import report, and there is no Mermaid ↔ Blueprint switch to warn about. A textarea with a gutter first; CodeMirror only as a lazy chunk, and only if needed.
-- **Note:** with levels, the pane edits the open level's YAML by default, with a toggle for the whole tree.
+- **Note:** with levels, the pane edits the open level's YAML. ~~A toggle for the whole tree~~ is dropped by D9. With pages (D10), it edits the open page.
 
 #### [ ] D3. F-11 ELK layout (lazy) · M
 - **Spec:** V1 F-11. Record the chunk size and add a budget for it.
@@ -446,7 +471,7 @@ These are small items that make the shell complete. Each can run in parallel wit
 
 Each item follows its V1 spec. They are listed in the order to build them.
 
-- [ ] **F1. F-04 Storyboards** · M. Build in the Present lens. Steps can hold a level path as well as a camera, so a story can drill down.
+- [ ] **F1. F-04 Storyboards** · M. Build in the Present lens. Steps can hold a page as well as a camera, so a story can move between pages. (Steps that drill into levels are dropped by D9.)
 - [ ] **F2. F-19 Video export** · S. Needs F1.
 - [ ] **F3. F-13 Read-only viewer and embeds** · M. Then finish B5 item 4 (the view-only link).
 - [ ] **F4. F-18 Diagram styles** · M. Add each style to `tests/contrast.test.ts` and to the `STYLES` list in `e2e/exportVisual.spec.ts` (with new baselines).
@@ -499,8 +524,9 @@ If a question isn't answered by the time its item comes up, use the default and 
 | Q6 | Which icon sets can be bundled under MIT? | G1 | Generic tech icons only, no cloud-provider sets |
 | Q8 | Live data and CORS: document a proxy, or ship one? | E4 | Document a minimal proxy example; don't ship one |
 | Q9 | CLI: publish to npm as `conduitcraft`, or Action only? | E2 | Action only at first; the CLI runs from the repo with `node` |
-| Q10 *(new)* | Should chaos reachability ever trace through levels (D5 is one-way)? | after A4 | No, until a user asks |
+| Q10 *(new)* | Should chaos reachability ever trace through levels (D5 is one-way)? | after A4 | No. Closed by D9 |
 | Q11 *(new)* | Is a zip dependency acceptable for "Export all", or should the zip writer be written by hand? | B3 | Write a store-only zip by hand (about 80 lines), no dependency |
 | Q12 *(new)* | Should the Blueprint file keep its embedded `mermaid` block, or become YAML only (wires in `edges:`)? | A5b | Keep the block. It lets GitHub render a Blueprint file as a diagram, and old files keep importing either way |
+| Q13 *(new)* | Once pages ship, should nested levels be removed, or kept read-only? | after P1c | Keep them as they are (D9). Removing them needs a migration that turns each child level into a page, and its own decision |
 
 Questions 3, 4 and 7 from V1 were already decided and are unchanged.
