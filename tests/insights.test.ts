@@ -207,3 +207,21 @@ describe('architecture insights (F-02)', () => {
     assert.equal(viaMd.doc.simulations[0].budgetMs, 200);
   });
 });
+
+describe('duplicate titles in review messages', () => {
+  it('tells same-titled orphans apart', () => {
+    const base = { kind: 'service', accent: 'blue', icon: 'code', eyebrow: '', footerLeft: '', chip: '', interfaceLabel: '', summary: '', metrics: [], code: '', x: 0, y: 0, width: 100, height: 100 };
+    const doc = {
+      nodes: [
+        { ...base, id: 'a', title: 'LIPS', subtitle: '', zoneLabel: 'optic-fro' },
+        { ...base, id: 'b', title: 'LIPS', subtitle: 'PDS request router', zoneLabel: 'ARCHITECTURE STAGE' },
+      ],
+      edges: [],
+      simulations: [],
+      frames: [],
+      zones: [],
+    } as any;
+    const msgs = runInsights(doc).filter((i) => i.code === 'orphan').map((i) => i.message);
+    assert.equal(new Set(msgs).size, 2);
+  });
+});
