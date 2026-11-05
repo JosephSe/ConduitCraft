@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Command line and GitHub Action.** `pnpm conduitcraft render`, `check` and `diff` work on Blueprint files, JSON and Mermaid, with no browser; the Action checks and renders every diagram in a repository and comments on pull requests with what changed.
 - **Live code pane.** `Cmd/Ctrl+/` shows the Blueprint file beside the canvas. Type and the canvas follows after a short pause, one undo step per pause; text with problems keeps the last good canvas and marks the lines; selecting on the canvas highlights its lines, and the cursor in a block selects it. Group, container and swimlane shapes in a draw.io file now import as frames.
 - **Frames, part 2.** Group into Frame, duplicate and lock a frame, move one with `Alt+Arrow`, notes and text labels move with the frame around them, frames show in the outline, the description and the minimap, and Mermaid subgraphs can import as frames.
 - **Pages.** One file can hold several diagrams, shown as tabs along the bottom of the canvas. Add, rename, reorder, duplicate and delete pages from the tab strip, its menu or the command palette; `Alt+PageDown` and `Alt+PageUp` change page. Existing files open as one page. The file format moves to version 11; files saved with pages need this version or later. The outline, Review, Find and replace, the exports and Home all know about pages, and a draw.io file with several pages opens as page tabs ("Pages as levels" is gone).

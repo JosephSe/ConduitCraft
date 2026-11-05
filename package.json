@@ -23,6 +23,7 @@
     "preview": "vite preview --port 4180",
     "check:size": "node tools/checkBundleSize.mjs",
     "test:e2e": "playwright test",
+    "conduitcraft": "node --experimental-strip-types --import ./tests/register-ts.mjs tools/conduitcraft.ts",
     "test": "node --experimental-strip-types --import ./tests/register-ts.mjs --test tests/*.test.ts"
   },
   "dependencies": {
