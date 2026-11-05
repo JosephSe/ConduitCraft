@@ -4,6 +4,7 @@ import { hopDelayMs, latenciesBetween } from '../core/wire';
 import { TONE_CSS } from '../shared/tones';
 import { app } from './state';
 import { holdingQueue } from '../core/queues';
+import { substituteBalancerTargets } from '../core/balancers';
 import { blockedNodeIn, bufferingQueueIds, downIds } from './chaos';
 import { holdMessage, setBacklogSpeedProvider } from './queueBacklog';
 import { announce } from './a11y';
@@ -35,6 +36,13 @@ export class SimulationPlaybackController {
   private speedMultiplier: SimulationSpeed = 1;
   private baseStepMs = 950;
   private timer: any = null;
+  /** The step a load balancer rewrote for this one render (K2). Never saved. */
+  private override: SimulationStep | null = null;
+  /** Round-robin counters per balancer and the balancers already announced, for this run. */
+  private balancerCounters = new Map<string, number>();
+  private announcedBalancers = new Set<string>();
+  /** Stand-ins chosen earlier in this pass through the scenario: the packet that went to B keeps going through B. */
+  private passSwaps = new Map<string, string>();
 
   private onStateChange?: (state: SimulationPlaybackState) => void;
 
@@ -67,6 +75,7 @@ export class SimulationPlaybackController {
   }
 
   public get currentStep(): SimulationStep | null {
+    if (this.override) return this.override;
     if (!this.scenario || this.currentStepIndex < 0 || this.currentStepIndex >= this.scenario.steps.length) {
       return null;
     }
@@ -86,6 +95,7 @@ export class SimulationPlaybackController {
 
   public loadScenario(scenario: SimulationScenario, autoPlay = true): void {
     this.clearTimer();
+    this.resetBalancers();
     this.scenario = scenario;
     this.currentStepIndex = -1;
 
@@ -161,11 +171,15 @@ export class SimulationPlaybackController {
     }
   }
 
-  public goToStep(index: number): void {
+  public goToStep(index: number, override?: SimulationStep | null): void {
     if (!this.scenario || this.scenario.steps.length === 0) return;
 
     const clamped = Math.max(0, Math.min(index, this.scenario.steps.length - 1));
+    // Starting over, or stepping back, forgets the stand-ins of the last pass.
+    if (clamped <= this.currentStepIndex) this.passSwaps.clear();
     this.currentStepIndex = clamped;
+    // The first step has no step before it, so a balancer and its target can only meet inside it.
+    this.override = override === undefined ? (clamped === 0 ? this.resolveStep(0, []) : null) : override;
 
     this.renderCurrentStep();
     this.notifyState();
@@ -203,6 +217,7 @@ export class SimulationPlaybackController {
     this.scenario = null;
     this.currentStepIndex = -1;
     this.isPlaying = false;
+    this.resetBalancers();
 
     if (typeof document !== 'undefined') {
       if (simPacket) simPacket.hidden = true;
@@ -239,12 +254,14 @@ export class SimulationPlaybackController {
 
       const nextIndex = this.currentStepIndex + 1;
       if (nextIndex < this.scenario.steps.length) {
-        this.goToStep(nextIndex);
+        const planned = this.scenario.steps[nextIndex];
+        // A load balancer hands a packet bound for a down target to a live one (K2).
+        this.goToStep(nextIndex, this.resolveStep(nextIndex, current?.nodes ?? []));
         // A packet that reaches a queue whose consumers are down parks there instead of stopping (K1).
         const held = holdingQueue(
           app.doc,
           current?.nodes ?? [],
-          this.scenario.steps[nextIndex].nodes,
+          this.currentStep?.nodes ?? planned.nodes,
           bufferingQueueIds(),
           downIds(),
         );
@@ -253,7 +270,7 @@ export class SimulationPlaybackController {
           return;
         }
         // A packet that reaches a failed or cut-off component goes no further.
-        const blocked = blockedNodeIn(this.scenario.steps[nextIndex].nodes);
+        const blocked = blockedNodeIn(this.currentStep?.nodes ?? planned.nodes);
         if (blocked) {
           this.pause();
           announce(`Traffic stopped at ${app.doc.nodes.find((n) => n.id === blocked)?.title || blocked}.`);
@@ -305,6 +322,36 @@ export class SimulationPlaybackController {
         setTimeout(() => delete wrapper.dataset.simActive, 600);
       }
     }
+  }
+
+  /**
+   * The step to draw when a load balancer sends a packet to a live target instead of a down one, or null when the
+   * scenario's own step stands. Never changes the saved scenario.
+   */
+  private resolveStep(index: number, previous: readonly string[]): SimulationStep | null {
+    const planned = this.scenario?.steps[index];
+    if (!planned) return null;
+    const down = downIds();
+    if (!down.size) return null;
+    const followed = planned.nodes.map((id) => (down.has(id) ? this.passSwaps.get(id) ?? id : id));
+    const swap = substituteBalancerTargets(app.doc, previous, [...new Set(followed)], down, this.balancerCounters);
+    if (swap.nodes.join() === planned.nodes.join()) return null;
+    for (const s of swap.swaps) this.passSwaps.set(s.from, s.to);
+    const name = (id: string) => app.doc.nodes.find((n) => n.id === id)?.title || id;
+    const standIn = swap.nodes.find((id) => !planned.nodes.includes(id));
+    for (const s of swap.swaps) {
+      if (this.announcedBalancers.has(s.balancerId)) continue;
+      this.announcedBalancers.add(s.balancerId);
+      announce(`${name(s.balancerId)} sent traffic to ${name(s.to)} instead of ${name(s.from)}.`);
+    }
+    return { ...planned, nodes: swap.nodes, label: standIn ? `${planned.label} → ${name(standIn)}` : planned.label };
+  }
+
+  private resetBalancers(): void {
+    this.override = null;
+    this.balancerCounters.clear();
+    this.announcedBalancers.clear();
+    this.passSwaps.clear();
   }
 
   private clearTimer(): void {

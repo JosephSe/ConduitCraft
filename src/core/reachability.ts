@@ -5,6 +5,7 @@
  * Traffic follows wires from `from` to `to`; a wire with `flow: 'both'` carries traffic either way.
  */
 import type { DiagramDocument, DiagramNode, NodeResilience } from '../types';
+import { balancerTargets } from './balancers';
 import { queueConsumers } from './queues';
 
 export interface ReachabilityResult {
@@ -156,6 +157,17 @@ export function reachableFrom(
     }
   }
   for (const id of buffering) {
+    const at = atRisk.indexOf(id);
+    if (at >= 0) atRisk.splice(at, 1);
+  }
+  // Load balancers (K2): with at least one target up, the balancer is not at risk and the live targets take the
+  // load. With every target down it stays at risk, as any caller of a failed component does.
+  for (const id of after) {
+    if (byId.get(id)!.kind !== 'balancer' || failedSet.has(id)) continue;
+    const targets = balancerTargets(doc, id);
+    const live = targets.filter((t) => after.has(t));
+    if (!live.length || live.length === targets.length) continue;
+    for (const t of live) if (!rerouted.includes(t)) rerouted.push(t);
     const at = atRisk.indexOf(id);
     if (at >= 0) atRisk.splice(at, 1);
   }
