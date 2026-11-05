@@ -1,6 +1,6 @@
 {
   "name": "conduitcraft",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "ConduitCraft — Open-source interactive architecture diagramming studio with animated traffic and scenarios. Build from scratch on a blank canvas or compile Mermaid (.mmd) and Blueprint (.md) files into animated, simulation-ready architecture views.",
   "license": "MIT",
   "engines": {
