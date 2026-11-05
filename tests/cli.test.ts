@@ -10,6 +10,7 @@ import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
 import { generateStandaloneHtmlWithLevels } from '../src/exporter/standaloneHtml.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
+import { convertCompose } from '../src/importers/compose.ts';
 import type { DiagramDocument } from '../src/types.ts';
 
 const root = new URL('../', import.meta.url);
@@ -188,6 +189,27 @@ describe('command line (E2): the program', () => {
     assert.equal(cli('diff', base).status, 2);
   });
 
+  it('drift exits 1 when the source file has moved on, 0 when it has not, and reads the importer from a flag or the file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cc-drift-'));
+    const composeText = readFileSync(new URL('tests/fixtures/compose/docker-compose.yml', root), 'utf8');
+    writeFileSync(join(dir, 'shop.blueprint.json'), serializeBlueprintJson(convertCompose(composeText, 'Shop').doc));
+    writeFileSync(join(dir, 'same.yml'), composeText);
+    writeFileSync(join(dir, 'newer.yml'), composeText.replace('postgres:16', 'postgres:17'));
+    const same = cli('drift', join(dir, 'shop.blueprint.json'), join(dir, 'same.yml'));
+    assert.equal(same.status, 0, same.stdout + same.stderr);
+    assert.match(same.stdout, /no drift/);
+    const moved = cli('drift', join(dir, 'shop.blueprint.json'), '--compose', join(dir, 'newer.yml'));
+    assert.equal(moved.status, 1);
+    assert.match(moved.stdout, /1 component changed/);
+    assert.match(moved.stdout, /changed: db: Image changed from postgres:16 to postgres:17/);
+    assert.equal(cli('drift', join(dir, 'shop.blueprint.json'), join(dir, 'nope.yml')).status, 1);
+    assert.equal(cli('drift', join(dir, 'shop.blueprint.json')).status, 2);
+    writeFileSync(join(dir, 'notes.txt'), 'hello');
+    const unreadable = cli('drift', join(dir, 'shop.blueprint.json'), join(dir, 'notes.txt'));
+    assert.equal(unreadable.status, 1);
+    assert.match(unreadable.stderr, /not a Docker Compose/);
+  });
+
   it('usage mistakes exit 2', () => {
     assert.equal(cli().status, 2);
     assert.equal(cli('render').status, 2);
@@ -202,7 +224,7 @@ describe('GitHub Action (E3): the manifest and the workflow', () => {
     const yaml = (await import('js-yaml')).default;
     const action = yaml.load(readFileSync(new URL('action.yml', root), 'utf8')) as Record<string, any>;
     assert.equal(action.runs.using, 'composite');
-    assert.ok(['files', 'out-dir', 'check', 'strict', 'comment', 'upload', 'commit-to', 'github-token'].every((k) => k in action.inputs));
+    assert.ok(['files', 'out-dir', 'check', 'strict', 'comment', 'upload', 'drift', 'commit-to', 'github-token'].every((k) => k in action.inputs));
     assert.ok(action.runs.steps.some((s: Record<string, unknown>) => String(s.run ?? '').includes('tools/action.sh')));
     const workflow = yaml.load(readFileSync(new URL('.github/workflows/diagrams.yml', root), 'utf8')) as Record<string, any>;
     assert.equal(workflow.jobs.diagrams.steps.at(-1).uses, './');
@@ -248,6 +270,19 @@ describe('GitHub Action (E3): the script it runs', () => {
     assert.equal(strict.status, 1, 'the sample has warnings');
     const lenient = run({ FILES: '*.blueprint.md', OUT_DIR: 'out5', COMMENT: 'false', CHECK: 'false' });
     assert.equal(lenient.status, 0);
+  });
+
+  it('fails the job when a source file has drifted from its diagram, and passes when it has not', () => {
+    const composeText = readFileSync(new URL('tests/fixtures/compose/docker-compose.yml', root), 'utf8');
+    writeFileSync(join(repo, 'stack.blueprint.json'), serializeBlueprintJson(convertCompose(composeText, 'Stack').doc));
+    writeFileSync(join(repo, 'docker-compose.yml'), composeText);
+    git('add', '.');
+    const clean = run({ FILES: '*.nothing', OUT_DIR: 'out-d1', COMMENT: 'false', DRIFT: 'stack.blueprint.json=docker-compose.yml' });
+    assert.equal(clean.status, 0, clean.stdout + clean.stderr);
+    writeFileSync(join(repo, 'docker-compose.yml'), composeText.replace('redis:7', 'redis:8'));
+    const drifted = run({ FILES: '*.nothing', OUT_DIR: 'out-d2', COMMENT: 'false', DRIFT: 'stack.blueprint.json=docker-compose.yml' });
+    assert.equal(drifted.status, 1);
+    assert.match(drifted.stdout, /changed: cache: Image changed from redis:7 to redis:8/);
   });
 
   it('on a pull request, comments with what changed against the base branch', () => {

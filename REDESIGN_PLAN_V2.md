@@ -478,9 +478,11 @@ Comes before D1b at the owner's request. Each item is an M or S; P1a changes the
 - **Part 2 (E4b):** Prometheus instant queries.
 - Until E4a ships, the word "Live" stays out of the UI (Appendix A).
 
-#### [ ] E5. F-24 Drift check · M
+#### [x] E5. F-24 Drift check · M (PR_NUMBER)
 - **Needs:** B8 (the `source` field), E2 (for the CLI half).
 - **Spec:** V1 F-24. Show the differences with the snapshot diff overlay in the Review lens. That overlay doesn't exist yet, so this item builds it (V1 section 5.2: added green, removed red, changed amber), and snapshots can use it too.
+- **Shipped as:** `src/core/drift.ts` (pure, DOM-free: `computeDrift`, `applyDrift`, `driftSummary`) compares a diagram with a freshly converted copy of its source file, matching on `source.kind` and `source.ref`; `src/importers/driftSource.ts` picks the importer (Compose, Kubernetes, OpenAPI, AsyncAPI) by what the file looks like or by name. Only importer-owned facts are compared (Image, Build, Ports, Replicas, Kind, Namespace, Host, Message metrics, every metric for OpenAPI, and Compose running copies); titles, notes, positions and tones are never drift. Wires are compared between components in both versions, and a removed wire is reported only when its id is an importer's (`wire-N`), since wires carry no `source` of their own. **Check for Drift** (command palette) opens `src/studio/driftDialog.ts` (a lazy chunk with its own `drift.css`): pick the file, see added (green), removed (red) and changed (amber) rows with Accept, Ignore and Accept all; accepting is one `mutateWithHistory` step; changed and removed components are outlined on the canvas while the dialog is open. CLI: `conduitcraft drift <diagram> <source> | --compose|--kubernetes|--openapi|--asyncapi <source>` (exit 1 on drift); Action input `drift` takes `diagram=source` lines. Tests: `tests/drift.test.ts` (a changed Compose fixture gives the expected list; accept-all leaves a clean second check; accepting one changes only that one; user edits are not drift; Kubernetes), `tests/cli.test.ts` (program and action script), `e2e/drift.spec.ts` (including axe).
+- **Not done:** the canvas outline is only on while the dialog is open, and there is no persistent diff overlay in the Review lens or in the snapshot dialog (the rows and outlines are drift-only); a general overlay is left for when snapshots need one. Entry size: 479.3 KiB of 480 (the palette entry added about 0.6 KiB).
 
 ### Milestone F: Telling the story (phase 7)
 

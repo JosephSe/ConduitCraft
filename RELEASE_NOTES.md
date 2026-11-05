@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Drift check.** **Check for Drift** (command palette) compares a diagram with a newer Docker Compose, Kubernetes, OpenAPI or AsyncAPI file and lists what was added, dropped or changed, with Accept and Ignore for each (one undo step). `pnpm conduitcraft drift` does the same on the command line, and the GitHub Action's new `drift` input fails a job when a source file has moved on.
 - **Command line and GitHub Action.** `pnpm conduitcraft render`, `check` and `diff` work on Blueprint files, JSON and Mermaid, with no browser; the Action checks and renders every diagram in a repository and comments on pull requests with what changed.
 - **Live code pane.** `Cmd/Ctrl+/` shows the Blueprint file beside the canvas. Type and the canvas follows after a short pause, one undo step per pause; text with problems keeps the last good canvas and marks the lines; selecting on the canvas highlights its lines, and the cursor in a block selects it. Group, container and swimlane shapes in a draw.io file now import as frames.
 - **Frames, part 2.** Group into Frame, duplicate and lock a frame, move one with `Alt+Arrow`, notes and text labels move with the frame around them, frames show in the outline, the description and the minimap, and Mermaid subgraphs can import as frames.

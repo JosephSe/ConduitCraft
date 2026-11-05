@@ -4,6 +4,8 @@
  * It uses exactly the modules the browser uses, so output matches the browser's export.
  */
 import { computeDocumentDiff } from '../src/core/diff';
+import { computeDrift, driftSummary } from '../src/core/drift';
+import { convertForDrift } from '../src/importers/driftSource';
 import { mutedRules, runInsightsAllLevels } from '../src/core/insights';
 import { importMermaidOrBlueprint } from '../src/core/parser';
 import { pageCount, pageList, viewOfPage } from '../src/core/pages';
@@ -138,4 +140,33 @@ export function formatCheck(file: string, result: CheckResult): string[] {
     .map((i) => `${file}: ${i.level}${i.where ? ` in ${i.where}` : ''}: ${i.message} [${i.code}]`);
   lines.push(`${file}: ${plural(result.errors, 'error')}, ${plural(result.warnings, 'warning')}`);
   return lines;
+}
+
+export interface DriftCheck {
+  drifted: boolean;
+  lines: string[];
+}
+
+/**
+ * Compare a diagram with a newer copy of the file it was imported from (E5). `kind` names the importer
+ * (`docker-compose`, `kubernetes`, `openapi`, `asyncapi`); without it the file's own look decides. Every page is
+ * checked; the file is "drifted" when anything differs.
+ */
+export function checkDrift(doc: DiagramDocument, sourceName: string, sourceText: string, kind?: string): DriftCheck {
+  const source = convertForDrift(sourceName, sourceText, kind);
+  const several = pageCount(doc) > 1;
+  const lines: string[] = [];
+  let total = 0;
+  let tracked = 0;
+  for (const page of pageList(doc)) {
+    const report = computeDrift(viewOfPage(doc, page.index), source.doc, source.kind);
+    tracked += report.tracked;
+    total += report.items.length;
+    for (const item of report.items) lines.push(`  ${item.type}: ${several ? `${page.title} › ` : ''}${item.title}: ${item.detail}`);
+  }
+  const summary = total === 0 ? (tracked === 0 ? 'nothing in this diagram was imported from this kind of file' : 'no drift') : `${plural(total, 'difference')} (${source.kind})`;
+  if (total === 0) return { drifted: false, lines: [`${sourceName}: ${summary}`] };
+  // Counts by kind of change, taken from the first page's wording when there is one page.
+  const detail = !several ? driftSummary(computeDrift(viewOfPage(doc, 0), source.doc, source.kind)) : summary;
+  return { drifted: true, lines: [`${sourceName}: ${detail}`, ...lines] };
 }
