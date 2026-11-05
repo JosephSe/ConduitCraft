@@ -21,13 +21,13 @@ inputs:
     description: Also fail on warnings.
     default: 'false'
   comment:
-    description: On a pull request, post a comment listing the diagrams that changed. Needs `pull-requests: write`.
+    description: 'On a pull request, post a comment listing the diagrams that changed. Needs the pull-requests write permission.'
     default: 'true'
   upload:
     description: Upload the renders as a workflow artifact.
     default: 'true'
   commit-to:
-    description: A folder to commit the renders into on a push (needs `contents: write`). Empty means do not commit.
+    description: 'A folder to commit the renders into on a push (needs the contents write permission). Empty means do not commit.'
     default: ''
   github-token:
     description: Token used to post the pull request comment.

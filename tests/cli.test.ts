@@ -197,6 +197,18 @@ describe('command line (E2): the program', () => {
   });
 });
 
+describe('GitHub Action (E3): the manifest and the workflow', () => {
+  it('action.yml and the workflow are valid YAML with the pieces the action needs', async () => {
+    const yaml = (await import('js-yaml')).default;
+    const action = yaml.load(readFileSync(new URL('action.yml', root), 'utf8')) as Record<string, any>;
+    assert.equal(action.runs.using, 'composite');
+    assert.ok(['files', 'out-dir', 'check', 'strict', 'comment', 'upload', 'commit-to', 'github-token'].every((k) => k in action.inputs));
+    assert.ok(action.runs.steps.some((s: Record<string, unknown>) => String(s.run ?? '').includes('tools/action.sh')));
+    const workflow = yaml.load(readFileSync(new URL('.github/workflows/diagrams.yml', root), 'utf8')) as Record<string, any>;
+    assert.equal(workflow.jobs.diagrams.steps.at(-1).uses, './');
+  });
+});
+
 describe('GitHub Action (E3): the script it runs', () => {
   const script = new URL('tools/action.sh', root).pathname;
   const repo = mkdtempSync(join(tmpdir(), 'cc-action-'));
