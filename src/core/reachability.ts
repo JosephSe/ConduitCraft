@@ -6,6 +6,7 @@
  */
 import type { DiagramDocument, DiagramNode, NodeResilience } from '../types';
 import { balancerTargets } from './balancers';
+import { backingStoreOf, limiterOnlyTarget } from './components';
 import { queueConsumers } from './queues';
 
 export interface ReachabilityResult {
@@ -25,11 +26,17 @@ export interface ReachabilityResult {
   buffering: string[];
   /** Cut off now, but their work waits in a live queue and resumes on restore (K1). */
   delayed: string[];
+  /** Still working, but their cache is down and every read goes to the store behind it instead (K3). */
+  slowed: string[];
+  /** Rate limiters that are down and fail open: traffic passes through them unchecked (K4). */
+  bypassed: string[];
 }
 
-/** Entry points are actors and clients; a diagram with neither falls back to components nothing points at. */
+/** Entry points are actors, clients and schedulers; a diagram with none falls back to components nothing points at. */
 export function entryPointIds(doc: DiagramDocument): string[] {
-  const explicit = doc.nodes.filter((n) => n.kind === 'actor' || n.kind === 'client').map((n) => n.id);
+  const explicit = doc.nodes
+    .filter((n) => n.kind === 'actor' || n.kind === 'client' || n.kind === 'scheduler')
+    .map((n) => n.id);
   if (explicit.length) return explicit;
   const targets = new Set<string>();
   for (const e of doc.edges) {
@@ -104,13 +111,30 @@ export function reachableFrom(
   const failedSet = new Set([...failedIds].filter((id) => byId.has(id)));
   const failed: string[] = [];
   const degraded: string[] = [];
-  for (const id of failedSet) (replicaCount(byId.get(id)!) > 1 ? degraded : failed).push(id);
+  const bypassed: string[] = [];
+  for (const id of failedSet) {
+    const node = byId.get(id)!;
+    if (replicaCount(node) > 1) degraded.push(id);
+    // A rate limiter that fails open lets traffic through when it is down (K4).
+    else if (node.kind === 'limiter' && node.limiter?.failOpen && limiterOnlyTarget(doc, id) !== null) bypassed.push(id);
+    else failed.push(id);
+  }
 
   const blocked = new Set(failed);
   const detour = new Map<string, string>();
   for (const id of failed) {
     const fb = byId.get(id)!.resilience?.fallbackId;
     if (fb && fb !== id && byId.has(fb) && !blocked.has(fb)) detour.set(id, fb);
+  }
+  // A failed cache sends its reads to the store behind it (K3), unless a fallback was named.
+  const cacheDetour = new Set<string>();
+  for (const id of failed) {
+    if (detour.has(id) || byId.get(id)!.kind !== 'cache') continue;
+    const backing = backingStoreOf(doc, id);
+    if (backing && backing !== id && !blocked.has(backing)) {
+      detour.set(id, backing);
+      cacheDetour.add(id);
+    }
   }
 
   const next = adjacency(doc);
@@ -171,6 +195,12 @@ export function reachableFrom(
     const at = atRisk.indexOf(id);
     if (at >= 0) atRisk.splice(at, 1);
   }
+  // Callers of a cache that is down still work, but slowly (K3): they are slowed rather than at risk.
+  const slowed = [...after].filter(
+    (id) =>
+      !failedSet.has(id) &&
+      doc.edges.some((e) => (e.from === id && cacheDetour.has(e.to)) || (e.flow === 'both' && e.to === id && cacheDetour.has(e.from))),
+  );
   // Work behind a buffering queue is delayed rather than lost: it was reachable before and resumes on restore.
   const delayed = new Set<string>();
   for (const q of buffering) {
@@ -190,6 +220,8 @@ export function reachableFrom(
     atRisk: sort(atRisk),
     buffering: sort(buffering),
     delayed: sort([...delayed]),
+    slowed: sort(slowed),
+    bypassed: sort(bypassed),
   };
 }
 
@@ -214,6 +246,13 @@ export function pruneDanglingChaos(doc: DiagramDocument): void {
     if (!q?.deadLetterId || (ids.has(q.deadLetterId) && q.deadLetterId !== node.id)) continue;
     delete q.deadLetterId;
     if (!Object.keys(q).length) delete node.queue;
+  }
+  // A cache's backing store must be another component on the same level (K3).
+  for (const node of doc.nodes) {
+    const c = node.cache;
+    if (!c?.backingId || (ids.has(c.backingId) && c.backingId !== node.id)) continue;
+    delete c.backingId;
+    if (!Object.keys(c).length) delete node.cache;
   }
   for (const sim of doc.simulations) {
     if (!sim.failures) continue;

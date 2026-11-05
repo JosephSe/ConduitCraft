@@ -7,6 +7,7 @@
 import { viewOfLevel } from './levels';
 import type { DiagramDocument, DiagramEdge, ImportIssue, ImportIssueLevel } from '../types';
 import { balancerTargets } from './balancers';
+import { backingStoreOf, limiterOnlyTarget } from './components';
 import { entryPointIds, reachableFrom } from './reachability';
 import { getEffectiveSimulations } from './layout';
 
@@ -22,7 +23,10 @@ export type InsightCode =
   | 'queue-no-consumer'
   | 'queue-no-dlq'
   | 'sync-into-queue'
-  | 'balancer-single-target';
+  | 'balancer-single-target'
+  | 'cache-no-backing'
+  | 'limiter-fail-open'
+  | 'scheduler-no-queue';
 
 export interface InsightTarget {
   type: 'node' | 'edge';
@@ -53,6 +57,9 @@ export const INSIGHT_RULES: readonly InsightRule[] = [
   { code: 'queue-no-dlq', level: 'info', title: 'Queue with a limit and no dead-letter queue' },
   { code: 'sync-into-queue', level: 'info', title: 'Synchronous wire into a queue' },
   { code: 'balancer-single-target', level: 'info', title: 'Load balancer with fewer than two targets' },
+  { code: 'cache-no-backing', level: 'info', title: 'Cache with no data store behind it' },
+  { code: 'limiter-fail-open', level: 'info', title: 'Rate limiter that fails open' },
+  { code: 'scheduler-no-queue', level: 'info', title: 'Scheduler that writes straight to a store' },
   { code: 'unlabeled-wire', level: 'info', title: 'Wire between services without a label' },
 ];
 
@@ -296,6 +303,51 @@ function balancerSingleTarget(doc: DiagramDocument): InsightIssue[] {
   return out;
 }
 
+function cacheNoBacking(doc: DiagramDocument): InsightIssue[] {
+  return doc.nodes
+    .filter((n) => n.kind === 'cache' && backingStoreOf(doc, n.id) === null)
+    .map((n) => ({
+      level: 'info' as const,
+      code: 'cache-no-backing' as const,
+      target: { type: 'node' as const, id: n.id },
+      message: `${n.title || n.id} has no data store behind it; a failure loses every read.`,
+    }));
+}
+
+function limiterFailOpen(doc: DiagramDocument): InsightIssue[] {
+  const out: InsightIssue[] = [];
+  for (const n of doc.nodes) {
+    if (n.kind !== 'limiter' || !n.limiter?.failOpen) continue;
+    const target = limiterOnlyTarget(doc, n.id);
+    out.push({
+      level: 'info',
+      code: 'limiter-fail-open',
+      target: { type: 'node', id: n.id },
+      message: target
+        ? `${n.title || n.id} fails open: when it is down, traffic reaches ${titleOf(doc, target)} unchecked.`
+        : `${n.title || n.id} fails open, but it has more than one target, so it fails closed when it is down.`,
+    });
+  }
+  return out;
+}
+
+function schedulerNoQueue(doc: DiagramDocument): InsightIssue[] {
+  const stores = new Set(doc.nodes.filter((n) => n.kind === 'store').map((n) => n.id));
+  const out: InsightIssue[] = [];
+  for (const n of doc.nodes) {
+    if (n.kind !== 'scheduler') continue;
+    const into = doc.edges.find((e) => e.from === n.id && stores.has(e.to));
+    if (!into) continue;
+    out.push({
+      level: 'info',
+      code: 'scheduler-no-queue',
+      target: { type: 'node', id: n.id },
+      message: `${n.title || n.id} runs straight into ${titleOf(doc, into.to)}; a failed run is not retried.`,
+    });
+  }
+  return out;
+}
+
 function deprecatedInPath(doc: DiagramDocument): InsightIssue[] {
   const deprecated = new Set(doc.nodes.filter((n) => n.status === 'deprecated').map((n) => n.id));
   if (deprecated.size === 0) return [];
@@ -399,6 +451,9 @@ const CHECKS: Record<InsightCode, (doc: DiagramDocument) => InsightIssue[]> = {
   'queue-no-dlq': queueNoDlq,
   'sync-into-queue': syncIntoQueue,
   'balancer-single-target': balancerSingleTarget,
+  'cache-no-backing': cacheNoBacking,
+  'limiter-fail-open': limiterFailOpen,
+  'scheduler-no-queue': schedulerNoQueue,
 };
 
 /** Every issue the rules find, most severe first, ignoring mutes. */
