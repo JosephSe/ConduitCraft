@@ -399,30 +399,41 @@ Three smaller kinds that share one PR's worth of groundwork (§2.2 touch list ×
 
 ### 5.1 K3 Cache
 
-- [ ] Kind `cache`; field `cache?: { hitRate?: number /* 0–100, default 80 */; backingId?: string }`.
-- [ ] Draw: card with a new `bolt` icon, accent emerald, size 200×112, eyebrow `CACHE`, chip `HIT 80%`.
-- [ ] `backingId`: if absent, use the cache's only outgoing wire to a `store`, when there is exactly one. Show the inferred value greyed out in the inspector. Prune and remap the field like `fallbackId`.
-- [ ] Chaos: a failed cache with a backing store **detours** to it, reusing the `detour` map in `reachableFrom` exactly like `fallbackId`. The cache's callers get `slowed`, not `at-risk`. Without a backing store, the cache behaves like any failed component.
-- [ ] Playback, deterministic hits: keep a counter per cache. Packet `n` is a **hit** when `floor((n + 1) * hitRate / 100) > floor(n * hitRate / 100)`, which spreads hits evenly. On a hit, when the next step contains the backing store, the packet shows `HIT`, skips the steps up to and including the backing store's step, and goes back to the caller. On a miss it shows `MISS` and plays on. This needs a small "skip to step" in the controller. Keep it inside `scheduleNextStep`, and put the pure step-picking part in `core/`.
-- [ ] Review: `cache-no-backing` (info): a cache with no backing store. "Session Cache has no data store behind it; a failure loses every read."
-- [ ] Images: `memcached` and `varnish` → cache (take `memcached` out of `STORE_IMAGES`). `redis` and `valkey` stay `store`: they are as often a database.
+- [x] Kind `cache`; field `cache?: { hitRate?: number /* 0–100, default 80 */; backingId?: string }`.
+- [x] Draw: card with a new `bolt` icon, accent emerald, size 200×112, eyebrow `CACHE`, chip `HIT 80%`.
+- [x] `backingId`: if absent, use the cache's only outgoing wire to a `store`, when there is exactly one. Show the inferred value greyed out in the inspector. Prune and remap the field like `fallbackId`.
+- [x] Chaos: a failed cache with a backing store **detours** to it, reusing the `detour` map in `reachableFrom` exactly like `fallbackId`. The cache's callers get `slowed`, not `at-risk`. Without a backing store, the cache behaves like any failed component.
+- [x] Playback, deterministic hits: keep a counter per cache. Packet `n` is a **hit** when `floor((n + 1) * hitRate / 100) > floor(n * hitRate / 100)`, which spreads hits evenly. On a hit, when the next step contains the backing store, the packet shows `HIT`, skips the steps up to and including the backing store's step, and goes back to the caller. On a miss it shows `MISS` and plays on. This needs a small "skip to step" in the controller. Keep it inside `scheduleNextStep`, and put the pure step-picking part in `core/`.
+- [x] Review: `cache-no-backing` (info): a cache with no backing store. "Session Cache has no data store behind it; a failure loses every read."
+- [x] Images: `memcached` and `varnish` → cache (take `memcached` out of `STORE_IMAGES`). `redis` and `valkey` stay `store`: they are as often a database.
 
 ### 5.2 K4 Rate Limiter
 
-- [ ] Kind `limiter`; field `limiter?: { admit?: number; per?: number; failOpen?: boolean }`: "admit `admit` of every `per` packets", defaults 4 of 5, fail-closed.
-- [ ] Draw: the `gate` look with a small meter glyph (new icon `gauge`), accent violet, chip `4/5`.
-- [ ] Playback: a counter per limiter. Packet `n` is rejected when `n % per >= admit`. A rejected packet turns rose, shows `429`, stops at the limiter, and the loop restarts at step 0 (or pauses when not looping). Announce "Rate Limiter rejected a request (429)." **at most once every 5 seconds**, so the live region is not flooded.
-- [ ] Chaos: a failed limiter with `failOpen: true` and exactly one outgoing wire detours to that target and gets status `bypassed` instead of `failed`. Fail-closed is the current behaviour.
-- [ ] Review: `limiter-fail-open` (info): "Rate Limiter fails open: when it is down, traffic reaches Orders API unchecked."
+- [x] Kind `limiter`; field `limiter?: { admit?: number; per?: number; failOpen?: boolean }`: "admit `admit` of every `per` packets", defaults 4 of 5, fail-closed.
+- [x] Draw: the `gate` look with a small meter glyph (new icon `gauge`), accent violet, chip `4/5`.
+- [x] Playback: a counter per limiter. Packet `n` is rejected when `n % per >= admit`. A rejected packet turns rose, shows `429`, stops at the limiter, and the loop restarts at step 0 (or pauses when not looping). Announce "Rate Limiter rejected a request (429)." **at most once every 5 seconds**, so the live region is not flooded.
+- [x] Chaos: a failed limiter with `failOpen: true` and exactly one outgoing wire detours to that target and gets status `bypassed` instead of `failed`. Fail-closed is the current behaviour.
+- [x] Review: `limiter-fail-open` (info): "Rate Limiter fails open: when it is down, traffic reaches Orders API unchecked."
 
 ### 5.3 K5 Scheduler / Cron
 
-- [ ] Kind `scheduler`; field `schedule?: { every?: string /* free text, "5m", "0 3 * * *" */ }`, max 40 chars.
-- [ ] Draw: a compact card like the client (192×112), new icon `clock`, accent blue, eyebrow `SCHEDULE`, chip from `every`.
-- [ ] **Entry point:** add `scheduler` to `entryPointIds` ([src/core/reachability.ts:25](src/core/reachability.ts:25)) next to `actor` and `client`. This changes SPOF and reachability for diagrams that contain one, which is intended. Test that a diagram whose only entry is a scheduler gets correct reachability, and that failing the scheduler makes its jobs unreachable.
-- [ ] Playback: a scenario whose first step is a scheduler shows its packet label as `⏱ <every>`. When looping, it waits 2 × the base step between loops (a visible "tick").
-- [ ] Review: `scheduler-no-queue` (info): a scheduler whose job writes straight to a store with no queue or retry between them. "Nightly Export runs straight into Ledger DB; a failed run is not retried." Keep the rule simple: it fires when the scheduler's direct target is a `store`.
-- [ ] Layout: [src/core/layout.ts:966](src/core/layout.ts:966) and [src/core/layout.ts:1158](src/core/layout.ts:1158) treat actors as the start of the flow. Treat schedulers the same for auto-layout and the ELK chunk ([src/core/elkLayout.ts](src/core/elkLayout.ts)).
+- [x] Kind `scheduler`; field `schedule?: { every?: string /* free text, "5m", "0 3 * * *" */ }`, max 40 chars.
+- [x] Draw: a compact card like the client (192×112), new icon `clock`, accent blue, eyebrow `SCHEDULE`, chip from `every`.
+- [x] **Entry point:** add `scheduler` to `entryPointIds` ([src/core/reachability.ts:25](src/core/reachability.ts:25)) next to `actor` and `client`. This changes SPOF and reachability for diagrams that contain one, which is intended. Test that a diagram whose only entry is a scheduler gets correct reachability, and that failing the scheduler makes its jobs unreachable.
+- [x] Playback: a scenario whose first step is a scheduler shows its packet label as `⏱ <every>`. When looping, it waits 2 × the base step between loops (a visible "tick").
+- [x] Review: `scheduler-no-queue` (info): a scheduler whose job writes straight to a store with no queue or retry between them. "Nightly Export runs straight into Ledger DB; a failed run is not retried." Keep the rule simple: it fires when the scheduler's direct target is a `store`.
+- [x] Layout: [src/core/layout.ts:966](src/core/layout.ts:966) and [src/core/layout.ts:1158](src/core/layout.ts:1158) treat actors as the start of the flow. Treat schedulers the same for auto-layout and the ELK chunk ([src/core/elkLayout.ts](src/core/elkLayout.ts)).
+
+**Built, with these differences from the text above (K3 to K5):**
+
+- The Rate Limiter uses the gate's size (242×172) and no new shape: "the gate look" is the card with violet accent and the `gauge` icon.
+- Cache and Scheduler cards are 112 high, so they hide the subtitle and show the footer chip (the studio, the SVG and the HTML export agree).
+- A failed fail-open limiter with more than one outgoing wire fails closed, and `limiter-fail-open` says so instead of naming a target.
+- Two chaos states were added for K3 and K4: `slowed` (callers of a cache that is down and has a store behind it) and `bypassed` (a fail-open limiter that is down). Neither is blocking: playback goes through both.
+- Cache lookup in playback happens when a packet arrives at a step that holds the cache while the next step holds its backing store. A hit goes to the step after the store's; a miss goes on. A failed cache or backing store is not looked up, and the scenario plays its own steps.
+- A limiter counts a packet when it first appears in a step (not when the previous step already held it). A hit rate of 80 and a limit of 4 of 5 are stored as absent.
+- The scheduler's doubled wait applies only to a looping run.
+- Open question 4 was answered with the spec's default: a scheduler is an entry point.
 
 ### 5.4 Tests and acceptance (Phase 3)
 
