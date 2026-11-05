@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { seedStorage } from './helpers';
 
 const node = (i: number) => ({
   id: `n${i}`,
@@ -34,16 +35,9 @@ const doc = (title: string, nodes: number) => ({
   simulations: [],
 });
 
-/** Leave an older release's autosave in localStorage, once per tab, so the visit is a returning one. */
+/** Leave an autosave in the database, so the visit is a returning one. */
 async function seedAutosave(page: Page, title: string, nodes: number): Promise<void> {
-  await page.addInitScript(
-    ({ value }) => {
-      if (sessionStorage.getItem('seeded')) return;
-      sessionStorage.setItem('seeded', '1');
-      localStorage.setItem('conduitcraft-autosave-v1', JSON.stringify(value));
-    },
-    { value: doc(title, nodes) },
-  );
+  await seedStorage(page, { diagrams: [{ id: 'autosave', title, updatedAt: Date.now(), doc: doc(title, nodes) }] });
 }
 
 const home = (page: Page) => page.locator('#home-dialog');

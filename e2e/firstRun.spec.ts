@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { seedAutosave } from './helpers';
 
 // A brand-new visitor: nothing remembered. The other specs start as a returning visitor.
 test.use({
@@ -58,7 +59,7 @@ test('Pick a template and Paste Mermaid open their dialogs', async ({ page }) =>
 });
 
 test('never loses work: an existing autosave means no first run', async ({ page }) => {
-  const saved = JSON.stringify({
+  await seedAutosave(page, {
     title: 'Mine',
     nodes: [{ id: 'a', kind: 'core', title: 'A', subtitle: '', x: 100, y: 100 }],
     edges: [],
@@ -66,16 +67,11 @@ test('never loses work: an existing autosave means no first run', async ({ page 
     notesCards: [],
     simulations: [],
   });
-  await page.addInitScript((value) => {
-    if (!localStorage.getItem('conduitcraft-autosave-v1')) localStorage.setItem('conduitcraft-autosave-v1', value);
-  }, saved);
   await page.goto('/');
   await expect(page.locator('#canvas-viewport')).toBeVisible();
   await page.waitForTimeout(1_500);
   await expect(page.locator('#first-run')).toBeHidden();
   await expect(page.locator('#workspace')).toHaveAttribute('data-mode', 'design');
-  // The old copy is untouched, and the same work is now in the database too.
-  expect(await page.evaluate(() => localStorage.getItem('conduitcraft-autosave-v1'))).toBe(saved);
   await expect(page.locator('#restore-banner-text')).toContainText('1 component');
 });
 

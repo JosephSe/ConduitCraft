@@ -6,6 +6,7 @@
 - **Queues in files and imports.** Blueprint files carry `kind: queue` and a `queue:` map; the file format moves to version 12, and an older app opens a queue as a service. In a hand-written Blueprint file, `queue` now means a queue (it used to mean an event broker, `bus`); `stream`, `broker` and `bus` still mean `bus`, and `sqs`, `fifo`, `mq` and `work-queue` mean a queue. RabbitMQ, ActiveMQ, Artemis, ElasticMQ and Beanstalkd images import as queues, as do AsyncAPI channels with an AMQP queue or SQS binding; Kafka, NATS and Pulsar stay event brokers.
 - **Event Broker is now "Pub/sub event bus"** in the palette, so it is not confused with the queue. The Event-Driven Microservices example gains a Fulfilment Queue with a dead-letter queue and a saved "Fulfilment down" scenario.
 - Palette entries can now share a kind: stencils have ids (groundwork for the next components).
+- **Storage.** The old browser-storage copies that 2.1 left behind are deleted once your work is safe in the database. A browser that never ran 2.1 keeps them untouched, but they are no longer imported.
 
 ## 2.1.0
 

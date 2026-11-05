@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import {
   AUTOSAVE_ID,
-  LEGACY_KEYS,
+  DIAGRAM_PREFIX,
   RECOVERY_ID,
+  SNAPSHOTS_KEY,
   createLocalStorageBackend,
   createMemoryBackend,
   flushWrites,
@@ -16,6 +17,7 @@ import {
   putRecord,
   removeRecord,
   resetStorageForTests,
+  retireOldCopies,
   type Backend,
   type DiagramRecord,
 } from '../src/studio/storage.ts';
@@ -102,25 +104,55 @@ describe('storage layer (T-04)', () => {
     assert.equal(hasRecord('snapshots', 's1'), true);
   });
 
-  it('localStorage fallback uses the keys older releases used, so nothing needs moving', async () => {
+  it('localStorage fallback keeps records under its own keys and reads them back', async () => {
+    const ls = fakeLocalStorage();
+    await initStorage({ backend: createLocalStorageBackend(ls) });
+    await putRecord('diagrams', record(AUTOSAVE_ID, docWith('New autosave', 2)));
+    assert.equal(JSON.parse(ls.map.get(DIAGRAM_PREFIX + AUTOSAVE_ID)!).doc.title, 'New autosave');
+    await putRecord('snapshots', { id: 'snap-1' });
+    await putRecord('snapshots', { id: 'snap-2' });
+    assert.equal(JSON.parse(ls.map.get(SNAPSHOTS_KEY)!).length, 2);
+    await removeRecord('snapshots', 'snap-1');
+    assert.deepEqual(JSON.parse(ls.map.get(SNAPSHOTS_KEY)!).map((s: { id: string }) => s.id), ['snap-2']);
+
+    resetStorageForTests();
+    await initStorage({ backend: createLocalStorageBackend(ls) });
+    assert.equal(getRecord<DiagramRecord>('diagrams', AUTOSAVE_ID)!.doc.nodes.length, 2);
+    assert.deepEqual(listRecords('snapshots').map((s) => s.id), ['snap-2']);
+  });
+
+  it('does not read the keys that releases before 2.1 used', async () => {
     const ls = fakeLocalStorage({
-      [LEGACY_KEYS.autosave]: JSON.stringify(docWith('Old autosave', 2)),
-      [LEGACY_KEYS.snapshots]: JSON.stringify([{ id: 'snap-1', name: 'Base', timestamp: 1, nodeCount: 0, edgeCount: 0, doc: docWith('S') }]),
+      'conduitcraft-autosave-v1': JSON.stringify(docWith('Old autosave', 2)),
+      'conduitcraft-snapshots-v1': JSON.stringify([{ id: 'snap-1' }]),
     });
     await initStorage({ backend: createLocalStorageBackend(ls) });
-    assert.equal(getRecord<DiagramRecord>('diagrams', AUTOSAVE_ID)!.doc.title, 'Old autosave');
-    assert.equal(listRecords('snapshots').length, 1);
+    assert.equal(hasRecord('diagrams', AUTOSAVE_ID), false);
+    assert.equal(listRecords('snapshots').length, 0);
+  });
 
-    await putRecord('diagrams', record(AUTOSAVE_ID, docWith('New autosave')));
-    assert.equal(JSON.parse(ls.map.get(LEGACY_KEYS.autosave)!).title, 'New autosave');
-    await putRecord('snapshots', { id: 'snap-2' });
-    assert.equal(JSON.parse(ls.map.get(LEGACY_KEYS.snapshots)!).length, 2);
-    await removeRecord('snapshots', 'snap-1');
-    assert.deepEqual(JSON.parse(ls.map.get(LEGACY_KEYS.snapshots)!).map((s: { id: string }) => s.id), ['snap-2']);
+  it('retires the old copies once they were moved, and only then', () => {
+    const old = {
+      'conduitcraft-autosave-v1': '{}',
+      'blueprint-studio-autosave-v1': '{}',
+      'conduitcraft-recovery-v1': '{}',
+      'conduitcraft-snapshots-v1': '[]',
+    };
+    const keep = { 'conduitcraft-diagram:autosave': '{}', 'conduitcraft-home-shown': '1', 'unrelated': 'x' };
+    const notMoved = fakeLocalStorage({ ...old, ...keep });
+    assert.equal(retireOldCopies(notMoved, false), 0);
+    assert.equal(notMoved.map.size, 7, 'nothing is deleted before the move is confirmed');
+
+    const moved = fakeLocalStorage({ ...old, ...keep });
+    assert.equal(retireOldCopies(moved, true), 4);
+    assert.deepEqual([...moved.map.keys()].sort(), Object.keys(keep).sort());
+    assert.equal(retireOldCopies(null, true), 0);
   });
 
   it('without IndexedDB it falls back to localStorage and says so', async () => {
-    const ls = fakeLocalStorage({ [LEGACY_KEYS.recovery]: JSON.stringify(docWith('Recovered', 3)) });
+    const ls = fakeLocalStorage({
+      [DIAGRAM_PREFIX + RECOVERY_ID]: JSON.stringify(record(RECOVERY_ID, docWith('Recovered', 3))),
+    });
     globalThis.localStorage = ls;
     const status = await initStorage();
     assert.equal(status.backend, 'localstorage');

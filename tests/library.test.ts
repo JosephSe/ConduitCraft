@@ -17,7 +17,7 @@ import {
 import {
   AUTOSAVE_ID,
   RECOVERY_ID,
-  LEGACY_KEYS,
+  DIAGRAM_PREFIX,
   createLocalStorageBackend,
   createMemoryBackend,
   flushWrites,
@@ -142,7 +142,7 @@ describe('diagram library (F-08 data)', () => {
     await putRecord('diagrams', record(AUTOSAVE_ID, 'First', 1));
     const made = await createDiagram(docWith('Second'), 2);
     await flushWrites();
-    assert.ok(map.has(LEGACY_KEYS.autosave), 'the first entry still uses the old key');
+    assert.ok(map.has(DIAGRAM_PREFIX + AUTOSAVE_ID), 'the first entry is stored under the fallback\'s own key');
 
     resetStorageForTests();
     await initStorage({ backend: createLocalStorageBackend(storage) });
