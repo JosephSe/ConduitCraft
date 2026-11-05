@@ -160,6 +160,14 @@ test('tap places a component from the palette drawer', async ({ page }) => {
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
+test('a tool in the palette drawer closes the drawer so the canvas can be used', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-drawer-palette').tap();
+  await page.locator('[data-rail-tool="frame"]').tap();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
+  await expect(page.locator('#palette-sidebar')).toBeHidden();
+});
+
 test('the drawer tabs are full-size targets that never overlap the top bar', async ({ page }) => {
   await open(page);
   for (const id of ['#btn-drawer-palette', '#btn-drawer-inspector']) {
@@ -167,7 +175,7 @@ test('the drawer tabs are full-size targets that never overlap the top bar', asy
     expect(box!.width).toBeGreaterThanOrEqual(43.5);
     expect(box!.height).toBeGreaterThanOrEqual(43.5);
   }
-  // The top bar stays at 8 controls or fewer: the panel toggles are not brought back to it.
+  // The top bar stays at 9 controls or fewer: the panel toggles are not brought back to it.
   await expect(page.locator('.topbar .panel-rail-toggles')).toHaveCount(0);
 });
 

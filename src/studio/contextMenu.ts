@@ -13,11 +13,16 @@ import { app } from './state';
 
 let menuEl: HTMLElement | null = null;
 let returnFocus: HTMLElement | null = null;
+let menuAnchor: HTMLElement | null = null;
+let menuOnClose: (() => void) | null = null;
 
 export function closeContextMenu(restoreFocus = true): void {
   if (!menuEl) return;
   menuEl.remove();
   menuEl = null;
+  menuAnchor = null;
+  menuOnClose?.();
+  menuOnClose = null;
   document.removeEventListener('pointerdown', onOutsidePointer, true);
   window.removeEventListener('blur', onWindowBlur);
   if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
@@ -25,7 +30,9 @@ export function closeContextMenu(restoreFocus = true): void {
 }
 
 function onOutsidePointer(e: Event): void {
-  if (menuEl && !menuEl.contains(e.target as Node)) closeContextMenu(false);
+  const target = e.target as Node;
+  // A press on the button that opened the menu is left to that button, which closes it on click.
+  if (menuEl && !menuEl.contains(target) && !menuAnchor?.contains(target)) closeContextMenu(false);
 }
 function onWindowBlur(): void {
   closeContextMenu(false);
@@ -58,19 +65,44 @@ function isInSelection(target: SelectionTarget): boolean {
 }
 
 export function openContextMenu(x: number, y: number): void {
+  const ctx = buildActionContext(app.selection, app.doc, app.workspaceMode);
+  openActionMenu({
+    ids: contextMenuCommandIds(ctx.selection, { grouped: ctx.grouped }),
+    x,
+    y,
+    label: 'Canvas actions',
+  });
+}
+
+export interface ActionMenuOptions {
+  /** Palette ids and separators. Actions that do not apply right now are dropped. */
+  ids: readonly string[];
+  x: number;
+  y: number;
+  /** The menu's accessible name. */
+  label: string;
+  /** Text for an item. Defaults to the palette title. */
+  labelFor?: (id: string) => string | undefined;
+  /** The button that opened the menu: it takes focus back, and pressing it does not count as clicking away. */
+  anchor?: HTMLElement;
+  onClose?: () => void;
+}
+
+export function isActionMenuOpenFor(anchor: HTMLElement): boolean {
+  return menuEl !== null && menuAnchor === anchor;
+}
+
+/** Show a menu of palette actions at (x, y). */
+export function openActionMenu({ ids: requested, x, y, label: menuLabel, labelFor, anchor, onClose }: ActionMenuOptions): void {
   closeContextMenu(false);
   const ctx = buildActionContext(app.selection, app.doc, app.workspaceMode);
-  const ids = tidySeparators(
-    contextMenuCommandIds(ctx.selection, { grouped: ctx.grouped }).filter(
-      (id) => id === MENU_SEPARATOR || isActionAvailable(id, ctx),
-    ),
-  );
+  const ids = tidySeparators(requested.filter((id) => id === MENU_SEPARATOR || isActionAvailable(id, ctx)));
 
   const menu = document.createElement('div');
   menu.className = 'context-menu';
   menu.setAttribute('role', 'menu');
-  menu.setAttribute('aria-label', 'Canvas actions');
-  returnFocus = (document.activeElement as HTMLElement | null) ?? viewport;
+  menu.setAttribute('aria-label', menuLabel);
+  returnFocus = anchor ?? (document.activeElement as HTMLElement | null) ?? viewport;
 
   for (const id of ids) {
     if (id === MENU_SEPARATOR) {
@@ -88,7 +120,7 @@ export function openContextMenu(x: number, y: number): void {
     item.setAttribute('role', 'menuitem');
     item.tabIndex = -1;
     const label = document.createElement('span');
-    label.textContent = cmd.title;
+    label.textContent = labelFor?.(id) ?? cmd.title;
     item.appendChild(label);
     if (cmd.shortcut) {
       const hint = document.createElement('kbd');
@@ -126,6 +158,8 @@ export function openContextMenu(x: number, y: number): void {
   menu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - w - 4))}px`;
   menu.style.top = `${Math.max(4, Math.min(y, window.innerHeight - h - 4))}px`;
   menuEl = menu;
+  menuAnchor = anchor ?? null;
+  menuOnClose = onClose ?? null;
   document.addEventListener('pointerdown', onOutsidePointer, true);
   window.addEventListener('blur', onWindowBlur);
   menu.querySelector<HTMLElement>('[role="menuitem"]')?.focus();

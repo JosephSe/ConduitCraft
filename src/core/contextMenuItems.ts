@@ -11,6 +11,34 @@ export interface ContextMenuHints {
 
 export const MENU_SEPARATOR = '-';
 
+/**
+ * The top-bar menu: actions with no button of their own. Palette ids again, with shorter labels than the palette's,
+ * whose titles have to make sense in a search list.
+ */
+export const APP_MENU_ITEMS: ReadonlyArray<{ id: string; label: string } | typeof MENU_SEPARATOR> = [
+  { id: 'open-home', label: 'Home' },
+  { id: 'new-diagram', label: 'New Diagram' },
+  { id: 'open-templates', label: 'Templates' },
+  { id: 'open-library', label: 'Your Diagrams' },
+  MENU_SEPARATOR,
+  { id: 'save-file', label: 'Save' },
+  { id: 'save-file-as', label: 'Save As…' },
+  { id: 'open-file-disk', label: 'Open File…' },
+  { id: 'import-file', label: 'Import File…' },
+  { id: 'open-export', label: 'Export…' },
+  MENU_SEPARATOR,
+  { id: 'open-find-replace', label: 'Find and Replace' },
+  { id: 'auto-layout', label: 'Auto-Layout' },
+  { id: 'toggle-outline', label: 'Text Outline' },
+  { id: 'toggle-code-pane', label: 'Code Pane' },
+  { id: 'open-matrix', label: 'Specification Matrix' },
+  { id: 'open-snapshots', label: 'Snapshots' },
+  { id: 'mode-presentation', label: 'Presentation' },
+  MENU_SEPARATOR,
+  { id: 'open-settings', label: 'Preferences' },
+  { id: 'open-shortcuts', label: 'Keyboard Shortcuts' },
+];
+
 export function contextMenuCommandIds(type: ContextSelectionType, hints: ContextMenuHints): string[] {
   switch (type) {
     case 'node':

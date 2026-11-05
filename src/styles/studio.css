@@ -4845,6 +4845,8 @@ kbd {
   border: 1px solid var(--wl-border-ui);
   box-shadow: var(--cc-shadow-3);
   color: var(--cc-ink);
+  max-block-size: calc(100dvh - 8px);
+  overflow-y: auto;
 }
 .context-menu-item {
   display: flex;
@@ -4932,6 +4934,34 @@ kbd {
 }
 .rail-divider.rail-tool-only {
   display: block;
+}
+/* The tools are always on show. With the palette open the rail shrinks to a row of them above the component list. */
+.palette-sidebar {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+.workspace:not([data-palette-collapsed="true"]) .palette-rail-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding-block: 0.5rem 0;
+  padding-inline: 0.75rem;
+}
+.workspace:not([data-palette-collapsed="true"]) .palette-rail-content > :not(.rail-tool-btn) {
+  display: none;
+}
+/* Folded, the rail is taller than most windows, so it scrolls. */
+.workspace[data-palette-collapsed="true"] .palette-sidebar {
+  grid-template-rows: minmax(0, 1fr);
+}
+.workspace[data-palette-collapsed="true"] .palette-rail-content {
+  block-size: 100%;
+  min-block-size: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.workspace[data-palette-collapsed="true"] .palette-rail-content > * {
+  flex: none;
 }
 .rail-tool-btn:hover {
   background: var(--wl-surface-elevated);

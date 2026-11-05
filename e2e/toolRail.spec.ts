@@ -79,3 +79,45 @@ test('clicking a component on the collapsed rail adds exactly one', async ({ pag
   await page.waitForTimeout(300);
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
+
+test('all five tools stay visible and work with the palette expanded', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-rail-expand-palette').click();
+  await expect(page.locator('#stencil-grid')).toBeVisible();
+  for (const name of ['select', 'connect', 'hand', 'text', 'frame']) await expect(tool(page, name)).toBeVisible();
+  await tool(page, 'frame').click();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
+  await expect(tool(page, 'frame')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('expanding the palette shows only the tools from the rail, not its component icons', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-rail-expand-palette').click();
+  await expect(page.locator('.rail-stencil-btn').first()).toBeHidden();
+  await expect(page.locator('#btn-rail-expand-palette')).toBeHidden();
+});
+
+test('the last rail buttons can be reached on a short window', async ({ page }) => {
+  await open(page);
+  await page.setViewportSize({ width: 1440, height: 700 });
+  const note = page.locator('.rail-stencil-btn[data-stencil-kind="notes"]');
+  await expect(note).not.toBeInViewport();
+  // The mouse wheel, because Playwright's own click can scroll a box that a person could not.
+  await page.locator('.rail-tool-btn[data-rail-tool="frame"]').hover();
+  await page.mouse.wheel(0, 2000);
+  await expect(note).toBeInViewport();
+  const before = await page.locator('.blueprint-spec').count();
+  await note.click();
+  await expect(page.locator('.blueprint-spec')).toHaveCount(before + 1);
+});
+
+test('Stage Containers offers Frame and Text, and they pick the same tools as the rail', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-rail-expand-palette').click();
+  await page.locator('#btn-add-frame').click();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
+  await expect(page.locator('#btn-add-frame')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#btn-add-text').click();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'text');
+  await expect(page.locator('#btn-add-frame')).toHaveAttribute('aria-pressed', 'false');
+});
