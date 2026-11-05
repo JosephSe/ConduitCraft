@@ -4,19 +4,22 @@
  *   pnpm conduitcraft render <file...> [--format svg|html|json] [--out <path> | --out-dir <dir>] [--scheme light|dark] [--page N|all]
  *   pnpm conduitcraft check <file...> [--strict]
  *   pnpm conduitcraft diff <base> <head> [--name <label>]
+ *   pnpm conduitcraft drift <diagram> <source-file> | --compose|--kubernetes|--openapi|--asyncapi <source-file>
  *
  * Files are Blueprint files (`.md`), Blueprint JSON (`.json`) or Mermaid. `check` runs the Review rules on every page
  * and level and exits 1 when any is an error (`--strict`: any warning too). `diff` prints what changed between two
- * versions; a missing `<base>` means a new diagram. Exit codes: 0 fine, 1 problems found or a file unreadable, 2 usage.
+ * versions; a missing `<base>` means a new diagram. `drift` compares a diagram with a newer copy of the file it was
+ * imported from and exits 1 when they have drifted apart. Exit codes: 0 fine, 1 problems found or a file unreadable, 2 usage.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
-import { checkDiagram, diffSummary, formatCheck, loadDiagram, renderHtml, renderJson, renderSvgPages } from './cliCore';
+import { checkDiagram, checkDrift, diffSummary, formatCheck, loadDiagram, renderHtml, renderJson, renderSvgPages } from './cliCore';
 
 const USAGE = `Usage:
   conduitcraft render <file...> [--format svg|html|json] [--out <path> | --out-dir <dir>] [--scheme light|dark] [--page N|all]
   conduitcraft check <file...> [--strict]
-  conduitcraft diff <base> <head> [--name <label>]`;
+  conduitcraft diff <base> <head> [--name <label>]
+  conduitcraft drift <diagram> <source-file> | --compose|--kubernetes|--openapi|--asyncapi <source-file>`;
 
 interface Args {
   command: string;
@@ -24,7 +27,7 @@ interface Args {
   flags: Map<string, string | true>;
 }
 
-const VALUE_FLAGS = new Set(['format', 'out', 'out-dir', 'scheme', 'page', 'name']);
+const VALUE_FLAGS = new Set(['format', 'out', 'out-dir', 'scheme', 'page', 'name', 'compose', 'kubernetes', 'openapi', 'asyncapi']);
 
 function parseArgs(argv: string[]): Args {
   const [command = '', ...rest] = argv;
@@ -114,6 +117,29 @@ function diff(args: Args): void {
   process.stdout.write(`${label}: ${diffSummary(base, head)}\n`);
 }
 
+const DRIFT_FLAGS: Array<[string, string]> = [
+  ['compose', 'docker-compose'],
+  ['kubernetes', 'kubernetes'],
+  ['openapi', 'openapi'],
+  ['asyncapi', 'asyncapi'],
+];
+
+function drift(args: Args): void {
+  const named = DRIFT_FLAGS.find(([flag]) => typeof args.flags.get(flag) === 'string' && args.flags.get(flag) !== '');
+  const [diagramFile] = args.files;
+  const sourceFile = named ? String(args.flags.get(named[0])) : args.files[1];
+  if (!diagramFile || !sourceFile || args.files.length > (named ? 1 : 2)) fail(USAGE, 2);
+  const doc = load(diagramFile);
+  if (!existsSync(sourceFile)) fail(`${sourceFile}: no such file`);
+  try {
+    const result = checkDrift(doc, sourceFile, readFileSync(sourceFile, 'utf8'), named?.[1]);
+    for (const line of result.lines) process.stdout.write(`${line}\n`);
+    if (result.drifted) process.exit(1);
+  } catch (err) {
+    fail(`${sourceFile}: ${err instanceof Error ? err.message : 'could not be read'}`);
+  }
+}
+
 const args = parseArgs(process.argv.slice(2));
 switch (args.command) {
   case 'render':
@@ -124,6 +150,9 @@ switch (args.command) {
     break;
   case 'diff':
     diff(args);
+    break;
+  case 'drift':
+    drift(args);
     break;
   case '--help':
   case 'help':

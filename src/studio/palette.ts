@@ -1045,6 +1045,14 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'check-drift',
+      title: 'Check for Drift',
+      subtitle: 'Compare this diagram with a newer Compose, Kubernetes, OpenAPI or AsyncAPI file',
+      category: 'Export & Sync',
+      keywords: ['drift', 'stale', 'compare', 'compose', 'kubernetes', 'openapi', 'import', 'out of date'],
+      run: () => void import('./driftDialog').then((m) => m.openDriftCheck()),
+    },
+    {
       id: 'tool-hand',
       title: 'Hand Tool',
       subtitle: 'Drag anywhere to pan the canvas',

@@ -6,6 +6,8 @@
 #   CHECK       "true" to run the Review rules and fail on errors           (default: true)
 #   STRICT      "true" to fail on warnings too                              (default: false)
 #   COMMENT     "true" to post "2 components added, 1 wire removed" on a pull request (default: true)
+#   DRIFT       lines of `diagram=source-file` (for example `shop.blueprint.md=docker-compose.yml`); fails when the source has
+#               changed since the diagram was imported from it (default: none)
 #   COMMIT_TO   a folder to commit the renders into (push events only)      (default: none)
 #   BASE_REF    the pull request's base branch (GITHUB_BASE_REF)
 # The CLI runs from ACTION_PATH (this repository's checkout), on the diagrams in the current directory.
@@ -18,6 +20,7 @@ CHECK="${CHECK:-true}"
 STRICT="${STRICT:-false}"
 COMMENT="${COMMENT:-true}"
 COMMIT_TO="${COMMIT_TO:-}"
+DRIFT="${DRIFT:-}"
 WORKDIR="$(pwd)"
 
 cc() {
@@ -26,6 +29,15 @@ cc() {
 # Paths given to the CLI must be absolute, because it runs from ACTION_PATH.
 abs() { case "$1" in /*) printf '%s' "$1" ;; *) printf '%s/%s' "$WORKDIR" "$1" ;; esac; }
 
+status=0
+
+# Drift: has the file a diagram was imported from moved on? One `diagram=source` pair per line.
+while IFS= read -r pair; do
+  pair="${pair#"${pair%%[![:space:]]*}"}"
+  [ -z "$pair" ] && continue
+  cc drift "$(abs "${pair%%=*}")" "$(abs "${pair#*=}")" || status=1
+done <<< "$DRIFT"
+
 # The pathspecs go to git as written (no shell globbing), so `*.md` matches at any depth the way git means it.
 set -f
 DIAGRAMS=()
@@ -33,11 +45,10 @@ while IFS= read -r line; do [ -n "$line" ] && DIAGRAMS+=("$line"); done < <(git 
 set +f
 if [ "${#DIAGRAMS[@]}" -eq 0 ]; then
   echo "No diagrams matched: $FILES"
-  exit 0
+  exit "$status"
 fi
 echo "ConduitCraft: ${#DIAGRAMS[@]} diagram(s)"
 
-status=0
 
 if [ "$CHECK" = "true" ]; then
   args=()

@@ -26,6 +26,9 @@ inputs:
   upload:
     description: Upload the renders as a workflow artifact.
     default: 'true'
+  drift:
+    description: 'Lines of diagram=source-file, for example shop.blueprint.md=docker-compose.yml. Fails the job when the source file has changed since the diagram was imported from it.'
+    default: ''
   commit-to:
     description: 'A folder to commit the renders into on a push (needs the contents write permission). Empty means do not commit.'
     default: ''
@@ -55,6 +58,7 @@ runs:
         CHECK: ${{ inputs.check }}
         STRICT: ${{ inputs.strict }}
         COMMENT: ${{ inputs.comment }}
+        DRIFT: ${{ inputs.drift }}
         COMMIT_TO: ${{ inputs.commit-to }}
         BASE_REF: ${{ github.base_ref }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
