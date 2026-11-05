@@ -5160,7 +5160,18 @@ kbd {
 .arch-node[data-chaos="delayed"] .chaos-badge { border-color: var(--wl-violet); }
 .arch-node[data-shape="pipe"][data-chaos="failed"] .node-shape-plate { color: var(--wl-rose); }
 .arch-node[data-shape="pipe"][data-chaos="buffering"] .node-shape-plate { color: var(--wl-violet); }
-.chaos-item[data-status="buffering"], .chaos-item[data-status="delayed"] { font-weight: 600; }
+/* Caches and limiters (K3, K4): slowed callers get an amber dashed ring; a bypassed limiter keeps a violet dashed one. */
+.arch-node[data-chaos="slowed"] .node-select-hit {
+  outline: 2px dashed color-mix(in srgb, var(--wl-amber) 75%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="bypassed"] .node-select-hit {
+  outline: 2px dashed color-mix(in srgb, var(--wl-violet) 75%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="slowed"] .chaos-badge { border-color: var(--wl-amber); }
+.arch-node[data-chaos="bypassed"] .chaos-badge { border-color: var(--wl-violet); }
+.chaos-item[data-status="buffering"], .chaos-item[data-status="delayed"], .chaos-item[data-status="slowed"], .chaos-item[data-status="bypassed"] { font-weight: 600; }
 .chaos-badge {
   position: absolute;
   inset-block-start: -0.7rem;
@@ -5617,3 +5628,8 @@ body[data-presenting="true"] .page-strip { display: none; }
   .canvas-shell { --page-strip-h: 2.75rem; }
   .page-tab, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
 }
+
+/* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */
+.prop-select.is-inferred { color: var(--text-muted, #64748b); }
+.arch-node[data-kind="cache"] .node-sub,
+.arch-node[data-kind="scheduler"] .node-sub { display: none; }

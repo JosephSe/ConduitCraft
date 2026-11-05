@@ -69,6 +69,9 @@ interface RawNodeMeta {
   resilience?: unknown;
   queue?: unknown;
   balancer?: unknown;
+  cache?: unknown;
+  limiter?: unknown;
+  schedule?: unknown;
   source?: unknown;
 }
 
@@ -194,6 +197,9 @@ function normalizeNodeKind(raw: string | undefined, fallback: NodeKind = 'servic
   if (k === 'actor' || k === 'human' || k === 'user' || k === 'person') return 'actor';
   if (k === 'core' || k === 'platform' || k === 'primary') return 'core';
   if (k === 'queue' || k === 'sqs' || k === 'fifo' || k === 'mq' || k === 'work-queue') return 'queue';
+  if (k === 'cache' || k === 'memcached' || k === 'varnish' || k === 'cdn-cache') return 'cache';
+  if (k === 'limiter' || k === 'rate-limiter' || k === 'ratelimiter' || k === 'throttle') return 'limiter';
+  if (k === 'scheduler' || k === 'cron' || k === 'timer' || k === 'schedule' || k === 'cronjob') return 'scheduler';
   if (k === 'balancer' || k === 'lb' || k === 'load-balancer' || k === 'loadbalancer') return 'balancer';
   if (k === 'bus' || k === 'broker' || k === 'stream') return 'bus';
   if (k === 'gate' || k === 'approval' || k === 'decision' || k === 'policy') return 'gate';
@@ -1877,6 +1883,16 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
           }
         : {}),
       ...(n.balancer ? { balancer: n.balancer } : {}),
+      ...(n.cache
+        ? {
+            cache: {
+              ...n.cache,
+              ...(n.cache.backingId ? { backingId: idMap.get(n.cache.backingId) || n.cache.backingId } : {}),
+            },
+          }
+        : {}),
+      ...(n.limiter ? { limiter: n.limiter } : {}),
+      ...(n.schedule ? { schedule: n.schedule } : {}),
       ...(n.child && depth < MAX_CHILD_DEPTH
         ? {
             children: buildFrontmatter(

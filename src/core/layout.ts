@@ -16,11 +16,15 @@ export function getNodeDimensions(kind: NodeKind): { width: number; height: numb
       return { width: 148, height: 142 };
     case 'core':
     case 'gate':
+    case 'limiter':
       return { width: 242, height: 172 };
     case 'store':
       return { width: 216, height: 150 };
     case 'client':
+    case 'scheduler':
       return { width: 192, height: 112 };
+    case 'cache':
+      return { width: 200, height: 112 };
     case 'queue':
       return { width: 240, height: 112 };
     case 'balancer':
@@ -967,7 +971,7 @@ export function autoLayoutDocument(doc: DiagramDocument, options?: AutoLayoutOpt
     for (const n of nodes) {
       const inEdges = relevantEdges.filter((e) => e.to === n.id);
       const outEdges = relevantEdges.filter((e) => e.from === n.id);
-      if (n.kind === 'actor' && inEdges.length === 0 && outEdges.length === 1) {
+      if ((n.kind === 'actor' || n.kind === 'scheduler') && inEdges.length === 0 && outEdges.length === 1) {
         const targetId = outEdges[0].to;
         if ((rank.get(targetId) || 0) >= 2) {
           pinnedAbove.set(n.id, targetId);
@@ -1159,7 +1163,7 @@ export function synthesizeAutoSimulations(doc: DiagramDocument): SimulationScena
   }
 
   const startNode =
-    doc.nodes.find((n) => n.kind === 'actor' && (inDegree.get(n.id) || 0) === 0) ||
+    doc.nodes.find((n) => (n.kind === 'actor' || n.kind === 'scheduler') && (inDegree.get(n.id) || 0) === 0) ||
     doc.nodes.find((n) => (inDegree.get(n.id) || 0) === 0) ||
     doc.nodes[0];
 

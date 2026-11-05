@@ -155,10 +155,11 @@ export function layoutImported(doc: DiagramDocument): void {
   expandStageToFit(doc);
 }
 
-const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'memcached', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd'];
+const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd'];
 const QUEUE_IMAGES = ['rabbitmq', 'activemq', 'artemis', 'elasticmq', 'beanstalkd'];
 const BUS_IMAGES = ['kafka', 'nats', 'redpanda', 'pulsar', 'mosquitto', 'zookeeper'];
 const BALANCER_IMAGES = ['haproxy'];
+const CACHE_IMAGES = ['memcached', 'varnish'];
 const GATE_IMAGES = ['nginx', 'traefik', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
 
 /** The kind of component a container image most likely is: a data store, a message bus, a gateway, else a service. */
@@ -166,6 +167,7 @@ export function kindForImage(image: string): NodeKind {
   const name = image.toLowerCase().split('@')[0].split(':')[0];
   const last = name.split('/').pop() ?? name;
   const has = (list: string[]) => list.some((word) => last.includes(word));
+  if (has(CACHE_IMAGES)) return 'cache';
   if (has(STORE_IMAGES)) return 'store';
   if (has(QUEUE_IMAGES)) return 'queue';
   if (has(BUS_IMAGES)) return 'bus';

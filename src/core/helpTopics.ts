@@ -59,6 +59,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     keywords: ['load balancer', 'balancer', 'lb', 'haproxy', 'round robin', 'targets'],
   },
   {
+    id: 'cache-limiter-scheduler',
+    title: 'Caches, rate limiters and schedulers',
+    body: 'A Cache answers a share of reads itself (its hit rate) and sends the rest to the store behind it; if it fails, reads go straight to that store and its callers are slowed. A Rate Limiter admits some of every few requests and turns the rest away with a 429; set it to fail open and traffic passes through when it is down. A Scheduler starts work on a timer and counts as an entry point, so failing it cuts off its jobs.',
+    guideAnchor: 'caches-limiters-and-schedulers',
+    keywords: ['cache', 'hit rate', 'redis', 'rate limit', 'limiter', '429', 'scheduler', 'cron', 'timer'],
+  },
+  {
     id: 'review',
     title: 'Review and insights',
     body: 'The Review lens runs a few rules over the diagram and lists what they find, grouped by rule. Click an issue to select the component or wire it is about, and mute a rule you do not want to see. Muting is saved with the diagram.',

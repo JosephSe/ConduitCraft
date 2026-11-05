@@ -6,6 +6,7 @@
 import type { DiagramDocument, DiagramEdge, DiagramNode, LegendEntry, LevelContent, StreamTone } from '../types';
 import { WIRE_PROTOCOL_NAMES } from './wire';
 import { BALANCER_STRATEGY_LABELS } from './balancers';
+import { backingStoreOf, cacheHitRate, limiterRate } from './components';
 import { contentOfPage, pageCount, pageList } from './pages';
 
 const TONE_COLOURS: Record<StreamTone, string> = {
@@ -182,6 +183,31 @@ function balancerLines(content: LevelContent): string[] {
   return lines;
 }
 
+/** One sentence per cache, rate limiter and scheduler (K3 to K5). */
+function componentLines(content: LevelContent): string[] {
+  const byId = new Map(content.nodes.map((n) => [n.id, n]));
+  const edges = content.edges ?? [];
+  const lines: string[] = [];
+  const reach = (id: string) => [...new Set(edges.filter((e) => e.from === id && byId.has(e.to)).map((e) => nameOf(byId.get(e.to))))];
+  for (const n of content.nodes) {
+    if (n.kind === 'cache') {
+      const backing = backingStoreOf({ nodes: content.nodes, edges }, n.id);
+      const tail = backing ? `, backed by ${nameOf(byId.get(backing))}` : ', with no data store behind it';
+      lines.push(`- ${nameOf(n)} is a cache that answers ${cacheHitRate(n.cache)}% of reads${tail}.`);
+    } else if (n.kind === 'limiter') {
+      const { admit, per } = limiterRate(n.limiter);
+      const to = reach(n.id);
+      const open = n.limiter?.failOpen ? ' It fails open.' : '';
+      lines.push(`- ${nameOf(n)} is a rate limiter that admits ${admit} of every ${per} requests${to.length ? ` to ${list(to)}` : ''}.${open}`);
+    } else if (n.kind === 'scheduler') {
+      const to = reach(n.id);
+      const when = n.schedule?.every ? ` (${n.schedule.every})` : '';
+      lines.push(`- ${nameOf(n)} is a scheduler${when}${to.length ? ` that starts ${list(to)}` : ''}.`);
+    }
+  }
+  return lines;
+}
+
 function scenarioLines(doc: DiagramDocument): string[] {
   const byId = new Map(doc.nodes.map((n) => [n.id, n]));
   return (doc.simulations ?? []).map((scenario) => {
@@ -240,6 +266,7 @@ export function describeDiagram(doc: DiagramDocument): string {
     add('Main flows', flowLines(doc));
     add('Queues', queueLines(doc));
     add('Load balancers', balancerLines(doc));
+    add('Caches, limiters and schedulers', componentLines(doc));
     add('Levels', levelLines(doc));
   } else {
     // Each page is told on its own: a wire never crosses pages, so the sentences never mix them.
@@ -252,6 +279,7 @@ export function describeDiagram(doc: DiagramDocument): string {
       add(`Page ${page.title}: Main flows`, flowLines(content));
       add(`Page ${page.title}: Queues`, queueLines(content));
       add(`Page ${page.title}: Load balancers`, balancerLines(content));
+      add(`Page ${page.title}: Caches, limiters and schedulers`, componentLines(content));
       add(`Page ${page.title}: Levels`, levelLines(content));
     }
   }

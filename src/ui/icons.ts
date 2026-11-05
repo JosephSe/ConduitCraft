@@ -22,6 +22,9 @@ export const ICON_LIST: Array<{ id: NodeIconName; label: string }> = [
   { id: 'spark', label: 'AI / Engine' },
   { id: 'queue', label: 'Queue' },
   { id: 'balancer', label: 'Load balancer' },
+  { id: 'bolt', label: 'Cache' },
+  { id: 'gauge', label: 'Rate limiter' },
+  { id: 'clock', label: 'Schedule' },
 ];
 
 const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
@@ -88,6 +91,16 @@ const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
     { tag: 'circle', attrs: { cx: '19', cy: '5', r: '2' } },
     { tag: 'circle', attrs: { cx: '19', cy: '12', r: '2' } },
     { tag: 'circle', attrs: { cx: '19', cy: '19', r: '2' } },
+  ],
+  bolt: [{ tag: 'path', attrs: { d: 'M13 2 4 14h7l-1 8 9-12h-7z' } }],
+  gauge: [
+    { tag: 'path', attrs: { d: 'M4 17a9 9 0 1 1 16 0' } },
+    { tag: 'path', attrs: { d: 'M12 17l4-6' } },
+    { tag: 'circle', attrs: { cx: '12', cy: '17', r: '1.5' } },
+  ],
+  clock: [
+    { tag: 'circle', attrs: { cx: '12', cy: '12', r: '9' } },
+    { tag: 'path', attrs: { d: 'M12 7v5l3 2' } },
   ],
   globe: [
     { tag: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },
