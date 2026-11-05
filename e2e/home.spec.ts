@@ -59,6 +59,37 @@ test('a returning visitor lands on Home with their diagram in Recent, and opens 
   await expect(home(page)).toBeHidden();
 });
 
+for (const size of [
+  { width: 1440, height: 900 },
+  { width: 1024, height: 700 },
+  { width: 768, height: 600 },
+  { width: 390, height: 800 },
+]) {
+  test(`Home fits a ${size.width}x${size.height} window with no sideways scroll`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await seedAutosave(page, 'Payments', 2);
+    await page.goto('/');
+    await expect(home(page)).toBeVisible();
+    await expect(page.locator('button.btn[data-home-new]')).toBeVisible();
+    const fit = await page.evaluate(() => {
+      const dialog = document.querySelector<HTMLElement>('#home-dialog')!;
+      const body = document.querySelector<HTMLElement>('#home-dialog-body')!;
+      const box = dialog.getBoundingClientRect();
+      return {
+        dialogScrolls: dialog.scrollWidth > dialog.clientWidth,
+        bodyScrolls: body.scrollWidth > body.clientWidth,
+        left: box.left,
+        right: box.right,
+        viewport: window.innerWidth,
+      };
+    });
+    expect(fit.dialogScrolls).toBe(false);
+    expect(fit.bodyScrolls).toBe(false);
+    expect(fit.left).toBeGreaterThanOrEqual(0);
+    expect(fit.right).toBeLessThanOrEqual(fit.viewport);
+  });
+}
+
 test('a visitor with nothing saved, or a share link, does not get Home at boot', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#empty-stage-overlay')).toBeVisible();

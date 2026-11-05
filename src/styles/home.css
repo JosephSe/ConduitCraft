@@ -1,9 +1,16 @@
 /* The home screen. Loaded the first time it opens (src/studio/homeScreen.ts). Nothing here animates. */
+.home-dialog {
+  inline-size: min(72rem, calc(100vw - 2rem));
+  max-inline-size: calc(100vw - 2rem);
+  overflow-x: hidden;
+}
 .home-dialog-shell {
-  inline-size: min(72rem, 94vw);
-  max-inline-size: 72rem;
+  inline-size: 100%;
+  min-inline-size: 0;
 }
 .home-dialog-body {
+  min-inline-size: 0;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
