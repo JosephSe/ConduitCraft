@@ -16,6 +16,7 @@ const SHORT_LABEL: Record<string, string> = {
   'edit-rename': 'Rename',
   'edit-duplicate': 'Duplicate',
   'edit-lock': 'Lock',
+  'edit-group-frame': 'Frame',
   'edit-group': 'Group',
   'edit-ungroup': 'Ungroup',
   'edit-delete': 'Delete',

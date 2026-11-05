@@ -170,6 +170,7 @@ export function isSelectionLocked(doc: DiagramDocument, sel: SelectionTarget): b
     const card = doc.notesCards.find((c) => c.id === sel.id);
     return Boolean(card?.locked);
   }
+  if (sel.type === 'frame') return Boolean(doc.frames?.find((f) => f.id === sel.id)?.locked);
   if (sel.type === 'multi') {
     const selectedNodes = doc.nodes.filter((n) => sel.ids.includes(n.id));
     return selectedNodes.length > 0 && selectedNodes.every((n) => n.locked);
@@ -193,6 +194,12 @@ export function toggleSelectionLock(doc: DiagramDocument, sel: SelectionTarget):
   } else if (sel.type === 'notes') {
     const card = doc.notesCards.find((c) => c.id === sel.id);
     if (card) card.locked = nextLocked;
+  } else if (sel.type === 'frame') {
+    const frame = doc.frames?.find((f) => f.id === sel.id);
+    if (frame) {
+      if (nextLocked) frame.locked = true;
+      else delete frame.locked;
+    }
   } else if (sel.type === 'multi') {
     for (const node of doc.nodes) {
       if (sel.ids.includes(node.id)) node.locked = nextLocked;

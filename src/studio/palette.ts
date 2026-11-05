@@ -9,7 +9,7 @@ import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
-import { togglePresentation } from './presentation';
+import { togglePresentation } from './presentationTrigger';
 import { setPointerTool } from './pointerTool';
 import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
@@ -639,6 +639,14 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: `${mod}G`,
       keywords: ['group', 'combine', 'cluster'],
       run: () => applyGroup(),
+    },
+    {
+      id: 'edit-group-frame',
+      title: 'Group into Frame',
+      subtitle: 'Draw a frame around the selected components and notes',
+      category: 'Edit & History',
+      keywords: ['frame', 'group', 'box', 'container', 'vpc'],
+      run: () => void import('./frameStage').then((m) => m.groupSelectionToFrame()),
     },
     {
       id: 'edit-ungroup',

@@ -6,7 +6,16 @@
 import '../styles/frames.css';
 import type { DiagramFrame } from '../types';
 import { FRAME_MIN_HEIGHT, FRAME_MIN_WIDTH } from '../core/frames';
-import { adoptByGeometry, createFrame, frameAndDescendantIds, moveFrame, removeFrame } from '../core/frameOps';
+import {
+  adoptByGeometry,
+  createFrame,
+  duplicateFrame,
+  frameAndDescendantIds,
+  groupIntoFrame,
+  moveFrame,
+  notesInFrames,
+  removeFrame,
+} from '../core/frameOps';
 import { expandStageToFit } from '../core/layout';
 import { nextUid } from '../templates/presets';
 import { announce } from './a11y';
@@ -17,8 +26,8 @@ import { makeField, makeTextInput, makeTonePicker, renderPropertyEditor } from '
 import { scheduleMinimapPaint } from './minimap';
 import { setPointerTool } from './pointerTool';
 import { reconcileKeyed } from './reconcile';
-import { applySelection, renderAll, renderNodes, renderWiresOnly } from './render';
-import { app, beginHistoryGesture, endHistoryGesture, performUndo, pushHistory, screenToWorld, setSelection } from './state';
+import { applySelection, renderAll, renderNodes, renderNotesCards, renderWiresOnly } from './render';
+import { app, beginHistoryGesture, endHistoryGesture, performUndo, pushHistory, pushHistoryNudge, screenToWorld, setSelection } from './state';
 
 const area = (f: DiagramFrame) => f.width * f.height;
 const snap = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
@@ -91,12 +100,59 @@ export function deleteFrame(id: string): void {
   notify('Deleted frame. Its components stay.', { action: { label: 'Undo', onClick: () => performUndo() } });
 }
 
-/** Repaint the frames, the components they own and the wires after a gesture changed positions. */
+/** Repaint the frames, the components they own, the notes and the wires after a gesture changed positions. */
 function repaintAfterChange(): void {
   expandStageToFit(app.doc);
   renderFrames();
   renderNodes();
+  renderNotesCards();
   renderWiresOnly();
+}
+
+/** Make a frame around the selected components and notes (Group into frame). */
+export function groupSelectionToFrame(): void {
+  const sel = app.selection;
+  const nodeIds = sel.type === 'node' ? [sel.id] : sel.type === 'multi' ? sel.ids : [];
+  const noteIds = sel.type === 'notes' ? [sel.id] : sel.type === 'multi' ? (sel.notesIds ?? []) : [];
+  if (nodeIds.length + noteIds.length === 0) {
+    notify('Select components to put in a frame');
+    return;
+  }
+  pushHistory();
+  const frame = groupIntoFrame(app.doc, nodeIds, noteIds, nextUid('frame'));
+  if (!frame) return;
+  expandStageToFit(app.doc);
+  setSelection({ type: 'frame', id: frame.id });
+  renderAll(true);
+  announce(`Grouped into a frame. ${app.doc.nodes.filter((n) => n.frameId === frame.id).length} components inside it.`);
+}
+
+/** Duplicate the selected frame with everything in it. */
+export function duplicateSelectedFrame(): void {
+  const sel = app.selection;
+  if (sel.type !== 'frame') return;
+  pushHistory();
+  const copy = duplicateFrame(app.doc, sel.id, nextUid);
+  if (!copy) return;
+  expandStageToFit(app.doc);
+  setSelection({ type: 'frame', id: copy.id });
+  renderAll(true);
+  notify('Duplicated frame and what is in it');
+}
+
+/** Move a frame and what it holds from the keyboard. */
+export function nudgeFrame(id: string, dx: number, dy: number): boolean {
+  const frame = liveFrame(id);
+  if (!frame) return false;
+  if (frame.locked) {
+    notify(`"${frame.title}" is locked. Unlock it to move it.`);
+    return false;
+  }
+  pushHistoryNudge();
+  moveFrame(app.doc, id, dx, dy);
+  repaintAfterChange();
+  announce(`Frame ${frame.title} moved`);
+  return true;
 }
 
 function createFrameBox(frame: DiagramFrame): HTMLElement {
@@ -127,6 +183,7 @@ function createFrameBox(frame: DiagramFrame): HTMLElement {
     origins = new Map();
     for (const f of app.doc.frames ?? []) if (ids.has(f.id)) origins.set(`f:${f.id}`, [f.x, f.y]);
     for (const n of app.doc.nodes) if (n.frameId && ids.has(n.frameId)) origins.set(`n:${n.id}`, [n.x, n.y]);
+    for (const c of notesInFrames(app.doc, ids)) origins.set(`c:${c.id}`, [c.x, c.y]);
     start = { x: e.clientX, y: e.clientY };
     moved = false;
     bar.setPointerCapture(e.pointerId);
@@ -150,6 +207,10 @@ function createFrameBox(frame: DiagramFrame): HTMLElement {
     for (const n of app.doc.nodes) {
       const o = origins.get(`n:${n.id}`);
       if (o) [n.x, n.y] = o;
+    }
+    for (const c of app.doc.notesCards) {
+      const o = origins.get(`c:${c.id}`);
+      if (o) [c.x, c.y] = o;
     }
     moveFrame(app.doc, frame.id, snap(dx), snap(dy));
     repaintAfterChange();

@@ -7,14 +7,15 @@
 import type {
   DiagramDocument,
   DiagramEdge,
+  DiagramFrame,
   DiagramNode,
   DiagramNotesCard,
-  DiagramZone,
   ImportIssue,
   NodeKind,
   NodeShape,
 } from '../types';
 import { expandStageToFit } from '../core/layout';
+import { adoptByGeometry, createFrame, frameAround } from '../core/frameOps';
 import { MAX_PAGES, normalizePages } from '../core/pages';
 import { STENCIL_CATALOG, createBlankDocument, createNodeFromStencil } from '../templates/presets';
 import { childrenNamed, decodeEntities, parseXml, type XmlNode } from './xml';
@@ -375,7 +376,7 @@ export function convertPage(model: XmlNode, title: string, issues: ImportIssue[]
   if (imageShapes > 0) issues.push(issue('info', 'drawio-image-shape', `${imageShapes} image shape${imageShapes === 1 ? '' : 's'} became plain components; pictures are not imported.`));
 
   // Position: keep the draw.io layout, scaled so components of the default size do not collide.
-  const { scale, shiftX } = placeShapes(doc, notes, origin, issues, 'drawio');
+  placeShapes(doc, notes, origin, issues, 'drawio');
 
   // Wires.
   let danglingEdges = 0;
@@ -417,45 +418,52 @@ export function convertPage(model: XmlNode, title: string, issues: ImportIssue[]
     issues.push(issue('warning', 'drawio-edge-to-container', `${containerEdges} line${containerEdges === 1 ? ' is' : 's are'} attached to a group or swimlane, which cannot hold a wire, and ${containerEdges === 1 ? 'was' : 'were'} skipped.`));
   }
 
-  // Swimlanes: a column that spans the components inside (or the container's own width when it holds none).
+  // Containers (groups, swimlanes) become frames sized from what they hold, nested like the source (D1, B6b). A
+  // container inside another is drawn larger on the outside, so the parent always holds the child.
   if (containers.length > 0) {
-    let nested = 0;
-    containers.forEach((entry, index) => {
-      const members = [...nodeFor.entries()]
-        .filter(([cellId]) => {
-          let c = containerOf.get(cellId);
-          for (let depth = 0; c && depth < 64; depth++) {
-            if (c.id === entry.cell.id) return true;
-            c = containerAbove(c);
-          }
-          return false;
-        })
-        .map(([, node]) => node);
-      entry.members = members;
-      if (containerAbove(entry.cell)) nested += 1;
-      const num = String(index + 1).padStart(2, '0');
-      let x: number;
-      let width: number;
-      if (members.length > 0) {
-        x = Math.min(...members.map((m) => m.x)) - 32;
-        width = Math.max(...members.map((m) => m.x + m.width)) + 32 - x;
-      } else {
-        const g = absolute(entry.cell)!;
-        x = g.x * scale + shiftX;
-        width = g.width * scale;
+    const rects = new Map<string, ReturnType<typeof frameAround> | null>();
+    const rectOf = (entry: (typeof containers)[number]): ReturnType<typeof frameAround> | null => {
+      if (rects.has(entry.cell.id)) return rects.get(entry.cell.id) ?? null;
+      rects.set(entry.cell.id, null);
+      const own = [...nodeFor.entries()].filter(([cellId]) => containerOf.get(cellId)?.id === entry.cell.id).map(([, node]) => node);
+      const inner = containers.filter((c) => containerAbove(c.cell)?.id === entry.cell.id).map(rectOf).filter((r): r is NonNullable<typeof r> => Boolean(r));
+      entry.members = own;
+      const rect = own.length + inner.length > 0 ? frameAround([...own, ...inner]) : null;
+      rects.set(entry.cell.id, rect);
+      return rect;
+    };
+    const frames: DiagramFrame[] = [];
+    const frameOfCell = new Map<string, string>();
+    let empty = 0;
+    for (const entry of containers) {
+      const rect = rectOf(entry);
+      if (!rect) {
+        empty += 1;
+        continue;
       }
-      const zone: DiagramZone = {
-        id: uniqueId(`zone-${slugOf(entry.title)}`, usedIds),
-        number: num,
-        title: entry.title.slice(0, 40).toUpperCase(),
-        subtitle: 'From draw.io',
-        x: Math.max(24, Math.round(x / 16) * 16),
-        width: Math.max(160, Math.round(width / 16) * 16),
-      };
-      doc.zones.push(zone);
-    });
-    issues.push(issue('info', 'drawio-containers', `${containers.length} group${containers.length === 1 ? '' : 's'} or swimlane${containers.length === 1 ? '' : 's'} became swimlanes (columns); the shapes inside stay as components.`));
-    if (nested > 0) issues.push(issue('info', 'drawio-nested-containers', `${nested} nested group${nested === 1 ? '' : 's'} became separate swimlanes, so the nesting is lost.`));
+      const frame = createFrame(
+        uniqueId(`frame-${slugOf(entry.title)}`, usedIds),
+        { x: Math.round(rect.x / 16) * 16, y: Math.round(rect.y / 16) * 16, width: Math.round(rect.width / 16) * 16, height: Math.round(rect.height / 16) * 16 },
+        colourToTone(entry.cell.style.strokeColor) ?? colourToTone(entry.cell.style.fillColor) ?? 'blue',
+        entry.title.slice(0, 40),
+      );
+      frameOfCell.set(entry.cell.id, frame.id);
+      frames.push(frame);
+    }
+    for (const entry of containers) {
+      const parent = containerAbove(entry.cell);
+      const frame = frames.find((f) => f.id === frameOfCell.get(entry.cell.id));
+      const parentId = parent && frameOfCell.get(parent.id);
+      if (frame && parentId) frame.parentId = parentId;
+    }
+    if (frames.length > 0) {
+      doc.frames = frames;
+      adoptByGeometry(doc);
+      issues.push(issue('info', 'drawio-containers', `${frames.length} group${frames.length === 1 ? '' : 's'} or swimlane${frames.length === 1 ? '' : 's'} became frame${frames.length === 1 ? '' : 's'}, nested as in the original; the shapes inside stay as components.`));
+    }
+    if (empty > 0) {
+      issues.push(issue('info', 'drawio-empty-containers', `${empty} empty group${empty === 1 ? '' : 's'} or swimlane${empty === 1 ? '' : 's'} had nothing inside and ${empty === 1 ? 'was' : 'were'} not imported.`));
+    }
   }
 
   doc.notesCards = notes;

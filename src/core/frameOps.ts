@@ -2,13 +2,16 @@
  * Frame editing rules (F-09): who owns what, moving, removing, grouping. Kept apart from `frames.ts` (which the
  * parsers load at start-up) so the entry bundle only carries what reading a file needs. Pure and DOM-free.
  */
-import type { DiagramFrame, DiagramNode, StreamTone } from '../types';
+import type { DiagramEdge, DiagramFrame, DiagramNode, DiagramNotesCard, StreamTone } from '../types';
 import { FRAME_HEADER_HEIGHT, FRAME_MIN_HEIGHT, FRAME_MIN_WIDTH, FRAME_PADDING, MAX_FRAME_DEPTH } from './frames';
 
 /** The part of a document that frames touch. */
 export interface FrameHost {
   nodes: DiagramNode[];
   frames?: DiagramFrame[];
+  /** Notes and text labels. They have no `frameId`: a frame holds the ones whose point lies inside it (D1b). */
+  notesCards?: DiagramNotesCard[];
+  edges?: DiagramEdge[];
 }
 
 export interface FrameRect {
@@ -110,7 +113,22 @@ export function adoptByGeometry(host: FrameHost): boolean {
   return changed;
 }
 
-/** Move a frame, the frames inside it and the components it owns by the same step, keeping all of them on the canvas. */
+/** Rough size of a note card and of a text label, used to find where one sits (cards store only a top-left corner). */
+const NOTE_SIZE = { card: [280, 96], text: [80, 28] } as const;
+const noteSize = (c: DiagramNotesCard) => NOTE_SIZE[c.variant === 'text' ? 'text' : 'card'];
+
+/** The notes and text labels whose middle lies inside any of the frames `ids`. */
+export function notesInFrames(host: FrameHost, ids: ReadonlySet<string>): DiagramNotesCard[] {
+  const rects = (host.frames ?? []).filter((f) => ids.has(f.id));
+  return (host.notesCards ?? []).filter((c) => {
+    const [w, h] = noteSize(c);
+    const mx = c.x + w / 2;
+    const my = c.y + h / 2;
+    return rects.some((f) => mx >= f.x && mx < f.x + f.width && my >= f.y && my < f.y + f.height);
+  });
+}
+
+/** Move a frame, the frames inside it, the components it owns and the notes inside it by the same step, keeping all of them on the canvas. */
 export function moveFrame(host: FrameHost, id: string, dx: number, dy: number): void {
   const frames = host.frames ?? [];
   const ids = frameAndDescendantIds(frames, id);
@@ -118,8 +136,9 @@ export function moveFrame(host: FrameHost, id: string, dx: number, dy: number): 
   if (!frame) return;
   const movingFrames = frames.filter((f) => ids.has(f.id));
   const movingNodes = host.nodes.filter((n) => n.frameId && ids.has(n.frameId));
-  const minX = Math.min(...movingFrames.map((f) => f.x), ...movingNodes.map((n) => n.x));
-  const minY = Math.min(...movingFrames.map((f) => f.y), ...movingNodes.map((n) => n.y));
+  const movingNotes = notesInFrames(host, ids);
+  const minX = Math.min(...movingFrames.map((f) => f.x), ...movingNodes.map((n) => n.x), ...movingNotes.map((c) => c.x));
+  const minY = Math.min(...movingFrames.map((f) => f.y), ...movingNodes.map((n) => n.y), ...movingNotes.map((c) => c.y));
   const stepX = Math.round(Math.max(dx, 16 - minX));
   const stepY = Math.round(Math.max(dy, 24 - minY));
   for (const f of movingFrames) {
@@ -129,6 +148,10 @@ export function moveFrame(host: FrameHost, id: string, dx: number, dy: number): 
   for (const n of movingNodes) {
     n.x += stepX;
     n.y += stepY;
+  }
+  for (const c of movingNotes) {
+    c.x += stepX;
+    c.y += stepY;
   }
 }
 
@@ -153,4 +176,69 @@ export function frameAround(nodes: readonly Pick<DiagramNode, 'x' | 'y' | 'width
   const right = Math.max(...nodes.map((n) => n.x + n.width)) + FRAME_PADDING;
   const bottom = Math.max(...nodes.map((n) => n.y + n.height)) + FRAME_PADDING;
   return { x: Math.max(16, x), y: Math.max(24, y), width: right - Math.max(16, x), height: bottom - Math.max(24, y) };
+}
+
+/**
+ * Make a frame around the chosen components and notes (their bounding box plus padding) and settle ownership.
+ * Returns null when nothing usable was chosen.
+ */
+export function groupIntoFrame(
+  host: FrameHost,
+  nodeIds: readonly string[],
+  noteIds: readonly string[],
+  id: string,
+  tone: StreamTone = 'blue',
+  title = 'Group',
+): DiagramFrame | null {
+  const nodes = host.nodes.filter((n) => nodeIds.includes(n.id));
+  const notes = (host.notesCards ?? []).filter((c) => noteIds.includes(c.id));
+  const boxes = [
+    ...nodes,
+    ...notes.map((c) => ({ x: c.x, y: c.y, width: noteSize(c)[0], height: noteSize(c)[1] })),
+  ];
+  if (boxes.length === 0) return null;
+  const frame = createFrame(id, frameAround(boxes), tone, title);
+  host.frames = [...(host.frames ?? []), frame];
+  adoptByGeometry(host);
+  return frame;
+}
+
+/**
+ * Copy a frame with everything in it: the frames inside, the components they own (with the wires between them) and
+ * the notes inside, all shifted by `offset`. `newId` makes ids. Returns the new top frame, or null for an unknown id.
+ */
+export function duplicateFrame(host: FrameHost, id: string, newId: (prefix: string) => string, offset = 32): DiagramFrame | null {
+  const frames = host.frames ?? [];
+  const source = frames.find((f) => f.id === id);
+  if (!source) return null;
+  const ids = frameAndDescendantIds(frames, id);
+  const subtree = frames.filter((x) => ids.has(x.id));
+  const frameMap = new Map(subtree.map((f) => [f.id, newId('frame')]));
+  const copies = subtree.map((f) => {
+    const copy: DiagramFrame = { ...structuredClone(f), id: frameMap.get(f.id)!, x: f.x + offset, y: f.y + offset };
+    delete copy.locked;
+    delete copy.parentId;
+    // Inside the copy, frames keep their parents; the copy of the top frame sits where the original sat.
+    const parent = f.id === id ? f.parentId : f.parentId && frameMap.get(f.parentId);
+    if (parent) copy.parentId = parent;
+    if (f.id === id) copy.title = `${f.title} copy`;
+    return copy;
+  });
+  const nodeMap = new Map<string, string>();
+  const nodeCopies = host.nodes
+    .filter((n) => n.frameId && ids.has(n.frameId))
+    .map((n) => {
+      const copy: DiagramNode = { ...structuredClone(n), id: newId(n.kind), x: n.x + offset, y: n.y + offset, frameId: frameMap.get(n.frameId!) };
+      nodeMap.set(n.id, copy.id);
+      return copy;
+    });
+  const edgeCopies = (host.edges ?? [])
+    .filter((e) => nodeMap.has(e.from) && nodeMap.has(e.to))
+    .map((e) => ({ ...structuredClone(e), id: newId('edge'), from: nodeMap.get(e.from)!, to: nodeMap.get(e.to)! }));
+  const noteCopies = notesInFrames(host, ids).map((c) => ({ ...structuredClone(c), id: newId('notes'), x: c.x + offset, y: c.y + offset }));
+  host.frames = [...frames, ...copies];
+  host.nodes.push(...nodeCopies);
+  if (host.edges) host.edges.push(...edgeCopies);
+  if (host.notesCards) host.notesCards.push(...noteCopies);
+  return copies.find((c) => c.id === frameMap.get(id)) ?? null;
 }

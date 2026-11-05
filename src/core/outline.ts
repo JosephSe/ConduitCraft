@@ -9,7 +9,7 @@ import { describeWire, zoneOf } from './describe';
 import { contentAt, type LevelPath } from './levels';
 import { pageList } from './pages';
 
-export type OutlineKind = 'page' | 'zone' | 'component' | 'wire' | 'level';
+export type OutlineKind = 'page' | 'frame' | 'zone' | 'component' | 'wire' | 'level';
 
 export interface OutlineItem {
   /** Unique and stable across rebuilds, so expansion and focus survive an edit. Never shown. */
@@ -99,6 +99,25 @@ export function pageItems(doc: DiagramDocument, openIndex: number): OutlineItem[
     pageIndex: page.index,
     children: [],
   }));
+}
+
+/** One row per frame of the level, nested frames indented under the frame they sit in. A row selects the frame (D1b). */
+export function frameItems(content: LevelContent, path: LevelPath = []): OutlineItem[] {
+  const frames = content.frames ?? [];
+  if (!frames.length) return [];
+  const make = (f: (typeof frames)[number]): OutlineItem => {
+    const held = content.nodes.filter((n) => n.frameId === f.id).length;
+    return {
+      key: keyOf(path, 'frame', f.id),
+      kind: 'frame',
+      label: `Frame ${txt(f.title) || 'Untitled'}, holds ${plural(held, 'component')}${f.locked ? ', locked' : ''}`,
+      path,
+      targetId: f.id,
+      children: frames.filter((x) => x.parentId === f.id).map(make),
+    };
+  };
+  const ids = new Set(frames.map((f) => f.id));
+  return frames.filter((f) => !f.parentId || !ids.has(f.parentId)).sort((a, b) => a.y - b.y || a.x - b.x).map(make);
 }
 
 /** The outline of the level at `openPath`, with every child level nested under its component. */

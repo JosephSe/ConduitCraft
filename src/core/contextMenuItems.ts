@@ -29,8 +29,9 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
         'edit-delete',
       ];
     case 'edge':
-    case 'frame':
       return ['edit-rename', MENU_SEPARATOR, 'edit-delete'];
+    case 'frame':
+      return ['edit-rename', 'edit-duplicate', 'edit-lock', MENU_SEPARATOR, 'edit-delete'];
     case 'zone':
     case 'notes':
       return [
@@ -47,6 +48,7 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
       return [
         'edit-duplicate',
         'edit-group',
+        'edit-group-frame',
         ...(hints.grouped ? ['edit-ungroup'] : []),
         'edit-lock',
         MENU_SEPARATOR,
@@ -80,14 +82,16 @@ export function contextToolbarCommandIds(type: ContextSelectionType, hints: Cont
     case 'node':
       return ['edit-rename', 'edit-duplicate', 'edit-lock', 'wire-from-selection'];
     case 'edge':
-    case 'frame':
       return ['edit-rename', 'edit-delete'];
+    case 'frame':
+      return ['edit-rename', 'edit-duplicate', 'edit-lock'];
     case 'zone':
     case 'notes':
       return ['edit-rename', 'edit-duplicate', 'edit-lock'];
     case 'multi':
       return [
         'edit-group',
+        'edit-group-frame',
         ...(hints.grouped ? ['edit-ungroup'] : []),
         'edit-lock',
         'edit-duplicate',

@@ -135,6 +135,10 @@ In the Blueprint file, the first page is the file itself and the others are a `p
 
 With several pages, the text outline lists them, Review says how many issues each other page has and jumps to it, and Find and replace can search "All pages". Export: Vector Picture and Image are the open page; "Every page as a picture" saves one SVG per page in a zip; the interactive HTML has every page, with a tab strip. A draw.io file with several pages opens as page tabs.
 
+## Frames
+
+A frame is a titled box that holds the components inside it. Draw one with the Frame tool (`F`), or select components and choose Group into Frame. Drag the title strip to move the frame with everything in it (notes and text labels inside it too); drag the corner to resize; double-click the title to rename. Frames can sit inside other frames. Duplicate (`Cmd/Ctrl+D`) copies a frame with what it holds, and Lock (`Cmd/Ctrl+L`) keeps it from being moved or deleted. A selected frame moves with `Alt+Arrow`. The text outline lists frames, and the description says what each holds. When importing Mermaid, Subgraphs as: Frames turns each subgraph into a frame.
+
 ## Legend and tags
 
 The **colour legend** is in the inspector when nothing is selected. Give each wire colour a meaning your team uses, such as "Payments" for Control. The names replace the defaults in the pickers, the filter and the exported page.

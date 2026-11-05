@@ -92,6 +92,22 @@ function flowLines(content: LevelContent): string[] {
   return lines;
 }
 
+/** One line per frame: what it holds (components, then frames inside it) and, for a nested frame, what it sits in (D1b). */
+function frameLines(content: LevelContent): string[] {
+  const frames = content.frames ?? [];
+  const byId = new Map(frames.map((f) => [f.id, f]));
+  const name = (f: { title: string }) => txt(f.title) || 'Untitled frame';
+  return [...frames]
+    .sort((a, b) => a.y - b.y || a.x - b.x)
+    .map((f) => {
+      const members = content.nodes.filter((n) => n.frameId === f.id).map(nameOf);
+      const inner = frames.filter((x) => x.parentId === f.id).map((x) => `frame ${name(x)}`);
+      const held = [...members, ...inner];
+      const parent = f.parentId ? byId.get(f.parentId) : undefined;
+      return `- Frame ${name(f)}${parent ? `, inside ${name(parent)},` : ''} holds ${held.length ? list(held) : 'nothing'}.`;
+    });
+}
+
 /** One line per component that opens into a level, nested levels included. */
 function levelLines(content: LevelContent, trail: string[] = []): string[] {
   const lines: string[] = [];
@@ -162,6 +178,7 @@ export function describeDiagram(doc: DiagramDocument): string {
   };
   if (pageCount(doc) === 1) {
     add((doc.zones ?? []).length ? 'Swimlanes' : 'Components', swimlaneLines(doc));
+    add('Frames', frameLines(doc));
     add('Main flows', flowLines(doc));
     add('Levels', levelLines(doc));
   } else {
@@ -171,6 +188,7 @@ export function describeDiagram(doc: DiagramDocument): string {
       if (!content) continue;
       sections.push(`Page ${page.title} holds ${countLine(content).replace(/^It has /, '').replace(/^It is empty\.$/, 'nothing yet.')}`);
       add(`Page ${page.title}: ${(content.zones ?? []).length ? 'Swimlanes' : 'Components'}`, swimlaneLines(content));
+      add(`Page ${page.title}: Frames`, frameLines(content));
       add(`Page ${page.title}: Main flows`, flowLines(content));
       add(`Page ${page.title}: Levels`, levelLines(content));
     }

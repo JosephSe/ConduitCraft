@@ -198,7 +198,7 @@ import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
 import { createShareUrl, decodeSharedDiagramFromHash, describeShareSize, docHasImages } from './shareLink';
 import { initNodeSearch } from './nodeSearch';
-import { presentationManager } from './presentation';
+import { togglePresentation } from './presentationTrigger';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
@@ -907,7 +907,9 @@ function dropNodesFromSimulations(ids: Set<string>): void {
 
 export function duplicateSelected(): void {
   const sel = app.selection;
-  if (sel.type === 'node') {
+  if (sel.type === 'frame') {
+    void import('./frameStage').then((m) => m.duplicateSelectedFrame());
+  } else if (sel.type === 'node') {
     const orig = app.doc.nodes.find((n) => n.id === sel.id);
     if (!orig) return;
     pushHistory();
@@ -1401,9 +1403,9 @@ export function getSafeFilenameSlug(): string {
   return filenameSlug(app.doc.title || 'architecture-diagram', 'architecture-diagram');
 }
 
-export function getSubgraphMode(): 'swimlanes' | 'levels' {
+export function getSubgraphMode(): 'swimlanes' | 'levels' | 'frames' {
   const checked = document.querySelector<HTMLInputElement>('input[name="subgraph-mode"]:checked');
-  return checked?.value === 'levels' ? 'levels' : 'swimlanes';
+  return checked?.value === 'levels' || checked?.value === 'frames' ? checked.value : 'swimlanes';
 }
 
 export function refreshCodeModalTextarea(): void {
@@ -2584,38 +2586,20 @@ export function initEvents(): void {
       return;
     }
 
-    // Presentation Mode Navigation & Toggle
-    if (presentationManager.isPresenting) {
-      if (e.key === 'Escape' || (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey)) {
-        e.preventDefault();
-        presentationManager.exit();
-        return;
-      }
-      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
-        e.preventDefault();
-        presentationManager.next();
-        return;
-      }
-      if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        e.preventDefault();
-        presentationManager.prev();
-        return;
-      }
-      if (e.key === 'Home') {
-        e.preventDefault();
-        presentationManager.goTo(0);
-        return;
-      }
-      if (e.key === 'End') {
-        e.preventDefault();
-        presentationManager.goTo(presentationManager.totalSteps - 1);
-        return;
-      }
+    // A selected frame moves with Alt+Arrow, like a component does; the frame code loads when it is first needed.
+    if (app.selection.type === 'frame' && e.altKey && !e.metaKey && !e.ctrlKey && !inEditable && e.key.startsWith('Arrow')) {
+      const id = app.selection.id;
+      const step = e.shiftKey ? 4 : 16;
+      const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0;
+      const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0;
+      e.preventDefault();
+      void import('./frameStage').then((m) => m.nudgeFrame(id, dx, dy));
+      return;
     }
 
     if (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey && !e.altKey && !inEditable) {
       e.preventDefault();
-      presentationManager.toggle(app.doc);
+      void togglePresentation(app.doc);
       return;
     }
 
