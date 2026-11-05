@@ -71,6 +71,17 @@ function showHelpAfterPalette(topicId: string): void {
   else openHelp(topicId);
 }
 
+/** Adds one component from a stencil in the palette. */
+function addStencilFromPalette(stencilId: string, name: string): void {
+  pushHistory();
+  const node = createNodeFromStencil(stencilId, 200, 200, app.doc.nodes.length);
+  app.doc.nodes.push(node);
+  expandStageToFit(app.doc);
+  setSelection({ type: 'node', id: node.id });
+  renderAll(true);
+  notify(`Added ${name} stencil`);
+}
+
 export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
   const mod = isMac() ? '⌘' : 'Ctrl+';
   const commands: PaletteCommand[] = [
@@ -154,6 +165,30 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
         renderAll(true);
         notify('Added Load Balancer stencil');
       },
+    },
+    {
+      id: 'add-cache',
+      title: 'Add Cache Stencil',
+      subtitle: 'Answers repeat reads fast',
+      category: 'Components',
+      keywords: ['cache', 'redis', 'memcached', 'hit', 'miss', 'fast reads'],
+      run: () => addStencilFromPalette('cache', 'Cache'),
+    },
+    {
+      id: 'add-limiter',
+      title: 'Add Rate Limiter Stencil',
+      subtitle: 'Turns away traffic over a limit',
+      category: 'Components',
+      keywords: ['rate limiter', 'limiter', 'throttle', '429', 'quota'],
+      run: () => addStencilFromPalette('limiter', 'Rate Limiter'),
+    },
+    {
+      id: 'add-scheduler',
+      title: 'Add Scheduler Stencil',
+      subtitle: 'Starts work on a timer',
+      category: 'Components',
+      keywords: ['scheduler', 'cron', 'timer', 'job', 'schedule'],
+      run: () => addStencilFromPalette('scheduler', 'Scheduler'),
     },
     {
       id: 'add-broker',

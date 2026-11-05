@@ -122,6 +122,14 @@ A Load Balancer is drawn as a trapezoid, with the wide side towards the componen
 
 Pick a **Strategy** under **Review & Status**: round robin, least connections, weighted or hash. It is recorded for the reader and shown on the card; the run does not use it.
 
+### Caches, limiters and schedulers
+
+A **Cache** answers a share of reads itself and sends the rest to the data store behind it. Set the **Hit rate** (0 to 100, default 80) in the inspector, and pick the **Backing store**; if you leave it empty, the cache uses its only wire to a store, and the inspector shows that store greyed out. If the cache fails and a store sits behind it, reads go straight to the store: the store shows as **rerouted** and the cache's callers are **slowed**, not at risk. With no store behind it, a failed cache behaves like any failed component. In the Traffic lens, a packet that reaches a cache is a hit or a miss. Hits are spread evenly (80% means 4 in every 5), so a run always looks the same. A hit shows `HIT`, skips the steps up to and including the store's step, and goes back to the caller; a miss shows `MISS` and plays on.
+
+A **Rate Limiter** admits some of every few requests. Set **Admit** and **Per** in the inspector (default 4 of 5). In the Traffic lens, a rejected packet turns red, shows `429` and stops at the limiter; a looping scenario starts again from the first step. The announcement "Rate Limiter rejected a request (429)" is made at most once every five seconds. A limiter that fails closed (the default) cuts off what is behind it when it is down. Tick **Fails open** and, if the limiter has exactly one outgoing wire, traffic passes through it when it is down: the limiter shows as **bypassed** instead of failed.
+
+A **Scheduler** starts work on a timer. Write the timing in **Runs** as free text, for example `5m` or `0 3 * * *` (up to 40 characters); it shows on the card. A scheduler is an entry point, like an actor or a client: failing it cuts off the jobs it starts. A scenario whose first step is a scheduler shows `⏱` and the timing on its packet, and a looping run waits twice as long between loops. Auto layout treats a scheduler as the start of the flow.
+
 Failing a component also fails everything inside its level. Failing a component inside a level leaves the parent alone.
 
 ## Review and insights
@@ -141,6 +149,9 @@ The Review lens runs a set of rules over every level of the diagram. The list gr
 | Queue with a limit and no dead-letter queue | Info | A queue has a maximum depth but nowhere to send overflow, so it drops messages when full. |
 | Synchronous wire into a queue | Info | A wire into a queue is not marked async. Queues are usually written asynchronously. |
 | Load balancer with fewer than two targets | Info | A load balancer points at one component or none, so it does not spread load. |
+| Cache with no data store behind it | Info | A cache has no store to fall back to, so a failure loses every read. |
+| Rate limiter that fails open | Info | A limiter is set to fail open, so traffic reaches its target unchecked when it is down. |
+| Scheduler that writes straight to a store | Info | A scheduler's direct target is a data store, with no queue or retry between them. |
 | Wire between services without a label | Info | A wire between two services has no label, so a reader cannot tell what it carries. |
 
 ## Levels
@@ -291,6 +302,9 @@ edges:
 | `service` | Service / API | `id["Title"]` |
 | `queue` | Message Queue | `id[("Title")]` |
 | `balancer` | Load Balancer | `id[/"Title"\]` |
+| `cache` | Cache | `id["Title"]` |
+| `limiter` | Rate Limiter | `id["Title"]` |
+| `scheduler` | Scheduler | `id["Title"]` |
 | `bus` | Event Broker | `id("Title")` |
 | `gate` | Control Gate | `id{{"Title"}}` |
 | `store` | Data Store | `id[("Title")]` |
@@ -298,7 +312,7 @@ edges:
 
 `shape` is the on-canvas outline: `card` (the default, omitted), `rounded`, `pill`, `circle`, `diamond`, `hexagon`, `asymmetric`, or `trapezoid`. A load balancer is drawn as a trapezoid without storing a shape.
 
-`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`, `balancer`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
+`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`, `balancer`, `bolt`, `gauge`, `clock`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
 
 `payload` is the contract. A JSON value is stored as structured YAML; anything that is not JSON stays a string. `metrics` is a list of `{ label, value }`. A map of label to value is also accepted on import.
 

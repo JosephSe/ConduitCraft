@@ -3,6 +3,7 @@
  * DOM-free, so the snapshot dialog, the CLI and the drift check can all use it.
  */
 import type { DiagramDocument, DiagramEdge, DiagramNode } from '../types';
+import { limiterRate } from './components';
 
 export type DiffStatus = 'added' | 'removed' | 'modified' | 'unchanged';
 
@@ -61,6 +62,20 @@ function balancerChanges(before: DiagramNode, after: DiagramNode): string[] {
   return a === b ? [] : [`${after.title || after.id}: strategy ${a ?? 'round-robin'} → ${b ?? 'round-robin'}`];
 }
 
+/** Changes to a cache, rate limiter or scheduler setting (K3 to K5). */
+function componentChanges(before: DiagramNode, after: DiagramNode): string[] {
+  const name = after.title || after.id;
+  const out: string[] = [];
+  if (before.cache?.hitRate !== after.cache?.hitRate) out.push(`${name}: hit rate ${before.cache?.hitRate ?? 80}% → ${after.cache?.hitRate ?? 80}%`);
+  if (before.cache?.backingId !== after.cache?.backingId) out.push(`${name}: backing store ${before.cache?.backingId ?? 'inferred'} → ${after.cache?.backingId ?? 'inferred'}`);
+  const bl = limiterRate(before.limiter);
+  const al = limiterRate(after.limiter);
+  if (bl.admit !== al.admit || bl.per !== al.per) out.push(`${name}: admits ${bl.admit} of ${bl.per} → ${al.admit} of ${al.per}`);
+  if (Boolean(before.limiter?.failOpen) !== Boolean(after.limiter?.failOpen)) out.push(`${name}: ${after.limiter?.failOpen ? 'now fails open' : 'now fails closed'}`);
+  if (before.schedule?.every !== after.schedule?.every) out.push(`${name}: schedule ${before.schedule?.every ?? 'none'} → ${after.schedule?.every ?? 'none'}`);
+  return out;
+}
+
 /** Compute differences between a base document (e.g. past snapshot) and current document. */
 export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: DiagramDocument): DocumentDiff {
   const baseNodes = new Map(baseDoc.nodes.map((n) => [n.id, n]));
@@ -112,6 +127,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
       }
       for (const line of queueChanges(before, after)) changes.push(line);
       for (const line of balancerChanges(before, after)) changes.push(line);
+      for (const line of componentChanges(before, after)) changes.push(line);
       if (before.x !== after.x || before.y !== after.y) {
         changes.push(`Moved to (${after.x}, ${after.y})`);
       }

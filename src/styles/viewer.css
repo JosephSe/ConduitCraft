@@ -640,3 +640,7 @@ body[data-presenting="true"] .canvas-hud {
 .export-page-tab:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
 body:has(.export-page-strip) { padding-block-end: 2.5rem; }
 body:has(.export-page-strip) .canvas-hud { inset-block-end: 3.5rem; }
+
+/* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */
+.arch-node[data-kind="cache"] .node-sub,
+.arch-node[data-kind="scheduler"] .node-sub { display: none; }

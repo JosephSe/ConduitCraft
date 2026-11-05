@@ -33,9 +33,9 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 ## New components (see COMPONENTS_PLAN.md)
 - [x] K1. **Message Queue**: pipe outline, buffering and delayed chaos states, backlog in the Traffic lens, dead-letter queue, three Review rules.
 - [x] K2. **Load Balancer**: trapezoid outline, a failed target is absorbed by the others, playback sends traffic to a live target, one Review rule.
-- [ ] K3. **Cache**
-- [ ] K4. **Rate Limiter**
-- [ ] K5. **Scheduler / Cron**
+- [x] K3. **Cache**: hit rate, a failed cache detours to its store (callers slowed), deterministic hits and misses in playback, one Review rule.
+- [x] K4. **Rate Limiter**: admit N of every M, 429 in playback, fail open shows as bypassed, one Review rule.
+- [x] K5. **Scheduler / Cron**: an entry point, timing on the card, a visible tick when looping, one Review rule.
 - [ ] K6. **Stream / Log**
 - [ ] K7. **External / third-party**
 - [ ] K8. **Object Storage**

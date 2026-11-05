@@ -250,6 +250,8 @@ function nodeMarkup(
     // The studio hides the subtitle inside a pipe, so the export does too.
     node = { ...node, x: node.x + rx, width: node.width - 3 * rx, subtitle: '' };
   }
+  // The 112-high cache and scheduler cards drop the subtitle so the footer chip fits, as the studio does.
+  if (node.kind === 'cache' || node.kind === 'scheduler') node = { ...node, subtitle: '' };
   const { x, y, width, height } = node;
   const isClient = node.kind === 'client';
   const right = x + width - 16;

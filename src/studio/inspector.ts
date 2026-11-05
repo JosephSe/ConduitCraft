@@ -100,6 +100,18 @@ import {
 } from '../core/meta';
 import { normalizeResilience, replicaCount } from '../core/reachability';
 import { BALANCER_STRATEGIES, BALANCER_STRATEGY_LABELS, normalizeBalancer } from '../core/balancers';
+import {
+  DEFAULT_ADMIT,
+  DEFAULT_HIT_RATE,
+  DEFAULT_PER,
+  MAX_PER,
+  MAX_SCHEDULE_EVERY,
+  backingStoreOf,
+  limiterRate,
+  normalizeCache,
+  normalizeLimiter,
+  normalizeSchedule,
+} from '../core/components';
 import { MAX_QUEUE_DEPTH, MAX_QUEUE_RETENTION, QUEUE_ORDERINGS, normalizeQueue } from '../core/queues';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
@@ -338,6 +350,112 @@ function makeBalancerFields(node: DiagramNode): HTMLElement[] {
   group.className = 'prop-field prop-queue-heading';
   group.appendChild(heading);
   return [group, makeField('prop-node-balancer-strategy', 'Strategy', strategy)];
+}
+
+function fieldGroup(title: string): HTMLElement {
+  const heading = document.createElement('span');
+  heading.className = 'field-label';
+  heading.textContent = title;
+  const group = document.createElement('div');
+  group.className = 'prop-field prop-queue-heading';
+  group.appendChild(heading);
+  return group;
+}
+
+function wholeNumberInput(value: number | undefined, min: number, max: number, placeholder: string): HTMLInputElement {
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.min = String(min);
+  input.max = String(max);
+  input.step = '1';
+  input.className = 'prop-input';
+  input.placeholder = placeholder;
+  input.value = value === undefined ? '' : String(value);
+  return input;
+}
+
+/** A cache (K3): its hit rate and the store behind it. An inferred store is shown greyed out. */
+function makeCacheFields(node: DiagramNode): HTMLElement[] {
+  const commit = (next: Record<string, unknown>): void => {
+    pushHistory();
+    node.cache = normalizeCache({ ...node.cache, ...next });
+    if (!node.cache) delete node.cache;
+    renderAll(false);
+  };
+  const rate = wholeNumberInput(node.cache?.hitRate, 0, 100, String(DEFAULT_HIT_RATE));
+  rate.addEventListener('change', () => {
+    const n = Number(rate.value);
+    const next = rate.value.trim() === '' || !Number.isFinite(n) ? undefined : Math.max(0, Math.min(100, Math.round(n)));
+    rate.value = next === undefined ? '' : String(next);
+    // The default is stored as absent, so asking for it clears the field.
+    commit({ hitRate: next ?? DEFAULT_HIT_RATE });
+  });
+
+  const backing = document.createElement('select');
+  backing.className = 'prop-select';
+  const inferred = node.cache?.backingId ? null : backingStoreOf(app.doc, node.id);
+  const inferredTitle = inferred ? app.doc.nodes.find((n) => n.id === inferred)?.title || inferred : '';
+  backing.appendChild(makeOption('', inferred ? `${inferredTitle} (inferred)` : 'None'));
+  for (const other of app.doc.nodes) {
+    if (other.id !== node.id) backing.appendChild(makeOption(other.id, other.title || other.id));
+  }
+  backing.value = node.cache?.backingId ?? '';
+  if (inferred) backing.classList.add('is-inferred');
+  backing.addEventListener('change', () => commit({ backingId: backing.value || undefined }));
+
+  return [
+    fieldGroup('Cache'),
+    makeField('prop-node-cache-hitrate', 'Hit rate (%)', rate),
+    makeField('prop-node-cache-backing', 'Backing store', backing),
+  ];
+}
+
+/** A rate limiter (K4): admit this many of every so many packets, and whether it fails open. */
+function makeLimiterFields(node: DiagramNode): HTMLElement[] {
+  const commit = (next: Record<string, unknown>): void => {
+    pushHistory();
+    node.limiter = normalizeLimiter({ ...node.limiter, ...next });
+    if (!node.limiter) delete node.limiter;
+    renderAll(false);
+  };
+  const now = limiterRate(node.limiter);
+  const admit = wholeNumberInput(now.admit, 1, MAX_PER, String(DEFAULT_ADMIT));
+  const per = wholeNumberInput(now.per, 1, MAX_PER, String(DEFAULT_PER));
+  const read = (input: HTMLInputElement, fallback: number): number => {
+    const n = Math.round(Number(input.value));
+    return Number.isFinite(n) && n >= 1 ? Math.min(MAX_PER, n) : fallback;
+  };
+  // Both numbers are written together, so "admit more than per" is settled in one place.
+  const write = () => commit({ admit: read(admit, DEFAULT_ADMIT), per: read(per, DEFAULT_PER) });
+  admit.addEventListener('change', write);
+  per.addEventListener('change', write);
+
+  const open = document.createElement('input');
+  open.type = 'checkbox';
+  open.checked = Boolean(node.limiter?.failOpen);
+  open.addEventListener('change', () => commit({ failOpen: open.checked }));
+  const openField = makeField('prop-node-limiter-failopen', 'Fails open', open);
+  openField.classList.add('prop-field-check');
+
+  return [
+    fieldGroup('Rate limiter'),
+    makeField('prop-node-limiter-admit', 'Admit', admit),
+    makeField('prop-node-limiter-per', 'Of every', per),
+    openField,
+  ];
+}
+
+/** A scheduler (K5): when it runs, as free text. */
+function makeSchedulerFields(node: DiagramNode): HTMLElement[] {
+  const every = makeTextInput(node.schedule?.every ?? '', (value) => {
+    pushHistory();
+    node.schedule = normalizeSchedule({ every: value });
+    if (!node.schedule) delete node.schedule;
+    renderAll(false);
+  });
+  every.maxLength = MAX_SCHEDULE_EVERY;
+  every.placeholder = '5m or 0 3 * * *';
+  return [fieldGroup('Scheduler'), makeField('prop-node-schedule-every', 'Runs', every)];
 }
 
 /** Ownership and links for a component (F-27): owner text, clickable link icons, and a row editor. */
@@ -1152,6 +1270,9 @@ export function renderPropertyEditor(): void {
     reviewElements.push(...makeResilienceFields(node));
     if (node.kind === 'queue') reviewElements.push(...makeQueueFields(node));
     if (node.kind === 'balancer') reviewElements.push(...makeBalancerFields(node));
+    if (node.kind === 'cache') reviewElements.push(...makeCacheFields(node));
+    if (node.kind === 'limiter') reviewElements.push(...makeLimiterFields(node));
+    if (node.kind === 'scheduler') reviewElements.push(...makeSchedulerFields(node));
 
     // Assemble Form Sections
     form.append(

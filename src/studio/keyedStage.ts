@@ -1346,6 +1346,8 @@ const CHAOS_BADGES: Record<string, string> = {
   'at-risk': '⚠ Potential disruption',
   buffering: '⏸ Buffering',
   delayed: '⏳ Delayed',
+  slowed: '🐢 Slowed',
+  bypassed: '↷ Bypassed',
 };
 
 /** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */
@@ -1430,6 +1432,9 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     node.footerLeft,
     node.queue,
     node.balancer,
+    node.cache,
+    node.limiter,
+    node.schedule,
   ]);
   const painted = paintedNodeContent.get(wrapper);
   if (painted && painted.sig === contentSig && painted.image === node.iconImage) return;

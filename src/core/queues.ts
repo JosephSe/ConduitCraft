@@ -2,8 +2,9 @@
  * Message queues (K1): reading queue settings from untrusted input, and the pure maths of a backlog. Pure and
  * DOM-free. The live backlog is held per page in `studio/queueBacklog.ts` and is never saved.
  */
-import type { DiagramDocument, NodeBalancer, NodeQueue, QueueDelivery, QueueOrdering } from '../types';
+import type { DiagramDocument, NodeBalancer, NodeCache, NodeLimiter, NodeQueue, NodeSchedule, QueueDelivery, QueueOrdering } from '../types';
 import { balancerChip } from './balancers';
+import { nodeChip } from './components';
 
 export const QUEUE_ORDERINGS: readonly QueueOrdering[] = ['standard', 'fifo', 'priority'];
 export const QUEUE_DELIVERIES: readonly QueueDelivery[] = ['competing', 'fanout'];
@@ -87,12 +88,15 @@ export function queueCardText(node: {
   footerLeft: string;
   queue?: NodeQueue;
   balancer?: NodeBalancer;
+  cache?: NodeCache;
+  limiter?: NodeLimiter;
+  schedule?: NodeSchedule;
 }): {
   chip: string;
   footer: string;
 } {
   if (node.kind === 'balancer') return { chip: balancerChip(node), footer: node.footerLeft };
-  if (node.kind !== 'queue') return { chip: node.chip, footer: node.footerLeft };
+  if (node.kind !== 'queue') return { chip: nodeChip(node), footer: node.footerLeft };
   const q = node.queue;
   const limits: string[] = [];
   if (q?.maxDepth) limits.push(`max ${q.maxDepth}`);

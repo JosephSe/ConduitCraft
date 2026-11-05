@@ -1,4 +1,4 @@
-export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client' | 'queue' | 'balancer';
+export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client' | 'queue' | 'balancer' | 'cache' | 'limiter' | 'scheduler';
 
 export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric' | 'trapezoid';
 
@@ -32,7 +32,10 @@ export type NodeIconName =
   | 'cpu'
   | 'globe'
   | 'queue'
-  | 'balancer';
+  | 'balancer'
+  | 'bolt'
+  | 'gauge'
+  | 'clock';
 
 export type BalancerStrategy = 'round-robin' | 'least-connections' | 'weighted' | 'hash';
 
@@ -40,6 +43,28 @@ export type BalancerStrategy = 'round-robin' | 'least-connections' | 'weighted' 
 export interface NodeBalancer {
   /** Default 'round-robin'. Recorded for the reader and shown on the card. */
   strategy?: BalancerStrategy;
+}
+
+/** Cache settings (K3). Absent fields use the defaults in `core/components.ts`. */
+export interface NodeCache {
+  /** Percent of reads answered by the cache, 0 to 100. Default 80. */
+  hitRate?: number;
+  /** The store behind the cache. Absent means the only store it points at, when there is exactly one. */
+  backingId?: string;
+}
+
+/** Rate limiter settings (K4): admit `admit` of every `per` packets. Defaults 4 of 5, fail-closed. */
+export interface NodeLimiter {
+  admit?: number;
+  per?: number;
+  /** When the limiter is down, traffic goes through unchecked instead of stopping. */
+  failOpen?: boolean;
+}
+
+/** Scheduler settings (K5). */
+export interface NodeSchedule {
+  /** Free text, for example "5m" or "0 3 * * *". Max 40 characters. */
+  every?: string;
 }
 
 export type QueueOrdering = 'standard' | 'fifo' | 'priority';
@@ -215,6 +240,12 @@ export interface DiagramNode {
   queue?: NodeQueue;
   /** Load balancer settings (K2). Only read when `kind` is 'balancer'; kept when the kind changes. */
   balancer?: NodeBalancer;
+  /** Cache settings (K3). Only read when `kind` is 'cache'. */
+  cache?: NodeCache;
+  /** Rate limiter settings (K4). Only read when `kind` is 'limiter'. */
+  limiter?: NodeLimiter;
+  /** Schedule (K5). Only read when `kind` is 'scheduler'. */
+  schedule?: NodeSchedule;
   /** Where the component was imported from (F-06), so a later import or drift check can match it again. */
   source?: NodeSource;
   /** The diagram inside this component, opened as a level (F-03). Absent means the component is a leaf. */

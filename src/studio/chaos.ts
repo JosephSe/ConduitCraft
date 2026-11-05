@@ -10,7 +10,7 @@ import { announce } from './a11y';
 import { app, onPageOpened } from './state';
 import { renderAll } from './render';
 
-export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk' | 'buffering' | 'delayed';
+export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk' | 'buffering' | 'delayed' | 'slowed' | 'bypassed';
 
 /** Failures at every level, keyed by where they sit (`core/failures.ts`), so repeated ids at different levels never collide. */
 let failed = new Set<string>();
@@ -108,10 +108,12 @@ export function chaosStatusOf(nodeId: string): ChaosStatus | null {
   const r = chaosResult();
   if (!r) return null;
   if (r.failed.includes(nodeId)) return 'failed';
+  if (r.bypassed.includes(nodeId)) return 'bypassed';
   if (r.degraded.includes(nodeId)) return 'degraded';
   if (r.delayed.includes(nodeId)) return 'delayed';
   if (r.unreachable.includes(nodeId)) return 'unreachable';
   if (r.buffering.includes(nodeId)) return 'buffering';
+  if (r.slowed.includes(nodeId)) return 'slowed';
   if (r.atRisk.includes(nodeId)) return 'at-risk';
   if (r.rerouted.includes(nodeId)) return 'rerouted';
   return null;
@@ -144,6 +146,8 @@ export interface ChaosSummary {
   atRisk: number;
   buffering: number;
   delayed: number;
+  slowed: number;
+  bypassed: number;
 }
 
 /** Counts for the run of real failures (not the Alt preview), or null when none are set. */
@@ -159,6 +163,8 @@ export function chaosSummary(): ChaosSummary | null {
     atRisk: r.atRisk.length,
     buffering: r.buffering.length,
     delayed: r.delayed.length,
+    slowed: r.slowed.length,
+    bypassed: r.bypassed.length,
   };
 }
 
@@ -168,6 +174,8 @@ export function summaryText(s: ChaosSummary): string {
   if (s.degraded) parts.push(`${s.degraded} degraded`);
   if (s.buffering) parts.push(`${s.buffering} buffering`);
   if (s.delayed) parts.push(`${s.delayed} delayed`);
+  if (s.bypassed) parts.push(`${s.bypassed} bypassed`);
+  if (s.slowed) parts.push(`${s.slowed} slowed`);
   parts.push(`${s.unreachable} unreachable`, `${s.rerouted} rerouted`);
   if (s.atRisk) parts.push(`${s.atRisk} at risk`);
   return parts.join(' · ');
