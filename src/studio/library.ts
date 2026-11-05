@@ -29,6 +29,8 @@ export interface LibraryEntry {
   title: string;
   updatedAt: number;
   thumbnail?: string;
+  /** How many pages the diagram has (D10). */
+  pages: number;
 }
 
 const isEntry = (record: DiagramRecord): boolean => record.id !== RECOVERY_ID;
@@ -39,7 +41,7 @@ export function listLibrary(): LibraryEntry[] {
     .filter(isEntry)
     .map((r, index) => ({ r, index }))
     .sort((a, b) => b.r.updatedAt - a.r.updatedAt || a.index - b.index)
-    .map(({ r }) => ({ id: r.id, title: r.title, updatedAt: r.updatedAt, thumbnail: r.thumbnail }));
+    .map(({ r }) => ({ id: r.id, title: r.title, updatedAt: r.updatedAt, thumbnail: r.thumbnail, pages: 1 + (r.doc?.pages?.length ?? 0) }));
 }
 
 export function hasDiagram(id: string): boolean {

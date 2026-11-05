@@ -65,7 +65,7 @@ function cardHtml(entry: ReturnType<typeof listLibrary>[number], activeId: strin
   return `<li><button type="button" class="home-card" data-home-card data-home-open="${id}"${isOpen ? ' aria-current="true"' : ''}>
     ${thumb}
     <span class="home-card-title">${title}</span>
-    <span class="home-card-when">${isOpen ? 'Open now · ' : ''}${escapeHtml(relativeTime(entry.updatedAt))}</span>
+    <span class="home-card-when">${isOpen ? 'Open now · ' : ''}${entry.pages > 1 ? `${entry.pages} pages · ` : ''}${escapeHtml(relativeTime(entry.updatedAt))}</span>
   </button></li>`;
 }
 

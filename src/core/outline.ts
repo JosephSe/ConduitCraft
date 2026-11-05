@@ -7,8 +7,9 @@
 import type { DiagramDocument, DiagramNode, LevelContent } from '../types';
 import { describeWire, zoneOf } from './describe';
 import { contentAt, type LevelPath } from './levels';
+import { pageList } from './pages';
 
-export type OutlineKind = 'zone' | 'component' | 'wire' | 'level';
+export type OutlineKind = 'page' | 'zone' | 'component' | 'wire' | 'level';
 
 export interface OutlineItem {
   /** Unique and stable across rebuilds, so expansion and focus survive an edit. Never shown. */
@@ -19,6 +20,8 @@ export interface OutlineItem {
   path: LevelPath;
   /** The component or wire a `component` or `wire` row selects. */
   targetId?: string;
+  /** The page a `page` row opens (D10). */
+  pageIndex?: number;
   children: OutlineItem[];
 }
 
@@ -82,6 +85,20 @@ function levelItems(content: LevelContent, path: LevelPath): OutlineItem[] {
     });
   }
   return items;
+}
+
+/** One row per page when the file has several, so the outline can move between them (D10). Empty for one page. */
+export function pageItems(doc: DiagramDocument, openIndex: number): OutlineItem[] {
+  const pages = pageList(doc);
+  if (pages.length < 2) return [];
+  return pages.map((page) => ({
+    key: `|page|${page.id}`,
+    kind: 'page' as const,
+    label: `Page ${page.title}${page.index === openIndex ? ', open' : ''}`,
+    path: [],
+    pageIndex: page.index,
+    children: [],
+  }));
 }
 
 /** The outline of the level at `openPath`, with every child level nested under its component. */

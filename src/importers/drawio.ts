@@ -15,13 +15,14 @@ import type {
   NodeShape,
 } from '../types';
 import { expandStageToFit } from '../core/layout';
+import { MAX_PAGES, normalizePages } from '../core/pages';
 import { STENCIL_CATALOG, createBlankDocument, createNodeFromStencil } from '../templates/presets';
 import { childrenNamed, decodeEntities, parseXml, type XmlNode } from './xml';
 import { colourToTone, issue, placeShapes, slugOf, uniqueId, type Geo } from './common';
 
 export { colourToTone };
 
-export type DrawioPageMode = 'separate' | 'levels';
+export type DrawioPageMode = 'separate' | 'tabs';
 
 export interface DrawioPage {
   name: string;
@@ -35,7 +36,7 @@ export interface DrawioFile {
 }
 
 export interface DrawioResult {
-  /** One document per page ('separate'), or a single overview whose components open the pages ('levels'). */
+  /** One document per page ('separate'), or one document with a page tab for each draw.io page ('tabs'). */
   docs: DiagramDocument[];
   issues: ImportIssue[];
 }
@@ -471,32 +472,40 @@ function titleCase(text: string): string {
 }
 
 /**
- * Convert every page. 'separate' gives one diagram per page. 'levels' gives one overview diagram with a component
- * per page, each opening that page as a level. A file with one page gives one diagram either way.
+ * Convert every page. 'separate' gives one diagram per page. 'tabs' gives one diagram with a page tab for each draw.io
+ * page, keeping the names and the order (D10). A file with one page gives one diagram either way.
  */
 export function convertDrawio(file: DrawioFile, mode: DrawioPageMode, fileTitle: string): DrawioResult {
   const issues: ImportIssue[] = [...file.issues];
   const many = file.pages.length > 1;
   const pageDocs = file.pages.map((page) => {
     const pageIssues: ImportIssue[] = [];
-    const title = many && mode === 'separate' ? `${fileTitle} – ${page.name}` : many ? page.name : fileTitle;
+    const title = many && mode === 'separate' ? `${fileTitle} – ${page.name}` : fileTitle;
     const doc = convertPage(page.model, title, pageIssues);
     for (const item of pageIssues) issues.push(many ? { ...item, message: `${page.name}: ${item.message}` } : item);
     return doc;
   });
   if (!many || mode === 'separate') return { docs: pageDocs, issues };
 
-  const overview = createBlankDocument();
-  overview.title = titleCase(fileTitle);
-  pageDocs.forEach((pageDoc, index) => {
-    const node = createNodeFromStencil('core', 96 + index * 320, 192, index);
-    node.id = uniqueId(slugOf(pageDoc.title), new Set(overview.nodes.map((n) => n.id)));
-    node.title = pageDoc.title.slice(0, 60);
-    node.subtitle = 'draw.io page';
-    node.summary = `Page "${pageDoc.title}" from the draw.io file. Open it as a level.`;
-    node.child = { nodes: pageDoc.nodes, edges: pageDoc.edges, zones: pageDoc.zones, notesCards: pageDoc.notesCards };
-    overview.nodes.push(node);
-  });
-  expandStageToFit(overview);
-  return { docs: [overview], issues };
+  const [first, ...rest] = pageDocs;
+  const doc = first;
+  doc.title = titleCase(fileTitle);
+  doc.pageTitle = file.pages[0].name.trim() || undefined;
+  if (!doc.pageTitle) delete doc.pageTitle;
+  doc.pages = rest.slice(0, MAX_PAGES - 1).map((pageDoc, i) => ({
+    id: '',
+    title: file.pages[i + 1].name.trim(),
+    nodes: pageDoc.nodes,
+    edges: pageDoc.edges,
+    zones: pageDoc.zones,
+    notesCards: pageDoc.notesCards,
+    ...(pageDoc.frames?.length ? { frames: pageDoc.frames } : {}),
+    stageWidth: pageDoc.stageWidth,
+    stageHeight: pageDoc.stageHeight,
+  }));
+  if (rest.length > MAX_PAGES - 1) {
+    issues.push({ level: 'warning', code: 'drawio-too-many-pages', message: `A file holds at most ${MAX_PAGES} pages; the last ${rest.length - (MAX_PAGES - 1)} were not imported.` });
+  }
+  normalizePages(doc);
+  return { docs: [doc], issues };
 }

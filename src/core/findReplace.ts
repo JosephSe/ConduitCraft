@@ -15,12 +15,16 @@ export interface FindOptions {
 export interface FindLevel {
   path: string[];
   content: LevelContent;
+  /** The page this level belongs to, when searching across pages (D10). */
+  page?: number;
 }
 
 export type MatchKind = 'node' | 'edge' | 'note' | 'zone';
 
 export interface FindMatch {
   path: string[];
+  /** The page the match is on, when searching across pages. */
+  page?: number;
   kind: MatchKind;
   id: string;
   /** Human name of the field, for the results list. */
@@ -117,7 +121,7 @@ export function findMatches(levels: FindLevel[], opts: FindOptions): FindMatch[]
     for (const ref of fieldsOf(level)) {
       const text = ref.get();
       const count = text ? countIn(text, pattern) : 0;
-      if (count > 0) out.push({ path: level.path, kind: ref.kind, id: ref.id, field: ref.field, text, count });
+      if (count > 0) out.push({ path: level.path, page: level.page, kind: ref.kind, id: ref.id, field: ref.field, text, count });
     }
   }
   return out;
@@ -131,15 +135,15 @@ export function replaceAll(
   levels: FindLevel[],
   opts: FindOptions,
   replacement: string,
-  only?: Pick<FindMatch, 'path' | 'id' | 'field'>[],
+  only?: Pick<FindMatch, 'path' | 'page' | 'id' | 'field'>[],
 ): number {
   const pattern = patternFor(opts);
   if (!pattern) return 0;
-  const allowed = only ? new Set(only.map((m) => `${m.path.join('/')}|${m.id}|${m.field}`)) : null;
+  const allowed = only ? new Set(only.map((m) => `${m.page ?? ''}|${m.path.join('/')}|${m.id}|${m.field}`)) : null;
   let replaced = 0;
   for (const level of levels) {
     for (const ref of fieldsOf(level)) {
-      if (allowed && !allowed.has(`${level.path.join('/')}|${ref.id}|${ref.field}`)) continue;
+      if (allowed && !allowed.has(`${level.page ?? ''}|${level.path.join('/')}|${ref.id}|${ref.field}`)) continue;
       const text = ref.get();
       if (!text) continue;
       const n = countIn(text, pattern);
@@ -154,11 +158,11 @@ export function replaceAll(
 }
 
 /** The ids of the matches in one level, split by kind, ready to become a multi-selection. */
-export function idsInLevel(matches: FindMatch[], path: string[]): Record<MatchKind, string[]> {
+export function idsInLevel(matches: FindMatch[], path: string[], page?: number): Record<MatchKind, string[]> {
   const key = path.join('/');
   const out: Record<MatchKind, string[]> = { node: [], edge: [], note: [], zone: [] };
   for (const m of matches) {
-    if (m.path.join('/') !== key) continue;
+    if (m.path.join('/') !== key || m.page !== page) continue;
     if (!out[m.kind].includes(m.id)) out[m.kind].push(m.id);
   }
   return out;
