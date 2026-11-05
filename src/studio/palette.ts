@@ -191,6 +191,22 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => addStencilFromPalette('scheduler', 'Scheduler'),
     },
     {
+      id: 'add-stream',
+      title: 'Add Stream / Log Stencil',
+      subtitle: 'Every reader gets every message',
+      category: 'Components',
+      keywords: ['stream', 'log', 'kafka', 'partition', 'fanout', 'replay'],
+      run: () => addStencilFromPalette('stream', 'Stream / Log'),
+    },
+    {
+      id: 'add-object-store',
+      title: 'Add Object Storage Stencil',
+      subtitle: 'Blobs and files',
+      category: 'Components',
+      keywords: ['object storage', 'bucket', 's3', 'blob', 'files', 'minio'],
+      run: () => addStencilFromPalette('object-store', 'Object Storage'),
+    },
+    {
       id: 'add-broker',
       title: 'Add Event Broker Stencil',
       subtitle: 'Pub/sub event bus',

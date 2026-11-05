@@ -5,7 +5,16 @@
  */
 import { failureKey } from '../core/failures';
 import { getNodeCenter } from '../core/layout';
-import { drainCount, enqueue, queueConsumers, type BacklogState, type EnqueueOutcome } from '../core/queues';
+import {
+  drainCount,
+  enqueue,
+  fanoutDrain,
+  fanoutHold,
+  maxLag,
+  queueConsumers,
+  type BacklogState,
+  type EnqueueOutcome,
+} from '../core/queues';
 import type { DiagramNode } from '../types';
 import { announce } from './a11y';
 import { bufferingQueueIds, downIds, onChaosChange, onChaosReset } from './chaos';
@@ -90,10 +99,17 @@ export function holdMessage(queueId: string): { outcome: EnqueueOutcome; deadLet
   const dlq = cfg?.deadLetterId;
   const dlqUp = Boolean(dlq) && !downIds().has(dlq!) && app.doc.nodes.some((n) => n.id === dlq);
   const prev = backlog.get(key(queueId)) ?? { depth: 0, deadLettered: 0, dropped: 0 };
-  const { state, outcome } = enqueue(prev, cfg, dlqUp);
+  let { state, outcome } = enqueue(prev, cfg, dlqUp);
+  const fanout = cfg?.delivery === 'fanout';
+  if (fanout && outcome === 'held') {
+    // A stream keeps a lag for each consumer: the ones that are down fall one further behind (K6).
+    const down = downIds();
+    const lags = fanoutHold(prev.lags ?? {}, queueConsumers(app.doc, queueId).filter((c) => down.has(c)));
+    state = { ...state, lags, depth: maxLag(lags) };
+  }
   backlog.set(key(queueId), state);
   const name = titleOf(queueId);
-  if (outcome === 'held') announce(`Message held in ${name}. ${state.depth} waiting.`);
+  if (outcome === 'held') announce(fanout ? `Message added to ${name}. Lag is ${state.depth}.` : `Message held in ${name}. ${state.depth} waiting.`);
   else if (outcome === 'dead-lettered') announce(`${name} is full. Message sent to ${titleOf(dlq!)}.`);
   else announce(`${name} is full. Message dropped.`);
   if (outcome === 'dead-lettered') flashDlqLink(queueId);
@@ -105,13 +121,28 @@ function drainTick(id: string): void {
   drainTimers.delete(id);
   const state = backlog.get(key(id));
   if (!state || state.depth <= 0) return;
-  // A queue that went back to buffering stops draining until its consumers are up again.
-  if (bufferingQueueIds().has(id)) return;
   const node = app.doc.nodes.find((n) => n.id === id);
   const down = downIds();
-  const live = queueConsumers(app.doc, id).filter((c) => !down.has(c)).length;
-  const left = Math.max(0, state.depth - drainCount(live, node?.queue));
-  backlog.set(key(id), { ...state, depth: left });
+  const fanout = node?.queue?.delivery === 'fanout';
+  // A queue that went back to buffering stops draining until its consumers are up again. A stream's live
+  // consumers keep reading while others are down (K6).
+  if (!fanout && bufferingQueueIds().has(id)) return;
+  const liveIds = queueConsumers(app.doc, id).filter((c) => !down.has(c));
+  let left: number;
+  if (fanout) {
+    const lags = fanoutDrain(state.lags ?? {}, liveIds);
+    left = maxLag(lags);
+    backlog.set(key(id), { ...state, lags, depth: left });
+    // Only the consumers that are still down hold the rest of the lag.
+    if (liveIds.every((c) => !lags[c])) {
+      changed();
+      if (left === 0) announceDrained(id, state);
+      return;
+    }
+  } else {
+    left = Math.max(0, state.depth - drainCount(liveIds.length, node?.queue));
+    backlog.set(key(id), { ...state, depth: left });
+  }
   if (left === 0) {
     const total = drainTotals.get(id) ?? state.depth;
     drainTotals.delete(id);
@@ -120,6 +151,12 @@ function drainTick(id: string): void {
     scheduleDrain(id);
   }
   changed();
+}
+
+function announceDrained(id: string, state: BacklogState): void {
+  const total = drainTotals.get(id) ?? state.depth;
+  drainTotals.delete(id);
+  announce(`${titleOf(id)} drained ${total} ${total === 1 ? 'message' : 'messages'}.`);
 }
 
 function scheduleDrain(id: string): void {
@@ -133,7 +170,8 @@ function syncDrain(): void {
   for (const [k, state] of backlog) {
     if (state.depth <= 0) continue;
     const id = k.split('\u0000').pop()!;
-    if (buffering.has(id)) {
+    const fanout = app.doc.nodes.find((n) => n.id === id)?.queue?.delivery === 'fanout';
+    if (buffering.has(id) && !fanout) {
       // Back to buffering: stop the drain.
       const timer = drainTimers.get(id);
       if (timer) clearTimeout(timer);
@@ -192,7 +230,12 @@ export function paintBacklog(wrapper: HTMLElement, node: DiagramNode): void {
     return;
   }
   wrapper.dataset.backlog = String(depth);
-  hit?.setAttribute('aria-label', `${node.title}, ${depth} ${depth === 1 ? 'message' : 'messages'} waiting`);
+  hit?.setAttribute(
+    'aria-label',
+    node.queue?.delivery === 'fanout'
+      ? `${node.title}, largest consumer lag ${depth}`
+      : `${node.title}, ${depth} ${depth === 1 ? 'message' : 'messages'} waiting`,
+  );
   if (!blocks) {
     blocks = document.createElement('span');
     blocks.className = 'queue-backlog';
@@ -218,7 +261,7 @@ export function paintBacklog(wrapper: HTMLElement, node: DiagramNode): void {
       return block;
     }),
   );
-  chip.textContent = max ? `${depth} / ${max}` : `${depth} waiting`;
+  chip.textContent = node.queue?.delivery === 'fanout' ? `lag ${depth}` : max ? `${depth} / ${max}` : `${depth} waiting`;
   chip.dataset.level = max && depth >= max ? 'full' : max && depth >= max * 0.8 ? 'warn' : 'ok';
 }
 

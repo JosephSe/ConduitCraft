@@ -72,6 +72,9 @@ function componentChanges(before: DiagramNode, after: DiagramNode): string[] {
   const al = limiterRate(after.limiter);
   if (bl.admit !== al.admit || bl.per !== al.per) out.push(`${name}: admits ${bl.admit} of ${bl.per} → ${al.admit} of ${al.per}`);
   if (Boolean(before.limiter?.failOpen) !== Boolean(after.limiter?.failOpen)) out.push(`${name}: ${after.limiter?.failOpen ? 'now fails open' : 'now fails closed'}`);
+  if (Boolean(before.external) !== Boolean(after.external)) out.push(`${name}: ${after.external ? 'now run by someone else' : 'no longer external'}`);
+  if (before.queue?.delivery !== after.queue?.delivery) out.push(`${name}: delivery ${before.queue?.delivery ?? 'competing'} → ${after.queue?.delivery ?? 'competing'}`);
+  if (before.queue?.partitions !== after.queue?.partitions) out.push(`${name}: partitions ${before.queue?.partitions ?? 3} → ${after.queue?.partitions ?? 3}`);
   if (before.schedule?.every !== after.schedule?.every) out.push(`${name}: schedule ${before.schedule?.every ?? 'none'} → ${after.schedule?.every ?? 'none'}`);
   return out;
 }

@@ -36,7 +36,7 @@ More exports of the Lumen Relay example:
 ## Highlights
 
 - **Blank-canvas authoring (Design lens)**
-  - Drag and drop 12 architectural stencils (**Human Actor**, **Core System**, **Service**, **Load Balancer**, **Cache**, **Rate Limiter**, **Scheduler**, **Message Queue**, **Event Broker**, **Decision Gate**, **Data Store**, **Client Edge**) plus **Swimlane Stage** banners and **Notes / Spec** checklist cards.
+  - Drag and drop 14 architectural stencils (**Human Actor**, **Core System**, **Service**, **Load Balancer**, **Cache**, **Rate Limiter**, **Scheduler**, **Message Queue**, **Stream / Log**, **Event Broker**, **Decision Gate**, **Data Store**, **Object Storage**, **Client Edge**) plus **Swimlane Stage** banners and **Notes / Spec** checklist cards.
   - Drag between directional ports (`top`, `right`, `bottom`, `left`) or use **Connect** mode to wire animated telemetry streams.
   - **9 Distinct Per-Wire Routing Styles** with a visual schematic picker: `Smart Auto`, `Direct Line`, `Smooth S-Curve`, `Curved Arc`, `Vertical Fan-out`, `Rounded Elbow`, `Sharp Step`, `Under U-Loop`, and `Over U-Loop`, plus draggable wire waypoints and automatic parallel-wire lane separation.
   - **Multi-Select & Alignment**: `Shift+click` or `Shift+drag` marquee box to select multiple components, move groups together, and align/distribute from the property inspector.

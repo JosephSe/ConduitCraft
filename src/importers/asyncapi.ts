@@ -63,6 +63,12 @@ function protocolFor(servers: unknown): WireProtocol | undefined {
 }
 
 /** A channel is a queue when its AMQP binding says so, or when it has an SQS binding. */
+/** A channel with a Kafka binding is a stream (K6): a queue where every reader gets every message. */
+function isStreamChannel(channel: Obj): boolean {
+  const bindings = isRecord(channel.bindings) ? channel.bindings : {};
+  return isRecord(bindings.kafka);
+}
+
 function isQueueChannel(channel: Obj): boolean {
   const bindings = isRecord(channel.bindings) ? channel.bindings : {};
   const amqp = isRecord(bindings.amqp) ? bindings.amqp : {};
@@ -96,12 +102,12 @@ export function convertAsyncApi(source: string, fallbackTitle: string): AsyncApi
   const info = isRecord(data.info) ? data.info : {};
   const appTitle = str(info.title) || fallbackTitle;
   const flows: Flow[] = [];
-  const channelInfo = new Map<string, { address: string; description: string; queue: boolean }>();
+  const channelInfo = new Map<string, { address: string; description: string; queue: boolean; stream: boolean }>();
 
   if (major === '2') {
     for (const [name, raw] of Object.entries(data.channels)) {
       const channel = isRecord(raw) ? raw : {};
-      channelInfo.set(name, { address: name, description: str(channel.description), queue: isQueueChannel(channel) });
+      channelInfo.set(name, { address: name, description: str(channel.description), queue: isQueueChannel(channel), stream: isStreamChannel(channel) });
       // In AsyncAPI 2, `subscribe` is what the application sends and `publish` is what it receives.
       const subscribe = isRecord(channel.subscribe) ? channel.subscribe : null;
       const publish = isRecord(channel.publish) ? channel.publish : null;
@@ -111,7 +117,7 @@ export function convertAsyncApi(source: string, fallbackTitle: string): AsyncApi
   } else {
     for (const [name, raw] of Object.entries(data.channels)) {
       const channel = isRecord(resolve(data, raw)) ? (resolve(data, raw) as Obj) : {};
-      channelInfo.set(name, { address: str(channel.address) || name, description: str(channel.description), queue: isQueueChannel(channel) });
+      channelInfo.set(name, { address: str(channel.address) || name, description: str(channel.description), queue: isQueueChannel(channel), stream: isStreamChannel(channel) });
     }
     const operations = isRecord(data.operations) ? data.operations : {};
     for (const raw of Object.values(operations)) {
@@ -145,8 +151,8 @@ export function convertAsyncApi(source: string, fallbackTitle: string): AsyncApi
   const busFor = new Map<string, DiagramNode>();
   for (const name of shown) {
     const meta = channelInfo.get(name)!;
-    const bus = makeNode(meta.queue ? 'queue' : 'bus', meta.address, used, { kind: ASYNCAPI_SOURCE, ref: `channel:${name}` });
-    bus.subtitle = meta.queue ? 'Queue' : 'Channel';
+    const bus = makeNode(meta.stream ? 'stream' : meta.queue ? 'queue' : 'bus', meta.address, used, { kind: ASYNCAPI_SOURCE, ref: `channel:${name}` });
+    bus.subtitle = meta.stream ? 'Stream' : meta.queue ? 'Queue' : 'Channel';
     bus.summary = (meta.description || `Channel ${meta.address}.`).slice(0, 280);
     const names = [...new Set(flows.filter((f) => f.channel === name).flatMap((f) => f.messages))];
     bus.metrics = names.slice(0, 12).map((n) => ({ label: 'Message', value: n }));

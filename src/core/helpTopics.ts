@@ -66,6 +66,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     keywords: ['cache', 'hit rate', 'redis', 'rate limit', 'limiter', '429', 'scheduler', 'cron', 'timer'],
   },
   {
+    id: 'streams-external-storage',
+    title: 'Streams, external components and object storage',
+    body: 'A Stream / Log is a queue where every reader gets every message and falls behind on its own: when a reader is down its lag grows, and the others carry on. Tick Run by someone else on any component to draw it dashed; a synchronous call into it with no circuit breaker or fallback is flagged. Object Storage is a store drawn as a bucket.',
+    guideAnchor: 'streams-external-components-and-object-storage',
+    keywords: ['stream', 'log', 'kafka', 'lag', 'external', 'third party', 'stripe', 'bucket', 's3', 'object storage'],
+  },
+  {
     id: 'review',
     title: 'Review and insights',
     body: 'The Review lens runs a few rules over the diagram and lists what they find, grouped by rule. Click an issue to select the component or wire it is about, and mute a rule you do not want to see. Muting is saved with the diagram.',

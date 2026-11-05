@@ -644,3 +644,24 @@ body:has(.export-page-strip) .canvas-hud { inset-block-end: 3.5rem; }
 /* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */
 .arch-node[data-kind="cache"] .node-sub,
 .arch-node[data-kind="scheduler"] .node-sub { display: none; }
+
+/* Streams draw their partitions as thin lanes inside the pipe (K6). */
+.node-shape-lanes { fill: none; stroke: currentColor; stroke-width: 1; opacity: 0.35; pointer-events: none; }
+
+/* Something someone else runs (K7): a dashed outline and a small ribbon. */
+.arch-node[data-external="true"] .node-select-hit { border-style: dashed; }
+.arch-node[data-external="true"] .node-shape-geom { stroke-dasharray: 6 4; }
+.arch-node[data-external="true"]::after {
+  content: "EXTERNAL";
+  position: absolute;
+  inset-block-start: -0.55rem;
+  inset-inline-end: 0.6rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font: 600 0.6rem/1.2 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
+  background: var(--surface, #fff);
+  color: var(--text-muted, #475569);
+  border: 1px dashed currentColor;
+  pointer-events: none;
+}

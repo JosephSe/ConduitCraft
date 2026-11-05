@@ -8,7 +8,7 @@ import yaml from 'js-yaml';
 import type { DiagramDocument, DiagramNode, ImportIssue } from '../types';
 import { normalizeTags } from '../core/meta';
 import { createBlankDocument } from '../templates/presets';
-import { issue, kindForImage, layoutImported, makeEdge, makeNode } from './common';
+import { issue, layoutImported, makeEdge, makeNode, stencilForImage } from './common';
 
 export interface ComposeResult {
   doc: DiagramDocument;
@@ -82,7 +82,7 @@ export function convertCompose(text: string, title: string): ComposeResult {
   for (const [name, service] of services) {
     const image = typeof service.image === 'string' ? service.image : '';
     const build = typeof service.build === 'string' ? service.build : isRecord(service.build) && typeof service.build.context === 'string' ? service.build.context : '';
-    const kind = image ? kindForImage(image) : 'service';
+    const kind = image ? stencilForImage(image) : 'service';
     const node = makeNode(kind, name, used, { kind: COMPOSE_SOURCE, ref: name });
     node.subtitle = (image || (build ? `build: ${build}` : 'Service')).slice(0, 60);
     node.summary = `Service ${name}${image ? ` running ${image}` : ''}.`;

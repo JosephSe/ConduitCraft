@@ -1,7 +1,7 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
 import { breadcrumb, viewOfLevel } from '../core/levels';
 import { pageList, viewOfPage } from '../core/pages';
-import { queueCardText } from '../core/queues';
+import { queueCardText, streamLanes } from '../core/queues';
 import { describeDiagram } from '../core/describe';
 import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, relatedNodeIds, routeDiagramEdges } from '../core/layout';
@@ -12,6 +12,7 @@ import {
   renderCylinderPlate,
   renderNodeShapePlate,
   sanitizeIconImage,
+  storeDrawsBucket,
   storeDrawsCylinder,
   queueDrawsPipe,
   renderPipePlate,
@@ -44,7 +45,7 @@ function serializeScriptJson(data: unknown): string {
 }
 
 function nodeShapeAttr(node: DiagramNode): string {
-  if (storeDrawsCylinder(node.kind, node.shape)) return ' data-shape="cylinder"';
+  if (storeDrawsCylinder(node.kind, node.shape)) return storeDrawsBucket(node.kind, node.shape) ? ' data-shape="cylinder" data-bucket="true"' : ' data-shape="cylinder"';
   if (queueDrawsPipe(node.kind, node.shape)) return ' data-shape="pipe"';
   if (balancerDrawsTrapezoid(node.kind, node.shape)) return ' data-shape="trapezoid"';
   if (!node.shape || node.shape === 'card') return '';
@@ -52,8 +53,8 @@ function nodeShapeAttr(node: DiagramNode): string {
 }
 
 function nodePlateMarkup(node: DiagramNode, direction: 'LR' | 'TD'): string {
-  if (storeDrawsCylinder(node.kind, node.shape)) return renderCylinderPlate(node.width, node.height);
-  if (queueDrawsPipe(node.kind, node.shape)) return renderPipePlate(node.width, node.height);
+  if (storeDrawsCylinder(node.kind, node.shape)) return renderCylinderPlate(node.width, node.height, storeDrawsBucket(node.kind, node.shape));
+  if (queueDrawsPipe(node.kind, node.shape)) return renderPipePlate(node.width, node.height, streamLanes(node));
   return renderNodeShapePlate(drawnShape(node.kind, node.shape), node.width, node.height, direction);
 }
 
@@ -103,7 +104,7 @@ function renderExportedNode(
   const isRel = Boolean(multiSel && related?.has(node.id) && !isSel);
   const isDim = Boolean(multiSel && multiSel.ids.length > 0 && !isSel && !isRel);
   const stateCls = isRel ? ' is-related' : isDim ? ' is-dimmed' : '';
-  const shape = nodeShapeAttr(node);
+  const shape = nodeShapeAttr(node) + (node.external ? ' data-external="true"' : '');
   const box = nodeBoxStyle(node);
   const plate = nodePlateMarkup(node, direction);
   const badges = renderNodeBadges(node, options);

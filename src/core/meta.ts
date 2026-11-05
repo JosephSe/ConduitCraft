@@ -135,6 +135,7 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
   resilience?: NodeResilience;
   queue?: NodeQueue;
   balancer?: NodeBalancer;
+  external?: true;
   cache?: NodeCache;
   limiter?: NodeLimiter;
   schedule?: NodeSchedule;
@@ -157,6 +158,7 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
     ...(resilience ? { resilience } : {}),
     ...(queue ? { queue } : {}),
     ...(balancer ? { balancer } : {}),
+    ...(raw.external === true ? { external: true as const } : {}),
     ...(cache ? { cache } : {}),
     ...(limiter ? { limiter } : {}),
     ...(schedule ? { schedule } : {}),

@@ -2,8 +2,8 @@
 import { describeDiagram } from '../core/describe';
 import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
-import { queueCardText } from '../core/queues';
-import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsCylinder } from '../core/nodeStyle';
+import { queueCardText, streamLanes } from '../core/queues';
+import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsBucket, storeDrawsCylinder } from '../core/nodeStyle';
 import { nodeIconShapes } from '../ui/icons';
 
 export type SvgScheme = 'light' | 'dark';
@@ -70,7 +70,16 @@ function notesHeight(itemCount: number): number {
   return 72 + Math.max(0, itemCount) * 40;
 }
 
+/** The outline of a node. Something someone else runs gets a dashed stroke and a small EXTERNAL label (K7). */
 function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR'): string {
+  const outline = nodeOutlineBase(node, pal, isSelected, direction);
+  if (!node.external) return outline;
+  const dashed = outline.replace(/ stroke-width="/g, ' stroke-dasharray="6 4" stroke-width="');
+  const label = `<text x="${node.x + node.width - 14}" y="${node.y - 6}" text-anchor="end" font-family="${MONO}" font-size="10" font-weight="600" letter-spacing="0.6" fill="${pal.muted}">EXTERNAL</text>`;
+  return dashed + label;
+}
+
+function nodeOutlineBase(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR'): string {
   const { x, y, width, height } = node;
   const shape = drawnShape(node.kind, node.shape) || 'card';
   const accent = pal.tone[node.accent] || pal.tone.blue;
@@ -79,7 +88,7 @@ function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direct
   const tinted = node.kind === 'core' || node.kind === 'gate' || node.kind === 'store';
   const fill = tinted ? mix(accent, pal.surface, 0.09) : pal.surface;
   if (storeDrawsCylinder(node.kind, node.shape)) {
-    const c = cylinderPlate(width, height);
+    const c = cylinderPlate(width, height, storeDrawsBucket(node.kind, node.shape));
     const body = mix(accent, pal.surface, 0.16);
     const lid = mix(accent, pal.surface, 0.07);
     return (
@@ -88,11 +97,12 @@ function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direct
     );
   }
   if (queueDrawsPipe(node.kind, node.shape)) {
-    const p = pipePlate(width, height);
+    const p = pipePlate(width, height, streamLanes(node));
     const body = mix(accent, pal.surface, 0.1);
     const cap = mix(accent, pal.surface, 0.2);
     return (
       `<g transform="translate(${x} ${y})"><path d="${p.body}" fill="${body}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>` +
+      (p.lanes ? `<path d="${p.lanes}" fill="none" stroke="${strokeColor}" stroke-width="1" opacity="0.4"/>` : '') +
       `<ellipse cx="${p.cx}" cy="${p.cy}" rx="${p.rx}" ry="${p.ry}" fill="${cap}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/></g>`
     );
   }

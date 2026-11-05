@@ -1,6 +1,6 @@
 export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client' | 'queue' | 'balancer' | 'cache' | 'limiter' | 'scheduler';
 
-export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric' | 'trapezoid';
+export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric' | 'trapezoid' | 'bucket';
 
 export type StreamTone = 'blue' | 'emerald' | 'rose' | 'violet' | 'amber';
 
@@ -35,7 +35,9 @@ export type NodeIconName =
   | 'balancer'
   | 'bolt'
   | 'gauge'
-  | 'clock';
+  | 'clock'
+  | 'stream'
+  | 'bucket';
 
 export type BalancerStrategy = 'round-robin' | 'least-connections' | 'weighted' | 'hash';
 
@@ -82,6 +84,8 @@ export interface NodeQueue {
   deadLetterId?: string;
   /** Free text such as "4 days". Shown on the card, not used in the run. Max 40 characters. */
   retention?: string;
+  /** Lanes drawn inside a stream's pipe, 1 to 12, default 3. Only drawn, never simulated (K6). */
+  partitions?: number;
 }
 
 export interface KeyValueMetric {
@@ -240,6 +244,8 @@ export interface DiagramNode {
   queue?: NodeQueue;
   /** Load balancer settings (K2). Only read when `kind` is 'balancer'; kept when the kind changes. */
   balancer?: NodeBalancer;
+  /** Run by someone else (K7). Written only when true. Works on every kind and shape. */
+  external?: boolean;
   /** Cache settings (K3). Only read when `kind` is 'cache'. */
   cache?: NodeCache;
   /** Rate limiter settings (K4). Only read when `kind` is 'limiter'. */

@@ -199,11 +199,15 @@ function componentLines(content: LevelContent): string[] {
       const to = reach(n.id);
       const open = n.limiter?.failOpen ? ' It fails open.' : '';
       lines.push(`- ${nameOf(n)} is a rate limiter that admits ${admit} of every ${per} requests${to.length ? ` to ${list(to)}` : ''}.${open}`);
+    } else if (n.kind === 'queue' && n.queue?.delivery === 'fanout') {
+      const readers = reach(n.id);
+      lines.push(`- ${nameOf(n)} is a stream: ${readers.length ? `${list(readers)} each get every message` : 'every reader gets every message'}.`);
     } else if (n.kind === 'scheduler') {
       const to = reach(n.id);
       const when = n.schedule?.every ? ` (${n.schedule.every})` : '';
       lines.push(`- ${nameOf(n)} is a scheduler${when}${to.length ? ` that starts ${list(to)}` : ''}.`);
     }
+    if (n.external) lines.push(`- ${nameOf(n)} is run by someone else.`);
   }
   return lines;
 }

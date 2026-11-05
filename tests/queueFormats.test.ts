@@ -246,13 +246,14 @@ describe('queue insights (K1, spec 3.5)', () => {
 });
 
 describe('queue importers (K1, spec 3.8)', () => {
-  it('container images: RabbitMQ and friends are queues; Kafka, NATS and Pulsar stay buses', () => {
+  it('container images: RabbitMQ and friends are queues; Kafka, Redpanda and Pulsar are streams (queues with fanout, K6); NATS stays a bus', () => {
     for (const image of ['rabbitmq:3-management', 'apache/activemq-artemis', 'softwaremill/elasticmq', 'schickling/beanstalkd']) {
       assert.equal(kindForImage(image), 'queue', image);
     }
-    for (const image of ['confluentinc/cp-kafka', 'nats:2', 'apache/pulsar', 'redpandadata/redpanda']) {
-      assert.equal(kindForImage(image), 'bus', image);
+    for (const image of ['confluentinc/cp-kafka', 'apache/pulsar', 'redpandadata/redpanda']) {
+      assert.equal(kindForImage(image), 'queue', image);
     }
+    assert.equal(kindForImage('nats:2'), 'bus');
   });
 
   it('AsyncAPI: an amqp queue or sqs binding becomes a queue; other channels stay buses', () => {

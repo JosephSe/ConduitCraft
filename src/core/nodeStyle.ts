@@ -1,7 +1,7 @@
 /** Node outline and custom-icon values shared by the editor, parser, and export. */
 import type { NodeShape } from '../types';
 
-export const NODE_SHAPES = ['card', 'rounded', 'pill', 'circle', 'diamond', 'hexagon', 'asymmetric', 'trapezoid'] as const;
+export const NODE_SHAPES = ['card', 'rounded', 'pill', 'circle', 'diamond', 'hexagon', 'asymmetric', 'trapezoid', 'bucket'] as const;
 
 export const NODE_SHAPE_LABELS: Record<NodeShape, string> = {
   card: 'Card',
@@ -12,6 +12,7 @@ export const NODE_SHAPE_LABELS: Record<NodeShape, string> = {
   hexagon: 'Hexagon',
   asymmetric: 'Asymmetric (Banner)',
   trapezoid: 'Trapezoid',
+  bucket: 'Bucket',
 };
 
 /** Largest custom icon kept on a node, in data-URL characters. */
@@ -142,7 +143,12 @@ export function nodeShapeFrame(
  * `shape` stays absent, and an explicit non-card outline still wins.
  */
 export function storeDrawsCylinder(kind: string, shape: NodeShape | undefined): boolean {
-  return kind === 'store' && (shape == null || shape === 'card');
+  return kind === 'store' && (shape == null || shape === 'card' || shape === 'bucket');
+}
+
+/** A store with the 'bucket' outline (K8): a drum that is wider at the top. Only stores draw it. */
+export function storeDrawsBucket(kind: string, shape: NodeShape | undefined): boolean {
+  return kind === 'store' && shape === 'bucket';
 }
 
 /**
@@ -176,10 +182,12 @@ export interface PipePlate {
   ry: number;
   /** Straight walls, a rounded left end and a rounded right end. The cap ellipse sits on the right end. */
   body: string;
+  /** Thin horizontal lines inside the body, one per stream partition (K6). Empty for a plain queue. */
+  lanes: string;
 }
 
 /** Pipe geometry in the node's box. Ports stay on the rectangle, so wires do not move. */
-export function pipePlate(width: number, height: number): PipePlate {
+export function pipePlate(width: number, height: number, lanes = 0): PipePlate {
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const inset = 1.5;
@@ -197,6 +205,11 @@ export function pipePlate(width: number, height: number): PipePlate {
     `A ${n(rx)} ${n(ry)} 0 0 1 ${n(left)},${n(inset)}`,
     'Z',
   ].join(' ');
+  const laneLines: string[] = [];
+  for (let i = 1; i <= lanes; i += 1) {
+    const y = n(inset + (i * (h - inset * 2)) / (lanes + 1));
+    laneLines.push(`M ${n(left)},${y} L ${n(right - rx * 0.4)},${y}`);
+  }
   return {
     width: Math.max(1, Math.round(w)),
     height: Math.max(1, Math.round(h)),
@@ -205,6 +218,7 @@ export function pipePlate(width: number, height: number): PipePlate {
     rx: n(rx),
     ry: n(ry),
     body,
+    lanes: laneLines.join(' '),
   };
 }
 
@@ -220,7 +234,7 @@ export interface CylinderPlate {
 }
 
 /** Drum geometry in the node's box. Ports stay on the rectangle, so wires do not move. */
-export function cylinderPlate(width: number, height: number): CylinderPlate {
+export function cylinderPlate(width: number, height: number, bucket = false): CylinderPlate {
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const inset = 1.5;
@@ -233,11 +247,13 @@ export function cylinderPlate(width: number, height: number): CylinderPlate {
   const left = cx - rx;
   const right = cx + rx;
   const n = roundTenth;
+  // A bucket's base is narrower than its rim, so the walls lean in.
+  const rb = bucket ? rx * 0.78 : rx;
   const body = [
     `M ${n(left)},${n(cy)}`,
-    `L ${n(left)},${n(bottom - ry)}`,
-    `A ${n(rx)} ${n(ry)} 0 0 0 ${n(cx)},${n(bottom)}`,
-    `A ${n(rx)} ${n(ry)} 0 0 0 ${n(right)},${n(bottom - ry)}`,
+    `L ${n(cx - rb)},${n(bottom - ry)}`,
+    `A ${n(rb)} ${n(ry)} 0 0 0 ${n(cx)},${n(bottom)}`,
+    `A ${n(rb)} ${n(ry)} 0 0 0 ${n(cx + rb)},${n(bottom - ry)}`,
     `L ${n(right)},${n(cy)}`,
     'Z',
   ].join(' ');
@@ -297,14 +313,14 @@ export function renderNodeShapePlate(
   return `<svg class="node-shape-plate" viewBox="0 0 ${w} ${h}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false">${geom}</svg>`;
 }
 
-export function renderCylinderPlate(width: number, height: number): string {
-  const plate = cylinderPlate(width, height);
-  return `<svg class="node-shape-plate" data-plate="cylinder" viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom cylinder-body" d="${plate.body}"/><ellipse class="node-shape-geom cylinder-lid" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
+export function renderCylinderPlate(width: number, height: number, bucket = false): string {
+  const plate = cylinderPlate(width, height, bucket);
+  return `<svg class="node-shape-plate" data-plate="cylinder"${bucket ? ' data-bucket="true"' : ''} viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom cylinder-body" d="${plate.body}"/><ellipse class="node-shape-geom cylinder-lid" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
 }
 
-export function renderPipePlate(width: number, height: number): string {
-  const plate = pipePlate(width, height);
-  return `<svg class="node-shape-plate" data-plate="pipe" viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom pipe-body" d="${plate.body}"/><ellipse class="node-shape-geom pipe-cap" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
+export function renderPipePlate(width: number, height: number, lanes = 0): string {
+  const plate = pipePlate(width, height, lanes);
+  return `<svg class="node-shape-plate" data-plate="pipe" viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom pipe-body" d="${plate.body}"/>${plate.lanes ? `<path class="node-shape-lanes" d="${plate.lanes}"/>` : ''}<ellipse class="node-shape-geom pipe-cap" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
 }
 
 /** True when the field is absent or a known outline name. */
