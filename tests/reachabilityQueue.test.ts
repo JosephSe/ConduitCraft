@@ -151,11 +151,11 @@ describe('example: event-driven microservices (K1, spec 3.10)', () => {
     assert.ok(parsed.ok);
     const doc = parsed.ok ? parsed.doc : createBlankDocument();
     const scenario = doc.simulations.find((s) => s.name === 'Fulfilment down')!;
-    assert.deepEqual(scenario.failures, ['inventory-svc']);
+    assert.deepEqual(scenario.failures, ['fulfilment-svc']);
     const r = reachableFrom(doc, entryPointIds(doc), scenario.failures!);
     assert.deepEqual(r.buffering, ['fulfilment-queue']);
-    assert.ok(!r.atRisk.includes('order-svc') && !r.atRisk.includes('kafka-bus'));
-    assert.deepEqual(r.failed, ['inventory-svc']);
+    assert.ok(!r.atRisk.includes('order-svc') && !r.atRisk.includes('event-stream'));
+    assert.deepEqual(r.failed, ['fulfilment-svc']);
     assert.equal(doc.nodes.find((n) => n.id === 'fulfilment-queue')?.queue?.deadLetterId, 'fulfilment-dlq');
   });
 });

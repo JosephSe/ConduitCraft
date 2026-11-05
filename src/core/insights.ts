@@ -304,8 +304,12 @@ function balancerSingleTarget(doc: DiagramDocument): InsightIssue[] {
   const out: InsightIssue[] = [];
   for (const node of doc.nodes) {
     if (node.kind !== 'balancer') continue;
-    const count = balancerTargets(doc, node.id).length;
+    const targets = balancerTargets(doc, node.id);
+    const count = targets.length;
     if (count >= 2) continue;
+    // One target that runs several copies (pods behind a Service, say) is still spread over.
+    const only = count === 1 ? doc.nodes.find((n) => n.id === targets[0]) : undefined;
+    if ((only?.resilience?.replicas ?? 1) > 1) continue;
     out.push({
       level: 'info',
       code: 'balancer-single-target',

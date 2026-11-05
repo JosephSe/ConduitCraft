@@ -2,336 +2,774 @@
   "kind": "conduitcraft.blueprint",
   "version": 1,
   "document": {
-    "title": "Kubernetes Ingress & Service Mesh",
-    "systemTag": "CLOUD ORCHESTRATION // K8S-MESH",
-    "statusLabel": "CLUSTER SYNCHRONIZED",
     "direction": "LR",
     "stageWidth": 1680,
-    "stageHeight": 900,
-    "overviewSummary": "Production cloud-native Kubernetes cluster topology featuring an external Cloud Load Balancer, Envoy Ingress Gateway, Istio Service Mesh control plane with mutual TLS sidecars, horizontally autoscaled pods, and persistent CSI storage volumes.",
+    "stageHeight": 920,
+    "title": "Kubernetes Ingress & Mesh",
+    "systemTag": "KUBERNETES // PROD CLUSTER",
+    "statusLabel": "REFERENCE ARCHITECTURE",
+    "overviewSummary": "A production cluster from the internet to the disk. A cloud L4 load balancer passes TLS traffic to the Envoy ingress gateway, which routes by host and path into the service mesh. Every pod has an Istio sidecar, so pod-to-pod calls are mutual TLS with certificates handed out by istiod. The API finds services through CoreDNS and keeps state in a Postgres StatefulSet on Ceph volumes, with uploads and nightly backups in Ceph object storage.",
     "brand": {
-      "name": "KubeMesh Fabric",
-      "accent": "#0284c7",
+      "name": "Platform Team",
+      "accent": "#2563eb",
       "logo": ""
     },
     "zones": [
       {
         "id": "zone-edge",
         "number": "01",
-        "title": "Ingress & Edge",
-        "subtitle": "External balancer & Envoy gateway",
+        "title": "Edge",
+        "subtitle": "Internet and cloud load balancer",
         "x": 24,
-        "width": 360
+        "width": 308
       },
       {
-        "id": "zone-control",
+        "id": "zone-cp",
         "number": "02",
-        "title": "Mesh Control Plane",
-        "subtitle": "Istio Istiod & CoreDNS discovery",
-        "x": 404,
-        "width": 420
+        "title": "Ingress & Control Plane",
+        "subtitle": "Gateway, istiod, CoreDNS, CronJob",
+        "x": 394,
+        "width": 678
       },
       {
-        "id": "zone-workloads",
+        "id": "zone-wl",
         "number": "03",
-        "title": "Namespace: Production",
-        "subtitle": "HPA autoscaling pod deployments",
-        "x": 844,
-        "width": 440
+        "title": "Workloads (Mesh)",
+        "subtitle": "Deployments with sidecars",
+        "x": 1134,
+        "width": 308
       },
       {
-        "id": "zone-storage",
+        "id": "zone-st",
         "number": "04",
-        "title": "Storage & State",
-        "subtitle": "Persistent volume claims (CSI)",
-        "x": 1304,
-        "width": 350
+        "title": "Stateful & Storage",
+        "subtitle": "StatefulSet, volumes, objects",
+        "x": 1504,
+        "width": 678
       }
     ],
     "notesCards": [
       {
         "id": "notes-k8s",
-        "title": "Mesh & Security Topology",
-        "code": "K8S-MESH",
+        "title": "Cluster rules",
+        "code": "SPEC-K8S",
         "x": 48,
-        "y": 680,
+        "y": 830,
         "items": [
           {
-            "title": "Strict mTLS",
-            "text": "Every inter-pod packet is authenticated and encrypted via Envoy sidecar certificates."
+            "title": "mTLS everywhere",
+            "text": "STRICT mode: no sidecar, no traffic.",
+            "icon": "check"
           },
           {
-            "title": "Horizontal Pod Autoscaler",
-            "text": "Targeting 75% average CPU; scales pods from 3 to 20 instances dynamically."
+            "title": "Spread out",
+            "text": "3 zones; disruption budgets keep 2 pods up.",
+            "icon": "check"
           },
           {
-            "title": "Affinity & Anti-Affinity",
-            "text": "Pod spread constraints ensure nodes across multiple availability zones."
+            "title": "Autoscale",
+            "text": "api HPA: 3 to 10 pods on CPU and RPS.",
+            "icon": "info"
+          },
+          {
+            "title": "State is special",
+            "text": "A PVC is not a backup. Test restores.",
+            "icon": "warning"
           }
         ]
       }
     ],
     "nodes": [
       {
-        "id": "cloud-lb",
-        "kind": "gate",
+        "id": "users",
+        "kind": "client",
         "accent": "blue",
-        "icon": "network",
-        "shape": "diamond",
-        "title": "Cloud NLB",
-        "subtitle": "AWS Network Load Balancer",
-        "eyebrow": "LAYER 4 INGRESS",
-        "chip": "Static Elastic IPs",
-        "zoneLabel": "Ingress & Edge",
-        "summary": "Terminates Layer 4 TCP traffic and passes packets into Kubernetes node port endpoints.",
+        "icon": "globe",
+        "shape": "pill",
+        "title": "Internet Clients",
+        "subtitle": "app.example.com",
+        "eyebrow": "USERS",
+        "chip": "HTTPS",
+        "zoneLabel": "Edge",
+        "summary": "Browsers and API clients.",
         "metrics": [
-          { "label": "Active Conns", "value": "32k" },
-          { "label": "Throughput", "value": "1.2 Gbps" }
+          {
+            "label": "RPS",
+            "value": "6.2k"
+          }
         ],
-        "x": 64,
-        "y": 180,
-        "width": 240,
-        "height": 110
+        "x": 82,
+        "y": 160,
+        "width": 192,
+        "height": 112
       },
       {
-        "id": "ingress-envoy",
+        "id": "cloud-lb",
+        "kind": "balancer",
+        "accent": "violet",
+        "icon": "balancer",
+        "title": "Cloud Load Balancer",
+        "subtitle": "L4 NLB, passes TLS through",
+        "eyebrow": "BALANCER",
+        "chip": "HASH",
+        "zoneLabel": "Edge",
+        "summary": "A Service of type LoadBalancer. Spreads TCP connections over the ingress gateway pods by source hash.",
+        "metrics": [
+          {
+            "label": "Targets",
+            "value": "3 pods"
+          }
+        ],
+        "balancer": {
+          "strategy": "hash"
+        },
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 78,
+        "y": 456,
+        "width": 200,
+        "height": 120
+      },
+      {
+        "id": "ingress",
         "kind": "gate",
         "accent": "violet",
         "icon": "shield",
         "shape": "hexagon",
         "title": "Envoy Ingress Gateway",
-        "subtitle": "Kubernetes Gateway API",
-        "eyebrow": "CLUSTER BORDER",
-        "chip": "TLS Termination",
-        "zoneLabel": "Ingress & Edge",
-        "summary": "Handles path routing, rate limiting, and injects distributed tracing headers (W3C traceparent).",
+        "subtitle": "TLS, host + path routing",
+        "eyebrow": "INGRESS",
+        "chip": "3 PODS",
+        "zoneLabel": "Ingress & Control Plane",
+        "summary": "Terminates TLS with cert-manager certificates and routes by host and path (Gateway API HTTPRoutes) into the mesh.",
         "metrics": [
-          { "label": "RPS", "value": "18.4k" },
-          { "label": "P99 Latency", "value": "2.1ms" }
+          {
+            "label": "Pods",
+            "value": "3"
+          },
+          {
+            "label": "p99",
+            "value": "2 ms"
+          }
         ],
-        "x": 64,
-        "y": 400,
-        "width": 240,
-        "height": 110
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 427,
+        "y": 430,
+        "width": 242,
+        "height": 172
       },
       {
-        "id": "istio-pilot",
+        "id": "istiod",
         "kind": "core",
         "accent": "violet",
-        "icon": "cpu",
-        "shape": "card",
-        "title": "Istio Control Plane",
-        "subtitle": "Istiod Daemon // mTLS CA",
-        "eyebrow": "SERVICE MESH",
-        "chip": "Mesh Controller",
-        "zoneLabel": "Mesh Control Plane",
-        "summary": "Distributes dynamic routing configurations, canary weight splits, and issues rotating x509 certs.",
+        "icon": "server",
+        "title": "istiod",
+        "subtitle": "Mesh control plane",
+        "eyebrow": "CONTROL PLANE",
+        "chip": "xDS",
+        "zoneLabel": "Ingress & Control Plane",
+        "summary": "Pushes routing config to every Envoy (xDS) and issues short-lived workload certificates for mTLS (SDS). Not in the request path.",
         "metrics": [
-          { "label": "Mesh Proxies", "value": "64" },
-          { "label": "Cert Validity", "value": "24h" }
+          {
+            "label": "Proxies",
+            "value": "64"
+          },
+          {
+            "label": "Cert TTL",
+            "value": "24 h"
+          }
         ],
-        "x": 450,
-        "y": 180,
-        "width": 250,
-        "height": 115
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 427,
+        "y": 130,
+        "width": 242,
+        "height": 172
       },
       {
-        "id": "cluster-dns",
+        "id": "coredns",
         "kind": "core",
-        "accent": "amber",
-        "icon": "layers",
+        "accent": "blue",
+        "icon": "globe",
         "shape": "pill",
-        "title": "CoreDNS Resolver",
-        "subtitle": "Kube-DNS Cluster Discovery",
-        "eyebrow": "SERVICE DISCOVERY",
-        "chip": "Internal DNS",
-        "zoneLabel": "Mesh Control Plane",
-        "summary": "Resolves cluster.local service names with round-robin DNS records for internal pod calling.",
+        "title": "CoreDNS",
+        "subtitle": "Service discovery",
+        "eyebrow": "DNS",
+        "chip": "cluster.local",
+        "zoneLabel": "Ingress & Control Plane",
+        "summary": "Resolves service names like api.prod.svc.cluster.local to their ClusterIPs.",
         "metrics": [
-          { "label": "QPS", "value": "42k" },
-          { "label": "Lookup P99", "value": "0.3ms" }
+          {
+            "label": "QPS",
+            "value": "9k"
+          },
+          {
+            "label": "Cache hit",
+            "value": "97%"
+          }
         ],
-        "x": 450,
-        "y": 400,
-        "width": 250,
-        "height": 110
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 797,
+        "y": 130,
+        "width": 242,
+        "height": 172
       },
       {
-        "id": "web-pods",
+        "id": "cronjob",
+        "kind": "scheduler",
+        "accent": "blue",
+        "icon": "clock",
+        "title": "Backup CronJob",
+        "subtitle": "Nightly at 03:00",
+        "eyebrow": "SCHEDULE",
+        "chip": "0 3 * * *",
+        "zoneLabel": "Ingress & Control Plane",
+        "summary": "Starts a backup Job every night. concurrencyPolicy: Forbid, so a slow run never overlaps the next.",
+        "metrics": [],
+        "schedule": {
+          "every": "0 3 * * *"
+        },
+        "x": 822,
+        "y": 760,
+        "width": 192,
+        "height": 112
+      },
+      {
+        "id": "web",
         "kind": "service",
-        "accent": "emerald",
-        "icon": "cpu",
-        "shape": "card",
-        "title": "Frontend Web Deployment",
-        "subtitle": "Next.js SSR // 3 Replicas",
-        "eyebrow": "DEPLOYMENT: WEB",
-        "chip": "Pod Status: Ready",
-        "zoneLabel": "Namespace: Production",
-        "summary": "Server-side rendering frontend containers wrapped with Envoy sidecar proxies.",
+        "accent": "blue",
+        "icon": "monitor",
+        "title": "web",
+        "subtitle": "Deployment · 3 pods + sidecar",
+        "eyebrow": "DEPLOYMENT",
+        "chip": "FRONTEND",
+        "zoneLabel": "Workloads (Mesh)",
+        "summary": "Server-renders pages and calls the API over the mesh.",
         "metrics": [
-          { "label": "Replicas", "value": "3 / 3" },
-          { "label": "CPU", "value": "38%" }
+          {
+            "label": "Pods",
+            "value": "3"
+          },
+          {
+            "label": "CPU",
+            "value": "35%"
+          }
         ],
-        "x": 890,
-        "y": 160,
-        "width": 250,
-        "height": 115
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 1177,
+        "y": 245,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "api-pods",
+        "id": "api",
         "kind": "service",
-        "accent": "emerald",
-        "icon": "cpu",
-        "shape": "card",
-        "title": "Core API Deployment",
-        "subtitle": "Go gRPC Engine // 5 Replicas",
-        "eyebrow": "DEPLOYMENT: API",
-        "chip": "Pod Status: Ready",
-        "zoneLabel": "Namespace: Production",
-        "summary": "High-performance gRPC backend microservices executing concurrent business logic.",
+        "accent": "blue",
+        "icon": "code",
+        "title": "api",
+        "subtitle": "Deployment · HPA 3–10 + sidecar",
+        "eyebrow": "DEPLOYMENT",
+        "chip": "BACKEND",
+        "zoneLabel": "Workloads (Mesh)",
+        "summary": "The business API. Stateless; scaled by the HorizontalPodAutoscaler.",
         "metrics": [
-          { "label": "Replicas", "value": "5 / 5" },
-          { "label": "gRPC QPS", "value": "28k" }
+          {
+            "label": "Pods",
+            "value": "4"
+          },
+          {
+            "label": "p99",
+            "value": "42 ms"
+          }
         ],
-        "x": 890,
-        "y": 400,
-        "width": 250,
-        "height": 115
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 1177,
+        "y": 545,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "ceph-csi",
+        "id": "backup-job",
+        "kind": "service",
+        "accent": "amber",
+        "icon": "cpu",
+        "title": "pg-backup Job",
+        "subtitle": "Runs to completion",
+        "eyebrow": "JOB",
+        "chip": "BATCH",
+        "zoneLabel": "Workloads (Mesh)",
+        "summary": "Dumps the database, compresses it and uploads it to object storage, then exits.",
+        "metrics": [
+          {
+            "label": "Last run",
+            "value": "6 min"
+          }
+        ],
+        "x": 1177,
+        "y": 785,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "postgres",
         "kind": "store",
-        "accent": "rose",
+        "accent": "emerald",
         "icon": "database",
-        "shape": "rounded",
-        "title": "Ceph CSI Storage",
-        "subtitle": "Distributed ReadWriteMany PVC",
-        "eyebrow": "PERSISTENT STORAGE",
-        "chip": "NVMe Volume",
-        "zoneLabel": "Storage & State",
-        "summary": "Block and file storage driver mounted dynamically into running backend pods.",
+        "title": "Postgres StatefulSet",
+        "subtitle": "Primary + standby (operator)",
+        "eyebrow": "STATEFULSET",
+        "chip": "HA",
+        "zoneLabel": "Stateful & Storage",
+        "summary": "Run by a Postgres operator: a primary and a synchronous standby on separate nodes, each with its own volume.",
         "metrics": [
-          { "label": "Capacity", "value": "12 TB" },
-          { "label": "Read IOPS", "value": "45k" }
+          {
+            "label": "Pods",
+            "value": "2"
+          },
+          {
+            "label": "Size",
+            "value": "310 GB"
+          }
         ],
-        "x": 1340,
-        "y": 280,
-        "width": 240,
-        "height": 115
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 1550,
+        "y": 441,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "volumes",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "server",
+        "shape": "rounded",
+        "title": "Ceph RBD Volumes",
+        "subtitle": "CSI, ReadWriteOnce",
+        "eyebrow": "PERSISTENT VOLUMES",
+        "chip": "CSI",
+        "zoneLabel": "Stateful & Storage",
+        "summary": "Block volumes provisioned by the Ceph CSI driver through a StorageClass, replicated three ways inside Ceph.",
+        "metrics": [
+          {
+            "label": "PVCs",
+            "value": "2 × 500 GB"
+          }
+        ],
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 1920,
+        "y": 441,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "object-store",
+        "kind": "store",
+        "accent": "amber",
+        "icon": "bucket",
+        "shape": "bucket",
+        "title": "Object Storage",
+        "subtitle": "Ceph RGW, S3 API",
+        "eyebrow": "OBJECT STORAGE",
+        "chip": "S3",
+        "zoneLabel": "Stateful & Storage",
+        "summary": "User uploads and database backups. Backups expire after 30 days by lifecycle rule.",
+        "metrics": [
+          {
+            "label": "Buckets",
+            "value": "2"
+          },
+          {
+            "label": "Size",
+            "value": "2.4 TB"
+          }
+        ],
+        "x": 1920,
+        "y": 741,
+        "width": 216,
+        "height": 150
       }
     ],
     "edges": [
       {
         "id": "e1",
-        "from": "cloud-lb",
-        "to": "ingress-envoy",
-        "sourcePort": "bottom",
-        "targetPort": "top",
+        "from": "users",
+        "to": "cloud-lb",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "blue",
         "route": "bezier",
-        "label": "TCP 443 -> NodePort",
-        "animated": true
+        "label": "HTTPS :443",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 20
       },
       {
         "id": "e2",
-        "from": "ingress-envoy",
-        "to": "web-pods",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "emerald",
+        "from": "cloud-lb",
+        "to": "ingress",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
         "route": "bezier",
-        "label": "mTLS: /",
-        "animated": true
+        "label": "TCP",
+        "animated": true,
+        "latencyMs": 1
       },
       {
         "id": "e3",
-        "from": "ingress-envoy",
-        "to": "api-pods",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "emerald",
+        "from": "ingress",
+        "to": "web",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "mTLS: /api/v1",
-        "animated": true
+        "label": "mTLS · /",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 2
       },
       {
         "id": "e4",
-        "from": "istio-pilot",
-        "to": "ingress-envoy",
-        "sourcePort": "left",
-        "targetPort": "top",
-        "tone": "violet",
-        "route": "orthogonal",
-        "label": "xDS Config Push",
-        "animated": false
+        "from": "ingress",
+        "to": "api",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "mTLS · /api/*",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 2
       },
       {
         "id": "e5",
-        "from": "istio-pilot",
-        "to": "web-pods",
-        "sourcePort": "right",
-        "targetPort": "top",
-        "tone": "violet",
+        "from": "web",
+        "to": "api",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "mTLS Certificates",
-        "animated": false
+        "label": "gRPC over mTLS",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 3
       },
       {
         "id": "e6",
-        "from": "web-pods",
-        "to": "api-pods",
-        "sourcePort": "bottom",
-        "targetPort": "top",
+        "from": "web",
+        "to": "coredns",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "blue",
-        "route": "orthogonal",
-        "label": "Internal gRPC Call",
-        "animated": true
+        "route": "bezier",
+        "label": "DNS lookup",
+        "animated": true,
+        "latencyMs": 1
       },
       {
         "id": "e7",
-        "from": "api-pods",
-        "to": "ceph-csi",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "rose",
+        "from": "api",
+        "to": "coredns",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "CSI Volume Mount",
+        "label": "DNS lookup",
+        "animated": true,
+        "latencyMs": 1
+      },
+      {
+        "id": "e8",
+        "from": "api",
+        "to": "postgres",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "SQL over TLS",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 4
+      },
+      {
+        "id": "e9",
+        "from": "postgres",
+        "to": "volumes",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Read / write",
+        "animated": true,
+        "latencyMs": 1
+      },
+      {
+        "id": "e10",
+        "from": "api",
+        "to": "object-store",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "PUT / GET uploads",
+        "animated": true,
+        "latencyMs": 12
+      },
+      {
+        "id": "e11",
+        "from": "istiod",
+        "to": "ingress",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "xDS config",
+        "animated": true,
+        "protocol": "grpc",
+        "sync": "async"
+      },
+      {
+        "id": "e12",
+        "from": "istiod",
+        "to": "web",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "mTLS certs",
+        "animated": true,
+        "protocol": "grpc",
+        "sync": "async"
+      },
+      {
+        "id": "e13",
+        "from": "istiod",
+        "to": "api",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "mTLS certs",
+        "animated": true,
+        "protocol": "grpc",
+        "sync": "async"
+      },
+      {
+        "id": "e14",
+        "from": "cronjob",
+        "to": "backup-job",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Create Job",
+        "animated": true
+      },
+      {
+        "id": "e15",
+        "from": "backup-job",
+        "to": "postgres",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "pg_dump (read)",
+        "animated": true,
+        "protocol": "sql"
+      },
+      {
+        "id": "e16",
+        "from": "backup-job",
+        "to": "object-store",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Upload backup",
         "animated": true
       }
     ],
     "simulations": [
       {
-        "id": "sim-mesh-ingress",
-        "name": "Ingress Request Through Mesh",
-        "tone": "emerald",
+        "id": "sim-mesh-request",
+        "name": "Request Through Ingress and Mesh",
+        "tone": "blue",
+        "budgetMs": 80,
         "steps": [
           {
             "id": "m1",
-            "nodes": ["cloud-lb", "ingress-envoy"],
+            "nodes": [
+              "users",
+              "cloud-lb"
+            ],
             "tone": "blue",
-            "label": "EXTERNAL TCP ENTRY",
-            "trace": "AWS NLB forwards incoming TLS traffic to Envoy Ingress Gateway pods."
+            "label": "HTTPS",
+            "trace": "The request reaches the cloud load balancer."
           },
           {
             "id": "m2",
-            "nodes": ["ingress-envoy", "web-pods"],
-            "tone": "emerald",
-            "label": "ENCRYPTED MTLS ROUTE",
-            "trace": "Envoy verifies client certificate and routes over mTLS tunnel to Web Frontend pod."
+            "nodes": [
+              "cloud-lb",
+              "ingress"
+            ],
+            "tone": "violet",
+            "label": "TLS + ROUTE",
+            "trace": "An Envoy gateway pod terminates TLS and matches the host and path."
           },
           {
             "id": "m3",
-            "nodes": ["web-pods", "api-pods"],
+            "nodes": [
+              "ingress",
+              "web"
+            ],
             "tone": "blue",
-            "label": "INTERNAL GRPC RPC",
-            "trace": "Frontend dispatches gRPC remote procedure call to backend Core API pods."
+            "label": "mTLS",
+            "trace": "The gateway forwards to a web pod; the sidecars verify each other's certificates."
           },
           {
             "id": "m4",
-            "nodes": ["api-pods", "ceph-csi"],
-            "tone": "rose",
-            "label": "CSI PERSISTENCE",
-            "trace": "Backend microservice reads and writes shared state to NVMe Ceph CSI volume."
+            "nodes": [
+              "web",
+              "coredns"
+            ],
+            "tone": "blue",
+            "label": "DNS",
+            "trace": "web resolves api.prod.svc.cluster.local (usually from cache)."
+          },
+          {
+            "id": "m5",
+            "nodes": [
+              "web",
+              "api"
+            ],
+            "tone": "blue",
+            "label": "gRPC",
+            "trace": "web calls the API pod to pod over mutual TLS."
+          },
+          {
+            "id": "m6",
+            "nodes": [
+              "api",
+              "postgres"
+            ],
+            "tone": "emerald",
+            "label": "SQL",
+            "trace": "The API queries the Postgres primary."
+          },
+          {
+            "id": "m7",
+            "nodes": [
+              "postgres",
+              "volumes"
+            ],
+            "tone": "emerald",
+            "label": "DISK",
+            "trace": "Postgres reads pages from its Ceph volume."
+          },
+          {
+            "id": "m8",
+            "nodes": [
+              "api",
+              "web",
+              "ingress",
+              "cloud-lb",
+              "users"
+            ],
+            "tone": "emerald",
+            "label": "200 OK",
+            "trace": "The page goes back out the same way."
+          }
+        ]
+      },
+      {
+        "id": "sim-pod-crash",
+        "name": "API Pod Crash (Self-Healing)",
+        "tone": "amber",
+        "failures": [
+          "api"
+        ],
+        "steps": [
+          {
+            "id": "c1",
+            "nodes": [
+              "users",
+              "cloud-lb",
+              "ingress"
+            ],
+            "tone": "blue",
+            "label": "TRAFFIC",
+            "trace": "Requests keep arriving while one API pod is OOM-killed."
+          },
+          {
+            "id": "c2",
+            "nodes": [
+              "ingress",
+              "api"
+            ],
+            "tone": "amber",
+            "label": "DEGRADED",
+            "trace": "The pod fails its readiness probe and leaves the Service endpoints; the other replicas take its share."
+          },
+          {
+            "id": "c3",
+            "nodes": [
+              "api",
+              "postgres"
+            ],
+            "tone": "emerald",
+            "label": "STILL SERVING",
+            "trace": "Requests carry on. The ReplicaSet starts a replacement pod in seconds."
+          }
+        ]
+      },
+      {
+        "id": "sim-backup",
+        "name": "Nightly Database Backup",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "b1",
+            "nodes": [
+              "cronjob",
+              "backup-job"
+            ],
+            "tone": "amber",
+            "label": "03:00",
+            "trace": "The CronJob creates a Job; its pod is scheduled on any free node."
+          },
+          {
+            "id": "b2",
+            "nodes": [
+              "backup-job",
+              "postgres"
+            ],
+            "tone": "amber",
+            "label": "pg_dump",
+            "trace": "The dump reads from the standby so the primary is not slowed down."
+          },
+          {
+            "id": "b3",
+            "nodes": [
+              "backup-job",
+              "object-store"
+            ],
+            "tone": "emerald",
+            "label": "UPLOADED",
+            "trace": "The compressed dump goes to the backups bucket. The Job exits and its pod is cleaned up."
           }
         ]
       }

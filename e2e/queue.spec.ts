@@ -68,13 +68,13 @@ test('a Message Queue from the rail draws as a pipe, and wires into and out of i
 test('failing the consumer makes the queue buffer and leaves its producer alone', async ({ page }) => {
   await openEventDriven(page);
   await page.keyboard.press('2');
-  await node(page, 'inventory-svc').locator('.node-select-hit').click();
+  await node(page, 'fulfilment-svc').locator('.node-select-hit').click();
   await page.keyboard.press('x');
 
   await expect(page.locator('#chaos-summary')).toContainText('1 buffering');
   await expect(node(page, 'fulfilment-queue')).toHaveAttribute('data-chaos', 'buffering');
   await expect(node(page, 'fulfilment-queue').locator('.chaos-badge')).toContainText('Buffering');
-  await expect(node(page, 'kafka-bus')).not.toHaveAttribute('data-chaos', 'at-risk');
+  await expect(node(page, 'event-stream')).not.toHaveAttribute('data-chaos', 'at-risk');
   await expect(node(page, 'order-svc')).not.toHaveAttribute('data-chaos', 'at-risk');
 });
 
@@ -102,7 +102,7 @@ test('a looping run fills the pipe, and restoring the consumer drains it', async
 
   // Stop the run, then restore the consumer with X: the queue drains.
   await page.locator('#run-bar-play').click();
-  await node(page, 'inventory-svc').locator('.node-select-hit').click();
+  await node(page, 'fulfilment-svc').locator('.node-select-hit').click();
   await page.keyboard.press('x');
   await expect(queue).not.toHaveAttribute('data-backlog', /.*/, { timeout: 20_000 });
   await expect(page.locator('#a11y-live-announcer')).toContainText(/drained/);

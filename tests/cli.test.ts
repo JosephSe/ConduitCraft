@@ -49,6 +49,9 @@ describe('command line (E2): the core', () => {
       // The browser fits the stage to the content, then draws the open page.
       const browserDoc = structuredClone(loaded.doc);
       expandStageToFit(browserDoc);
+      // A picture of one page of a file with several describes that page, not the whole file.
+      delete browserDoc.pages;
+      delete browserDoc.pageId;
       const [page] = renderSvgPages(loaded.doc);
       assert.equal(page.svg, renderDiagramSvg(browserDoc, undefined, undefined, 'light'), `${file}: svg`);
       assert.match(page.svg, /^<\?xml[^>]*\?>\s*<svg /, `${file}: starts as an SVG`);

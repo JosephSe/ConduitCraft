@@ -1,6 +1,6 @@
 # ConduitCraft guide
 
-This page is the guide and schema reference for ConduitCraft. The [README](../README.md) covers install and the product overview.
+This page is the guide and schema reference for ConduitCraft. The [README](../README.md) covers install and the product overview, and the [showcase walkthrough](showcase.md) shows every feature in one example.
 
 ## The canvas
 
@@ -156,7 +156,7 @@ The Review lens runs a set of rules over every level of the diagram. The list gr
 | Data store nothing reads from | Info | Every wire into this data store only writes to it. |
 | Queue with a limit and no dead-letter queue | Info | A queue has a maximum depth but nowhere to send overflow, so it drops messages when full. |
 | Synchronous wire into a queue | Info | A wire into a queue is not marked async. Queues are usually written asynchronously. |
-| Load balancer with fewer than two targets | Info | A load balancer points at one component or none, so it does not spread load. |
+| Load balancer with fewer than two targets | Info | A load balancer points at one component or none, so it does not spread load. One target with more than one replica counts as spread. |
 | Unprotected call to an external component | Warning | A synchronous wire into a component marked as run by someone else, on a scenario path, where the caller has no circuit breaker and the external component has no fallback. |
 | Cache with no data store behind it | Info | A cache has no store to fall back to, so a failure loses every read. |
 | Rate limiter that fails open | Info | A limiter is set to fail open, so traffic reaches its target unchecked when it is down. |

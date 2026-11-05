@@ -1,0 +1,3179 @@
+{
+  "kind": "conduitcraft.blueprint",
+  "version": 1,
+  "document": {
+    "title": "Marquee: Flash-Sale Ticketing",
+    "systemTag": "MARQUEE LIVE // STADIUM TOUR ON-SALE",
+    "statusLabel": "FULL SHOWCASE",
+    "direction": "LR",
+    "stageWidth": 3168,
+    "stageHeight": 1460,
+    "overviewSummary": "Marquee (a made-up company) sells 60,000 stadium seats to 1.8 million fans who all arrive at 10:00. A virtual waiting room at the edge admits fans at a rate the origin can handle. Seat Inventory holds seats for 8 minutes while the fan pays, the Payment Orchestrator fails over between two card processors, and a transactional outbox streams every order to Kafka, where ticketing and the promoter's live dashboard read it at their own pace.",
+    "brand": {
+      "name": "Marquee Live",
+      "accent": "#c026d3",
+      "logo": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iI2MwMjZkMyIvPjxwYXRoIGQ9Ik03IDExLjVhMiAyIDAgMCAwIDAgNHY1aDE4di01YTIgMiAwIDAgMSAwLTR2LTVIN3oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAgMikiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZkZjRmZiIgc3Ryb2tlLXdpZHRoPSIxLjciIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48cGF0aCBkPSJNMTYgMTEuMmwxLjMgMi43IDMgLjQtMi4yIDIuMS41IDMtMi42LTEuNC0yLjYgMS40LjUtMy0yLjItMi4xIDMtLjR6IiBmaWxsPSIjZmJiZjI0Ii8+PC9zdmc+"
+    },
+    "legend": [
+      {
+        "tone": "blue",
+        "label": "Fan requests",
+        "description": "what the fan is waiting on"
+      },
+      {
+        "tone": "emerald",
+        "label": "Seats & orders",
+        "description": "state that must be right"
+      },
+      {
+        "tone": "violet",
+        "label": "Trust & money",
+        "description": "identity, fraud, payments"
+      },
+      {
+        "tone": "amber",
+        "label": "Async & live",
+        "description": "events, queues, sockets"
+      },
+      {
+        "tone": "rose",
+        "label": "Fallbacks",
+        "description": "failure paths and legacy"
+      }
+    ],
+    "pageTitle": "On-Sale (Live)",
+    "zones": [
+      {
+        "id": "zone-fans",
+        "number": "01",
+        "title": "Fans",
+        "subtitle": "Phones and browsers",
+        "x": 26,
+        "width": 304
+      },
+      {
+        "id": "zone-edge",
+        "number": "02",
+        "title": "Edge",
+        "subtitle": "Close to the fan",
+        "x": 376,
+        "width": 654
+      },
+      {
+        "id": "zone-platform",
+        "number": "03",
+        "title": "Platform",
+        "subtitle": "Shared services",
+        "x": 1076,
+        "width": 654
+      },
+      {
+        "id": "zone-core",
+        "number": "04",
+        "title": "On-Sale Core",
+        "subtitle": "Seats, orders, tickets",
+        "x": 1776,
+        "width": 654
+      },
+      {
+        "id": "zone-pay",
+        "number": "05",
+        "title": "Payments & Events",
+        "subtitle": "Money, Kafka, insight",
+        "x": 2476,
+        "width": 654
+      }
+    ],
+    "frames": [
+      {
+        "id": "frame-pci",
+        "title": "PCI DSS scope",
+        "x": 2491,
+        "y": 411,
+        "width": 274,
+        "height": 212,
+        "tone": "violet"
+      },
+      {
+        "id": "frame-async",
+        "title": "After payment: tickets & messages (async)",
+        "x": 1091,
+        "y": 1011,
+        "width": 1333,
+        "height": 212,
+        "tone": "amber"
+      }
+    ],
+    "notesCards": [
+      {
+        "id": "notes-rules",
+        "title": "On-sale rules",
+        "code": "SPEC-ONSALE",
+        "x": 48,
+        "y": 800,
+        "items": [
+          {
+            "title": "Never oversell",
+            "text": "A seat is locked before it is shown as yours.",
+            "icon": "check"
+          },
+          {
+            "title": "Fair line",
+            "text": "First in the room, first admitted.",
+            "icon": "check"
+          },
+          {
+            "title": "Six per fan",
+            "text": "Enforced by Identity, per account.",
+            "icon": "info"
+          },
+          {
+            "title": "Known risk",
+            "text": "Ticket DB has no standby yet.",
+            "icon": "warning"
+          }
+        ]
+      },
+      {
+        "id": "notes-headline",
+        "title": "Fri 10:00 · 60,000 seats · 1.8M fans",
+        "code": "",
+        "x": 48,
+        "y": 1080,
+        "items": [],
+        "variant": "text"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "fans",
+        "kind": "actor",
+        "accent": "blue",
+        "icon": "actor",
+        "title": "Fans",
+        "subtitle": "1.8M at 10:00",
+        "eyebrow": "PEOPLE",
+        "chip": "HUMAN",
+        "summary": "Everyone who wants a ticket to the stadium tour. Most arrive in the same minute, on phones, many on weak mobile signal.",
+        "tags": [
+          "customer"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Fans",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Peak arrivals",
+            "value": "41k/s"
+          },
+          {
+            "label": "Seats",
+            "value": "60,000"
+          }
+        ],
+        "code": "",
+        "x": 104,
+        "y": 165,
+        "width": 148,
+        "height": 142
+      },
+      {
+        "id": "app",
+        "kind": "client",
+        "accent": "blue",
+        "icon": "monitor",
+        "shape": "pill",
+        "title": "Marquee App",
+        "subtitle": "iOS, Android and web",
+        "eyebrow": "CLIENT",
+        "chip": "GRAPHQL",
+        "summary": "Shows the live seat map, holds the fan's queue token and receives the tickets. Talks GraphQL to the API and keeps a WebSocket open for seat updates.",
+        "owner": "Team Fan Apps",
+        "tags": [
+          "customer",
+          "tier-0"
+        ],
+        "links": [
+          {
+            "kind": "repo",
+            "label": "App repository",
+            "url": "https://marquee.example/git/marquee-app"
+          },
+          {
+            "kind": "dashboard",
+            "label": "Client health",
+            "url": "https://marquee.example/grafana/app"
+          }
+        ],
+        "footerLeft": "v8.14",
+        "zoneLabel": "Fans",
+        "interfaceLabel": "GraphQL + WebSocket",
+        "metrics": [
+          {
+            "label": "Crash-free",
+            "value": "99.92%"
+          },
+          {
+            "label": "Map refresh",
+            "value": "live"
+          }
+        ],
+        "code": "",
+        "x": 82,
+        "y": 470,
+        "width": 192,
+        "height": 112
+      },
+      {
+        "id": "hub",
+        "kind": "bus",
+        "accent": "amber",
+        "icon": "bolt",
+        "shape": "rounded",
+        "title": "Realtime Hub",
+        "subtitle": "WebSocket fan-out",
+        "eyebrow": "EVENT BROKER",
+        "chip": "WS",
+        "summary": "Keeps 1.2M sockets open at the edge and pushes \"seat taken\" and \"seat freed\" to every map. Fire and forget: a missed update is fixed by the next one.",
+        "resilience": {
+          "replicas": 3
+        },
+        "owner": "Team Edge",
+        "tags": [
+          "edge"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Edge",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Sockets",
+            "value": "1.2M"
+          },
+          {
+            "label": "Fan-out p99",
+            "value": "180 ms"
+          }
+        ],
+        "code": "",
+        "x": 592,
+        "y": 165,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "cdn",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "hexagon",
+        "title": "Edge CDN + WAF",
+        "subtitle": "40 PoPs, bot rules",
+        "eyebrow": "EDGE",
+        "chip": "WAF",
+        "summary": "Terminates TLS close to the fan, blocks known bots, and checks the signed queue token. With a valid token the request skips the waiting room.",
+        "resilience": {
+          "replicas": 40
+        },
+        "owner": "Team Edge",
+        "tags": [
+          "edge",
+          "tier-0"
+        ],
+        "links": [
+          {
+            "kind": "runbook",
+            "label": "Edge runbook",
+            "url": "https://marquee.example/runbooks/edge"
+          }
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Edge",
+        "interfaceLabel": "HTTPS / HTTP/3",
+        "metrics": [
+          {
+            "label": "Bots blocked",
+            "value": "38%"
+          },
+          {
+            "label": "Edge hit",
+            "value": "71%"
+          }
+        ],
+        "code": "",
+        "x": 407,
+        "y": 440,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "id": "waiting-room",
+        "kind": "limiter",
+        "accent": "amber",
+        "icon": "gauge",
+        "title": "Virtual Waiting Room",
+        "subtitle": "Admits at a safe rate",
+        "eyebrow": "RATE LIMITER",
+        "chip": "2/5",
+        "summary": "Turns a stampede into a line. Admits 2 of every 5 requests per tick, so the origin never sees more than it can sell to; everyone else sees their place in the queue.",
+        "limiter": {
+          "admit": 2,
+          "per": 5
+        },
+        "resilience": {
+          "replicas": 3
+        },
+        "owner": "Team Edge",
+        "tags": [
+          "edge",
+          "tier-0"
+        ],
+        "code": "{\n  \"admit\": 2,\n  \"per\": 5,\n  \"token\": {\n    \"ttl\": \"15m\",\n    \"signedBy\": \"edge-kms\"\n  },\n  \"onDown\": \"closed\"\n}",
+        "footerLeft": "Fails closed",
+        "zoneLabel": "Edge",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Admit rate",
+            "value": "2,000/min"
+          },
+          {
+            "label": "In line",
+            "value": "1.6M"
+          }
+        ],
+        "x": 757,
+        "y": 440,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "id": "fraud",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "spark",
+        "shape": "diamond",
+        "title": "Bot & Fraud Check",
+        "subtitle": "Score every buyer",
+        "eyebrow": "DECISION",
+        "chip": "ML",
+        "summary": "Scores device, behaviour and payment signals. Above 0.8 the request is refused; between 0.4 and 0.8 the fan gets a challenge.",
+        "resilience": {
+          "replicas": 2
+        },
+        "owner": "Team Trust",
+        "tags": [
+          "trust"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "p99",
+            "value": "9 ms"
+          },
+          {
+            "label": "Refused",
+            "value": "3.1%"
+          }
+        ],
+        "code": "",
+        "x": 1107,
+        "y": 150,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "id": "identity",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "lock",
+        "shape": "circle",
+        "title": "Identity",
+        "subtitle": "OIDC sessions",
+        "eyebrow": "AUTH",
+        "chip": "OIDC",
+        "summary": "Signs fans in and verifies the session on every call. One account can hold at most 6 tickets per show.",
+        "resilience": {
+          "replicas": 3
+        },
+        "owner": "Team Platform",
+        "tags": [
+          "platform"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Logins",
+            "value": "8.4k/s"
+          },
+          {
+            "label": "p99",
+            "value": "4 ms"
+          }
+        ],
+        "code": "",
+        "x": 1467,
+        "y": 165,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "lb",
+        "kind": "balancer",
+        "accent": "blue",
+        "icon": "balancer",
+        "shape": "trapezoid",
+        "title": "Load Balancer",
+        "subtitle": "Least connections",
+        "eyebrow": "BALANCER",
+        "chip": "L7",
+        "summary": "Spreads admitted traffic over the gateway pods, sending each new request to the one with the fewest open connections.",
+        "balancer": {
+          "strategy": "least-connections"
+        },
+        "resilience": {
+          "replicas": 2
+        },
+        "owner": "Team Platform",
+        "tags": [
+          "platform",
+          "tier-0"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Targets",
+            "value": "4 pods"
+          }
+        ],
+        "code": "",
+        "x": 1128,
+        "y": 466,
+        "width": 200,
+        "height": 120
+      },
+      {
+        "id": "api-gw",
+        "kind": "gate",
+        "accent": "blue",
+        "icon": "bridge",
+        "title": "API Gateway",
+        "subtitle": "GraphQL federation",
+        "eyebrow": "GATEWAY",
+        "chip": "GQL",
+        "summary": "One GraphQL endpoint for the app. Checks the session and bot score, then calls the seat, order and cache services over gRPC.",
+        "resilience": {
+          "replicas": 4
+        },
+        "owner": "Team Platform",
+        "tags": [
+          "platform",
+          "tier-0"
+        ],
+        "links": [
+          {
+            "kind": "docs",
+            "label": "Schema",
+            "url": "https://marquee.example/docs/graphql"
+          },
+          {
+            "kind": "oncall",
+            "label": "Platform on-call",
+            "url": "https://marquee.example/oncall/platform"
+          }
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "GraphQL → gRPC",
+        "metrics": [
+          {
+            "label": "RPS",
+            "value": "22k"
+          },
+          {
+            "label": "p99",
+            "value": "35 ms"
+          }
+        ],
+        "code": "",
+        "x": 1457,
+        "y": 440,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "id": "seat-cache",
+        "kind": "cache",
+        "accent": "emerald",
+        "icon": "database",
+        "title": "Seat Map Cache",
+        "subtitle": "Redis, 1 s TTL",
+        "eyebrow": "CACHE",
+        "chip": "92%",
+        "summary": "Answers seat-map reads, which are 30 times more common than holds. A 1-second TTL keeps the map honest; misses load from the ticket database.",
+        "cache": {
+          "hitRate": 92,
+          "backingId": "seat-db"
+        },
+        "resilience": {
+          "replicas": 3
+        },
+        "owner": "Team Inventory",
+        "tags": [
+          "tier-0"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Hit rate",
+            "value": "92%"
+          },
+          {
+            "label": "p99",
+            "value": "2 ms"
+          }
+        ],
+        "code": "",
+        "x": 1828,
+        "y": 180,
+        "width": 200,
+        "height": 112
+      },
+      {
+        "id": "seat-db",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "title": "Ticket Database",
+        "subtitle": "Postgres, single primary",
+        "eyebrow": "DATA STORE",
+        "chip": "AT RISK",
+        "summary": "Seats, holds and orders in one transactional store, with an outbox table that change-data-capture streams to Kafka. Running at 78% of write capacity at peak.",
+        "status": "at-risk",
+        "comment": "Single primary. A synchronous standby is planned for Q1 (RISK-12).",
+        "owner": "Team Inventory",
+        "tags": [
+          "tier-0",
+          "data"
+        ],
+        "links": [
+          {
+            "kind": "runbook",
+            "label": "Failover runbook",
+            "url": "https://marquee.example/runbooks/ticket-db"
+          },
+          {
+            "kind": "dashboard",
+            "label": "DB capacity",
+            "url": "https://marquee.example/grafana/ticket-db"
+          }
+        ],
+        "footerLeft": "Outbox table",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Writes at peak",
+            "value": "9.6k/s"
+          },
+          {
+            "label": "Capacity used",
+            "value": "78%"
+          }
+        ],
+        "code": "",
+        "x": 2170,
+        "y": 161,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "seat-svc",
+        "kind": "core",
+        "accent": "emerald",
+        "icon": "agency",
+        "title": "Seat Inventory",
+        "subtitle": "Holds seats for 8 minutes",
+        "eyebrow": "CORE SYSTEM",
+        "chip": "HOLDS",
+        "summary": "The heart of the on-sale. Finds the best available seats, locks them for 8 minutes while the fan pays, and never sells a seat twice.",
+        "resilience": {
+          "replicas": 6
+        },
+        "status": "live",
+        "owner": "Team Inventory",
+        "tags": [
+          "tier-0"
+        ],
+        "code": "{\n  \"rpc\": \"HoldSeats\",\n  \"request\": {\n    \"showId\": \"sh_2026_wembley_n1\",\n    \"quantity\": 2,\n    \"section\": \"any\"\n  },\n  \"response\": {\n    \"holdId\": \"hd_9f2c\",\n    \"seats\": [\n      \"B12-14\",\n      \"B12-15\"\n    ],\n    \"expiresIn\": \"8m\"\n  }\n}",
+        "links": [
+          {
+            "kind": "repo",
+            "label": "Repository",
+            "url": "https://marquee.example/git/seat-inventory"
+          },
+          {
+            "kind": "runbook",
+            "label": "Runbook",
+            "url": "https://marquee.example/runbooks/seat-inventory"
+          }
+        ],
+        "footerLeft": "Opens into a level",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "gRPC SeatService",
+        "metrics": [
+          {
+            "label": "Holds",
+            "value": "3.1k/s"
+          },
+          {
+            "label": "Double sales",
+            "value": "0"
+          }
+        ],
+        "x": 1807,
+        "y": 440,
+        "width": 242,
+        "height": 172,
+        "child": {
+          "zones": [
+            {
+              "id": "lz-api",
+              "number": "01",
+              "title": "API",
+              "subtitle": "gRPC",
+              "x": 40,
+              "width": 300
+            },
+            {
+              "id": "lz-alloc",
+              "number": "02",
+              "title": "Allocation",
+              "subtitle": "Best seats, fairly",
+              "x": 360,
+              "width": 640
+            },
+            {
+              "id": "lz-state",
+              "number": "03",
+              "title": "State",
+              "subtitle": "Locks and ledger",
+              "x": 1020,
+              "width": 300
+            }
+          ],
+          "notesCards": [],
+          "nodes": [
+            {
+              "id": "hold-api",
+              "kind": "service",
+              "accent": "blue",
+              "icon": "code",
+              "title": "Hold API",
+              "subtitle": "HoldSeats, Release",
+              "eyebrow": "ENDPOINT",
+              "chip": "gRPC",
+              "summary": "Validates the request: show, quantity, and the 6-ticket limit.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "RPS",
+                  "value": "3.1k"
+                }
+              ],
+              "x": 80,
+              "y": 200,
+              "width": 222,
+              "height": 142
+            },
+            {
+              "id": "allocator",
+              "kind": "core",
+              "accent": "emerald",
+              "icon": "agency",
+              "title": "Best-Seat Allocator",
+              "subtitle": "Keeps groups together",
+              "eyebrow": "ALGORITHM",
+              "chip": "BEST",
+              "summary": "Picks adjacent seats in the best section left, sharded by section so two fans never fight over the same row lock.",
+              "resilience": {
+                "replicas": 6
+              },
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Shards",
+                  "value": "64"
+                }
+              ],
+              "x": 420,
+              "y": 180,
+              "width": 242,
+              "height": 172
+            },
+            {
+              "id": "locks",
+              "kind": "cache",
+              "accent": "amber",
+              "icon": "clock",
+              "title": "Seat Locks",
+              "subtitle": "Redis, TTL 8 min",
+              "eyebrow": "CACHE",
+              "chip": "TTL",
+              "summary": "A short-lived lock per seat, so a hold disappears on its own if everything else fails.",
+              "cache": {
+                "hitRate": 70,
+                "backingId": "hold-ledger"
+              },
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Locks",
+                  "value": "96k"
+                }
+              ],
+              "x": 760,
+              "y": 210,
+              "width": 200,
+              "height": 112
+            },
+            {
+              "id": "hold-ledger",
+              "kind": "store",
+              "accent": "emerald",
+              "icon": "database",
+              "title": "Hold Ledger",
+              "subtitle": "Who holds what",
+              "eyebrow": "DATA STORE",
+              "chip": "LOG",
+              "summary": "The durable record of every hold, read back to rebuild locks after a restart.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Rows",
+                  "value": "2.4M"
+                }
+              ],
+              "x": 1060,
+              "y": 200,
+              "width": 216,
+              "height": 150
+            }
+          ],
+          "edges": [
+            {
+              "id": "le-1",
+              "from": "hold-api",
+              "to": "allocator",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "blue",
+              "route": "auto",
+              "label": "Find 2 seats",
+              "animated": true,
+              "protocol": "grpc"
+            },
+            {
+              "id": "le-2",
+              "from": "allocator",
+              "to": "locks",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "amber",
+              "route": "auto",
+              "label": "SET NX, 8 min",
+              "animated": true
+            },
+            {
+              "id": "le-3",
+              "from": "locks",
+              "to": "hold-ledger",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "emerald",
+              "route": "auto",
+              "label": "Read / write hold",
+              "animated": true,
+              "protocol": "sql"
+            }
+          ]
+        }
+      },
+      {
+        "id": "order-svc",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "code",
+        "title": "Checkout & Orders",
+        "subtitle": "Turns a hold into an order",
+        "eyebrow": "SERVICE",
+        "chip": "SAGA",
+        "summary": "Charges the card, converts the hold into sold seats and writes the order and its outbox event in one transaction.",
+        "resilience": {
+          "replicas": 4
+        },
+        "status": "live",
+        "owner": "Team Checkout",
+        "tags": [
+          "tier-0"
+        ],
+        "code": "{\n  \"mutation\": \"checkout\",\n  \"input\": {\n    \"holdId\": \"hd_9f2c\",\n    \"paymentToken\": \"tok_••••4242\"\n  },\n  \"result\": {\n    \"orderId\": \"ord_51c7\",\n    \"status\": \"CONFIRMED\"\n  }\n}",
+        "footerLeft": "",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Orders",
+            "value": "410/s"
+          },
+          {
+            "label": "p99",
+            "value": "820 ms"
+          }
+        ],
+        "x": 2167,
+        "y": 455,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "sweeper",
+        "kind": "scheduler",
+        "accent": "violet",
+        "icon": "clock",
+        "title": "Hold Expiry Sweeper",
+        "subtitle": "Frees unpaid holds",
+        "eyebrow": "SCHEDULER",
+        "chip": "30s",
+        "summary": "Every 30 seconds, releases holds older than 8 minutes so their seats go back on sale.",
+        "schedule": {
+          "every": "30s"
+        },
+        "owner": "Team Inventory",
+        "footerLeft": "",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Freed per run",
+            "value": "~300"
+          }
+        ],
+        "code": "",
+        "x": 2182,
+        "y": 782,
+        "width": 192,
+        "height": 112
+      },
+      {
+        "id": "orchestrator",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "cpu",
+        "title": "Payment Orchestrator",
+        "subtitle": "Tokens, 3-D Secure, routing",
+        "eyebrow": "PCI SERVICE",
+        "chip": "PCI",
+        "summary": "The only service that touches card data. Tokenises the card, runs 3-D Secure, and routes the charge to a card processor, with a circuit breaker on each.",
+        "resilience": {
+          "replicas": 3,
+          "circuitBreaker": true
+        },
+        "owner": "Team Payments",
+        "tags": [
+          "pci",
+          "tier-0"
+        ],
+        "links": [
+          {
+            "kind": "runbook",
+            "label": "Payments runbook",
+            "url": "https://marquee.example/runbooks/payments"
+          },
+          {
+            "kind": "oncall",
+            "label": "Payments on-call",
+            "url": "https://marquee.example/oncall/payments"
+          }
+        ],
+        "footerLeft": "Opens into a level",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Auth rate",
+            "value": "96.8%"
+          },
+          {
+            "label": "p99",
+            "value": "420 ms"
+          }
+        ],
+        "code": "",
+        "x": 2517,
+        "y": 455,
+        "width": 222,
+        "height": 142,
+        "child": {
+          "zones": [
+            {
+              "id": "lp-in",
+              "number": "01",
+              "title": "Intake",
+              "subtitle": "Card never stored raw",
+              "x": 40,
+              "width": 640
+            },
+            {
+              "id": "lp-route",
+              "number": "02",
+              "title": "Routing",
+              "subtitle": "Cheapest healthy processor",
+              "x": 700,
+              "width": 640
+            }
+          ],
+          "notesCards": [],
+          "nodes": [
+            {
+              "id": "pay-api",
+              "kind": "gate",
+              "accent": "violet",
+              "icon": "shield",
+              "shape": "hexagon",
+              "title": "Payment API",
+              "subtitle": "Idempotency keys",
+              "eyebrow": "GATE",
+              "chip": "PCI",
+              "summary": "Rejects a retry that would charge twice: the same idempotency key returns the first result.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Dupes stopped",
+                  "value": "1.9%"
+                }
+              ],
+              "x": 80,
+              "y": 180,
+              "width": 242,
+              "height": 172
+            },
+            {
+              "id": "vault",
+              "kind": "store",
+              "accent": "violet",
+              "icon": "lock",
+              "title": "Card Vault",
+              "subtitle": "Tokens, HSM keys",
+              "eyebrow": "VAULT",
+              "chip": "TOKENS",
+              "summary": "Swaps the card number for a token. Nothing outside this level ever sees a card number.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Tokens",
+                  "value": "3.8M"
+                }
+              ],
+              "x": 420,
+              "y": 40,
+              "width": 216,
+              "height": 150
+            },
+            {
+              "id": "three-ds",
+              "kind": "service",
+              "accent": "amber",
+              "icon": "globe",
+              "title": "3-D Secure",
+              "subtitle": "Bank challenge",
+              "eyebrow": "PARTNER",
+              "chip": "3DS2",
+              "external": true,
+              "summary": "Asks the fan's bank to confirm it is really them, usually without a prompt.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Frictionless",
+                  "value": "88%"
+                }
+              ],
+              "x": 420,
+              "y": 320,
+              "width": 222,
+              "height": 142
+            },
+            {
+              "id": "router",
+              "kind": "balancer",
+              "accent": "blue",
+              "icon": "balancer",
+              "title": "Processor Router",
+              "subtitle": "Weighted 90 / 10",
+              "eyebrow": "BALANCER",
+              "chip": "WEIGHTED",
+              "balancer": {
+                "strategy": "weighted"
+              },
+              "resilience": {
+                "replicas": 3
+              },
+              "summary": "Sends 90% to Processor A and 10% to B, and shifts everything to B when A's breaker opens.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Split",
+                  "value": "90/10"
+                }
+              ],
+              "x": 760,
+              "y": 200,
+              "width": 200,
+              "height": 120
+            },
+            {
+              "id": "adapter-a",
+              "kind": "service",
+              "accent": "violet",
+              "icon": "cloud",
+              "title": "Adapter A",
+              "subtitle": "Processor A API",
+              "eyebrow": "ADAPTER",
+              "chip": "BREAKER",
+              "resilience": {
+                "circuitBreaker": true
+              },
+              "summary": "Talks to Processor A, with a breaker that opens after 20% errors in 10 seconds.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Timeout",
+                  "value": "2 s"
+                }
+              ],
+              "x": 1080,
+              "y": 90,
+              "width": 222,
+              "height": 142
+            },
+            {
+              "id": "adapter-b",
+              "kind": "service",
+              "accent": "rose",
+              "icon": "cloud",
+              "title": "Adapter B",
+              "subtitle": "Processor B API",
+              "eyebrow": "ADAPTER",
+              "chip": "BREAKER",
+              "resilience": {
+                "circuitBreaker": true
+              },
+              "summary": "Talks to Processor B, the fallback.",
+              "footerLeft": "",
+              "zoneLabel": "",
+              "interfaceLabel": "",
+              "code": "",
+              "metrics": [
+                {
+                  "label": "Timeout",
+                  "value": "2 s"
+                }
+              ],
+              "x": 1080,
+              "y": 310,
+              "width": 222,
+              "height": 142
+            }
+          ],
+          "edges": [
+            {
+              "id": "lp-1",
+              "from": "pay-api",
+              "to": "vault",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "violet",
+              "route": "auto",
+              "label": "Tokenise or fetch token",
+              "animated": true
+            },
+            {
+              "id": "lp-2",
+              "from": "pay-api",
+              "to": "three-ds",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "amber",
+              "route": "auto",
+              "label": "Challenge if needed",
+              "animated": true,
+              "protocol": "http"
+            },
+            {
+              "id": "lp-3",
+              "from": "pay-api",
+              "to": "router",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "blue",
+              "route": "auto",
+              "label": "Charge token",
+              "animated": true,
+              "protocol": "grpc"
+            },
+            {
+              "id": "lp-4",
+              "from": "router",
+              "to": "adapter-a",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "violet",
+              "route": "auto",
+              "label": "90%",
+              "animated": true,
+              "protocol": "grpc"
+            },
+            {
+              "id": "lp-5",
+              "from": "router",
+              "to": "adapter-b",
+              "sourcePort": "auto",
+              "targetPort": "auto",
+              "tone": "rose",
+              "route": "auto",
+              "label": "10%",
+              "animated": true,
+              "protocol": "grpc"
+            }
+          ]
+        },
+        "frameId": "frame-pci"
+      },
+      {
+        "id": "psp-a",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "cloud",
+        "shape": "pill",
+        "external": true,
+        "title": "Card Processor A",
+        "subtitle": "Primary acquirer",
+        "eyebrow": "PARTNER",
+        "chip": "PRIMARY",
+        "summary": "Takes 90% of charges. When it slows down or fails, the orchestrator's breaker opens and Processor B takes over.",
+        "resilience": {
+          "fallbackId": "psp-b"
+        },
+        "tags": [
+          "pci"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "p99",
+            "value": "350 ms"
+          },
+          {
+            "label": "Share",
+            "value": "90%"
+          }
+        ],
+        "code": "",
+        "x": 2867,
+        "y": 455,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "psp-b",
+        "kind": "service",
+        "accent": "rose",
+        "icon": "cloud",
+        "shape": "pill",
+        "external": true,
+        "title": "Card Processor B",
+        "subtitle": "Fallback acquirer",
+        "eyebrow": "PARTNER",
+        "chip": "FALLBACK",
+        "summary": "Kept warm with 10% of traffic so it is known to work on the day it is needed.",
+        "tags": [
+          "pci"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "p99",
+            "value": "410 ms"
+          },
+          {
+            "label": "Share",
+            "value": "10%"
+          }
+        ],
+        "code": "",
+        "x": 2867,
+        "y": 165,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "bnpl",
+        "kind": "service",
+        "accent": "amber",
+        "icon": "globe",
+        "shape": "asymmetric",
+        "external": true,
+        "title": "Pay in 3",
+        "subtitle": "Instalments partner",
+        "eyebrow": "PLANNED",
+        "chip": "Q2",
+        "summary": "Planned for the next tour: split the price into three payments. Drawn now so the team can see where it plugs in.",
+        "status": "planned",
+        "tags": [
+          "pci"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Launch",
+            "value": "Q2"
+          }
+        ],
+        "code": "",
+        "x": 2517,
+        "y": 165,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "order-events",
+        "kind": "queue",
+        "accent": "amber",
+        "icon": "stream",
+        "title": "Order Events",
+        "subtitle": "Kafka, 12 partitions",
+        "eyebrow": "STREAM",
+        "chip": "7 DAYS",
+        "summary": "Every confirmed order as an event. Each reader keeps its own place, so ticketing and the live dashboard read the same events at their own pace and can replay.",
+        "queue": {
+          "delivery": "fanout",
+          "partitions": 12,
+          "retention": "7 days"
+        },
+        "resilience": {
+          "replicas": 3
+        },
+        "owner": "Team Platform",
+        "tags": [
+          "async"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Events",
+            "value": "410/s"
+          },
+          {
+            "label": "Retention",
+            "value": "7 days"
+          }
+        ],
+        "code": "",
+        "x": 2508,
+        "y": 782,
+        "width": 240,
+        "height": 112
+      },
+      {
+        "id": "ticket-queue",
+        "kind": "queue",
+        "accent": "amber",
+        "icon": "queue",
+        "frameId": "frame-async",
+        "title": "Ticket Jobs",
+        "subtitle": "FIFO per order",
+        "eyebrow": "QUEUE",
+        "chip": "FIFO",
+        "summary": "One job per order, in order. Each job goes to exactly one issuer; after 5 failed tries it moves to the dead-letter queue.",
+        "queue": {
+          "ordering": "fifo",
+          "maxDepth": 5000,
+          "deadLetterId": "ticket-dlq",
+          "retention": "4 days"
+        },
+        "resilience": {
+          "replicas": 2
+        },
+        "owner": "Team Ticketing",
+        "tags": [
+          "async"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Depth",
+            "value": "1.2k"
+          },
+          {
+            "label": "Max",
+            "value": "5,000"
+          }
+        ],
+        "code": "",
+        "x": 2158,
+        "y": 1070,
+        "width": 240,
+        "height": 112
+      },
+      {
+        "id": "ticket-dlq",
+        "kind": "queue",
+        "accent": "rose",
+        "icon": "queue",
+        "title": "Ticket Dead Letters",
+        "subtitle": "Jobs that kept failing",
+        "eyebrow": "DLQ",
+        "chip": "14 DAYS",
+        "summary": "Parked jobs for a human to look at. Each one is a fan who paid and has no ticket yet, so an alert fires on the first message.",
+        "queue": {
+          "retention": "14 days"
+        },
+        "owner": "Team Ticketing",
+        "tags": [
+          "async"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Depth",
+            "value": "0"
+          },
+          {
+            "label": "Alert at",
+            "value": "1"
+          }
+        ],
+        "code": "",
+        "x": 2508,
+        "y": 1070,
+        "width": 240,
+        "height": 112
+      },
+      {
+        "id": "dashboard",
+        "kind": "client",
+        "accent": "violet",
+        "icon": "monitor",
+        "iconImage": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9IjIwIiBoZWlnaHQ9IjIwIiByeD0iNSIgZmlsbD0iI2MwMjZkMyIvPjxwYXRoIGQ9Ik02IDE2bDMuNS00IDMgMi41TDE4IDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48Y2lyY2xlIGN4PSIxOCIgY3k9IjgiIHI9IjEuNiIgZmlsbD0iI2ZiYmYyNCIvPjwvc3ZnPg==",
+        "title": "Promoter Dashboard",
+        "subtitle": "Sales by the second",
+        "eyebrow": "INSIGHT",
+        "chip": "LIVE",
+        "summary": "The tour promoter watches sales per section, live, from the order stream.",
+        "owner": "Team Data",
+        "footerLeft": "",
+        "zoneLabel": "Payments & Events",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Sold",
+            "value": "41,208"
+          },
+          {
+            "label": "Rate",
+            "value": "410/s"
+          }
+        ],
+        "code": "",
+        "x": 2882,
+        "y": 1070,
+        "width": 192,
+        "height": 112
+      },
+      {
+        "id": "worker",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "server",
+        "frameId": "frame-async",
+        "title": "Ticket Issuer",
+        "subtitle": "Barcodes, PDF, wallet pass",
+        "eyebrow": "WORKER",
+        "chip": "x4",
+        "summary": "Issues each ticket with a rotating barcode that cannot be screenshotted and resold, renders the PDF and wallet pass, and stores them.",
+        "resilience": {
+          "replicas": 4
+        },
+        "owner": "Team Ticketing",
+        "tags": [
+          "async"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "On-Sale Core",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Issued",
+            "value": "820/s"
+          },
+          {
+            "label": "p99",
+            "value": "1.4 s"
+          }
+        ],
+        "code": "",
+        "x": 1817,
+        "y": 1055,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "bucket",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "bucket",
+        "shape": "bucket",
+        "title": "Ticket Wallet",
+        "subtitle": "Object storage",
+        "eyebrow": "OBJECT STORAGE",
+        "chip": "S3",
+        "summary": "PDFs and wallet passes. Fans download them through the CDN with a signed link that expires.",
+        "owner": "Team Platform",
+        "tags": [
+          "data"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Objects",
+            "value": "12.4M"
+          },
+          {
+            "label": "Size",
+            "value": "3.1 TB"
+          }
+        ],
+        "code": "",
+        "x": 1470,
+        "y": 763,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "notify",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "globe",
+        "frameId": "frame-async",
+        "title": "Notifications",
+        "subtitle": "Push, email, SMS",
+        "eyebrow": "SERVICE",
+        "chip": "FAN-OUT",
+        "summary": "Tells the fan the tickets are ready. Push and email first; SMS only for fans who have no app.",
+        "resilience": {
+          "replicas": 2,
+          "circuitBreaker": true
+        },
+        "owner": "Team Platform",
+        "tags": [
+          "async",
+          "platform"
+        ],
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Sent",
+            "value": "1.1k/s"
+          }
+        ],
+        "code": "",
+        "x": 1467,
+        "y": 1055,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "push",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "cloud",
+        "shape": "pill",
+        "external": true,
+        "frameId": "frame-async",
+        "title": "Push & Email",
+        "subtitle": "Delivery provider",
+        "eyebrow": "PARTNER",
+        "chip": "APNS/FCM",
+        "summary": "A delivery provider that reaches the phone. If it is down, notifications fall back to SMS.",
+        "resilience": {
+          "fallbackId": "sms-legacy"
+        },
+        "footerLeft": "",
+        "zoneLabel": "Platform",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Delivered",
+            "value": "99.4%"
+          }
+        ],
+        "code": "",
+        "x": 1117,
+        "y": 1055,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "sms-legacy",
+        "kind": "service",
+        "accent": "rose",
+        "icon": "server",
+        "shape": "rounded",
+        "title": "Legacy SMS Gateway",
+        "subtitle": "Being retired",
+        "eyebrow": "DEPRECATED",
+        "chip": "OLD",
+        "summary": "The old SMS box from the previous platform. Still sends to fans without the app; scheduled to be replaced by the provider's SMS API.",
+        "status": "deprecated",
+        "comment": "Replace with the provider SMS API (MIG-7) before the summer tour.",
+        "owner": "Team Platform",
+        "footerLeft": "",
+        "zoneLabel": "Edge",
+        "interfaceLabel": "",
+        "metrics": [
+          {
+            "label": "Sent",
+            "value": "40/s"
+          },
+          {
+            "label": "Retire by",
+            "value": "March"
+          }
+        ],
+        "code": "",
+        "x": 767,
+        "y": 1055,
+        "width": 222,
+        "height": 142
+      }
+    ],
+    "edges": [
+      {
+        "id": "e-tap",
+        "from": "fans",
+        "to": "app",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "auto",
+        "label": "Tap \"Buy\" at 10:00",
+        "animated": true
+      },
+      {
+        "id": "e-edge",
+        "from": "app",
+        "to": "cdn",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "blue",
+        "route": "straight",
+        "label": "HTTPS",
+        "animated": true,
+        "protocol": "graphql",
+        "latencyMs": 25
+      },
+      {
+        "id": "e-queue",
+        "from": "cdn",
+        "to": "waiting-room",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "straight",
+        "label": "No token",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 2
+      },
+      {
+        "id": "e-token",
+        "from": "cdn",
+        "to": "lb",
+        "sourcePort": "top",
+        "targetPort": "top",
+        "tone": "blue",
+        "route": "over",
+        "label": "Token valid: skip the line",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 2
+      },
+      {
+        "id": "e-admit",
+        "from": "waiting-room",
+        "to": "lb",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "straight",
+        "label": "Admitted",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 1
+      },
+      {
+        "id": "e-lb",
+        "from": "lb",
+        "to": "api-gw",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
+        "route": "straight",
+        "label": "Route",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 1
+      },
+      {
+        "id": "e-session",
+        "from": "api-gw",
+        "to": "identity",
+        "sourcePort": "top",
+        "targetPort": "bottom",
+        "tone": "violet",
+        "route": "orthogonal",
+        "label": "Verify session",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 4
+      },
+      {
+        "id": "e-bot",
+        "from": "api-gw",
+        "to": "fraud",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "arc",
+        "label": "Bot score",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 9
+      },
+      {
+        "id": "e-map",
+        "from": "api-gw",
+        "to": "seat-cache",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Read seat map",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 2
+      },
+      {
+        "id": "e-miss",
+        "from": "seat-cache",
+        "to": "seat-db",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "straight",
+        "label": "Miss: load",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 6
+      },
+      {
+        "id": "e-hold",
+        "from": "api-gw",
+        "to": "seat-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
+        "route": "straight",
+        "label": "Hold",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 5
+      },
+      {
+        "id": "e-lock",
+        "from": "seat-svc",
+        "to": "seat-db",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Lock rows",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 9
+      },
+      {
+        "id": "e-live",
+        "from": "seat-svc",
+        "to": "hub",
+        "sourcePort": "top",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "over",
+        "label": "Seat taken / freed",
+        "animated": true,
+        "protocol": "amqp",
+        "sync": "async"
+      },
+      {
+        "id": "e-socket",
+        "from": "hub",
+        "to": "app",
+        "sourcePort": "left",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Live seat map",
+        "animated": true,
+        "protocol": "custom",
+        "sync": "async",
+        "flow": "both"
+      },
+      {
+        "id": "e-checkout",
+        "from": "api-gw",
+        "to": "order-svc",
+        "sourcePort": "bottom",
+        "targetPort": "bottom",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "Checkout",
+        "animated": true,
+        "waypoint": [
+          1880,
+          708
+        ],
+        "protocol": "grpc",
+        "latencyMs": 6
+      },
+      {
+        "id": "e-sold",
+        "from": "order-svc",
+        "to": "seat-svc",
+        "sourcePort": "left",
+        "targetPort": "right",
+        "tone": "emerald",
+        "route": "straight",
+        "label": "Sold",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 5
+      },
+      {
+        "id": "e-order",
+        "from": "order-svc",
+        "to": "seat-db",
+        "sourcePort": "top",
+        "targetPort": "bottom",
+        "tone": "emerald",
+        "route": "straight",
+        "label": "Order + outbox",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 8
+      },
+      {
+        "id": "e-charge",
+        "from": "order-svc",
+        "to": "orchestrator",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "straight",
+        "label": "Authorise",
+        "animated": true,
+        "protocol": "grpc",
+        "latencyMs": 12
+      },
+      {
+        "id": "e-psp-a",
+        "from": "orchestrator",
+        "to": "psp-a",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "straight",
+        "label": "Card auth",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 350
+      },
+      {
+        "id": "e-psp-b",
+        "from": "orchestrator",
+        "to": "psp-b",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "step",
+        "label": "Fail over",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 410
+      },
+      {
+        "id": "e-bnpl",
+        "from": "orchestrator",
+        "to": "bnpl",
+        "sourcePort": "top",
+        "targetPort": "bottom",
+        "tone": "amber",
+        "route": "straight",
+        "label": "Instalments (planned)",
+        "animated": false,
+        "protocol": "http",
+        "comment": "Not built yet: drawn to agree the contract."
+      },
+      {
+        "id": "e-cdc",
+        "from": "seat-db",
+        "to": "order-events",
+        "sourcePort": "right",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "straight",
+        "label": "CDC: OrderConfirmed",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async",
+        "waypoint": [
+          2455,
+          640
+        ]
+      },
+      {
+        "id": "e-jobs",
+        "from": "order-events",
+        "to": "ticket-queue",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "amber",
+        "route": "fanout",
+        "label": "Issue tickets",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
+      },
+      {
+        "id": "e-insight",
+        "from": "order-events",
+        "to": "dashboard",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "violet",
+        "route": "fanout",
+        "label": "Sales per second",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
+      },
+      {
+        "id": "e-dead",
+        "from": "ticket-queue",
+        "to": "ticket-dlq",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
+        "route": "straight",
+        "label": "5 tries",
+        "animated": true,
+        "protocol": "amqp",
+        "sync": "async"
+      },
+      {
+        "id": "e-redrive",
+        "from": "ticket-dlq",
+        "to": "ticket-queue",
+        "sourcePort": "bottom",
+        "targetPort": "bottom",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Redrive after fix",
+        "animated": false,
+        "protocol": "amqp",
+        "sync": "async"
+      },
+      {
+        "id": "e-issue",
+        "from": "ticket-queue",
+        "to": "worker",
+        "sourcePort": "left",
+        "targetPort": "right",
+        "tone": "amber",
+        "route": "straight",
+        "label": "Issue",
+        "animated": true,
+        "protocol": "amqp",
+        "sync": "async"
+      },
+      {
+        "id": "e-store",
+        "from": "worker",
+        "to": "bucket",
+        "sourcePort": "top",
+        "targetPort": "right",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Write PDF + pass",
+        "animated": true,
+        "latencyMs": 40
+      },
+      {
+        "id": "e-ready",
+        "from": "worker",
+        "to": "notify",
+        "sourcePort": "left",
+        "targetPort": "right",
+        "tone": "amber",
+        "route": "straight",
+        "label": "Issued",
+        "animated": true,
+        "protocol": "amqp",
+        "sync": "async"
+      },
+      {
+        "id": "e-push",
+        "from": "notify",
+        "to": "push",
+        "sourcePort": "left",
+        "targetPort": "right",
+        "tone": "blue",
+        "route": "straight",
+        "label": "Push + email",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 60
+      },
+      {
+        "id": "e-sms",
+        "from": "notify",
+        "to": "sms-legacy",
+        "sourcePort": "bottom",
+        "targetPort": "bottom",
+        "tone": "rose",
+        "route": "under",
+        "label": "SMS, no app",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 90
+      },
+      {
+        "id": "e-phone",
+        "from": "push",
+        "to": "app",
+        "sourcePort": "top",
+        "targetPort": "bottom",
+        "tone": "emerald",
+        "route": "orthogonal",
+        "label": "Tickets ready",
+        "animated": true,
+        "protocol": "http",
+        "sync": "async",
+        "waypoint": [
+          620,
+          700
+        ]
+      },
+      {
+        "id": "e-download",
+        "from": "cdn",
+        "to": "bucket",
+        "sourcePort": "bottom",
+        "targetPort": "left",
+        "tone": "emerald",
+        "route": "orthogonal",
+        "label": "Get ticket",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 30
+      },
+      {
+        "id": "e-sweep",
+        "from": "sweeper",
+        "to": "seat-svc",
+        "sourcePort": "top",
+        "targetPort": "bottom",
+        "tone": "violet",
+        "route": "straight",
+        "label": "Release expired holds",
+        "animated": false,
+        "protocol": "grpc",
+        "latencyMs": 5
+      }
+    ],
+    "simulations": [
+      {
+        "id": "sim-rush",
+        "name": "On-Sale Rush (Waiting Room)",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "r1",
+            "nodes": [
+              "fans",
+              "app"
+            ],
+            "tone": "blue",
+            "label": "10:00:00",
+            "trace": "1.8M fans press Buy in the same minute."
+          },
+          {
+            "id": "r2",
+            "nodes": [
+              "app",
+              "cdn"
+            ],
+            "tone": "blue",
+            "label": "EDGE",
+            "trace": "The nearest of 40 edge locations answers. The WAF drops 38% of requests as bots."
+          },
+          {
+            "id": "r3",
+            "nodes": [
+              "cdn",
+              "waiting-room"
+            ],
+            "tone": "amber",
+            "label": "NO TOKEN",
+            "trace": "No queue token yet, so the fan joins the virtual waiting room."
+          },
+          {
+            "id": "r4",
+            "nodes": [
+              "waiting-room",
+              "lb",
+              "api-gw"
+            ],
+            "tone": "emerald",
+            "label": "ADMITTED",
+            "trace": "The room lets in 2 of every 5 per tick, so the origin is never asked for more than it can sell. Loop this run: the red packets are fans told to keep waiting (429)."
+          },
+          {
+            "id": "r5",
+            "nodes": [
+              "api-gw",
+              "seat-cache"
+            ],
+            "tone": "emerald",
+            "label": "SEAT MAP",
+            "trace": "Most of what admitted fans do is look at the map, and the cache answers 92% of it."
+          },
+          {
+            "id": "r6",
+            "nodes": [
+              "seat-cache",
+              "seat-db"
+            ],
+            "tone": "emerald",
+            "label": "MISS",
+            "trace": "One read in twelve reaches the database."
+          }
+        ]
+      },
+      {
+        "id": "sim-buy",
+        "name": "Buy Two Tickets (Hold → Pay → Confirm)",
+        "tone": "emerald",
+        "budgetMs": 600,
+        "steps": [
+          {
+            "id": "b1",
+            "nodes": [
+              "fans",
+              "app"
+            ],
+            "tone": "blue",
+            "label": "10:04 · BUY",
+            "trace": "A fan who already waited in line taps Buy for two seats in block B."
+          },
+          {
+            "id": "b2",
+            "nodes": [
+              "app",
+              "cdn"
+            ],
+            "tone": "blue",
+            "label": "TOKEN OK",
+            "trace": "The edge checks the signed queue token the waiting room gave out. It is valid, so no second wait."
+          },
+          {
+            "id": "b3",
+            "nodes": [
+              "cdn",
+              "lb"
+            ],
+            "tone": "blue",
+            "label": "SKIP THE LINE",
+            "trace": "The request goes straight to the load balancer, past the waiting room."
+          },
+          {
+            "id": "b4",
+            "nodes": [
+              "lb",
+              "api-gw"
+            ],
+            "tone": "blue",
+            "label": "GATEWAY",
+            "trace": "The pod with the fewest open connections takes it."
+          },
+          {
+            "id": "b5",
+            "nodes": [
+              "identity",
+              "api-gw",
+              "fraud"
+            ],
+            "tone": "violet",
+            "label": "SIGNED IN · HUMAN",
+            "trace": "Session verified, and the bot score is 0.03: a real person."
+          },
+          {
+            "id": "b6",
+            "nodes": [
+              "api-gw",
+              "seat-cache"
+            ],
+            "tone": "emerald",
+            "label": "SEAT MAP",
+            "trace": "The map comes from the cache. On a miss the section loads from the database."
+          },
+          {
+            "id": "b7",
+            "nodes": [
+              "seat-cache",
+              "seat-db"
+            ],
+            "tone": "emerald",
+            "label": "LOAD SECTION",
+            "trace": "Cache miss: block B is read from the ticket database and cached for a second."
+          },
+          {
+            "id": "b8",
+            "nodes": [
+              "api-gw",
+              "seat-svc"
+            ],
+            "tone": "blue",
+            "label": "HOLD 2 SEATS",
+            "trace": "Seat Inventory picks B12-14 and B12-15, side by side. Open it (level badge) to see how."
+          },
+          {
+            "id": "b9",
+            "nodes": [
+              "seat-svc",
+              "seat-db"
+            ],
+            "tone": "emerald",
+            "label": "LOCKED · 8 MIN",
+            "trace": "The rows are locked and the hold is written. Nobody else can buy these seats for 8 minutes."
+          },
+          {
+            "id": "b10",
+            "nodes": [
+              "seat-svc",
+              "hub",
+              "app"
+            ],
+            "tone": "amber",
+            "label": "GREY ON EVERY MAP",
+            "trace": "The hub tells 1.2M open maps that two seats just went. The wire is two-way: the app keeps the socket alive."
+          },
+          {
+            "id": "b11",
+            "nodes": [
+              "api-gw",
+              "order-svc"
+            ],
+            "tone": "blue",
+            "label": "CHECKOUT",
+            "trace": "The fan pays. The checkout call carries the hold id and a card token, never the card number."
+          },
+          {
+            "id": "b12",
+            "nodes": [
+              "order-svc",
+              "orchestrator"
+            ],
+            "tone": "violet",
+            "label": "AUTHORISE $184",
+            "trace": "Checkout asks the Payment Orchestrator to charge the card token. Open it (level badge) to see 3-D Secure and the processor router."
+          },
+          {
+            "id": "b12b",
+            "nodes": [
+              "orchestrator",
+              "psp-a"
+            ],
+            "tone": "violet",
+            "label": "APPROVED",
+            "trace": "Processor A approves the charge. At 350 ms this is the slowest hop of the whole purchase."
+          },
+          {
+            "id": "b13",
+            "nodes": [
+              "order-svc",
+              "seat-svc"
+            ],
+            "tone": "emerald",
+            "label": "SOLD",
+            "trace": "The hold becomes two sold seats."
+          },
+          {
+            "id": "b14",
+            "nodes": [
+              "order-svc",
+              "seat-db"
+            ],
+            "tone": "emerald",
+            "label": "ORDER + OUTBOX",
+            "trace": "The order and an OrderConfirmed outbox row are written in one transaction, so the event can never be lost."
+          },
+          {
+            "id": "b15",
+            "nodes": [
+              "order-svc",
+              "api-gw"
+            ],
+            "tone": "emerald",
+            "label": "CONFIRMED",
+            "trace": "The fan sees \"You're going!\". Tickets follow in seconds: play \"Tickets Delivered\"."
+          }
+        ]
+      },
+      {
+        "id": "sim-tickets",
+        "name": "Tickets Delivered (Async)",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "t1",
+            "nodes": [
+              "seat-db",
+              "order-events"
+            ],
+            "tone": "amber",
+            "label": "CDC",
+            "trace": "Change-data-capture reads the outbox row and publishes OrderConfirmed to Kafka."
+          },
+          {
+            "id": "t2",
+            "nodes": [
+              "order-events",
+              "dashboard"
+            ],
+            "tone": "violet",
+            "label": "LIVE SALES",
+            "trace": "The promoter's dashboard reads the same event, at its own pace."
+          },
+          {
+            "id": "t3",
+            "nodes": [
+              "order-events",
+              "ticket-queue"
+            ],
+            "tone": "amber",
+            "label": "ISSUE JOB",
+            "trace": "Ticketing reads it too and queues one job for the order."
+          },
+          {
+            "id": "t4",
+            "nodes": [
+              "ticket-queue",
+              "worker"
+            ],
+            "tone": "amber",
+            "label": "ONE ISSUER",
+            "trace": "Exactly one of the four issuers takes the job."
+          },
+          {
+            "id": "t5",
+            "nodes": [
+              "worker",
+              "bucket"
+            ],
+            "tone": "emerald",
+            "label": "PDF + PASS",
+            "trace": "Two tickets with rotating barcodes, rendered as a PDF and a wallet pass, saved to object storage."
+          },
+          {
+            "id": "t6",
+            "nodes": [
+              "worker",
+              "notify"
+            ],
+            "tone": "amber",
+            "label": "ISSUED",
+            "trace": "TicketsIssued goes to Notifications."
+          },
+          {
+            "id": "t7",
+            "nodes": [
+              "notify",
+              "push",
+              "app"
+            ],
+            "tone": "emerald",
+            "label": "IN YOUR WALLET",
+            "trace": "Push and email reach the phone: \"Your tickets are ready\"."
+          },
+          {
+            "id": "t8",
+            "nodes": [
+              "notify",
+              "sms-legacy"
+            ],
+            "tone": "rose",
+            "label": "SMS (LEGACY)",
+            "trace": "Fans without the app get an SMS through the old gateway. Review flags it: it is deprecated and still on this path."
+          },
+          {
+            "id": "t9",
+            "nodes": [
+              "app",
+              "cdn",
+              "bucket"
+            ],
+            "tone": "emerald",
+            "label": "DOWNLOAD",
+            "trace": "The app fetches the ticket through the CDN with a signed link that expires in 10 minutes."
+          }
+        ]
+      },
+      {
+        "id": "sim-psp",
+        "name": "Card Processor A Outage",
+        "tone": "rose",
+        "failures": [
+          "psp-a"
+        ],
+        "steps": [
+          {
+            "id": "p1",
+            "nodes": [
+              "api-gw",
+              "order-svc"
+            ],
+            "tone": "blue",
+            "label": "CHECKOUT",
+            "trace": "Checkout carries on as normal: the fan does not know anything is wrong."
+          },
+          {
+            "id": "p2",
+            "nodes": [
+              "order-svc",
+              "orchestrator"
+            ],
+            "tone": "violet",
+            "label": "AUTHORISE",
+            "trace": "The orchestrator tries Processor A first."
+          },
+          {
+            "id": "p3",
+            "nodes": [
+              "orchestrator",
+              "psp-a"
+            ],
+            "tone": "rose",
+            "label": "TIMEOUT · BREAKER OPENS",
+            "trace": "Processor A is down. After 20% errors in 10 seconds the breaker opens and stops sending it work."
+          },
+          {
+            "id": "p4",
+            "nodes": [
+              "orchestrator",
+              "psp-b"
+            ],
+            "tone": "emerald",
+            "label": "PROCESSOR B",
+            "trace": "Processor A's fallback takes every charge. It was kept warm with 10% of traffic, so it is known to work."
+          },
+          {
+            "id": "p5",
+            "nodes": [
+              "order-svc",
+              "seat-svc"
+            ],
+            "tone": "emerald",
+            "label": "SOLD ANYWAY",
+            "trace": "The order completes. Press X on Processor B too and see what that would cost."
+          }
+        ]
+      },
+      {
+        "id": "sim-expiry",
+        "name": "Hold Expires: Seats Back On Sale",
+        "tone": "violet",
+        "steps": [
+          {
+            "id": "x1",
+            "nodes": [
+              "sweeper",
+              "seat-svc"
+            ],
+            "tone": "violet",
+            "label": "EVERY 30 S",
+            "trace": "The sweeper wakes up, as it does every 30 seconds."
+          },
+          {
+            "id": "x2",
+            "nodes": [
+              "seat-svc",
+              "seat-db"
+            ],
+            "tone": "emerald",
+            "label": "RELEASE 312 HOLDS",
+            "trace": "Holds older than 8 minutes that were never paid are released."
+          },
+          {
+            "id": "x3",
+            "nodes": [
+              "seat-svc",
+              "hub",
+              "app"
+            ],
+            "tone": "amber",
+            "label": "BACK ON THE MAP",
+            "trace": "The freed seats turn green on every open map. Someone still in line gets lucky."
+          }
+        ]
+      },
+      {
+        "id": "sim-db",
+        "name": "Ticket Database Fails",
+        "tone": "rose",
+        "failures": [
+          "seat-db"
+        ],
+        "steps": [
+          {
+            "id": "d1",
+            "nodes": [
+              "api-gw",
+              "seat-svc"
+            ],
+            "tone": "blue",
+            "label": "HOLD",
+            "trace": "A fan tries to hold seats."
+          },
+          {
+            "id": "d2",
+            "nodes": [
+              "seat-svc",
+              "seat-db"
+            ],
+            "tone": "rose",
+            "label": "NO PRIMARY",
+            "trace": "The single primary is down. Holds, orders and the outbox all stop: this is the one known single point of failure."
+          },
+          {
+            "id": "d3",
+            "nodes": [
+              "api-gw",
+              "seat-cache"
+            ],
+            "tone": "amber",
+            "label": "MAP STILL SHOWS",
+            "trace": "The cache keeps answering seat-map reads for a moment, so the app still looks alive."
+          },
+          {
+            "id": "d4",
+            "nodes": [
+              "seat-db",
+              "order-events"
+            ],
+            "tone": "rose",
+            "label": "TICKETS STALL",
+            "trace": "No outbox, no events: ticketing goes quiet. The fix (a synchronous standby) is planned as RISK-12."
+          }
+        ]
+      }
+    ],
+    "pages": [
+      {
+        "id": "page-regions",
+        "title": "Regions & Failover",
+        "stageWidth": 2000,
+        "stageHeight": 1060,
+        "zones": [
+          {
+            "id": "rz-global",
+            "number": "01",
+            "title": "Global",
+            "subtitle": "DNS and traffic steering",
+            "x": 26,
+            "width": 664
+          },
+          {
+            "id": "rz-eu",
+            "number": "02",
+            "title": "eu-west (active)",
+            "subtitle": "Serves every fan today",
+            "x": 686,
+            "width": 664
+          },
+          {
+            "id": "rz-us",
+            "number": "03",
+            "title": "us-east (warm standby)",
+            "subtitle": "Takes over in under 5 min",
+            "x": 1346,
+            "width": 634
+          }
+        ],
+        "frames": [
+          {
+            "id": "frame-dr",
+            "title": "Disaster recovery: RPO 1 s, RTO 5 min",
+            "x": 702,
+            "y": 560,
+            "width": 1300,
+            "height": 250,
+            "tone": "rose"
+          }
+        ],
+        "notesCards": [
+          {
+            "id": "notes-dr",
+            "title": "Failover drill",
+            "code": "DR-01",
+            "x": 48,
+            "y": 640,
+            "items": [
+              {
+                "title": "Monthly",
+                "text": "eu-west is failed on purpose every month.",
+                "icon": "check"
+              },
+              {
+                "title": "Replication",
+                "text": "Async, about 1 s behind.",
+                "icon": "info"
+              },
+              {
+                "title": "Data loss",
+                "text": "At most the last second of orders.",
+                "icon": "warning"
+              }
+            ]
+          }
+        ],
+        "nodes": [
+          {
+            "id": "r-fans",
+            "kind": "actor",
+            "accent": "blue",
+            "icon": "actor",
+            "title": "Fans",
+            "subtitle": "Worldwide",
+            "eyebrow": "PEOPLE",
+            "chip": "HUMAN",
+            "summary": "The same fans, seen from the top of the stack.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Countries",
+                "value": "31"
+              }
+            ],
+            "x": 104,
+            "y": 140,
+            "width": 148,
+            "height": 142
+          },
+          {
+            "id": "gtm",
+            "kind": "balancer",
+            "accent": "violet",
+            "icon": "globe",
+            "title": "Global Traffic Manager",
+            "subtitle": "Geo DNS + health",
+            "eyebrow": "BALANCER",
+            "chip": "WEIGHTED",
+            "balancer": {
+              "strategy": "weighted"
+            },
+            "resilience": {
+              "replicas": 4
+            },
+            "summary": "Answers DNS with the healthy region. Today that is eu-west for everyone; us-east takes 100% within a minute of eu-west failing its checks.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Health check",
+                "value": "10 s"
+              }
+            ],
+            "x": 408,
+            "y": 150,
+            "width": 200,
+            "height": 120
+          },
+          {
+            "id": "eu-stack",
+            "kind": "core",
+            "accent": "emerald",
+            "icon": "server",
+            "shape": "rounded",
+            "title": "eu-west stack",
+            "subtitle": "Everything on page 1",
+            "eyebrow": "REGION",
+            "chip": "ACTIVE",
+            "resilience": {
+              "fallbackId": "us-stack"
+            },
+            "owner": "Team Platform",
+            "summary": "The whole on-sale system from page 1, running in three availability zones.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Zones",
+                "value": "3"
+              }
+            ],
+            "x": 717,
+            "y": 120,
+            "width": 242,
+            "height": 172
+          },
+          {
+            "id": "us-stack",
+            "kind": "core",
+            "accent": "amber",
+            "icon": "server",
+            "shape": "rounded",
+            "title": "us-east stack",
+            "subtitle": "Scaled to 20%",
+            "eyebrow": "REGION",
+            "chip": "STANDBY",
+            "owner": "Team Platform",
+            "summary": "A smaller copy that scales up when it takes over.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Warm",
+                "value": "20%"
+              }
+            ],
+            "x": 1377,
+            "y": 120,
+            "width": 242,
+            "height": 172
+          },
+          {
+            "id": "eu-db",
+            "kind": "store",
+            "accent": "emerald",
+            "icon": "database",
+            "title": "Ticket DB (eu)",
+            "subtitle": "Primary",
+            "eyebrow": "DATA STORE",
+            "chip": "PRIMARY",
+            "resilience": {
+              "fallbackId": "us-db"
+            },
+            "summary": "The primary from page 1.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Lag",
+                "value": "0"
+              }
+            ],
+            "x": 730,
+            "y": 600,
+            "width": 216,
+            "height": 150
+          },
+          {
+            "id": "us-db",
+            "kind": "store",
+            "accent": "amber",
+            "icon": "database",
+            "title": "Ticket DB (us)",
+            "subtitle": "Async replica",
+            "eyebrow": "DATA STORE",
+            "chip": "REPLICA",
+            "summary": "Promoted to primary during a failover.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Lag",
+                "value": "~1 s"
+              }
+            ],
+            "x": 1390,
+            "y": 600,
+            "width": 216,
+            "height": 150
+          },
+          {
+            "id": "snapshots",
+            "kind": "scheduler",
+            "accent": "violet",
+            "icon": "clock",
+            "title": "Nightly Snapshots",
+            "subtitle": "03:00 UTC",
+            "eyebrow": "SCHEDULER",
+            "chip": "0 3 * * *",
+            "schedule": {
+              "every": "0 3 * * *"
+            },
+            "summary": "Takes a full snapshot of the primary every night.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Kept",
+                "value": "35 days"
+              }
+            ],
+            "x": 742,
+            "y": 880,
+            "width": 192,
+            "height": 112
+          },
+          {
+            "id": "backup-job",
+            "kind": "service",
+            "accent": "violet",
+            "icon": "cpu",
+            "title": "Backup Job",
+            "subtitle": "Copies and verifies",
+            "eyebrow": "JOB",
+            "chip": "BATCH",
+            "resilience": {
+              "replicas": 2
+            },
+            "summary": "Copies the snapshot to the vault and test-restores it, because a backup nobody restored is a hope, not a backup.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Last run",
+                "value": "14 min"
+              }
+            ],
+            "x": 1057,
+            "y": 865,
+            "width": 222,
+            "height": 142
+          },
+          {
+            "id": "vault-bucket",
+            "kind": "store",
+            "accent": "violet",
+            "icon": "bucket",
+            "shape": "bucket",
+            "title": "Backup Vault",
+            "subtitle": "Locked, other account",
+            "eyebrow": "OBJECT STORAGE",
+            "chip": "WORM",
+            "summary": "Write-once backups in a separate account, so a bad deploy or a stolen key cannot delete them.",
+            "footerLeft": "",
+            "zoneLabel": "",
+            "interfaceLabel": "",
+            "code": "",
+            "metrics": [
+              {
+                "label": "Size",
+                "value": "18 TB"
+              }
+            ],
+            "x": 1720,
+            "y": 860,
+            "width": 216,
+            "height": 150
+          }
+        ],
+        "edges": [
+          {
+            "id": "re-1",
+            "from": "r-fans",
+            "to": "gtm",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "blue",
+            "route": "straight",
+            "label": "DNS lookup",
+            "animated": true,
+            "latencyMs": 20
+          },
+          {
+            "id": "re-2",
+            "from": "gtm",
+            "to": "eu-stack",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "emerald",
+            "route": "straight",
+            "label": "100% today",
+            "animated": true,
+            "protocol": "http",
+            "latencyMs": 30
+          },
+          {
+            "id": "re-3",
+            "from": "gtm",
+            "to": "us-stack",
+            "sourcePort": "top",
+            "targetPort": "top",
+            "tone": "amber",
+            "route": "over",
+            "label": "0%, until failover",
+            "animated": true,
+            "protocol": "http",
+            "latencyMs": 90
+          },
+          {
+            "id": "re-4",
+            "from": "eu-stack",
+            "to": "eu-db",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "emerald",
+            "route": "straight",
+            "label": "Read / write",
+            "animated": true,
+            "protocol": "sql"
+          },
+          {
+            "id": "re-5",
+            "from": "us-stack",
+            "to": "us-db",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "amber",
+            "route": "straight",
+            "label": "Read (standby)",
+            "animated": true,
+            "protocol": "sql"
+          },
+          {
+            "id": "re-6",
+            "from": "eu-db",
+            "to": "us-db",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "amber",
+            "route": "straight",
+            "label": "Async replication",
+            "animated": true,
+            "sync": "async",
+            "protocol": "sql"
+          },
+          {
+            "id": "re-7",
+            "from": "snapshots",
+            "to": "backup-job",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "violet",
+            "route": "straight",
+            "label": "Start job",
+            "animated": true
+          },
+          {
+            "id": "re-8",
+            "from": "backup-job",
+            "to": "vault-bucket",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "violet",
+            "route": "straight",
+            "label": "Upload + read back",
+            "animated": true
+          },
+          {
+            "id": "re-9",
+            "from": "backup-job",
+            "to": "eu-db",
+            "sourcePort": "auto",
+            "targetPort": "auto",
+            "tone": "violet",
+            "route": "bezier",
+            "label": "Read snapshot",
+            "animated": true,
+            "protocol": "sql"
+          }
+        ]
+      },
+      {
+        "id": "page-tour",
+        "title": "Start Here: A 5-Minute Tour",
+        "stageWidth": 1420,
+        "stageHeight": 700,
+        "zones": [],
+        "nodes": [],
+        "edges": [],
+        "notesCards": [
+          {
+            "id": "tour-title",
+            "title": "Marquee: selling 60,000 seats to 1.8 million fans in ten minutes",
+            "code": "",
+            "x": 48,
+            "y": 40,
+            "items": [],
+            "variant": "text"
+          },
+          {
+            "id": "tour-1",
+            "title": "1 · Watch it work",
+            "code": "TOUR-1",
+            "x": 48,
+            "y": 110,
+            "items": [
+              {
+                "title": "Traffic lens",
+                "text": "Press 2, pick \"Buy Two Tickets\" and press Play.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Cache",
+                "text": "The seat map shows HIT or MISS at the cache.",
+                "icon": "info"
+              },
+              {
+                "title": "Waiting room",
+                "text": "Loop \"On-Sale Rush\": red packets are 429s.",
+                "icon": "info"
+              },
+              {
+                "title": "Async",
+                "text": "\"Tickets Delivered\" follows the Kafka stream.",
+                "icon": "info"
+              }
+            ]
+          },
+          {
+            "id": "tour-2",
+            "title": "2 · Break it",
+            "code": "TOUR-2",
+            "x": 500,
+            "y": 110,
+            "items": [
+              {
+                "title": "Fail a part",
+                "text": "Select a component and press X.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Processor A",
+                "text": "Payments fail over to Processor B.",
+                "icon": "check"
+              },
+              {
+                "title": "Ticket Issuer",
+                "text": "4 copies: it degrades, nothing stops.",
+                "icon": "check"
+              },
+              {
+                "title": "Dashboard",
+                "text": "Kafka keeps its events; its lag grows.",
+                "icon": "info"
+              },
+              {
+                "title": "Ticket DB",
+                "text": "The one real single point of failure.",
+                "icon": "warning"
+              }
+            ]
+          },
+          {
+            "id": "tour-3",
+            "title": "3 · Review it",
+            "code": "TOUR-3",
+            "x": 952,
+            "y": 110,
+            "items": [
+              {
+                "title": "Review lens",
+                "text": "Press 3: three warnings, all on purpose.",
+                "icon": "arrow"
+              },
+              {
+                "title": "At risk",
+                "text": "Ticket DB: 78% capacity, 3 callers.",
+                "icon": "warning"
+              },
+              {
+                "title": "Deprecated",
+                "text": "Legacy SMS is still on a live path.",
+                "icon": "warning"
+              },
+              {
+                "title": "Budgets",
+                "text": "Buying fits its 600 ms budget.",
+                "icon": "check"
+              }
+            ]
+          },
+          {
+            "id": "tour-4",
+            "title": "4 · Go deeper",
+            "code": "TOUR-4",
+            "x": 48,
+            "y": 400,
+            "items": [
+              {
+                "title": "Levels",
+                "text": "Open Seat Inventory or Payments.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Pages",
+                "text": "\"Regions & Failover\" is the next tab.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Frames",
+                "text": "PCI scope and async work are framed.",
+                "icon": "info"
+              },
+              {
+                "title": "Details",
+                "text": "Owners, links, tags, code on each card.",
+                "icon": "info"
+              }
+            ]
+          },
+          {
+            "id": "tour-5",
+            "title": "5 · Ship it",
+            "code": "TOUR-5",
+            "x": 500,
+            "y": 400,
+            "items": [
+              {
+                "title": "Present",
+                "text": "Press 4 for a clean view to show.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Export",
+                "text": "HTML page, SVG, PNG, GIF or file.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Share",
+                "text": "One link holds the whole diagram.",
+                "icon": "arrow"
+              },
+              {
+                "title": "Check in CI",
+                "text": "conduitcraft check fails on errors.",
+                "icon": "star"
+              }
+            ]
+          },
+          {
+            "id": "tour-6",
+            "title": "Read the full story",
+            "code": "TOUR-6",
+            "x": 952,
+            "y": 400,
+            "items": [
+              {
+                "title": "Guide",
+                "text": "docs/showcase.md explains every part.",
+                "icon": "question"
+              },
+              {
+                "title": "Fictional",
+                "text": "Marquee is made up; the patterns are not.",
+                "icon": "info"
+              },
+              {
+                "title": "Yours",
+                "text": "Change anything. It is your copy.",
+                "icon": "star"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,5 +1,5 @@
 /**
- * First run (R-08): a brand-new visitor sees the example system working instead of an empty canvas. `lumen-relay`
+ * First run (R-08): a brand-new visitor sees the example system working instead of an empty canvas. The showcase
  * opens in the Traffic lens with its first scenario playing; after one loop a single-path component fails so the
  * ripple shows. It never replaces work: see `shouldShowFirstRun`.
  */

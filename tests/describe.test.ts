@@ -34,7 +34,8 @@ describe('describeDiagram', () => {
       const doc = loadExample(name);
       const text = describeDiagram(doc);
       assert.ok(text.startsWith(describeDiagramBrief(doc)));
-      assert.match(text, /\n\nMain flows\n- .+ (calls|sends messages to|exchanges data with) /);
+      // A file with several pages names the page before each section.
+      assert.match(text, /\n\n(Page [^\n]+: )?Main flows\n- .+ (calls|sends messages to|exchanges data with) /);
       // An id that is not also a word in the diagram's own text must not appear in the description.
       const prose = [doc.title, doc.overviewSummary, ...doc.nodes.flatMap((n) => [n.title, n.subtitle]), ...doc.edges.map((e) => e.label)]
         .join(' ')

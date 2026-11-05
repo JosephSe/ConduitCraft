@@ -5,8 +5,8 @@ test('the template gallery fills its previews once the lazy template chunks load
   await page.goto('/');
   await runPaletteCommand(page, 'Starter Templates');
   const frames = page.locator('.template-card:not(.template-card-blank) .template-preview-frame');
-  await expect(frames).toHaveCount(7);
-  for (let i = 0; i < 7; i++) await expect(frames.nth(i).locator('svg')).toBeVisible();
+  await expect(frames).toHaveCount(8);
+  for (let i = 0; i < 8; i++) await expect(frames.nth(i).locator('svg')).toBeVisible();
 });
 
 test('template JSON is not in the entry bundle: nothing is requested until a template is needed', async ({ page }) => {

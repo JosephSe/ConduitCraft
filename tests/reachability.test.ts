@@ -135,9 +135,15 @@ describe('chaos reachability on the bundled templates', () => {
       assert.deepEqual(baseline.unreachable, []);
       for (const node of doc.nodes) {
         const r = reachableFrom(doc, entries, [node.id]);
-        const everyone = [...r.failed, ...r.unreachable, ...r.reachable];
+        // Work behind a buffering stream or queue is delayed rather than unreachable.
+        const everyone = [...r.failed, ...r.unreachable, ...r.delayed, ...r.reachable];
         assert.equal(new Set(everyone).size, everyone.length, `${node.id}: no overlap`);
-        assert.ok(!r.reachable.includes(node.id), `${node.id}: a failed component is not reachable`);
+        // A component with replicas degrades instead of failing, so it stays exactly as reachable as before.
+        if (r.degraded.includes(node.id)) {
+          assert.equal(r.reachable.includes(node.id), baseline.reachable.includes(node.id), `${node.id}: degraded keeps its reach`);
+        } else {
+          assert.ok(!r.reachable.includes(node.id), `${node.id}: a failed component is not reachable`);
+        }
         assert.deepEqual(
           [...everyone].sort(),
           [...baseline.reachable].sort(),

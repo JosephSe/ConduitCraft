@@ -2,332 +2,749 @@
   "kind": "conduitcraft.blueprint",
   "version": 1,
   "document": {
-    "title": "CI/CD Deployment Pipeline",
-    "systemTag": "DEVSECOPS PIPELINE // GITOPS",
-    "statusLabel": "CONTINUOUS DELIVERY READY",
     "direction": "LR",
-    "stageWidth": 1720,
-    "stageHeight": 900,
-    "overviewSummary": "Automated continuous integration and GitOps deployment pipeline: developer push triggers GitHub Actions workflows, executes matrix test suites, runs SonarQube and Trivy security scans, builds signed OCI images, and triggers ArgoCD canary rollouts.",
+    "stageWidth": 1680,
+    "stageHeight": 920,
+    "title": "CI/CD Deployment Pipeline",
+    "systemTag": "DELIVERY // GITOPS",
+    "statusLabel": "REFERENCE ARCHITECTURE",
+    "overviewSummary": "From git push to a production canary. A pull request triggers GitHub Actions, which runs the test matrix and security scans in parallel. Only when the quality gate passes does the workflow build the image, sign it with Cosign, push it with its SBOM and commit the new digest to the GitOps config repo. Argo CD reconciles that repo: staging updates automatically, and production rolls out as a canary that Prometheus metrics can promote or roll back.",
     "brand": {
-      "name": "GitOps Flow",
-      "accent": "#059669",
+      "name": "Delivery",
+      "accent": "#0f766e",
       "logo": ""
     },
     "zones": [
       {
-        "id": "zone-trigger",
+        "id": "zone-source",
         "number": "01",
-        "title": "Source & Trigger",
-        "subtitle": "Developer git commit & PR",
+        "title": "Source",
+        "subtitle": "Developer and app repo",
         "x": 24,
-        "width": 340
+        "width": 308
       },
       {
         "id": "zone-ci",
         "number": "02",
-        "title": "Build & Quality Gate",
-        "subtitle": "Test runners & vulnerability scanners",
-        "x": 384,
-        "width": 440
+        "title": "Continuous Integration",
+        "subtitle": "Tests, scans, gate, build",
+        "x": 394,
+        "width": 678
       },
       {
-        "id": "zone-dist",
+        "id": "zone-artifacts",
         "number": "03",
-        "title": "Registry & GitOps",
-        "subtitle": "Container storage & ArgoCD sync",
-        "x": 844,
-        "width": 440
+        "title": "Artifacts & Desired State",
+        "subtitle": "Signed images and config repo",
+        "x": 1134,
+        "width": 308
       },
       {
-        "id": "zone-runtime",
+        "id": "zone-cd",
         "number": "04",
-        "title": "Production Target",
-        "subtitle": "Canary rollouts & cluster pods",
-        "x": 1304,
-        "width": 380
+        "title": "Continuous Delivery",
+        "subtitle": "Argo CD, staging, production",
+        "x": 1504,
+        "width": 678
       }
     ],
     "notesCards": [
       {
-        "id": "notes-gitops",
-        "title": "Delivery Policies & Safeguards",
-        "code": "GITOPS-01",
+        "id": "notes-cicd",
+        "title": "Pipeline guarantees",
+        "code": "SPEC-CD",
         "x": 48,
-        "y": 680,
+        "y": 730,
         "items": [
           {
-            "title": "Zero Secrets in Code",
-            "text": "SealedSecrets and HashiCorp Vault inject credentials dynamically at deploy time."
+            "title": "Nothing skips the gate",
+            "text": "Branch protection requires it.",
+            "icon": "check"
           },
           {
-            "title": "Automated Rollback",
-            "text": "Canary analysis tracks Prometheus error rate; if > 0.5%, ArgoCD rolls back automatically."
+            "title": "Build once",
+            "text": "Every env runs the same signed digest.",
+            "icon": "check"
           },
           {
-            "title": "Cosign Image Attestation",
-            "text": "Images are cryptographically signed with Sigstore; admission webhook rejects untrusted digests."
+            "title": "Git is the truth",
+            "text": "Roll back with git revert; Argo undoes drift.",
+            "icon": "check"
+          },
+          {
+            "title": "Canary brake",
+            "text": "Errors > 1% or p99 > 400 ms abort it.",
+            "icon": "warning"
           }
         ]
       }
     ],
     "nodes": [
       {
-        "id": "dev-commit",
+        "id": "dev",
         "kind": "actor",
         "accent": "blue",
-        "icon": "terminal",
-        "shape": "card",
-        "title": "Developer Push",
-        "subtitle": "Git Commit on main branch",
-        "eyebrow": "ORIGIN TRIGGER",
-        "chip": "Git Webhook",
-        "zoneLabel": "Source & Trigger",
-        "summary": "Engineer merges a verified pull request, firing a signed webhook event to GitHub Actions.",
-        "metrics": [
-          { "label": "Commits / day", "value": "48" },
-          { "label": "Avg PR Size", "value": "120 lines" }
-        ],
-        "x": 64,
-        "y": 260,
-        "width": 240,
-        "height": 110
+        "icon": "actor",
+        "title": "Developer",
+        "subtitle": "Opens a pull request",
+        "eyebrow": "PERSON",
+        "chip": "AUTHOR",
+        "zoneLabel": "Source",
+        "summary": "Pushes a branch and opens a PR. Merges to main after review and a green gate.",
+        "metrics": [],
+        "x": 104,
+        "y": 145,
+        "width": 148,
+        "height": 142
       },
       {
-        "id": "gh-actions",
+        "id": "repo",
+        "kind": "store",
+        "accent": "blue",
+        "icon": "code",
+        "title": "App Repository",
+        "subtitle": "GitHub, protected main",
+        "eyebrow": "SOURCE",
+        "chip": "GIT",
+        "zoneLabel": "Source",
+        "summary": "Application code, Dockerfile and workflow files. main requires a review and the quality gate check.",
+        "metrics": [
+          {
+            "label": "PRs",
+            "value": "38/week"
+          }
+        ],
+        "x": 70,
+        "y": 441,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "ci",
         "kind": "core",
-        "accent": "violet",
-        "icon": "cpu",
-        "shape": "card",
+        "accent": "blue",
+        "icon": "server",
         "title": "GitHub Actions",
-        "subtitle": "Workflow Orchestration Runner",
-        "eyebrow": "CI PIPELINE",
-        "chip": "Runner Matrix",
-        "zoneLabel": "Build & Quality Gate",
-        "summary": "Spins up ephemeral Ubuntu runners, checks out code, and orchestrates build jobs concurrently.",
+        "subtitle": "Workflow on pull_request + push",
+        "eyebrow": "CI",
+        "chip": "WORKFLOW",
+        "zoneLabel": "Continuous Integration",
+        "summary": "Runs the workflow on ephemeral runners and fans the checks out in parallel.",
         "metrics": [
-          { "label": "Run Duration", "value": "4m 12s" },
-          { "label": "Runner Pools", "value": "16 concurrent" }
+          {
+            "label": "Median run",
+            "value": "7 min"
+          }
         ],
-        "x": 430,
-        "y": 140,
-        "width": 250,
-        "height": 115
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 427,
+        "y": 430,
+        "width": 242,
+        "height": 172
       },
       {
-        "id": "test-matrix",
+        "id": "tests",
         "kind": "service",
         "accent": "emerald",
         "icon": "cpu",
-        "shape": "card",
-        "title": "Matrix Test Runner",
-        "subtitle": "Unit, Lint & E2E Integration",
-        "eyebrow": "VERIFICATION",
-        "chip": "1,840 Tests Passed",
-        "zoneLabel": "Build & Quality Gate",
-        "summary": "Executes Vitest unit tests, TypeScript typechecking, and Playwright end-to-end integration specs.",
+        "title": "Test Matrix",
+        "subtitle": "Unit, integration, e2e",
+        "eyebrow": "CHECK",
+        "chip": "MATRIX",
+        "zoneLabel": "Continuous Integration",
+        "summary": "Runs the suites across supported runtimes and operating systems and reports coverage.",
         "metrics": [
-          { "label": "Code Coverage", "value": "94.6%" },
-          { "label": "Duration", "value": "1m 45s" }
+          {
+            "label": "Jobs",
+            "value": "6"
+          },
+          {
+            "label": "Coverage",
+            "value": "84%"
+          }
         ],
-        "x": 430,
-        "y": 320,
-        "width": 250,
-        "height": 115
+        "x": 807,
+        "y": 245,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "sonar-gate",
-        "kind": "gate",
+        "id": "scans",
+        "kind": "service",
         "accent": "rose",
         "icon": "shield",
-        "shape": "hexagon",
-        "title": "Security & Quality Gate",
-        "subtitle": "SonarQube & Trivy Scanner",
-        "eyebrow": "DEVSECOPS",
-        "chip": "0 CVEs Detected",
-        "zoneLabel": "Build & Quality Gate",
-        "summary": "Scans AST code for vulnerabilities, checks license compliance, and inspects container base images.",
+        "title": "Security Scans",
+        "subtitle": "SAST, dependencies, secrets",
+        "eyebrow": "CHECK",
+        "chip": "SAST",
+        "zoneLabel": "Continuous Integration",
+        "summary": "Static analysis, a dependency and container vulnerability scan, and a secret scan.",
         "metrics": [
-          { "label": "Bugs", "value": "0" },
-          { "label": "Vulnerabilities", "value": "0" }
+          {
+            "label": "Critical CVEs",
+            "value": "0"
+          }
         ],
-        "x": 430,
-        "y": 500,
-        "width": 250,
-        "height": 115
+        "x": 807,
+        "y": 645,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "oci-registry",
+        "id": "gate",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "hexagon",
+        "title": "Quality Gate",
+        "subtitle": "All required checks green",
+        "eyebrow": "POLICY",
+        "chip": "REQUIRED",
+        "zoneLabel": "Artifacts & Desired State",
+        "summary": "Passes only when every test job passes, coverage stays at 80% or more and no critical or high vulnerability is open.",
+        "metrics": [
+          {
+            "label": "Pass rate",
+            "value": "91%"
+          }
+        ],
+        "x": 1167,
+        "y": 430,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "id": "build",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "cpu",
+        "title": "Build, SBOM & Sign",
+        "subtitle": "Docker Buildx + Cosign",
+        "eyebrow": "BUILD",
+        "chip": "SIGNED",
+        "zoneLabel": "Artifacts & Desired State",
+        "summary": "On main only: builds the image once, generates an SBOM, signs both with Cosign keyless signing and records provenance.",
+        "metrics": [
+          {
+            "label": "Image",
+            "value": "84 MB"
+          }
+        ],
+        "x": 1177,
+        "y": 745,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "registry",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "title": "Container Registry",
+        "subtitle": "Images, SBOMs, signatures",
+        "eyebrow": "OCI REGISTRY",
+        "chip": "OCI",
+        "zoneLabel": "Continuous Delivery",
+        "summary": "Immutable tags. Clusters only admit images whose Cosign signature verifies.",
+        "metrics": [
+          {
+            "label": "Retention",
+            "value": "90 days"
+          }
+        ],
+        "x": 1550,
+        "y": 741,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "config-repo",
         "kind": "store",
         "accent": "amber",
-        "icon": "database",
-        "shape": "rounded",
-        "title": "OCI Container Registry",
-        "subtitle": "Signed Docker Images (Cosign)",
-        "eyebrow": "ARTIFACT STORE",
-        "chip": "Immutable Tags",
-        "zoneLabel": "Registry & GitOps",
-        "summary": "Stores encrypted container images tagged with git SHA and signed using cryptographic keys.",
+        "icon": "code",
+        "title": "GitOps Config Repo",
+        "subtitle": "Helm values per environment",
+        "eyebrow": "DESIRED STATE",
+        "chip": "GIT",
+        "zoneLabel": "Artifacts & Desired State",
+        "summary": "What each environment should run. CI commits the new image digest; people review promotions here.",
         "metrics": [
-          { "label": "Image Size", "value": "78 MB" },
-          { "label": "Pull Speed", "value": "85 MB/s" }
+          {
+            "label": "Envs",
+            "value": "staging, prod"
+          }
         ],
-        "x": 890,
-        "y": 180,
-        "width": 250,
-        "height": 115
+        "x": 1180,
+        "y": 141,
+        "width": 216,
+        "height": 150
       },
       {
         "id": "argocd",
-        "kind": "core",
-        "accent": "emerald",
-        "icon": "layers",
-        "shape": "card",
-        "title": "ArgoCD GitOps Controller",
-        "subtitle": "Continuous Reconciliation Engine",
-        "eyebrow": "DECLARATIVE CD",
-        "chip": "Status: Synced",
-        "zoneLabel": "Registry & GitOps",
-        "summary": "Monitors git manifest repository and reconciles actual cluster state with desired Git declarations.",
-        "metrics": [
-          { "label": "Sync Window", "value": "30s" },
-          { "label": "Sync SLA", "value": "99.99%" }
-        ],
-        "x": 890,
-        "y": 420,
-        "width": 250,
-        "height": 115
+        "kind": "scheduler",
+        "accent": "violet",
+        "icon": "clock",
+        "title": "Argo CD",
+        "subtitle": "Reconciles git → cluster",
+        "eyebrow": "GITOPS",
+        "chip": "3m",
+        "zoneLabel": "Continuous Delivery",
+        "summary": "Compares the config repo with each cluster every 3 minutes (or on webhook) and syncs any difference.",
+        "metrics": [],
+        "schedule": {
+          "every": "3m"
+        },
+        "x": 1562,
+        "y": 160,
+        "width": 192,
+        "height": 112
       },
       {
-        "id": "k8s-prod",
+        "id": "staging",
         "kind": "service",
         "accent": "blue",
-        "icon": "network",
-        "shape": "card",
+        "icon": "cloud",
+        "title": "Staging Cluster",
+        "subtitle": "Auto-sync, smoke tests",
+        "eyebrow": "ENVIRONMENT",
+        "chip": "STAGING",
+        "zoneLabel": "Continuous Delivery",
+        "summary": "Gets every main build automatically; post-sync smoke tests must pass before production is promoted.",
+        "metrics": [],
+        "x": 1917,
+        "y": 145,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "prod",
+        "kind": "service",
+        "accent": "rose",
+        "icon": "cloud",
         "title": "Production Cluster",
-        "subtitle": "Argo Rollouts Canary (10% -> 100%)",
-        "eyebrow": "RUNTIME TARGET",
-        "chip": "Production Live",
-        "zoneLabel": "Production Target",
-        "summary": "Kubernetes cluster executing canary rollout, evaluating error rates, and promoting to 100% traffic.",
+        "subtitle": "3 zones · Argo Rollouts canary",
+        "eyebrow": "ENVIRONMENT",
+        "chip": "CANARY",
+        "zoneLabel": "Continuous Delivery",
+        "summary": "Shifts traffic 10% → 50% → 100% with an analysis step between each, run by Argo Rollouts.",
         "metrics": [
-          { "label": "Canary Weight", "value": "100%" },
-          { "label": "Pods Online", "value": "12" }
+          {
+            "label": "Steps",
+            "value": "3"
+          },
+          {
+            "label": "Pause",
+            "value": "5 min"
+          }
         ],
-        "x": 1350,
-        "y": 300,
-        "width": 250,
-        "height": 115
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 1917,
+        "y": 445,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "metrics",
+        "kind": "store",
+        "accent": "amber",
+        "icon": "gauge",
+        "title": "Prometheus",
+        "subtitle": "SLO metrics",
+        "eyebrow": "OBSERVABILITY",
+        "chip": "SLO",
+        "zoneLabel": "Continuous Delivery",
+        "summary": "Error rate and latency per version, which the canary analysis queries.",
+        "metrics": [],
+        "x": 1920,
+        "y": 741,
+        "width": 216,
+        "height": 150
       }
     ],
     "edges": [
       {
         "id": "e1",
-        "from": "dev-commit",
-        "to": "gh-actions",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "from": "dev",
+        "to": "repo",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "blue",
         "route": "bezier",
-        "label": "Git Webhook Push",
+        "label": "git push · open PR",
         "animated": true
       },
       {
         "id": "e2",
-        "from": "gh-actions",
-        "to": "test-matrix",
-        "sourcePort": "bottom",
-        "targetPort": "top",
-        "tone": "emerald",
-        "route": "orthogonal",
-        "label": "Execute Test Suite",
-        "animated": true
+        "from": "repo",
+        "to": "ci",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "Webhook",
+        "animated": true,
+        "sync": "async"
       },
       {
         "id": "e3",
-        "from": "test-matrix",
-        "to": "sonar-gate",
-        "sourcePort": "bottom",
-        "targetPort": "top",
-        "tone": "rose",
-        "route": "orthogonal",
-        "label": "SAST Security Scan",
+        "from": "ci",
+        "to": "tests",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Run test matrix",
         "animated": true
       },
       {
         "id": "e4",
-        "from": "sonar-gate",
-        "to": "oci-registry",
-        "sourcePort": "right",
-        "targetPort": "bottom",
-        "tone": "amber",
+        "from": "ci",
+        "to": "scans",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
         "route": "bezier",
-        "label": "Build & Push OCI Image",
+        "label": "Run security scans",
         "animated": true
       },
       {
         "id": "e5",
-        "from": "oci-registry",
-        "to": "argocd",
-        "sourcePort": "bottom",
-        "targetPort": "top",
+        "from": "tests",
+        "to": "gate",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "emerald",
-        "route": "orthogonal",
-        "label": "Image Digest Published",
+        "route": "bezier",
+        "label": "Results + coverage",
         "animated": true
       },
       {
         "id": "e6",
+        "from": "scans",
+        "to": "gate",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Findings",
+        "animated": true
+      },
+      {
+        "id": "e7",
+        "from": "gate",
+        "to": "build",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "Pass on main → build",
+        "animated": true
+      },
+      {
+        "id": "e8",
+        "from": "build",
+        "to": "registry",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Push signed image",
+        "animated": true
+      },
+      {
+        "id": "e9",
+        "from": "build",
+        "to": "config-repo",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Commit new image digest",
+        "animated": true
+      },
+      {
+        "id": "e10",
+        "from": "config-repo",
+        "to": "argocd",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Desired state",
+        "animated": true
+      },
+      {
+        "id": "e11",
         "from": "argocd",
-        "to": "k8s-prod",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "to": "staging",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "blue",
         "route": "bezier",
-        "label": "Canary Progressive Sync",
+        "label": "Auto-sync",
+        "animated": true
+      },
+      {
+        "id": "e12",
+        "from": "argocd",
+        "to": "prod",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Promote: canary rollout",
+        "animated": true
+      },
+      {
+        "id": "e13",
+        "from": "staging",
+        "to": "registry",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Fetch image",
+        "animated": true
+      },
+      {
+        "id": "e14",
+        "from": "prod",
+        "to": "registry",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Fetch signed image",
+        "animated": true
+      },
+      {
+        "id": "e15",
+        "from": "prod",
+        "to": "metrics",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Query SLOs",
         "animated": true
       }
     ],
     "simulations": [
       {
-        "id": "sim-pr-deploy",
-        "name": "Green Build to Production Canary",
+        "id": "sim-pr-to-prod",
+        "name": "Pull Request → Production Canary",
         "tone": "emerald",
         "steps": [
           {
             "id": "c1",
-            "nodes": ["dev-commit", "gh-actions"],
+            "nodes": [
+              "dev",
+              "repo"
+            ],
             "tone": "blue",
-            "label": "CODE PUSH TRIGGER",
-            "trace": "Developer merges commit to main; GitHub Actions starts CI pipeline."
+            "label": "PUSH",
+            "trace": "The developer pushes a branch and opens a pull request."
           },
           {
             "id": "c2",
-            "nodes": ["gh-actions", "test-matrix"],
-            "tone": "emerald",
-            "label": "TEST VERIFICATION",
-            "trace": "1,840 unit and integration tests execute in parallel with 100% pass rate."
+            "nodes": [
+              "repo",
+              "ci"
+            ],
+            "tone": "blue",
+            "label": "WEBHOOK",
+            "trace": "GitHub starts the workflow on a fresh runner."
           },
           {
             "id": "c3",
-            "nodes": ["test-matrix", "sonar-gate"],
-            "tone": "rose",
-            "label": "SECURITY ANALYSIS",
-            "trace": "SonarQube & Trivy scan report clean bill of health: 0 high/critical CVEs."
+            "nodes": [
+              "ci",
+              "tests",
+              "scans"
+            ],
+            "tone": "emerald",
+            "label": "PARALLEL CHECKS",
+            "trace": "The test matrix and the security scans run at the same time."
           },
           {
             "id": "c4",
-            "nodes": ["sonar-gate", "oci-registry"],
-            "tone": "amber",
-            "label": "IMAGE SIGNED & PUSHED",
-            "trace": "Docker container built, signed with Sigstore Cosign, and stored in registry."
+            "nodes": [
+              "tests",
+              "scans",
+              "gate"
+            ],
+            "tone": "violet",
+            "label": "GATE PASSES",
+            "trace": "All checks are green, so the PR can merge."
           },
           {
             "id": "c5",
-            "nodes": ["argocd", "k8s-prod"],
+            "nodes": [
+              "gate",
+              "build"
+            ],
+            "tone": "blue",
+            "label": "BUILD & SIGN",
+            "trace": "On merge to main the image is built once, given an SBOM and signed with Cosign."
+          },
+          {
+            "id": "c6",
+            "nodes": [
+              "build",
+              "registry",
+              "config-repo"
+            ],
             "tone": "emerald",
-            "label": "CANARY PROMOTED",
-            "trace": "ArgoCD detects new git tag and progressively shifts production traffic to new release."
+            "label": "PUBLISH",
+            "trace": "The image goes to the registry and the new digest is committed to the config repo."
+          },
+          {
+            "id": "c7",
+            "nodes": [
+              "argocd",
+              "config-repo"
+            ],
+            "tone": "amber",
+            "label": "DRIFT FOUND",
+            "trace": "Argo CD sees the config repo differs from the clusters."
+          },
+          {
+            "id": "c8",
+            "nodes": [
+              "argocd",
+              "staging"
+            ],
+            "tone": "blue",
+            "label": "STAGING",
+            "trace": "Staging syncs automatically and the smoke tests pass."
+          },
+          {
+            "id": "c9",
+            "nodes": [
+              "argocd",
+              "prod"
+            ],
+            "tone": "rose",
+            "label": "CANARY 10%",
+            "trace": "Production starts the rollout with 10% of traffic on the new version."
+          },
+          {
+            "id": "c10",
+            "nodes": [
+              "prod",
+              "metrics"
+            ],
+            "tone": "amber",
+            "label": "ANALYSIS",
+            "trace": "Error rate and p99 for the canary stay inside the limits."
+          },
+          {
+            "id": "c11",
+            "nodes": [
+              "prod",
+              "registry"
+            ],
+            "tone": "emerald",
+            "label": "100% LIVE",
+            "trace": "Traffic shifts to 50% then 100%; every pod runs the signed digest."
+          }
+        ]
+      },
+      {
+        "id": "sim-gate-blocks",
+        "name": "Quality Gate Blocks a Vulnerable Change",
+        "tone": "rose",
+        "steps": [
+          {
+            "id": "g1",
+            "nodes": [
+              "dev",
+              "repo"
+            ],
+            "tone": "blue",
+            "label": "PUSH",
+            "trace": "A PR adds a dependency with a known critical vulnerability."
+          },
+          {
+            "id": "g2",
+            "nodes": [
+              "repo",
+              "ci"
+            ],
+            "tone": "blue",
+            "label": "WEBHOOK",
+            "trace": "The workflow starts."
+          },
+          {
+            "id": "g3",
+            "nodes": [
+              "ci",
+              "scans"
+            ],
+            "tone": "rose",
+            "label": "CRITICAL CVE",
+            "trace": "The dependency scan finds a critical vulnerability."
+          },
+          {
+            "id": "g4",
+            "nodes": [
+              "scans",
+              "gate"
+            ],
+            "tone": "rose",
+            "label": "GATE FAILS",
+            "trace": "The required check fails and the PR cannot merge. No image is built and nothing deploys."
+          }
+        ]
+      },
+      {
+        "id": "sim-canary-rollback",
+        "name": "Canary Fails → Automatic Rollback",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "k1",
+            "nodes": [
+              "argocd",
+              "prod"
+            ],
+            "tone": "rose",
+            "label": "CANARY 10%",
+            "trace": "A new version takes 10% of production traffic."
+          },
+          {
+            "id": "k2",
+            "nodes": [
+              "prod",
+              "metrics"
+            ],
+            "tone": "rose",
+            "label": "ERROR RATE 4%",
+            "trace": "Analysis finds a 4% error rate on the canary against a 1% limit."
+          },
+          {
+            "id": "k3",
+            "nodes": [
+              "argocd",
+              "prod"
+            ],
+            "tone": "amber",
+            "label": "ABORT",
+            "trace": "Argo Rollouts aborts and sends all traffic back to the stable version. Users saw errors on 10% of requests for one step only."
+          },
+          {
+            "id": "k4",
+            "nodes": [
+              "argocd",
+              "config-repo"
+            ],
+            "tone": "amber",
+            "label": "REVERT",
+            "trace": "The team reverts the digest commit so git matches what is running."
           }
         ]
       }

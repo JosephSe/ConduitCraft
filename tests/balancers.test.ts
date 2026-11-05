@@ -277,6 +277,11 @@ describe('balancer review rules (K2, spec 4.3)', () => {
     assert.match(issues[0].message, /Edge LB has one target, so it does not spread load\./);
   });
 
+  it('balancer-single-target: quiet when the one target runs several replicas', () => {
+    const doc = build({ u: 'actor', lb: 'balancer', a: 'service' }, [['u', 'lb'], ['lb', 'a']], { a: { resilience: { replicas: 3 } } });
+    assert.equal(found(doc).length, 0);
+  });
+
   it('balancer-single-target: no targets, and quiet with two or more', () => {
     const none = build({ u: 'actor', lb: 'balancer' }, [['u', 'lb']], { lb: { title: 'Edge LB' } });
     assert.match(found(none)[0].message, /has no targets/);
