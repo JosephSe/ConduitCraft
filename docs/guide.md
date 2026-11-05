@@ -176,6 +176,12 @@ The rows are swimlane, then component, then the component's outgoing wires. A co
 
 `Cmd/Ctrl+/` shows the Blueprint file beside the canvas (below it on a narrow screen). Type, and after a short pause the canvas follows; each pause is one undo step. If the text does not read, the canvas keeps the last good version, the bad lines are marked in the gutter and listed under the text (click one to go to it), and nothing you typed is thrown away: Reset puts the canvas version back. Edits on the canvas flow into the text. Selecting something on the canvas highlights its lines, and putting the cursor in a component's, wire's, swimlane's, note's or frame's block selects it. Pasting a Mermaid flowchart converts it once to a Blueprint file. The pane shows the whole file, pages and levels included; highlighting covers the first page.
 
+## Command line and GitHub Action
+
+From a checkout of this repository, `pnpm conduitcraft render diagram.blueprint.md --format svg --out diagram.svg` draws a file (`--format html` or `json`; `--page all` for an SVG per page of a file with pages; `--scheme dark`). `pnpm conduitcraft check diagram.blueprint.md` runs the Review rules on every page and level and exits 1 when one is an error (`--strict` also fails on warnings), so it can gate a pull request. `pnpm conduitcraft diff old.md new.md` prints what changed, for example `2 components added, 1 wire removed`. Files can be a Blueprint file, Blueprint JSON or Mermaid.
+
+The GitHub Action does the same for a whole repository: add `uses: JosephSe/ConduitCraft@main` to a workflow with `fetch-depth: 0`, set `files` to the diagrams (default `*.blueprint.md`), and it checks them, renders an SVG per page and an HTML page into `conduitcraft-out` (uploaded as an artifact, or committed to a folder with `commit-to` on a push), and comments on pull requests with what changed. The comment needs `pull-requests: write`; this repository's `.github/workflows/diagrams.yml` is an example.
+
 ## Share and export
 
 **Share** copies a link that holds the whole diagram, so anyone with it can open your work without an account. A logo or custom icon you embedded is left out of the link to keep it short. A very long link shows a warning first.

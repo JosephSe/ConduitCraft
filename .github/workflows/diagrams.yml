@@ -1,0 +1,41 @@
+name: Diagrams
+
+# Runs the ConduitCraft action (action.yml in this repository) on the bundled examples: checks them, renders them,
+# and on a pull request comments with what changed. It doubles as the action's own test.
+on:
+  pull_request:
+    paths:
+      - 'src/examples/**'
+      - 'tools/**'
+      - 'action.yml'
+      - 'src/core/**'
+      - 'src/exporter/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: diagrams-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check and render the examples
+        uses: ./
+        with:
+          files: |
+            src/examples/*.blueprint.json
+            src/examples/*.md
+            src/examples/*.mmd
+          out-dir: conduitcraft-out
+          # Pull requests from forks get a read-only token, so they cannot comment.
+          comment: ${{ github.event.pull_request.head.repo.full_name == github.repository }}

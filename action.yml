@@ -1,0 +1,70 @@
+name: ConduitCraft diagrams
+description: >-
+  Check and render the architecture diagrams in your repository (Blueprint files, Blueprint JSON or Mermaid), and
+  comment on pull requests with what changed ("2 components added, 1 wire removed").
+author: ConduitCraft
+branding:
+  icon: git-branch
+  color: blue
+
+inputs:
+  files:
+    description: Git pathspecs of the diagrams, separated by spaces or new lines.
+    default: '*.blueprint.md'
+  out-dir:
+    description: Folder the renders (an SVG per page, and an interactive HTML page) are written to.
+    default: conduitcraft-out
+  check:
+    description: Run the Review rules and fail the job when any is an error.
+    default: 'true'
+  strict:
+    description: Also fail on warnings.
+    default: 'false'
+  comment:
+    description: On a pull request, post a comment listing the diagrams that changed. Needs `pull-requests: write`.
+    default: 'true'
+  upload:
+    description: Upload the renders as a workflow artifact.
+    default: 'true'
+  commit-to:
+    description: A folder to commit the renders into on a push (needs `contents: write`). Empty means do not commit.
+    default: ''
+  github-token:
+    description: Token used to post the pull request comment.
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+
+    - name: Install the ConduitCraft CLI
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: npm install --omit=dev --no-audit --no-fund --no-package-lock --ignore-scripts
+
+    - name: Check and render diagrams
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        FILES: ${{ inputs.files }}
+        OUT_DIR: ${{ inputs.out-dir }}
+        CHECK: ${{ inputs.check }}
+        STRICT: ${{ inputs.strict }}
+        COMMENT: ${{ inputs.comment }}
+        COMMIT_TO: ${{ inputs.commit-to }}
+        BASE_REF: ${{ github.base_ref }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: bash "$ACTION_PATH/tools/action.sh"
+
+    - name: Upload the renders
+      if: ${{ always() && inputs.upload == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: conduitcraft-diagrams
+        path: ${{ inputs.out-dir }}
+        if-no-files-found: ignore
