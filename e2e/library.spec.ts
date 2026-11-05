@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { captureExports, nextExport, openLumenRelay, runPaletteCommand } from './helpers';
+import { captureExports, nextExport, openLumenRelay, runPaletteCommand, seedStorage } from './helpers';
 
 const node = (i: number) => ({
   id: `n${i}`,
@@ -34,18 +34,10 @@ const doc = (title: string, nodes: number) => ({
   simulations: [],
 });
 
-/** Leave an older release's autosave in localStorage, once per tab. */
 async function seedAutosave(page: Page, title: string, nodes: number): Promise<void> {
-  await page.addInitScript(
-    ({ value }) => {
-      // These tests are not about Home, so it counts as already shown in this tab.
-      sessionStorage.setItem('conduitcraft-home-shown', '1');
-      if (sessionStorage.getItem('seeded')) return;
-      sessionStorage.setItem('seeded', '1');
-      localStorage.setItem('conduitcraft-autosave-v1', JSON.stringify(value));
-    },
-    { value: doc(title, nodes) },
-  );
+  // These tests are not about Home, so it counts as already shown in this tab.
+  await page.addInitScript(() => sessionStorage.setItem('conduitcraft-home-shown', '1'));
+  await seedStorage(page, { diagrams: [{ id: 'autosave', title, updatedAt: Date.now(), doc: doc(title, nodes) }] });
 }
 
 const diagrams = (page: Page) =>

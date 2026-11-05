@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay, runPaletteCommand } from './helpers';
+import { openLumenRelay, runPaletteCommand, seedStorage } from './helpers';
 
 const doc = (title: string, nodes: number) => ({
   title,
@@ -33,16 +33,16 @@ const doc = (title: string, nodes: number) => ({
   simulations: [],
 });
 
-/** Put values in localStorage once per tab, the way an older release would have left them. */
-async function seedLegacy(page: Page, values: Record<string, unknown>): Promise<void> {
-  await page.addInitScript((entries) => {
-    // These tests are not about Home, so it counts as already shown in this tab.
-    sessionStorage.setItem('conduitcraft-home-shown', '1');
-    if (sessionStorage.getItem('seeded')) return;
-    sessionStorage.setItem('seeded', '1');
+/** Leave the document keys that releases before 2.1 wrote to localStorage, before the app starts. */
+async function seedOldKeys(page: Page, values: Record<string, unknown>): Promise<void> {
+  // These tests are not about Home, so it counts as already shown in this tab.
+  await page.addInitScript(() => sessionStorage.setItem('conduitcraft-home-shown', '1'));
+  await page.evaluate((entries) => {
     for (const [key, value] of Object.entries(entries)) localStorage.setItem(key, JSON.stringify(value));
   }, values);
 }
+
+const movedMarker = { id: 'legacy-migrated', value: 1 };
 
 /** Read a whole store of the `conduitcraft` database. */
 const idbRecords = (page: Page, store: string) =>
@@ -66,37 +66,41 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
 });
 
-test('never loses an autosave left in localStorage by an older release', async ({ page }) => {
-  await seedLegacy(page, { 'conduitcraft-autosave-v1': doc('Kept', 2) });
-  await page.goto('/');
-  await expect(page.locator('#restore-banner-text')).toContainText('2 components');
-  await expect.poll(async () => (await idbRecords(page, 'diagrams')).map((r) => r.id)).toContain('autosave');
-  // The old copy is left in place, read-only.
-  expect(await page.evaluate(() => localStorage.getItem('conduitcraft-autosave-v1'))).not.toBeNull();
-
-  await page.locator('#btn-restore-open').click();
-  await expect(page.locator('.arch-node')).toHaveCount(2);
-
-  // And it is still there on the next visit, now from the database alone.
-  await page.evaluate(() => localStorage.clear());
-  await page.reload();
-  await expect(page.locator('#restore-banner-text')).toContainText('2 components');
-});
-
-test('never loses the oldest autosave key, the recovery copy or the snapshots', async ({ page }) => {
+test('never loses work that 2.1 moved into the database, and clears the old copies', async ({ page }) => {
+  const saved = { id: 'autosave', title: 'Kept', updatedAt: Date.now(), doc: doc('Kept', 2) };
   const snapshot = { id: 'snap-a', name: 'Before the move', timestamp: 1, nodeCount: 1, edgeCount: 0, doc: doc('Snap', 1) };
-  await seedLegacy(page, {
-    'blueprint-studio-autosave-v1': doc('Oldest', 3),
+  await seedStorage(page, { diagrams: [saved], snapshots: [snapshot], meta: [movedMarker] });
+  // 2.1 left its old copies behind; they hold different work, to show they are not read.
+  await seedOldKeys(page, {
+    'conduitcraft-autosave-v1': doc('Stale', 5),
+    'blueprint-studio-autosave-v1': doc('Staler', 6),
     'conduitcraft-recovery-v1': doc('Scratch', 1),
     'conduitcraft-snapshots-v1': [snapshot],
   });
   await page.goto('/');
-  await expect(page.locator('#restore-banner-text')).toContainText('3 components');
-  await expect.poll(async () => (await idbRecords(page, 'diagrams')).map((r) => r.id).sort()).toEqual(['autosave', 'recovery']);
-  expect((await idbRecords(page, 'snapshots')).map((r) => r.id)).toEqual(['snap-a']);
+  await expect(page.locator('#restore-banner-text')).toContainText('2 components');
+  await expect
+    .poll(() => page.evaluate(() => Object.keys(localStorage).filter((k) => /-v1$/.test(k))))
+    .toEqual([]);
 
+  await page.locator('#btn-restore-open').click();
+  await expect(page.locator('.arch-node')).toHaveCount(2);
   await runPaletteCommand(page, 'Snapshots');
   await expect(page.locator('#snapshots-dialog-body')).toContainText('Before the move');
+
+  // And it is all still there on the next visit, from the database alone.
+  await page.reload();
+  await expect(page.locator('#restore-banner-text')).toContainText('2 components');
+  expect((await idbRecords(page, 'snapshots')).map((r) => r.id)).toEqual(['snap-a']);
+});
+
+test('never destroys old copies that were never moved: they are left alone and not read', async ({ page }) => {
+  await seedStorage(page, {});
+  await seedOldKeys(page, { 'conduitcraft-autosave-v1': doc('Never moved', 2) });
+  await page.goto('/');
+  await expect(page.locator('#canvas-viewport')).toBeVisible();
+  await expect(page.locator('#restore-banner-text')).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem('conduitcraft-autosave-v1'))).not.toBeNull();
 });
 
 test('never loses an edit when the page is reloaded', async ({ page }) => {
@@ -119,7 +123,7 @@ test('never loses work when IndexedDB is unavailable: it saves to localStorage a
   await openLumenRelay(page);
   await expect(page.locator('#save-status-pill')).toHaveAttribute('data-status', 'saved');
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem('conduitcraft-autosave-v1')))
+    .poll(() => page.evaluate(() => localStorage.getItem('conduitcraft-diagram:autosave')))
     .not.toBeNull();
   await page.reload();
   await expect(page.locator('#restore-banner-text')).toContainText('Previous session');
