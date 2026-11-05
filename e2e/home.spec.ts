@@ -142,7 +142,7 @@ test('a template on Home opens as a new diagram and leaves the saved one in the 
   await expect(home(page)).toBeVisible();
   await page.locator('#home-templates [data-template-id="cicd-pipeline"] .btn-use-template').click();
   await expect(home(page)).toBeHidden();
-  await expect(page.locator('.arch-node')).toHaveCount(7);
+  await expect(page.locator('.arch-node')).toHaveCount(13);
 
   await page.keyboard.press('ControlOrMeta+o');
   await expect(page.locator('[data-home-open]', { hasText: 'Payments' })).toBeVisible();

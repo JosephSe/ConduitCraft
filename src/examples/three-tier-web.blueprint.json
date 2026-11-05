@@ -2,117 +2,159 @@
   "kind": "conduitcraft.blueprint",
   "version": 1,
   "document": {
-    "title": "Three-Tier Web Application",
-    "systemTag": "ENTERPRISE ARCHITECTURE // US-EAST-1",
-    "statusLabel": "PRODUCTION ACTIVE",
     "direction": "LR",
     "stageWidth": 1680,
     "stageHeight": 920,
-    "overviewSummary": "Standard scalable 3-tier web topology featuring an Edge CDN and WAF, dual Application Load Balancers, horizontally scaled web application servers, a distributed Redis caching layer, and a high-availability PostgreSQL cluster with primary-replica replication.",
+    "title": "Three-Tier Web Application",
+    "systemTag": "WEB PLATFORM // MULTI-AZ",
+    "statusLabel": "REFERENCE ARCHITECTURE",
+    "overviewSummary": "The classic presentation, application and data split. A CDN with a WAF serves static files from object storage and forwards dynamic requests to a load balancer, which spreads them over stateless app servers in two availability zones. Reads go through a Redis cache to a read replica; writes go to the PostgreSQL primary, which streams its WAL to the replica and fails over to it.",
     "brand": {
-      "name": "Cloud Native Corp",
+      "name": "Web Platform",
       "accent": "#2563eb",
       "logo": ""
     },
     "zones": [
       {
-        "id": "zone-edge",
+        "id": "zone-presentation",
         "number": "01",
-        "title": "Edge & Ingress",
-        "subtitle": "CDN and perimeter security",
+        "title": "Presentation Tier",
+        "subtitle": "Users, CDN and static files",
         "x": 24,
-        "width": 360
+        "width": 678
       },
       {
-        "id": "zone-app",
+        "id": "zone-application",
         "number": "02",
         "title": "Application Tier",
-        "subtitle": "Compute and business logic",
-        "x": 414,
-        "width": 430
-      },
-      {
-        "id": "zone-cache",
-        "number": "03",
-        "title": "Caching Tier",
-        "subtitle": "Distributed session acceleration",
-        "x": 874,
-        "width": 360
+        "subtitle": "Balancer and stateless app servers",
+        "x": 764,
+        "width": 678
       },
       {
         "id": "zone-data",
-        "number": "04",
-        "title": "Persistence Tier",
-        "subtitle": "Transactional relational storage",
-        "x": 1264,
-        "width": 390
+        "number": "03",
+        "title": "Data Tier",
+        "subtitle": "Cache, primary and replica",
+        "x": 1504,
+        "width": 678
       }
     ],
     "notesCards": [
       {
-        "id": "notes-scale",
-        "title": "Scaling & Fault Tolerance",
+        "id": "notes-three-tier",
+        "title": "Why it scales",
         "code": "SPEC-3T",
         "x": 48,
-        "y": 700,
+        "y": 730,
         "items": [
           {
-            "title": "Stateless Compute",
-            "text": "App instances carry no state. All sessions are stored in the Redis cluster."
+            "title": "Stateless app tier",
+            "text": "Sessions live in Redis; any server takes any request.",
+            "icon": "check"
           },
           {
-            "title": "Read Offload",
-            "text": "Read-heavy queries route to the streaming replica, protecting primary write capacity."
+            "title": "Static files skip the app",
+            "text": "The CDN serves them straight from the bucket.",
+            "icon": "check"
           },
           {
-            "title": "Failover",
-            "text": "Automated orchestrator promotes read replica to primary in under 30 seconds."
+            "title": "Reads vs writes",
+            "text": "Reads: Redis, then the replica. Writes: primary only.",
+            "icon": "check"
+          },
+          {
+            "title": "Replica lag",
+            "text": "Read your own writes from the primary.",
+            "icon": "warning"
           }
         ]
       }
     ],
     "nodes": [
       {
-        "id": "client",
+        "id": "users",
         "kind": "client",
         "accent": "blue",
-        "icon": "terminal",
+        "icon": "globe",
         "shape": "pill",
-        "title": "Web & Mobile Clients",
-        "subtitle": "HTTPS / TLS 1.3 Requests",
-        "eyebrow": "PUBLIC INTERNET",
-        "chip": "Traffic Origin",
-        "zoneLabel": "Edge & Ingress",
-        "summary": "External web browsers and mobile apps dispatching TLS-encrypted traffic.",
+        "title": "Browsers & Mobile Apps",
+        "subtitle": "HTTPS clients",
+        "eyebrow": "USERS",
+        "chip": "TLS 1.3",
+        "zoneLabel": "Presentation Tier",
+        "summary": "Everyone using the product. Every request starts here and goes to the CDN first.",
         "metrics": [
-          { "label": "Active Users", "value": "18.4k" },
-          { "label": "Avg Latency", "value": "32ms" }
+          {
+            "label": "Peak users",
+            "value": "18k"
+          },
+          {
+            "label": "Requests",
+            "value": "12k/s"
+          }
         ],
-        "x": 64,
-        "y": 140,
-        "width": 240,
-        "height": 110
+        "x": 82,
+        "y": 160,
+        "width": 192,
+        "height": 112
       },
       {
-        "id": "cdn-waf",
+        "id": "cdn",
         "kind": "gate",
         "accent": "violet",
         "icon": "shield",
         "shape": "hexagon",
-        "title": "Cloudflare CDN & WAF",
-        "subtitle": "DDoS Shield & Edge Caching",
-        "eyebrow": "PERIMETER",
-        "chip": "Edge Shield",
-        "zoneLabel": "Edge & Ingress",
-        "summary": "Anycast edge network terminating SSL, mitigating DDoS, and caching static assets.",
+        "title": "CDN & WAF",
+        "subtitle": "Edge cache, TLS, bot and DDoS filter",
+        "eyebrow": "EDGE",
+        "chip": "EDGE",
+        "zoneLabel": "Presentation Tier",
+        "summary": "Terminates TLS close to the user, blocks bad traffic, caches static files and forwards everything else to the load balancer.",
         "metrics": [
-          { "label": "Hit Ratio", "value": "89.2%" },
-          { "label": "Blocked Threats", "value": "340/s" }
+          {
+            "label": "Edge hit ratio",
+            "value": "92%"
+          },
+          {
+            "label": "Blocked",
+            "value": "340/s"
+          }
         ],
-        "x": 64,
-        "y": 360,
-        "width": 240,
-        "height": 110
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 57,
+        "y": 330,
+        "width": 242,
+        "height": 172
+      },
+      {
+        "id": "static",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "bucket",
+        "shape": "bucket",
+        "title": "Static Assets",
+        "subtitle": "S3 bucket: JS, CSS, images",
+        "eyebrow": "OBJECT STORAGE",
+        "chip": "OBJECTS",
+        "zoneLabel": "Presentation Tier",
+        "summary": "Versioned build output and uploads. The CDN fetches from here on an edge miss; the app servers never serve these files.",
+        "metrics": [
+          {
+            "label": "Objects",
+            "value": "41k"
+          },
+          {
+            "label": "Size",
+            "value": "18 GB"
+          }
+        ],
+        "x": 440,
+        "y": 541,
+        "width": 216,
+        "height": 150
       },
       {
         "id": "alb",
@@ -120,295 +162,516 @@
         "accent": "violet",
         "icon": "balancer",
         "title": "Application Load Balancer",
-        "subtitle": "L7 Health-Checked Proxy",
+        "subtitle": "L7, health-checked",
         "eyebrow": "BALANCER",
-        "chip": "RR",
+        "chip": "LEAST CONN",
         "zoneLabel": "Application Tier",
-        "summary": "Distributes incoming HTTP traffic across healthy application pods with sticky session support.",
+        "summary": "Sends each request to the healthy app server with the fewest open connections and drops a server that fails its health check.",
         "metrics": [
-          { "label": "RPS", "value": "12.8k" },
-          { "label": "Pool Health", "value": "100%" }
+          {
+            "label": "Healthy targets",
+            "value": "2 / 2"
+          },
+          {
+            "label": "p99 added",
+            "value": "1 ms"
+          }
         ],
-        "x": 450,
-        "y": 140,
-        "width": 240,
-        "height": 110
+        "balancer": {
+          "strategy": "least-connections"
+        },
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 818,
+        "y": 356,
+        "width": 200,
+        "height": 120
       },
       {
-        "id": "app-01",
+        "id": "app-a",
         "kind": "service",
-        "accent": "emerald",
+        "accent": "blue",
         "icon": "cpu",
-        "shape": "card",
-        "title": "App Service Alpha",
-        "subtitle": "Node.js Container Worker",
-        "eyebrow": "COMPUTE POD 1",
-        "chip": "Active Worker",
+        "title": "App Server · AZ-a",
+        "subtitle": "Stateless API + page rendering",
+        "eyebrow": "COMPUTE",
+        "chip": "AZ-a",
         "zoneLabel": "Application Tier",
-        "summary": "Executes domain business logic, handles API endpoints, and orchestrates transactions.",
+        "summary": "Runs the business logic. Holds no state of its own: sessions live in Redis and data in PostgreSQL.",
         "metrics": [
-          { "label": "CPU", "value": "44%" },
-          { "label": "Memory", "value": "610MB" }
+          {
+            "label": "CPU",
+            "value": "44%"
+          },
+          {
+            "label": "p99",
+            "value": "38 ms"
+          }
         ],
-        "x": 450,
-        "y": 340,
-        "width": 240,
-        "height": 110
+        "x": 1177,
+        "y": 145,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "app-02",
+        "id": "app-b",
         "kind": "service",
-        "accent": "emerald",
+        "accent": "blue",
         "icon": "cpu",
-        "shape": "card",
-        "title": "App Service Beta",
-        "subtitle": "Node.js Container Worker",
-        "eyebrow": "COMPUTE POD 2",
-        "chip": "Active Worker",
+        "title": "App Server · AZ-b",
+        "subtitle": "Stateless API + page rendering",
+        "eyebrow": "COMPUTE",
+        "chip": "AZ-b",
         "zoneLabel": "Application Tier",
-        "summary": "Secondary horizontally scaled worker providing zero-downtime rolling deploys.",
+        "summary": "The same build as AZ-a in a second availability zone, so losing a zone halves capacity instead of taking the site down.",
         "metrics": [
-          { "label": "CPU", "value": "41%" },
-          { "label": "Memory", "value": "580MB" }
+          {
+            "label": "CPU",
+            "value": "41%"
+          },
+          {
+            "label": "p99",
+            "value": "36 ms"
+          }
         ],
-        "x": 450,
-        "y": 520,
-        "width": 240,
-        "height": 110
+        "x": 1177,
+        "y": 545,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "redis",
-        "kind": "store",
+        "id": "cache",
+        "kind": "cache",
         "accent": "amber",
-        "icon": "layers",
-        "shape": "rounded",
-        "title": "Redis Sentinel Cluster",
-        "subtitle": "In-Memory Session & Cache",
-        "eyebrow": "CACHING TIER",
-        "chip": "Sub-ms Query",
-        "zoneLabel": "Caching Tier",
-        "summary": "Stores distributed session state, rate limit tokens, and frequently queried responses.",
+        "icon": "bolt",
+        "title": "Redis Cache",
+        "subtitle": "Sessions and hot reads",
+        "eyebrow": "CACHE",
+        "chip": "HIT 85%",
+        "zoneLabel": "Data Tier",
+        "summary": "Answers most reads in under a millisecond. On a miss it reads through to the replica and keeps the answer for its TTL.",
         "metrics": [
-          { "label": "Hit Rate", "value": "97.4%" },
-          { "label": "Memory Used", "value": "14.2GB" }
+          {
+            "label": "Hit rate",
+            "value": "85%"
+          },
+          {
+            "label": "Memory",
+            "value": "14 GB"
+          }
         ],
-        "x": 920,
-        "y": 240,
-        "width": 240,
-        "height": 110
+        "cache": {
+          "hitRate": 85,
+          "backingId": "pg-replica"
+        },
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 1558,
+        "y": 160,
+        "width": 200,
+        "height": 112
       },
       {
         "id": "pg-primary",
         "kind": "store",
         "accent": "rose",
         "icon": "database",
-        "shape": "card",
         "title": "PostgreSQL Primary",
-        "subtitle": "Read / Write Master Instance",
-        "eyebrow": "ACID PERSISTENCE",
-        "chip": "Primary DB",
-        "zoneLabel": "Persistence Tier",
-        "summary": "Handles all ACID state mutations and writes WAL changes to disk and replication streams.",
+        "subtitle": "All writes",
+        "eyebrow": "DATABASE",
+        "chip": "PRIMARY",
+        "zoneLabel": "Data Tier",
+        "summary": "Takes every INSERT, UPDATE and DELETE and streams its write-ahead log to the replica. If it fails, the replica is promoted.",
         "metrics": [
-          { "label": "IOPS", "value": "3,400" },
-          { "label": "Write QPS", "value": "1.8k" }
+          {
+            "label": "Write QPS",
+            "value": "1.8k"
+          },
+          {
+            "label": "Storage",
+            "value": "420 GB"
+          }
         ],
-        "x": 1310,
-        "y": 190,
-        "width": 240,
-        "height": 110
+        "resilience": {
+          "fallbackId": "pg-replica"
+        },
+        "x": 1920,
+        "y": 541,
+        "width": 216,
+        "height": 150
       },
       {
         "id": "pg-replica",
         "kind": "store",
-        "accent": "rose",
+        "accent": "emerald",
         "icon": "database",
-        "shape": "card",
         "title": "PostgreSQL Replica",
-        "subtitle": "Streaming Read-Only Follower",
-        "eyebrow": "READ REPLICA",
-        "chip": "Read Scale",
-        "zoneLabel": "Persistence Tier",
-        "summary": "Serves analytical and catalog read queries with sub-second replication latency.",
+        "subtitle": "Read-only, streaming",
+        "eyebrow": "DATABASE",
+        "chip": "REPLICA",
+        "zoneLabel": "Data Tier",
+        "summary": "Serves the cache misses and reporting queries, and is the failover target for the primary.",
         "metrics": [
-          { "label": "Read QPS", "value": "7.9k" },
-          { "label": "Replica Lag", "value": "18ms" }
+          {
+            "label": "Read QPS",
+            "value": "7.9k"
+          },
+          {
+            "label": "Lag",
+            "value": "18 ms"
+          }
         ],
-        "x": 1310,
-        "y": 420,
-        "width": 240,
-        "height": 110
+        "x": 1920,
+        "y": 141,
+        "width": 216,
+        "height": 150
       }
     ],
     "edges": [
       {
         "id": "e1",
-        "from": "client",
-        "to": "cdn-waf",
-        "sourcePort": "bottom",
-        "targetPort": "top",
+        "from": "users",
+        "to": "cdn",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "blue",
         "route": "bezier",
-        "label": "HTTPS Request",
-        "animated": true
+        "label": "HTTPS",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 20
       },
       {
         "id": "e2",
-        "from": "cdn-waf",
-        "to": "alb",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "violet",
+        "from": "cdn",
+        "to": "static",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
         "route": "bezier",
-        "label": "Reverse Proxy",
-        "animated": true
+        "label": "GET static files",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 15
       },
       {
         "id": "e3",
-        "from": "alb",
-        "to": "app-01",
-        "sourcePort": "bottom",
-        "targetPort": "top",
-        "tone": "emerald",
-        "route": "orthogonal",
-        "label": "Balance /api",
-        "animated": true
+        "from": "cdn",
+        "to": "alb",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "Forward dynamic requests",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 5
       },
       {
         "id": "e4",
         "from": "alb",
-        "to": "app-02",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "emerald",
+        "to": "app-a",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "Balance /api",
-        "animated": true
+        "label": "Route /api and pages",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 1
       },
       {
         "id": "e5",
-        "from": "app-01",
-        "to": "redis",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "amber",
+        "from": "alb",
+        "to": "app-b",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "Session & Cache",
-        "animated": true
+        "label": "Route /api and pages",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 1
       },
       {
         "id": "e6",
-        "from": "app-02",
-        "to": "redis",
-        "sourcePort": "right",
-        "targetPort": "bottom",
+        "from": "app-a",
+        "to": "cache",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Session & Cache",
-        "animated": true
+        "label": "GET cached keys",
+        "animated": true,
+        "latencyMs": 1
       },
       {
         "id": "e7",
-        "from": "app-01",
-        "to": "pg-primary",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "rose",
+        "from": "app-b",
+        "to": "cache",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
         "route": "bezier",
-        "label": "Write Mutations",
-        "animated": true
+        "label": "GET cached keys",
+        "animated": true,
+        "latencyMs": 1
       },
       {
         "id": "e8",
-        "from": "app-02",
+        "from": "cache",
         "to": "pg-replica",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "blue",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
         "route": "bezier",
-        "label": "Read Queries",
-        "animated": true
+        "label": "Read on miss",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 4
       },
       {
         "id": "e9",
+        "from": "app-a",
+        "to": "pg-primary",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "INSERT / UPDATE",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 6
+      },
+      {
+        "id": "e10",
+        "from": "app-b",
+        "to": "pg-primary",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "INSERT / UPDATE",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 6
+      },
+      {
+        "id": "e11",
         "from": "pg-primary",
         "to": "pg-replica",
-        "sourcePort": "bottom",
-        "targetPort": "top",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "rose",
         "route": "orthogonal",
-        "label": "WAL Replication",
-        "animated": true
+        "label": "WAL replication",
+        "animated": true,
+        "protocol": "sql",
+        "sync": "async"
       }
     ],
     "simulations": [
       {
-        "id": "sim-cache-read",
-        "name": "Read Request (Cache Hit)",
+        "id": "sim-page-load",
+        "name": "Page Load (Cache Hit or Miss)",
         "tone": "emerald",
+        "budgetMs": 100,
         "steps": [
           {
-            "id": "s1",
-            "nodes": ["client", "cdn-waf"],
+            "id": "r1",
+            "nodes": [
+              "users",
+              "cdn"
+            ],
             "tone": "blue",
-            "label": "EDGE LOOKUP",
-            "trace": "Client sends HTTPS request to the Cloudflare CDN edge."
+            "label": "HTTPS",
+            "trace": "The browser asks for /dashboard. The CDN terminates TLS at the nearest edge."
           },
           {
-            "id": "s2",
-            "nodes": ["cdn-waf", "alb"],
+            "id": "r2",
+            "nodes": [
+              "cdn",
+              "alb"
+            ],
             "tone": "violet",
-            "label": "INGRESS ROUTE",
-            "trace": "CDN bypasses static cache and forwards dynamic request to ALB."
+            "label": "FORWARD",
+            "trace": "The page is dynamic, so the CDN forwards it to the load balancer."
           },
           {
-            "id": "s3",
-            "nodes": ["alb", "app-01"],
-            "tone": "emerald",
-            "label": "ROUND ROBIN",
-            "trace": "ALB routes request to healthy worker App Service Alpha."
+            "id": "r3",
+            "nodes": [
+              "alb",
+              "app-a"
+            ],
+            "tone": "blue",
+            "label": "LEAST CONN",
+            "trace": "The balancer picks the app server with the fewest open connections."
           },
           {
-            "id": "s4",
-            "nodes": ["app-01", "redis"],
+            "id": "r4",
+            "nodes": [
+              "app-a",
+              "cache"
+            ],
             "tone": "amber",
-            "label": "CACHE HIT (0.6ms)",
-            "trace": "App queries Redis cache and receives an immediate hit without touching the database."
+            "label": "CACHE LOOKUP",
+            "trace": "The app reads the session and the dashboard data from Redis."
           },
           {
-            "id": "s5",
-            "nodes": ["app-01", "client"],
+            "id": "r5",
+            "nodes": [
+              "cache",
+              "pg-replica"
+            ],
             "tone": "emerald",
-            "label": "HTTP 200 OK",
-            "trace": "Payload formatted as JSON and returned directly to the client."
+            "label": "MISS → REPLICA",
+            "trace": "On a miss Redis reads through to the replica and keeps the result. On a hit this step is skipped."
+          },
+          {
+            "id": "r6",
+            "nodes": [
+              "app-a",
+              "alb",
+              "cdn",
+              "users"
+            ],
+            "tone": "emerald",
+            "label": "200 OK",
+            "trace": "The rendered page goes back through the balancer and the edge to the browser."
           }
         ]
       },
       {
-        "id": "sim-order-write",
-        "name": "Order Checkout (Write Transaction)",
+        "id": "sim-checkout",
+        "name": "Checkout (Write Transaction)",
         "tone": "rose",
+        "budgetMs": 120,
         "steps": [
           {
             "id": "w1",
-            "nodes": ["client", "alb", "app-02"],
+            "nodes": [
+              "users",
+              "cdn"
+            ],
             "tone": "blue",
-            "label": "CHECKOUT POST",
-            "trace": "User submits shopping cart checkout via HTTPS POST."
+            "label": "POST /checkout",
+            "trace": "The shopper submits the cart."
           },
           {
             "id": "w2",
-            "nodes": ["app-02", "pg-primary"],
-            "tone": "rose",
-            "label": "ACID COMMIT",
-            "trace": "App Service Beta writes transaction to PostgreSQL Primary with serializable isolation."
+            "nodes": [
+              "cdn",
+              "alb"
+            ],
+            "tone": "violet",
+            "label": "FORWARD",
+            "trace": "POST requests are never cached at the edge."
           },
           {
             "id": "w3",
-            "nodes": ["pg-primary", "pg-replica"],
+            "nodes": [
+              "alb",
+              "app-b"
+            ],
+            "tone": "blue",
+            "label": "ROUTE",
+            "trace": "The balancer sends this one to the AZ-b server."
+          },
+          {
+            "id": "w4",
+            "nodes": [
+              "app-b",
+              "pg-primary"
+            ],
             "tone": "rose",
-            "label": "WAL STREAM",
-            "trace": "PostgreSQL streams write-ahead log records to read replica asynchronously."
+            "label": "COMMIT",
+            "trace": "The order and the stock change commit in one transaction on the primary."
+          },
+          {
+            "id": "w5",
+            "nodes": [
+              "pg-primary",
+              "pg-replica"
+            ],
+            "tone": "rose",
+            "label": "WAL → REPLICA",
+            "trace": "The primary streams the change to the replica a few ms later. The shopper does not wait for it."
+          },
+          {
+            "id": "w6",
+            "nodes": [
+              "app-b",
+              "alb",
+              "cdn",
+              "users"
+            ],
+            "tone": "emerald",
+            "label": "201 CREATED",
+            "trace": "The order confirmation goes back to the browser."
+          }
+        ]
+      },
+      {
+        "id": "sim-az-outage",
+        "name": "Availability Zone Outage",
+        "tone": "amber",
+        "failures": [
+          "app-a"
+        ],
+        "steps": [
+          {
+            "id": "z1",
+            "nodes": [
+              "users",
+              "cdn"
+            ],
+            "tone": "blue",
+            "label": "HTTPS",
+            "trace": "Traffic arrives as normal while AZ-a is down."
+          },
+          {
+            "id": "z2",
+            "nodes": [
+              "cdn",
+              "alb"
+            ],
+            "tone": "violet",
+            "label": "FORWARD",
+            "trace": "The edge forwards to the balancer."
+          },
+          {
+            "id": "z3",
+            "nodes": [
+              "alb",
+              "app-a"
+            ],
+            "tone": "amber",
+            "label": "REROUTE",
+            "trace": "AZ-a fails its health check, so the balancer sends the request to AZ-b instead."
+          },
+          {
+            "id": "z4",
+            "nodes": [
+              "app-a",
+              "cache"
+            ],
+            "tone": "amber",
+            "label": "CACHE LOOKUP",
+            "trace": "The surviving server reads from the same shared cache; no session is lost."
+          },
+          {
+            "id": "z5",
+            "nodes": [
+              "app-a",
+              "alb",
+              "cdn",
+              "users"
+            ],
+            "tone": "emerald",
+            "label": "200 OK",
+            "trace": "Users see a normal response. Capacity is halved until AZ-a recovers."
           }
         ]
       }

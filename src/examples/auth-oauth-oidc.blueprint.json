@@ -2,15 +2,15 @@
   "kind": "conduitcraft.blueprint",
   "version": 1,
   "document": {
-    "title": "OAuth2 & OIDC Authentication Flow",
-    "systemTag": "ZERO TRUST IDENTITY // AUTH-HUB",
-    "statusLabel": "OIDC DISCOVERY ACTIVE",
     "direction": "LR",
     "stageWidth": 1680,
-    "stageHeight": 900,
-    "overviewSummary": "Complete zero-trust authentication architecture implementing OAuth 2.1 and OpenID Connect with PKCE (Proof Key for Code Exchange) between a Single-Page App, an Authorization Server with HSM/KMS keys, and protected backend APIs.",
+    "stageHeight": 920,
+    "title": "OAuth2 & OIDC Authentication",
+    "systemTag": "IDENTITY // AUTHORIZATION CODE + PKCE",
+    "statusLabel": "REFERENCE ARCHITECTURE",
+    "overviewSummary": "How a browser app signs users in and calls APIs safely. The single-page app uses the Authorization Code flow with PKCE: the identity provider checks the password and MFA, returns a one-time code, and swaps it for a signed ID token, a short-lived access token and a rotating refresh token. The API gateway checks every access token against the provider's published keys (JWKS) and the required scope before forwarding to the APIs.",
     "brand": {
-      "name": "AuthShield Identity",
+      "name": "Identity",
       "accent": "#7c3aed",
       "logo": ""
     },
@@ -18,298 +18,581 @@
       {
         "id": "zone-client",
         "number": "01",
-        "title": "Client User Agent",
-        "subtitle": "Browser and single-page application",
+        "title": "User & Client",
+        "subtitle": "Public client: no secrets",
         "x": 24,
-        "width": 360
+        "width": 678
       },
       {
         "id": "zone-idp",
         "number": "02",
-        "title": "Identity Provider (IdP)",
-        "subtitle": "Authorization server & key vault",
-        "x": 414,
-        "width": 460
+        "title": "Identity Provider",
+        "subtitle": "Authorization server and its stores",
+        "x": 764,
+        "width": 678
       },
       {
-        "id": "zone-apis",
+        "id": "zone-rs",
         "number": "03",
         "title": "Resource Servers",
-        "subtitle": "Protected API gateway & microservices",
-        "x": 904,
-        "width": 740
+        "subtitle": "Gateway and protected APIs",
+        "x": 1504,
+        "width": 678
       }
     ],
     "notesCards": [
       {
-        "id": "notes-security",
-        "title": "Zero-Trust Security Controls",
-        "code": "OIDC-21",
+        "id": "notes-oauth",
+        "title": "Security checklist",
+        "code": "SPEC-OIDC",
         "x": 48,
-        "y": 680,
+        "y": 830,
         "items": [
           {
-            "title": "PKCE Enforcement",
-            "text": "Code challenge (S256) is mandatory; client secrets are never embedded in the browser."
+            "title": "PKCE every login",
+            "text": "A stolen code is useless without the verifier.",
+            "icon": "check"
           },
           {
-            "title": "Short-Lived Access Tokens",
-            "text": "JWT access tokens expire after 15 minutes; rotating refresh tokens stored in HTTP-only cookies."
+            "title": "Short tokens",
+            "text": "5-min access; refresh tokens rotate on use.",
+            "icon": "check"
           },
           {
-            "title": "JWKS Verification",
-            "text": "Resource servers cache and verify RS256 signatures via public /.well-known/jwks.json."
+            "title": "Validate everything",
+            "text": "Signature, iss, aud, exp and scope, every call.",
+            "icon": "check"
+          },
+          {
+            "title": "Token storage",
+            "text": "Memory, not localStorage. High risk: use a BFF.",
+            "icon": "warning"
           }
         ]
       }
     ],
     "nodes": [
       {
-        "id": "spa-client",
+        "id": "user",
+        "kind": "actor",
+        "accent": "blue",
+        "icon": "actor",
+        "title": "End User",
+        "subtitle": "Signs in with password + MFA",
+        "eyebrow": "PERSON",
+        "chip": "HUMAN",
+        "zoneLabel": "User & Client",
+        "summary": "The person signing in. Only ever types credentials into the identity provider's page, never into the app.",
+        "metrics": [],
+        "x": 104,
+        "y": 145,
+        "width": 148,
+        "height": 142
+      },
+      {
+        "id": "spa",
         "kind": "client",
         "accent": "blue",
-        "icon": "terminal",
+        "icon": "monitor",
         "shape": "pill",
-        "title": "SPA Web Application",
-        "subtitle": "React 19 / Vite Client",
-        "eyebrow": "UNTRUSTED ENVIRONMENT",
-        "chip": "PKCE Client",
-        "zoneLabel": "Client User Agent",
-        "summary": "Runs in user's browser, generates code_verifier, and initiates the OIDC authorization code flow.",
+        "title": "Single-Page App",
+        "subtitle": "Public OAuth client",
+        "eyebrow": "CLIENT",
+        "chip": "PKCE",
+        "zoneLabel": "User & Client",
+        "summary": "Runs in the browser, so it cannot keep a client secret. Uses PKCE instead and holds tokens in memory only.",
         "metrics": [
-          { "label": "Session Duration", "value": "45m" },
-          { "label": "Token Refresh", "value": "Every 14m" }
+          {
+            "label": "Access token",
+            "value": "5 min"
+          },
+          {
+            "label": "Refresh token",
+            "value": "8 h, rotating"
+          }
         ],
-        "x": 64,
-        "y": 240,
-        "width": 250,
-        "height": 115
+        "x": 452,
+        "y": 460,
+        "width": 192,
+        "height": 112
       },
       {
-        "id": "auth-server",
+        "id": "idp",
         "kind": "gate",
         "accent": "violet",
-        "icon": "shield",
+        "icon": "lock",
         "shape": "hexagon",
-        "title": "OIDC Auth Server",
-        "subtitle": "OAuth 2.1 Authorization Server",
-        "eyebrow": "IDENTITY BACKBONE",
-        "chip": "Token Issuer",
-        "zoneLabel": "Identity Provider (IdP)",
-        "summary": "Authenticates users via MFA, validates PKCE verifiers, and issues signed RS256 JWTs and ID tokens.",
+        "title": "Authorization Server",
+        "subtitle": "/authorize, /token, JWKS",
+        "eyebrow": "IDENTITY",
+        "chip": "OIDC",
+        "zoneLabel": "Identity Provider",
+        "summary": "Authenticates the user, issues codes and tokens, and publishes its public signing keys at /.well-known/jwks.json.",
         "metrics": [
-          { "label": "Token Issuance", "value": "1.2k/s" },
-          { "label": "MFA Success", "value": "99.4%" }
+          {
+            "label": "Logins",
+            "value": "2.1k/min"
+          },
+          {
+            "label": "p99 /token",
+            "value": "45 ms"
+          }
         ],
-        "x": 470,
-        "y": 140,
-        "width": 260,
-        "height": 120
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 797,
+        "y": 330,
+        "width": 242,
+        "height": 172
       },
       {
-        "id": "kms-vault",
+        "id": "user-dir",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "title": "User Directory",
+        "subtitle": "Accounts, password hashes, MFA",
+        "eyebrow": "DIRECTORY",
+        "chip": "ARGON2",
+        "zoneLabel": "Identity Provider",
+        "summary": "Accounts with Argon2id password hashes and enrolled MFA factors. Only the authorization server can reach it.",
+        "metrics": [
+          {
+            "label": "Users",
+            "value": "1.3M"
+          }
+        ],
+        "x": 1180,
+        "y": 141,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "keys",
+        "kind": "store",
+        "accent": "rose",
+        "icon": "lock",
+        "title": "Signing Keys (HSM)",
+        "subtitle": "Private keys never leave",
+        "eyebrow": "KEY VAULT",
+        "chip": "RS256",
+        "zoneLabel": "Identity Provider",
+        "summary": "Holds the RS256 private keys inside a hardware security module. Keys rotate every 90 days; the old public key stays in JWKS until its tokens expire.",
+        "metrics": [
+          {
+            "label": "Active keys",
+            "value": "2"
+          }
+        ],
+        "x": 1180,
+        "y": 341,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "token-store",
         "kind": "store",
         "accent": "amber",
         "icon": "database",
-        "shape": "rounded",
-        "title": "Cloud HSM / Vault",
-        "subtitle": "Hardware Cryptographic Keys",
-        "eyebrow": "ROOT OF TRUST",
-        "chip": "FIPS 140-2 L3",
-        "zoneLabel": "Identity Provider (IdP)",
-        "summary": "Holds asymmetric private signing keys for rotating RS256/ES256 JSON Web Key Sets (JWKS).",
+        "title": "Refresh Token Store",
+        "subtitle": "Families, rotation, revocation",
+        "eyebrow": "SESSIONS",
+        "chip": "ROTATING",
+        "zoneLabel": "Identity Provider",
+        "summary": "Tracks each refresh-token family. A refresh token used twice means it was stolen, so the whole family is revoked.",
         "metrics": [
-          { "label": "Key Rotation", "value": "30 Days" },
-          { "label": "Sign Latency", "value": "1.8ms" }
+          {
+            "label": "Active sessions",
+            "value": "410k"
+          }
         ],
-        "x": 470,
-        "y": 380,
-        "width": 260,
-        "height": 115
+        "x": 810,
+        "y": 141,
+        "width": 216,
+        "height": 150
       },
       {
         "id": "api-gw",
         "kind": "gate",
-        "accent": "blue",
-        "icon": "network",
+        "accent": "violet",
+        "icon": "shield",
         "shape": "diamond",
-        "title": "Enforcing API Gateway",
-        "subtitle": "JWT Signature & Scope Validator",
-        "eyebrow": "RESOURCE PERIMETER",
-        "chip": "Policy Enforcer",
+        "title": "API Gateway",
+        "subtitle": "Validates JWT + scope",
+        "eyebrow": "ENFORCEMENT",
+        "chip": "JWT",
         "zoneLabel": "Resource Servers",
-        "summary": "Validates Bearer token signature against public JWKS and checks required scopes before routing.",
+        "summary": "Rejects any request without a valid, unexpired token for this audience with the right scope, then forwards the user id to the API.",
         "metrics": [
-          { "label": "Validation P99", "value": "0.4ms" },
-          { "label": "Rejections", "value": "0.08%" }
+          {
+            "label": "Rejected",
+            "value": "0.4%"
+          },
+          {
+            "label": "p99 check",
+            "value": "0.3 ms"
+          }
         ],
-        "x": 960,
-        "y": 240,
-        "width": 260,
-        "height": 120
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 1537,
+        "y": 630,
+        "width": 242,
+        "height": 172
       },
       {
-        "id": "user-service",
+        "id": "profile-api",
         "kind": "service",
         "accent": "emerald",
-        "icon": "cpu",
-        "shape": "card",
-        "title": "User Profile Service",
-        "subtitle": "Internal Microservice",
-        "eyebrow": "RESOURCE: USER",
-        "chip": "Scope: read:profile",
+        "icon": "code",
+        "title": "Profile API",
+        "subtitle": "scope: profile:read",
+        "eyebrow": "RESOURCE SERVER",
+        "chip": "API",
         "zoneLabel": "Resource Servers",
-        "summary": "Supplies user profile data and account settings to authorized callers with read:profile claims.",
-        "metrics": [
-          { "label": "RPS", "value": "8.5k" },
-          { "label": "Latency", "value": "12ms" }
-        ],
-        "x": 1330,
-        "y": 140,
-        "width": 250,
-        "height": 110
+        "summary": "Trusts the X-User-Id header only because the gateway is the only way in.",
+        "metrics": [],
+        "x": 1917,
+        "y": 545,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "billing-api",
+        "id": "orders-api",
         "kind": "service",
-        "accent": "rose",
-        "icon": "box",
-        "shape": "card",
-        "title": "Billing & Payments API",
-        "subtitle": "PCI DSS Scoped Microservice",
-        "eyebrow": "RESOURCE: BILLING",
-        "chip": "Scope: write:orders",
+        "accent": "emerald",
+        "icon": "code",
+        "title": "Orders API",
+        "subtitle": "scope: orders:write",
+        "eyebrow": "RESOURCE SERVER",
+        "chip": "API",
         "zoneLabel": "Resource Servers",
-        "summary": "Processes customer credit subscriptions, invoicing, and PCI payment method tokenization.",
-        "metrics": [
-          { "label": "RPS", "value": "1.2k" },
-          { "label": "Latency", "value": "24ms" }
-        ],
-        "x": 1330,
-        "y": 380,
-        "width": 250,
-        "height": 110
+        "summary": "Also checks that the order belongs to the user in X-User-Id; scopes say what, ownership says whose.",
+        "metrics": [],
+        "x": 1917,
+        "y": 745,
+        "width": 222,
+        "height": 142
       }
     ],
     "edges": [
       {
         "id": "e1",
-        "from": "spa-client",
-        "to": "auth-server",
-        "sourcePort": "top",
-        "targetPort": "left",
-        "tone": "violet",
+        "from": "user",
+        "to": "spa",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "1. /authorize (code_challenge)",
+        "label": "Click \"Sign in\"",
         "animated": true
       },
       {
         "id": "e2",
-        "from": "auth-server",
-        "to": "kms-vault",
-        "sourcePort": "bottom",
-        "targetPort": "top",
-        "tone": "amber",
-        "route": "orthogonal",
-        "label": "Sign JWT with RS256 Key",
-        "animated": true
+        "from": "spa",
+        "to": "idp",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
+        "route": "bezier",
+        "label": "/authorize + /token (PKCE)",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 45
       },
       {
         "id": "e3",
-        "from": "auth-server",
-        "to": "spa-client",
-        "sourcePort": "left",
-        "targetPort": "right",
-        "tone": "violet",
+        "from": "idp",
+        "to": "user-dir",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
         "route": "bezier",
-        "label": "2. Return JWT & ID Token",
-        "animated": true
+        "label": "Look up user + MFA",
+        "animated": true,
+        "latencyMs": 30
       },
       {
         "id": "e4",
-        "from": "spa-client",
-        "to": "api-gw",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "blue",
+        "from": "idp",
+        "to": "keys",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
         "route": "bezier",
-        "label": "3. Authorization: Bearer <jwt>",
-        "animated": true
+        "label": "Fetch key, sign JWT",
+        "animated": true,
+        "latencyMs": 5
       },
       {
         "id": "e5",
-        "from": "auth-server",
-        "to": "api-gw",
-        "sourcePort": "right",
-        "targetPort": "top",
-        "tone": "violet",
+        "from": "idp",
+        "to": "token-store",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
         "route": "bezier",
-        "label": "JWKS Public Keys Cache",
-        "animated": false
+        "label": "Look up / rotate",
+        "animated": true,
+        "latencyMs": 3
       },
       {
         "id": "e6",
-        "from": "api-gw",
-        "to": "user-service",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "emerald",
+        "from": "spa",
+        "to": "api-gw",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
         "route": "bezier",
-        "label": "Forward with X-User-Id",
-        "animated": true
+        "label": "Bearer token",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 25
       },
       {
         "id": "e7",
         "from": "api-gw",
-        "to": "billing-api",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "rose",
+        "to": "idp",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
         "route": "bezier",
-        "label": "Forward with X-User-Id",
-        "animated": true
+        "label": "GET JWKS (cached)",
+        "animated": true,
+        "protocol": "http",
+        "sync": "async"
+      },
+      {
+        "id": "e8",
+        "from": "api-gw",
+        "to": "profile-api",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Forward user id",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 10
+      },
+      {
+        "id": "e9",
+        "from": "api-gw",
+        "to": "orders-api",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Forward user id",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 15
       }
     ],
     "simulations": [
       {
-        "id": "sim-pkce-flow",
-        "name": "PKCE Code Exchange & Token Mint",
+        "id": "sim-pkce-login",
+        "name": "Sign In (Authorization Code + PKCE)",
         "tone": "violet",
         "steps": [
           {
-            "id": "a1",
-            "nodes": ["spa-client", "auth-server"],
+            "id": "l1",
+            "nodes": [
+              "user",
+              "spa"
+            ],
+            "tone": "blue",
+            "label": "SIGN IN",
+            "trace": "The SPA makes a random code_verifier and its SHA-256 hash, the code_challenge."
+          },
+          {
+            "id": "l2",
+            "nodes": [
+              "spa",
+              "idp"
+            ],
             "tone": "violet",
-            "label": "AUTH CODE CHALLENGE",
-            "trace": "Client launches PKCE login; sends SHA-256 code challenge to /authorize."
+            "label": "/authorize",
+            "trace": "The browser goes to /authorize with response_type=code, code_challenge, state and nonce."
+          },
+          {
+            "id": "l3",
+            "nodes": [
+              "idp",
+              "user-dir"
+            ],
+            "tone": "emerald",
+            "label": "AUTHENTICATE",
+            "trace": "The user types the password and MFA code on the provider's page; both are checked against the directory."
+          },
+          {
+            "id": "l4",
+            "nodes": [
+              "idp",
+              "spa"
+            ],
+            "tone": "violet",
+            "label": "302 ?code=…",
+            "trace": "The provider redirects back with a one-time code valid for 60 seconds. The SPA checks state matches."
+          },
+          {
+            "id": "l5",
+            "nodes": [
+              "spa",
+              "idp"
+            ],
+            "tone": "violet",
+            "label": "POST /token",
+            "trace": "The SPA sends the code with the code_verifier. The provider hashes it and compares it to the challenge."
+          },
+          {
+            "id": "l6",
+            "nodes": [
+              "idp",
+              "keys"
+            ],
+            "tone": "rose",
+            "label": "SIGN",
+            "trace": "The ID token and access token are signed with the current RS256 key."
+          },
+          {
+            "id": "l7",
+            "nodes": [
+              "idp",
+              "token-store"
+            ],
+            "tone": "amber",
+            "label": "REFRESH TOKEN",
+            "trace": "A new refresh-token family starts for this session."
+          },
+          {
+            "id": "l8",
+            "nodes": [
+              "idp",
+              "spa"
+            ],
+            "tone": "emerald",
+            "label": "TOKENS",
+            "trace": "ID token, 5-minute access token and refresh token come back. The SPA keeps them in memory."
+          }
+        ]
+      },
+      {
+        "id": "sim-api-call",
+        "name": "Call a Protected API",
+        "tone": "emerald",
+        "budgetMs": 80,
+        "steps": [
+          {
+            "id": "a1",
+            "nodes": [
+              "spa",
+              "api-gw"
+            ],
+            "tone": "blue",
+            "label": "BEARER",
+            "trace": "The SPA calls POST /orders with the access token."
           },
           {
             "id": "a2",
-            "nodes": ["auth-server", "kms-vault"],
-            "tone": "amber",
-            "label": "CRYPTO SIGNING",
-            "trace": "Authorization server requests private RS256 key from HSM vault to sign JWT claims."
+            "nodes": [
+              "api-gw",
+              "idp"
+            ],
+            "tone": "violet",
+            "label": "VERIFY JWT",
+            "trace": "The signature is checked with the cached JWKS public key; iss, aud, exp and the orders:write scope are checked too."
           },
           {
             "id": "a3",
-            "nodes": ["auth-server", "spa-client"],
+            "nodes": [
+              "api-gw",
+              "orders-api"
+            ],
             "tone": "emerald",
-            "label": "TOKEN ISSUED",
-            "trace": "Access token and ID token issued and stored securely in browser memory."
+            "label": "AUTHORIZED",
+            "trace": "The gateway strips the token and forwards the verified user id."
           },
           {
             "id": "a4",
-            "nodes": ["spa-client", "api-gw"],
+            "nodes": [
+              "orders-api",
+              "api-gw",
+              "spa"
+            ],
+            "tone": "emerald",
+            "label": "201 CREATED",
+            "trace": "The order is created for that user."
+          }
+        ]
+      },
+      {
+        "id": "sim-refresh",
+        "name": "Expired Token → Silent Refresh",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "r1",
+            "nodes": [
+              "spa",
+              "api-gw"
+            ],
             "tone": "blue",
-            "label": "BEARER REQUEST",
-            "trace": "SPA attaches Bearer JWT in Authorization header to invoke protected API."
+            "label": "EXPIRED",
+            "trace": "The access token is past its 5 minutes."
           },
           {
-            "id": "a5",
-            "nodes": ["api-gw", "user-service"],
+            "id": "r2",
+            "nodes": [
+              "api-gw",
+              "spa"
+            ],
+            "tone": "rose",
+            "label": "401",
+            "trace": "The gateway answers 401 invalid_token. Nothing reaches the API."
+          },
+          {
+            "id": "r3",
+            "nodes": [
+              "spa",
+              "idp"
+            ],
+            "tone": "violet",
+            "label": "REFRESH GRANT",
+            "trace": "The SPA posts grant_type=refresh_token to /token."
+          },
+          {
+            "id": "r4",
+            "nodes": [
+              "idp",
+              "token-store"
+            ],
+            "tone": "amber",
+            "label": "ROTATE",
+            "trace": "The used refresh token is retired and a new one issued in the same family. Reusing the old one would revoke them all."
+          },
+          {
+            "id": "r5",
+            "nodes": [
+              "idp",
+              "keys"
+            ],
+            "tone": "rose",
+            "label": "NEW ACCESS TOKEN",
+            "trace": "A fresh access token is signed."
+          },
+          {
+            "id": "r6",
+            "nodes": [
+              "spa",
+              "api-gw",
+              "profile-api"
+            ],
             "tone": "emerald",
-            "label": "CLAIMS FORWARDED",
-            "trace": "Gateway validates JWT cryptographic signature and forwards verified user identity."
+            "label": "RETRY → 200",
+            "trace": "The SPA retries the original call and it succeeds. The user noticed nothing."
           }
         ]
       }

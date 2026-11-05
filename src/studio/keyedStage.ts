@@ -1507,7 +1507,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   levelBadge.textContent = node.child ? `⤵ ${innerCount}` : '⤵';
   levelBadge.dataset.hasChild = node.child ? 'true' : 'false';
   levelBadge.setAttribute('data-tip', node.child ? `Open level (${innerCount} inside) · ⌘↵` : 'Open as a level · ⌘↵');
-  levelBadge.setAttribute('aria-label', `Open ${node.title} as a level`);
+  // The visible count is part of the name, so speech input ("click 4") and screen readers agree with the screen.
+  levelBadge.setAttribute('aria-label', node.child ? `Open ${node.title} as a level, ${innerCount} inside` : `Open ${node.title} as a level`);
 
   // Comment badge
   let commentBadge = wrapper.querySelector<HTMLElement>('.node-comment-badge');
@@ -1515,6 +1516,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     if (!commentBadge) {
       commentBadge = document.createElement('span');
       commentBadge.className = 'node-comment-badge';
+      // A plain span may not carry a label; as an image it can, and screen readers read the comment.
+      commentBadge.setAttribute('role', 'img');
       commentBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
       wrapper.appendChild(commentBadge);
     }

@@ -2,180 +2,225 @@
   "kind": "conduitcraft.blueprint",
   "version": 1,
   "document": {
-    "title": "Event-Driven Microservices",
-    "systemTag": "STREAM BACKBONE // MULTI-REGION",
-    "statusLabel": "KAFKA CLUSTER ACTIVE",
     "direction": "LR",
-    "stageWidth": 1720,
+    "stageWidth": 1680,
     "stageHeight": 920,
-    "overviewSummary": "Asynchronous microservices topology powered by an Apache Kafka event spine, decoupled order processing, inventory reservations, credit card payment capture, notification fanout, and an immutable audit event store.",
+    "title": "Event-Driven Microservices",
+    "systemTag": "COMMERCE PLATFORM // EVENT BACKBONE",
+    "statusLabel": "REFERENCE ARCHITECTURE",
+    "overviewSummary": "An order platform where services talk through events instead of calling each other. The Order Service writes the order and an outbox row in one transaction, then publishes OrderPlaced to a Kafka topic. Payment, fulfilment, notifications and a CQRS read model each consume it at their own pace. A failed payment publishes PaymentFailed and the Order Service compensates by cancelling the order (a choreographed saga). Shipping work goes through a FIFO queue with a dead-letter queue.",
     "brand": {
-      "name": "EventCraft Systems",
+      "name": "Commerce Platform",
       "accent": "#d97706",
       "logo": ""
     },
     "zones": [
       {
-        "id": "zone-ingest",
+        "id": "zone-ingress",
         "number": "01",
-        "title": "API & Ingress",
-        "subtitle": "External gateway and ingestion",
+        "title": "Ingress & Commands",
+        "subtitle": "Clients, gateway and command side",
         "x": 24,
-        "width": 340
+        "width": 678
       },
       {
-        "id": "zone-spine",
+        "id": "zone-backbone",
         "number": "02",
-        "title": "Event Spine",
-        "subtitle": "Kafka distributed streaming log",
-        "x": 384,
-        "width": 380
+        "title": "Event Backbone",
+        "subtitle": "Kafka topic, work queue and DLQ",
+        "x": 764,
+        "width": 308
       },
       {
-        "id": "zone-domain",
+        "id": "zone-services",
         "number": "03",
-        "title": "Domain Microservices",
-        "subtitle": "Decoupled consumer & producer pods",
-        "x": 784,
-        "width": 490
+        "title": "Domain Services",
+        "subtitle": "Consumers that own their data",
+        "x": 1134,
+        "width": 678
       },
       {
-        "id": "zone-state",
+        "id": "zone-read",
         "number": "04",
-        "title": "State & Projections",
-        "subtitle": "Materialized views & audit ledger",
-        "x": 1294,
-        "width": 380
+        "title": "Queries & Notifications",
+        "subtitle": "CQRS read model and notifications",
+        "x": 1874,
+        "width": 308
       }
     ],
     "notesCards": [
       {
-        "id": "notes-patterns",
-        "title": "Saga Orchestration & Guarantees",
-        "code": "EVENT-01",
+        "id": "notes-events",
+        "title": "Event rules",
+        "code": "SPEC-EDA",
         "x": 48,
-        "y": 700,
+        "y": 930,
         "items": [
           {
-            "title": "At-Least-Once Delivery",
-            "text": "Every microservice uses idempotent consumer deduplication via message sequence IDs."
+            "title": "Transactional outbox",
+            "text": "Order and event commit together; none is lost.",
+            "icon": "check"
           },
           {
-            "title": "Outbox Pattern",
-            "text": "Services commit state mutations and outbox records in a single local transaction."
+            "title": "Idempotent consumers",
+            "text": "At-least-once delivery: dedupe on event id.",
+            "icon": "check"
           },
           {
-            "title": "Dead Letter Queue",
-            "text": "Poison pill messages route to the dlq.orders topic after 3 failed retries."
+            "title": "Saga, not 2PC",
+            "text": "PaymentFailed triggers a compensating cancel.",
+            "icon": "info"
+          },
+          {
+            "title": "Eventual consistency",
+            "text": "The read model trails writes by ~200 ms.",
+            "icon": "warning"
           }
         ]
       }
     ],
     "nodes": [
       {
-        "id": "api-gw",
-        "kind": "gate",
+        "id": "clients",
+        "kind": "client",
         "accent": "blue",
-        "icon": "network",
-        "shape": "diamond",
-        "title": "API Gateway",
-        "subtitle": "Kong Gateway // JWT Auth",
-        "eyebrow": "ENTRY PERIMETER",
-        "chip": "REST / GraphQL",
-        "zoneLabel": "API & Ingress",
-        "summary": "Validates API tokens, enforces rate limits, and routes client commands to the Order service.",
+        "icon": "globe",
+        "shape": "pill",
+        "title": "Web & Mobile Clients",
+        "subtitle": "Shoppers",
+        "eyebrow": "USERS",
+        "chip": "HTTPS",
+        "zoneLabel": "Ingress & Commands",
+        "summary": "Places orders and polls their status.",
         "metrics": [
-          { "label": "Traffic", "value": "24.5k req/s" },
-          { "label": "Auth Latency", "value": "1.2ms" }
+          {
+            "label": "Orders",
+            "value": "220/min"
+          }
         ],
-        "x": 64,
-        "y": 280,
-        "width": 240,
-        "height": 110
+        "x": 82,
+        "y": 160,
+        "width": 192,
+        "height": 112
       },
       {
-        "id": "kafka-bus",
-        "kind": "bus",
-        "accent": "amber",
-        "icon": "layers",
-        "shape": "card",
-        "title": "Apache Kafka Spine",
-        "subtitle": "Distributed Commit Log",
-        "eyebrow": "MESSAGING BUS",
-        "chip": "32 Partitions",
-        "zoneLabel": "Event Spine",
-        "summary": "High-throughput, durable streaming platform managing order, payment, and inventory topics.",
+        "id": "api-gw",
+        "kind": "gate",
+        "accent": "violet",
+        "icon": "shield",
+        "shape": "diamond",
+        "title": "API Gateway",
+        "subtitle": "Auth, routing, rate limits",
+        "eyebrow": "GATEWAY",
+        "chip": "JWT",
+        "zoneLabel": "Ingress & Commands",
+        "summary": "Checks the token and routes commands to the Order Service and queries to the Order Query Service.",
         "metrics": [
-          { "label": "Throughput", "value": "180k msg/s" },
-          { "label": "Replication", "value": "RF=3" }
+          {
+            "label": "p99",
+            "value": "9 ms"
+          },
+          {
+            "label": "RPS",
+            "value": "1.4k"
+          }
         ],
-        "x": 430,
-        "y": 260,
-        "width": 260,
-        "height": 130
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 57,
+        "y": 430,
+        "width": 242,
+        "height": 172
       },
       {
         "id": "order-svc",
         "kind": "service",
-        "accent": "emerald",
-        "icon": "cpu",
-        "shape": "card",
+        "accent": "blue",
+        "icon": "code",
         "title": "Order Service",
-        "subtitle": "Order Lifecycle Orchestrator",
-        "eyebrow": "DOMAIN CORE",
-        "chip": "Producer / Consumer",
-        "zoneLabel": "Domain Microservices",
-        "summary": "Receives order commands, emits OrderCreated events, and manages the checkout saga.",
+        "subtitle": "Command side, owns orders",
+        "eyebrow": "SERVICE",
+        "chip": "WRITE",
+        "zoneLabel": "Ingress & Commands",
+        "summary": "Validates and stores new orders, writes the outbox event in the same transaction, and cancels orders when payment fails.",
         "metrics": [
-          { "label": "Active Sagas", "value": "1,420" },
-          { "label": "Success Rate", "value": "99.94%" }
+          {
+            "label": "Pods",
+            "value": "3"
+          },
+          {
+            "label": "p99",
+            "value": "24 ms"
+          }
         ],
-        "x": 840,
-        "y": 100,
-        "width": 240,
-        "height": 105
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 437,
+        "y": 245,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "payment-svc",
-        "kind": "service",
-        "accent": "rose",
-        "icon": "shield",
-        "shape": "card",
-        "title": "Payment Service",
-        "subtitle": "Stripe & PSP Integration",
-        "eyebrow": "PCI DOMAIN",
-        "chip": "Consumer",
-        "zoneLabel": "Domain Microservices",
-        "summary": "Subscribes to OrderCreated events and authorizes credit card charges via external PSP.",
+        "id": "orders-db",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "title": "Orders DB + Outbox",
+        "subtitle": "PostgreSQL",
+        "eyebrow": "DATABASE",
+        "chip": "OUTBOX",
+        "zoneLabel": "Ingress & Commands",
+        "summary": "The source of truth for orders. A relay reads new outbox rows and publishes them to Kafka.",
         "metrics": [
-          { "label": "Auth P95", "value": "310ms" },
-          { "label": "Declines", "value": "1.1%" }
+          {
+            "label": "Rows",
+            "value": "9.2M"
+          },
+          {
+            "label": "Outbox lag",
+            "value": "40 ms"
+          }
         ],
-        "x": 840,
-        "y": 250,
-        "width": 240,
-        "height": 105
+        "x": 440,
+        "y": 641,
+        "width": 216,
+        "height": 150
       },
       {
-        "id": "inventory-svc",
-        "kind": "service",
-        "accent": "violet",
-        "icon": "box",
-        "shape": "card",
-        "title": "Fulfilment Service",
-        "subtitle": "Warehouse Stock Allocator",
-        "eyebrow": "FULFILLMENT",
-        "chip": "Consumer",
-        "zoneLabel": "Domain Microservices",
-        "summary": "Locks available warehouse stock and releases held allocations if payments fail.",
+        "id": "event-stream",
+        "kind": "queue",
+        "accent": "amber",
+        "icon": "stream",
+        "title": "Kafka · order-events",
+        "subtitle": "Replayable event log",
+        "eyebrow": "STREAM",
+        "chip": "STREAM",
+        "zoneLabel": "Event Backbone",
+        "summary": "Every consumer group reads every event at its own offset. Partitioned by order id, so events for one order stay in order.",
         "metrics": [
-          { "label": "Reservations", "value": "8.2k/min" },
-          { "label": "Lock Lag", "value": "4ms" }
+          {
+            "label": "Throughput",
+            "value": "3.1k msg/s"
+          },
+          {
+            "label": "Brokers",
+            "value": "3"
+          }
         ],
-        "x": 840,
-        "y": 400,
+        "queue": {
+          "delivery": "fanout",
+          "partitions": 6,
+          "retention": "7 days"
+        },
+        "resilience": {
+          "replicas": 3
+        },
+        "x": 798,
+        "y": 260,
         "width": 240,
-        "height": 105
+        "height": 112
       },
       {
         "id": "fulfilment-queue",
@@ -183,15 +228,29 @@
         "accent": "amber",
         "icon": "queue",
         "title": "Fulfilment Queue",
-        "subtitle": "Work Queue",
+        "subtitle": "ShipOrder jobs",
         "eyebrow": "QUEUE",
-        "chip": "ASYNC",
-        "footerLeft": "Point to point",
-        "zoneLabel": "Event Spine",
-        "summary": "Holds stock reservations while the Fulfilment Service is down, and sends overflow to the dead-letter queue.",
-        "queue": { "ordering": "fifo", "maxDepth": 50, "deadLetterId": "fulfilment-dlq", "retention": "4 days" },
-        "x": 430,
-        "y": 450,
+        "chip": "FIFO",
+        "zoneLabel": "Event Backbone",
+        "summary": "Holds shipping jobs until a fulfilment worker takes one. When it holds 50, new jobs go to the dead-letter queue.",
+        "metrics": [
+          {
+            "label": "Depth",
+            "value": "4"
+          },
+          {
+            "label": "Oldest",
+            "value": "2 s"
+          }
+        ],
+        "queue": {
+          "ordering": "fifo",
+          "maxDepth": 50,
+          "deadLetterId": "fulfilment-dlq",
+          "retention": "4 days"
+        },
+        "x": 798,
+        "y": 560,
         "width": 240,
         "height": 112
       },
@@ -201,284 +260,669 @@
         "accent": "rose",
         "icon": "queue",
         "title": "Fulfilment DLQ",
-        "subtitle": "Dead-letter Queue",
-        "eyebrow": "QUEUE",
-        "chip": "ASYNC",
-        "footerLeft": "Point to point",
-        "zoneLabel": "Event Spine",
-        "summary": "Reservations the Fulfilment Queue could not hold. Someone reviews these by hand.",
-        "x": 430,
-        "y": 620,
+        "subtitle": "Overflow and poison jobs",
+        "eyebrow": "DEAD LETTER",
+        "chip": "DLQ",
+        "zoneLabel": "Event Backbone",
+        "summary": "Jobs that overflowed or failed every retry. On-call is paged, fixes the cause and replays them.",
+        "metrics": [
+          {
+            "label": "Depth",
+            "value": "0"
+          }
+        ],
+        "queue": {
+          "retention": "14 days"
+        },
+        "x": 798,
+        "y": 760,
         "width": 240,
         "height": 112
       },
       {
-        "id": "notify-svc",
+        "id": "payment-svc",
         "kind": "service",
         "accent": "blue",
-        "icon": "terminal",
-        "shape": "pill",
-        "title": "Notification Dispatcher",
-        "subtitle": "Email, SMS & Push Gateway",
-        "eyebrow": "COMMUNICATIONS",
-        "chip": "Fanout Worker",
-        "zoneLabel": "Domain Microservices",
-        "summary": "Sends customer confirmation emails and push notifications when orders are completed.",
+        "icon": "code",
+        "title": "Payment Service",
+        "subtitle": "Charges cards",
+        "eyebrow": "SERVICE",
+        "chip": "SAGA",
+        "zoneLabel": "Domain Services",
+        "summary": "Consumes OrderPlaced, charges the card through the provider with an idempotency key, and publishes PaymentCaptured or PaymentFailed.",
         "metrics": [
-          { "label": "Sent / sec", "value": "450" },
-          { "label": "Delivery Rate", "value": "99.8%" }
+          {
+            "label": "Pods",
+            "value": "2"
+          },
+          {
+            "label": "Success",
+            "value": "98.6%"
+          }
         ],
-        "x": 840,
-        "y": 550,
-        "width": 240,
-        "height": 100
+        "resilience": {
+          "replicas": 2,
+          "circuitBreaker": true
+        },
+        "x": 1177,
+        "y": 145,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "event-store",
-        "kind": "store",
-        "accent": "amber",
-        "icon": "database",
-        "shape": "rounded",
-        "title": "Event Store Ledger",
-        "subtitle": "Immutable Change Log",
-        "eyebrow": "AUDIT ARCHIVE",
-        "chip": "Append-Only",
-        "zoneLabel": "State & Projections",
-        "summary": "Persistent append-only event archive used for event sourcing and full state reconstruction.",
+        "id": "payment-provider",
+        "kind": "service",
+        "accent": "violet",
+        "icon": "cloud",
+        "title": "Payment Provider",
+        "subtitle": "Card processor API",
+        "eyebrow": "THIRD PARTY",
+        "chip": "EXTERNAL",
+        "zoneLabel": "Domain Services",
+        "summary": "Run by someone else. Calls go through a circuit breaker so an outage there fails payments fast instead of piling up.",
         "metrics": [
-          { "label": "Events Total", "value": "4.2B" },
-          { "label": "Compression", "value": "4.2x" }
+          {
+            "label": "p99",
+            "value": "310 ms"
+          }
         ],
-        "x": 1330,
-        "y": 180,
-        "width": 240,
-        "height": 110
+        "external": true,
+        "x": 1547,
+        "y": 145,
+        "width": 222,
+        "height": 142
       },
       {
-        "id": "analytics-view",
-        "kind": "core",
+        "id": "fulfilment-svc",
+        "kind": "service",
+        "accent": "blue",
+        "icon": "code",
+        "title": "Fulfilment Service",
+        "subtitle": "Picks, packs, ships",
+        "eyebrow": "SERVICE",
+        "chip": "WORKER",
+        "zoneLabel": "Domain Services",
+        "summary": "Takes ShipOrder jobs from the queue, books the courier and publishes OrderShipped.",
+        "metrics": [
+          {
+            "label": "Workers",
+            "value": "4"
+          },
+          {
+            "label": "Jobs",
+            "value": "180/min"
+          }
+        ],
+        "x": 1177,
+        "y": 545,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "query-svc",
+        "kind": "service",
         "accent": "emerald",
-        "icon": "layers",
-        "shape": "card",
-        "title": "Real-time Projections",
-        "subtitle": "Materialized Read Models",
-        "eyebrow": "CQRS PROJECTIONS",
-        "chip": "ClickHouse / Read",
-        "zoneLabel": "State & Projections",
-        "summary": "Continuous stream projection generating fast queryable order status and financial summaries.",
+        "icon": "code",
+        "title": "Order Query Service",
+        "subtitle": "CQRS projector + read API",
+        "eyebrow": "SERVICE",
+        "chip": "READ",
+        "zoneLabel": "Queries & Notifications",
+        "summary": "Folds every order event into a denormalised view and answers GET /orders from it, so reads never touch the Orders DB.",
         "metrics": [
-          { "label": "Sync Delay", "value": "< 50ms" },
-          { "label": "Query RPS", "value": "16k" }
+          {
+            "label": "Projection lag",
+            "value": "220 ms"
+          }
         ],
-        "x": 1330,
-        "y": 420,
-        "width": 240,
-        "height": 110
+        "resilience": {
+          "replicas": 2
+        },
+        "x": 1917,
+        "y": 245,
+        "width": 222,
+        "height": 142
+      },
+      {
+        "id": "read-model",
+        "kind": "store",
+        "accent": "emerald",
+        "icon": "database",
+        "title": "Order Read Model",
+        "subtitle": "Search-friendly views",
+        "eyebrow": "READ STORE",
+        "chip": "VIEWS",
+        "zoneLabel": "Queries & Notifications",
+        "summary": "Rebuildable at any time by replaying the Kafka topic from the start.",
+        "metrics": [
+          {
+            "label": "Docs",
+            "value": "9.2M"
+          }
+        ],
+        "x": 1920,
+        "y": 541,
+        "width": 216,
+        "height": 150
+      },
+      {
+        "id": "notify-svc",
+        "kind": "service",
+        "accent": "emerald",
+        "icon": "bolt",
+        "shape": "pill",
+        "title": "Notification Service",
+        "subtitle": "Email, SMS, on-call pages",
+        "eyebrow": "SERVICE",
+        "chip": "NOTIFY",
+        "zoneLabel": "Domain Services",
+        "summary": "Sends order receipts and shipping updates, and pages on-call when jobs land in the dead-letter queue.",
+        "metrics": [
+          {
+            "label": "Sent",
+            "value": "41k/day"
+          }
+        ],
+        "x": 1547,
+        "y": 745,
+        "width": 222,
+        "height": 142
       }
     ],
     "edges": [
       {
         "id": "e1",
-        "from": "api-gw",
-        "to": "order-svc",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "from": "clients",
+        "to": "api-gw",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "blue",
         "route": "bezier",
-        "label": "POST /v1/orders",
-        "animated": true
+        "label": "HTTPS /v1/*",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 20
       },
       {
         "id": "e2",
-        "from": "order-svc",
-        "to": "kafka-bus",
-        "sourcePort": "left",
-        "targetPort": "top",
-        "tone": "amber",
-        "route": "orthogonal",
-        "label": "Publish: OrderCreated",
-        "animated": true
+        "from": "api-gw",
+        "to": "order-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "blue",
+        "route": "bezier",
+        "label": "POST /v1/orders",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 5
       },
       {
         "id": "e3",
-        "from": "kafka-bus",
-        "to": "payment-svc",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "rose",
+        "from": "order-svc",
+        "to": "orders-db",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
         "route": "bezier",
-        "label": "Consume: OrderCreated",
-        "animated": true
+        "label": "Read / write + outbox",
+        "animated": true,
+        "protocol": "sql",
+        "latencyMs": 6
       },
       {
         "id": "e4",
-        "from": "kafka-bus",
-        "to": "fulfilment-queue",
-        "sourcePort": "bottom",
-        "targetPort": "top",
+        "from": "order-svc",
+        "to": "event-stream",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Consume: ReserveStock",
+        "label": "Publish OrderPlaced",
         "animated": true,
+        "protocol": "kafka",
         "sync": "async"
       },
       {
         "id": "e5",
-        "from": "payment-svc",
-        "to": "kafka-bus",
-        "sourcePort": "left",
-        "targetPort": "bottom",
-        "tone": "emerald",
-        "route": "orthogonal",
-        "label": "Publish: PaymentCaptured",
-        "animated": true
+        "from": "event-stream",
+        "to": "payment-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Consume OrderPlaced",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
       },
       {
         "id": "e6",
-        "from": "kafka-bus",
-        "to": "notify-svc",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "blue",
+        "from": "payment-svc",
+        "to": "payment-provider",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "violet",
         "route": "bezier",
-        "label": "Consume: SendReceipt",
-        "animated": true
+        "label": "Charge card",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 300
       },
       {
         "id": "e7",
-        "from": "kafka-bus",
-        "to": "event-store",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "from": "payment-svc",
+        "to": "event-stream",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Archive All Events",
-        "animated": true
+        "label": "Publish payment result",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
       },
       {
         "id": "e8",
-        "from": "kafka-bus",
-        "to": "analytics-view",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "emerald",
+        "from": "event-stream",
+        "to": "order-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
         "route": "bezier",
-        "label": "Continuous Projection",
-        "animated": true
+        "label": "PaymentFailed → cancel",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
       },
       {
         "id": "e9",
-        "from": "fulfilment-queue",
-        "to": "inventory-svc",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "from": "event-stream",
+        "to": "fulfilment-queue",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Deliver: ReserveStock",
+        "label": "ShipOrder job",
         "animated": true,
+        "protocol": "kafka",
         "sync": "async"
       },
       {
         "id": "e10",
         "from": "fulfilment-queue",
-        "to": "fulfilment-dlq",
-        "sourcePort": "bottom",
-        "targetPort": "top",
-        "tone": "rose",
+        "to": "fulfilment-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
         "route": "bezier",
-        "label": "Overflow",
-        "animated": false,
+        "label": "Deliver ShipOrder",
+        "animated": true,
+        "protocol": "amqp",
         "sync": "async"
       },
       {
         "id": "e11",
-        "from": "fulfilment-dlq",
-        "to": "notify-svc",
-        "sourcePort": "right",
-        "targetPort": "left",
+        "from": "fulfilment-queue",
+        "to": "fulfilment-dlq",
+        "sourcePort": "auto",
+        "targetPort": "auto",
         "tone": "rose",
         "route": "bezier",
-        "label": "Alert: dead letters",
-        "animated": false,
+        "label": "Overflow",
+        "animated": true,
+        "protocol": "amqp",
         "sync": "async"
+      },
+      {
+        "id": "e12",
+        "from": "fulfilment-svc",
+        "to": "event-stream",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Publish OrderShipped",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
+      },
+      {
+        "id": "e13",
+        "from": "event-stream",
+        "to": "notify-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Consume order events",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
+      },
+      {
+        "id": "e14",
+        "from": "fulfilment-dlq",
+        "to": "notify-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Page on-call: dead letters",
+        "animated": true,
+        "sync": "async"
+      },
+      {
+        "id": "e15",
+        "from": "event-stream",
+        "to": "query-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Consume all events",
+        "animated": true,
+        "protocol": "kafka",
+        "sync": "async"
+      },
+      {
+        "id": "e16",
+        "from": "query-svc",
+        "to": "read-model",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "Upsert and read views",
+        "animated": true,
+        "latencyMs": 6
+      },
+      {
+        "id": "e17",
+        "from": "api-gw",
+        "to": "query-svc",
+        "sourcePort": "auto",
+        "targetPort": "auto",
+        "tone": "emerald",
+        "route": "bezier",
+        "label": "GET /v1/orders/:id",
+        "animated": true,
+        "protocol": "http",
+        "latencyMs": 5
       }
     ],
     "simulations": [
       {
-        "id": "sim-order-flow",
-        "name": "Order Placed & Fulfilled Saga",
-        "tone": "emerald",
+        "id": "sim-order-saga",
+        "name": "Order Placed → Paid → Shipped",
+        "tone": "amber",
+        "steps": [
+          {
+            "id": "o1",
+            "nodes": [
+              "clients",
+              "api-gw"
+            ],
+            "tone": "blue",
+            "label": "POST /orders",
+            "trace": "The shopper places an order. The gateway checks the token."
+          },
+          {
+            "id": "o2",
+            "nodes": [
+              "api-gw",
+              "order-svc"
+            ],
+            "tone": "blue",
+            "label": "COMMAND",
+            "trace": "The gateway routes the command to the Order Service."
+          },
+          {
+            "id": "o3",
+            "nodes": [
+              "order-svc",
+              "orders-db"
+            ],
+            "tone": "emerald",
+            "label": "COMMIT + OUTBOX",
+            "trace": "The order and an OrderPlaced outbox row commit in one transaction. The client gets 202 Accepted now."
+          },
+          {
+            "id": "o4",
+            "nodes": [
+              "order-svc",
+              "event-stream"
+            ],
+            "tone": "amber",
+            "label": "OrderPlaced",
+            "trace": "The outbox relay publishes the event to Kafka, keyed by order id."
+          },
+          {
+            "id": "o5",
+            "nodes": [
+              "event-stream",
+              "payment-svc"
+            ],
+            "tone": "amber",
+            "label": "CONSUME",
+            "trace": "The payment consumer group reads OrderPlaced."
+          },
+          {
+            "id": "o6",
+            "nodes": [
+              "payment-svc",
+              "payment-provider"
+            ],
+            "tone": "violet",
+            "label": "CHARGE",
+            "trace": "The card is charged with the order id as the idempotency key, so a retry never charges twice."
+          },
+          {
+            "id": "o7",
+            "nodes": [
+              "payment-svc",
+              "event-stream"
+            ],
+            "tone": "amber",
+            "label": "PaymentCaptured",
+            "trace": "Payment succeeded; the service publishes PaymentCaptured."
+          },
+          {
+            "id": "o8",
+            "nodes": [
+              "event-stream",
+              "fulfilment-queue"
+            ],
+            "tone": "amber",
+            "label": "ShipOrder",
+            "trace": "A ShipOrder job is queued for the fulfilment workers."
+          },
+          {
+            "id": "o9",
+            "nodes": [
+              "fulfilment-queue",
+              "fulfilment-svc"
+            ],
+            "tone": "amber",
+            "label": "SHIP",
+            "trace": "A worker takes the job, books the courier and publishes OrderShipped."
+          },
+          {
+            "id": "o10",
+            "nodes": [
+              "event-stream",
+              "notify-svc",
+              "query-svc"
+            ],
+            "tone": "emerald",
+            "label": "FAN-OUT",
+            "trace": "Every event also reaches notifications (receipt email) and the read model (status: shipped)."
+          }
+        ]
+      },
+      {
+        "id": "sim-payment-declined",
+        "name": "Payment Declined (Compensating Saga)",
+        "tone": "rose",
         "steps": [
           {
             "id": "p1",
-            "nodes": ["api-gw", "order-svc"],
-            "tone": "blue",
-            "label": "COMMAND INGEST",
-            "trace": "Client sends checkout request through API Gateway to Order Service."
+            "nodes": [
+              "event-stream",
+              "payment-svc"
+            ],
+            "tone": "amber",
+            "label": "OrderPlaced",
+            "trace": "The payment consumer reads a new order."
           },
           {
             "id": "p2",
-            "nodes": ["order-svc", "kafka-bus"],
-            "tone": "amber",
-            "label": "EVENT EMITTED",
-            "trace": "Order Service commits local record and publishes OrderCreated to Kafka orders topic."
+            "nodes": [
+              "payment-svc",
+              "payment-provider"
+            ],
+            "tone": "rose",
+            "label": "DECLINED",
+            "trace": "The provider declines the card."
           },
           {
             "id": "p3",
-            "nodes": ["kafka-bus", "payment-svc", "fulfilment-queue"],
+            "nodes": [
+              "payment-svc",
+              "event-stream"
+            ],
             "tone": "rose",
-            "label": "PARALLEL CONSUMPTION",
-            "trace": "Payment Service charges card; Fulfilment Service reserves SKU warehouse stock."
+            "label": "PaymentFailed",
+            "trace": "The service publishes PaymentFailed instead of PaymentCaptured."
           },
           {
             "id": "p4",
-            "nodes": ["payment-svc", "kafka-bus"],
-            "tone": "emerald",
-            "label": "PAYMENT CONFIRMED",
-            "trace": "Payment Service publishes PaymentCaptured event back to the Kafka event log."
+            "nodes": [
+              "event-stream",
+              "order-svc"
+            ],
+            "tone": "rose",
+            "label": "COMPENSATE",
+            "trace": "The Order Service consumes PaymentFailed and runs the compensating action."
           },
           {
             "id": "p5",
-            "nodes": ["kafka-bus", "notify-svc", "analytics-view"],
+            "nodes": [
+              "order-svc",
+              "orders-db"
+            ],
+            "tone": "rose",
+            "label": "CANCELLED",
+            "trace": "The order is marked CANCELLED. No ShipOrder job was ever created."
+          },
+          {
+            "id": "p6",
+            "nodes": [
+              "event-stream",
+              "notify-svc",
+              "query-svc"
+            ],
+            "tone": "emerald",
+            "label": "NOTIFY",
+            "trace": "The shopper is emailed and the read model shows the order as cancelled."
+          }
+        ]
+      },
+      {
+        "id": "sim-read-order",
+        "name": "Read Order Status (CQRS Query)",
+        "tone": "emerald",
+        "budgetMs": 60,
+        "steps": [
+          {
+            "id": "q1",
+            "nodes": [
+              "clients",
+              "api-gw"
+            ],
             "tone": "blue",
-            "label": "NOTIFY & PROJECT",
-            "trace": "Notification service emails order receipt; CQRS projector updates real-time analytics."
+            "label": "GET /orders/:id",
+            "trace": "The app polls the order status."
+          },
+          {
+            "id": "q2",
+            "nodes": [
+              "api-gw",
+              "query-svc"
+            ],
+            "tone": "emerald",
+            "label": "QUERY",
+            "trace": "Queries go to the read side, never to the Order Service."
+          },
+          {
+            "id": "q3",
+            "nodes": [
+              "query-svc",
+              "read-model"
+            ],
+            "tone": "emerald",
+            "label": "VIEW LOOKUP",
+            "trace": "One document lookup returns the whole denormalised order view."
+          },
+          {
+            "id": "q4",
+            "nodes": [
+              "query-svc",
+              "api-gw",
+              "clients"
+            ],
+            "tone": "emerald",
+            "label": "200 OK",
+            "trace": "The status comes back without touching the write database."
           }
         ]
       },
       {
         "id": "sim-fulfilment-down",
         "name": "Fulfilment down",
-        "tone": "amber",
-        "failures": ["inventory-svc"],
+        "tone": "rose",
+        "failures": [
+          "fulfilment-svc"
+        ],
         "steps": [
           {
             "id": "f1",
-            "nodes": ["api-gw", "order-svc"],
+            "nodes": [
+              "api-gw",
+              "order-svc"
+            ],
             "tone": "blue",
-            "label": "COMMAND INGEST",
-            "trace": "Orders keep arriving. The Fulfilment Service being down does not stop checkout."
+            "label": "ORDER ACCEPTED",
+            "trace": "Orders are still accepted while the fulfilment workers are down."
           },
           {
             "id": "f2",
-            "nodes": ["order-svc", "kafka-bus"],
+            "nodes": [
+              "order-svc",
+              "event-stream"
+            ],
             "tone": "amber",
-            "label": "EVENT EMITTED",
-            "trace": "Order Service still publishes OrderCreated to Kafka."
+            "label": "OrderPlaced",
+            "trace": "Events keep flowing into Kafka."
           },
           {
             "id": "f3",
-            "nodes": ["kafka-bus", "fulfilment-queue"],
+            "nodes": [
+              "event-stream",
+              "fulfilment-queue"
+            ],
             "tone": "amber",
             "label": "QUEUED",
-            "trace": "The reservation lands in the Fulfilment Queue."
+            "trace": "ShipOrder jobs build up in the queue instead of failing."
           },
           {
             "id": "f4",
-            "nodes": ["fulfilment-queue", "inventory-svc"],
+            "nodes": [
+              "fulfilment-queue",
+              "fulfilment-svc"
+            ],
             "tone": "rose",
-            "label": "HELD",
-            "trace": "The Fulfilment Service is down, so the message waits in the queue. Loop this run to watch it fill; restore the service to watch it drain."
+            "label": "BUFFERING",
+            "trace": "Nothing takes the jobs. Past 50 they go to the DLQ and on-call is paged; the rest ship when workers recover."
           }
         ]
       }

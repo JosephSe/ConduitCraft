@@ -30,8 +30,15 @@ describe('text outline', () => {
     it(`lists every component and wire of ${name} once, with no ids in the labels`, () => {
       const doc = loadExample(name);
       const all = walk(buildOutline(doc));
-      assert.equal(all.filter((i) => i.kind === 'component').length, doc.nodes.length);
-      const wires = doc.edges.filter((e) => doc.nodes.some((n) => n.id === e.from) && doc.nodes.some((n) => n.id === e.to));
+      // The outline is the open page, with each level's components listed under the component that opens it.
+      const levels: Array<{ nodes: typeof doc.nodes; edges: typeof doc.edges }> = [];
+      const visit = (level: { nodes: typeof doc.nodes; edges: typeof doc.edges }) => {
+        levels.push(level);
+        for (const n of level.nodes) if (n.child) visit(n.child);
+      };
+      visit(doc);
+      assert.equal(all.filter((i) => i.kind === 'component').length, levels.reduce((sum, l) => sum + l.nodes.length, 0));
+      const wires = levels.flatMap((l) => l.edges.filter((e) => l.nodes.some((n) => n.id === e.from) && l.nodes.some((n) => n.id === e.to)));
       assert.equal(all.filter((i) => i.kind === 'wire').length, wires.length);
       assert.equal(new Set(all.map((i) => i.key)).size, all.length, 'keys are unique');
       // Kinds are shown on purpose ("Web App, client"), so an id that is also a kind word is not a leak.

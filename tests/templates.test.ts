@@ -13,10 +13,11 @@ import {
 import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 
 describe('starter architecture templates gallery', () => {
-  it('contains 7 production-grade starter blueprints', () => {
-    assert.strictEqual(STARTER_TEMPLATES.length, 7);
+  it('contains 8 starter blueprints, the showcase first', () => {
+    assert.strictEqual(STARTER_TEMPLATES.length, 8);
     const ids = STARTER_TEMPLATES.map((t) => t.id);
     assert.deepStrictEqual(ids, [
+      'flash-sale-ticketing',
       'three-tier-web',
       'event-driven-microservices',
       'cloud-data-pipeline',
@@ -42,7 +43,10 @@ describe('starter architecture templates gallery', () => {
 
   it('filters starter templates by category', () => {
     const all = getStarterTemplates('all');
-    assert.strictEqual(all.length, 7);
+    assert.strictEqual(all.length, 8);
+
+    const showcase = getStarterTemplates('showcase');
+    assert.deepStrictEqual(showcase.map((t) => t.id), ['flash-sale-ticketing', 'lumen-relay']);
 
     const cloud = getStarterTemplates('cloud');
     assert.strictEqual(cloud.length, 2);
@@ -92,7 +96,7 @@ describe('starter architecture templates gallery', () => {
   });
 
   it('generates structured HTML markup for cards, blank canvas, and empty stage shelf', () => {
-    const cardHtml = renderTemplateCardHtml(STARTER_TEMPLATES[0]);
+    const cardHtml = renderTemplateCardHtml(getStarterTemplateById('three-tier-web')!);
     assert.ok(cardHtml.includes('class="template-card"'));
     assert.ok(cardHtml.includes('data-template-id="three-tier-web"'));
     assert.ok(cardHtml.includes('Three-Tier Web Application'));

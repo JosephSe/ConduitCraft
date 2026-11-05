@@ -7,19 +7,22 @@ import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 
 // D8: Mermaid is import only. Removing the Mermaid writers must not change what
 // any bundled example imports as. Each hash is the imported document and its
-// issues, recorded before the writers were removed.
+// issues, recorded before the writers were removed. The six reference templates were
+// rewritten afterwards (cache, stream, bucket, scheduler and external kinds), so their
+// hashes were recorded again then. The flash-sale showcase was added later still.
 const EXPECTED: Record<string, string> = {
-  'auth-oauth-oidc.blueprint.json': '77b50b9d7815a4ed',
-  'cicd-pipeline.blueprint.json': '088056898627ab6b',
-  'cloud-data-pipeline.blueprint.json': '80d98e60704d9fd5',
-  'event-driven-microservices.blueprint.json': '056fb19da61db862',
-  'kubernetes-ingress.blueprint.json': '8da25fcc0249ac32',
+  'auth-oauth-oidc.blueprint.json': 'c6c8fec87be4cbfe',
+  'cicd-pipeline.blueprint.json': '9d935169ff85edba',
+  'cloud-data-pipeline.blueprint.json': '9055ce508c9c2843',
+  'event-driven-microservices.blueprint.json': 'c90bee8a2a5ddcf2',
+  'flash-sale-ticketing.blueprint.json': '41272d4af18ca7c6',
+  'kubernetes-ingress.blueprint.json': '0691b103258bb88c',
   'lumen-relay.blueprint.json': 'a953451e446175d6',
   'plain-mermaid-demo.mmd': 'aa6c2ec40bc0e667',
   'plain-mermaid-demo.mmd (levels)': '7cebac775efd99d5',
   'sample-blueprint.md': '59facbb3cb5ebc92',
   'sample-blueprint.md (levels)': '12ec449fbb94cfe1',
-  'three-tier-web.blueprint.json': '904b5667eaaf0eca',
+  'three-tier-web.blueprint.json': '82a322248f998ea6',
 };
 
 const examplesDir = new URL('../src/examples/', import.meta.url);

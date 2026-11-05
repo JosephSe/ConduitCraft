@@ -55,6 +55,12 @@ More exports of the Lumen Relay example:
 
 The [guide](./docs/guide.md) is the Blueprint YAML schema, the wire routing modes, and the keyboard shortcuts.
 
+The [showcase walkthrough](./docs/showcase.md) explains the example a new visitor sees first: a made-up flash-sale ticketing system that uses every feature, with scenarios to play, components to fail and the Review findings it keeps on purpose.
+
+![The showcase: Marquee flash-sale ticketing](docs/images/showcase-design.jpg)
+
+The [LLM rules](./docs/llm-rules.md) let any AI chat convert an architecture image, whiteboard photo, draw.io file or Mermaid diagram into a Blueprint file you can open and edit. Paste the rules and your diagram into the chat, save the reply as `name.blueprint.md`, and drop it on the canvas. **Copy LLM Rules** in the command palette copies them.
+
 ## Quick Start
 
 Requires Node.js 22.6 or newer (the tests use Node's built-in TypeScript support) and [pnpm](https://pnpm.io). An `.nvmrc` is included, so `nvm use` picks the right version.

@@ -17,6 +17,8 @@ const lazyBudgets = [
   { pattern: /^standaloneHtml-.*\.js$/, maxBytes: 100 * 1024, label: 'HTML export chunk' },
   { pattern: /^gifWorker-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF worker' },
   { pattern: /^gif-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF exporter chunk' },
+  // The showcase uses every feature (levels, pages, code samples), so it is several templates' worth of JSON.
+  { pattern: /^flash-sale-ticketing\.blueprint-.*\.js$/, maxBytes: 110 * 1024, label: 'showcase template chunk' },
   { pattern: /\.blueprint-.*\.js$/, maxBytes: 30 * 1024, label: 'template chunk' },
   { pattern: /^drawio-.*\.js$/, maxBytes: 24 * 1024, label: 'draw.io importer chunk' },
   // The layered layout carries all of ELK (about 1.44 MiB minified, 440 kB gzipped). It loads only when asked for.

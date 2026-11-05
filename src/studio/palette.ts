@@ -43,6 +43,8 @@ export interface PaletteDeps {
   deleteSelected: () => void;
   duplicateSelected: () => void;
   loadShowcase: () => void;
+  /** The smaller Lumen Relay example. Optional so older callers keep working. */
+  loadLumenRelay?: () => void;
   runSimulationById: (id: string) => void;
   saveFile?: () => void;
   saveFileAs?: () => void;
@@ -964,16 +966,24 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'load-showcase',
-      title: 'Load Lumen Relay Showcase',
-      subtitle: 'Pre-built harbor city architecture with animated traffic',
+      title: 'Load Showcase: Marquee Flash-Sale Ticketing',
+      subtitle: 'The full example: every component, scenario, level and page',
       category: 'Export & Sync',
-      keywords: ['showcase', 'demo', 'example', 'lumen', 'sample'],
+      keywords: ['showcase', 'demo', 'example', 'sample', 'marquee', 'ticketing'],
       run: deps.loadShowcase,
+    },
+    {
+      id: 'load-lumen-relay',
+      title: 'Load Lumen Relay Example',
+      subtitle: 'The small harbor city example with animated traffic',
+      category: 'Export & Sync',
+      keywords: ['demo', 'example', 'lumen', 'sample', 'classic'],
+      run: () => (deps.loadLumenRelay ?? deps.loadShowcase)(),
     },
     {
       id: 'open-templates',
       title: 'New Architecture / Starter Templates',
-      subtitle: 'Browse 7 production starter blueprints or create a blank canvas',
+      subtitle: 'Browse 8 starter blueprints or create a blank canvas',
       category: 'Templates',
       keywords: ['new', 'template', 'gallery', 'starter', 'blank', 'architecture'],
       run: () => {
@@ -994,6 +1004,22 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
         try {
           await navigator.clipboard.writeText(describeDiagram(fullDocument()));
           notify('Copied the description as text');
+        } catch {
+          notify('Could not copy to the clipboard', { tone: 'error' });
+        }
+      },
+    },
+    {
+      id: 'copy-llm-rules',
+      title: 'Copy LLM Rules',
+      subtitle: 'Rules that let any AI chat turn a diagram, image or draw.io file into a Blueprint file',
+      category: 'Export & Sync',
+      keywords: ['llm', 'ai', 'chatgpt', 'claude', 'gemini', 'prompt', 'rules', 'convert', 'image', 'drawio', 'copy', 'clipboard'],
+      run: async () => {
+        try {
+          const { default: rules } = await import('../../docs/llm-rules.md?raw');
+          await navigator.clipboard.writeText(rules);
+          notify('Copied the LLM rules. Paste them into an AI chat with your diagram');
         } catch {
           notify('Could not copy to the clipboard', { tone: 'error' });
         }

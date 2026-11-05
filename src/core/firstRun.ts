@@ -6,7 +6,7 @@ import type { DiagramDocument } from '../types';
 import { entryPointIds, reachableFrom } from './reachability';
 
 /** The example that plays on first run. */
-export const FIRST_RUN_TEMPLATE_ID = 'lumen-relay';
+export const FIRST_RUN_TEMPLATE_ID = 'flash-sale-ticketing';
 
 /** Set once someone has picked a card or started working, so first run never comes back for them. */
 export const FIRST_RUN_SEEN_KEY = 'conduitcraft-first-run-seen';

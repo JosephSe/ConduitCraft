@@ -2141,8 +2141,12 @@ export function initEvents(): void {
     deleteSelected,
     duplicateSelected,
     loadShowcase: () => {
-      const showcase = getStarterTemplateById('lumen-relay');
+      const showcase = getStarterTemplateById('flash-sale-ticketing');
       if (showcase) void loadTemplateDoc(showcase);
+    },
+    loadLumenRelay: () => {
+      const lumen = getStarterTemplateById('lumen-relay');
+      if (lumen) void loadTemplateDoc(lumen);
     },
     runSimulationById: (id) => runSimulation(id),
     saveFile: () => void handleSaveDiagram(false),
