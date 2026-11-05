@@ -114,9 +114,7 @@ How a component copes is set under **Review & Status**:
 
 ### Queues
 
-A Message Queue is drawn as a pipe. When every component that reads from a queue is down, the queue is **buffering**: it is up, it holds the work, and the components that write to it carry on. What sits behind the failed reader is **delayed** rather than unreachable, because its work is waiting and resumes when the reader is restored. Without a queue, the writer would be at risk instead.
-
-In the Traffic lens, play a looping scenario while a reader is down and messages pile up inside the pipe. Press `X` on the reader again and the queue drains. Set **Max depth** under **Review & Status** to cap the backlog. Past the cap, messages go to the **Dead-letter queue** if you set one, and are dropped if you did not.
+A Message Queue is drawn as a pipe. When every component that reads from a queue is down, the queue is **buffering**: it holds the work, and the components that write to it carry on. Anything behind the failed reader is **delayed**, not unreachable, because its work waits and resumes when the reader is restored. In the Traffic lens, play a looping scenario and messages pile up inside the pipe; press `X` on the reader again and the queue drains. Set **Max depth** under **Review & Status** to cap the backlog: past the cap, messages go to the **Dead-letter queue** if you set one, and are dropped if you did not.
 
 Failing a component also fails everything inside its level. Failing a component inside a level leaves the parent alone.
 

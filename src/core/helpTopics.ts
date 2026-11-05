@@ -45,6 +45,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     keywords: ['chaos', 'failure', 'outage', 'resilience', 'replicas', 'fallback', 'ripple'],
   },
   {
+    id: 'queues',
+    title: 'Queues',
+    body: 'A Message Queue holds work while the components that read from it are down, so the components that write to it carry on. Fail a reader, play a looping scenario and watch the pipe fill; restore the reader and it drains. Set a maximum depth and a dead-letter queue for what does not fit.',
+    guideAnchor: 'queues',
+    keywords: ['queue', 'backlog', 'buffer', 'dead letter', 'dlq', 'sqs', 'rabbitmq'],
+  },
+  {
     id: 'review',
     title: 'Review and insights',
     body: 'The Review lens runs a few rules over the diagram and lists what they find, grouped by rule. Click an issue to select the component or wire it is about, and mute a rule you do not want to see. Muting is saved with the diagram.',

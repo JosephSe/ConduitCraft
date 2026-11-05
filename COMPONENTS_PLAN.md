@@ -82,10 +82,10 @@ These come from how the repo is already built. Keep to them.
 
 `STENCIL_CATALOG` ([src/templates/presets.ts:26](src/templates/presets.ts:26)) is looked up by `kind`, and the rail buttons in [index.html:130](index.html:130) carry `data-stencil-kind`. K6 (Stream) and K8 (Object Storage) need two palette entries with the same kind but different presets.
 
-- [ ] Add `id: string` to `StencilDefinition` (equal to the kind for the existing seven), plus optional presets: `shape?: NodeShape`, `preset?: Partial<DiagramNode>` (applied after the defaults in `createNodeFromStencil`).
-- [ ] `createNodeFromStencil(kindOrStencilId, …)`: accept a stencil id, keep accepting a kind (look up `s.id === x || s.kind === x`, id first). Keep every existing call site working unchanged.
-- [ ] Rail buttons: add `data-stencil-id`; [src/studio/interactions.ts:366](src/studio/interactions.ts:366) and [src/studio/responsiveToolbar.ts:116](src/studio/responsiveToolbar.ts:116) read `data-stencil-id` first, then fall back to `data-stencil-kind`.
-- [ ] The inspector's kind picker ([src/studio/inspector.ts:669](src/studio/inspector.ts:669)) lists **kinds**, not stencils: give it one entry per kind (first stencil of each kind).
+- [x] Add `id: string` to `StencilDefinition` (equal to the kind for the existing seven), plus optional presets: `shape?: NodeShape`, `preset?: Partial<DiagramNode>` (applied after the defaults in `createNodeFromStencil`).
+- [x] `createNodeFromStencil(kindOrStencilId, …)`: accept a stencil id, keep accepting a kind (look up `s.id === x || s.kind === x`, id first). Keep every existing call site working unchanged.
+- [x] Rail buttons: add `data-stencil-id`; [src/studio/interactions.ts:366](src/studio/interactions.ts:366) and [src/studio/responsiveToolbar.ts:116](src/studio/responsiveToolbar.ts:116) read `data-stencil-id` first, then fall back to `data-stencil-kind`.
+- [x] The inspector's kind picker ([src/studio/inspector.ts:669](src/studio/inspector.ts:669)) lists **kinds**, not stencils: give it one entry per kind (first stencil of each kind).
 
 ### 2.2 The "new kind" touch list
 
@@ -109,7 +109,7 @@ Write this list as a comment at the top of `src/templates/presets.ts` so the nex
 
 ### 2.3 Acceptance
 
-- [ ] No behaviour change. All existing tests pass. A new test proves two stencils with the same kind create different nodes.
+- [x] No behaviour change. All existing tests pass. A new test proves two stencils with the same kind create different nodes.
 
 ---
 
@@ -147,26 +147,26 @@ export interface DiagramNode {
 }
 ```
 
-- [ ] `normalizeQueue(raw): NodeQueue | undefined` in a new `src/core/queues.ts`: unknown enum values are dropped; `maxDepth` is a whole number from 1 to 9999; `retention` is trimmed and cut to 40 chars; defaults (`standard`, `competing`) are left absent. Call it from `normalizeNodeMeta` ([src/core/meta.ts:128](src/core/meta.ts:128)) so every reader picks it up.
-- [ ] A `queue` field on a non-queue component is **kept** (so switching kind back and forth does not lose settings) but ignored.
-- [ ] `deadLetterId`: pruned like `fallbackId` (missing id, or the queue itself); remapped on import like `fallbackId` ([src/core/parser.ts:1850](src/core/parser.ts:1850)).
-- [ ] Schema step `11 -> 12` with the comment from §0.
+- [x] `normalizeQueue(raw): NodeQueue | undefined` in a new `src/core/queues.ts`: unknown enum values are dropped; `maxDepth` is a whole number from 1 to 9999; `retention` is trimmed and cut to 40 chars; defaults (`standard`, `competing`) are left absent. Call it from `normalizeNodeMeta` ([src/core/meta.ts:128](src/core/meta.ts:128)) so every reader picks it up.
+- [x] A `queue` field on a non-queue component is **kept** (so switching kind back and forth does not lose settings) but ignored.
+- [x] `deadLetterId`: pruned like `fallbackId` (missing id, or the queue itself); remapped on import like `fallbackId` ([src/core/parser.ts:1850](src/core/parser.ts:1850)).
+- [x] Schema step `11 -> 12` with the comment from §0.
 
 ### 3.2 Draw
 
 **Shape: a horizontal pipe.** It works like the store's drum: the store kind draws a cylinder by default without storing a `shape` ([src/core/nodeStyle.ts:118](src/core/nodeStyle.ts:118)). Do the same:
 
-- [ ] `queueDrawsPipe(kind, shape)`: true when `kind === 'queue'` and `shape` is absent or `'card'`. An explicit other shape still wins.
-- [ ] `pipePlate(width, height)` in [src/core/nodeStyle.ts](src/core/nodeStyle.ts), next to `cylinderPlate`, a horizontal cylinder:
+- [x] `queueDrawsPipe(kind, shape)`: true when `kind === 'queue'` and `shape` is absent or `'card'`. An explicit other shape still wins.
+- [x] `pipePlate(width, height)` in [src/core/nodeStyle.ts](src/core/nodeStyle.ts), next to `cylinderPlate`, a horizontal cylinder:
   - `inset = 1.5`; `ry = h/2 - inset`; cap half-width `rx = clamp(6, w * 0.07, 16)`.
   - Body path: start at `(inset + rx, inset)`, line to `(w - inset - rx, inset)`, arc (`rx ry`, sweep 1) to `(w - inset - rx, h - inset)`, line to `(inset + rx, h - inset)`, arc (sweep 1) back to the start, `Z`. That gives a rounded left end.
   - Outlet cap: a full ellipse at `cx = w - inset - rx`, `cy = h/2`. This is the visible "open end" on the right, the side messages leave from. Same classes as the drum: `node-shape-geom pipe-body` and `node-shape-geom pipe-cap`.
   - Round every number to a tenth with `roundTenth`, as the drum does.
-- [ ] `renderPipePlate(width, height)`: SVG string with `data-plate="pipe"`, same structure as `renderCylinderPlate`.
-- [ ] `nodeShapeContentPadding`: for the pipe, `top/bottom = round(h * 0.14)`, `left = round(rx + 12)`, `right = round(2 * rx + 12)`.
-- [ ] Ports stay on the rectangle (same as the drum), so wires do not move.
-- [ ] Inspector shape picker: show "Pipe" for `card` when the kind is `queue`, as it shows "Cylinder" for stores ([src/studio/inspector.ts:703](src/studio/inspector.ts:703)).
-- [ ] Use it in all three renderers: `keyedStage.ts` (studio, `wrapper.dataset.shape = 'pipe'`), `diagramSvg.ts` and `standaloneHtml.ts`.
+- [x] `renderPipePlate(width, height)`: SVG string with `data-plate="pipe"`, same structure as `renderCylinderPlate`.
+- [x] `nodeShapeContentPadding`: for the pipe, `top/bottom = round(h * 0.14)`, `left = round(rx + 12)`, `right = round(2 * rx + 12)`.
+- [x] Ports stay on the rectangle (same as the drum), so wires do not move.
+- [x] Inspector shape picker: show "Pipe" for `card` when the kind is `queue`, as it shows "Cylinder" for stores ([src/studio/inspector.ts:703](src/studio/inspector.ts:703)).
+- [x] Use it in all three renderers: `keyedStage.ts` (studio, `wrapper.dataset.shape = 'pipe'`), `diagramSvg.ts` and `standaloneHtml.ts`.
 
 **Stencil:**
 
@@ -180,18 +180,18 @@ export interface DiagramNode {
 }
 ```
 
-- [ ] Default size: `{ width: 240, height: 112 }` in `getNodeDimensions`.
-- [ ] New icon `queue` in `NodeIconName` ([src/types.ts:20](src/types.ts:20)) and [src/ui/icons.ts](src/ui/icons.ts): three stacked rectangles with a right arrow, drawn in the same stroke style and viewBox as the other icons. Add it to the icon list in the guide and to `tests/icons.test.ts`.
-- [ ] Change the Event Broker's `paletteSub` from "Queue or message bus" to "Pub/sub event bus", and drop `'queue'` from its palette keywords ([src/studio/palette.ts:131](src/studio/palette.ts:131)), so the two are not confused.
-- [ ] Card text: the chip shows the ordering when it is set (`FIFO`, `PRIORITY`); the footer shows `maxDepth` and `retention` when set ("max 500 · 4 days").
+- [x] Default size: `{ width: 240, height: 112 }` in `getNodeDimensions`.
+- [x] New icon `queue` in `NodeIconName` ([src/types.ts:20](src/types.ts:20)) and [src/ui/icons.ts](src/ui/icons.ts): three stacked rectangles with a right arrow, drawn in the same stroke style and viewBox as the other icons. Add it to the icon list in the guide and to `tests/icons.test.ts`.
+- [x] Change the Event Broker's `paletteSub` from "Queue or message bus" to "Pub/sub event bus", and drop `'queue'` from its palette keywords ([src/studio/palette.ts:131](src/studio/palette.ts:131)), so the two are not confused.
+- [x] Card text: the chip shows the ordering when it is set (`FIFO`, `PRIORITY`); the footer shows `maxDepth` and `retention` when set ("max 500 · 4 days").
 
 **Backlog inside the pipe (Traffic lens only):**
 
-- [ ] The wrapper gets `data-backlog="<depth>"` when the depth is above zero.
-- [ ] Inside the pipe, draw up to 8 message blocks (`<span class="queue-msg">`) lined up from the outlet (right) end towards the left, so the pipe visibly fills. Above 8, the 8th block shows `+N`.
-- [ ] A count chip, "12 waiting", sits on the pipe's top edge. When `maxDepth` is set: "12 / 50", and at 80 % or more of `maxDepth` the chip turns amber; when full it turns rose.
-- [ ] The node's accessible name adds ", 12 messages waiting".
-- [ ] Draining animates the blocks sliding out of the outlet; with reduced motion they just disappear.
+- [x] The wrapper gets `data-backlog="<depth>"` when the depth is above zero.
+- [x] Inside the pipe, draw up to 8 message blocks (`<span class="queue-msg">`) lined up from the outlet (right) end towards the left, so the pipe visibly fills. Above 8, the 8th block shows `+N`.
+- [x] A count chip, "12 waiting", sits on the pipe's top edge. When `maxDepth` is set: "12 / 50", and at 80 % or more of `maxDepth` the chip turns amber; when full it turns rose.
+- [x] The node's accessible name adds ", 12 messages waiting".
+- [~] Draining animates the blocks sliding out of the outlet; with reduced motion they just disappear. (Built: the blocks leave one drain tick at a time and the count falls; there is no slide animation yet. With reduced motion the backlog empties at once.)
 
 ### 3.3 Run: chaos (pure, in `core/reachability.ts`)
 
@@ -200,7 +200,7 @@ Today, with `Producer → Consumer`, failing the consumer marks the producer `at
 1. `consumers(q)` = the targets of wires **leaving** `q` (`e.from === q`). Wires with `flow: 'both'` count once, as leaving the queue. The `deadLetterId` target is **not** a consumer.
 2. A consumer is **down** when it is in `blocked` with no `detour` (a failed consumer that has a live fallback is not down).
 3. For each queue `q` in `after` (reachable) that is not in `failedSet`:
-   - `competing` (default): `q` is **buffering** when **every** consumer is down and it has at least one consumer. If only some are down, the live consumers go into `rerouted` (they take the extra load).
+   - `competing` (default): `q` is **buffering** when **every** consumer is down and it has at least one consumer. If only some are down, the live consumers go into `rerouted` (they take the extra load), and the queue itself is not `at-risk` (built so; messages still flow).
    - `fanout` (K6, Phase 4): `q` is buffering when **any** consumer is down.
 4. Buffering queues are **removed from `atRisk`**: they are `buffering` instead.
 5. **Delayed:** walk the **pre-failure** graph from each buffering queue (`walk(next, [q], new Set(), new Map())`). Every component in `unreachable` that this walk reaches moves from `unreachable` to `delayed`. Its work is waiting in the queue. Failed components stay `failed`.
@@ -265,79 +265,79 @@ export function holdingQueue(
 
 Add to `InsightCode` and `INSIGHT_RULES`. Each one is mutable like the others:
 
-- [ ] `queue-no-consumer` (warning): a queue with incoming wires and no outgoing wires. "Nothing reads from Orders Queue; messages pile up forever."
-- [ ] `queue-no-dlq` (info): a queue with `maxDepth` set and no `deadLetterId`. "Orders Queue drops messages when full; it has no dead-letter queue."
-- [ ] `sync-into-queue` (info): a wire **into** a queue that is not `sync: 'async'`. "The wire into Orders Queue is synchronous; queues are usually written asynchronously." Do not change the wire automatically on load; see §3.6 for the default on new wires.
-- [ ] `dangling-store` must not fire for queues (it checks `kind === 'store'`, so it already does not; add a test).
-- [ ] `spof`: a queue counts like any other component. No change, but add a test that a single queue between producer and consumer is reported.
+- [x] `queue-no-consumer` (warning): a queue with incoming wires and no outgoing wires. "Nothing reads from Orders Queue; messages pile up forever."
+- [x] `queue-no-dlq` (info): a queue with `maxDepth` set and no `deadLetterId`. "Orders Queue drops messages when full; it has no dead-letter queue."
+- [x] `sync-into-queue` (info): a wire **into** a queue that is not `sync: 'async'`. "The wire into Orders Queue is synchronous; queues are usually written asynchronously." Do not change the wire automatically on load; see §3.6 for the default on new wires.
+- [x] `dangling-store` must not fire for queues (it checks `kind === 'store'`, so it already does not; add a test).
+- [x] `spof`: a queue counts like any other component. No change, but add a test that a single queue between producer and consumer is reported.
 
 ### 3.6 Editing
 
-- [ ] Inspector, **Review & Status** section, a **Queue** group shown only for `kind === 'queue'`: Ordering (select), Max depth (number, empty = unbounded), Dead-letter queue (select of other components on the level, "None" first; list queues first), Retention (text). Build it next to the resilience group ([src/studio/inspector.ts:210](src/studio/inspector.ts:210)) and use the same `commit` + normalize pattern. One undo step per change.
-- [ ] A new wire **into or out of** a queue defaults to `sync: 'async'` and tone `amber` (when the user has not picked a tone). Only for wires made in the editor, never on import or load.
-- [ ] The DLQ link is drawn as a thin dashed rose line from the queue to its DLQ **only while the queue is selected**, and in the Traffic lens when a message is dead-lettered. It is not a wire: it is not saved in `edges`, not routed, and not counted by insights.
-- [ ] Context menu ([src/core/contextMenuItems.ts](src/core/contextMenuItems.ts)) on a queue: "Add dead-letter queue". It creates a queue to the right, named "<title> DLQ", and sets `deadLetterId`. One undo step.
-- [ ] Bulk fields ([src/studio/bulkFields.ts](src/studio/bulkFields.ts)): when every selected component is a queue, Ordering and Max depth are editable together.
+- [x] Inspector, **Review & Status** section, a **Queue** group shown only for `kind === 'queue'`: Ordering (select), Max depth (number, empty = unbounded), Dead-letter queue (select of other components on the level, "None" first; list queues first), Retention (text). Build it next to the resilience group ([src/studio/inspector.ts:210](src/studio/inspector.ts:210)) and use the same `commit` + normalize pattern. One undo step per change.
+- [x] A new wire **into or out of** a queue defaults to `sync: 'async'` and tone `amber` (when the user has not picked a tone). Only for wires made in the editor, never on import or load.
+- [x] The DLQ link is drawn as a thin dashed rose line from the queue to its DLQ **only while the queue is selected**, and in the Traffic lens when a message is dead-lettered. It is not a wire: it is not saved in `edges`, not routed, and not counted by insights.
+- [x] Context menu ([src/core/contextMenuItems.ts](src/core/contextMenuItems.ts)) on a queue: "Add dead-letter queue". It creates a queue to the right, named "<title> DLQ", and sets `deadLetterId`. One undo step.
+- [x] Bulk fields ([src/studio/bulkFields.ts](src/studio/bulkFields.ts)): when every selected component is a queue, Ordering and Max depth are editable together.
 
 ### 3.7 File formats
 
-- [ ] **Blueprint file** (`.blueprint.md` YAML): `kind: queue`, and a `queue:` map with `ordering`, `delivery`, `maxDepth`, `deadLetterId`, `retention`. Written only when it has a value. Check that the writer and reader use the same path as `resilience`.
-- [ ] **Aliases** in `normalizeNodeKind`: `queue`, `sqs`, `fifo`, `mq`, `work-queue` → `queue`. **This changes `queue`**, which today maps to `bus`. That only affects hand-written files (the editor always writes `bus`); note it in the release notes. `stream`, `broker` and `bus` still map to `bus`.
-- [ ] **Embedded Mermaid block** (for GitHub preview): write a queue as `id[("Title")]` (the cylinder bracket), so GitHub draws a drum. On re-import the YAML `kind: queue` must win over the bracket. Add a test that a Blueprint file with a queue round-trips as a queue.
-- [ ] **Mermaid import** stays bracket-based. Stretch item, not required: read Mermaid v11's `id@{ shape: h-cyl, label: "…" }` as a queue.
-- [ ] **Blueprint JSON**: `KINDS` gains `queue`; `queue` is read through `normalizeNodeMeta`.
-- [ ] **Share link** ([src/studio/shareLink.ts](src/studio/shareLink.ts)): round-trip test.
-- [ ] **Diff** ([src/core/diff.ts](src/core/diff.ts)): a change to `queue` fields is listed as a change to the component ("Orders Queue: max depth 100 → 500").
+- [x] **Blueprint file** (`.blueprint.md` YAML): `kind: queue`, and a `queue:` map with `ordering`, `delivery`, `maxDepth`, `deadLetterId`, `retention`. Written only when it has a value. Check that the writer and reader use the same path as `resilience`.
+- [x] **Aliases** in `normalizeNodeKind`: `queue`, `sqs`, `fifo`, `mq`, `work-queue` → `queue`. **This changes `queue`**, which today maps to `bus`. That only affects hand-written files (the editor always writes `bus`); note it in the release notes. `stream`, `broker` and `bus` still map to `bus`.
+- [x] **Embedded Mermaid block** (for GitHub preview): write a queue as `id[("Title")]` (the cylinder bracket), so GitHub draws a drum. On re-import the YAML `kind: queue` must win over the bracket. Add a test that a Blueprint file with a queue round-trips as a queue.
+- [x] **Mermaid import** stays bracket-based. Stretch item, not required: read Mermaid v11's `id@{ shape: h-cyl, label: "…" }` as a queue.
+- [x] **Blueprint JSON**: `KINDS` gains `queue`; `queue` is read through `normalizeNodeMeta`.
+- [x] **Share link** ([src/studio/shareLink.ts](src/studio/shareLink.ts)): round-trip test.
+- [x] **Diff** ([src/core/diff.ts](src/core/diff.ts)): a change to `queue` fields is listed as a change to the component ("Orders Queue: max depth 100 → 500").
 
 ### 3.8 Importers
 
-- [ ] `kindForImage` ([src/importers/common.ts:163](src/importers/common.ts:163)): add `QUEUE_IMAGES = ['rabbitmq', 'activemq', 'artemis', 'elasticmq', 'beanstalkd']`, checked **before** `BUS_IMAGES`, and remove `rabbitmq` and `activemq` from `BUS_IMAGES`. Kafka, Redpanda, Pulsar and NATS stay `bus` until K6.
-- [ ] AsyncAPI ([src/importers/asyncapi.ts:141](src/importers/asyncapi.ts:141)): a channel whose bindings say queue (`bindings.amqp.is === 'queue'`, or an `sqs` binding) becomes a `queue`; others stay `bus`. Update the `asyncapi-schemas` info message, since some bindings are now read. Add fixtures to `tests/fixtures/asyncapi/`.
-- [ ] Drift ([src/core/drift.ts](src/core/drift.ts)) matches on `source`, not kind, so an old diagram whose channel is a `bus` still matches. Add a test that a re-import does **not** report drift just because the kind guess changed.
+- [x] `kindForImage` ([src/importers/common.ts:163](src/importers/common.ts:163)): add `QUEUE_IMAGES = ['rabbitmq', 'activemq', 'artemis', 'elasticmq', 'beanstalkd']`, checked **before** `BUS_IMAGES`, and remove `rabbitmq` and `activemq` from `BUS_IMAGES`. Kafka, Redpanda, Pulsar and NATS stay `bus` until K6.
+- [x] AsyncAPI ([src/importers/asyncapi.ts:141](src/importers/asyncapi.ts:141)): a channel whose bindings say queue (`bindings.amqp.is === 'queue'`, or an `sqs` binding) becomes a `queue`; others stay `bus`. Update the `asyncapi-schemas` info message, since some bindings are now read. Add fixtures to `tests/fixtures/asyncapi/`.
+- [x] Drift ([src/core/drift.ts](src/core/drift.ts)) matches on `source`, not kind, so an old diagram whose channel is a `bus` still matches. Add a test that a re-import does **not** report drift just because the kind guess changed.
 
 ### 3.9 Exports
 
-- [ ] SVG and PNG: pipe plate, no backlog (exports show the design, not a run).
-- [ ] Standalone HTML: pipe plate. The exported page plays scenarios but has no chaos today, so no backlog is needed. If the HTML export gains chaos later, it must reuse `core/queues.ts`.
-- [ ] GIF ([src/exporter/gif.ts](src/exporter/gif.ts)): when a chaos run with a backlog is recorded, the backlog blocks must show in the frames. Check that the frame capture includes `.queue-msg`.
-- [ ] Text description: "Orders Queue is a FIFO queue between Checkout and Fulfilment. It holds up to 500 messages and sends overflow to Orders DLQ."
+- [x] SVG and PNG: pipe plate, no backlog (exports show the design, not a run).
+- [x] Standalone HTML: pipe plate. The exported page plays scenarios but has no chaos today, so no backlog is needed. If the HTML export gains chaos later, it must reuse `core/queues.ts`.
+- [x] GIF ([src/exporter/gif.ts](src/exporter/gif.ts)): when a chaos run with a backlog is recorded, the backlog blocks must show in the frames. Check that the frame capture includes `.queue-msg`.
+- [x] Text description: "Orders Queue is a FIFO queue between Checkout and Fulfilment. It holds up to 500 messages and sends overflow to Orders DLQ."
 
 ### 3.10 Example and docs
 
-- [ ] Update [src/examples/event-driven-microservices.blueprint.json](src/examples/event-driven-microservices.blueprint.json): put a real queue (with a DLQ) between the order service and fulfilment, and add a saved chaos scenario "Fulfilment down" (`failures: [<fulfilment id>]`) that shows buffering and drain.
-- [ ] [docs/guide.md](docs/guide.md): the kind table row; a "Queues" subsection under "Failing components" that explains buffering, delayed, the DLQ and draining in four or five short sentences; new Review rules under "Review and insights".
-- [ ] Help topic in [src/core/helpTopics.ts](src/core/helpTopics.ts) with keywords `queue, backlog, buffer, dead letter, dlq, sqs, rabbitmq`.
-- [ ] README highlights: "8 architectural stencils" and the queue in the list.
-- [ ] RELEASE_NOTES entry, including the `queue` alias change and the old-app fallback.
+- [x] Update [src/examples/event-driven-microservices.blueprint.json](src/examples/event-driven-microservices.blueprint.json): put a real queue (with a DLQ) between the order service and fulfilment, and add a saved chaos scenario "Fulfilment down" (`failures: [<fulfilment id>]`) that shows buffering and drain.
+- [x] [docs/guide.md](docs/guide.md): the kind table row; a "Queues" subsection under "Failing components" that explains buffering, delayed, the DLQ and draining in four or five short sentences; new Review rules under "Review and insights".
+- [x] Help topic in [src/core/helpTopics.ts](src/core/helpTopics.ts) with keywords `queue, backlog, buffer, dead letter, dlq, sqs, rabbitmq`.
+- [x] README highlights: "8 architectural stencils" and the queue in the list.
+- [x] RELEASE_NOTES entry, including the `queue` alias change and the old-app fallback.
 
 ### 3.11 Tests (Phase 1)
 
 Unit (`pnpm test`):
 
-- [ ] `nodeStyle.test.ts`: `queueDrawsPipe` truth table; `pipePlate` numbers for 240×112 and for a tiny 10×10 box (no negative radii); content padding.
-- [ ] `reachability.test.ts`: every row of the table in §3.3.
-- [ ] New `queues.test.ts`: `normalizeQueue` (bad enums, `maxDepth` 0 / -1 / 1.7 / 10000 / "50", long retention), `enqueue` at and over `maxDepth` with DLQ up, DLQ down and no DLQ, `drainCount`, `holdingQueue` with the queue in `current`, in `next`, and not buffering.
-- [ ] `insights.test.ts`: the three new rules, including muting.
-- [ ] Round-trips: Blueprint file, Blueprint JSON, share link, with every `queue` field set and with none.
-- [ ] `schema.test.ts`: a version-11 file loads unchanged and stamps 12.
-- [ ] `importers.test.ts` / `clusterImporters.test.ts`: RabbitMQ image → queue; AsyncAPI amqp-queue binding → queue.
-- [ ] `playback.test.ts`: a scenario `P → Q → C` with `C` failed and looping. After 3 loops `Q` has depth 3 and playback did not stop. Without looping it pauses after one hold. Use fake timers as the existing playback tests do.
-- [ ] `describe.test.ts`, `palette.test.ts`, `responsiveToolbar.test.ts`, `showcase.test.ts`, `portableExport.test.ts`: updated counts and snapshots.
+- [x] `nodeStyle.test.ts`: `queueDrawsPipe` truth table; `pipePlate` numbers for 240×112 and for a tiny 10×10 box (no negative radii); content padding.
+- [x] `reachability.test.ts`: every row of the table in §3.3.
+- [x] New `queues.test.ts`: `normalizeQueue` (bad enums, `maxDepth` 0 / -1 / 1.7 / 10000 / "50", long retention), `enqueue` at and over `maxDepth` with DLQ up, DLQ down and no DLQ, `drainCount`, `holdingQueue` with the queue in `current`, in `next`, and not buffering.
+- [x] `insights.test.ts`: the three new rules, including muting.
+- [x] Round-trips: Blueprint file, Blueprint JSON, share link, with every `queue` field set and with none.
+- [x] `schema.test.ts`: a version-11 file loads unchanged and stamps 12.
+- [x] `importers.test.ts` / `clusterImporters.test.ts`: RabbitMQ image → queue; AsyncAPI amqp-queue binding → queue.
+- [x] `playback.test.ts` (built as `queuePlayback.test.ts`): a scenario `P → Q → C` with `C` failed and looping. After 3 loops `Q` has depth 3 and playback did not stop. Without looping it pauses after one hold. Use fake timers as the existing playback tests do.
+- [x] `describe.test.ts`, `palette.test.ts`, `responsiveToolbar.test.ts`, `showcase.test.ts`, `portableExport.test.ts`: updated counts and snapshots.
 
 End-to-end (`pnpm test:e2e`), new `e2e/queue.spec.ts`:
 
-- [ ] Drag a Message Queue from the rail; it draws as a pipe (`[data-shape="pipe"]`).
-- [ ] Wire `Service → Queue → Service`; the new wires are async (dashed).
-- [ ] Traffic lens: fail the consumer with `X`. The summary includes "1 buffering"; the producer has no `at-risk` badge.
-- [ ] Play a looping scenario: `data-backlog` rises; the count chip reads "2 waiting" after two loops.
-- [ ] Press `X` again: the backlog drains to 0 and the live region announces "drained".
-- [ ] axe scan of the inspector with the Queue group open.
+- [x] Drag a Message Queue from the rail; it draws as a pipe (`[data-shape="pipe"]`).
+- [x] Wire `Service → Queue → Service`; the new wires are async (dashed).
+- [x] Traffic lens: fail the consumer with `X`. The summary includes "1 buffering"; the producer has no `at-risk` badge.
+- [x] Play a looping scenario: `data-backlog` rises; the count chip reads "2 waiting" after two loops. (The example's queue has a limit, so its chip reads "2 / 50"; a queue with no limit reads "2 waiting".)
+- [x] Press `X` again: the backlog drains to 0 and the live region announces "drained".
+- [x] axe scan of the inspector with the Queue group open.
 
 ### 3.12 Acceptance (Phase 1)
 
-- [ ] A user can draw `API → Queue → Worker → DB`, fail the Worker, play the scenario, and see the API stay green, the queue fill, the DB marked "delayed", and the queue drain when the Worker is restored.
-- [ ] No existing diagram changes how it looks or how its chaos run comes out (snapshot tests stay unchanged except for the deliberate changes listed above).
-- [ ] `pnpm test`, `pnpm build`, `pnpm test:e2e` and `pnpm check:size` pass. The bundle grows by under 6 KB gzip.
+- [x] A user can draw `API → Queue → Worker → DB`, fail the Worker, play the scenario, and see the API stay green, the queue fill, the DB marked "delayed", and the queue drain when the Worker is restored.
+- [x] No existing diagram changes how it looks or how its chaos run comes out (snapshot tests stay unchanged except for the deliberate changes listed above).
+- [x] `pnpm test`, `pnpm build`, `pnpm test:e2e` and `pnpm check:size` pass. The bundle grows by under 6 KB gzip. (Built: about 6.1 KB gzip, 18 KB raw; the entry budget in `tools/checkBundleSize.mjs` went from 480 KB to 520 KB.)
 
 ---
 

@@ -1,5 +1,12 @@
 # Release notes
 
+## Unreleased
+
+- **Message Queue.** A new component, drawn as a pipe. Fail the components that read from a queue and it **buffers**: the components that write to it carry on, and what sits behind the failed reader is **delayed** instead of unreachable. In the Traffic lens, a looping scenario fills the pipe, a count chip shows how many messages wait (and turns amber and rose near the limit), and restoring the reader drains it. Under **Review & Status**, set ordering, a maximum depth, a **dead-letter queue** and retention; "Add dead-letter queue" in the context menu makes one in a single step. Three new Review rules: a queue nothing reads from, a queue with a limit and no dead-letter queue, and a synchronous wire into a queue. New wires into or out of a queue start out asynchronous and amber.
+- **Queues in files and imports.** Blueprint files carry `kind: queue` and a `queue:` map; the file format moves to version 12, and an older app opens a queue as a service. In a hand-written Blueprint file, `queue` now means a queue (it used to mean an event broker, `bus`); `stream`, `broker` and `bus` still mean `bus`, and `sqs`, `fifo`, `mq` and `work-queue` mean a queue. RabbitMQ, ActiveMQ, Artemis, ElasticMQ and Beanstalkd images import as queues, as do AsyncAPI channels with an AMQP queue or SQS binding; Kafka, NATS and Pulsar stay event brokers.
+- **Event Broker is now "Pub/sub event bus"** in the palette, so it is not confused with the queue. The Event-Driven Microservices example gains a Fulfilment Queue with a dead-letter queue and a saved "Fulfilment down" scenario.
+- Palette entries can now share a kind: stencils have ids (groundwork for the next components).
+
 ## 2.1.0
 
 - **Layered layout (ELK).** **Auto-Layout: Layered (ELK)** in the command palette arranges the diagram in layers with fewer crossings, keeps fixed wire ends on their side and zones in order, leaves locked components alone, glides the components into place and is one undo step. The ELK library loads only when you use it; the built-in layout is still the default.
