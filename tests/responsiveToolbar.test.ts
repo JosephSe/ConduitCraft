@@ -370,15 +370,16 @@ describe('responsive and compact toolbar', () => {
     assert.ok(railHtml.includes('data-stencil-kind="core"'), 'Rail must contain core');
     assert.ok(railHtml.includes('data-stencil-kind="service"'), 'Rail must contain service');
     assert.ok(railHtml.includes('data-stencil-kind="bus"'), 'Rail must contain bus');
+    assert.ok(railHtml.includes('data-stencil-kind="queue"'), 'Rail must contain queue');
+    assert.ok(railHtml.includes('data-stencil-id="queue"'), 'Rail must carry stencil ids');
     assert.ok(railHtml.includes('data-stencil-kind="store"'), 'Rail must contain store');
     assert.ok(railHtml.includes('data-stencil-kind="gate"'), 'Rail must contain gate');
     assert.ok(railHtml.includes('data-stencil-kind="client"'), 'Rail must contain client');
     assert.ok(railHtml.includes('data-stencil-kind="zone"'), 'Rail must contain zone');
     assert.ok(railHtml.includes('data-stencil-kind="notes"'), 'Rail must contain notes');
 
-    // Must NOT contain invalid kinds database, queue, cloud
+    // Must NOT contain invalid kinds database, cloud
     assert.ok(!railHtml.includes('data-stencil-kind="database"'), 'Rail must not contain bogus kind database');
-    assert.ok(!railHtml.includes('data-stencil-kind="queue"'), 'Rail must not contain bogus kind queue');
     assert.ok(!railHtml.includes('data-stencil-kind="cloud"'), 'Rail must not contain bogus kind cloud');
   });
 });

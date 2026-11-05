@@ -26,7 +26,7 @@ describe('Docker Compose import', () => {
     );
     assert.equal(node('db')?.kind, 'store');
     assert.equal(node('cache')?.kind, 'store');
-    assert.equal(node('queue')?.kind, 'bus');
+    assert.equal(node('queue')?.kind, 'queue');
     assert.equal(node('web')?.kind, 'gate');
     assert.equal(node('api')?.kind, 'service');
     assert.equal(node('pgdata')?.kind, 'store');

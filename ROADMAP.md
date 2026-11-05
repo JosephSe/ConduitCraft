@@ -29,3 +29,13 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 - [x] 18. Touch and pen gestures (pinch zoom, two-finger pan, larger ports).
 - [x] 19. Theming and branding controls for exported pages.
 - [x] 20. Docs: YAML schema reference, routing modes, shortcuts, screenshots.
+
+## New components (see COMPONENTS_PLAN.md)
+- [x] K1. **Message Queue**: pipe outline, buffering and delayed chaos states, backlog in the Traffic lens, dead-letter queue, three Review rules.
+- [ ] K2. **Load Balancer**
+- [ ] K3. **Cache**
+- [ ] K4. **Rate Limiter**
+- [ ] K5. **Scheduler / Cron**
+- [ ] K6. **Stream / Log**
+- [ ] K7. **External / third-party**
+- [ ] K8. **Object Storage**

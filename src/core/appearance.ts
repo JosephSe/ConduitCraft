@@ -3,7 +3,8 @@
  * these, so a change means the same thing from either. Each returns whether anything changed, which is what
  * `mutateWithHistory` needs to decide whether to record an undo step.
  */
-import type { ComponentStatus, DiagramEdge, DiagramNode, NodeKind, NodeShape, StreamTone, WireSync } from '../types';
+import type { ComponentStatus, DiagramEdge, DiagramNode, NodeKind, NodeShape, QueueOrdering, StreamTone, WireSync } from '../types';
+import { normalizeQueue } from './queues';
 import { getNodeDimensions } from './layout';
 import { nodeShapeFrame } from './nodeStyle';
 
@@ -114,4 +115,43 @@ export function setWireSync(edges: DiagramEdge[], sync: WireSync): boolean {
     changed = true;
   }
   return changed;
+}
+
+/** Set the ordering of every queue (K1). Components that are not queues are left alone. */
+export function setQueueOrdering(nodes: DiagramNode[], ordering: QueueOrdering): boolean {
+  let changed = false;
+  for (const n of nodes) {
+    if (n.kind !== 'queue' || (n.queue?.ordering ?? 'standard') === ordering) continue;
+    n.queue = normalizeQueue({ ...n.queue, ordering });
+    if (!n.queue) delete n.queue;
+    changed = true;
+  }
+  return changed;
+}
+
+/** Set (or with `undefined`, clear) the maximum depth of every queue (K1). */
+export function setQueueMaxDepth(nodes: DiagramNode[], maxDepth: number | undefined): boolean {
+  let changed = false;
+  for (const n of nodes) {
+    if (n.kind !== 'queue') continue;
+    const next = normalizeQueue({ ...n.queue, maxDepth });
+    if (n.queue?.maxDepth === next?.maxDepth) continue;
+    if (next) n.queue = next;
+    else delete n.queue;
+    changed = true;
+  }
+  return changed;
+}
+
+/**
+ * A wire made in the editor into or out of a queue is asynchronous and amber unless the person chose otherwise (K1).
+ * Never applied on import or load.
+ */
+export function queueWireDefaults(
+  nodes: ReadonlyArray<Pick<DiagramNode, 'id' | 'kind'>>,
+  fromId: string,
+  toId: string,
+): Partial<Pick<DiagramEdge, 'sync' | 'tone'>> {
+  const isQueue = (id: string) => nodes.find((n) => n.id === id)?.kind === 'queue';
+  return isQueue(fromId) || isQueue(toId) ? { sync: 'async', tone: 'amber' } : {};
 }

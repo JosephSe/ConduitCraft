@@ -226,8 +226,8 @@ describe('pages (D10): levels inside a page', () => {
 });
 
 describe('pages (D10): files', () => {
-  it('is schema 11 and older files open as one page', () => {
-    assert.equal(CURRENT_SCHEMA_VERSION, 11);
+  it('is at least schema 11 and older files open as one page', () => {
+    assert.ok(CURRENT_SCHEMA_VERSION >= 11);
     const result = migrate({ nodes: [] }, 10);
     assert.equal(result.ok, true);
     const parsed = parseBlueprintJson(

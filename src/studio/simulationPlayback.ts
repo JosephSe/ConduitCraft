@@ -3,7 +3,9 @@ import { getNodeCenter } from '../core/layout';
 import { hopDelayMs, latenciesBetween } from '../core/wire';
 import { TONE_CSS } from '../shared/tones';
 import { app } from './state';
-import { blockedNodeIn } from './chaos';
+import { holdingQueue } from '../core/queues';
+import { blockedNodeIn, bufferingQueueIds, downIds } from './chaos';
+import { holdMessage, setBacklogSpeedProvider } from './queueBacklog';
 import { announce } from './a11y';
 import { nodesLayer, simPacket, simPacketDot, simPacketLabel, traceList, wiresGroup } from './dom';
 
@@ -238,6 +240,18 @@ export class SimulationPlaybackController {
       const nextIndex = this.currentStepIndex + 1;
       if (nextIndex < this.scenario.steps.length) {
         this.goToStep(nextIndex);
+        // A packet that reaches a queue whose consumers are down parks there instead of stopping (K1).
+        const held = holdingQueue(
+          app.doc,
+          current?.nodes ?? [],
+          this.scenario.steps[nextIndex].nodes,
+          bufferingQueueIds(),
+          downIds(),
+        );
+        if (held) {
+          this.parkPacket(held, delayMs);
+          return;
+        }
         // A packet that reaches a failed or cut-off component goes no further.
         const blocked = blockedNodeIn(this.scenario.steps[nextIndex].nodes);
         if (blocked) {
@@ -253,6 +267,44 @@ export class SimulationPlaybackController {
         this.pause();
       }
     }, delayMs);
+  }
+
+  /** The message stays in the queue: show where it went, then carry on from the top when looping, else pause. */
+  private parkPacket(queueId: string, delayMs: number): void {
+    const { outcome, deadLetterId } = holdMessage(queueId);
+    this.showHeld(queueId, outcome, deadLetterId);
+    if (this.isLooping) {
+      this.timer = setTimeout(() => {
+        if (!this.isPlaying || !this.scenario) return;
+        this.goToStep(0);
+        this.scheduleNextStep();
+      }, delayMs);
+    } else {
+      this.pause();
+    }
+  }
+
+  private showHeld(queueId: string, outcome: 'held' | 'dead-lettered' | 'dropped', deadLetterId?: string): void {
+    if (typeof document === 'undefined') return;
+    const queue = app.doc.nodes.find((n) => n.id === queueId);
+    if (queue && simPacket && simPacketLabel) {
+      const [cx, cy] = getNodeCenter(queue);
+      simPacketLabel.textContent = outcome === 'held' ? 'HELD' : outcome === 'dead-lettered' ? 'DLQ' : 'DROPPED';
+      simPacket.style.setProperty('--px', String(cx));
+      simPacket.style.setProperty('--py', String(cy));
+      if (outcome !== 'held' && simPacketDot) simPacketDot.style.background = TONE_CSS.rose[0];
+    }
+    if (outcome === 'dead-lettered' && deadLetterId && nodesLayer) {
+      const wrapper = Array.from(nodesLayer.querySelectorAll<HTMLElement>('.arch-node')).find(
+        (w) => w.dataset.node === deadLetterId,
+      );
+      if (wrapper) {
+        wrapper.dataset.simActive = 'true';
+        wrapper.style.setProperty('--sim-accent', TONE_CSS.rose[0]);
+        wrapper.style.setProperty('--sim-accent-soft', TONE_CSS.rose[1]);
+        setTimeout(() => delete wrapper.dataset.simActive, 600);
+      }
+    }
   }
 
   private clearTimer(): void {
@@ -343,6 +395,7 @@ export class SimulationPlaybackController {
 }
 
 export const simulationPlayback = new SimulationPlaybackController();
+setBacklogSpeedProvider(() => simulationPlayback.speed);
 
 /**
  * Builds the initial trace rows when a simulation starts so all steps

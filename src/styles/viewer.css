@@ -342,6 +342,22 @@
   .arch-node[data-kind="store"][data-shape="cylinder"] .cylinder-lid {
     fill: color-mix(in srgb, var(--node-accent) 7%, var(--wl-surface));
   }
+  .arch-node[data-shape="pipe"],
+  .arch-node[data-shape="pipe"]:hover,
+  .arch-node[data-shape="pipe"][aria-pressed="true"],
+  .arch-node[data-shape="pipe"][data-sim-active="true"] {
+    overflow: visible;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .arch-node[data-shape="pipe"] .pipe-body {
+    fill: color-mix(in srgb, var(--node-accent) 10%, var(--wl-surface));
+  }
+  .arch-node[data-shape="pipe"] .pipe-cap {
+    fill: color-mix(in srgb, var(--node-accent) 20%, var(--wl-surface));
+  }
+  .arch-node[data-shape="pipe"] .node-sub { display: none; }
   .arch-node[data-shape="cylinder"] .node-top { justify-content: center; }
   .arch-node[data-shape="cylinder"] .node-icon:not(:has(.node-custom-icon)) { display: none; }
   .arch-node[data-shape="cylinder"] .node-eyebrow { display: none; }

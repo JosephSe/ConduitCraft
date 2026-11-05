@@ -146,6 +146,7 @@ import {
   STENCIL_CATALOG,
   createBlankDocument,
   createNodeFromStencil,
+  findStencil,
   createNotesCard,
   createTextCard,
   createSwimlaneZone,
@@ -202,6 +203,8 @@ import { togglePresentation } from './presentationTrigger';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
+import { initQueueBacklog } from './queueBacklog';
+import { queueWireDefaults } from '../core/appearance';
 import { initInsightsPanel } from './insights';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
@@ -240,10 +243,11 @@ import {
 
 export function attachStencilDragAndDrop(
   btn: HTMLElement,
-  kind: NodeKind,
+  stencilId: string,
   title: string,
 ): void {
   // Pointer drag onto canvas OR simple click to add at viewport center
+  const kind = stencilId;
   let ghostEl: HTMLElement | null = null;
   let startClientX = 0;
   let startClientY = 0;
@@ -288,12 +292,12 @@ export function attachStencilDragAndDrop(
         e.clientY <= vpRect.bottom
       ) {
         const [wx, wy] = screenToWorld(e.clientX, e.clientY);
-        const dims = getNodeDimensions(kind);
+        const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
         addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2);
       }
     } else {
       const [cx, cy] = getViewportWorldCenter();
-      const dims = getNodeDimensions(kind);
+      const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
       const cascade = (app.doc.nodes.length % 5) * 24;
       addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
     }
@@ -314,7 +318,7 @@ export function attachStencilDragAndDrop(
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       const [cx, cy] = getViewportWorldCenter();
-      const dims = getNodeDimensions(kind);
+      const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
       addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2);
       if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
         responsiveToolbar.togglePalette(true);
@@ -331,6 +335,7 @@ export function initStencilPalette(): void {
     btn.type = 'button';
     btn.className = 'stencil-card';
     btn.dataset.kind = stencil.kind;
+    btn.dataset.stencilId = stencil.id;
     btn.setAttribute('role', 'listitem');
     const [accent, soft] = TONE_CSS[stencil.accent];
     btn.style.setProperty('--stencil-accent', accent);
@@ -357,18 +362,18 @@ export function initStencilPalette(): void {
 
     btn.append(preview, title, sub);
 
-    attachStencilDragAndDrop(btn, stencil.kind, stencil.paletteTitle);
+    attachStencilDragAndDrop(btn, stencil.id, stencil.paletteTitle);
 
     stencilGrid.appendChild(btn);
   }
 
   // Also wire drag-and-drop & click actions for collapsed palette rail buttons
-  const railBtns = document.querySelectorAll<HTMLButtonElement>('.rail-stencil-btn[data-stencil-kind]');
+  const railBtns = document.querySelectorAll<HTMLButtonElement>('.rail-stencil-btn[data-stencil-kind], .rail-stencil-btn[data-stencil-id]');
   railBtns.forEach((railBtn) => {
-    const kind = railBtn.getAttribute('data-stencil-kind') as NodeKind | 'zone' | 'notes';
-    if (kind && kind !== 'zone' && kind !== 'notes') {
-      const stencil = STENCIL_CATALOG.find((s) => s.kind === kind);
-      attachStencilDragAndDrop(railBtn, kind, stencil?.paletteTitle ?? kind);
+    const id = railBtn.getAttribute('data-stencil-id') ?? railBtn.getAttribute('data-stencil-kind');
+    if (id && id !== 'zone' && id !== 'notes') {
+      const stencil = findStencil(id);
+      attachStencilDragAndDrop(railBtn, stencil?.id ?? id, stencil?.paletteTitle ?? id);
     }
   });
 }
@@ -386,7 +391,7 @@ export function tagEnteringNodes(ids: string[]): void {
   });
 }
 
-export function addNodeAt(kind: NodeKind, rawX: number, rawY: number): DiagramNode {
+export function addNodeAt(kind: NodeKind | string, rawX: number, rawY: number): DiagramNode {
   pushHistory();
   const clampedX = Math.max(24, rawX);
   const clampedY = Math.max(32, rawY);
@@ -604,6 +609,7 @@ export function createNodeFromWireDrop(
       route: 'auto',
       label: '',
       animated: true,
+      ...queueWireDefaults(app.doc.nodes, sourceId, node.id),
     });
     expandStageToFit(app.doc);
     created = node;
@@ -636,6 +642,7 @@ export function createEdgeConnection(
     route: 'auto',
     label: '',
     animated: true,
+    ...queueWireDefaults(app.doc.nodes, fromId, toId),
   };
   app.doc.edges.push(newEdge);
   setSelection({ type: 'edge', id: newEdge.id });
@@ -2202,6 +2209,7 @@ export function initEvents(): void {
   initSimulationPlaybackUi();
   initRunBar({ run: runSimulation });
   initChaosPanel();
+  initQueueBacklog();
   initInsightsPanel();
   initHelp();
   initChaosPreview(chaosNodesLayer);

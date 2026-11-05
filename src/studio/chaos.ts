@@ -10,7 +10,7 @@ import { announce } from './a11y';
 import { app, onPageOpened } from './state';
 import { renderAll } from './render';
 
-export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk';
+export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk' | 'buffering' | 'delayed';
 
 /** Failures at every level, keyed by where they sit (`core/failures.ts`), so repeated ids at different levels never collide. */
 let failed = new Set<string>();
@@ -35,6 +35,12 @@ onPageOpened(switchChaosPage);
 
 export function onChaosChange(listener: () => void): void {
   listeners.add(listener);
+}
+
+/** Called when a run ends for good ("Restore all") or the open level changes: state tied to the run should go too. */
+const resetListeners = new Set<() => void>();
+export function onChaosReset(listener: () => void): void {
+  resetListeners.add(listener);
 }
 
 /** Forget the cached result. Call before a repaint, since the document may have changed underneath. */
@@ -103,7 +109,9 @@ export function chaosStatusOf(nodeId: string): ChaosStatus | null {
   if (!r) return null;
   if (r.failed.includes(nodeId)) return 'failed';
   if (r.degraded.includes(nodeId)) return 'degraded';
+  if (r.delayed.includes(nodeId)) return 'delayed';
   if (r.unreachable.includes(nodeId)) return 'unreachable';
+  if (r.buffering.includes(nodeId)) return 'buffering';
   if (r.atRisk.includes(nodeId)) return 'at-risk';
   if (r.rerouted.includes(nodeId)) return 'rerouted';
   return null;
@@ -112,7 +120,20 @@ export function chaosStatusOf(nodeId: string): ChaosStatus | null {
 /** The first of these components a packet cannot get through, or null. Used to stop playback. */
 export function blockedNodeIn(nodeIds: readonly string[]): string | null {
   if (!hasRun()) return null;
-  return nodeIds.find((id) => ['failed', 'unreachable'].includes(chaosStatusOf(id) ?? '')) ?? null;
+  return nodeIds.find((id) => ['failed', 'unreachable', 'delayed'].includes(chaosStatusOf(id) ?? '')) ?? null;
+}
+
+/** Queues on the open level that are up but holding messages because their consumers are down (K1). */
+export function bufferingQueueIds(): ReadonlySet<string> {
+  if (!hasRun()) return new Set();
+  return new Set(chaosResult()?.buffering ?? []);
+}
+
+/** Components on the open level that cannot take a message right now: failed or cut off, and not just delayed. */
+export function downIds(): ReadonlySet<string> {
+  if (!hasRun()) return new Set();
+  const r = chaosResult();
+  return new Set(r ? [...r.failed, ...r.unreachable, ...r.delayed] : []);
 }
 
 export interface ChaosSummary {
@@ -121,6 +142,8 @@ export interface ChaosSummary {
   unreachable: number;
   rerouted: number;
   atRisk: number;
+  buffering: number;
+  delayed: number;
 }
 
 /** Counts for the run of real failures (not the Alt preview), or null when none are set. */
@@ -134,6 +157,8 @@ export function chaosSummary(): ChaosSummary | null {
     unreachable: r.unreachable.length,
     rerouted: r.rerouted.length,
     atRisk: r.atRisk.length,
+    buffering: r.buffering.length,
+    delayed: r.delayed.length,
   };
 }
 
@@ -141,6 +166,8 @@ export function chaosSummary(): ChaosSummary | null {
 export function summaryText(s: ChaosSummary): string {
   const parts = [`${s.failed} failed`];
   if (s.degraded) parts.push(`${s.degraded} degraded`);
+  if (s.buffering) parts.push(`${s.buffering} buffering`);
+  if (s.delayed) parts.push(`${s.delayed} delayed`);
   parts.push(`${s.unreachable} unreachable`, `${s.rerouted} rerouted`);
   if (s.atRisk) parts.push(`${s.atRisk} at risk`);
   return parts.join(' · ');
@@ -167,6 +194,7 @@ export function repaintForLens(): void {
  */
 export function levelOpened(): void {
   cached = undefined;
+  for (const listener of resetListeners) listener();
   for (const listener of listeners) listener();
   const parent = failedParent();
   if (!parent || !chaosLensActive()) return;
@@ -207,6 +235,7 @@ export function setFailures(ids: readonly string[]): void {
 export function clearFailures(): void {
   if (failed.size === 0) return;
   failed.clear();
+  for (const listener of resetListeners) listener();
   changed();
   announce('All components restored.');
 }

@@ -2,7 +2,8 @@
 import { describeDiagram } from '../core/describe';
 import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
-import { cylinderPlate, sanitizeIconImage, storeDrawsCylinder } from '../core/nodeStyle';
+import { queueCardText } from '../core/queues';
+import { cylinderPlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsCylinder } from '../core/nodeStyle';
 import { nodeIconShapes } from '../ui/icons';
 
 export type SvgScheme = 'light' | 'dark';
@@ -84,6 +85,15 @@ function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false): strin
     return (
       `<g transform="translate(${x} ${y})"><path d="${c.body}" fill="${body}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>` +
       `<ellipse cx="${c.cx}" cy="${c.cy}" rx="${c.rx}" ry="${c.ry}" fill="${lid}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/></g>`
+    );
+  }
+  if (queueDrawsPipe(node.kind, node.shape)) {
+    const p = pipePlate(width, height);
+    const body = mix(accent, pal.surface, 0.1);
+    const cap = mix(accent, pal.surface, 0.2);
+    return (
+      `<g transform="translate(${x} ${y})"><path d="${p.body}" fill="${body}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>` +
+      `<ellipse cx="${p.cx}" cy="${p.cy}" rx="${p.rx}" ry="${p.ry}" fill="${cap}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/></g>`
     );
   }
   const common = `fill="${fill}" stroke="${strokeColor}" stroke-width="${strokeWidth}"`;
@@ -218,6 +228,13 @@ function nodeMarkup(
     return `<g${opacityAttr}>${nodeOutline(node, pal, isSelected)}${centeredText(text, pal)}</g>`;
   }
 
+  // A pipe keeps its text clear of the rounded ends and the outlet cap.
+  const outlineNode = node;
+  if (queueDrawsPipe(node.kind, node.shape)) {
+    const rx = pipePlate(node.width, node.height).rx;
+    // The studio hides the subtitle inside a pipe, so the export does too.
+    node = { ...node, x: node.x + rx, width: node.width - 3 * rx, subtitle: '' };
+  }
   const { x, y, width, height } = node;
   const isClient = node.kind === 'client';
   const right = x + width - 16;
@@ -233,14 +250,15 @@ function nodeMarkup(
       ? `<text x="${right}" y="${topMid + 4}" text-anchor="end" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.muted}">${escapeXml(node.eyebrow)}</text>`
       : '';
   const titleY = y + 14 + iconSize + 26;
-  const hasFooter = !isClient && (node.footerLeft || node.chip) && height >= titleY - y + (node.subtitle ? 22 : 0) + 38;
+  const card = queueCardText(node);
+  const hasFooter = !isClient && (card.footer || card.chip) && height >= titleY - y + (node.subtitle ? 22 : 0) + 38;
   const footerMid = y + height - 22;
   const footer = hasFooter
     ? `<line x1="${x + 16}" y1="${y + height - 40}" x2="${right}" y2="${y + height - 40}" stroke="${pal.subtle}"/>` +
-      (node.footerLeft
-        ? `<text x="${x + 16}" y="${footerMid + 4}" font-family="${MONO}" font-size="11" fill="${pal.muted}">${escapeXml(node.footerLeft)}</text>`
+      (card.footer
+        ? `<text x="${x + 16}" y="${footerMid + 4}" font-family="${MONO}" font-size="11" fill="${pal.muted}">${escapeXml(card.footer)}</text>`
         : '') +
-      (node.chip ? chipMarkup(node.chip, right, footerMid, pal) : '')
+      (card.chip ? chipMarkup(card.chip, right, footerMid, pal) : '')
     : '';
   const sub = node.subtitle
     ? `<text x="${x + 16}" y="${titleY + 22}" font-family="${SANS}" font-size="12.5" fill="${pal.secondary}">${escapeXml(node.subtitle)}</text>`
@@ -248,7 +266,7 @@ function nodeMarkup(
 
   return [
     `<g${opacityAttr}>`,
-    nodeOutline(node, pal, isSelected),
+    nodeOutline(outlineNode, pal, isSelected),
     iconMarkup(node, x + 14, y + 14, iconSize, pal),
     corner,
     `<text x="${x + 16}" y="${titleY}" font-family="${SANS}" font-size="${titleSize}" font-weight="700" fill="${pal.ink}">${escapeXml(node.title)}</text>`,

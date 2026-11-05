@@ -20,6 +20,7 @@ export const ICON_LIST: Array<{ id: NodeIconName; label: string }> = [
   { id: 'globe', label: 'Network' },
   { id: 'agency', label: 'Client / Org' },
   { id: 'spark', label: 'AI / Engine' },
+  { id: 'queue', label: 'Queue' },
 ];
 
 const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
@@ -74,6 +75,12 @@ const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
     { tag: 'rect', attrs: { x: '4', y: '4', width: '16', height: '16', rx: '2' } },
     { tag: 'rect', attrs: { x: '9', y: '9', width: '6', height: '6', rx: '1' } },
     { tag: 'path', attrs: { d: 'M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3' } },
+  ],
+  queue: [
+    { tag: 'rect', attrs: { x: '2', y: '4', width: '10', height: '4', rx: '1' } },
+    { tag: 'rect', attrs: { x: '2', y: '10', width: '10', height: '4', rx: '1' } },
+    { tag: 'rect', attrs: { x: '2', y: '16', width: '10', height: '4', rx: '1' } },
+    { tag: 'path', attrs: { d: 'M15 12h7M19 8l3 4-3 4' } },
   ],
   globe: [
     { tag: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },

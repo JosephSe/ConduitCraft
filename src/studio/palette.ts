@@ -124,11 +124,27 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'add-queue',
+      title: 'Add Message Queue Stencil',
+      subtitle: 'Buffers work between services',
+      category: 'Components',
+      keywords: ['queue', 'sqs', 'rabbitmq', 'mq', 'buffer', 'backlog', 'dead letter', 'dlq', 'pipe'],
+      run: () => {
+        pushHistory();
+        const node = createNodeFromStencil('queue', 200, 200, app.doc.nodes.length);
+        app.doc.nodes.push(node);
+        expandStageToFit(app.doc);
+        setSelection({ type: 'node', id: node.id });
+        renderAll(true);
+        notify('Added Message Queue stencil');
+      },
+    },
+    {
       id: 'add-broker',
       title: 'Add Event Broker Stencil',
-      subtitle: 'Queue, pub/sub, or message bus',
+      subtitle: 'Pub/sub event bus',
       category: 'Components',
-      keywords: ['broker', 'event', 'queue', 'kafka', 'bus', 'pubsub'],
+      keywords: ['broker', 'event', 'kafka', 'bus', 'pubsub'],
       run: () => {
         pushHistory();
         const node = createNodeFromStencil('bus', 200, 200, app.doc.nodes.length);
@@ -632,6 +648,27 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: 'Del',
       keywords: ['delete', 'remove', 'trash'],
       run: deps.deleteSelected,
+    },
+    {
+      id: 'queue-add-dlq',
+      title: 'Add dead-letter queue',
+      subtitle: 'Create a queue to the right for overflow and set it on this queue',
+      category: 'Components',
+      keywords: ['queue', 'dead letter', 'dlq', 'overflow', 'poison'],
+      run: () => {
+        const sel = app.selection;
+        const source = sel.type === 'node' ? app.doc.nodes.find((n) => n.id === sel.id) : undefined;
+        if (!source || source.kind !== 'queue') return;
+        pushHistory();
+        const dlq = createNodeFromStencil('queue', source.x + source.width + 64, source.y, app.doc.nodes.length);
+        dlq.title = `${source.title} DLQ`;
+        app.doc.nodes.push(dlq);
+        source.queue = { ...source.queue, deadLetterId: dlq.id };
+        expandStageToFit(app.doc);
+        setSelection({ type: 'node', id: dlq.id });
+        renderAll(true);
+        notify(`Added ${dlq.title}`);
+      },
     },
     {
       id: 'edit-lock',

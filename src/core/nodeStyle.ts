@@ -119,6 +119,56 @@ export function storeDrawsCylinder(kind: string, shape: NodeShape | undefined): 
   return kind === 'store' && (shape == null || shape === 'card');
 }
 
+/**
+ * Default message queues are drawn as a horizontal pipe, the way stores are drawn as a drum. The outline is not
+ * stored: `shape` stays absent, and an explicit non-card outline still wins.
+ */
+export function queueDrawsPipe(kind: string, shape: NodeShape | undefined): boolean {
+  return kind === 'queue' && (shape == null || shape === 'card');
+}
+
+export interface PipePlate {
+  width: number;
+  height: number;
+  /** Outlet cap: the visible open end on the right, where messages leave. */
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  /** Straight walls, a rounded left end and a rounded right end. The cap ellipse sits on the right end. */
+  body: string;
+}
+
+/** Pipe geometry in the node's box. Ports stay on the rectangle, so wires do not move. */
+export function pipePlate(width: number, height: number): PipePlate {
+  const w = Math.max(1, width);
+  const h = Math.max(1, height);
+  const inset = 1.5;
+  const rx = Math.max(1, Math.min(Math.max(6, Math.min(w * 0.07, 16)), w / 2 - inset));
+  const ry = Math.max(1, h / 2 - inset);
+  const left = inset + rx;
+  const right = w - inset - rx;
+  const bottom = h - inset;
+  const n = roundTenth;
+  const body = [
+    `M ${n(left)},${n(inset)}`,
+    `L ${n(right)},${n(inset)}`,
+    `A ${n(rx)} ${n(ry)} 0 0 1 ${n(right)},${n(bottom)}`,
+    `L ${n(left)},${n(bottom)}`,
+    `A ${n(rx)} ${n(ry)} 0 0 1 ${n(left)},${n(inset)}`,
+    'Z',
+  ].join(' ');
+  return {
+    width: Math.max(1, Math.round(w)),
+    height: Math.max(1, Math.round(h)),
+    cx: n(right),
+    cy: n(h / 2),
+    rx: n(rx),
+    ry: n(ry),
+    body,
+  };
+}
+
 export interface CylinderPlate {
   width: number;
   height: number;
@@ -174,6 +224,11 @@ export function nodeShapeContentPadding(
     const { cy, ry } = cylinderPlate(width, height);
     return `${Math.round(cy + ry + 6)}px 1.15rem ${Math.round(ry + 8)}px`;
   }
+  if (queueDrawsPipe(kind, shape)) {
+    const { rx } = pipePlate(width, height);
+    const v = Math.round(Math.max(1, height) * 0.14);
+    return `${v}px ${Math.round(2 * rx + 12)}px ${v}px ${Math.round(rx + 12)}px`;
+  }
   if (kind === 'actor' || !shape || shape === 'card' || shape === 'rounded') return '';
   const w = Math.max(1, width);
   const h = Math.max(1, height);
@@ -203,6 +258,11 @@ export function renderNodeShapePlate(
 export function renderCylinderPlate(width: number, height: number): string {
   const plate = cylinderPlate(width, height);
   return `<svg class="node-shape-plate" data-plate="cylinder" viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom cylinder-body" d="${plate.body}"/><ellipse class="node-shape-geom cylinder-lid" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
+}
+
+export function renderPipePlate(width: number, height: number): string {
+  const plate = pipePlate(width, height);
+  return `<svg class="node-shape-plate" data-plate="pipe" viewBox="0 0 ${plate.width} ${plate.height}" width="100%" height="100%" overflow="visible" aria-hidden="true" focusable="false"><path class="node-shape-geom pipe-body" d="${plate.body}"/><ellipse class="node-shape-geom pipe-cap" cx="${plate.cx}" cy="${plate.cy}" rx="${plate.rx}" ry="${plate.ry}"/></svg>`;
 }
 
 /** True when the field is absent or a known outline name. */

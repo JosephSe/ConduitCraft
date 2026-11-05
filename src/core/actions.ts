@@ -16,6 +16,8 @@ export interface ActionContext {
   selectedNodeCount: number;
   /** At least one selected component or note belongs to a group. */
   grouped: boolean;
+  /** The one selected component is a message queue (K1). */
+  queueSelected?: boolean;
 }
 
 export function buildActionContext(
@@ -55,7 +57,15 @@ export function buildActionContext(
   const grouped =
     nodeIds.some((id) => doc.nodes.find((n) => n.id === id)?.groupId) ||
     noteIds.some((id) => doc.notesCards.find((c) => c.id === id)?.groupId);
-  return { mode, selection: kind, selectedCount: count, selectedNodeCount: nodeIds.length, grouped: Boolean(grouped) };
+  const queueSelected = kind === 'node' && doc.nodes.find((n) => n.id === nodeIds[0])?.kind === 'queue';
+  return {
+    mode,
+    selection: kind,
+    selectedCount: count,
+    selectedNodeCount: nodeIds.length,
+    grouped: Boolean(grouped),
+    ...(queueSelected ? { queueSelected } : {}),
+  };
 }
 
 const hasSelection = (c: ActionContext) => c.selection !== 'none';
@@ -77,6 +87,7 @@ const RULES: Record<string, (c: ActionContext) => boolean> = {
   'edit-send-backward': (c) => design(c) && arrangeable(c),
   'wire-from-selection': (c) => design(c) && c.selection === 'node',
   'level-open': (c) => c.selection === 'node',
+  'queue-add-dlq': (c) => design(c) && c.selection === 'node' && Boolean(c.queueSelected),
   'chaos-fail': (c) => c.mode === 'data' && c.selection === 'node',
   'fit-selection': hasSelection,
   'auto-layout-selection': (c) => design(c) && c.selectedNodeCount >= 2,

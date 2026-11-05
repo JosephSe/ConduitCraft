@@ -5,6 +5,7 @@
  */
 import { getEffectiveSimulations } from '../core/layout';
 import { app } from './state';
+import { onBacklogChange, totalHeld } from './queueBacklog';
 import { onPlaybackChange, simulationPlayback, type SimulationPlaybackState } from './simulationPlayback';
 
 const PLACEHOLDER = '';
@@ -48,7 +49,12 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
     }
     scrubber.max = String(Math.max(0, state.totalSteps - 1));
     scrubber.value = String(Math.max(0, state.currentStepIndex));
-    stepLabel.textContent = loaded ? `step ${Math.max(1, state.currentStepIndex + 1)}/${state.totalSteps}` : 'no run';
+    const held = totalHeld();
+    stepLabel.textContent = loaded
+      ? `step ${Math.max(1, state.currentStepIndex + 1)}/${state.totalSteps}${held > 0 ? ` · ${held} held` : ''}`
+      : held > 0
+        ? `${held} held`
+        : 'no run';
     playBtn.setAttribute('aria-label', state.isPlaying ? 'Pause' : 'Play');
     playBtn.setAttribute('aria-pressed', String(state.isPlaying));
     const icon = playBtn.querySelector('svg');
@@ -86,6 +92,7 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
     syncScenarios();
     syncTransport(simulationPlayback.getState());
   };
+  onBacklogChange(() => syncTransport(simulationPlayback.getState()));
   refreshRunBar = refresh;
   refresh();
 }

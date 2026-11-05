@@ -112,6 +112,10 @@ How a component copes is set under **Review & Status**:
 - **Fallback.** Another component takes over the incoming traffic while this one is down.
 - **Circuit breaker.** Recorded for the reader. It does not change what is reachable.
 
+### Queues
+
+A Message Queue is drawn as a pipe. When every component that reads from a queue is down, the queue is **buffering**: it holds the work, and the components that write to it carry on. Anything behind the failed reader is **delayed**, not unreachable, because its work waits and resumes when the reader is restored. In the Traffic lens, play a looping scenario and messages pile up inside the pipe; press `X` on the reader again and the queue drains. Set **Max depth** under **Review & Status** to cap the backlog: past the cap, messages go to the **Dead-letter queue** if you set one, and are dropped if you did not.
+
 Failing a component also fails everything inside its level. Failing a component inside a level leaves the parent alone.
 
 ## Review and insights
@@ -123,10 +127,13 @@ The Review lens runs a set of rules over every level of the diagram. The list gr
 | Latency budget exceeded | Error | A scenario's wires add up to more than its latency budget. Shorten the path or raise the budget. |
 | Single point of failure | Warning | If this component fails, at least one end point can no longer be reached. Add replicas or a fallback. |
 | Synchronous cycle | Warning | Components call each other synchronously in a loop. Mark one wire async to break it. |
+| Queue nothing reads from | Warning | A queue has wires into it and none out of it, so messages pile up forever. |
 | Deprecated component in a scenario | Warning | A component with the deprecated status is still on a scenario's path. |
 | At-risk component with many dependents | Warning | A component with the at-risk status has three or more components calling it. |
 | Component with no wires | Info | Nothing connects to this component. |
 | Data store nothing reads from | Info | Every wire into this data store only writes to it. |
+| Queue with a limit and no dead-letter queue | Info | A queue has a maximum depth but nowhere to send overflow, so it drops messages when full. |
+| Synchronous wire into a queue | Info | A wire into a queue is not marked async. Queues are usually written asynchronously. |
 | Wire between services without a label | Info | A wire between two services has no label, so a reader cannot tell what it carries. |
 
 ## Levels
@@ -275,6 +282,7 @@ edges:
 | `actor` | Actor | `id(["Title"])` |
 | `core` | Core System | `id[["Title"]]` |
 | `service` | Service / API | `id["Title"]` |
+| `queue` | Message Queue | `id[("Title")]` |
 | `bus` | Event Broker | `id("Title")` |
 | `gate` | Control Gate | `id{{"Title"}}` |
 | `store` | Data Store | `id[("Title")]` |
@@ -282,7 +290,7 @@ edges:
 
 `shape` is the on-canvas outline: `card` (the default, omitted), `rounded`, `pill`, `circle`, `diamond`, or `hexagon`.
 
-`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
+`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
 
 `payload` is the contract. A JSON value is stored as structured YAML; anything that is not JSON stays a string. `metrics` is a list of `{ label, value }`. A map of label to value is also accepted on import.
 

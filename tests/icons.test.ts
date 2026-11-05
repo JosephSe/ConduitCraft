@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   renderUiIconMarkup,
   renderIconMarkup,
+  ICON_LIST,
   normalizeIconName,
   type UiIconName,
 } from '../src/ui/icons.ts';
@@ -49,5 +50,13 @@ describe('UI and node SVG icons', () => {
     assert.strictEqual(normalizeIconName('unknown-name', 'server'), 'server');
     const nodeSvg = renderIconMarkup('database', 20);
     assert.ok(nodeSvg.includes('viewBox="0 0 24 24"'));
+  });
+
+  it('has a queue icon (K1): three stacked bars and an arrow, in the same box as the others', () => {
+    assert.strictEqual(normalizeIconName('Queue', 'server'), 'queue');
+    const svg = renderIconMarkup('queue', 18);
+    assert.ok(svg.includes('viewBox="0 0 24 24"'));
+    assert.strictEqual((svg.match(/<rect/g) ?? []).length, 3);
+    assert.ok(ICON_LIST.some((i) => i.id === 'queue'));
   });
 });

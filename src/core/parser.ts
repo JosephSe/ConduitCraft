@@ -67,6 +67,7 @@ interface RawNodeMeta {
   tags?: unknown;
   links?: unknown;
   resilience?: unknown;
+  queue?: unknown;
   source?: unknown;
 }
 
@@ -191,7 +192,8 @@ function normalizeNodeKind(raw: string | undefined, fallback: NodeKind = 'servic
   const k = raw.trim().toLowerCase();
   if (k === 'actor' || k === 'human' || k === 'user' || k === 'person') return 'actor';
   if (k === 'core' || k === 'platform' || k === 'primary') return 'core';
-  if (k === 'bus' || k === 'broker' || k === 'queue' || k === 'stream') return 'bus';
+  if (k === 'queue' || k === 'sqs' || k === 'fifo' || k === 'mq' || k === 'work-queue') return 'queue';
+  if (k === 'bus' || k === 'broker' || k === 'stream') return 'bus';
   if (k === 'gate' || k === 'approval' || k === 'decision' || k === 'policy') return 'gate';
   if (k === 'store' || k === 'database' || k === 'db' || k === 'storage') return 'store';
   if (k === 'client' || k === 'agency' || k === 'consumer' || k === 'external') return 'client';
@@ -1720,6 +1722,7 @@ function formatMermaidNodeShape(node: DiagramNode, safeId: string): string {
     case 'core':
       return `${safeId}[[${label}]]`;
     case 'store':
+    case 'queue':
       return `${safeId}[(${label})]`;
     case 'gate':
       return `${safeId}{{${label}}}`;
@@ -1853,6 +1856,16 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
               ...n.resilience,
               ...(n.resilience.fallbackId
                 ? { fallbackId: idMap.get(n.resilience.fallbackId) || n.resilience.fallbackId }
+                : {}),
+            },
+          }
+        : {}),
+      ...(n.queue
+        ? {
+            queue: {
+              ...n.queue,
+              ...(n.queue.deadLetterId
+                ? { deadLetterId: idMap.get(n.queue.deadLetterId) || n.queue.deadLetterId }
                 : {}),
             },
           }

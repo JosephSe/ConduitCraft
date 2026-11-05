@@ -46,5 +46,7 @@ export function insideFailedComponent(level: DiagramDocument): ReachabilityResul
     unreachable: [],
     rerouted: [],
     atRisk: [],
+    buffering: [],
+    delayed: [],
   };
 }
