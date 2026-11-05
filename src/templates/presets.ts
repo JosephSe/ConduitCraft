@@ -5,12 +5,38 @@ import type {
   DiagramZone,
   NodeIconName,
   NodeKind,
+  NodeShape,
   StreamTone,
 } from '../types';
 import { getNodeDimensions } from '../core/layout';
 
+/*
+ * Adding a new NodeKind: go through every line of this list.
+ *  1. `NodeKind` union: src/types.ts
+ *  2. `KINDS` set: src/exporter/blueprintJson.ts
+ *  3. `getNodeDimensions`: src/core/layout.ts
+ *  4. `STENCIL_CATALOG` entry: this file
+ *  5. Rail button in index.html (icon, data-tip, aria-label, data-stencil-id) and the responsive toolbar overflow
+ *  6. Command palette entry: src/studio/palette.ts
+ *  7. Blueprint-file alias parsing: `normalizeNodeKind` in src/core/parser.ts
+ *  8. Mermaid writer for the embedded block: the `switch (node.kind)` in src/core/parser.ts
+ *  9. Studio rendering: src/studio/keyedStage.ts (plate, data-kind, data-shape)
+ * 10. SVG export: src/exporter/diagramSvg.ts
+ * 11. HTML export: src/exporter/standaloneHtml.ts
+ * 12. Text description: src/core/describe.ts
+ * 13. Container-image guess: `kindForImage` in src/importers/common.ts
+ * 14. Guide kind table (docs/guide.md) and a help topic (src/core/helpTopics.ts)
+ * 15. Tests: showcase, portableExport, nodeStyle, schema, palette, and round-trips (Blueprint file, JSON, share link)
+ */
+
 export interface StencilDefinition {
+  /** Unique palette id. Equal to `kind` unless two stencils share a kind (for example a stream and a queue). */
+  id: string;
   kind: NodeKind;
+  /** Outline applied to nodes made from this stencil. */
+  shape?: NodeShape;
+  /** Extra fields applied after the defaults. */
+  preset?: Partial<DiagramNode>;
   paletteTitle: string;
   paletteSub: string;
   defaultTitle: string;
@@ -25,6 +51,7 @@ export interface StencilDefinition {
 
 export const STENCIL_CATALOG: StencilDefinition[] = [
   {
+    id: 'actor',
     kind: 'actor',
     paletteTitle: 'Actor',
     paletteSub: 'Human outline role',
@@ -38,6 +65,7 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
     interfaceLabel: 'Web / SSO Session',
   },
   {
+    id: 'core',
     kind: 'core',
     paletteTitle: 'Core System',
     paletteSub: 'Primary platform card',
@@ -51,6 +79,7 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
     interfaceLabel: 'HTTPS / Internal RPC',
   },
   {
+    id: 'service',
     kind: 'service',
     paletteTitle: 'Service / API',
     paletteSub: 'Microservice or endpoint',
@@ -64,6 +93,7 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
     interfaceLabel: 'REST / gRPC mTLS',
   },
   {
+    id: 'bus',
     kind: 'bus',
     paletteTitle: 'Event Broker',
     paletteSub: 'Queue or message bus',
@@ -77,6 +107,7 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
     interfaceLabel: 'Event Stream / Queue',
   },
   {
+    id: 'gate',
     kind: 'gate',
     paletteTitle: 'Control Gate',
     paletteSub: 'Decision or policy gate',
@@ -90,6 +121,7 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
     interfaceLabel: 'Signed Policy Gate',
   },
   {
+    id: 'store',
     kind: 'store',
     paletteTitle: 'Data Store',
     paletteSub: 'Database, cache, or ledger',
@@ -103,6 +135,7 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
     interfaceLabel: 'Transactional Storage',
   },
   {
+    id: 'client',
     kind: 'client',
     paletteTitle: 'External Client',
     paletteSub: 'Compact consumer node',
@@ -154,13 +187,25 @@ export function nextUid(prefix: string): string {
   return `${prefix}-${Date.now().toString(36).slice(-4)}-${uidCounter}`;
 }
 
+/** Find a stencil by id first, then by kind. */
+export function findStencil(idOrKind: string): StencilDefinition | undefined {
+  return STENCIL_CATALOG.find((s) => s.id === idOrKind) ?? STENCIL_CATALOG.find((s) => s.kind === idOrKind);
+}
+
+/** One stencil per kind (the first of each), for pickers that choose a kind rather than a look. */
+export function kindStencils(): StencilDefinition[] {
+  const seen = new Set<NodeKind>();
+  return STENCIL_CATALOG.filter((s) => (seen.has(s.kind) ? false : (seen.add(s.kind), true)));
+}
+
 export function createNodeFromStencil(
-  kind: NodeKind,
+  kindOrStencilId: NodeKind | string,
   x: number,
   y: number,
   existingCount: number,
 ): DiagramNode {
-  const stencil = STENCIL_CATALOG.find((s) => s.kind === kind) || STENCIL_CATALOG[1];
+  const stencil = findStencil(kindOrStencilId) || STENCIL_CATALOG[1];
+  const kind = stencil.kind;
   const dims = getNodeDimensions(kind);
   const indexSuffix = existingCount + 1;
   const id = `${kind}-${indexSuffix}-${Math.random().toString(36).slice(2, 5)}`;
@@ -197,6 +242,8 @@ export function createNodeFromStencil(
     y: Math.round(y / 16) * 16,
     width: dims.width,
     height: dims.height,
+    ...(stencil.shape ? { shape: stencil.shape } : {}),
+    ...(stencil.preset ?? {}),
   };
 }
 

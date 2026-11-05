@@ -4,7 +4,7 @@
  */
 import { addTag, removeTag, setKind, setShape, setStatus, setWireSync, setWireTone } from '../core/appearance';
 import { NODE_SHAPE_LABELS, NODE_SHAPES } from '../core/nodeStyle';
-import { STENCIL_CATALOG, STREAM_TONE_OPTIONS } from '../templates/presets';
+import { STREAM_TONE_OPTIONS, kindStencils } from '../templates/presets';
 import type { ComponentStatus, DiagramEdge, DiagramNode, NodeKind, NodeShape, StreamTone, WireSync } from '../types';
 import { app, mutateWithHistory } from './state';
 import { renderAll } from './render';
@@ -57,7 +57,7 @@ export function mountBulkFields(host: HTMLElement, nodeIds: string[], edgeIds: s
 
   if (nodeIds.length > 0) {
     host.append(
-      chooser('Kind', STENCIL_CATALOG.map((s) => [s.kind, s.paletteTitle]), (v) => setKind(nodes(), v as NodeKind)),
+      chooser('Kind', kindStencils().map((s) => [s.kind, s.paletteTitle]), (v) => setKind(nodes(), v as NodeKind)),
       chooser('Shape', NODE_SHAPES.map((s) => [s, NODE_SHAPE_LABELS[s]]), (v) => setShape(nodes(), v as NodeShape)),
       chooser('Status', STATUSES, (v) => setStatus(nodes(), (v || undefined) as ComponentStatus | undefined)),
     );

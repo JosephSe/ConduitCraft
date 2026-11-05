@@ -73,7 +73,7 @@ import type {
 import { WIRE_PROTOCOLS, WIRE_PROTOCOL_NAMES } from '../core/wire';
 import { NOTES_ITEM_ICONS, normalizeNotesItemIcon } from '../types';
 import {
-  STENCIL_CATALOG,
+  kindStencils,
   STREAM_TONE_OPTIONS,
   nextUid,
 } from '../templates/presets';
@@ -662,7 +662,7 @@ export function renderPropertyEditor(): void {
 
     const kindSelect = document.createElement('select');
     kindSelect.className = 'prop-select';
-    for (const st of STENCIL_CATALOG) {
+    for (const st of kindStencils()) {
       const opt = document.createElement('option');
       opt.value = st.kind;
       opt.textContent = st.paletteTitle;

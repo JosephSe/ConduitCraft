@@ -4,7 +4,7 @@
  */
 import { setAccent, setKind, setShape } from '../core/appearance';
 import { NODE_SHAPE_LABELS, NODE_SHAPES } from '../core/nodeStyle';
-import { STENCIL_CATALOG, STREAM_TONE_OPTIONS } from '../templates/presets';
+import { STREAM_TONE_OPTIONS, kindStencils } from '../templates/presets';
 import type { DiagramNode, NodeKind, NodeShape, StreamTone } from '../types';
 import { app, mutateWithHistory } from './state';
 import { renderAll } from './render';
@@ -53,7 +53,7 @@ function choicesFor(which: 'colour' | 'kind' | 'shape', nodes: DiagramNode[]): C
   }
   if (which === 'kind') {
     const same = all((n) => n.kind);
-    return STENCIL_CATALOG.map((s) => ({
+    return kindStencils().map((s) => ({
       label: s.paletteTitle,
       current: same(s.kind),
       run: () => choose((ns) => setKind(ns, s.kind as NodeKind)),

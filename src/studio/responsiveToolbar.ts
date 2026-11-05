@@ -113,7 +113,7 @@ export class ResponsiveToolbarManager {
     paletteRail.addEventListener('click', (e) => {
       const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>('.rail-stencil-btn');
       if (!btn) return;
-      const kind = btn.getAttribute('data-stencil-kind');
+      const kind = btn.getAttribute('data-stencil-id') ?? btn.getAttribute('data-stencil-kind');
       if (!kind) return;
 
       if (kind === 'zone') {
