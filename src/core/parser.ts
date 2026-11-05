@@ -30,6 +30,7 @@ import { normalizeWireFields } from './wire';
 import { coerceFrames, dropDanglingFrameIds } from './frames';
 import { adoptByGeometry, createFrame, frameAround } from './frameOps';
 import { MAX_PAGES, normalizePages } from './pages';
+import { nodeKeys } from './codeLines';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
 
@@ -1687,6 +1688,11 @@ function waypointField(raw: unknown): { waypoint?: [number, number] } {
   return {};
 }
 
+/** The key a component has in the `nodes:` map of the Blueprint file (the code pane maps lines back to components with it). */
+export function blueprintNodeKey(rawId: string): string {
+  return sanitizeMermaidId(rawId);
+}
+
 function sanitizeMermaidId(rawId: string): string {
   const cleaned = rawId.replace(/[^A-Za-z0-9_.-]/g, '_');
   return /^[A-Za-z_]/.test(cleaned) ? cleaned : `n_${cleaned}`;
@@ -1814,18 +1820,7 @@ export function serializeToBlueprintMarkdown(doc: DiagramDocument): string {
 
 /** The YAML metadata for one level. A nested level leaves out the document-level fields (`shell` false). */
 function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Record<string, unknown> {
-  const idMap = new Map<string, string>();
-  const usedIds = new Set<string>();
-  for (const n of doc.nodes) {
-    let base = sanitizeMermaidId(n.id);
-    let candidate = base;
-    let suffix = 2;
-    while (usedIds.has(candidate)) {
-      candidate = `${base}_${suffix++}`;
-    }
-    usedIds.add(candidate);
-    idMap.set(n.id, candidate);
-  }
+  const idMap = nodeKeys(doc.nodes.map((n) => n.id), sanitizeMermaidId);
 
   const nodesMeta: Record<string, Record<string, unknown>> = {};
   for (const n of doc.nodes) {

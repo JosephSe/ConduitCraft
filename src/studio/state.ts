@@ -629,6 +629,19 @@ export function stepPage(step: 1 | -1): boolean {
 }
 
 /**
+ * Replace the whole file with `whole` (typed into the code pane) as one undo step, staying on the open page and level
+ * where they still exist.
+ */
+export function replaceFile(whole: DiagramDocument): void {
+  pushHistory();
+  applyWhole(whole, app.levelPath, indexOfPage(whole, currentPageId()) < 0 ? 0 : indexOfPage(whole, currentPageId()));
+  announcePageOpened();
+  validateSelection();
+  historyApplied();
+  pagesChanged();
+}
+
+/**
  * Apply a structural page edit (add, duplicate, delete, rename, move) as one undo step. `edit` gets a copy of the
  * whole file and returns the edited file with the page to open, or null to do nothing.
  */

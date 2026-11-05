@@ -1,0 +1,101 @@
+/* The live code pane (F-05). Loaded with the pane code the first time it is opened. */
+.canvas-shell { --code-pane-w: 26rem; --code-pane-h: 14rem; }
+
+.code-pane {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 13;
+  inline-size: var(--code-pane-w);
+  max-inline-size: 60vw;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  background: var(--wl-surface);
+  border-inline-start: 1px solid var(--wl-border);
+  box-shadow: -8px 0 24px rgba(2, 6, 23, 0.1);
+}
+.code-pane[hidden] { display: none; }
+
+/* The canvas, its HUD, the page strip and the run bar give way to the pane. */
+.canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: calc(100% - var(--code-pane-w)); }
+.canvas-shell[data-code-pane="open"] :is(.canvas-hud, .page-strip, .legend-card) { inset-inline-end: calc(var(--code-pane-w) + 0.875rem); }
+.canvas-shell[data-code-pane="open"] .page-strip { inset-inline-end: var(--code-pane-w); }
+.canvas-shell[data-code-pane="open"] :is(.run-bar, .chaos-panel) { inset-inline-start: calc(50% - var(--code-pane-w) / 2); }
+
+.code-pane-resize {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: -4px;
+  inline-size: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 1;
+}
+.code-pane-resize:hover, .code-pane-resize:focus-visible { background: var(--wl-blue-soft); outline: none; }
+
+.code-pane-head { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--wl-border-subtle); }
+.code-pane-title { flex: 1; margin: 0; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; }
+
+.code-pane-body { display: grid; grid-template-columns: auto minmax(0, 1fr); min-block-size: 0; background: var(--wl-canvas); }
+.code-gutter, .code-area {
+  margin: 0;
+  padding: 0.5rem 0.5rem;
+  font-family: var(--wl-font-mono);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+.code-gutter {
+  overflow: hidden;
+  white-space: pre;
+  text-align: end;
+  color: var(--wl-ink-muted);
+  user-select: none;
+  padding-inline: 0.5rem 0.4rem;
+  border-inline-end: 1px solid var(--wl-border-subtle);
+}
+.code-gutter .is-bad { color: var(--wl-rose, #b91c1c); font-weight: 700; }
+.code-area-wrap { position: relative; min-inline-size: 0; min-block-size: 0; display: grid; }
+.code-highlight { position: absolute; inset-inline: 0; z-index: 0; background: var(--wl-blue-soft); border-inline-start: 3px solid var(--wl-blue); pointer-events: none; }
+.code-highlight[hidden] { display: none; }
+.code-area {
+  position: relative;
+  z-index: 1;
+  min-inline-size: 0;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--wl-ink);
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+}
+.code-area:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+
+.code-status { margin: 0; padding: 0.35rem 0.6rem; font-size: 0.74rem; color: var(--wl-ink); border-block-start: 1px solid var(--wl-border-subtle); }
+.code-status[data-tone="warn"] { font-weight: 600; border-inline-start: 3px solid var(--wl-amber); }
+.code-diagnostics { list-style: none; margin: 0; padding: 0 0.4rem 0.4rem; max-block-size: 7rem; overflow: auto; }
+.code-diagnostics:empty { display: none; }
+.code-diagnostic { display: block; inline-size: 100%; padding: 0.2rem 0.3rem; border: 0; background: none; color: var(--wl-ink); font: inherit; font-size: 0.74rem; text-align: start; cursor: pointer; border-radius: 0.3rem; }
+.code-diagnostic:hover { background: var(--wl-hover, rgba(127, 127, 127, 0.1)); }
+.code-diagnostic[data-level="error"] { font-weight: 600; }
+.code-diagnostic:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+
+/* Narrow screens: the pane sits below the canvas instead of beside it. */
+@media (max-width: 66rem) {
+  .code-pane { inset-block: auto 0; inset-inline: 0; inline-size: auto; max-inline-size: none; block-size: var(--code-pane-h); border-inline-start: 0; border-block-start: 1px solid var(--wl-border); }
+  .code-pane-resize { inset-block: -4px auto; inset-inline: 0; block-size: 8px; inline-size: auto; cursor: row-resize; }
+  .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: 100%; block-size: calc(100% - var(--code-pane-h)); }
+  .canvas-shell[data-code-pane="open"] :is(.canvas-hud, .legend-card, .page-strip) { inset-inline-end: 0.875rem; }
+  .canvas-shell[data-code-pane="open"] .page-strip { inset-inline-end: 0; inset-block-end: var(--code-pane-h); }
+  .canvas-shell[data-code-pane="open"] .canvas-hud { inset-block-end: calc(var(--code-pane-h) + var(--page-strip-h) + 0.5rem); }
+  .canvas-shell[data-code-pane="open"] :is(.run-bar, .chaos-panel) { inset-inline-start: 50%; inset-block-end: calc(var(--code-pane-h) + var(--page-strip-h) + 5rem); }
+}
+
+@media (pointer: coarse) {
+  .code-pane .btn { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+  .code-diagnostic { min-block-size: 2.75rem; }
+  .code-pane-resize { inline-size: 16px; inset-inline-start: -8px; }
+}
+@media (pointer: coarse) and (max-width: 66rem) {
+  .code-pane-resize { inline-size: auto; block-size: 16px; inset-block-start: -8px; inset-inline-start: 0; }
+}
