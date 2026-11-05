@@ -123,9 +123,9 @@ export function placeShapes(
 }
 
 /** A component made from text alone (no layout in the source). The caller sets the position through `layoutImported`. */
-export function makeNode(kind: NodeKind, title: string, used: Set<string>, source: { kind: string; ref: string }): DiagramNode {
+export function makeNode(kind: NodeKind | string, title: string, used: Set<string>, source: { kind: string; ref: string }): DiagramNode {
   const node = createNodeFromStencil(kind, 0, 0, 0);
-  const name = title.trim().slice(0, 60) || STENCIL_CATALOG.find((s) => s.kind === kind)?.defaultTitle || 'Component';
+  const name = title.trim().slice(0, 60) || STENCIL_CATALOG.find((s) => s.id === kind || s.kind === kind)?.defaultTitle || 'Component';
   node.id = uniqueId(slugOf(name), used);
   node.title = name;
   node.summary = `${name} imported from ${source.kind}.`;
@@ -155,9 +155,11 @@ export function layoutImported(doc: DiagramDocument): void {
   expandStageToFit(doc);
 }
 
-const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd'];
+const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd', 'minio', 'localstack'];
 const QUEUE_IMAGES = ['rabbitmq', 'activemq', 'artemis', 'elasticmq', 'beanstalkd'];
-const BUS_IMAGES = ['kafka', 'nats', 'redpanda', 'pulsar', 'mosquitto', 'zookeeper'];
+const STREAM_IMAGES = ['kafka', 'redpanda', 'pulsar'];
+const BUCKET_IMAGES = ['minio', 'localstack'];
+const BUS_IMAGES = ['nats', 'mosquitto', 'zookeeper'];
 const BALANCER_IMAGES = ['haproxy'];
 const CACHE_IMAGES = ['memcached', 'varnish'];
 const GATE_IMAGES = ['nginx', 'traefik', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
@@ -169,13 +171,33 @@ export function kindForImage(image: string): NodeKind {
   const has = (list: string[]) => list.some((word) => last.includes(word));
   if (has(CACHE_IMAGES)) return 'cache';
   if (has(STORE_IMAGES)) return 'store';
-  if (has(QUEUE_IMAGES)) return 'queue';
+  if (has(QUEUE_IMAGES) || has(STREAM_IMAGES)) return 'queue';
   if (has(BUS_IMAGES)) return 'bus';
   if (has(BALANCER_IMAGES)) return 'balancer';
   if (has(GATE_IMAGES)) return 'gate';
   return 'service';
 }
 
+
+/** The palette stencil a container image matches: a stream or object storage get their own, else the kind (K6, K8). */
+export function stencilForImage(image: string): string {
+  const name = image.toLowerCase().split('@')[0].split(':')[0];
+  const last = name.split('/').pop() ?? name;
+  if (STREAM_IMAGES.some((word) => last.includes(word))) return 'stream';
+  if (BUCKET_IMAGES.some((word) => last.includes(word))) return 'object-store';
+  return kindForImage(image);
+}
+
+/**
+ * What an image adds on top of its kind: streams are queues with fanout, and object stores use the bucket outline.
+ * `kindForImage` returns only a kind, so this carries the rest.
+ */
+export function presetForImage(image: string): Partial<DiagramNode> | undefined {
+  const stencil = stencilForImage(image);
+  if (stencil === 'stream') return { queue: { delivery: 'fanout' } };
+  if (stencil === 'object-store') return { shape: 'bucket' };
+  return undefined;
+}
 
 export interface GroupExtent {
   name: string;

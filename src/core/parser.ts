@@ -69,6 +69,7 @@ interface RawNodeMeta {
   resilience?: unknown;
   queue?: unknown;
   balancer?: unknown;
+  external?: unknown;
   cache?: unknown;
   limiter?: unknown;
   schedule?: unknown;
@@ -1715,6 +1716,11 @@ function escapeMermaidText(text: string): string {
 }
 
 function formatMermaidNodeShape(node: DiagramNode, safeId: string): string {
+  // An external component carries the `external` class so GitHub also draws it dashed (K7).
+  return `${formatMermaidNodeBase(node, safeId)}${node.external ? ':::external' : ''}`;
+}
+
+function formatMermaidNodeBase(node: DiagramNode, safeId: string): string {
   const label = node.subtitle
     ? `"${escapeMermaidText(node.title)}<br/>${escapeMermaidText(node.subtitle)}"`
     : `"${escapeMermaidText(node.title)}"`;
@@ -1801,6 +1807,8 @@ export function serializeMermaidBlock(doc: DiagramDocument): string {
     lines.push(`  ${formatMermaidNodeShape(n, idMap.get(n.id)!)}`);
   }
 
+  if (doc.nodes.some((n) => n.external)) lines.push('  classDef external stroke-dasharray: 5 5');
+
   if (doc.edges.length > 0) {
     lines.push('');
     for (const e of doc.edges) {
@@ -1883,6 +1891,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
           }
         : {}),
       ...(n.balancer ? { balancer: n.balancer } : {}),
+      ...(n.external ? { external: true } : {}),
       ...(n.cache
         ? {
             cache: {

@@ -10,6 +10,8 @@ export const QUEUE_ORDERINGS: readonly QueueOrdering[] = ['standard', 'fifo', 'p
 export const QUEUE_DELIVERIES: readonly QueueDelivery[] = ['competing', 'fanout'];
 export const MAX_QUEUE_DEPTH = 9999;
 export const MAX_QUEUE_RETENTION = 40;
+export const DEFAULT_PARTITIONS = 3;
+export const MAX_PARTITIONS = 12;
 
 /** Reads `queue` from untrusted input. Defaults ('standard', 'competing') are left absent. */
 export function normalizeQueue(raw: unknown): NodeQueue | undefined {
@@ -31,11 +33,51 @@ export function normalizeQueue(raw: unknown): NodeQueue | undefined {
     const retention = r.retention.trim().slice(0, MAX_QUEUE_RETENTION).trim();
     if (retention) out.retention = retention;
   }
+  if (
+    typeof r.partitions === 'number' &&
+    Number.isInteger(r.partitions) &&
+    r.partitions >= 1 &&
+    r.partitions <= MAX_PARTITIONS &&
+    r.partitions !== DEFAULT_PARTITIONS
+  ) {
+    out.partitions = r.partitions;
+  }
   return Object.keys(out).length ? out : undefined;
 }
 
+/** Lanes drawn inside a stream's pipe: 0 for a queue that is not a stream. */
+export function streamLanes(node: { kind: string; queue?: NodeQueue }): number {
+  if (node.kind !== 'queue' || node.queue?.delivery !== 'fanout') return 0;
+  return node.queue.partitions ?? DEFAULT_PARTITIONS;
+}
+
+/** Messages each consumer of a stream still has to read, by consumer id (K6). */
+export type Lags = Record<string, number>;
+
+/** One message arrives: every consumer that is down falls one further behind. */
+export function fanoutHold(lags: Lags, downConsumers: readonly string[]): Lags {
+  const next = { ...lags };
+  for (const c of downConsumers) next[c] = (next[c] ?? 0) + 1;
+  return next;
+}
+
+/** One drain tick: every live consumer reads one message. */
+export function fanoutDrain(lags: Lags, liveConsumers: readonly string[]): Lags {
+  const next = { ...lags };
+  for (const c of liveConsumers) if (next[c]) next[c] = Math.max(0, next[c] - 1);
+  return next;
+}
+
+/** The largest lag: what the stream's chip and depth show. */
+export function maxLag(lags: Lags): number {
+  return Math.max(0, ...Object.values(lags));
+}
+
 export interface BacklogState {
+  /** For a stream this is the largest lag. */
   depth: number;
+  /** Per-consumer lag, kept only for fanout queues (K6). */
+  lags?: Lags;
   deadLettered: number;
   dropped: number;
 }

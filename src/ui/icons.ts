@@ -25,6 +25,8 @@ export const ICON_LIST: Array<{ id: NodeIconName; label: string }> = [
   { id: 'bolt', label: 'Cache' },
   { id: 'gauge', label: 'Rate limiter' },
   { id: 'clock', label: 'Schedule' },
+  { id: 'stream', label: 'Stream / log' },
+  { id: 'bucket', label: 'Object storage' },
 ];
 
 const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
@@ -97,6 +99,14 @@ const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
     { tag: 'path', attrs: { d: 'M4 17a9 9 0 1 1 16 0' } },
     { tag: 'path', attrs: { d: 'M12 17l4-6' } },
     { tag: 'circle', attrs: { cx: '12', cy: '17', r: '1.5' } },
+  ],
+  stream: [
+    { tag: 'path', attrs: { d: 'M3 7h18M3 12h18M3 17h18' } },
+    { tag: 'path', attrs: { d: 'M17 4l4 3-4 3M17 14l4 3-4 3' } },
+  ],
+  bucket: [
+    { tag: 'ellipse', attrs: { cx: '12', cy: '6', rx: '8', ry: '3' } },
+    { tag: 'path', attrs: { d: 'M4 6l2.5 13a2 2 0 0 0 2 1.5h7a2 2 0 0 0 2-1.5L20 6' } },
   ],
   clock: [
     { tag: 'circle', attrs: { cx: '12', cy: '12', r: '9' } },

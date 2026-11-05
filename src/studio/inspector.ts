@@ -112,7 +112,7 @@ import {
   normalizeLimiter,
   normalizeSchedule,
 } from '../core/components';
-import { MAX_QUEUE_DEPTH, MAX_QUEUE_RETENTION, QUEUE_ORDERINGS, normalizeQueue } from '../core/queues';
+import { DEFAULT_PARTITIONS, MAX_PARTITIONS, MAX_QUEUE_DEPTH, MAX_QUEUE_RETENTION, QUEUE_ORDERINGS, normalizeQueue } from '../core/queues';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 import { notify } from './toast';
@@ -281,6 +281,21 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   ordering.value = node.queue?.ordering ?? 'standard';
   ordering.addEventListener('change', () => commit({ ordering: ordering.value }));
 
+  const delivery = document.createElement('select');
+  delivery.className = 'prop-select';
+  delivery.appendChild(makeOption('competing', 'One reader gets each message'));
+  delivery.appendChild(makeOption('fanout', 'Every reader gets every message (stream)'));
+  delivery.value = node.queue?.delivery ?? 'competing';
+  delivery.addEventListener('change', () => commit({ delivery: delivery.value }));
+
+  const partitions = wholeNumberInput(node.queue?.partitions, 1, MAX_PARTITIONS, String(DEFAULT_PARTITIONS));
+  partitions.addEventListener('change', () => {
+    const n = Math.round(Number(partitions.value));
+    const next = partitions.value.trim() === '' || !Number.isFinite(n) ? DEFAULT_PARTITIONS : Math.max(1, Math.min(MAX_PARTITIONS, n));
+    partitions.value = next === DEFAULT_PARTITIONS ? '' : String(next);
+    commit({ partitions: next });
+  });
+
   const depth = document.createElement('input');
   depth.type = 'number';
   depth.min = '1';
@@ -324,6 +339,8 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   return [
     group,
     makeField('prop-node-queue-ordering', 'Ordering', ordering),
+    makeField('prop-node-queue-delivery', 'Delivery', delivery),
+    ...(node.queue?.delivery === 'fanout' ? [makeField('prop-node-queue-partitions', 'Partitions (drawn)', partitions)] : []),
     makeField('prop-node-queue-depth', 'Max depth', depth),
     makeField('prop-node-queue-dlq', 'Dead-letter queue', dead),
     makeField('prop-node-queue-retention', 'Retention', retention),
@@ -350,6 +367,22 @@ function makeBalancerFields(node: DiagramNode): HTMLElement[] {
   group.className = 'prop-field prop-queue-heading';
   group.appendChild(heading);
   return [group, makeField('prop-node-balancer-strategy', 'Strategy', strategy)];
+}
+
+/** "Run by someone else" (K7): the component is drawn dashed and counts as outside the team's control. */
+function makeExternalField(node: DiagramNode): HTMLElement {
+  const box = document.createElement('input');
+  box.type = 'checkbox';
+  box.checked = Boolean(node.external);
+  box.addEventListener('change', () => {
+    pushHistory();
+    if (box.checked) node.external = true;
+    else delete node.external;
+    renderAll(false);
+  });
+  const field = makeField('prop-node-external', 'Run by someone else', box);
+  field.classList.add('prop-field-check');
+  return field;
 }
 
 function fieldGroup(title: string): HTMLElement {
@@ -906,6 +939,8 @@ export function renderPropertyEditor(): void {
     for (const shape of NODE_SHAPES) {
       // A load balancer's default outline already is the trapezoid, so it lists one entry for it.
       if (shape === 'trapezoid' && node.kind === 'balancer') continue;
+      // The bucket outline is a store's (K8).
+      if (shape === 'bucket' && node.kind !== 'store') continue;
       const opt = document.createElement('option');
       opt.value = shape;
       opt.textContent =
@@ -1268,6 +1303,7 @@ export function renderPropertyEditor(): void {
     linksField.append(linksTitle, makeLinksEditor(node));
     reviewElements.push(linksField);
     reviewElements.push(...makeResilienceFields(node));
+    reviewElements.push(makeExternalField(node));
     if (node.kind === 'queue') reviewElements.push(...makeQueueFields(node));
     if (node.kind === 'balancer') reviewElements.push(...makeBalancerFields(node));
     if (node.kind === 'cache') reviewElements.push(...makeCacheFields(node));

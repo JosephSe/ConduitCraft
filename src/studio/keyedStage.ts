@@ -12,6 +12,7 @@ import {
   drawnShape,
   balancerDrawsTrapezoid,
   sanitizeIconImage,
+  storeDrawsBucket,
   storeDrawsCylinder,
 } from '../core/nodeStyle';
 import {
@@ -54,7 +55,7 @@ import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline
 import { reconcileKeyed } from './reconcile';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
-import { queueCardText } from '../core/queues';
+import { queueCardText, streamLanes } from '../core/queues';
 import { paintBacklog, paintDlqLinks } from './queueBacklog';
 import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { insightsFor, worstLevel } from './insights';
@@ -1256,9 +1257,9 @@ function ensureShapePlate(hit: HTMLElement, plateKind: string): SVGSVGElement {
 function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
   hit.style.padding = nodeShapeContentPadding(node.kind, node.shape, node.width, node.height);
   const cylinder = storeDrawsCylinder(node.kind, node.shape)
-    ? cylinderPlate(node.width, node.height)
+    ? cylinderPlate(node.width, node.height, storeDrawsBucket(node.kind, node.shape))
     : null;
-  const pipe = queueDrawsPipe(node.kind, node.shape) ? pipePlate(node.width, node.height) : null;
+  const pipe = queueDrawsPipe(node.kind, node.shape) ? pipePlate(node.width, node.height, streamLanes(node)) : null;
   const plate = cylinder || pipe
     ? null
     : nodeShapePlate(drawnShape(node.kind, node.shape), node.width, node.height, app.doc.direction);
@@ -1280,6 +1281,18 @@ function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
       pipeSvg.append(body, cap);
     }
     body.setAttribute('d', pipe.body);
+    // A stream shows its partitions as thin lanes (K6).
+    let lanes = pipeSvg.querySelector<SVGPathElement>('.node-shape-lanes');
+    if (pipe.lanes) {
+      if (!lanes) {
+        lanes = document.createElementNS(SVG_NS, 'path');
+        lanes.setAttribute('class', 'node-shape-lanes');
+        body.after(lanes);
+      }
+      lanes.setAttribute('d', pipe.lanes);
+    } else {
+      lanes?.remove();
+    }
     cap.setAttribute('cx', String(pipe.cx));
     cap.setAttribute('cy', String(pipe.cy));
     cap.setAttribute('rx', String(pipe.rx));
@@ -1401,7 +1414,13 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   paintChaos(wrapper, node.id);
   paintInsights(wrapper, node.id);
   paintBacklog(wrapper, node);
-  if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
+  if (node.external) wrapper.dataset.external = 'true';
+  else delete wrapper.dataset.external;
+  if (storeDrawsCylinder(node.kind, node.shape)) {
+    wrapper.dataset.shape = 'cylinder';
+    if (storeDrawsBucket(node.kind, node.shape)) wrapper.dataset.bucket = 'true';
+    else delete wrapper.dataset.bucket;
+  }
   else if (queueDrawsPipe(node.kind, node.shape)) wrapper.dataset.shape = 'pipe';
   else if (balancerDrawsTrapezoid(node.kind, node.shape)) wrapper.dataset.shape = 'trapezoid';
   else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;

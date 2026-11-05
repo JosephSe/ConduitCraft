@@ -7,7 +7,7 @@
 import yaml from 'js-yaml';
 import type { DiagramDocument, DiagramNode, ImportIssue } from '../types';
 import { createBlankDocument } from '../templates/presets';
-import { issue, kindForImage, layoutByGroup, makeEdge, makeNode } from './common';
+import { issue, layoutByGroup, makeEdge, makeNode, stencilForImage } from './common';
 
 export interface KubernetesResult {
   doc: DiagramDocument;
@@ -110,7 +110,7 @@ export function convertKubernetes(text: string, title: string): KubernetesResult
   for (const r of workloads) {
     const containers = containersOf(r);
     const images = containers.map((c) => str(c.image)).filter(Boolean);
-    const node = makeNode(images[0] ? kindForImage(images[0]) : 'service', r.name, used, { kind: KUBERNETES_SOURCE, ref: `${r.kind}/${r.ns}/${r.name}` });
+    const node = makeNode(images[0] ? stencilForImage(images[0]) : 'service', r.name, used, { kind: KUBERNETES_SOURCE, ref: `${r.kind}/${r.ns}/${r.name}` });
     node.subtitle = `${r.kind} · ${r.ns}`.slice(0, 60);
     node.summary = `${r.kind} ${r.name} in namespace ${r.ns}.`;
     const spec = isRecord(r.raw.spec) ? r.raw.spec : {};

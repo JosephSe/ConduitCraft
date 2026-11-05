@@ -26,7 +26,8 @@ export type InsightCode =
   | 'balancer-single-target'
   | 'cache-no-backing'
   | 'limiter-fail-open'
-  | 'scheduler-no-queue';
+  | 'scheduler-no-queue'
+  | 'external-unprotected';
 
 export interface InsightTarget {
   type: 'node' | 'edge';
@@ -51,6 +52,7 @@ export const INSIGHT_RULES: readonly InsightRule[] = [
   { code: 'cycle', level: 'warning', title: 'Synchronous cycle' },
   { code: 'deprecated-in-path', level: 'warning', title: 'Deprecated component in a scenario' },
   { code: 'queue-no-consumer', level: 'warning', title: 'Queue nothing reads from' },
+  { code: 'external-unprotected', level: 'warning', title: 'Unprotected call to an external component' },
   { code: 'at-risk-fan-in', level: 'warning', title: 'At-risk component with many dependents' },
   { code: 'orphan', level: 'info', title: 'Component with no wires' },
   { code: 'dangling-store', level: 'info', title: 'Data store nothing reads from' },
@@ -233,6 +235,17 @@ function danglingStore(doc: DiagramDocument): InsightIssue[] {
   for (const node of doc.nodes) {
     if (node.kind !== 'store') continue;
     const touching = doc.edges.filter((e) => e.from === node.id || e.to === node.id);
+    // Backups and exports are often write-only: a bucket written only by a scheduler or an external component is fine (K8).
+    if (
+      node.shape === 'bucket' &&
+      touching.length > 0 &&
+      touching.every((e) => {
+        const writer = doc.nodes.find((n) => n.id === e.from);
+        return e.to === node.id && (writer?.kind === 'scheduler' || writer?.external === true);
+      })
+    ) {
+      continue;
+    }
     // Unwired stores are reported as orphans instead.
     if (touching.length === 0) continue;
     const readFrom = touching.some((e) => e.from === node.id || e.flow === 'both' || READ_WORDS.test(e.label));
@@ -348,6 +361,35 @@ function schedulerNoQueue(doc: DiagramDocument): InsightIssue[] {
   return out;
 }
 
+/** A synchronous call into a component someone else runs, on a scenario path, with no breaker and no fallback (K7). */
+function externalUnprotected(doc: DiagramDocument): InsightIssue[] {
+  const byId = new Map(doc.nodes.map((n) => [n.id, n]));
+  const sims = getEffectiveSimulations(doc);
+  const onPath = (from: string, to: string): boolean =>
+    sims.some((sim) =>
+      sim.steps.some(
+        (s, i) =>
+          (s.nodes.includes(from) && s.nodes.includes(to)) ||
+          (s.nodes.includes(from) && Boolean(sim.steps[i + 1]?.nodes.includes(to))),
+      ),
+    );
+  const out: InsightIssue[] = [];
+  for (const e of doc.edges) {
+    const caller = byId.get(e.from);
+    const callee = byId.get(e.to);
+    if (!caller || !callee || !callee.external || !isSync(e)) continue;
+    if (caller.resilience?.circuitBreaker || callee.resilience?.fallbackId) continue;
+    if (!onPath(e.from, e.to)) continue;
+    out.push({
+      level: 'warning',
+      code: 'external-unprotected',
+      target: { type: 'edge', id: e.id },
+      message: `${caller.title || caller.id} calls ${callee.title || callee.id} synchronously with no circuit breaker or fallback.`,
+    });
+  }
+  return out;
+}
+
 function deprecatedInPath(doc: DiagramDocument): InsightIssue[] {
   const deprecated = new Set(doc.nodes.filter((n) => n.status === 'deprecated').map((n) => n.id));
   if (deprecated.size === 0) return [];
@@ -454,6 +496,7 @@ const CHECKS: Record<InsightCode, (doc: DiagramDocument) => InsightIssue[]> = {
   'cache-no-backing': cacheNoBacking,
   'limiter-fail-open': limiterFailOpen,
   'scheduler-no-queue': schedulerNoQueue,
+  'external-unprotected': externalUnprotected,
 };
 
 /** Every issue the rules find, most severe first, ignoring mutes. */
