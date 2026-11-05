@@ -5,6 +5,7 @@
  * Traffic follows wires from `from` to `to`; a wire with `flow: 'both'` carries traffic either way.
  */
 import type { DiagramDocument, DiagramNode, NodeResilience } from '../types';
+import { queueConsumers } from './queues';
 
 export interface ReachabilityResult {
   /** Failed outright: in the failure set with a single instance. */
@@ -19,6 +20,10 @@ export interface ReachabilityResult {
   rerouted: string[];
   /** Still working, but call a failed component directly, so their requests may fail. */
   atRisk: string[];
+  /** Queues that are up but holding messages because their consumers are down (K1). */
+  buffering: string[];
+  /** Cut off now, but their work waits in a live queue and resumes on restore (K1). */
+  delayed: string[];
 }
 
 /** Entry points are actors and clients; a diagram with neither falls back to components nothing points at. */
@@ -131,14 +136,48 @@ export function reachableFrom(
       }),
   );
 
+  // Queues (K1): a queue whose consumers are down holds the work, so its producers carry on.
+  const buffering: string[] = [];
+  const isDown = (id: string) => blocked.has(id) && !detour.has(id);
+  for (const id of after) {
+    const node = byId.get(id)!;
+    if (node.kind !== 'queue' || failedSet.has(id)) continue;
+    const consumers = queueConsumers(doc, id);
+    if (!consumers.length) continue;
+    const downCount = consumers.filter(isDown).length;
+    if (!downCount) continue;
+    const fanout = node.queue?.delivery === 'fanout';
+    if (fanout || downCount === consumers.length) buffering.push(id);
+    // Competing consumers: the live ones take the extra load, and the queue itself is not at risk.
+    else {
+      for (const c of consumers) if (!isDown(c) && after.has(c) && !rerouted.includes(c)) rerouted.push(c);
+      const at = atRisk.indexOf(id);
+      if (at >= 0) atRisk.splice(at, 1);
+    }
+  }
+  for (const id of buffering) {
+    const at = atRisk.indexOf(id);
+    if (at >= 0) atRisk.splice(at, 1);
+  }
+  // Work behind a buffering queue is delayed rather than lost: it was reachable before and resumes on restore.
+  const delayed = new Set<string>();
+  for (const q of buffering) {
+    for (const id of walk(next, [q], new Set(), new Map())) {
+      if (unreachable.includes(id)) delayed.add(id);
+    }
+  }
+  const stillUnreachable = unreachable.filter((id) => !delayed.has(id));
+
   const sort = (ids: string[]) => ids.sort();
   return {
     failed: sort(failed),
     degraded: sort(degraded),
     reachable: sort([...after]),
-    unreachable: sort(unreachable),
+    unreachable: sort(stillUnreachable),
     rerouted: sort(rerouted),
     atRisk: sort(atRisk),
+    buffering: sort(buffering),
+    delayed: sort([...delayed]),
   };
 }
 

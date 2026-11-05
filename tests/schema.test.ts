@@ -52,6 +52,17 @@ describe('schema versioning (T-03)', () => {
     assert.equal(back.ok && back.doc.title, 'Round trip');
   });
 
+  it('opens a version-11 file unchanged and stamps 12 (queues, K1)', () => {
+    assert.equal(CURRENT_SCHEMA_VERSION >= 12, true);
+    const doc = createBlankDocument();
+    doc.title = 'Old file';
+    const v11 = JSON.stringify({ kind: 'conduitcraft.blueprint', version: 11, document: doc });
+    const parsed = parseBlueprintJson(v11);
+    assert.ok(parsed.ok);
+    assert.equal(parsed.ok && parsed.doc.title, 'Old file');
+    assert.equal(JSON.parse(serializeBlueprintJson(parsed.ok ? parsed.doc : doc)).version, CURRENT_SCHEMA_VERSION);
+  });
+
   it('opens files saved before versioning: version 1 in an envelope, or a bare document', () => {
     const doc = createBlankDocument();
     const v1 = JSON.stringify({ kind: 'conduitcraft.blueprint', version: 1, document: doc });

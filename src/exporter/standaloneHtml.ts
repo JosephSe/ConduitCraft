@@ -1,6 +1,7 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
 import { breadcrumb, viewOfLevel } from '../core/levels';
 import { pageList, viewOfPage } from '../core/pages';
+import { queueCardText } from '../core/queues';
 import { describeDiagram } from '../core/describe';
 import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, relatedNodeIds, routeDiagramEdges } from '../core/layout';
@@ -12,6 +13,8 @@ import {
   renderNodeShapePlate,
   sanitizeIconImage,
   storeDrawsCylinder,
+  queueDrawsPipe,
+  renderPipePlate,
 } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { normalizeLinks, toneName } from '../core/meta';
@@ -40,12 +43,14 @@ function serializeScriptJson(data: unknown): string {
 
 function nodeShapeAttr(node: DiagramNode): string {
   if (storeDrawsCylinder(node.kind, node.shape)) return ' data-shape="cylinder"';
+  if (queueDrawsPipe(node.kind, node.shape)) return ' data-shape="pipe"';
   if (!node.shape || node.shape === 'card') return '';
   return ` data-shape="${escapeHtml(node.shape)}"`;
 }
 
 function nodePlateMarkup(node: DiagramNode): string {
   if (storeDrawsCylinder(node.kind, node.shape)) return renderCylinderPlate(node.width, node.height);
+  if (queueDrawsPipe(node.kind, node.shape)) return renderPipePlate(node.width, node.height);
   return renderNodeShapePlate(node.shape, node.width, node.height);
 }
 
@@ -140,8 +145,8 @@ function renderExportedNode(
         <span class="node-sub">${escapeHtml(node.subtitle)}</span>
       </div>
       <div class="node-footer">
-        <span>${escapeHtml(node.footerLeft)}</span>
-        <span class="micro-chip">${escapeHtml(node.chip)}</span>
+        <span>${escapeHtml(queueCardText(node).footer)}</span>
+        <span class="micro-chip">${escapeHtml(queueCardText(node).chip)}</span>
       </div>
     </button>`;
 }

@@ -1,4 +1,4 @@
-export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client';
+export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client' | 'queue';
 
 export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric';
 
@@ -30,7 +30,25 @@ export type NodeIconName =
   | 'cloud'
   | 'spark'
   | 'cpu'
-  | 'globe';
+  | 'globe'
+  | 'queue';
+
+export type QueueOrdering = 'standard' | 'fifo' | 'priority';
+export type QueueDelivery = 'competing' | 'fanout';
+
+/** How a queue holds and hands out messages (K1). Absent fields use the defaults in `core/queues.ts`. */
+export interface NodeQueue {
+  /** Default 'standard'. Recorded for the reader and shown on the card. */
+  ordering?: QueueOrdering;
+  /** Default 'competing': each message goes to one consumer. 'fanout' is a stream (K6). */
+  delivery?: QueueDelivery;
+  /** Most messages held before overflow. Absent means unbounded. 1 to 9999. */
+  maxDepth?: number;
+  /** Where overflow goes. Another component on the same level, usually a queue. */
+  deadLetterId?: string;
+  /** Free text such as "4 days". Shown on the card, not used in the run. Max 40 characters. */
+  retention?: string;
+}
 
 export interface KeyValueMetric {
   label: string;
@@ -184,6 +202,8 @@ export interface DiagramNode {
   links?: NodeLink[];
   /** How the component copes with failing (F-01). Absent means a single instance with no fallback. */
   resilience?: NodeResilience;
+  /** Queue settings (K1). Only read when `kind` is 'queue'; kept when the kind changes so settings are not lost. */
+  queue?: NodeQueue;
   /** Where the component was imported from (F-06), so a later import or drift check can match it again. */
   source?: NodeSource;
   /** The diagram inside this component, opened as a level (F-03). Absent means the component is a leaf. */

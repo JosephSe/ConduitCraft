@@ -29,7 +29,7 @@ import { createBlankDocument } from '../templates/presets';
 
 export const BLUEPRINT_JSON_KIND = 'conduitcraft.blueprint';
 
-const KINDS = new Set<NodeKind>(['actor', 'core', 'service', 'bus', 'gate', 'store', 'client']);
+const KINDS = new Set<NodeKind>(['actor', 'core', 'service', 'bus', 'gate', 'store', 'client', 'queue']);
 const TONES = new Set<StreamTone>(['blue', 'emerald', 'rose', 'violet', 'amber']);
 const PORTS = new Set<PortSide>(['auto', 'top', 'right', 'bottom', 'left']);
 const ROUTES = new Set<EdgeRouteMode>([

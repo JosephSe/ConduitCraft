@@ -2397,6 +2397,102 @@
     top: 2.45rem;
   }
 
+  /* Message queues draw a horizontal pipe (K1). The hit stays clear so the plate is the silhouette. */
+  .arch-node[data-shape="pipe"] .node-select-hit,
+  .arch-node[data-shape="pipe"] .node-select-hit:hover,
+  .arch-node[data-shape="pipe"] .node-select-hit[aria-pressed="true"],
+  .arch-node.is-related[data-shape="pipe"] .node-select-hit,
+  .arch-node[data-shape="pipe"][data-sim-active="true"] .node-select-hit {
+    overflow: visible;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+
+  .arch-node[data-shape="pipe"] .node-select-hit[aria-pressed="true"],
+  .arch-node.is-related[data-shape="pipe"] .node-select-hit {
+    outline-color: transparent;
+  }
+
+  .arch-node[data-shape="pipe"] .pipe-body {
+    fill: color-mix(in srgb, var(--node-accent) 10%, var(--wl-surface));
+  }
+
+  .arch-node[data-shape="pipe"] .pipe-cap {
+    fill: color-mix(in srgb, var(--node-accent) 20%, var(--wl-surface));
+  }
+
+  .arch-node[data-shape="pipe"] .node-sub { display: none; }
+
+  /* Backlog inside the pipe (K1): messages line up from the outlet on the right. Traffic lens only. */
+  .queue-backlog {
+    position: absolute;
+    inset-block-end: 0.55rem;
+    inset-inline-end: 2.4rem;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 3px;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .queue-msg {
+    inline-size: 0.8rem;
+    block-size: 0.55rem;
+    border-radius: 2px;
+    background: var(--node-accent);
+    color: var(--wl-surface);
+    font: 700 0.55rem/0.55rem var(--wl-font-mono);
+    text-align: center;
+    animation: queue-msg-in 220ms ease-out 1;
+  }
+
+  .queue-msg[data-more] {
+    inline-size: auto;
+    min-inline-size: 1.4rem;
+    padding-inline: 2px;
+    block-size: 0.8rem;
+    line-height: 0.8rem;
+    margin-block-start: -0.12rem;
+  }
+
+  .arch-node[data-backlog] .node-footer { visibility: hidden; }
+
+  .queue-count {
+    position: absolute;
+    inset-block-start: -0.7rem;
+    inset-inline-end: 2.2rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    font: 600 0.65rem/1.3 var(--wl-font-mono);
+    white-space: nowrap;
+    pointer-events: none;
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    border: 1px solid var(--wl-amber);
+    z-index: 3;
+  }
+
+  .queue-count[data-level="warn"] { border-color: var(--wl-amber); border-width: 2px; }
+  .queue-count[data-level="full"] { border-color: var(--wl-rose); border-width: 2px; }
+
+  .queue-dlq-link {
+    stroke: var(--wl-rose);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+    fill: none;
+    pointer-events: none;
+  }
+
+  @keyframes queue-msg-in {
+    from { opacity: 0; transform: translateX(-6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .queue-msg { animation: none; }
+  }
+
   /* Level-of-Detail (LoD) rendering for low zoom (< 55%) */
   #stage-world[data-lod="low"] .node-footer,
   #stage-world[data-lod="low"] .node-eyebrow,
@@ -5048,6 +5144,20 @@ kbd {
 }
 .arch-node[data-chaos="at-risk"] .chaos-badge { background: #f97316; color: #fff; border-color: #f97316; }
 .chaos-item[data-status="at-risk"] { color: #c2410c; }
+/* Queues (K1): a queue that holds work is up, so it gets a violet ring; what waits behind it gets a dotted one. */
+.arch-node[data-chaos="buffering"] .node-select-hit {
+  border-color: var(--wl-violet);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--wl-violet) 40%, transparent);
+}
+.arch-node[data-chaos="delayed"] .node-select-hit {
+  outline: 2px dotted color-mix(in srgb, var(--wl-violet) 65%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="buffering"] .chaos-badge,
+.arch-node[data-chaos="delayed"] .chaos-badge { border-color: var(--wl-violet); }
+.arch-node[data-shape="pipe"][data-chaos="failed"] .node-shape-plate { color: var(--wl-rose); }
+.arch-node[data-shape="pipe"][data-chaos="buffering"] .node-shape-plate { color: var(--wl-violet); }
+.chaos-item[data-status="buffering"], .chaos-item[data-status="delayed"] { font-weight: 600; }
 .chaos-badge {
   position: absolute;
   inset-block-start: -0.7rem;

@@ -5,6 +5,8 @@ import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/lay
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
 import {
   cylinderPlate,
+  pipePlate,
+  queueDrawsPipe,
   nodeShapeContentPadding,
   nodeShapePlate,
   sanitizeIconImage,
@@ -50,6 +52,7 @@ import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline
 import { reconcileKeyed } from './reconcile';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
+import { queueCardText } from '../core/queues';
 import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { insightsFor, worstLevel } from './insights';
 import { scheduleMinimapPaint } from './minimap';
@@ -1252,9 +1255,30 @@ function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
   const cylinder = storeDrawsCylinder(node.kind, node.shape)
     ? cylinderPlate(node.width, node.height)
     : null;
-  const plate = cylinder ? null : nodeShapePlate(node.shape, node.width, node.height);
-  if (!cylinder && !plate) {
+  const pipe = queueDrawsPipe(node.kind, node.shape) ? pipePlate(node.width, node.height) : null;
+  const plate = cylinder || pipe ? null : nodeShapePlate(node.shape, node.width, node.height);
+  if (!cylinder && !pipe && !plate) {
     hit.querySelector('.node-shape-plate')?.remove();
+    return;
+  }
+  if (pipe) {
+    const pipeSvg = ensureShapePlate(hit, 'pipe');
+    pipeSvg.setAttribute('viewBox', `0 0 ${pipe.width} ${pipe.height}`);
+    let body = pipeSvg.querySelector<SVGPathElement>('.pipe-body');
+    let cap = pipeSvg.querySelector<SVGEllipseElement>('.pipe-cap');
+    if (!body || !cap) {
+      pipeSvg.replaceChildren();
+      body = document.createElementNS(SVG_NS, 'path');
+      body.setAttribute('class', 'node-shape-geom pipe-body');
+      cap = document.createElementNS(SVG_NS, 'ellipse');
+      cap.setAttribute('class', 'node-shape-geom pipe-cap');
+      pipeSvg.append(body, cap);
+    }
+    body.setAttribute('d', pipe.body);
+    cap.setAttribute('cx', String(pipe.cx));
+    cap.setAttribute('cy', String(pipe.cy));
+    cap.setAttribute('rx', String(pipe.rx));
+    cap.setAttribute('ry', String(pipe.ry));
     return;
   }
   const svg = ensureShapePlate(hit, cylinder ? 'cylinder' : plate!.kind);
@@ -1315,6 +1339,8 @@ const CHAOS_BADGES: Record<string, string> = {
   unreachable: '⛓ Unreachable',
   rerouted: '↪ Rerouted',
   'at-risk': '⚠ Potential disruption',
+  buffering: '⏸ Buffering',
+  delayed: '⏳ Delayed',
 };
 
 /** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */
@@ -1368,6 +1394,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   paintChaos(wrapper, node.id);
   paintInsights(wrapper, node.id);
   if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
+  else if (queueDrawsPipe(node.kind, node.shape)) wrapper.dataset.shape = 'pipe';
   else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
   else delete wrapper.dataset.shape;
   wrapper.style.setProperty('--nx', String(node.x));
@@ -1394,6 +1421,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     node.icon,
     node.eyebrow,
     node.footerLeft,
+    node.queue,
   ]);
   const painted = paintedNodeContent.get(wrapper);
   if (painted && painted.sig === contentSig && painted.image === node.iconImage) return;
@@ -1502,7 +1530,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   const sub = wrapper.querySelector('.node-sub');
   if (sub) sub.textContent = node.subtitle;
   const chip = wrapper.querySelector('.micro-chip');
-  if (chip) chip.textContent = node.chip;
+  const cardText = queueCardText(node);
+  if (chip) chip.textContent = cardText.chip;
   const iconBox = wrapper.querySelector<HTMLElement>('.node-icon');
   if (iconBox) {
     const key = glyphKey(customIcon, node.icon);
@@ -1516,7 +1545,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     const eyebrow = wrapper.querySelector('.node-eyebrow');
     if (eyebrow) eyebrow.textContent = node.eyebrow;
     const footer = wrapper.querySelector('.node-footer-label');
-    if (footer) footer.textContent = node.footerLeft;
+    if (footer) footer.textContent = cardText.footer;
   }
 }
 
