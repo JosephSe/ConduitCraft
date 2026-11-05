@@ -200,7 +200,7 @@ export async function importTraceText(text: string, title: string): Promise<bool
     notify(err instanceof Error ? err.message : 'Could not read this trace file.', { tone: 'error' });
     return false;
   }
-  const canUpdate = app.levelPath.length === 0 && app.doc.nodes.length > 0;
+  const canUpdate = app.levelPath.length === 0 && app.pageIndex === 0 && app.doc.nodes.length > 0;
   const mode = canUpdate ? await askTraceMode() : 'new';
   if (!mode) return false;
   if (mode === 'new') return openConverted([result.doc], result.issues, 'traces');

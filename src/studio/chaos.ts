@@ -7,17 +7,31 @@ import { failedAncestor, failedIdsAt, failureKey, insideFailedComponent } from '
 import { nodesAtLevel, type LevelPath } from '../core/levels';
 import { entryPointIds, reachableFrom, type ReachabilityResult } from '../core/reachability';
 import { announce } from './a11y';
-import { app } from './state';
+import { app, onPageOpened } from './state';
 import { renderAll } from './render';
 
 export type ChaosStatus = 'failed' | 'degraded' | 'unreachable' | 'rerouted' | 'at-risk';
 
 /** Failures at every level, keyed by where they sit (`core/failures.ts`), so repeated ids at different levels never collide. */
-const failed = new Set<string>();
+let failed = new Set<string>();
+/** Each page keeps its own failures (D10), so a component that fails on one page stays up on the others. */
+const failedByPage = new Map<string, Set<string>>();
+let failedPageId = '';
+
+/** The open page changed: show that page's failures. */
+function switchChaosPage(pageId: string): void {
+  if (pageId === failedPageId) return;
+  failedByPage.set(failedPageId, failed);
+  failedPageId = pageId;
+  failed = failedByPage.get(pageId) ?? new Set<string>();
+  cached = undefined;
+  for (const listener of listeners) listener();
+}
 /** Component under the pointer while Alt is held and nothing has failed: a what-if preview. */
 let previewId: string | null = null;
 let cached: ReachabilityResult | null | undefined;
 const listeners = new Set<() => void>();
+onPageOpened(switchChaosPage);
 
 export function onChaosChange(listener: () => void): void {
   listeners.add(listener);

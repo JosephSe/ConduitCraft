@@ -5,7 +5,7 @@
 import { boundaryPorts, breadcrumb } from '../core/levels';
 import { chaosLensActive, isFailedAt, levelOpened } from './chaos';
 import { stageWorld } from './dom';
-import { app, fullDocument, goToLevel, setSelection } from './state';
+import { app, goToLevel, openPageDocument, setSelection } from './state';
 
 let crumbNav: HTMLElement | null = null;
 let portLayer: HTMLElement | null = null;
@@ -38,7 +38,7 @@ export function paintLevels(): void {
   if (typeof document === 'undefined') return;
   ensureElements();
   const path = app.levelPath;
-  const root = path.length > 0 ? fullDocument() : app.doc;
+  const root = path.length > 0 ? openPageDocument() : app.doc;
   const crumbs = breadcrumb(root, path);
   const ports = boundaryPorts(root, path);
   // A wire to an outside component that has failed leads nowhere: its port is cut off (D5).

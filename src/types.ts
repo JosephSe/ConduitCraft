@@ -304,6 +304,18 @@ export interface DiagramBrand {
   logo: string;
 }
 
+/**
+ * One diagram of several in a file (D10). The document's own content is the first page; the rest live in
+ * `DiagramDocument.pages`. A page has its own components, wires, swimlanes, notes, frames and stage size, and wires
+ * never cross pages.
+ */
+export interface DiagramPage extends LevelContent {
+  id: string;
+  title: string;
+  stageWidth?: number;
+  stageHeight?: number;
+}
+
 export interface DiagramDocument {
   title: string;
   systemTag: string;
@@ -324,6 +336,12 @@ export interface DiagramDocument {
   legend?: LegendEntry[];
   /** Per-diagram settings for the Review lens (F-02). */
   insights?: { muted: string[] };
+  /** The second page onwards (D10). The document's own content is the first page. Absent means a single page. */
+  pages?: DiagramPage[];
+  /** Name of the first page. Absent means "Page 1". */
+  pageTitle?: string;
+  /** Id of the first page, once it has moved or been told apart from the others. Absent means "page-1". */
+  pageId?: string;
 }
 
 export type SelectionTarget =

@@ -4,6 +4,7 @@ import type {
   DiagramEdge,
   DiagramNode,
   DiagramNotesCard,
+  DiagramPage,
   DiagramZone,
   EdgeRouteMode,
   KeyValueMetric,
@@ -20,6 +21,7 @@ import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta'
 import { normalizeBrand } from '../core/brand';
 import { coerceFrames, dropDanglingFrameIds } from '../core/frames';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
+import { MAX_PAGES, normalizePages } from '../core/pages';
 import { expandStageToFit, getNodeDimensions, tightenLegacyStoreCylinder } from '../core/layout';
 import { normalizeNodeShape, sanitizeIconImage } from '../core/nodeStyle';
 import { normalizeIconName } from '../ui/icons';
@@ -123,6 +125,19 @@ function coerceLevel(raw: unknown, depth: number): LevelContent | null {
   if (frames.length) level.frames = frames;
   dropDanglingFrameIds(level.nodes, frames);
   return level;
+}
+
+/** The second page onwards. Each page reads like a level, plus its own id, title and stage size. */
+function coercePages(raw: unknown): DiagramPage[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, MAX_PAGES - 1).flatMap((item) => {
+    const level = coerceLevel(item, 1);
+    if (!level || !isRecord(item)) return [];
+    const page: DiagramPage = { id: str(item.id), title: str(item.title), ...level };
+    if (num(item.stageWidth) > 0) page.stageWidth = num(item.stageWidth);
+    if (num(item.stageHeight) > 0) page.stageHeight = num(item.stageHeight);
+    return [page];
+  });
 }
 
 function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
@@ -254,7 +269,18 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
     if (!Array.isArray(sim.failures)) delete sim.failures;
     else sim.failures = sim.failures.filter((id): id is string => typeof id === 'string');
   }
+  const pages = coercePages(source.pages);
+  if (pages.length) doc.pages = pages;
+  if (typeof source.pageTitle === 'string') doc.pageTitle = source.pageTitle;
+  if (typeof source.pageId === 'string') doc.pageId = source.pageId;
+  normalizePages(doc);
   pruneDanglingChaos(doc);
   expandStageToFit(doc);
+  for (const page of doc.pages ?? []) {
+    const fit = { ...doc, ...page } as DiagramDocument;
+    expandStageToFit(fit);
+    page.stageWidth = fit.stageWidth;
+    page.stageHeight = fit.stageHeight;
+  }
   return { ok: true, doc };
 }

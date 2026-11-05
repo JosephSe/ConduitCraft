@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Pages.** One file can hold several diagrams, shown as tabs along the bottom of the canvas. Add, rename, reorder, duplicate and delete pages from the tab strip, its menu or the command palette; `Alt+PageDown` and `Alt+PageUp` change page. Existing files open as one page. The file format moves to version 11; files saved with pages need this version or later.
 - **The Classic layout is removed.** `?ui=1` and the "Classic layout" setting are gone, and so is the old header's overflow menu. A saved Classic preference is dropped once, with a notice. Nothing in your diagrams changes.
 
 ## 2.0.0

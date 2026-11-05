@@ -105,6 +105,7 @@ import {
   getViewportWorldCenter,
   goToLevel,
   goUpLevel,
+  openPageDocument,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
   performRedo,
@@ -201,7 +202,6 @@ import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from 
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
 import { initInsightsPanel } from './insights';
-import { initOutlinePanel } from './outlinePanel';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
@@ -1406,7 +1406,8 @@ export function getSubgraphMode(): 'swimlanes' | 'levels' {
 }
 
 export function refreshCodeModalTextarea(): void {
-  codeSyncTextarea.value = serializeToBlueprintMarkdown(app.doc);
+  // Applying this text replaces the whole diagram, so on a later page it shows the whole file, not just that page (D10).
+  codeSyncTextarea.value = serializeToBlueprintMarkdown(app.pageIndex > 0 ? fullDocument() : app.doc);
   codeSyncDiagnostics.textContent =
     'Blueprint file (.md): YAML metadata, positions and a Mermaid block. Paste Mermaid or a Blueprint file to import it.';
   delete codeSyncDiagnostics.dataset.tone;
@@ -2167,7 +2168,7 @@ export function initEvents(): void {
       getDoc: () => app.doc,
       getOtherLevels: () => {
         const here = app.levelPath.join('/');
-        return allLevelNodes(fullDocument()).filter((e) => e.path.join('/') !== here);
+        return allLevelNodes(openPageDocument()).filter((e) => e.path.join('/') !== here);
       },
       onFocusNode: (node, frame = false, path) => {
         if (path) goToLevel(path);
@@ -2190,7 +2191,6 @@ export function initEvents(): void {
   initRunBar({ run: runSimulation });
   initChaosPanel();
   initInsightsPanel();
-  initOutlinePanel();
   initHelp();
   initChaosPreview(chaosNodesLayer);
 

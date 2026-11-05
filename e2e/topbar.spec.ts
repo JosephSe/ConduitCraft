@@ -92,6 +92,7 @@ const REGIONS: Array<[name: string, selector: string]> = [
   ['failure summary', '#chaos-panel'],
   ['review panel', '#insights-panel'],
   ['text outline', '#outline-panel'],
+  ['page strip', '#page-strip'],
 ];
 const NOT_COUNTED = '.rail-stencil-btn, .insight-item, #toast-container, #canvas-stage, .arch-node';
 

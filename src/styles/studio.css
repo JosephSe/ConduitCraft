@@ -2474,7 +2474,7 @@
 
   .canvas-hud {
     position: absolute;
-    inset-block-end: 0.875rem;
+    inset-block-end: calc(0.875rem + var(--page-strip-h));
     inset-inline: 0.875rem;
     display: flex;
     align-items: flex-end;
@@ -4945,7 +4945,7 @@ kbd {
 .run-bar {
   position: absolute;
   inset-inline-start: 50%;
-  inset-block-end: 7.25rem;
+  inset-block-end: calc(7.25rem + var(--page-strip-h));
   transform: translateX(-50%);
   z-index: 11;
   display: flex;
@@ -5078,7 +5078,7 @@ kbd {
 .chaos-panel {
   position: absolute;
   inset-inline-start: 50%;
-  inset-block-end: 11.5rem;
+  inset-block-end: calc(11.5rem + var(--page-strip-h));
   transform: translateX(-50%);
   z-index: 11;
   display: grid;
@@ -5443,3 +5443,64 @@ kbd {
 .bulk-tag-row { display: flex; gap: 0.4rem; align-items: center; }
 .bulk-tag-row .prop-input { flex: 1; min-inline-size: 0; }
 .bulk-tag-buttons { display: inline-flex; gap: 0.25rem; }
+
+/* Page tabs (D10): along the bottom edge of the canvas, always shown. The HUD, run bar and failure summary sit above it. */
+.canvas-shell { --page-strip-h: 2.25rem; }
+.page-strip {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 12;
+  block-size: var(--page-strip-h);
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  padding-inline: 0.5rem;
+  background: var(--wl-surface);
+  border-block-start: 1px solid var(--wl-border);
+}
+.page-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0.125rem;
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.page-tab {
+  flex: 0 0 auto;
+  max-inline-size: 14rem;
+  padding: 0 0.85rem;
+  border: 0;
+  border-block-start: 2px solid transparent;
+  background: none;
+  color: var(--wl-ink-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.page-tab:hover { color: var(--wl-ink); background: var(--wl-hover, rgba(127, 127, 127, 0.1)); }
+.page-tab[aria-selected="true"] { color: var(--wl-ink); font-weight: 600; border-block-start-color: var(--wl-blue); background: var(--wl-panel, transparent); }
+.page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--wl-blue); }
+.page-tab-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-add {
+  flex: 0 0 auto;
+  align-self: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: none;
+  color: var(--wl-ink-muted);
+  cursor: pointer;
+}
+.page-add:hover { color: var(--wl-ink); border-color: var(--wl-border); }
+.page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+body[data-presenting="true"] .page-strip { display: none; }
+/* Touch (A12): the strip's tabs and + button are full-size targets, and the HUD above them makes room. */
+@media (pointer: coarse) {
+  .canvas-shell { --page-strip-h: 2.75rem; }
+  .page-tab, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+}

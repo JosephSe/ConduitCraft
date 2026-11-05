@@ -8,6 +8,8 @@ export interface KeyBinding {
   /** Cmd on Mac, Ctrl elsewhere. */
   mod?: boolean;
   shift?: boolean;
+  /** Alt (Option on Mac). Most bindings leave it off and are ignored when Alt is held. */
+  alt?: boolean;
   /** Only in Design mode. */
   designOnly?: boolean;
   /** Only in the Traffic (data) lens. */
@@ -46,6 +48,9 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'level-open', key: 'Enter', mod: true, needsSelection: true },
   { actionId: 'level-up', key: 'ArrowUp', mod: true },
   { actionId: 'edit-rename', key: 'F2', designOnly: true },
+  // Pages (D10). Ctrl+PageUp/PageDown belong to the browser's own tabs, so Alt is used.
+  { actionId: 'page-next', key: 'PageDown', alt: true },
+  { actionId: 'page-previous', key: 'PageUp', alt: true },
   { actionId: 'edit-delete', key: 'Delete', designOnly: true, needsSelection: true },
   { actionId: 'edit-delete', key: 'Backspace', designOnly: true, needsSelection: true },
 ];
@@ -65,13 +70,13 @@ export interface KeyContext {
 
 /** The action a key press should run, or null when it is not bound (or not applicable right now). */
 export function matchBinding(event: KeyEventLike, ctx: KeyContext, bindings: KeyBinding[] = KEY_BINDINGS): string | null {
-  if (event.altKey) return null;
   const mod = event.metaKey || event.ctrlKey;
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
   for (const b of bindings) {
     if (b.key.toLowerCase() !== key.toLowerCase()) continue;
     if (Boolean(b.mod) !== mod) continue;
     if (Boolean(b.shift) !== event.shiftKey) continue;
+    if (Boolean(b.alt) !== event.altKey) continue;
     if (b.designOnly && ctx.mode !== 'design') continue;
     if (b.dataOnly && ctx.mode !== 'data') continue;
     if (b.needsSelection && !ctx.hasSelection) continue;
