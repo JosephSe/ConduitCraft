@@ -1010,6 +1010,22 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'copy-llm-rules',
+      title: 'Copy LLM Rules',
+      subtitle: 'Rules that let any AI chat turn a diagram, image or draw.io file into a Blueprint file',
+      category: 'Export & Sync',
+      keywords: ['llm', 'ai', 'chatgpt', 'claude', 'gemini', 'prompt', 'rules', 'convert', 'image', 'drawio', 'copy', 'clipboard'],
+      run: async () => {
+        try {
+          const { default: rules } = await import('../../docs/llm-rules.md?raw');
+          await navigator.clipboard.writeText(rules);
+          notify('Copied the LLM rules. Paste them into an AI chat with your diagram');
+        } catch {
+          notify('Could not copy to the clipboard', { tone: 'error' });
+        }
+      },
+    },
+    {
       id: 'copy-share-link',
       title: 'Copy Shareable Link',
       subtitle: 'Compress architecture into URL hash and copy to clipboard',

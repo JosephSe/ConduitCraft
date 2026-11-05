@@ -1,6 +1,6 @@
 # ConduitCraft guide
 
-This page is the guide and schema reference for ConduitCraft. The [README](../README.md) covers install and the product overview, and the [showcase walkthrough](showcase.md) shows every feature in one example.
+This page is the guide and schema reference for ConduitCraft. The [README](../README.md) covers install and the product overview, and the [showcase walkthrough](showcase.md) shows every feature in one example. To have an AI chat convert an image or another tool's diagram into a Blueprint file, give it the [LLM rules](llm-rules.md).
 
 ## The canvas
 

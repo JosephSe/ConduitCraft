@@ -59,6 +59,8 @@ The [showcase walkthrough](./docs/showcase.md) explains the example a new visito
 
 ![The showcase: Marquee flash-sale ticketing](docs/images/showcase-design.jpg)
 
+The [LLM rules](./docs/llm-rules.md) let any AI chat convert an architecture image, whiteboard photo, draw.io file or Mermaid diagram into a Blueprint file you can open and edit. Paste the rules and your diagram into the chat, save the reply as `name.blueprint.md`, and drop it on the canvas. **Copy LLM Rules** in the command palette copies them.
+
 ## Quick Start
 
 Requires Node.js 22.6 or newer (the tests use Node's built-in TypeScript support) and [pnpm](https://pnpm.io). An `.nvmrc` is included, so `nvm use` picks the right version.

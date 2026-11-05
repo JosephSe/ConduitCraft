@@ -490,6 +490,15 @@ function extractSections(rawInput: string): {
   const leadLines = countNewlines(normalized.match(/^\s*/)?.[0] ?? '');
   let text = normalized.trim();
   let bodyLineBase = leadLines; // 0-based line index of `text[0]` within the original input
+  // A chat reply often wraps the whole file in a ```markdown fence, with a sentence before it. When that fence holds
+  // front matter, read the file inside it.
+  if (!text.startsWith('---')) {
+    const fenced = /(^|\n)(`{3,}|~{3,})[ \t]*(?:markdown|md)[ \t]*\n(---\n[\s\S]*?\n---[ \t]*(?:\n[\s\S]*?)?)\n\2[ \t]*(?:\n|$)/i.exec(text);
+    if (fenced) {
+      bodyLineBase += countNewlines(text.slice(0, fenced.index + fenced[1].length)) + 1;
+      text = fenced[3].trim();
+    }
+  }
   const mergedMeta: RawBlueprintMeta = {};
 
   const mergeMetaObject = (parsed: unknown, sourceLabel: string) => {

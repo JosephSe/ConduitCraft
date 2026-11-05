@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Rules for AI chats.** [docs/llm-rules.md](docs/llm-rules.md) teaches any language model to turn an image, whiteboard photo, draw.io file, Mermaid, PlantUML or C4 model into a Blueprint file. It covers every component kind, the layout grid, swimlanes, frames, scenarios, and what the model may infer and must never invent. **Copy LLM Rules** in the command palette copies it. A Blueprint file pasted or opened with the chat reply still around it (a ```markdown fence and a sentence before it) now imports as the file inside.
 - **New showcase: Marquee flash-sale ticketing.** First run and **Load Showcase** now open a made-up ticketing system selling 60,000 seats to 1.8 million fans. It uses every component kind, outline, icon, wire route and protocol, two levels, three pages, frames, a legend and six scenarios, and keeps three Review warnings on purpose. [docs/showcase.md](docs/showcase.md) walks through it. Lumen Relay stays in the gallery as the smaller classic example.
 - **Reference templates rebuilt.** The six starter templates use the newer components (caches, streams, object storage, schedulers, external components), their scenarios follow real wires, and they pass Review with no issues.
 - **Load balancer rule.** A load balancer with a single target that runs more than one replica is no longer reported as not spreading load.
