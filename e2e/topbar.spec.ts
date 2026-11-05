@@ -19,11 +19,11 @@ const visibleControls = (page: Page) =>
       .map((el) => el.id || el.getAttribute('name') || el.tagName);
   });
 
-test('the top bar shows at most 8 controls', async ({ page }) => {
+test('the top bar shows at most 9 controls', async ({ page }) => {
   await open(page);
   const controls = await visibleControls(page);
-  expect(controls.length, controls.join(', ')).toBeLessThanOrEqual(8);
-  for (const id of ['btn-open-palette', 'btn-share', 'btn-focus-doc-title']) expect(controls).toContain(id);
+  expect(controls.length, controls.join(', ')).toBeLessThanOrEqual(9);
+  for (const id of ['btn-open-palette', 'btn-share', 'btn-focus-doc-title', 'btn-app-menu']) expect(controls).toContain(id);
   await expect(page.locator('#btn-open-export')).toHaveCount(0);
 });
 
@@ -129,7 +129,8 @@ for (const [lens, key] of [['Design', '1'], ['Traffic', '2'], ['Review', '3']] a
     const total = Object.values(counts).reduce((sum, list) => sum + list.length, 0);
     console.log(`${lens}: ${total} counted controls`, JSON.stringify(Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v.length]))));
     for (const [name, list] of Object.entries(counts)) {
-      expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(8);
+      // The top bar is allowed one more: its menu holds every action that has no button of its own.
+      expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(name === 'top bar' ? 9 : 8);
     }
   });
 }

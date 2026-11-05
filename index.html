@@ -87,6 +87,10 @@
         <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="btn-text-responsive">Search</span>
       </button>
+
+      <button type="button" class="btn btn-icon-only" id="btn-app-menu" aria-label="Main menu" aria-haspopup="menu" aria-expanded="false" data-tip="Menu">
+        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+      </button>
     </div>
   </header>
 
@@ -111,19 +115,19 @@
           <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
         </button>
         <div class="rail-divider rail-tool-only"></div>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" data-tip-pos="right" aria-label="Select tool (V)">
+        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" aria-label="Select tool (V)">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
         </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="connect" aria-pressed="false" data-tip="Wire (W)" data-tip-pos="right" aria-label="Wire tool (W)">
+        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="connect" aria-pressed="false" data-tip="Wire (W)" aria-label="Wire tool (W)">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
         </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="hand" aria-pressed="false" data-tip="Hand (H)" data-tip-pos="right" aria-label="Hand tool (H)">
+        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="hand" aria-pressed="false" data-tip="Hand (H)" aria-label="Hand tool (H)">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.4L3.4 16a2 2 0 0 1 3.2-2.4L8 15"/></svg>
         </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="text" aria-pressed="false" data-tip="Text (T)" data-tip-pos="right" aria-label="Text tool (T)">
+        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="text" aria-pressed="false" data-tip="Text (T)" aria-label="Text tool (T)">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
         </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="frame" aria-pressed="false" data-tip="Frame (F)" data-tip-pos="right" aria-label="Frame tool (F)">
+        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="frame" aria-pressed="false" data-tip="Frame (F)" aria-label="Frame tool (F)">
           <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
         </button>
         <div class="rail-divider"></div>
@@ -204,6 +208,15 @@
                 <small>Column header banner</small>
               </span>
             </button>
+            <button type="button" class="stencil-aux-btn" id="btn-add-frame" data-palette-tool="frame" aria-pressed="false" data-tip="Drag on the canvas to draw a frame (F)" data-tip-pos="top">
+              <span class="stencil-aux-icon" aria-hidden="true">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
+              </span>
+              <span>
+                <strong>Frame</strong>
+                <small>Box that holds components</small>
+              </span>
+            </button>
             <button type="button" class="stencil-aux-btn" id="btn-add-notes">
               <span class="stencil-aux-icon" aria-hidden="true">
                 <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
@@ -211,6 +224,15 @@
               <span>
                 <strong>Note</strong>
                 <small>Checklist annotation box</small>
+              </span>
+            </button>
+            <button type="button" class="stencil-aux-btn" id="btn-add-text" data-palette-tool="text" aria-pressed="false" data-tip="Click the canvas to add a label (T)" data-tip-pos="top">
+              <span class="stencil-aux-icon" aria-hidden="true">
+                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+              </span>
+              <span>
+                <strong>Text</strong>
+                <small>Free label on the canvas</small>
               </span>
             </button>
           </div>

@@ -6,6 +6,8 @@ This page is the guide and schema reference for ConduitCraft. The [README](../RE
 
 Design mode is the drafting surface. The stencil palette sits on the left, the canvas in the middle, and the property inspector on the right. Data View hides the palette, filters wires by tone, and opens lineage, the live trace, and the scenario editor.
 
+The tools (Select, Wire, Hand, Text and Frame) are at the top of the left panel whether the component list is open or folded. The menu button at the right of the top bar holds file, view and settings actions such as Save, Export, Auto-Layout and Preferences. `Cmd/Ctrl+K` searches every action.
+
 ![Design mode with a starter pair, the stencil palette, and the property inspector](images/design-canvas.png)
 
 ![Data View with tone filters, lineage, and the inspector beside the canvas](images/data-view.png)
@@ -181,7 +183,7 @@ With several pages, the text outline lists them, Review says how many issues eac
 
 ## Frames
 
-A frame is a titled box that holds the components inside it. Draw one with the Frame tool (`F`), or select components and choose Group into Frame. Drag the title strip to move the frame with everything in it (notes and text labels inside it too); drag the corner to resize; double-click the title to rename. Frames can sit inside other frames. Duplicate (`Cmd/Ctrl+D`) copies a frame with what it holds, and Lock (`Cmd/Ctrl+L`) keeps it from being moved or deleted. A selected frame moves with `Alt+Arrow`. The text outline lists frames, and the description says what each holds. When importing Mermaid, Subgraphs as: Frames turns each subgraph into a frame.
+A frame is a titled box that holds the components inside it. Draw one with the Frame tool (the Frame button in the left panel, or `F`), or select components and choose Group into Frame. Drag the title strip to move the frame with everything in it (notes and text labels inside it too); drag the corner to resize; double-click the title to rename. Frames can sit inside other frames. Duplicate (`Cmd/Ctrl+D`) copies a frame with what it holds, and Lock (`Cmd/Ctrl+L`) keeps it from being moved or deleted. A selected frame moves with `Alt+Arrow`. The text outline lists frames, and the description says what each holds. When importing Mermaid, Subgraphs as: Frames turns each subgraph into a frame.
 
 ## Legend and tags
 

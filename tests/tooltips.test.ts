@@ -75,6 +75,14 @@ describe('preferred tooltip placement', () => {
     assert.equal(preferredPlacement(fake({}, ['.palette-rail-content'])), 'right');
     assert.equal(preferredPlacement(fake({}, ['.inspector-rail-content'])), 'left');
   });
+
+  it('keeps tool tips off the next tool when the tools run sideways above the open palette', () => {
+    assert.equal(preferredPlacement(fake({}, ['.palette-rail-content', '.rail-tool-btn'])), 'bottom');
+    assert.equal(
+      preferredPlacement(fake({}, ['.palette-rail-content', '.rail-tool-btn', '[data-palette-collapsed="true"]'])),
+      'right',
+    );
+  });
 });
 
 describe('tooltip styles', () => {
