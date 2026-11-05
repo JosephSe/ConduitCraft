@@ -292,7 +292,7 @@ Animation audit against V1 table 6.3: packet and dash flow, the chaos shake, the
 
 #### [ ] B2b. Retire the old `localStorage` document copies · S
 - **Needs:** B2, and at least one release since B2 shipped.
-- **Blocked:** no release since B2 shipped. `v2.0.0` was tagged before B2 merged and no later tag exists, so deleting the old `localStorage` copies now would remove the only fallback for a visitor who rolls back. Take it after the next tagged release.
+- **Blocked:** until a release after B2 is out. `v2.0.0` was tagged before B2 merged, so deleting the old `localStorage` copies would remove the only fallback for a visitor who rolls back. `v2.1.0` is the first release that includes B2; once it is tagged this item is unblocked, and it can go in the next PR.
 - **Do:** stop reading `readLegacyContents` and delete the old keys after the first successful IndexedDB load, then drop the `localStorage` fallback's legacy-key mapping in favour of its own namespace. Keep the memory fallback and its notice.
 - **Done when:** `grep -rn "conduitcraft-autosave-v1\|blueprint-studio-autosave-v1" src` finds nothing, and a Playwright test shows a returning visitor's work survives the release.
 

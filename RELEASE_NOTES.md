@@ -1,6 +1,6 @@
 # Release notes
 
-## Unreleased
+## 2.1.0
 
 - **Layered layout (ELK).** **Auto-Layout: Layered (ELK)** in the command palette arranges the diagram in layers with fewer crossings, keeps fixed wire ends on their side and zones in order, leaves locked components alone, glides the components into place and is one undo step. The ELK library loads only when you use it; the built-in layout is still the default.
 - **Drift check.** **Check for Drift** (command palette) compares a diagram with a newer Docker Compose, Kubernetes, OpenAPI or AsyncAPI file and lists what was added, dropped or changed, with Accept and Ignore for each (one undo step). `pnpm conduitcraft drift` does the same on the command line, and the GitHub Action's new `drift` input fails a job when a source file has moved on.
