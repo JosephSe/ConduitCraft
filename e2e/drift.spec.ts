@@ -63,7 +63,17 @@ test('a file that is not an importer source is refused in plain words', async ({
 });
 
 test('the dialog has no accessibility violations', async ({ page }) => {
-  await openWith(page, 'docker-compose.yml', newer);
+  const dialog = await openWith(page, 'docker-compose.yml', newer);
+  await expect(dialog.locator('.drift-row')).toHaveCount(2);
+  // The dialog fades in; axe reads blended colours while that runs, so let every finite animation finish first.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+        .map((a) => a.finished.catch(() => undefined)),
+    ),
+  );
   const results = await new AxeBuilder({ page }).include('#drift-dialog').analyze();
   expect(results.violations).toEqual([]);
 });
