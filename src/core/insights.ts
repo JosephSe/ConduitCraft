@@ -95,8 +95,23 @@ const READ_WORDS = /\b(read|reads|query|queries|select|fetch|get|load|lookup|loo
 /** A wire is treated as a synchronous call unless it is marked async. */
 const isSync = (e: DiagramEdge) => e.sync !== 'async';
 
+// Two components can share a title (e.g. a LIPS in two zones). Add the first detail that tells them apart so
+// the review never lists what looks like the same entry twice.
 function titleOf(doc: DiagramDocument, id: string): string {
-  return doc.nodes.find((n) => n.id === id)?.title || id;
+  const node = doc.nodes.find((n) => n.id === id);
+  if (!node) return id;
+  const base = node.title || node.id;
+  const twins = doc.nodes.filter((n) => n.id !== node.id && (n.title || n.id) === base);
+  if (twins.length === 0) return base;
+  const details: Array<(n: { subtitle?: string; zoneLabel?: string }) => string | undefined> = [
+    (n) => n.subtitle,
+    (n) => n.zoneLabel,
+  ];
+  for (const detail of details) {
+    const mine = detail(node)?.trim();
+    if (mine && twins.every((t) => detail(t)?.trim() !== mine)) return `${base} (${mine})`;
+  }
+  return `${base} (${node.id})`;
 }
 
 function spof(doc: DiagramDocument): InsightIssue[] {
@@ -226,7 +241,7 @@ function orphan(doc: DiagramDocument): InsightIssue[] {
       level: 'info' as const,
       code: 'orphan' as const,
       target: { type: 'node' as const, id: n.id },
-      message: `${n.title || n.id} has no wires.`,
+      message: `${titleOf(doc, n.id)} has no wires.`,
     }));
 }
 
@@ -254,7 +269,7 @@ function danglingStore(doc: DiagramDocument): InsightIssue[] {
       level: 'info',
       code: 'dangling-store',
       target: { type: 'node', id: node.id },
-      message: `Nothing reads from ${node.title || node.id}; every wire only writes to it.`,
+      message: `Nothing reads from ${titleOf(doc, node.id)}; every wire only writes to it.`,
     });
   }
   return out;
@@ -271,7 +286,7 @@ function queueNoConsumer(doc: DiagramDocument): InsightIssue[] {
       level: 'warning',
       code: 'queue-no-consumer',
       target: { type: 'node', id: node.id },
-      message: `Nothing reads from ${node.title || node.id}; messages pile up forever.`,
+      message: `Nothing reads from ${titleOf(doc, node.id)}; messages pile up forever.`,
     });
   }
   return out;
@@ -284,7 +299,7 @@ function queueNoDlq(doc: DiagramDocument): InsightIssue[] {
       level: 'info' as const,
       code: 'queue-no-dlq' as const,
       target: { type: 'node' as const, id: n.id },
-      message: `${n.title || n.id} drops messages when full; it has no dead-letter queue.`,
+      message: `${titleOf(doc, n.id)} drops messages when full; it has no dead-letter queue.`,
     }));
 }
 
@@ -314,7 +329,7 @@ function balancerSingleTarget(doc: DiagramDocument): InsightIssue[] {
       level: 'info',
       code: 'balancer-single-target',
       target: { type: 'node', id: node.id },
-      message: `${node.title || node.id} has ${count === 0 ? 'no targets' : 'one target'}, so it does not spread load.`,
+      message: `${titleOf(doc, node.id)} has ${count === 0 ? 'no targets' : 'one target'}, so it does not spread load.`,
     });
   }
   return out;
@@ -327,7 +342,7 @@ function cacheNoBacking(doc: DiagramDocument): InsightIssue[] {
       level: 'info' as const,
       code: 'cache-no-backing' as const,
       target: { type: 'node' as const, id: n.id },
-      message: `${n.title || n.id} has no data store behind it; a failure loses every read.`,
+      message: `${titleOf(doc, n.id)} has no data store behind it; a failure loses every read.`,
     }));
 }
 
@@ -341,8 +356,8 @@ function limiterFailOpen(doc: DiagramDocument): InsightIssue[] {
       code: 'limiter-fail-open',
       target: { type: 'node', id: n.id },
       message: target
-        ? `${n.title || n.id} fails open: when it is down, traffic reaches ${titleOf(doc, target)} unchecked.`
-        : `${n.title || n.id} fails open, but it has more than one target, so it fails closed when it is down.`,
+        ? `${titleOf(doc, n.id)} fails open: when it is down, traffic reaches ${titleOf(doc, target)} unchecked.`
+        : `${titleOf(doc, n.id)} fails open, but it has more than one target, so it fails closed when it is down.`,
     });
   }
   return out;
@@ -359,7 +374,7 @@ function schedulerNoQueue(doc: DiagramDocument): InsightIssue[] {
       level: 'info',
       code: 'scheduler-no-queue',
       target: { type: 'node', id: n.id },
-      message: `${n.title || n.id} runs straight into ${titleOf(doc, into.to)}; a failed run is not retried.`,
+      message: `${titleOf(doc, n.id)} runs straight into ${titleOf(doc, into.to)}; a failed run is not retried.`,
     });
   }
   return out;
@@ -388,7 +403,7 @@ function externalUnprotected(doc: DiagramDocument): InsightIssue[] {
       level: 'warning',
       code: 'external-unprotected',
       target: { type: 'edge', id: e.id },
-      message: `${caller.title || caller.id} calls ${callee.title || callee.id} synchronously with no circuit breaker or fallback.`,
+      message: `${titleOf(doc, caller.id)} calls ${titleOf(doc, callee.id)} synchronously with no circuit breaker or fallback.`,
     });
   }
   return out;
@@ -436,7 +451,7 @@ function atRiskFanIn(doc: DiagramDocument): InsightIssue[] {
       level: 'warning',
       code: 'at-risk-fan-in',
       target: { type: 'node', id: node.id },
-      message: `${node.title || node.id} is marked at risk and ${n} components depend on it.`,
+      message: `${titleOf(doc, node.id)} is marked at risk and ${n} components depend on it.`,
     });
   }
   return out;
