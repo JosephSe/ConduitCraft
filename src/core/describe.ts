@@ -124,6 +124,43 @@ function levelLines(content: LevelContent, trail: string[] = []): string[] {
   return lines;
 }
 
+/** One sentence per queue (K1): where it sits, how big it may grow and where overflow goes. */
+function queueLines(content: LevelContent): string[] {
+  const byId = new Map(content.nodes.map((n) => [n.id, n]));
+  const edges = content.edges ?? [];
+  const lines: string[] = [];
+  for (const q of content.nodes) {
+    if (q.kind !== 'queue') continue;
+    const cfg = q.queue;
+    const dlq = cfg?.deadLetterId;
+    const producers = edges.filter((e) => e.to === q.id && byId.has(e.from)).map((e) => nameOf(byId.get(e.from)));
+    const consumers = edges
+      .filter((e) => e.from === q.id && e.to !== dlq && byId.has(e.to))
+      .map((e) => nameOf(byId.get(e.to)));
+    const kind = cfg?.ordering === 'fifo' ? 'a FIFO queue' : cfg?.ordering === 'priority' ? 'a priority queue' : 'a queue';
+    const place =
+      producers.length && consumers.length
+        ? ` between ${list([...new Set(producers)])} and ${list([...new Set(consumers)])}`
+        : producers.length
+          ? ` fed by ${list([...new Set(producers)])}`
+          : consumers.length
+            ? ` read by ${list([...new Set(consumers)])}`
+            : '';
+    const parts = [`${nameOf(q)} is ${kind}${place}.`];
+    const dlqNode = dlq ? byId.get(dlq) : undefined;
+    if (cfg?.maxDepth) {
+      parts.push(
+        `It holds up to ${cfg.maxDepth} messages${dlqNode ? ` and sends overflow to ${nameOf(dlqNode)}` : ' and drops the rest'}.`,
+      );
+    } else if (dlqNode) {
+      parts.push(`It sends overflow to ${nameOf(dlqNode)}.`);
+    }
+    if (cfg?.retention) parts.push(`It keeps messages for ${cfg.retention}.`);
+    lines.push(`- ${parts.join(' ')}`);
+  }
+  return lines;
+}
+
 function scenarioLines(doc: DiagramDocument): string[] {
   const byId = new Map(doc.nodes.map((n) => [n.id, n]));
   return (doc.simulations ?? []).map((scenario) => {
@@ -180,6 +217,7 @@ export function describeDiagram(doc: DiagramDocument): string {
     add((doc.zones ?? []).length ? 'Swimlanes' : 'Components', swimlaneLines(doc));
     add('Frames', frameLines(doc));
     add('Main flows', flowLines(doc));
+    add('Queues', queueLines(doc));
     add('Levels', levelLines(doc));
   } else {
     // Each page is told on its own: a wire never crosses pages, so the sentences never mix them.
@@ -190,6 +228,7 @@ export function describeDiagram(doc: DiagramDocument): string {
       add(`Page ${page.title}: ${(content.zones ?? []).length ? 'Swimlanes' : 'Components'}`, swimlaneLines(content));
       add(`Page ${page.title}: Frames`, frameLines(content));
       add(`Page ${page.title}: Main flows`, flowLines(content));
+      add(`Page ${page.title}: Queues`, queueLines(content));
       add(`Page ${page.title}: Levels`, levelLines(content));
     }
   }

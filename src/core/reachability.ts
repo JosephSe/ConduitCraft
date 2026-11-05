@@ -196,6 +196,13 @@ export function pruneDanglingChaos(doc: DiagramDocument): void {
     delete r.fallbackId;
     if (!Object.keys(r).length) delete node.resilience;
   }
+  // A queue's dead-letter target must be another component on the same level (K1).
+  for (const node of doc.nodes) {
+    const q = node.queue;
+    if (!q?.deadLetterId || (ids.has(q.deadLetterId) && q.deadLetterId !== node.id)) continue;
+    delete q.deadLetterId;
+    if (!Object.keys(q).length) delete node.queue;
+  }
   for (const sim of doc.simulations) {
     if (!sim.failures) continue;
     const kept = [...new Set(sim.failures)].filter((id) => typeof id === 'string' && anyPage.has(id));

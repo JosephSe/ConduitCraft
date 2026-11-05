@@ -179,7 +179,7 @@ describe('architecture insights (F-02)', () => {
 
   it('every rule is listed once with a level', () => {
     assert.equal(new Set(INSIGHT_RULES.map((r) => r.code)).size, INSIGHT_RULES.length);
-    assert.equal(INSIGHT_RULES.length, 8);
+    assert.equal(INSIGHT_RULES.length, 11);
   });
 
   it('no bundled template produces an error', async () => {

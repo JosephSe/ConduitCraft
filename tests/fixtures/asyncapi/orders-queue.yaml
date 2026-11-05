@@ -1,0 +1,30 @@
+asyncapi: 2.6.0
+info:
+  title: Fulfilment Service
+  version: 1.0.0
+channels:
+  fulfilment.work:
+    description: Work waiting for a picker.
+    bindings:
+      amqp:
+        is: queue
+        queue:
+          name: fulfilment.work
+    publish:
+      message:
+        name: PickOrder
+  orders.events:
+    bindings:
+      amqp:
+        is: routingKey
+    subscribe:
+      message:
+        name: OrderPicked
+  orders.sqs:
+    bindings:
+      sqs:
+        queues:
+          - name: orders
+    publish:
+      message:
+        name: OrderPlaced

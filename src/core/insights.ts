@@ -17,7 +17,10 @@ export type InsightCode =
   | 'deprecated-in-path'
   | 'at-risk-fan-in'
   | 'latency-budget'
-  | 'unlabeled-wire';
+  | 'unlabeled-wire'
+  | 'queue-no-consumer'
+  | 'queue-no-dlq'
+  | 'sync-into-queue';
 
 export interface InsightTarget {
   type: 'node' | 'edge';
@@ -41,9 +44,12 @@ export const INSIGHT_RULES: readonly InsightRule[] = [
   { code: 'spof', level: 'warning', title: 'Single point of failure' },
   { code: 'cycle', level: 'warning', title: 'Synchronous cycle' },
   { code: 'deprecated-in-path', level: 'warning', title: 'Deprecated component in a scenario' },
+  { code: 'queue-no-consumer', level: 'warning', title: 'Queue nothing reads from' },
   { code: 'at-risk-fan-in', level: 'warning', title: 'At-risk component with many dependents' },
   { code: 'orphan', level: 'info', title: 'Component with no wires' },
   { code: 'dangling-store', level: 'info', title: 'Data store nothing reads from' },
+  { code: 'queue-no-dlq', level: 'info', title: 'Queue with a limit and no dead-letter queue' },
+  { code: 'sync-into-queue', level: 'info', title: 'Synchronous wire into a queue' },
   { code: 'unlabeled-wire', level: 'info', title: 'Wire between services without a label' },
 ];
 
@@ -231,6 +237,46 @@ function danglingStore(doc: DiagramDocument): InsightIssue[] {
   return out;
 }
 
+function queueNoConsumer(doc: DiagramDocument): InsightIssue[] {
+  const out: InsightIssue[] = [];
+  for (const node of doc.nodes) {
+    if (node.kind !== 'queue') continue;
+    const into = doc.edges.some((e) => e.to === node.id || (e.flow === 'both' && e.from === node.id));
+    const outOf = doc.edges.some((e) => e.from === node.id || (e.flow === 'both' && e.to === node.id));
+    if (!into || outOf) continue;
+    out.push({
+      level: 'warning',
+      code: 'queue-no-consumer',
+      target: { type: 'node', id: node.id },
+      message: `Nothing reads from ${node.title || node.id}; messages pile up forever.`,
+    });
+  }
+  return out;
+}
+
+function queueNoDlq(doc: DiagramDocument): InsightIssue[] {
+  return doc.nodes
+    .filter((n) => n.kind === 'queue' && n.queue?.maxDepth !== undefined && !n.queue.deadLetterId)
+    .map((n) => ({
+      level: 'info' as const,
+      code: 'queue-no-dlq' as const,
+      target: { type: 'node' as const, id: n.id },
+      message: `${n.title || n.id} drops messages when full; it has no dead-letter queue.`,
+    }));
+}
+
+function syncIntoQueue(doc: DiagramDocument): InsightIssue[] {
+  const queues = new Map(doc.nodes.filter((n) => n.kind === 'queue').map((n) => [n.id, n]));
+  return doc.edges
+    .filter((e) => queues.has(e.to) && isSync(e))
+    .map((e) => ({
+      level: 'info' as const,
+      code: 'sync-into-queue' as const,
+      target: { type: 'edge' as const, id: e.id },
+      message: `The wire into ${queues.get(e.to)!.title || e.to} is synchronous; queues are usually written asynchronously.`,
+    }));
+}
+
 function deprecatedInPath(doc: DiagramDocument): InsightIssue[] {
   const deprecated = new Set(doc.nodes.filter((n) => n.status === 'deprecated').map((n) => n.id));
   if (deprecated.size === 0) return [];
@@ -330,6 +376,9 @@ const CHECKS: Record<InsightCode, (doc: DiagramDocument) => InsightIssue[]> = {
   'at-risk-fan-in': atRiskFanIn,
   'latency-budget': latencyBudget,
   'unlabeled-wire': unlabeledWire,
+  'queue-no-consumer': queueNoConsumer,
+  'queue-no-dlq': queueNoDlq,
+  'sync-into-queue': syncIntoQueue,
 };
 
 /** Every issue the rules find, most severe first, ignoring mutes. */

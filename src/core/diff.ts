@@ -34,6 +34,26 @@ export interface DocumentDiff {
   hasChanges: boolean;
 }
 
+const QUEUE_FIELDS: Array<[keyof NonNullable<DiagramNode['queue']>, string]> = [
+  ['ordering', 'ordering'],
+  ['delivery', 'delivery'],
+  ['maxDepth', 'max depth'],
+  ['deadLetterId', 'dead-letter queue'],
+  ['retention', 'retention'],
+];
+
+/** "Orders Queue: max depth 100 → 500" for each queue setting that changed (K1). */
+function queueChanges(before: DiagramNode, after: DiagramNode): string[] {
+  const out: string[] = [];
+  for (const [key, label] of QUEUE_FIELDS) {
+    const a = before.queue?.[key];
+    const b = after.queue?.[key];
+    if (a === b) continue;
+    out.push(`${after.title || after.id}: ${label} ${a ?? 'none'} → ${b ?? 'none'}`);
+  }
+  return out;
+}
+
 /** Compute differences between a base document (e.g. past snapshot) and current document. */
 export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: DiagramDocument): DocumentDiff {
   const baseNodes = new Map(baseDoc.nodes.map((n) => [n.id, n]));
@@ -83,6 +103,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
       if (before.shape !== after.shape) {
         changes.push(`Shape changed from ${before.shape || 'box'} to ${after.shape || 'box'}`);
       }
+      for (const line of queueChanges(before, after)) changes.push(line);
       if (before.x !== after.x || before.y !== after.y) {
         changes.push(`Moved to (${after.x}, ${after.y})`);
       }

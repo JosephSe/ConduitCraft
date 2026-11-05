@@ -232,7 +232,8 @@ function nodeMarkup(
   const outlineNode = node;
   if (queueDrawsPipe(node.kind, node.shape)) {
     const rx = pipePlate(node.width, node.height).rx;
-    node = { ...node, x: node.x + rx, width: node.width - 3 * rx };
+    // The studio hides the subtitle inside a pipe, so the export does too.
+    node = { ...node, x: node.x + rx, width: node.width - 3 * rx, subtitle: '' };
   }
   const { x, y, width, height } = node;
   const isClient = node.kind === 'client';

@@ -124,11 +124,27 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'add-queue',
+      title: 'Add Message Queue Stencil',
+      subtitle: 'Buffers work between services',
+      category: 'Components',
+      keywords: ['queue', 'sqs', 'rabbitmq', 'mq', 'buffer', 'backlog', 'dead letter', 'dlq', 'pipe'],
+      run: () => {
+        pushHistory();
+        const node = createNodeFromStencil('queue', 200, 200, app.doc.nodes.length);
+        app.doc.nodes.push(node);
+        expandStageToFit(app.doc);
+        setSelection({ type: 'node', id: node.id });
+        renderAll(true);
+        notify('Added Message Queue stencil');
+      },
+    },
+    {
       id: 'add-broker',
       title: 'Add Event Broker Stencil',
-      subtitle: 'Queue, pub/sub, or message bus',
+      subtitle: 'Pub/sub event bus',
       category: 'Components',
-      keywords: ['broker', 'event', 'queue', 'kafka', 'bus', 'pubsub'],
+      keywords: ['broker', 'event', 'kafka', 'bus', 'pubsub'],
       run: () => {
         pushHistory();
         const node = createNodeFromStencil('bus', 200, 200, app.doc.nodes.length);
