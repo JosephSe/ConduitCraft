@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { reachableFrom } from '../src/core/reachability.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
+import { entryPointIds } from '../src/core/reachability.ts';
+import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
+import { getStarterTemplateById, loadTemplateRaw } from '../src/studio/templatesGallery.ts';
 import type { DiagramDocument, DiagramEdge, DiagramNode, NodeKind } from '../src/types.ts';
 
 function build(
@@ -139,5 +142,20 @@ describe('chaos: queues buffer instead of failing the producer (K1, spec 3.3)', 
     );
     const r = reachableFrom(doc, ['U'], ['C1']);
     assert.deepEqual(r.buffering, ['Q']);
+  });
+});
+
+describe('example: event-driven microservices (K1, spec 3.10)', () => {
+  it('"Fulfilment down" makes the fulfilment queue buffer and leaves the order service alone', async () => {
+    const parsed = parseBlueprintJson(await loadTemplateRaw(getStarterTemplateById('event-driven-microservices')!));
+    assert.ok(parsed.ok);
+    const doc = parsed.ok ? parsed.doc : createBlankDocument();
+    const scenario = doc.simulations.find((s) => s.name === 'Fulfilment down')!;
+    assert.deepEqual(scenario.failures, ['inventory-svc']);
+    const r = reachableFrom(doc, entryPointIds(doc), scenario.failures!);
+    assert.deepEqual(r.buffering, ['fulfilment-queue']);
+    assert.ok(!r.atRisk.includes('order-svc') && !r.atRisk.includes('kafka-bus'));
+    assert.deepEqual(r.failed, ['inventory-svc']);
+    assert.equal(doc.nodes.find((n) => n.id === 'fulfilment-queue')?.queue?.deadLetterId, 'fulfilment-dlq');
   });
 });

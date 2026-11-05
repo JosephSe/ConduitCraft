@@ -162,7 +162,7 @@
         "accent": "violet",
         "icon": "box",
         "shape": "card",
-        "title": "Inventory Service",
+        "title": "Fulfilment Service",
         "subtitle": "Warehouse Stock Allocator",
         "eyebrow": "FULFILLMENT",
         "chip": "Consumer",
@@ -176,6 +176,41 @@
         "y": 400,
         "width": 240,
         "height": 105
+      },
+      {
+        "id": "fulfilment-queue",
+        "kind": "queue",
+        "accent": "amber",
+        "icon": "queue",
+        "title": "Fulfilment Queue",
+        "subtitle": "Work Queue",
+        "eyebrow": "QUEUE",
+        "chip": "ASYNC",
+        "footerLeft": "Point to point",
+        "zoneLabel": "Event Spine",
+        "summary": "Holds stock reservations while the Fulfilment Service is down, and sends overflow to the dead-letter queue.",
+        "queue": { "ordering": "fifo", "maxDepth": 50, "deadLetterId": "fulfilment-dlq", "retention": "4 days" },
+        "x": 430,
+        "y": 450,
+        "width": 240,
+        "height": 112
+      },
+      {
+        "id": "fulfilment-dlq",
+        "kind": "queue",
+        "accent": "rose",
+        "icon": "queue",
+        "title": "Fulfilment DLQ",
+        "subtitle": "Dead-letter Queue",
+        "eyebrow": "QUEUE",
+        "chip": "ASYNC",
+        "footerLeft": "Point to point",
+        "zoneLabel": "Event Spine",
+        "summary": "Reservations the Fulfilment Queue could not hold. Someone reviews these by hand.",
+        "x": 430,
+        "y": 620,
+        "width": 240,
+        "height": 112
       },
       {
         "id": "notify-svc",
@@ -278,13 +313,14 @@
       {
         "id": "e4",
         "from": "kafka-bus",
-        "to": "inventory-svc",
-        "sourcePort": "right",
-        "targetPort": "left",
-        "tone": "violet",
+        "to": "fulfilment-queue",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "amber",
         "route": "bezier",
         "label": "Consume: ReserveStock",
-        "animated": true
+        "animated": true,
+        "sync": "async"
       },
       {
         "id": "e5",
@@ -329,6 +365,42 @@
         "route": "bezier",
         "label": "Continuous Projection",
         "animated": true
+      },
+      {
+        "id": "e9",
+        "from": "fulfilment-queue",
+        "to": "inventory-svc",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "amber",
+        "route": "bezier",
+        "label": "Deliver: ReserveStock",
+        "animated": true,
+        "sync": "async"
+      },
+      {
+        "id": "e10",
+        "from": "fulfilment-queue",
+        "to": "fulfilment-dlq",
+        "sourcePort": "bottom",
+        "targetPort": "top",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Overflow",
+        "animated": false,
+        "sync": "async"
+      },
+      {
+        "id": "e11",
+        "from": "fulfilment-dlq",
+        "to": "notify-svc",
+        "sourcePort": "right",
+        "targetPort": "left",
+        "tone": "rose",
+        "route": "bezier",
+        "label": "Alert: dead letters",
+        "animated": false,
+        "sync": "async"
       }
     ],
     "simulations": [
@@ -353,10 +425,10 @@
           },
           {
             "id": "p3",
-            "nodes": ["kafka-bus", "payment-svc", "inventory-svc"],
+            "nodes": ["kafka-bus", "payment-svc", "fulfilment-queue"],
             "tone": "rose",
             "label": "PARALLEL CONSUMPTION",
-            "trace": "Payment Service charges card; Inventory Service reserves SKU warehouse stock."
+            "trace": "Payment Service charges card; Fulfilment Service reserves SKU warehouse stock."
           },
           {
             "id": "p4",
@@ -371,6 +443,42 @@
             "tone": "blue",
             "label": "NOTIFY & PROJECT",
             "trace": "Notification service emails order receipt; CQRS projector updates real-time analytics."
+          }
+        ]
+      },
+      {
+        "id": "sim-fulfilment-down",
+        "name": "Fulfilment down",
+        "tone": "amber",
+        "failures": ["inventory-svc"],
+        "steps": [
+          {
+            "id": "f1",
+            "nodes": ["api-gw", "order-svc"],
+            "tone": "blue",
+            "label": "COMMAND INGEST",
+            "trace": "Orders keep arriving. The Fulfilment Service being down does not stop checkout."
+          },
+          {
+            "id": "f2",
+            "nodes": ["order-svc", "kafka-bus"],
+            "tone": "amber",
+            "label": "EVENT EMITTED",
+            "trace": "Order Service still publishes OrderCreated to Kafka."
+          },
+          {
+            "id": "f3",
+            "nodes": ["kafka-bus", "fulfilment-queue"],
+            "tone": "amber",
+            "label": "QUEUED",
+            "trace": "The reservation lands in the Fulfilment Queue."
+          },
+          {
+            "id": "f4",
+            "nodes": ["fulfilment-queue", "inventory-svc"],
+            "tone": "rose",
+            "label": "HELD",
+            "trace": "The Fulfilment Service is down, so the message waits in the queue. Loop this run to watch it fill; restore the service to watch it drain."
           }
         ]
       }

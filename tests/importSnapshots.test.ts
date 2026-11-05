@@ -12,7 +12,7 @@ const EXPECTED: Record<string, string> = {
   'auth-oauth-oidc.blueprint.json': '77b50b9d7815a4ed',
   'cicd-pipeline.blueprint.json': '088056898627ab6b',
   'cloud-data-pipeline.blueprint.json': '80d98e60704d9fd5',
-  'event-driven-microservices.blueprint.json': '668a81c34648980b',
+  'event-driven-microservices.blueprint.json': '056fb19da61db862',
   'kubernetes-ingress.blueprint.json': '8da25fcc0249ac32',
   'lumen-relay.blueprint.json': 'a953451e446175d6',
   'plain-mermaid-demo.mmd': 'aa6c2ec40bc0e667',

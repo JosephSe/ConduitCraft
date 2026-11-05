@@ -65,10 +65,10 @@ export const STARTER_TEMPLATES: TemplateDefinition[] = [
     categoryLabel: 'Microservices',
     tag: 'Kafka Spine · Sagas · Event Sourcing',
     description:
-      'Asynchronous decoupled microservices coordinated via an Apache Kafka distributed commit log, saga payments, inventory locking, and CQRS materialized views.',
-    nodesCount: 8,
-    edgesCount: 8,
-    simulationsCount: 1,
+      'Asynchronous decoupled microservices coordinated via an Apache Kafka distributed commit log, saga payments, a fulfilment queue with a dead-letter queue, and CQRS materialized views.',
+    nodesCount: 10,
+    edgesCount: 11,
+    simulationsCount: 2,
     loadRaw: async () => (await loaders['event-driven-microservices']()).default,
   },
   {
