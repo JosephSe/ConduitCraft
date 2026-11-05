@@ -125,6 +125,14 @@ A component can open into a diagram of its own, called a level. Use the level ba
 
 Insights run on every level. The text outline lists a component's level under it as a row, and Enter on that row opens it.
 
+## Pages
+
+A file can hold several diagrams, called pages, shown as tabs along the bottom of the canvas (as in draw.io). Click a tab to open it, or use `Alt+PageDown` and `Alt+PageUp`. The `+` button adds a blank page. Double-click a tab, or press `F2` on it, to rename it; drag a tab to reorder; right-click it (or `Shift+F10`, or a long press on touch) for Rename, Duplicate, Delete, Move left and Move right. Delete has a 10-second Undo, and the last page cannot be deleted.
+
+Each page has its own components, wires, swimlanes, notes and frames, and a wire never joins components on different pages. The title, colours, legend and scenarios belong to the whole file. One undo history covers every page, and undoing a change made on another page opens that page first. Each page remembers its zoom and position while the app is open. A page can hold components with levels, and those levels belong to that page.
+
+In the Blueprint file, the first page is the file itself and the others are a `pages:` list; `pageTitle:` names the first page. Blueprint JSON carries the same as `pages`, `pageTitle` and `pageId`. A file can hold up to 64 pages.
+
 ## Legend and tags
 
 The **colour legend** is in the inspector when nothing is selected. Give each wire colour a meaning your team uses, such as "Payments" for Control. The names replace the defaults in the pickers, the filter and the exported page.

@@ -8,7 +8,7 @@
  */
 import { buildOutline, flattenOutline, zoneKeys, type OutlineItem, type OutlineRow } from '../core/outline';
 import { announce } from './a11y';
-import { app, fullDocument, goToLevel, panToNodeIfNeeded, setSelection } from './state';
+import { app, goToLevel, openPageDocument, panToNodeIfNeeded, setSelection } from './state';
 
 const expanded = new Set<string>();
 const knownZones = new Set<string>();
@@ -114,7 +114,7 @@ function onKeydown(e: KeyboardEvent): void {
 function paint(force = false): void {
   const root = tree();
   if (!root || !isOutlineOpen()) return;
-  const items = buildOutline(fullDocument(), app.levelPath);
+  const items = buildOutline(openPageDocument(), app.levelPath);
   // Swimlanes start open; later toggles are the reader's choice.
   for (const key of zoneKeys(items)) {
     if (!knownZones.has(key)) {
@@ -202,7 +202,9 @@ export function toggleOutline(): void {
   setOutlineOpen(!isOutlineOpen());
 }
 
-export function initOutlinePanel(): void {
+/** Wired once, when the chunk first loads. */
+function initOutlinePanel(): void {
   tree()?.addEventListener('keydown', onKeydown);
   document.getElementById('outline-close')?.addEventListener('click', () => setOutlineOpen(false));
 }
+initOutlinePanel();

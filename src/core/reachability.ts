@@ -148,6 +148,9 @@ export function reachableFrom(
  */
 export function pruneDanglingChaos(doc: DiagramDocument): void {
   const ids = new Set(doc.nodes.map((n) => n.id));
+  // A scenario belongs to the whole file, so its failures may name a component on any page (D10).
+  const anyPage = new Set(ids);
+  for (const page of doc.pages ?? []) for (const n of page.nodes) anyPage.add(n.id);
   for (const node of doc.nodes) {
     const r = node.resilience;
     if (!r?.fallbackId || (ids.has(r.fallbackId) && r.fallbackId !== node.id)) continue;
@@ -156,7 +159,7 @@ export function pruneDanglingChaos(doc: DiagramDocument): void {
   }
   for (const sim of doc.simulations) {
     if (!sim.failures) continue;
-    const kept = [...new Set(sim.failures)].filter((id) => typeof id === 'string' && ids.has(id));
+    const kept = [...new Set(sim.failures)].filter((id) => typeof id === 'string' && anyPage.has(id));
     if (kept.length) sim.failures = kept;
     else delete sim.failures;
   }

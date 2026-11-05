@@ -12,7 +12,7 @@ import {
   type FindMatch,
   type FindOptions,
 } from '../core/findReplace';
-import { app, fitSelection, fullDocument, goToLevel, mutateWithHistory, setSelection } from './state';
+import { app, fitSelection, goToLevel, openPageDocument, mutateWithHistory, setSelection } from './state';
 import { renderAll } from './render';
 import { notify } from './toast';
 import { allLevelNodes } from '../core/levels';
@@ -28,7 +28,7 @@ function levelsFor(scope: 'level' | 'all'): FindLevel[] {
 /** "Orders › Payments" for a level path, from the component titles along it. */
 function whereLabel(path: string[]): string {
   if (path.length === 0) return 'Top level';
-  const titles = new Map(allLevelNodes(fullDocument()).map((e) => [e.node.id, e.node.title]));
+  const titles = new Map(allLevelNodes(openPageDocument()).map((e) => [e.node.id, e.node.title]));
   return path.map((id) => titles.get(id) || id).join(' › ');
 }
 

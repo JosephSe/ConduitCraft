@@ -35,7 +35,8 @@ import {
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
 import { paintLevels } from './levels';
-import { paintOutline } from './outlinePanel';
+import { paintPageTabs } from './pageTabs';
+import { paintOutline } from './outlineTrigger';
 
 export {
   renderNodes,
@@ -159,6 +160,7 @@ export function renderAll(rebuildInspector = true): void {
   updateVisualSelectionHighlights();
   paintGroupOutlines();
   paintLevels();
+  paintPageTabs();
   paintOutline();
 
   if (rebuildInspector) {

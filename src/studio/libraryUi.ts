@@ -384,7 +384,7 @@ function scheduleThumbnail(savedId: string): void {
   thumbnailTimer = window.setTimeout(() => {
     thumbnailTimer = null;
     const run = (): void => {
-      if (document.hidden || app.hasPendingAutosave || savedId !== getActiveDiagramId() || app.levelPath.length > 0) return;
+      if (document.hidden || app.hasPendingAutosave || savedId !== getActiveDiagramId() || app.levelPath.length > 0 || app.pageIndex > 0) return;
       const svg = renderStagePictureSvg(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, { preserveSelection: false });
       rasterThumbnail(svg)
         .then((picture) => (picture && savedId === getActiveDiagramId() ? setThumbnail(savedId, picture) : undefined))

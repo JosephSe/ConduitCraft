@@ -12,7 +12,7 @@ import {
   type LevelInsightIssue as InsightIssue,
 } from '../core/insights';
 import { announce } from './a11y';
-import { app, fullDocument, goToLevel, panToNodeIfNeeded, pushHistory, setSelection } from './state';
+import { app, goToLevel, openPageDocument, panToNodeIfNeeded, pushHistory, setSelection } from './state';
 import { renderAll } from './render';
 
 const DEBOUNCE_MS = 300;
@@ -24,7 +24,7 @@ const listeners = new Set<() => void>();
 
 /** Every issue for the current document, ignoring mutes. Recomputed lazily after a change. */
 function allIssues(): InsightIssue[] {
-  cached ??= runInsightsAllLevels(fullDocument());
+  cached ??= runInsightsAllLevels(openPageDocument());
   return cached;
 }
 

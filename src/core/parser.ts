@@ -5,6 +5,7 @@ import type {
   DiagramEdge,
   DiagramNode,
   DiagramNotesCard,
+  DiagramPage,
   DiagramZone,
   EdgeFlowMode,
   EdgeRouteMode,
@@ -26,6 +27,7 @@ import { pruneDanglingChaos } from './reachability';
 import { normalizeBudgetMs, normalizeInsights } from './insights';
 import { normalizeWireFields } from './wire';
 import { coerceFrames, dropDanglingFrameIds } from './frames';
+import { MAX_PAGES, normalizePages } from './pages';
 import { isKnownNodeShape, normalizeNodeShape, sanitizeIconImage } from './nodeStyle';
 import { autoLayoutDocument, expandStageToFit, getNodeDimensions } from './layout';
 
@@ -103,6 +105,9 @@ interface RawBlueprintMeta {
   legend?: unknown;
   insights?: unknown;
   frames?: unknown;
+  pages?: unknown;
+  pageTitle?: unknown;
+  pageId?: unknown;
   zones?: Array<{
     id?: string;
     number?: string | number;
@@ -920,24 +925,52 @@ function normalizeCodeBlock(raw: unknown, fallbackObj: Record<string, unknown>):
 const MAX_CHILD_DEPTH = 8;
 let childDepth = 0;
 
-/** A component's `children:` entry is a smaller blueprint (nodes, edges, zones, notes) that imports like one. */
-function importChildLevel(raw: unknown, ownerId: string, issues: ImportIssue[]): LevelContent | null {
+/** A `children:` or `pages:` entry is a smaller blueprint (nodes, edges, zones, notes) that imports like one. */
+function importSubBlueprint(raw: unknown, label: string, issues: ImportIssue[]): DiagramDocument | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   if (childDepth >= MAX_CHILD_DEPTH) {
-    issues.push({ level: 'warning', code: 'level-too-deep', message: `Component "${ownerId}" nests levels too deep; its inner level was dropped.` });
+    issues.push({ level: 'warning', code: 'level-too-deep', message: `${label} nests levels too deep; its inner level was dropped.` });
     return null;
   }
   childDepth += 1;
   try {
     const result = importMermaidOrBlueprint(`---\n${yaml.dump(raw)}---\n`);
     for (const issue of result.issues) {
-      if (issue.level !== 'info') issues.push({ ...issue, line: undefined, message: `Inside "${ownerId}": ${issue.message}` });
+      if (issue.level !== 'info') issues.push({ ...issue, line: undefined, message: `Inside ${label}: ${issue.message}` });
     }
-    const { nodes, edges, zones, notesCards, frames } = result.doc;
-    return { nodes, edges, zones, notesCards, ...(frames?.length ? { frames } : {}) };
+    return result.doc;
   } finally {
     childDepth -= 1;
   }
+}
+
+function importChildLevel(raw: unknown, ownerId: string, issues: ImportIssue[]): LevelContent | null {
+  const sub = importSubBlueprint(raw, `"${ownerId}"`, issues);
+  if (!sub) return null;
+  const { nodes, edges, zones, notesCards, frames } = sub;
+  return { nodes, edges, zones, notesCards, ...(frames?.length ? { frames } : {}) };
+}
+
+/** The `pages:` list: one smaller blueprint per page after the first (D10). */
+function importPages(raw: unknown[], doc: DiagramDocument, issues: ImportIssue[]): void {
+  const pages: DiagramPage[] = [];
+  raw.slice(0, MAX_PAGES - 1).forEach((entry, i) => {
+    const sub = importSubBlueprint(entry, `page ${i + 2}`, issues);
+    if (!sub) return;
+    const r = entry as Record<string, unknown>;
+    pages.push({
+      id: typeof r.id === 'string' ? r.id : '',
+      title: typeof r.title === 'string' ? r.title : '',
+      nodes: sub.nodes,
+      edges: sub.edges,
+      zones: sub.zones,
+      notesCards: sub.notesCards,
+      ...(sub.frames?.length ? { frames: sub.frames } : {}),
+      stageWidth: sub.stageWidth,
+      stageHeight: sub.stageHeight,
+    });
+  });
+  if (pages.length) doc.pages = pages;
 }
 
 /** What "Subgraphs as: Levels" decided before components are built (D6). */
@@ -1500,9 +1533,16 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
   });
   doc.notesCards = notesCards;
 
+  // Pages (D10): the second page onwards. The first page is this document's own content.
+  if (typeof meta.pageTitle === 'string' && meta.pageTitle.trim()) doc.pageTitle = meta.pageTitle.trim();
+  if (typeof meta.pageId === 'string' && meta.pageId.trim()) doc.pageId = meta.pageId.trim();
+  if (Array.isArray(meta.pages) && meta.pages.length > 0) importPages(meta.pages, doc, issues);
+  normalizePages(doc);
+
   // Simulations
   if (Array.isArray(meta.simulations) && meta.simulations.length > 0) {
-    const validIds = new Set(doc.nodes.map((n) => n.id));
+    // A scenario belongs to the whole file, so a step may name a component on any page.
+    const validIds = new Set([...doc.nodes, ...(doc.pages ?? []).flatMap((p) => p.nodes)].map((n) => n.id));
     const sims: SimulationScenario[] = [];
     meta.simulations.forEach((sim, idx) => {
       const steps = (sim.steps || [])
@@ -1557,6 +1597,12 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
     doc.stageHeight = meta.stageHeight;
   }
   expandStageToFit(doc);
+  for (const page of doc.pages ?? []) {
+    const fit = { ...doc, ...page } as DiagramDocument;
+    expandStageToFit(fit);
+    page.stageWidth = fit.stageWidth;
+    page.stageHeight = fit.stageHeight;
+  }
 
   if (doc.nodes.length === 0 && !issues.some((i) => i.level === 'error')) {
     issues.push({
@@ -1873,6 +1919,24 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       ...(e.tags?.length ? { tags: e.tags } : {}),
       ...(e.waypoint ? { waypoint: [Math.round(e.waypoint[0]), Math.round(e.waypoint[1])] } : {}),
     }));
+  }
+
+  if (shell) {
+    if (doc.pageTitle) frontmatterObj.pageTitle = doc.pageTitle;
+    if (doc.pageId) frontmatterObj.pageId = doc.pageId;
+    if (doc.pages?.length) {
+      frontmatterObj.pages = doc.pages.map((page) => ({
+        id: page.id,
+        title: page.title,
+        ...(page.stageWidth ? { stageWidth: page.stageWidth } : {}),
+        ...(page.stageHeight ? { stageHeight: page.stageHeight } : {}),
+        ...buildFrontmatter(
+          { ...doc, pages: undefined, frames: undefined, ...page, simulations: [], legend: undefined, insights: undefined },
+          false,
+          depth + 1,
+        ),
+      }));
+    }
   }
 
   if (doc.simulations.length > 0) {

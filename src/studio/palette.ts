@@ -1,6 +1,6 @@
 /** Command Palette (Cmd/Ctrl+K) controller. */
 import { describeDiagram } from '../core/describe';
-import { app, fullDocument, goUpLevel, openComponentLevel, fitSelection, fitToViewport, performRedo, performUndo, pushHistory, setSelection, zoomAround } from './state';
+import { app, fullDocument, goUpLevel, openComponentLevel, fitSelection, fitToViewport, performRedo, performUndo, pushHistory, setSelection, stepPage, zoomAround } from './state';
 import { autoLayoutDocument, expandStageToFit } from '../core/layout';
 import { createNodeFromStencil, createSwimlaneZone, createNotesCard } from '../templates/presets';
 import { applySelection, renderAll, renderMatrixTable } from './render';
@@ -15,7 +15,7 @@ import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
 import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
-import { toggleOutline } from './outlinePanel';
+import { toggleOutline } from './outlineTrigger';
 import { HELP_TOPICS } from '../core/helpTopics';
 import { openHelp } from './helpPopover';
 import { selectionOfStage } from './selection';
@@ -966,6 +966,56 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       category: 'Canvas & Layout',
       keywords: ['connect', 'wire', 'link', 'tool', 'edge'],
       run: () => setPointerTool('connect'),
+    },
+    {
+      id: 'page-add',
+      title: 'Add page',
+      subtitle: 'A new blank diagram in this file',
+      category: 'Canvas & Layout',
+      keywords: ['page', 'tab', 'sheet', 'new', 'diagram', 'add'],
+      run: () => void import('./pageMenu').then((m) => m.runPageAction('add')),
+    },
+    {
+      id: 'page-duplicate',
+      title: 'Duplicate page',
+      subtitle: 'Copy the open page',
+      category: 'Canvas & Layout',
+      keywords: ['page', 'tab', 'sheet', 'copy', 'duplicate', 'clone'],
+      run: () => void import('./pageMenu').then((m) => m.runPageAction('duplicate')),
+    },
+    {
+      id: 'page-delete',
+      title: 'Delete page',
+      subtitle: 'Remove the open page (Undo brings it back)',
+      category: 'Canvas & Layout',
+      keywords: ['page', 'tab', 'sheet', 'delete', 'remove', 'close'],
+      run: () => void import('./pageMenu').then((m) => m.runPageAction('delete')),
+    },
+    {
+      id: 'page-rename',
+      title: 'Rename page',
+      subtitle: 'Change the open page\'s name',
+      category: 'Canvas & Layout',
+      keywords: ['page', 'tab', 'sheet', 'rename', 'name', 'title'],
+      run: () => void import('./pageMenu').then((m) => m.runPageAction('rename')),
+    },
+    {
+      id: 'page-next',
+      title: 'Next page',
+      subtitle: 'Open the page to the right of this one',
+      category: 'Canvas & Layout',
+      shortcut: `${platformShortcut('⌥')}PageDown`,
+      keywords: ['page', 'tab', 'sheet', 'next', 'right', 'forward'],
+      run: () => void stepPage(1),
+    },
+    {
+      id: 'page-previous',
+      title: 'Previous page',
+      subtitle: 'Open the page to the left of this one',
+      category: 'Canvas & Layout',
+      shortcut: `${platformShortcut('⌥')}PageUp`,
+      keywords: ['page', 'tab', 'sheet', 'previous', 'left', 'back'],
+      run: () => void stepPage(-1),
     },
     {
       id: 'open-find-replace',

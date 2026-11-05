@@ -32,6 +32,15 @@ import type {
 } from '../types';
 import { normalizeBrand } from '../core/brand';
 import { emptyLevel, resolveLevelPath, viewOfLevel, writeLevelBack } from '../core/levels';
+import {
+  indexOfPage,
+  neighbourPage,
+  pageCount,
+  pageIdAt,
+  viewOfPage,
+  writePageBack,
+} from '../core/pages';
+import type { PageEdit } from '../core/pageOps';
 import { tightenLegacyStoreCylinder } from '../core/layout';
 import { panForViewportResize } from './camera';
 import { createBlankDocument } from '../templates/presets';
@@ -71,14 +80,24 @@ export const app = {
   levelPath: [] as string[],
   /** The whole tree while a level is open (its open-level content is stale; `fullDocument` merges it back). */
   levelRoot: null as DiagramDocument | null,
+  /** The open page: 0 is the first page, which is the document itself (D10). */
+  pageIndex: 0,
+  /** The whole file while a page after the first is open (that page's content in it is stale; `fullDocument` merges it back). */
+  pageRoot: null as DiagramDocument | null,
+  /** Camera of each page this session, by page id, so switching back lands where you left. */
+  pageCameras: new Map<string, { scale: number; panX: number; panY: number }>(),
   get doc(): DiagramDocument {
     return this._doc;
   },
-  /** Replacing the document from outside (load, import, new) always lands on its root level. */
+  /** Replacing the document from outside (load, import, new) always lands on its first page and root level. */
   set doc(next: DiagramDocument) {
     this._doc = next;
     this.levelPath = [];
     this.levelRoot = null;
+    this.pageIndex = 0;
+    this.pageRoot = null;
+    this.pageCameras.clear();
+    announcePageOpened();
   },
   lens: 'design' as Lens,
   /** How components are coloured in the view: by their own tone, by status, or by first tag (F-26). */
@@ -347,34 +366,62 @@ export function getSelectedEdgeIds(): string[] {
 // ---------------------------------------------------------------------------
 // Undo / Redo History
 // ---------------------------------------------------------------------------
-/** Which level each undo snapshot was taken in, so undo can return there (F-03). */
-const snapshotPaths = new WeakMap<DiagramDocument, string[]>();
+/** Which page and level each undo snapshot was taken in, so undo can return there (F-03, D10). */
+const snapshotPlaces = new WeakMap<DiagramDocument, { path: string[]; pageId: string }>();
 
-/** The whole document, merging the open level back into the tree. At the root this is `app.doc` itself. */
-export function fullDocument(): DiagramDocument {
+/**
+ * The open page with its levels, as one document: the tree that level paths are scoped to (D10). On the first page
+ * with no level open this is `app.doc` itself.
+ */
+export function openPageDocument(): DiagramDocument {
   if (app.levelPath.length === 0 || !app.levelRoot) return app.doc;
-  const whole = structuredClone(app.levelRoot);
-  writeLevelBack(whole, app.levelPath, structuredClone(app.doc));
+  const page = structuredClone(app.levelRoot);
+  writeLevelBack(page, app.levelPath, structuredClone(app.doc));
+  return page;
+}
+
+/**
+ * The whole file, merging the open level and the open page back into it. On the first page, with no level open,
+ * this is `app.doc` itself.
+ */
+export function fullDocument(): DiagramDocument {
+  const page = openPageDocument();
+  if (app.pageIndex === 0 || !app.pageRoot) return page;
+  const whole = structuredClone(app.pageRoot);
+  writePageBack(whole, app.pageIndex, page === app.doc ? structuredClone(page) : page);
   return whole;
 }
 
-function takeSnapshot(): DiagramDocument {
+/** Id of the open page. */
+export function currentPageId(): string {
+  return pageIdAt(app.pageRoot ?? app.doc, app.pageIndex);
+}
+
+function takeSnapshot(place?: { path: string[]; pageId: string }): DiagramDocument {
   const snapshot = structuredClone(fullDocument());
-  snapshotPaths.set(snapshot, [...app.levelPath]);
+  snapshotPlaces.set(snapshot, place ?? { path: [...app.levelPath], pageId: currentPageId() });
   return snapshot;
 }
 
-/** Make `whole` the document with `path` open (or the deepest part of it that still exists). */
-function applyWhole(whole: DiagramDocument, path: string[]): void {
-  const valid = resolveLevelPath(whole, path);
+/** Show `page` (a page as a document) with `path` open, or the deepest part of that path that still exists. */
+function applyPage(page: DiagramDocument, path: string[]): void {
+  const valid = resolveLevelPath(page, path);
   app.levelPath = valid;
   if (valid.length === 0) {
-    app._doc = whole;
+    app._doc = page;
     app.levelRoot = null;
   } else {
-    app.levelRoot = whole;
-    app._doc = viewOfLevel(whole, valid);
+    app.levelRoot = page;
+    app._doc = viewOfLevel(page, valid);
   }
+}
+
+/** Make `whole` the file with page `pageIndex` and `path` open. */
+function applyWhole(whole: DiagramDocument, path: string[], pageIndex = 0): void {
+  const index = Math.min(Math.max(0, pageIndex), pageCount(whole) - 1);
+  app.pageIndex = index;
+  app.pageRoot = index === 0 ? null : whole;
+  applyPage(index === 0 ? whole : viewOfPage(whole, index), path);
 }
 
 const historyCommitListeners = new Set<() => void>();
@@ -439,33 +486,55 @@ export function syncHistoryButtons(): void {
 }
 
 function restoreSnapshot(snapshot: DiagramDocument): void {
-  const before = app.levelPath.join('/');
-  applyWhole(snapshot, snapshotPaths.get(snapshot) ?? []);
-  if (app.levelPath.join('/') !== before) setSelection({ type: 'none' });
+  const before = `${currentPageId()}|${app.levelPath.join('/')}`;
+  const place = snapshotPlaces.get(snapshot);
+  const found = place ? indexOfPage(snapshot, place.pageId) : 0;
+  applyWhole(snapshot, place?.path ?? [], found < 0 ? 0 : found);
+  // Undoing a change made on another page brings that page into view first.
+  if (`${currentPageId()}|${app.levelPath.join('/')}` !== before) setSelection({ type: 'none' });
+  announcePageOpened();
+}
+
+let lastOpenedPageId = '';
+const pageOpenedListeners = new Set<(pageId: string) => void>();
+
+/** Called whenever the open page becomes a different page: a switch, an edit that opens one, or an undo. */
+export function onPageOpened(listener: (pageId: string) => void): void {
+  pageOpenedListeners.add(listener);
+}
+
+function announcePageOpened(): void {
+  const id = currentPageId();
+  if (id === lastOpenedPageId) return;
+  lastOpenedPageId = id;
+  for (const listener of pageOpenedListeners) listener(id);
 }
 
 export function performUndo(): void {
   const prev = app.undoStack.pop();
   if (!prev) return;
   historyGate = initialHistoryGate();
-  app.redoStack.push(takeSnapshot());
+  // The redo step goes back to where the change was made, as the undo step does.
+  app.redoStack.push(takeSnapshot(snapshotPlaces.get(prev)));
   restoreSnapshot(prev);
   validateSelection();
   syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
+  pagesChanged();
 }
 
 export function performRedo(): void {
   const next = app.redoStack.pop();
   if (!next) return;
   historyGate = initialHistoryGate();
-  app.undoStack.push(takeSnapshot());
+  app.undoStack.push(takeSnapshot(snapshotPlaces.get(next)));
   restoreSnapshot(next);
   validateSelection();
   syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
+  pagesChanged();
 }
 
 // ---------------------------------------------------------------------------
@@ -473,11 +542,11 @@ export function performRedo(): void {
 // ---------------------------------------------------------------------------
 /** Open the level at `path` (`[]` is the root). Not an undo step; edits inside it are. */
 export function goToLevel(path: string[]): boolean {
-  const whole = fullDocument();
-  const valid = resolveLevelPath(whole, path);
+  const page = openPageDocument();
+  const valid = resolveLevelPath(page, path);
   if (valid.length !== path.length) return false;
   if (valid.join('/') === app.levelPath.join('/')) return false;
-  applyWhole(whole, valid);
+  applyPage(page, valid);
   setSelection({ type: 'none' });
   historyApplied();
   fitToViewport();
@@ -494,6 +563,88 @@ export function openComponentLevel(nodeId: string): boolean {
 
 export function goUpLevel(): boolean {
   return app.levelPath.length > 0 && goToLevel(app.levelPath.slice(0, -1));
+}
+
+// ---------------------------------------------------------------------------
+// Pages (D10)
+// ---------------------------------------------------------------------------
+const pageListeners = new Set<() => void>();
+
+/** Called when the open page or the page list changes, so the tab strip repaints. */
+export function onPagesChange(listener: () => void): void {
+  pageListeners.add(listener);
+}
+
+function pagesChanged(): void {
+  for (const listener of pageListeners) listener();
+}
+
+/** Open page `index`. Not an undo step; edits inside it are. Keeps each page's camera for the session. */
+export function goToPage(index: number): boolean {
+  const whole = fullDocument();
+  if (index < 0 || index >= pageCount(whole) || index === app.pageIndex) return false;
+  app.pageCameras.set(currentPageId(), { scale: app.scale, panX: app.panX, panY: app.panY });
+  applyWhole(whole, [], index);
+  announcePageOpened();
+  setSelection({ type: 'none' });
+  historyApplied();
+  restorePageCamera();
+  pagesChanged();
+  return true;
+}
+
+/** Put the camera where this page was last left; a page not seen yet is fitted, and an empty one starts at 100%. */
+function restorePageCamera(): void {
+  const camera = app.pageCameras.get(currentPageId());
+  if (camera) {
+    app.scale = camera.scale;
+    app.panX = camera.panX;
+    app.panY = camera.panY;
+    applyTransform();
+  } else if (app.doc.nodes.length + app.doc.zones.length + app.doc.notesCards.length === 0) {
+    app.scale = 1;
+    app.panX = 0;
+    app.panY = 0;
+    applyTransform();
+  } else {
+    fitToViewport();
+  }
+}
+
+/** Open the page with this id. */
+export function goToPageId(id: string): boolean {
+  const index = indexOfPage(fullDocument(), id);
+  return index >= 0 && goToPage(index);
+}
+
+/** Open the next (or previous) page, wrapping around. */
+export function stepPage(step: 1 | -1): boolean {
+  const whole = fullDocument();
+  if (pageCount(whole) < 2) return false;
+  return goToPage(neighbourPage(whole, app.pageIndex, step));
+}
+
+/**
+ * Apply a structural page edit (add, duplicate, delete, rename, move) as one undo step. `edit` gets a copy of the
+ * whole file and returns the edited file with the page to open, or null to do nothing.
+ */
+export function editPages(edit: (whole: DiagramDocument) => PageEdit | null): boolean {
+  const before = takeSnapshot();
+  const result = edit(structuredClone(fullDocument()));
+  if (!result) return false;
+  const decision = resolveHistoryPush(historyGate, { type: 'commit' });
+  historyGate = decision.gate;
+  if (decision.capture) commitHistorySnapshot(before);
+  const opened = pageIdAt(result.doc, result.index);
+  const same = opened === currentPageId();
+  if (!same) app.pageCameras.set(currentPageId(), { scale: app.scale, panX: app.panX, panY: app.panY });
+  applyWhole(result.doc, same ? app.levelPath : [], result.index);
+  announcePageOpened();
+  if (!same) setSelection({ type: 'none' });
+  historyApplied();
+  if (!same) restorePageCamera();
+  pagesChanged();
+  return true;
 }
 
 export function validateSelection(): void {
