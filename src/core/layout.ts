@@ -23,6 +23,8 @@ export function getNodeDimensions(kind: NodeKind): { width: number; height: numb
       return { width: 192, height: 112 };
     case 'queue':
       return { width: 240, height: 112 };
+    case 'balancer':
+      return { width: 200, height: 120 };
     case 'service':
     case 'bus':
     default:

@@ -1,6 +1,6 @@
-export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client' | 'queue';
+export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' | 'client' | 'queue' | 'balancer';
 
-export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric';
+export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric' | 'trapezoid';
 
 export type StreamTone = 'blue' | 'emerald' | 'rose' | 'violet' | 'amber';
 
@@ -31,7 +31,16 @@ export type NodeIconName =
   | 'spark'
   | 'cpu'
   | 'globe'
-  | 'queue';
+  | 'queue'
+  | 'balancer';
+
+export type BalancerStrategy = 'round-robin' | 'least-connections' | 'weighted' | 'hash';
+
+/** How a load balancer spreads traffic (K2). Absent fields use the defaults in `core/balancers.ts`. */
+export interface NodeBalancer {
+  /** Default 'round-robin'. Recorded for the reader and shown on the card. */
+  strategy?: BalancerStrategy;
+}
 
 export type QueueOrdering = 'standard' | 'fifo' | 'priority';
 export type QueueDelivery = 'competing' | 'fanout';
@@ -204,6 +213,8 @@ export interface DiagramNode {
   resilience?: NodeResilience;
   /** Queue settings (K1). Only read when `kind` is 'queue'; kept when the kind changes so settings are not lost. */
   queue?: NodeQueue;
+  /** Load balancer settings (K2). Only read when `kind` is 'balancer'; kept when the kind changes. */
+  balancer?: NodeBalancer;
   /** Where the component was imported from (F-06), so a later import or drift check can match it again. */
   source?: NodeSource;
   /** The diagram inside this component, opened as a level (F-03). Absent means the component is a leaf. */

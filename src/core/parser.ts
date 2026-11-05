@@ -68,6 +68,7 @@ interface RawNodeMeta {
   links?: unknown;
   resilience?: unknown;
   queue?: unknown;
+  balancer?: unknown;
   source?: unknown;
 }
 
@@ -193,6 +194,7 @@ function normalizeNodeKind(raw: string | undefined, fallback: NodeKind = 'servic
   if (k === 'actor' || k === 'human' || k === 'user' || k === 'person') return 'actor';
   if (k === 'core' || k === 'platform' || k === 'primary') return 'core';
   if (k === 'queue' || k === 'sqs' || k === 'fifo' || k === 'mq' || k === 'work-queue') return 'queue';
+  if (k === 'balancer' || k === 'lb' || k === 'load-balancer' || k === 'loadbalancer') return 'balancer';
   if (k === 'bus' || k === 'broker' || k === 'stream') return 'bus';
   if (k === 'gate' || k === 'approval' || k === 'decision' || k === 'policy') return 'gate';
   if (k === 'store' || k === 'database' || k === 'db' || k === 'storage') return 'store';
@@ -373,6 +375,8 @@ function parseSingleNodeToken(token: string): {
     // Hexagon {{Gate}} or Rhombus {Gate} -> gate
     { regex: /^([A-Za-z0-9_.-]+)\s*\{\{([\s\S]+)\}\}$/, kind: 'gate', shape: 'hexagon' },
     { regex: /^([A-Za-z0-9_.-]+)\s*\{([\s\S]+)\}$/, kind: 'gate', shape: 'diamond' },
+    // Trapezoid [/Load Balancer\] -> balancer. Listed before the parallelograms so [/Client/] stays a client.
+    { regex: /^([A-Za-z0-9_.-]+)\s*\[\/([\s\S]+)\\\]$/, kind: 'balancer' },
     // Asymmetric >Client] or Parallelogram [/Client/] -> client
     { regex: /^([A-Za-z0-9_.-]+)\s*>([\s\S]+)\]$/, kind: 'client', shape: 'asymmetric' },
     { regex: /^([A-Za-z0-9_.-]+)\s*\[\/([\s\S]+)\/\]$/, kind: 'client', shape: 'card' },
@@ -1726,6 +1730,8 @@ function formatMermaidNodeShape(node: DiagramNode, safeId: string): string {
       return `${safeId}[(${label})]`;
     case 'gate':
       return `${safeId}{{${label}}}`;
+    case 'balancer':
+      return `${safeId}[/${label}\\]`;
     case 'client':
       return `${safeId}[/${label}/]`;
     case 'bus':
@@ -1870,6 +1876,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
             },
           }
         : {}),
+      ...(n.balancer ? { balancer: n.balancer } : {}),
       ...(n.child && depth < MAX_CHILD_DEPTH
         ? {
             children: buildFrontmatter(

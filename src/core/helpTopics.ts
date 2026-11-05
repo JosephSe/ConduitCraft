@@ -52,6 +52,13 @@ export const HELP_TOPICS: readonly HelpTopic[] = [
     keywords: ['queue', 'backlog', 'buffer', 'dead letter', 'dlq', 'sqs', 'rabbitmq'],
   },
   {
+    id: 'load-balancers',
+    title: 'Load balancers',
+    body: 'A Load Balancer spreads traffic over the components it points to. Fail one of them and the others take the load: the balancer is not at risk while at least one target is up, and a looping scenario sends the packet to a live target instead. Only what sits behind the failed target alone is lost.',
+    guideAnchor: 'load-balancers',
+    keywords: ['load balancer', 'balancer', 'lb', 'haproxy', 'round robin', 'targets'],
+  },
+  {
     id: 'review',
     title: 'Review and insights',
     body: 'The Review lens runs a few rules over the diagram and lists what they find, grouped by rule. Click an issue to select the component or wire it is about, and mute a rule you do not want to see. Muting is saved with the diagram.',

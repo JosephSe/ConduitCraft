@@ -2187,7 +2187,8 @@
   /* Circle, diamond, and hexagon draw their own stroke. A clip would cut the border and the text. */
   .arch-node[data-shape="circle"] .node-select-hit,
   .arch-node[data-shape="diamond"] .node-select-hit,
-  .arch-node[data-shape="hexagon"] .node-select-hit {
+  .arch-node[data-shape="hexagon"] .node-select-hit,
+  .arch-node[data-shape="trapezoid"] .node-select-hit {
     overflow: visible;
     background: transparent;
     border-color: transparent;
@@ -2213,6 +2214,7 @@
 
   .arch-node[data-kind="core"] .node-shape-geom,
   .arch-node[data-kind="gate"] .node-shape-geom,
+  .arch-node[data-kind="balancer"] .node-shape-geom,
   .arch-node[data-kind="store"] .node-shape-geom {
     fill: color-mix(in srgb, var(--node-accent-soft) 72%, var(--wl-surface));
   }
@@ -2239,7 +2241,8 @@
 
   .arch-node[data-shape="circle"] .node-select-hit,
   .arch-node[data-shape="diamond"] .node-select-hit,
-  .arch-node[data-shape="hexagon"] .node-select-hit {
+  .arch-node[data-shape="hexagon"] .node-select-hit,
+  .arch-node[data-shape="trapezoid"] .node-select-hit {
     justify-content: center;
     gap: 0.28rem;
   }

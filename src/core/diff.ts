@@ -54,6 +54,13 @@ function queueChanges(before: DiagramNode, after: DiagramNode): string[] {
   return out;
 }
 
+/** "Edge LB: strategy round-robin → hash" when a load balancer's strategy changed (K2). */
+function balancerChanges(before: DiagramNode, after: DiagramNode): string[] {
+  const a = before.balancer?.strategy;
+  const b = after.balancer?.strategy;
+  return a === b ? [] : [`${after.title || after.id}: strategy ${a ?? 'round-robin'} → ${b ?? 'round-robin'}`];
+}
+
 /** Compute differences between a base document (e.g. past snapshot) and current document. */
 export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: DiagramDocument): DocumentDiff {
   const baseNodes = new Map(baseDoc.nodes.map((n) => [n.id, n]));
@@ -104,6 +111,7 @@ export function computeDocumentDiff(baseDoc: DiagramDocument, currentDoc: Diagra
         changes.push(`Shape changed from ${before.shape || 'box'} to ${after.shape || 'box'}`);
       }
       for (const line of queueChanges(before, after)) changes.push(line);
+      for (const line of balancerChanges(before, after)) changes.push(line);
       if (before.x !== after.x || before.y !== after.y) {
         changes.push(`Moved to (${after.x}, ${after.y})`);
       }
