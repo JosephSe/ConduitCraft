@@ -5,6 +5,7 @@ import { TONE_CSS } from '../shared/tones';
 import { app } from './state';
 import { holdingQueue } from '../core/queues';
 import { substituteBalancerTargets } from '../core/balancers';
+import { backingStoreOf, cacheHit, cacheHitRate, limiterRate, limiterRejects, planCacheStep } from '../core/components';
 import { blockedNodeIn, bufferingQueueIds, downIds } from './chaos';
 import { holdMessage, setBacklogSpeedProvider } from './queueBacklog';
 import { announce } from './a11y';
@@ -43,6 +44,13 @@ export class SimulationPlaybackController {
   private announcedBalancers = new Set<string>();
   /** Stand-ins chosen earlier in this pass through the scenario: the packet that went to B keeps going through B. */
   private passSwaps = new Map<string, string>();
+  /** Packets seen so far at each cache and rate limiter in this run (K3, K4). Never saved. */
+  private cacheCounters = new Map<string, number>();
+  private limiterCounters = new Map<string, number>();
+  /** The step a cache hit jumps to instead of the next one, and the label it put on the packet. */
+  private pendingNext: number | null = null;
+  /** When a rejection was last announced, so the live region is not flooded. */
+  private lastRejectAnnounce = Number.NEGATIVE_INFINITY;
 
   private onStateChange?: (state: SimulationPlaybackState) => void;
 
@@ -108,6 +116,7 @@ export class SimulationPlaybackController {
     if (autoPlay) {
       this.isPlaying = true;
       this.goToStep(0);
+      if (this.arrive(0, [])) return;
       this.scheduleNextStep();
     } else {
       this.isPlaying = false;
@@ -124,6 +133,10 @@ export class SimulationPlaybackController {
     // If at the end, wrap to start
     if (this.currentStepIndex >= this.scenario.steps.length - 1) {
       this.goToStep(0);
+      if (this.arrive(0, [])) {
+        this.notifyState();
+        return;
+      }
     }
 
     this.scheduleNextStep();
@@ -178,6 +191,7 @@ export class SimulationPlaybackController {
     // Starting over, or stepping back, forgets the stand-ins of the last pass.
     if (clamped <= this.currentStepIndex) this.passSwaps.clear();
     this.currentStepIndex = clamped;
+    this.pendingNext = null;
     // The first step has no step before it, so a balancer and its target can only meet inside it.
     this.override = override === undefined ? (clamped === 0 ? this.resolveStep(0, []) : null) : override;
 
@@ -242,17 +256,20 @@ export class SimulationPlaybackController {
 
     // The wait before the next step follows the typical latency of the wires the packet is about to cross.
     const current = this.scenario.steps[this.currentStepIndex];
-    const next = this.scenario.steps[this.currentStepIndex + 1];
+    const nextIndex0 = this.pendingNext ?? this.currentStepIndex + 1;
+    const next = this.scenario.steps[nextIndex0];
     const hopMs =
       current && next
         ? hopDelayMs(this.baseStepMs, latenciesBetween(app.doc.edges, current.nodes, next.nodes))
         : this.baseStepMs;
-    const delayMs = Math.round(hopMs / this.speedMultiplier);
+    // A scenario started by a scheduler waits twice as long between loops: a visible tick (K5).
+    const tick = !next && this.isLooping && this.startsWithScheduler() ? 2 : 1;
+    const delayMs = Math.round((hopMs * tick) / this.speedMultiplier);
 
     this.timer = setTimeout(() => {
       if (!this.isPlaying || !this.scenario) return;
 
-      const nextIndex = this.currentStepIndex + 1;
+      const nextIndex = this.pendingNext ?? this.currentStepIndex + 1;
       if (nextIndex < this.scenario.steps.length) {
         const planned = this.scenario.steps[nextIndex];
         // A load balancer hands a packet bound for a down target to a live one (K2).
@@ -276,9 +293,12 @@ export class SimulationPlaybackController {
           announce(`Traffic stopped at ${app.doc.nodes.find((n) => n.id === blocked)?.title || blocked}.`);
           return;
         }
+        // A rate limiter may turn the packet away here, and a cache may answer it without going further (K3, K4).
+        if (this.arrive(nextIndex, current?.nodes ?? [], delayMs)) return;
         this.scheduleNextStep();
       } else if (this.isLooping) {
         this.goToStep(0);
+        if (this.arrive(0, [], delayMs)) return;
         this.scheduleNextStep();
       } else {
         this.pause();
@@ -294,6 +314,82 @@ export class SimulationPlaybackController {
       this.timer = setTimeout(() => {
         if (!this.isPlaying || !this.scenario) return;
         this.goToStep(0);
+        this.scheduleNextStep();
+      }, delayMs);
+    } else {
+      this.pause();
+    }
+  }
+
+  /** The scenario begins at a scheduler (K5). */
+  private startsWithScheduler(): boolean {
+    const first = this.scenario?.steps[0]?.nodes[0];
+    return Boolean(first && app.doc.nodes.find((n) => n.id === first)?.kind === 'scheduler');
+  }
+
+  /**
+   * A packet has just arrived at step `index` of a run that is playing. A rate limiter in that step may turn it
+   * away (returns true: the run restarts or pauses, so the caller stops); a cache may answer it and skip ahead
+   * (sets `pendingNext`). Both use per-run counters, so the same run always gives the same answer (K3, K4).
+   */
+  private arrive(index: number, previous: readonly string[], delayMs = Math.round(this.baseStepMs / this.speedMultiplier)): boolean {
+    const scenario = this.scenario;
+    const step = this.currentStep;
+    if (!scenario || !step || !this.isPlaying) return false;
+    const down = downIds();
+    for (const id of step.nodes) {
+      const node = app.doc.nodes.find((n) => n.id === id);
+      if (!node || down.has(id) || previous.includes(id)) continue;
+      if (node.kind === 'limiter') {
+        const count = this.limiterCounters.get(id) ?? 0;
+        this.limiterCounters.set(id, count + 1);
+        const { admit, per } = limiterRate(node.limiter);
+        if (limiterRejects(count, admit, per)) {
+          this.rejectPacket(id, delayMs);
+          return true;
+        }
+      }
+    }
+    for (const id of step.nodes) {
+      const node = app.doc.nodes.find((n) => n.id === id);
+      if (node?.kind !== 'cache' || down.has(id)) continue;
+      const backing = backingStoreOf(app.doc, id);
+      if (!backing || down.has(backing)) continue;
+      const count = this.cacheCounters.get(id) ?? 0;
+      const hit = cacheHit(count, cacheHitRate(node.cache));
+      const plan = planCacheStep(scenario.steps, index, id, backing, hit);
+      if (!plan) continue;
+      this.cacheCounters.set(id, count + 1);
+      this.pendingNext = plan.next < scenario.steps.length ? plan.next : null;
+      this.override = { ...step, label: plan.label };
+      this.renderCurrentStep();
+      if (plan.next >= scenario.steps.length) this.pendingNext = scenario.steps.length;
+      break;
+    }
+    return false;
+  }
+
+  /** A rate limiter turned the packet away: it turns rose, reads 429 and stops there. */
+  private rejectPacket(limiterId: string, delayMs: number): void {
+    const limiter = app.doc.nodes.find((n) => n.id === limiterId);
+    if (typeof document !== 'undefined' && limiter && simPacket && simPacketLabel) {
+      const [cx, cy] = getNodeCenter(limiter);
+      simPacket.hidden = false;
+      simPacketLabel.textContent = '429';
+      simPacket.style.setProperty('--px', String(cx));
+      simPacket.style.setProperty('--py', String(cy - 62));
+      if (simPacketDot) simPacketDot.style.background = TONE_CSS.rose[0];
+    }
+    const now = Date.now();
+    if (now - this.lastRejectAnnounce >= 5000) {
+      this.lastRejectAnnounce = now;
+      announce(`${limiter?.title || limiterId} rejected a request (429).`);
+    }
+    if (this.isLooping) {
+      this.timer = setTimeout(() => {
+        if (!this.isPlaying || !this.scenario) return;
+        this.goToStep(0);
+        if (this.arrive(0, [])) return;
         this.scheduleNextStep();
       }, delayMs);
     } else {
@@ -352,6 +448,10 @@ export class SimulationPlaybackController {
     this.balancerCounters.clear();
     this.announcedBalancers.clear();
     this.passSwaps.clear();
+    this.cacheCounters.clear();
+    this.limiterCounters.clear();
+    this.pendingNext = null;
+    this.lastRejectAnnounce = Number.NEGATIVE_INFINITY;
   }
 
   private clearTimer(): void {
@@ -420,7 +520,8 @@ export class SimulationPlaybackController {
       simPacket.hidden = false;
       simPacket.dataset.tone = step.tone;
       simPacketDot.style.background = accent;
-      simPacketLabel.textContent = step.label;
+      simPacketLabel.textContent =
+        this.currentStepIndex === 0 && anchorNode.kind === 'scheduler' ? `⏱ ${anchorNode.schedule?.every || 'schedule'}` : step.label;
       simPacket.style.setProperty('--px', String(cx));
       simPacket.style.setProperty('--py', String(cy - 62));
     }
