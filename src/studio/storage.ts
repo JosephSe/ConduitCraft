@@ -6,9 +6,12 @@
  * filled once at boot by `initStorage()`, and every write updates the copy first and then persists in order. A write
  * that fails rolls the copy back and rejects, so callers can show the failure; nothing is swallowed.
  *
- * Fallbacks: if IndexedDB can't be opened (private mode in some browsers) records go to `localStorage` under the
- * keys older releases used, and the status says so. If that is missing too, they live in memory for the session.
- * The old `localStorage` copies are never deleted here: they are read once, on first load, and then left alone.
+ * Fallbacks: if IndexedDB can't be opened (private mode in some browsers) records go to `localStorage` under this
+ * module's own keys, and the status says so. If that is missing too, they live in memory for the session.
+ *
+ * Releases before 2.1 kept documents in `localStorage` under other keys. 2.1 copied them into the database once and
+ * left them. They are no longer read: once the database holds the "moved" marker, the first successful load deletes
+ * them (`retireOldCopies`). A browser that never ran 2.1 has no marker, and its old keys are left alone.
  */
 import type { DiagramDocument } from '../types';
 
@@ -17,19 +20,17 @@ export const DB_VERSION = 1;
 export const STORE_NAMES = ['diagrams', 'snapshots', 'meta'] as const;
 export type StoreName = (typeof STORE_NAMES)[number];
 
-/** The `localStorage` keys that releases before this one wrote document data to. */
-export const LEGACY_KEYS = {
-  autosave: 'conduitcraft-autosave-v1',
-  autosaveOlder: 'blueprint-studio-autosave-v1',
-  recovery: 'conduitcraft-recovery-v1',
-  snapshots: 'conduitcraft-snapshots-v1',
-} as const;
+/** The `localStorage` keys the fallback backend uses. */
 const META_PREFIX = 'conduitcraft-meta:';
-const DIAGRAM_PREFIX = 'conduitcraft-diagram:';
+export const DIAGRAM_PREFIX = 'conduitcraft-diagram:';
+export const SNAPSHOTS_KEY = 'conduitcraft-snapshot-list';
 
 export const AUTOSAVE_ID = 'autosave';
 export const RECOVERY_ID = 'recovery';
+/** Written by 2.1 when it moved the old `localStorage` copies into the database. Read here, never written. */
 const MIGRATED_ID = 'legacy-migrated';
+/** Every `localStorage` key a release before 2.1 wrote document data to, matched by shape. */
+const OLD_COPY_KEY = /^(?:conduitcraft|blueprint-studio)-(?:autosave|recovery|snapshots)-v1$/;
 
 export interface DiagramRecord {
   id: string;
@@ -159,54 +160,28 @@ export function createIndexedDbBackend(db: IDBDatabase): Backend {
   };
 }
 
-/** Read what releases before this one stored. Used by the migration and by the `localStorage` fallback. */
-export function readLegacyContents(storage: Storage | null): StoreContents {
-  const out = emptyContents();
-  if (!storage) return out;
-  const readJson = (key: string): unknown => {
-    try {
-      const raw = storage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  };
-  const asRecord = (id: string, doc: unknown): DiagramRecord | null => {
-    const d = doc as DiagramDocument | null;
-    if (!d || typeof d !== 'object' || !Array.isArray(d.nodes) || !Array.isArray(d.edges)) return null;
-    return { id, title: d.title || 'Untitled', updatedAt: 0, doc: d };
-  };
-  const autosave = asRecord(AUTOSAVE_ID, readJson(LEGACY_KEYS.autosave) ?? readJson(LEGACY_KEYS.autosaveOlder));
-  const recovery = asRecord(RECOVERY_ID, readJson(LEGACY_KEYS.recovery));
-  if (autosave) out.diagrams.push(autosave);
-  if (recovery) out.diagrams.push(recovery);
-  const snaps = readJson(LEGACY_KEYS.snapshots);
-  if (Array.isArray(snaps)) {
-    out.snapshots = snaps.filter((s): s is StoredRecord => typeof s?.id === 'string');
-  }
-  return out;
-}
-
-/** Fallback: the same keys older releases used, so nothing needs moving and a downgrade still finds its data. */
+/** Fallback when IndexedDB is not available: one `localStorage` key per record, plus one for the snapshot list. */
 export function createLocalStorageBackend(storage: Storage): Backend {
   let snapshots: StoredRecord[] = [];
   const keyFor = (store: StoreName, id: string): string | null => {
-    if (store === 'diagrams') {
-      if (id === RECOVERY_ID) return LEGACY_KEYS.recovery;
-      return id === AUTOSAVE_ID ? LEGACY_KEYS.autosave : DIAGRAM_PREFIX + id;
-    }
+    if (store === 'diagrams') return DIAGRAM_PREFIX + id;
     if (store === 'meta') return META_PREFIX + id;
     return null;
   };
   return {
     kind: 'localstorage',
     async load() {
-      const out = readLegacyContents(storage);
+      const out = emptyContents();
+      try {
+        const saved = JSON.parse(storage.getItem(SNAPSHOTS_KEY) ?? 'null') as unknown;
+        if (Array.isArray(saved)) out.snapshots = saved.filter((s): s is StoredRecord => typeof s?.id === 'string');
+      } catch {
+        // An unreadable snapshot list is treated as empty; the diagrams still load.
+      }
       snapshots = [...out.snapshots];
       for (let i = 0; i < storage.length; i += 1) {
         const key = storage.key(i);
         if (key?.startsWith(DIAGRAM_PREFIX)) {
-          // Library entries other than the first (B3) keep the whole record, so title and time survive.
           try {
             const record = JSON.parse(storage.getItem(key) ?? 'null') as DiagramRecord | null;
             if (record && typeof record.id === 'string' && record.doc) out.diagrams.push(record);
@@ -226,24 +201,18 @@ export function createLocalStorageBackend(storage: Storage): Backend {
     async put(store, record) {
       if (store === 'snapshots') {
         const next = [record, ...snapshots.filter((s) => s.id !== record.id)];
-        storage.setItem(LEGACY_KEYS.snapshots, JSON.stringify(next));
+        storage.setItem(SNAPSHOTS_KEY, JSON.stringify(next));
         snapshots = next;
         return;
       }
       const key = keyFor(store, record.id);
       if (!key) return;
-      const value =
-        store === 'diagrams'
-          ? key.startsWith(DIAGRAM_PREFIX)
-            ? record
-            : (record as DiagramRecord).doc
-          : (record as MetaRecord).value;
-      storage.setItem(key, JSON.stringify(value));
+      storage.setItem(key, JSON.stringify(store === 'diagrams' ? record : (record as MetaRecord).value));
     },
     async remove(store, id) {
       if (store === 'snapshots') {
         const next = snapshots.filter((s) => s.id !== id);
-        storage.setItem(LEGACY_KEYS.snapshots, JSON.stringify(next));
+        storage.setItem(SNAPSHOTS_KEY, JSON.stringify(next));
         snapshots = next;
         return;
       }
@@ -251,6 +220,22 @@ export function createLocalStorageBackend(storage: Storage): Backend {
       if (key) storage.removeItem(key);
     },
   };
+}
+
+/**
+ * Delete the document copies that releases before 2.1 left in `localStorage`, but only once the database says they
+ * were moved. Returns how many keys went. Without the marker nothing is touched, so work that was never moved is
+ * not destroyed.
+ */
+export function retireOldCopies(storage: Storage | null, moved: boolean): number {
+  if (!storage || !moved) return 0;
+  const doomed: string[] = [];
+  for (let i = 0; i < storage.length; i += 1) {
+    const key = storage.key(i);
+    if (key && OLD_COPY_KEY.test(key)) doomed.push(key);
+  }
+  for (const key of doomed) storage.removeItem(key);
+  return doomed.length;
 }
 
 export function createMemoryBackend(initial?: Partial<StoreContents>): Backend {
@@ -344,23 +329,6 @@ async function useFallback(reason: string): Promise<void> {
   }
 }
 
-/** Copy what older releases kept in `localStorage` into IndexedDB, once. The old copies stay where they are. */
-async function migrateLegacy(target: Backend): Promise<void> {
-  if (cache.meta.has(MIGRATED_ID)) return;
-  const legacy = readLegacyContents(localStorageOrNull());
-  for (const name of ['diagrams', 'snapshots'] as const) {
-    for (const record of legacy[name]) {
-      if (cache[name].has(record.id)) continue; // never overwrite something already in the database
-      const stored = { ...(record as StoredRecord), ...(name === 'diagrams' ? { updatedAt: Date.now() } : {}) };
-      await target.put(name, stored);
-      cache[name].set(stored.id, stored);
-    }
-  }
-  const marker: MetaRecord = { id: MIGRATED_ID, value: Date.now() };
-  await target.put('meta', marker);
-  cache.meta.set(marker.id, marker);
-}
-
 export interface InitOptions {
   /** For tests. Skips detection and uses this backend as is. */
   backend?: Backend;
@@ -385,11 +353,10 @@ export function initStorage(options: InitOptions = {}): Promise<StorageStatus> {
         const idb = createIndexedDbBackend(db);
         try {
           hydrate(await idb.load());
-          await migrateLegacy(idb);
+          retireOldCopies(localStorageOrNull(), cache.meta.has(MIGRATED_ID));
           backend = idb;
           status = { backend: 'indexeddb', notice: null };
         } catch {
-          // The old copies are untouched, so the fallback finds them. Nothing is lost.
           db.close();
           await useFallback('ConduitCraft could not move your saved work into the new store.');
         }

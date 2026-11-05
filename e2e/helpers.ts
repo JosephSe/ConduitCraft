@@ -96,3 +96,44 @@ export async function dropFile(page: Page, name: string, text: string): Promise<
     { name, text },
   );
 }
+
+/**
+ * Put records straight into the `conduitcraft` database, the way an earlier visit would have left them, before the
+ * app has started. It visits a static file on the same origin (so the app does not boot and no first run happens),
+ * creates the stores the way the app does, and writes. The next `page.goto('/')` is then a returning visit.
+ */
+export async function seedStorage(
+  page: Page,
+  contents: { diagrams?: object[]; snapshots?: object[]; meta?: object[] },
+): Promise<void> {
+  await page.goto('/icon.svg');
+  await page.evaluate(
+    (data) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open('conduitcraft', 1);
+        open.onupgradeneeded = () => {
+          for (const name of ['diagrams', 'snapshots', 'meta']) open.result.createObjectStore(name, { keyPath: 'id' });
+        };
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const db = open.result;
+          const tx = db.transaction(['diagrams', 'snapshots', 'meta'], 'readwrite');
+          for (const name of ['diagrams', 'snapshots', 'meta'] as const) {
+            for (const record of data[name] ?? []) tx.objectStore(name).put(record);
+          }
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => reject(tx.error);
+        };
+      }),
+    contents,
+  );
+}
+
+/** Seed the autosave record: a returning visitor with this work saved. */
+export async function seedAutosave(page: Page, doc: object): Promise<void> {
+  const title = (doc as { title?: string }).title ?? 'Untitled';
+  await seedStorage(page, { diagrams: [{ id: 'autosave', title, updatedAt: Date.now(), doc }] });
+}

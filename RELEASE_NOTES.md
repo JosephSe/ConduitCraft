@@ -1,5 +1,9 @@
 # Release notes
 
+## Unreleased
+
+- **Storage.** The old browser-storage copies that 2.1 left behind are deleted once your work is safe in the database. A browser that never ran 2.1 keeps them untouched, but they are no longer imported.
+
 ## 2.1.0
 
 - **Layered layout (ELK).** **Auto-Layout: Layered (ELK)** in the command palette arranges the diagram in layers with fewer crossings, keeps fixed wire ends on their side and zones in order, leaves locked components alone, glides the components into place and is one undo step. The ELK library loads only when you use it; the built-in layout is still the default.
