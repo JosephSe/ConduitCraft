@@ -446,3 +446,22 @@ export const presentationManager = new PresentationManager();
 export function togglePresentation(doc: DiagramDocument = app.doc): Promise<void> {
   return presentationManager.toggle(doc);
 }
+
+/** Tour keys while a presentation is running. Bound here, in the lazy chunk, so the entry bundle carries none of it. */
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') window.addEventListener(
+  'keydown',
+  (e) => {
+    if (!presentationManager.isPresenting) return;
+    const handled = (action: () => void) => {
+      e.preventDefault();
+      e.stopPropagation();
+      action();
+    };
+    if (e.key === 'Escape' || (e.key.toLowerCase() === 'p' && !e.metaKey && !e.ctrlKey)) handled(() => presentationManager.exit());
+    else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') handled(() => presentationManager.next());
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') handled(() => presentationManager.prev());
+    else if (e.key === 'Home') handled(() => presentationManager.goTo(0));
+    else if (e.key === 'End') handled(() => presentationManager.goTo(presentationManager.totalSteps - 1));
+  },
+  true,
+);

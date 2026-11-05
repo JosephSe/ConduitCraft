@@ -9,7 +9,7 @@ import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
 import { STARTER_TEMPLATES } from './templatesGallery';
 import { createShareUrl } from './shareLink';
-import { togglePresentation } from './presentation';
+import { togglePresentation } from './presentationTrigger';
 import { setPointerTool } from './pointerTool';
 import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
