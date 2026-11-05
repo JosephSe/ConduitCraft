@@ -116,6 +116,12 @@ How a component copes is set under **Review & Status**:
 
 A Message Queue is drawn as a pipe. When every component that reads from a queue is down, the queue is **buffering**: it holds the work, and the components that write to it carry on. Anything behind the failed reader is **delayed**, not unreachable, because its work waits and resumes when the reader is restored. In the Traffic lens, play a looping scenario and messages pile up inside the pipe; press `X` on the reader again and the queue drains. Set **Max depth** under **Review & Status** to cap the backlog: past the cap, messages go to the **Dead-letter queue** if you set one, and are dropped if you did not.
 
+### Load balancers
+
+A Load Balancer is drawn as a trapezoid, with the wide side towards the components it spreads traffic over. Fail one of those targets and the others take the load: they show as **rerouted**, and the balancer is not **at risk** while at least one target is up. If every target is down, the balancer is at risk. What sits behind the failed target alone is still unreachable, because a balancer cannot save work only one instance served. In the Traffic lens, a scenario that names a failed target is sent to a live one instead, and the packet shows `→` and the target's name. With nothing failed, the scenario's own steps decide the path.
+
+Pick a **Strategy** under **Review & Status**: round robin, least connections, weighted or hash. It is recorded for the reader and shown on the card; the run does not use it.
+
 Failing a component also fails everything inside its level. Failing a component inside a level leaves the parent alone.
 
 ## Review and insights
@@ -134,6 +140,7 @@ The Review lens runs a set of rules over every level of the diagram. The list gr
 | Data store nothing reads from | Info | Every wire into this data store only writes to it. |
 | Queue with a limit and no dead-letter queue | Info | A queue has a maximum depth but nowhere to send overflow, so it drops messages when full. |
 | Synchronous wire into a queue | Info | A wire into a queue is not marked async. Queues are usually written asynchronously. |
+| Load balancer with fewer than two targets | Info | A load balancer points at one component or none, so it does not spread load. |
 | Wire between services without a label | Info | A wire between two services has no label, so a reader cannot tell what it carries. |
 
 ## Levels
@@ -283,14 +290,15 @@ edges:
 | `core` | Core System | `id[["Title"]]` |
 | `service` | Service / API | `id["Title"]` |
 | `queue` | Message Queue | `id[("Title")]` |
+| `balancer` | Load Balancer | `id[/"Title"\]` |
 | `bus` | Event Broker | `id("Title")` |
 | `gate` | Control Gate | `id{{"Title"}}` |
 | `store` | Data Store | `id[("Title")]` |
 | `client` | External Client | `id[/"Title"/]` |
 
-`shape` is the on-canvas outline: `card` (the default, omitted), `rounded`, `pill`, `circle`, `diamond`, or `hexagon`.
+`shape` is the on-canvas outline: `card` (the default, omitted), `rounded`, `pill`, `circle`, `diamond`, `hexagon`, `asymmetric`, or `trapezoid`. A load balancer is drawn as a trapezoid without storing a shape.
 
-`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
+`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`, `balancer`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
 
 `payload` is the contract. A JSON value is stored as structured YAML; anything that is not JSON stays a string. `metrics` is a list of `{ label, value }`. A map of label to value is also accepted on import.
 

@@ -3,7 +3,7 @@ import { describeDiagram } from '../core/describe';
 import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { queueCardText } from '../core/queues';
-import { cylinderPlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsCylinder } from '../core/nodeStyle';
+import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsCylinder } from '../core/nodeStyle';
 import { nodeIconShapes } from '../ui/icons';
 
 export type SvgScheme = 'light' | 'dark';
@@ -70,9 +70,9 @@ function notesHeight(itemCount: number): number {
   return 72 + Math.max(0, itemCount) * 40;
 }
 
-function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false): string {
+function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR'): string {
   const { x, y, width, height } = node;
-  const shape = node.shape || 'card';
+  const shape = drawnShape(node.kind, node.shape) || 'card';
   const accent = pal.tone[node.accent] || pal.tone.blue;
   const strokeColor = isSelected ? accent : pal.border;
   const strokeWidth = isSelected ? '2.75' : '1.75';
@@ -136,6 +136,20 @@ function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false): strin
     }
     return outline;
   }
+  if (shape === 'trapezoid') {
+    const plate = nodeShapePlate('trapezoid', width, height, direction);
+    const pts = plate?.kind === 'polygon' ? plate.points : '';
+    const shifted = pts
+      .split(' ')
+      .map((p) => {
+        const [px, py] = p.split(',').map(Number);
+        return `${px + x},${py + y}`;
+      })
+      .join(' ');
+    outline = `<polygon points="${shifted}" ${common} stroke-linejoin="round"/>`;
+    if (isSelected) outline += `<polygon points="${shifted}" fill="none" stroke="${strokeColor}" stroke-width="6" stroke-opacity="0.25" stroke-linejoin="round"/>`;
+    return outline;
+  }
   const rx =
     shape === 'circle' || shape === 'pill' ? Math.min(width, height) / 2 : shape === 'rounded' ? 28 : 18;
   outline = `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="${rx}" ${common}/>`;
@@ -167,7 +181,7 @@ function iconMarkup(node: DiagramNode, x: number, y: number, size: number, pal: 
   return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${mix(color, pal.surface, 0.14)}"/><g transform="translate(${x + offset} ${y + offset}) scale(${glyph / 24})" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${nodeIconShapes(node.icon)}</g>`;
 }
 
-const CENTERED = new Set(['circle', 'diamond', 'hexagon']);
+const CENTERED = new Set(['circle', 'diamond', 'hexagon', 'trapezoid']);
 
 /** Text of a node drawn inside a circle, diamond or hexagon: centred, stacked, no icon box. */
 function centeredText(node: DiagramNode, pal: Palette): string {
@@ -176,7 +190,7 @@ function centeredText(node: DiagramNode, pal: Palette): string {
   if (node.eyebrow) lines.push({ text: node.eyebrow, size: 11, weight: 600, color: pal.muted, mono: true, gap: 14 });
   lines.push({ text: node.title, size: 16, weight: 700, color: pal.ink, gap: 22 });
   if (node.subtitle) lines.push({ text: node.subtitle, size: 12, weight: 400, color: pal.secondary, gap: 18 });
-  const foot = [node.footerLeft, node.chip].filter(Boolean).join('  ·  ');
+  const foot = [node.footerLeft, queueCardText(node).chip].filter(Boolean).join('  ·  ');
   if (foot) lines.push({ text: foot, size: 11, weight: 400, color: pal.muted, mono: true, gap: 16 });
   const total = lines.reduce((sum, line) => sum + line.gap, 0);
   let y = node.y + node.height / 2 - total / 2;
@@ -212,6 +226,7 @@ function nodeMarkup(
   selection?: SelectionTarget,
   related?: Set<string>,
   spotlight = false,
+  direction: 'LR' | 'TD' = 'LR',
 ): string {
   const isSelected = selection?.type === 'multi' && selection.ids.includes(node.id);
   const isRelated = Boolean(related?.has(node.id));
@@ -222,10 +237,10 @@ function nodeMarkup(
     return `<g${opacityAttr}>${actorMarkup(node, pal)}</g>`;
   }
   const cylinder = storeDrawsCylinder(node.kind, node.shape);
-  if (cylinder || CENTERED.has(node.shape ?? '')) {
+  if (cylinder || CENTERED.has(drawnShape(node.kind, node.shape) ?? '')) {
     // The canvas hides a drum's eyebrow and icon, so its text is just the title, subtitle and footer.
     const text = cylinder ? { ...node, eyebrow: '', y: node.y + 10, height: node.height - 10 } : node;
-    return `<g${opacityAttr}>${nodeOutline(node, pal, isSelected)}${centeredText(text, pal)}</g>`;
+    return `<g${opacityAttr}>${nodeOutline(node, pal, isSelected, direction)}${centeredText(text, pal)}</g>`;
   }
 
   // A pipe keeps its text clear of the rounded ends and the outlet cap.
@@ -266,7 +281,7 @@ function nodeMarkup(
 
   return [
     `<g${opacityAttr}>`,
-    nodeOutline(outlineNode, pal, isSelected),
+    nodeOutline(outlineNode, pal, isSelected, direction),
     iconMarkup(node, x + 14, y + 14, iconSize, pal),
     corner,
     `<text x="${x + 16}" y="${titleY}" font-family="${SANS}" font-size="${titleSize}" font-weight="700" fill="${pal.ink}">${escapeXml(node.title)}</text>`,
@@ -415,7 +430,7 @@ export function renderDiagramSvg(
     .join('');
 
   const nodes = doc.nodes
-    .map((node) => nodeMarkup(node, pal, selection, related, spotlight))
+    .map((node) => nodeMarkup(node, pal, selection, related, spotlight, doc.direction))
     .join('');
 
   const legend = legendMarkup(doc, height, pal);

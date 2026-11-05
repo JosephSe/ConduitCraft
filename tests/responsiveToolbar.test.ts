@@ -372,6 +372,7 @@ describe('responsive and compact toolbar', () => {
     assert.ok(railHtml.includes('data-stencil-kind="bus"'), 'Rail must contain bus');
     assert.ok(railHtml.includes('data-stencil-kind="queue"'), 'Rail must contain queue');
     assert.ok(railHtml.includes('data-stencil-id="queue"'), 'Rail must carry stencil ids');
+    assert.ok(railHtml.includes('data-stencil-kind="balancer"'), 'Rail must contain balancer');
     assert.ok(railHtml.includes('data-stencil-kind="store"'), 'Rail must contain store');
     assert.ok(railHtml.includes('data-stencil-kind="gate"'), 'Rail must contain gate');
     assert.ok(railHtml.includes('data-stencil-kind="client"'), 'Rail must contain client');

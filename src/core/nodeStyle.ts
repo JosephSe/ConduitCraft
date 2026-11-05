@@ -1,7 +1,7 @@
 /** Node outline and custom-icon values shared by the editor, parser, and export. */
 import type { NodeShape } from '../types';
 
-export const NODE_SHAPES = ['card', 'rounded', 'pill', 'circle', 'diamond', 'hexagon', 'asymmetric'] as const;
+export const NODE_SHAPES = ['card', 'rounded', 'pill', 'circle', 'diamond', 'hexagon', 'asymmetric', 'trapezoid'] as const;
 
 export const NODE_SHAPE_LABELS: Record<NodeShape, string> = {
   card: 'Card',
@@ -11,6 +11,7 @@ export const NODE_SHAPE_LABELS: Record<NodeShape, string> = {
   diamond: 'Diamond',
   hexagon: 'Hexagon',
   asymmetric: 'Asymmetric (Banner)',
+  trapezoid: 'Trapezoid',
 };
 
 /** Largest custom icon kept on a node, in data-URL characters. */
@@ -52,8 +53,17 @@ export function nodeShapePlate(
   shape: NodeShape | undefined,
   width: number,
   height: number,
+  direction: 'LR' | 'TD' = 'LR',
 ): ShapePlate | null {
-  if (shape !== 'circle' && shape !== 'diamond' && shape !== 'hexagon' && shape !== 'asymmetric') return null;
+  if (
+    shape !== 'circle' &&
+    shape !== 'diamond' &&
+    shape !== 'hexagon' &&
+    shape !== 'asymmetric' &&
+    shape !== 'trapezoid'
+  ) {
+    return null;
+  }
   const w = Math.max(1, width);
   const h = Math.max(1, height);
   const inset = 1.25;
@@ -74,6 +84,22 @@ export function nodeShapePlate(
       [w / 2, h - inset],
       [inset, h / 2],
     ];
+  } else if (shape === 'trapezoid') {
+    // The wide side faces the targets: right when the flow runs left to right, bottom when it runs top down.
+    points =
+      direction === 'TD'
+        ? [
+            [w * 0.17, inset],
+            [w * 0.83, inset],
+            [w - inset, h - inset],
+            [inset, h - inset],
+          ]
+        : [
+            [inset, h * 0.17],
+            [w - inset, inset],
+            [w - inset, h - inset],
+            [inset, h * 0.83],
+          ];
   } else if (shape === 'asymmetric') {
     const notch = Math.min(22, Math.round(w * 0.14));
     points = [
@@ -125,6 +151,19 @@ export function storeDrawsCylinder(kind: string, shape: NodeShape | undefined): 
  */
 export function queueDrawsPipe(kind: string, shape: NodeShape | undefined): boolean {
   return kind === 'queue' && (shape == null || shape === 'card');
+}
+
+/**
+ * Default load balancers are drawn as a trapezoid, wide side towards the targets. The outline is not stored:
+ * `shape` stays absent, and an explicit non-card outline still wins.
+ */
+export function balancerDrawsTrapezoid(kind: string, shape: NodeShape | undefined): boolean {
+  return kind === 'balancer' && (shape == null || shape === 'card');
+}
+
+/** The outline a node is drawn with: its stored shape, or 'trapezoid' for a default load balancer. */
+export function drawnShape(kind: string, shape: NodeShape | undefined): NodeShape | undefined {
+  return balancerDrawsTrapezoid(kind, shape) ? 'trapezoid' : shape;
 }
 
 export interface PipePlate {
@@ -220,6 +259,7 @@ export function nodeShapeContentPadding(
   width: number,
   height: number,
 ): string {
+  shape = drawnShape(kind, shape);
   if (storeDrawsCylinder(kind, shape)) {
     const { cy, ry } = cylinderPlate(width, height);
     return `${Math.round(cy + ry + 6)}px 1.15rem ${Math.round(ry + 8)}px`;
@@ -235,6 +275,7 @@ export function nodeShapeContentPadding(
   if (shape === 'diamond') return `${Math.round(h * 0.26)}px ${Math.round(w * 0.27)}px`;
   if (shape === 'circle') return `${Math.round(h * 0.16)}px ${Math.round(w * 0.16)}px`;
   if (shape === 'hexagon') return `${Math.round(h * 0.1)}px ${Math.round(w * 0.2)}px`;
+  if (shape === 'trapezoid') return `${Math.round(h * 0.1)}px ${Math.round(w * 0.12)}px`;
   if (shape === 'asymmetric') return `${Math.round(h * 0.12)}px ${Math.round(w * 0.16)}px ${Math.round(h * 0.12)}px ${Math.round(w * 0.08)}px`;
   return `${Math.round(h * 0.1)}px ${Math.round(Math.min(w, h) * 0.2)}px`;
 }
@@ -243,8 +284,9 @@ export function renderNodeShapePlate(
   shape: NodeShape | undefined,
   width: number,
   height: number,
+  direction: 'LR' | 'TD' = 'LR',
 ): string {
-  const plate = nodeShapePlate(shape, width, height);
+  const plate = nodeShapePlate(shape, width, height, direction);
   if (!plate) return '';
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));

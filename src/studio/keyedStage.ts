@@ -9,6 +9,8 @@ import {
   queueDrawsPipe,
   nodeShapeContentPadding,
   nodeShapePlate,
+  drawnShape,
+  balancerDrawsTrapezoid,
   sanitizeIconImage,
   storeDrawsCylinder,
 } from '../core/nodeStyle';
@@ -1257,7 +1259,9 @@ function paintShapePlate(hit: HTMLElement, node: DiagramNode): void {
     ? cylinderPlate(node.width, node.height)
     : null;
   const pipe = queueDrawsPipe(node.kind, node.shape) ? pipePlate(node.width, node.height) : null;
-  const plate = cylinder || pipe ? null : nodeShapePlate(node.shape, node.width, node.height);
+  const plate = cylinder || pipe
+    ? null
+    : nodeShapePlate(drawnShape(node.kind, node.shape), node.width, node.height, app.doc.direction);
   if (!cylinder && !pipe && !plate) {
     hit.querySelector('.node-shape-plate')?.remove();
     return;
@@ -1397,6 +1401,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   paintBacklog(wrapper, node);
   if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
   else if (queueDrawsPipe(node.kind, node.shape)) wrapper.dataset.shape = 'pipe';
+  else if (balancerDrawsTrapezoid(node.kind, node.shape)) wrapper.dataset.shape = 'trapezoid';
   else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;
   else delete wrapper.dataset.shape;
   wrapper.style.setProperty('--nx', String(node.x));
@@ -1424,6 +1429,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     node.eyebrow,
     node.footerLeft,
     node.queue,
+    node.balancer,
   ]);
   const painted = paintedNodeContent.get(wrapper);
   if (painted && painted.sig === contentSig && painted.image === node.iconImage) return;

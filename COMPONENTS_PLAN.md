@@ -345,12 +345,12 @@ End-to-end (`pnpm test:e2e`), new `e2e/queue.spec.ts`:
 
 ### 4.1 Model and draw
 
-- [ ] Kind `balancer`; field `balancer?: { strategy?: 'round-robin' | 'least-connections' | 'weighted' | 'hash' }` (default round-robin, left absent), normalized like `queue`.
-- [ ] Default outline: a **trapezoid**, wide side facing the targets (right in LR, bottom in TD; read `doc.direction`). Same pattern as the drum: `balancerDrawsTrapezoid(kind, shape)` plus a `ShapePlatePolygon`. Also add `trapezoid` as a general `NodeShape` so any component can use it (shape picker, Blueprint `shape: trapezoid`, Mermaid `[/Title\]`, the trapezoid bracket, on import).
+- [x] Kind `balancer`; field `balancer?: { strategy?: 'round-robin' | 'least-connections' | 'weighted' | 'hash' }` (default round-robin, left absent), normalized like `queue`.
+- [x] Default outline: a **trapezoid**, wide side facing the targets (right in LR, bottom in TD; read `doc.direction`). Same pattern as the drum: `balancerDrawsTrapezoid(kind, shape)` plus a `ShapePlatePolygon`. Also add `trapezoid` as a general `NodeShape` so any component can use it (shape picker, Blueprint `shape: trapezoid`, Mermaid `[/Title\]`, the trapezoid bracket, on import).
   - Watch out: `[/Title/]` and `[\Title\]` currently map to `client` ([src/core/parser.ts:376](src/core/parser.ts:376)). `[/Title\]` (a trapezoid) is a different bracket. Add its pattern **before** the client patterns and test that the client brackets still parse as clients.
-- [ ] Icon `balancer` (one line splitting into three). Size 200×120. Stencil: title "Load Balancer", eyebrow `BALANCER`, chip from the strategy (`RR`, `LEAST`, `WEIGHTED`, `HASH`), accent violet.
-- [ ] Images: `haproxy` → balancer (remove it from `GATE_IMAGES`); `nginx`, `traefik` and `envoy` stay gates (they are more often gateways).
-- [ ] Kubernetes importer: a `Service` of `type: LoadBalancer` becomes a balancer in front of its workload, if the importer already draws Services. Check [src/importers/kubernetes.ts](src/importers/kubernetes.ts) first; skip this if Services are not drawn.
+- [x] Icon `balancer` (one line splitting into three). Size 200×120. Stencil: title "Load Balancer", eyebrow `BALANCER`, chip from the strategy (`RR`, `LEAST`, `WEIGHTED`, `HASH`), accent violet.
+- [x] Images: `haproxy` → balancer (remove it from `GATE_IMAGES`); `nginx`, `traefik` and `envoy` stay gates (they are more often gateways).
+- [x] Kubernetes importer (n/a: Services are not drawn as components, so there is nothing to turn into a balancer): a `Service` of `type: LoadBalancer` becomes a balancer in front of its workload, if the importer already draws Services. Check [src/importers/kubernetes.ts](src/importers/kubernetes.ts) first; skip this if Services are not drawn.
 
 ### 4.2 Run
 
@@ -364,26 +364,35 @@ Chaos (pure):
 
 | Graph (entry `U`) | Fail | Expected |
 | --- | --- | --- |
-| `U → LB → {A, B} → DB` | `A` | failed `[A]`, rerouted `[B]`, LB not at-risk, DB reachable |
+| `U → LB → {A, B} → DB` | `A` | failed `[A]`, rerouted includes `[B]` (DB is also rerouted, because it lost the wire from A), LB not at-risk, DB reachable |
 | `U → LB → {A, B}` | `A, B` | LB at-risk |
 | `U → LB → {A, B}`, `A → X` only | `A` | `X` unreachable |
 
 Playback:
 
-- [ ] When a step contains a balancer and the next step contains a down target, **substitute** a live target of the same balancer for that step's render only (round-robin over live targets, using a counter kept per balancer so it is deterministic). Show the label `→ B` on the packet and announce once per run: "Load Balancer sent traffic to B instead of A."
-- [ ] With no failures, round-robin playback over targets is **not** done: the scenario's own steps decide the path (otherwise saved scenarios would play differently).
+- [x] When a step contains a balancer and the next step contains a down target, **substitute** a live target of the same balancer for that step's render only (round-robin over live targets, using a counter kept per balancer so it is deterministic). Show the label `→ B` on the packet and announce once per run: "Load Balancer sent traffic to B instead of A."
+- [x] With no failures, round-robin playback over targets is **not** done: the scenario's own steps decide the path (otherwise saved scenarios would play differently).
 
 ### 4.3 Review
 
-- [ ] `balancer-single-target` (info): a balancer with fewer than two targets. "Load Balancer has one target, so it does not spread load."
-- [ ] `spof`: a balancer with two or more live targets is not reported as a SPOF **for its targets**, but the balancer itself can be (unless it has `replicas > 1`).
+- [x] `balancer-single-target` (info): a balancer with fewer than two targets. "Load Balancer has one target, so it does not spread load."
+- [x] `spof`: a balancer with two or more live targets is not reported as a SPOF **for its targets**, but the balancer itself can be (unless it has `replicas > 1`).
 
 ### 4.4 Tests and acceptance
 
-Same structure as §3.11, for the balancer: the shape, the trapezoid bracket regression, the chaos table, playback substitution with fake timers, the rule, round-trips, the e2e "fail one of two targets, traffic continues".
+Built in `tests/balancers.test.ts`, `tests/balancerPlayback.test.ts` and `e2e/balancer.spec.ts`. Same structure as §3.11, for the balancer: the shape, the trapezoid bracket regression, the chaos table, playback substitution with fake timers, the rule, round-trips, the e2e "fail one of two targets, traffic continues".
+
+**Built, with these differences from the text above (K2):**
+
+- The first row of the chaos table: DB is also `rerouted`, by the existing rule that a component which lost an incoming wire counts as rerouted. The test checks that `B` is included.
+- The substitution also applies when one step holds both the balancer and its down target (for example `client, alb, app-02`), and the first step of a scenario. The stand-in follows the packet for the rest of that pass through the scenario, so it does not stop at the failed target one step later.
+- The label is the step's own label plus `→ B` (for example `Route → App B`), not `→ B` alone.
+- A balancer with no targets gets the same rule, worded "has no targets".
+- The Mermaid trapezoid `[/Title\]` imports as a `balancer`; a `trapezoid` shape on any other component is stored in the file and drawn, and the Mermaid block writes that component by its kind.
+- The strategy is recorded and shown in the chip; playback does not use it, and there is no bulk field for it.
+- The Three-Tier example's "Application Load Balancer" changed from a diamond gate to a balancer.
 
 ---
-
 ## 5. Phase 3 — K3 Cache, K4 Rate Limiter, K5 Scheduler
 
 Three smaller kinds that share one PR's worth of groundwork (§2.2 touch list ×3). Split into three PRs if review gets heavy.

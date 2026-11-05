@@ -2,7 +2,8 @@
  * Tags, ownership, links and the custom legend (F-26, F-27): what they mean and how they are read from a file.
  * Pure and DOM-free. Every link URL goes through `safeLinkUrl`, on input, on import and again on export.
  */
-import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeLinkKind, NodeQueue, NodeResilience, NodeSource, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeBalancer, NodeLinkKind, NodeQueue, NodeResilience, NodeSource, StreamTone } from '../types';
+import { normalizeBalancer } from './balancers';
 import { normalizeQueue } from './queues';
 import { normalizeResilience } from './reachability';
 
@@ -132,6 +133,7 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
   tags?: string[];
   resilience?: NodeResilience;
   queue?: NodeQueue;
+  balancer?: NodeBalancer;
   source?: NodeSource;
 } {
   const owner = normalizeOwner(raw.owner);
@@ -140,12 +142,14 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
   const tags = normalizeTags(raw.tags);
   const resilience = normalizeResilience(raw.resilience);
   const queue = normalizeQueue(raw.queue);
+  const balancer = normalizeBalancer(raw.balancer);
   return {
     ...(owner ? { owner } : {}),
     ...(links.length ? { links } : {}),
     ...(tags.length ? { tags } : {}),
     ...(resilience ? { resilience } : {}),
     ...(queue ? { queue } : {}),
+    ...(balancer ? { balancer } : {}),
     ...(source ? { source } : {}),
   };
 }

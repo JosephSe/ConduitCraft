@@ -158,7 +158,8 @@ export function layoutImported(doc: DiagramDocument): void {
 const STORE_IMAGES = ['postgres', 'mysql', 'mariadb', 'mongo', 'redis', 'valkey', 'memcached', 'elasticsearch', 'opensearch', 'clickhouse', 'cassandra', 'influxdb', 'couchdb', 'cockroach', 'timescale', 'minio', 'neo4j', 'etcd'];
 const QUEUE_IMAGES = ['rabbitmq', 'activemq', 'artemis', 'elasticmq', 'beanstalkd'];
 const BUS_IMAGES = ['kafka', 'nats', 'redpanda', 'pulsar', 'mosquitto', 'zookeeper'];
-const GATE_IMAGES = ['nginx', 'traefik', 'haproxy', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
+const BALANCER_IMAGES = ['haproxy'];
+const GATE_IMAGES = ['nginx', 'traefik', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
 
 /** The kind of component a container image most likely is: a data store, a message bus, a gateway, else a service. */
 export function kindForImage(image: string): NodeKind {
@@ -168,6 +169,7 @@ export function kindForImage(image: string): NodeKind {
   if (has(STORE_IMAGES)) return 'store';
   if (has(QUEUE_IMAGES)) return 'queue';
   if (has(BUS_IMAGES)) return 'bus';
+  if (has(BALANCER_IMAGES)) return 'balancer';
   if (has(GATE_IMAGES)) return 'gate';
   return 'service';
 }

@@ -99,6 +99,7 @@ import {
   toneName,
 } from '../core/meta';
 import { normalizeResilience, replicaCount } from '../core/reachability';
+import { BALANCER_STRATEGIES, BALANCER_STRATEGY_LABELS, normalizeBalancer } from '../core/balancers';
 import { MAX_QUEUE_DEPTH, MAX_QUEUE_RETENTION, QUEUE_ORDERINGS, normalizeQueue } from '../core/queues';
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
@@ -315,6 +316,28 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
     makeField('prop-node-queue-dlq', 'Dead-letter queue', dead),
     makeField('prop-node-queue-retention', 'Retention', retention),
   ];
+}
+
+/** How a load balancer spreads traffic (K2). The strategy is recorded for the reader; playback does not use it. */
+function makeBalancerFields(node: DiagramNode): HTMLElement[] {
+  const strategy = document.createElement('select');
+  strategy.className = 'prop-select';
+  for (const s of BALANCER_STRATEGIES) strategy.appendChild(makeOption(s, BALANCER_STRATEGY_LABELS[s]));
+  strategy.value = node.balancer?.strategy ?? 'round-robin';
+  strategy.addEventListener('change', () => {
+    pushHistory();
+    node.balancer = normalizeBalancer({ ...node.balancer, strategy: strategy.value });
+    if (!node.balancer) delete node.balancer;
+    renderAll(false);
+  });
+
+  const heading = document.createElement('span');
+  heading.className = 'field-label';
+  heading.textContent = 'Load balancer';
+  const group = document.createElement('div');
+  group.className = 'prop-field prop-queue-heading';
+  group.appendChild(heading);
+  return [group, makeField('prop-node-balancer-strategy', 'Strategy', strategy)];
 }
 
 /** Ownership and links for a component (F-27): owner text, clickable link icons, and a row editor. */
@@ -763,6 +786,8 @@ export function renderPropertyEditor(): void {
     const shapeSelect = document.createElement('select');
     shapeSelect.className = 'prop-select';
     for (const shape of NODE_SHAPES) {
+      // A load balancer's default outline already is the trapezoid, so it lists one entry for it.
+      if (shape === 'trapezoid' && node.kind === 'balancer') continue;
       const opt = document.createElement('option');
       opt.value = shape;
       opt.textContent =
@@ -770,8 +795,11 @@ export function renderPropertyEditor(): void {
           ? 'Cylinder'
           : shape === 'card' && node.kind === 'queue'
             ? 'Pipe'
-            : NODE_SHAPE_LABELS[shape];
-      opt.selected = (node.shape || 'card') === shape;
+            : shape === 'card' && node.kind === 'balancer'
+              ? 'Trapezoid'
+              : NODE_SHAPE_LABELS[shape];
+      const current = node.kind === 'balancer' && node.shape === 'trapezoid' ? 'card' : node.shape || 'card';
+      opt.selected = current === shape;
       shapeSelect.appendChild(opt);
     }
     shapeSelect.addEventListener('change', () => {
@@ -1123,6 +1151,7 @@ export function renderPropertyEditor(): void {
     reviewElements.push(linksField);
     reviewElements.push(...makeResilienceFields(node));
     if (node.kind === 'queue') reviewElements.push(...makeQueueFields(node));
+    if (node.kind === 'balancer') reviewElements.push(...makeBalancerFields(node));
 
     // Assemble Form Sections
     form.append(

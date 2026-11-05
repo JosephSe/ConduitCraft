@@ -270,7 +270,8 @@
   .arch-node[data-shape="pill"] { border-radius: 999px; }
   .arch-node[data-shape="circle"],
   .arch-node[data-shape="diamond"],
-  .arch-node[data-shape="hexagon"] {
+  .arch-node[data-shape="hexagon"],
+  .arch-node[data-shape="trapezoid"] {
     overflow: visible; background: transparent; border-color: transparent; box-shadow: none;
   }
   .node-shape-plate {
@@ -280,6 +281,7 @@
   .node-shape-geom { fill: var(--wl-surface); stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round; }
   .arch-node[data-kind="core"] .node-shape-geom,
   .arch-node[data-kind="gate"] .node-shape-geom,
+  .arch-node[data-kind="balancer"] .node-shape-geom,
   .arch-node[data-kind="store"] .node-shape-geom {
     fill: color-mix(in srgb, var(--node-accent-soft) 72%, var(--wl-surface));
   }
@@ -289,7 +291,8 @@
   .arch-node > :not(.node-shape-plate) { position: relative; z-index: 1; min-inline-size: 0; }
   .arch-node[data-shape="circle"],
   .arch-node[data-shape="diamond"],
-  .arch-node[data-shape="hexagon"] { justify-content: center; gap: 0.28rem; }
+  .arch-node[data-shape="hexagon"],
+  .arch-node[data-shape="trapezoid"] { justify-content: center; gap: 0.28rem; }
   .arch-node[data-shape] .node-top,
   .arch-node[data-shape] .node-footer { flex-wrap: wrap; justify-content: center; }
   .arch-node[data-shape] .node-eyebrow,

@@ -32,7 +32,7 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 
 ## New components (see COMPONENTS_PLAN.md)
 - [x] K1. **Message Queue**: pipe outline, buffering and delayed chaos states, backlog in the Traffic lens, dead-letter queue, three Review rules.
-- [ ] K2. **Load Balancer**
+- [x] K2. **Load Balancer**: trapezoid outline, a failed target is absorbed by the others, playback sends traffic to a live target, one Review rule.
 - [ ] K3. **Cache**
 - [ ] K4. **Rate Limiter**
 - [ ] K5. **Scheduler / Cron**

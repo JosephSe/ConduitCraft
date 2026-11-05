@@ -21,6 +21,7 @@ export const ICON_LIST: Array<{ id: NodeIconName; label: string }> = [
   { id: 'agency', label: 'Client / Org' },
   { id: 'spark', label: 'AI / Engine' },
   { id: 'queue', label: 'Queue' },
+  { id: 'balancer', label: 'Load balancer' },
 ];
 
 const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
@@ -81,6 +82,12 @@ const ICON_PRIMITIVES: Record<NodeIconName, SvgPrimitive[]> = {
     { tag: 'rect', attrs: { x: '2', y: '10', width: '10', height: '4', rx: '1' } },
     { tag: 'rect', attrs: { x: '2', y: '16', width: '10', height: '4', rx: '1' } },
     { tag: 'path', attrs: { d: 'M15 12h7M19 8l3 4-3 4' } },
+  ],
+  balancer: [
+    { tag: 'path', attrs: { d: 'M2 12h6M8 12l8-7M8 12h8M8 12l8 7' } },
+    { tag: 'circle', attrs: { cx: '19', cy: '5', r: '2' } },
+    { tag: 'circle', attrs: { cx: '19', cy: '12', r: '2' } },
+    { tag: 'circle', attrs: { cx: '19', cy: '19', r: '2' } },
   ],
   globe: [
     { tag: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },

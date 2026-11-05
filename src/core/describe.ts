@@ -5,6 +5,7 @@
  */
 import type { DiagramDocument, DiagramEdge, DiagramNode, LegendEntry, LevelContent, StreamTone } from '../types';
 import { WIRE_PROTOCOL_NAMES } from './wire';
+import { BALANCER_STRATEGY_LABELS } from './balancers';
 import { contentOfPage, pageCount, pageList } from './pages';
 
 const TONE_COLOURS: Record<StreamTone, string> = {
@@ -161,6 +162,26 @@ function queueLines(content: LevelContent): string[] {
   return lines;
 }
 
+/** One sentence per load balancer (K2): who sends it traffic, what it spreads it over and how. */
+function balancerLines(content: LevelContent): string[] {
+  const byId = new Map(content.nodes.map((n) => [n.id, n]));
+  const edges = content.edges ?? [];
+  const lines: string[] = [];
+  for (const b of content.nodes) {
+    if (b.kind !== 'balancer') continue;
+    const callers = [...new Set(edges.filter((e) => e.to === b.id && byId.has(e.from)).map((e) => nameOf(byId.get(e.from))))];
+    const targets = [...new Set(edges.filter((e) => e.from === b.id && byId.has(e.to)).map((e) => nameOf(byId.get(e.to))))];
+    const how = b.balancer?.strategy ? `, ${BALANCER_STRATEGY_LABELS[b.balancer.strategy].toLowerCase()}` : '';
+    const from = callers.length ? ` for ${list(callers)}` : '';
+    lines.push(
+      targets.length
+        ? `- ${nameOf(b)} is a load balancer${from}. It spreads traffic over ${list(targets)}${how}.`
+        : `- ${nameOf(b)} is a load balancer${from}. It has no targets yet.`,
+    );
+  }
+  return lines;
+}
+
 function scenarioLines(doc: DiagramDocument): string[] {
   const byId = new Map(doc.nodes.map((n) => [n.id, n]));
   return (doc.simulations ?? []).map((scenario) => {
@@ -218,6 +239,7 @@ export function describeDiagram(doc: DiagramDocument): string {
     add('Frames', frameLines(doc));
     add('Main flows', flowLines(doc));
     add('Queues', queueLines(doc));
+    add('Load balancers', balancerLines(doc));
     add('Levels', levelLines(doc));
   } else {
     // Each page is told on its own: a wire never crosses pages, so the sentences never mix them.
@@ -229,6 +251,7 @@ export function describeDiagram(doc: DiagramDocument): string {
       add(`Page ${page.title}: Frames`, frameLines(content));
       add(`Page ${page.title}: Main flows`, flowLines(content));
       add(`Page ${page.title}: Queues`, queueLines(content));
+      add(`Page ${page.title}: Load balancers`, balancerLines(content));
       add(`Page ${page.title}: Levels`, levelLines(content));
     }
   }

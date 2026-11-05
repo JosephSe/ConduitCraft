@@ -15,6 +15,8 @@ import {
   storeDrawsCylinder,
   queueDrawsPipe,
   renderPipePlate,
+  balancerDrawsTrapezoid,
+  drawnShape,
 } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { normalizeLinks, toneName } from '../core/meta';
@@ -44,14 +46,15 @@ function serializeScriptJson(data: unknown): string {
 function nodeShapeAttr(node: DiagramNode): string {
   if (storeDrawsCylinder(node.kind, node.shape)) return ' data-shape="cylinder"';
   if (queueDrawsPipe(node.kind, node.shape)) return ' data-shape="pipe"';
+  if (balancerDrawsTrapezoid(node.kind, node.shape)) return ' data-shape="trapezoid"';
   if (!node.shape || node.shape === 'card') return '';
   return ` data-shape="${escapeHtml(node.shape)}"`;
 }
 
-function nodePlateMarkup(node: DiagramNode): string {
+function nodePlateMarkup(node: DiagramNode, direction: 'LR' | 'TD'): string {
   if (storeDrawsCylinder(node.kind, node.shape)) return renderCylinderPlate(node.width, node.height);
   if (queueDrawsPipe(node.kind, node.shape)) return renderPipePlate(node.width, node.height);
-  return renderNodeShapePlate(node.shape, node.width, node.height);
+  return renderNodeShapePlate(drawnShape(node.kind, node.shape), node.width, node.height, direction);
 }
 
 function exportedIconMarkup(node: DiagramNode, size: number, fallback: string): string {
@@ -87,6 +90,7 @@ function renderExportedNode(
   index: number,
   options?: StandaloneHtmlOptions,
   related?: Set<string>,
+  direction: 'LR' | 'TD' = 'LR',
 ): string {
   const multiSel = options?.initialSelection?.type === 'multi' ? options.initialSelection : null;
   const hasSelection = Boolean(options?.initialSelection && options.initialSelection.type !== 'none');
@@ -101,7 +105,7 @@ function renderExportedNode(
   const stateCls = isRel ? ' is-related' : isDim ? ' is-dimmed' : '';
   const shape = nodeShapeAttr(node);
   const box = nodeBoxStyle(node);
-  const plate = nodePlateMarkup(node);
+  const plate = nodePlateMarkup(node, direction);
   const badges = renderNodeBadges(node, options);
   if (node.kind === 'actor') {
     return `
@@ -320,7 +324,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
         )
         .join('')}</div></nav>`
     : '';
-  const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx, options, related)).join('\n');
+  const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx, options, related, doc.direction)).join('\n');
 
   const simButtonsMarkup = simulations
     .map((sim) => {

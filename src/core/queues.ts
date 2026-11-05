@@ -2,7 +2,8 @@
  * Message queues (K1): reading queue settings from untrusted input, and the pure maths of a backlog. Pure and
  * DOM-free. The live backlog is held per page in `studio/queueBacklog.ts` and is never saved.
  */
-import type { DiagramDocument, NodeQueue, QueueDelivery, QueueOrdering } from '../types';
+import type { DiagramDocument, NodeBalancer, NodeQueue, QueueDelivery, QueueOrdering } from '../types';
+import { balancerChip } from './balancers';
 
 export const QUEUE_ORDERINGS: readonly QueueOrdering[] = ['standard', 'fifo', 'priority'];
 export const QUEUE_DELIVERIES: readonly QueueDelivery[] = ['competing', 'fanout'];
@@ -76,11 +77,21 @@ export function queueConsumers(doc: Pick<DiagramDocument, 'nodes' | 'edges'>, qu
   return [...out];
 }
 
-/** What a queue's card shows in its chip and footer: the ordering and the limits when set, else the stencil text. */
-export function queueCardText(node: { kind: string; chip: string; footerLeft: string; queue?: NodeQueue }): {
+/**
+ * What a card shows in its chip and footer. A queue shows its ordering and limits when set; a balancer shows its
+ * strategy in the chip (K2). Anything else shows the stencil text.
+ */
+export function queueCardText(node: {
+  kind: string;
+  chip: string;
+  footerLeft: string;
+  queue?: NodeQueue;
+  balancer?: NodeBalancer;
+}): {
   chip: string;
   footer: string;
 } {
+  if (node.kind === 'balancer') return { chip: balancerChip(node), footer: node.footerLeft };
   if (node.kind !== 'queue') return { chip: node.chip, footer: node.footerLeft };
   const q = node.queue;
   const limits: string[] = [];

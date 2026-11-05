@@ -6,6 +6,7 @@
  */
 import { viewOfLevel } from './levels';
 import type { DiagramDocument, DiagramEdge, ImportIssue, ImportIssueLevel } from '../types';
+import { balancerTargets } from './balancers';
 import { entryPointIds, reachableFrom } from './reachability';
 import { getEffectiveSimulations } from './layout';
 
@@ -20,7 +21,8 @@ export type InsightCode =
   | 'unlabeled-wire'
   | 'queue-no-consumer'
   | 'queue-no-dlq'
-  | 'sync-into-queue';
+  | 'sync-into-queue'
+  | 'balancer-single-target';
 
 export interface InsightTarget {
   type: 'node' | 'edge';
@@ -50,6 +52,7 @@ export const INSIGHT_RULES: readonly InsightRule[] = [
   { code: 'dangling-store', level: 'info', title: 'Data store nothing reads from' },
   { code: 'queue-no-dlq', level: 'info', title: 'Queue with a limit and no dead-letter queue' },
   { code: 'sync-into-queue', level: 'info', title: 'Synchronous wire into a queue' },
+  { code: 'balancer-single-target', level: 'info', title: 'Load balancer with fewer than two targets' },
   { code: 'unlabeled-wire', level: 'info', title: 'Wire between services without a label' },
 ];
 
@@ -277,6 +280,22 @@ function syncIntoQueue(doc: DiagramDocument): InsightIssue[] {
     }));
 }
 
+function balancerSingleTarget(doc: DiagramDocument): InsightIssue[] {
+  const out: InsightIssue[] = [];
+  for (const node of doc.nodes) {
+    if (node.kind !== 'balancer') continue;
+    const count = balancerTargets(doc, node.id).length;
+    if (count >= 2) continue;
+    out.push({
+      level: 'info',
+      code: 'balancer-single-target',
+      target: { type: 'node', id: node.id },
+      message: `${node.title || node.id} has ${count === 0 ? 'no targets' : 'one target'}, so it does not spread load.`,
+    });
+  }
+  return out;
+}
+
 function deprecatedInPath(doc: DiagramDocument): InsightIssue[] {
   const deprecated = new Set(doc.nodes.filter((n) => n.status === 'deprecated').map((n) => n.id));
   if (deprecated.size === 0) return [];
@@ -379,6 +398,7 @@ const CHECKS: Record<InsightCode, (doc: DiagramDocument) => InsightIssue[]> = {
   'queue-no-consumer': queueNoConsumer,
   'queue-no-dlq': queueNoDlq,
   'sync-into-queue': syncIntoQueue,
+  'balancer-single-target': balancerSingleTarget,
 };
 
 /** Every issue the rules find, most severe first, ignoring mutes. */

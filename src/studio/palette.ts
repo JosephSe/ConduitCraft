@@ -140,6 +140,22 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       },
     },
     {
+      id: 'add-balancer',
+      title: 'Add Load Balancer Stencil',
+      subtitle: 'Spreads traffic over instances',
+      category: 'Components',
+      keywords: ['load balancer', 'balancer', 'lb', 'haproxy', 'round robin', 'spread', 'instances'],
+      run: () => {
+        pushHistory();
+        const node = createNodeFromStencil('balancer', 200, 200, app.doc.nodes.length);
+        app.doc.nodes.push(node);
+        expandStageToFit(app.doc);
+        setSelection({ type: 'node', id: node.id });
+        renderAll(true);
+        notify('Added Load Balancer stencil');
+      },
+    },
+    {
       id: 'add-broker',
       title: 'Add Event Broker Stencil',
       subtitle: 'Pub/sub event bus',
