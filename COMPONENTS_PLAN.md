@@ -445,28 +445,36 @@ For each kind: the §2.2 touch list, round-trips, chaos tables like §3.3, deter
 
 ### 6.1 K6 Stream / Log
 
-- [ ] A second stencil on the `queue` kind (needs Phase 0): id `stream`, title "Stream / Log", preset `queue: { delivery: 'fanout' }`, icon `stream`, chip `STREAM`, eyebrow `LOG`.
-- [ ] Draw: the pipe with 3 horizontal lanes (partitions) drawn as thin lines inside the body. Add `partitions?: number` (1–12, default 3, only drawn, never simulated) to `NodeQueue`.
-- [ ] Run: the `fanout` rules already specified in §3.3 (step 3) and `drainCount` (§3.4). Backlog is kept **per consumer** for fanout: change `BacklogState` to hold a map from consumer id to depth for fanout queues. Each lane shows its own blocks, and the chip shows the largest lag: "lag 12".
-- [ ] Images: `kafka`, `redpanda` and `pulsar` → stream (a queue with fanout). `nats` stays `bus`. AsyncAPI: a `kafka` binding → stream.
-- [ ] Guide: a short paragraph on queue vs stream vs event bus: one consumer per message / every consumer gets every message and can replay / fire and forget.
+- [x] A second stencil on the `queue` kind (needs Phase 0): id `stream`, title "Stream / Log", preset `queue: { delivery: 'fanout' }`, icon `stream`, chip `STREAM`, eyebrow `LOG`.
+- [x] Draw: the pipe with 3 horizontal lanes (partitions) drawn as thin lines inside the body. Add `partitions?: number` (1–12, default 3, only drawn, never simulated) to `NodeQueue`.
+- [x] Run: the `fanout` rules already specified in §3.3 (step 3) and `drainCount` (§3.4). Backlog is kept **per consumer** for fanout: change `BacklogState` to hold a map from consumer id to depth for fanout queues. Each lane shows its own blocks, and the chip shows the largest lag: "lag 12".
+- [x] Images: `kafka`, `redpanda` and `pulsar` → stream (a queue with fanout). `nats` stays `bus`. AsyncAPI: a `kafka` binding → stream.
+- [x] Guide: a short paragraph on queue vs stream vs event bus: one consumer per message / every consumer gets every message and can replay / fire and forget.
 
 ### 6.2 K7 External / third-party
 
-- [ ] Field `external?: boolean` on **any** component (written only when true). Inspector checkbox under Review & Status: "Run by someone else".
-- [ ] Draw: dashed outline (`stroke-dasharray` on the plate, or a dashed border for the card), plus a small `EXTERNAL` ribbon. Works with every shape and every kind, including the pipe and the drum.
-- [ ] Review: `external-unprotected` (warning): a **sync** wire into an external component, on a scenario path, where the caller has no `circuitBreaker` and the external component has no `fallbackId`. "Checkout calls Stripe synchronously with no circuit breaker or fallback."
-- [ ] Importers: OpenAPI `servers` on another domain, and Compose services with no `build` and an image from a third-party registry, are **not** marked external automatically (too many false positives). Record this as a decision in the guide.
-- [ ] Mermaid writer: add `:::external` with a `classDef external stroke-dasharray: 5 5` in the embedded block, so GitHub also draws it dashed.
+- [x] Field `external?: boolean` on **any** component (written only when true). Inspector checkbox under Review & Status: "Run by someone else".
+- [x] Draw: dashed outline (`stroke-dasharray` on the plate, or a dashed border for the card), plus a small `EXTERNAL` ribbon. Works with every shape and every kind, including the pipe and the drum.
+- [x] Review: `external-unprotected` (warning): a **sync** wire into an external component, on a scenario path, where the caller has no `circuitBreaker` and the external component has no `fallbackId`. "Checkout calls Stripe synchronously with no circuit breaker or fallback."
+- [x] Importers: OpenAPI `servers` on another domain, and Compose services with no `build` and an image from a third-party registry, are **not** marked external automatically (too many false positives). Record this as a decision in the guide.
+- [x] Mermaid writer: add `:::external` with a `classDef external stroke-dasharray: 5 5` in the embedded block, so GitHub also draws it dashed.
 
 ### 6.3 K8 Object Storage
 
-- [ ] New `NodeShape` `bucket`: a trapezoid wider at the top with a lid ellipse (the classic bucket). Plate geometry in `nodeStyle.ts` like the drum.
-- [ ] Second stencil on the `store` kind: id `object-store`, title "Object Storage", preset `shape: 'bucket'`, icon `bucket`, subtitle "Blobs and files", interface "S3 API".
-- [ ] Images: `minio` and `localstack` → store with shape bucket. `kindForImage` returns only a kind, so add a `presetForImage` next to it.
-- [ ] `dangling-store` should not fire for buckets that are only written to by a scheduler or an external component (backups and exports are often write-only). Add that exception and a test.
+- [x] New `NodeShape` `bucket`: a trapezoid wider at the top with a lid ellipse (the classic bucket). Plate geometry in `nodeStyle.ts` like the drum.
+- [x] Second stencil on the `store` kind: id `object-store`, title "Object Storage", preset `shape: 'bucket'`, icon `bucket`, subtitle "Blobs and files", interface "S3 API".
+- [x] Images: `minio` and `localstack` → store with shape bucket. `kindForImage` returns only a kind, so add a `presetForImage` next to it.
+- [x] `dangling-store` should not fire for buckets that are only written to by a scheduler or an external component (backups and exports are often write-only). Add that exception and a test.
 
 ---
+
+**Built, with these differences from the text above (K6 to K8):**
+
+- Stream: the `stream` stencil is `queue` plus `queue: { delivery: 'fanout' }`. The inspector also has a **Delivery** select so any queue can become a stream. Per-consumer lag is kept in `BacklogState.lags` for fanout queues; `depth` holds the largest lag. A stream's live readers keep reading while another reader is down; the stream still shows as buffering until all are up. The lanes are drawn but the blocks inside the pipe show the largest lag, not one row per lane.
+- Stream images: `kindForImage` returns `queue` for `kafka`, `redpanda` and `pulsar`, and `stencilForImage` and `presetForImage` carry the fanout setting. The earlier K1 test that kept them as buses is updated.
+- External: "on a scenario path" counts the scenarios a diagram would play when it has none saved (the generated ones), so the warning also fires without a saved scenario. A rule fires per wire.
+- Object Storage: the `bucket` outline is drawn only on stores (it reuses the drum with leaning walls; `data-shape` stays `cylinder` and the wrapper gets `data-bucket`). The shape picker lists it only for stores.
+- The entry JavaScript budget was raised from 520 kB to 540 kB (the entry is 524.7 kB).
 
 ## 7. Out of scope (do not build)
 

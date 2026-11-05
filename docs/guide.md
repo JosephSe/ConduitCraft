@@ -122,6 +122,14 @@ A Load Balancer is drawn as a trapezoid, with the wide side towards the componen
 
 Pick a **Strategy** under **Review & Status**: round robin, least connections, weighted or hash. It is recorded for the reader and shown on the card; the run does not use it.
 
+### Streams, external components and object storage
+
+A **Stream / Log** is a message queue where every reader gets every message, can read it again, and falls behind on its own. It is drawn as a pipe with thin lanes inside (the **Partitions**, 1 to 12, default 3; they are drawn and never simulated). Pick **Delivery** in the inspector to turn any queue into a stream, or add one from the rail. When a reader is down the stream is **buffering**, and that reader's lag grows while the other readers carry on. The chip shows the largest lag, for example `lag 12`. Compare the three: a **queue** gives each message to one reader; a **stream** gives every reader every message and keeps it so a reader can replay; an **event broker** passes a message on and forgets it.
+
+Tick **Run by someone else** under **Review & Status** on any component to mark it as external: it is drawn with a dashed outline and an `EXTERNAL` label, on every shape and kind. A Review warning flags a synchronous call into an external component on a scenario path when the caller has no circuit breaker and the external component has no fallback. Imports never mark a component external by themselves: a different domain or a third-party image gives too many false alarms. Mermaid output writes `:::external` with a dashed `classDef`, so GitHub draws it dashed too.
+
+**Object Storage** is a data store drawn as a bucket, wider at the top. `minio` and `localstack` images import as object storage, and `kafka`, `redpanda` and `pulsar` images, and an AsyncAPI channel with a `kafka` binding, import as streams (`nats` stays an event broker). A bucket that only a scheduler or an external component writes to is not flagged as a data store nothing reads from, because backups and exports are often write-only.
+
 ### Caches, limiters and schedulers
 
 A **Cache** answers a share of reads itself and sends the rest to the data store behind it. Set the **Hit rate** (0 to 100, default 80) in the inspector, and pick the **Backing store**; if you leave it empty, the cache uses its only wire to a store, and the inspector shows that store greyed out. If the cache fails and a store sits behind it, reads go straight to the store: the store shows as **rerouted** and the cache's callers are **slowed**, not at risk. With no store behind it, a failed cache behaves like any failed component. In the Traffic lens, a packet that reaches a cache is a hit or a miss. Hits are spread evenly (80% means 4 in every 5), so a run always looks the same. A hit shows `HIT`, skips the steps up to and including the store's step, and goes back to the caller; a miss shows `MISS` and plays on.
@@ -149,6 +157,7 @@ The Review lens runs a set of rules over every level of the diagram. The list gr
 | Queue with a limit and no dead-letter queue | Info | A queue has a maximum depth but nowhere to send overflow, so it drops messages when full. |
 | Synchronous wire into a queue | Info | A wire into a queue is not marked async. Queues are usually written asynchronously. |
 | Load balancer with fewer than two targets | Info | A load balancer points at one component or none, so it does not spread load. |
+| Unprotected call to an external component | Warning | A synchronous wire into a component marked as run by someone else, on a scenario path, where the caller has no circuit breaker and the external component has no fallback. |
 | Cache with no data store behind it | Info | A cache has no store to fall back to, so a failure loses every read. |
 | Rate limiter that fails open | Info | A limiter is set to fail open, so traffic reaches its target unchecked when it is down. |
 | Scheduler that writes straight to a store | Info | A scheduler's direct target is a data store, with no queue or retry between them. |
@@ -302,6 +311,8 @@ edges:
 | `service` | Service / API | `id["Title"]` |
 | `queue` | Message Queue | `id[("Title")]` |
 | `balancer` | Load Balancer | `id[/"Title"\]` |
+| `queue` (with `delivery: fanout`) | Stream / Log | `id[("Title")]` |
+| `store` (with `shape: bucket`) | Object Storage | `id[("Title")]` |
 | `cache` | Cache | `id["Title"]` |
 | `limiter` | Rate Limiter | `id["Title"]` |
 | `scheduler` | Scheduler | `id["Title"]` |
@@ -310,9 +321,9 @@ edges:
 | `store` | Data Store | `id[("Title")]` |
 | `client` | External Client | `id[/"Title"/]` |
 
-`shape` is the on-canvas outline: `card` (the default, omitted), `rounded`, `pill`, `circle`, `diamond`, `hexagon`, `asymmetric`, or `trapezoid`. A load balancer is drawn as a trapezoid without storing a shape.
+`shape` is the on-canvas outline: `card` (the default, omitted), `rounded`, `pill`, `circle`, `diamond`, `hexagon`, `asymmetric`, `trapezoid`, or `bucket` (stores only). A load balancer is drawn as a trapezoid without storing a shape.
 
-`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`, `balancer`, `bolt`, `gauge`, `clock`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
+`icon` is one of `actor`, `monitor`, `bridge`, `shield`, `code`, `database`, `agency`, `server`, `lock`, `cloud`, `spark`, `cpu`, `globe`, `queue`, `balancer`, `bolt`, `gauge`, `clock`, `stream`, `bucket`. `iconImage`, when present, is an image data URL (`png`, `jpeg`, `gif`, `webp`, or `svg+xml`, base64) and replaces that glyph. The studio rejects an upload larger than 280 KB.
 
 `payload` is the contract. A JSON value is stored as structured YAML; anything that is not JSON stays a string. `metrics` is a list of `{ label, value }`. A map of label to value is also accepted on import.
 

@@ -36,6 +36,6 @@ Ordered from most to least valuable. Status: `[ ]` todo, `[~]` in progress, `[x]
 - [x] K3. **Cache**: hit rate, a failed cache detours to its store (callers slowed), deterministic hits and misses in playback, one Review rule.
 - [x] K4. **Rate Limiter**: admit N of every M, 429 in playback, fail open shows as bypassed, one Review rule.
 - [x] K5. **Scheduler / Cron**: an entry point, timing on the card, a visible tick when looping, one Review rule.
-- [ ] K6. **Stream / Log**
-- [ ] K7. **External / third-party**
-- [ ] K8. **Object Storage**
+- [x] K6. **Stream / Log**: a queue with fanout, lanes in the pipe, a lag for each reader, Kafka-like images import as streams.
+- [x] K7. **External / third-party**: a dashed outline on any component, one Review warning, `:::external` in Mermaid output.
+- [x] K8. **Object Storage**: a bucket outline on a store, `minio` and `localstack` images, write-only buckets are not flagged.
