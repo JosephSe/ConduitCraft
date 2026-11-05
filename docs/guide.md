@@ -172,6 +172,10 @@ The outline is a list of the diagram that you can read with a screen reader and 
 
 The rows are swimlane, then component, then the component's outgoing wires. A component that opens into a level has one more row, "Opens into N components", which holds the level's own rows.
 
+## Code pane
+
+`Cmd/Ctrl+/` shows the Blueprint file beside the canvas (below it on a narrow screen). Type, and after a short pause the canvas follows; each pause is one undo step. If the text does not read, the canvas keeps the last good version, the bad lines are marked in the gutter and listed under the text (click one to go to it), and nothing you typed is thrown away: Reset puts the canvas version back. Edits on the canvas flow into the text. Selecting something on the canvas highlights its lines, and putting the cursor in a component's, wire's, swimlane's, note's or frame's block selects it. Pasting a Mermaid flowchart converts it once to a Blueprint file. The pane shows the whole file, pages and levels included; highlighting covers the first page.
+
 ## Share and export
 
 **Share** copies a link that holds the whole diagram, so anyone with it can open your work without an account. A logo or custom icon you embedded is left out of the link to keep it short. A very long link shows a warning first.

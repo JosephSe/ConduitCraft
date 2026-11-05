@@ -71,6 +71,7 @@ export const SHORTCUTS: ShortcutItem[] = [
   { keys: ['P'], description: 'Toggle presentation mode & guided tour', category: 'Navigation & View' },
   { keys: ['⌘', 'F'], description: 'Find & focus node on canvas', category: 'Navigation & View' },
   { keys: ['⌘', 'K'], description: 'Open command palette', category: 'Navigation & View' },
+  { keys: ['⌘', '/'], description: 'Show or hide the code pane (the Blueprint file, live)', category: 'Navigation & View' },
   { keys: ['⌥', 'PageDown', 'PageUp'], description: 'Open the next or previous page (F2 on a page tab renames it)', category: 'Navigation & View' },
   { keys: ['Wheel / Trackpad'], description: 'Zoom into pointer position', category: 'Navigation & View' },
   { keys: ['Drag Canvas'], description: 'Pan stage workspace', category: 'Navigation & View' },

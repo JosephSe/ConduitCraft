@@ -1026,6 +1026,15 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: () => void stepPage(-1),
     },
     {
+      id: 'toggle-code-pane',
+      title: 'Toggle Code Pane',
+      subtitle: 'The Blueprint file beside the canvas: type and the canvas follows',
+      category: 'Mode & View',
+      shortcut: `${mod}/`,
+      keywords: ['code', 'yaml', 'text', 'editor', 'blueprint', 'live', 'split'],
+      run: () => void import('./codePane').then((m) => m.toggleCodePane()),
+    },
+    {
       id: 'open-find-replace',
       title: 'Find and Replace',
       subtitle: 'Search titles, wire labels, notes and comments, and change them all at once',
