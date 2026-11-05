@@ -21,6 +21,15 @@ test('dropping a .drawio file on the canvas imports it as a new diagram, with a 
   await expect(report).toContainText('not attached to a shape at both ends');
 });
 
+test('groups and swimlanes import as frames', async ({ page }) => {
+  await dropFile(page, 'platform.drawio', fixture('container.drawio'));
+  await expect(page.locator('.arch-node')).toHaveCount(4);
+  await expect(page.locator('.frame-box').first()).toBeVisible();
+  expect(await page.locator('.frame-box').count()).toBeGreaterThanOrEqual(2);
+  await expect(page.locator('.frame-title-bar', { hasText: 'Edge' })).toBeVisible();
+  await expect(page.locator('.zone-banner')).toHaveCount(0);
+});
+
 test('a compressed page imports the same way', async ({ page }) => {
   await dropFile(page, 'jobs.drawio', fixture('compressed.drawio'));
   await expect(page.locator('.arch-node')).toHaveCount(3);

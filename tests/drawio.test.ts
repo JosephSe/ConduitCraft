@@ -118,20 +118,32 @@ describe('draw.io import', () => {
     assertRoundTrips(docs[0]);
   });
 
-  it('turns swimlanes and containers into swimlanes, and reports what that loses', async () => {
+  it('turns swimlanes and containers into frames, nested like the original', async () => {
     const file = await readDrawio(fixture('container.drawio'));
     const { docs, issues } = convertDrawio(file, 'separate', 'Platform');
     const doc = docs[0];
     assert.equal(doc.nodes.length, 4);
-    assert.equal(doc.zones.length, 3);
+    assert.equal(doc.zones.length, 0, 'containers are frames now, not swimlanes');
     assert.equal(doc.edges.length, 3, 'the wire attached to a swimlane is skipped');
-    const swimlane = doc.zones.find((z) => z.title === 'EDGE');
-    assert.ok(swimlane);
+    const frames = doc.frames ?? [];
+    assert.ok(frames.length >= 2, 'at least the Edge and Core containers become frames');
+    const edge = frames.find((f) => f.title === 'Edge');
+    assert.ok(edge);
     const edgeNodes = doc.nodes.filter((n) => ['CDN', 'Load balancer'].includes(n.title));
-    for (const n of edgeNodes) assert.ok(n.x >= swimlane.x && n.x + n.width <= swimlane.x + swimlane.width);
+    for (const n of edgeNodes) {
+      assert.ok(n.x >= edge.x && n.x + n.width <= edge.x + edge.width, `${n.title} sits inside the Edge frame`);
+      assert.equal(n.frameId, edge.id);
+    }
+    // Nesting is kept: a container inside Core is a frame inside the Core frame.
+    const core = frames.find((f) => f.title === 'Core');
+    const inner = frames.find((f) => f.title === 'Inner');
+    if (inner) {
+      assert.equal(inner.parentId, core?.id);
+      assert.ok(core && core.width * core.height > inner.width * inner.height);
+    }
     assert.ok(codes(issues).includes('drawio-edge-to-container'));
     assert.ok(codes(issues).includes('drawio-containers'));
-    assert.ok(codes(issues).includes('drawio-nested-containers'));
+    assert.ok(!codes(issues).includes('drawio-nested-containers'), 'nesting is no longer lost');
     assertRoundTrips(doc);
   });
 
