@@ -18,6 +18,8 @@ const lazyBudgets = [
   { pattern: /^gif-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF exporter chunk' },
   { pattern: /\.blueprint-.*\.js$/, maxBytes: 30 * 1024, label: 'template chunk' },
   { pattern: /^drawio-.*\.js$/, maxBytes: 24 * 1024, label: 'draw.io importer chunk' },
+  // The layered layout carries all of ELK (about 1.44 MiB minified, 440 kB gzipped). It loads only when asked for.
+  { pattern: /^elkArrange-.*\.js$/, maxBytes: 1600 * 1024, label: 'ELK layout chunk' },
 ];
 const DEFAULT_LAZY_MAX_BYTES = 60 * 1024;
 
