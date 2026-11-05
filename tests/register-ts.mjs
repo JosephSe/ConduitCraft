@@ -6,6 +6,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, resolve as resolvePath } from 'node:path';
 
 export async function resolve(specifier, context, nextResolve) {
+  // Stylesheets are imported for the bundler; under test they are empty modules.
+  if (specifier.endsWith('.css')) {
+    return { url: 'data:text/javascript,export {}', shortCircuit: true };
+  }
   if (specifier.includes('?raw') && (specifier.startsWith('./') || specifier.startsWith('../'))) {
     const parentPath = context.parentURL ? dirname(fileURLToPath(context.parentURL)) : process.cwd();
     const file = resolvePath(parentPath, specifier.replace(/\\?raw$/, ''));

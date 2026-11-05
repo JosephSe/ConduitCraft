@@ -53,6 +53,7 @@ import { reconcileKeyed } from './reconcile';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText } from '../core/queues';
+import { paintBacklog } from './queueBacklog';
 import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { insightsFor, worstLevel } from './insights';
 import { scheduleMinimapPaint } from './minimap';
@@ -1393,6 +1394,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.classList.toggle('is-tag-dimmed', !matchesTag(node, app.tagFilter));
   paintChaos(wrapper, node.id);
   paintInsights(wrapper, node.id);
+  paintBacklog(wrapper, node);
   if (storeDrawsCylinder(node.kind, node.shape)) wrapper.dataset.shape = 'cylinder';
   else if (queueDrawsPipe(node.kind, node.shape)) wrapper.dataset.shape = 'pipe';
   else if (node.shape && node.shape !== 'card') wrapper.dataset.shape = node.shape;

@@ -203,6 +203,7 @@ import { togglePresentation } from './presentationTrigger';
 import { simulationPlayback, populateTraceRows, initSimulationPlaybackUi } from './simulationPlayback';
 import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
+import { initQueueBacklog } from './queueBacklog';
 import { initInsightsPanel } from './insights';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
@@ -2205,6 +2206,7 @@ export function initEvents(): void {
   initSimulationPlaybackUi();
   initRunBar({ run: runSimulation });
   initChaosPanel();
+  initQueueBacklog();
   initInsightsPanel();
   initHelp();
   initChaosPreview(chaosNodesLayer);

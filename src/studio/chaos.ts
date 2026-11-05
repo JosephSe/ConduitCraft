@@ -37,6 +37,12 @@ export function onChaosChange(listener: () => void): void {
   listeners.add(listener);
 }
 
+/** Called when a run ends for good ("Restore all") or the open level changes: state tied to the run should go too. */
+const resetListeners = new Set<() => void>();
+export function onChaosReset(listener: () => void): void {
+  resetListeners.add(listener);
+}
+
 /** Forget the cached result. Call before a repaint, since the document may have changed underneath. */
 export function invalidateChaos(): void {
   cached = undefined;
@@ -188,6 +194,7 @@ export function repaintForLens(): void {
  */
 export function levelOpened(): void {
   cached = undefined;
+  for (const listener of resetListeners) listener();
   for (const listener of listeners) listener();
   const parent = failedParent();
   if (!parent || !chaosLensActive()) return;
@@ -228,6 +235,7 @@ export function setFailures(ids: readonly string[]): void {
 export function clearFailures(): void {
   if (failed.size === 0) return;
   failed.clear();
+  for (const listener of resetListeners) listener();
   changed();
   announce('All components restored.');
 }
