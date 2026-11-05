@@ -12,12 +12,14 @@ import {
   type LevelInsightIssue as InsightIssue,
 } from '../core/insights';
 import { announce } from './a11y';
-import { app, goToLevel, openPageDocument, panToNodeIfNeeded, pushHistory, setSelection } from './state';
+import { pageCount, pageList, viewOfPage } from '../core/pages';
+import { app, fullDocument, goToLevel, goToPage, openPageDocument, panToNodeIfNeeded, pushHistory, setSelection } from './state';
 import { renderAll } from './render';
 
 const DEBOUNCE_MS = 300;
 
 let cached: InsightIssue[] | undefined;
+let otherPages: Array<{ index: number; title: string; count: number }> | undefined;
 let timer: number | undefined;
 let paintedKey = '';
 const listeners = new Set<() => void>();
@@ -26,6 +28,24 @@ const listeners = new Set<() => void>();
 function allIssues(): InsightIssue[] {
   cached ??= runInsightsAllLevels(openPageDocument());
   return cached;
+}
+
+/** How many visible issues each other page has (D10). Empty for a single-page file. Cached like the open page's. */
+function otherPageCounts(): Array<{ index: number; title: string; count: number }> {
+  if (otherPages) return otherPages;
+  const whole = fullDocument();
+  const muted = mutedRules(whole);
+  otherPages =
+    pageCount(whole) < 2
+      ? []
+      : pageList(whole)
+          .filter((p) => p.index !== app.pageIndex)
+          .map((p) => ({
+            index: p.index,
+            title: p.title,
+            count: runInsightsAllLevels(viewOfPage(whole, p.index)).filter((i) => !muted.has(i.code)).length,
+          }));
+  return otherPages;
 }
 
 /** Issues for rules that are not muted. */
@@ -64,6 +84,7 @@ function keyOf(issues: readonly InsightIssue[]): string {
 /** Call from every render: the cached result is dropped now, and the count and list catch up after 300 ms. */
 export function invalidateInsights(): void {
   cached = undefined;
+  otherPages = undefined;
   window.clearTimeout(timer);
   timer = window.setTimeout(refreshInsights, DEBOUNCE_MS);
 }
@@ -130,7 +151,8 @@ export function initInsightsPanel(): void {
     panel.hidden = !visible;
     if (!visible) return;
 
-    heading.textContent = insightCountText(issues.length);
+    const others = otherPageCounts();
+    heading.textContent = `${insightCountText(issues.length)}${others.length ? ' on this page' : ''}`;
     const muted = mutedRules(app.doc);
     const frag = document.createDocumentFragment();
     for (const rule of INSIGHT_RULES) {
@@ -180,7 +202,29 @@ export function initInsightsPanel(): void {
       }
       frag.appendChild(section);
     }
-    if (!frag.childNodes.length) {
+    const hadGroups = frag.childNodes.length > 0;
+    if (others.length) {
+      const section = document.createElement('section');
+      section.className = 'insight-group insight-pages';
+      const title = document.createElement('h3');
+      title.textContent = 'Other pages';
+      const list = document.createElement('ul');
+      list.className = 'insight-list';
+      for (const other of others) {
+        const item = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'insight-item insight-page-jump';
+        button.dataset.page = String(other.index);
+        button.textContent = `${other.title}: ${insightCountText(other.count)}`;
+        button.addEventListener('click', () => goToPage(other.index));
+        item.appendChild(button);
+        list.appendChild(item);
+      }
+      section.append(title, list);
+      frag.appendChild(section);
+    }
+    if (!hadGroups) {
       const empty = document.createElement('p');
       empty.className = 'insight-empty';
       empty.textContent = 'Nothing to flag. The rules found no problems in this diagram.';

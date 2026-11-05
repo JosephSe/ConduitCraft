@@ -12,24 +12,42 @@ import {
   type FindMatch,
   type FindOptions,
 } from '../core/findReplace';
-import { app, fitSelection, goToLevel, openPageDocument, mutateWithHistory, setSelection } from './state';
+import { app, fitSelection, goToLevel, goToPage, openPageDocument, mutateWithHistory, setSelection } from './state';
 import { renderAll } from './render';
 import { notify } from './toast';
 import { allLevelNodes } from '../core/levels';
+import type { DiagramDocument } from '../types';
+import { contentOfPage, pageCount, pageList } from '../core/pages';
 
 const MAX_ROWS = 200;
 let dialog: HTMLDialogElement | null = null;
 
-function levelsFor(scope: 'level' | 'all'): FindLevel[] {
+type Scope = 'level' | 'all' | 'pages';
+
+/** The file that holds every page's content: the open page's own copy of it is stale while it is being edited. */
+const pageHost = () => app.pageRoot ?? app.levelRoot ?? app.doc;
+
+function levelsFor(scope: Scope): FindLevel[] {
   const open: FindLevel = { path: app.levelPath, content: app.doc };
-  return collectLevels(app.levelRoot ?? app.doc, open, scope);
+  if (scope !== 'pages' || pageCount(pageHost()) < 2) return collectLevels(app.levelRoot ?? app.doc, open, scope === 'pages' ? 'all' : scope);
+  // Every page: the open page through its live copy, the others straight from the file (D10).
+  return pageList(pageHost()).flatMap((page) => {
+    const content = page.index === app.pageIndex ? (app.levelRoot ?? app.doc) : contentOfPage(pageHost(), page.index);
+    if (!content) return [];
+    const here: FindLevel = page.index === app.pageIndex ? open : { path: ['\u0000'], content };
+    return collectLevels(content, here, 'all').map((level) => ({ ...level, page: page.index }));
+  });
 }
 
+const onOpenPage = (m: Pick<FindMatch, 'page'>) => m.page === undefined || m.page === app.pageIndex;
+
 /** "Orders › Payments" for a level path, from the component titles along it. */
-function whereLabel(path: string[]): string {
-  if (path.length === 0) return 'Top level';
-  const titles = new Map(allLevelNodes(openPageDocument()).map((e) => [e.node.id, e.node.title]));
-  return path.map((id) => titles.get(id) || id).join(' › ');
+function whereLabel(path: string[], page?: number): string {
+  const onThisPage = page === undefined || page === app.pageIndex;
+  const content = onThisPage ? openPageDocument() : (contentOfPage(pageHost(), page) as DiagramDocument | null);
+  const titles = new Map(content ? allLevelNodes(content).map((e) => [e.node.id, e.node.title]) : []);
+  const levels = path.length === 0 ? 'Top level' : path.map((id) => titles.get(id) || id).join(' › ');
+  return page === undefined || pageCount(pageHost()) < 2 ? levels : `${pageList(pageHost())[page]?.title ?? ''} · ${levels}`;
 }
 
 function snippet(text: string, query: string): string {
@@ -62,6 +80,7 @@ function build(): HTMLDialogElement {
           <label><input type="checkbox" id="fr-word" /> Whole word</label>
           <label><input type="radio" name="fr-scope" value="level" checked /> This level</label>
           <label><input type="radio" name="fr-scope" value="all" /> All levels</label>
+          <label id="fr-pages-scope"><input type="radio" name="fr-scope" value="pages" /> All pages</label>
         </div>
         <p class="field-tip" id="fr-status" role="status" aria-live="polite"></p>
         <ul class="find-replace-results" id="fr-results" aria-label="Matches"></ul>
@@ -86,12 +105,19 @@ function wire(dlg: HTMLDialogElement): void {
   const results = q<HTMLUListElement>('#fr-results');
   const btnSelect = q<HTMLButtonElement>('#fr-select');
   const btnReplaceAll = q<HTMLButtonElement>('#fr-replace-all');
-  const scope = () => (dlg.querySelector<HTMLInputElement>('input[name="fr-scope"]:checked')?.value === 'all' ? 'all' : 'level');
+  const scope = (): Scope => {
+    const value = dlg.querySelector<HTMLInputElement>('input[name="fr-scope"]:checked')?.value;
+    return value === 'all' || value === 'pages' ? value : 'level';
+  };
   const opts = (): FindOptions => ({ query: find.value, matchCase: matchCase.checked, wholeWord: wholeWord.checked });
 
   let matches: FindMatch[] = [];
 
   const refresh = () => {
+    // The page scope is only offered when the file has several pages.
+    const pagesScope = q<HTMLElement>('#fr-pages-scope');
+    pagesScope.hidden = pageCount(pageHost()) < 2;
+    if (pagesScope.hidden && scope() === 'pages') (dlg.querySelector('input[name="fr-scope"][value="all"]') as HTMLInputElement).checked = true;
     matches = findMatches(levelsFor(scope()), opts());
     results.replaceChildren();
     const occurrences = matches.reduce((n, m) => n + m.count, 0);
@@ -101,7 +127,7 @@ function wire(dlg: HTMLDialogElement): void {
         ? 'No matches.'
         : `${occurrences} ${occurrences === 1 ? 'match' : 'matches'} in ${matches.length} ${matches.length === 1 ? 'place' : 'places'}.`;
     btnReplaceAll.disabled = matches.length === 0;
-    btnSelect.disabled = !matches.some((m) => m.path.join('/') === app.levelPath.join('/'));
+    btnSelect.disabled = !matches.some((m) => onOpenPage(m) && m.path.join('/') === app.levelPath.join('/'));
     for (const m of matches.slice(0, MAX_ROWS)) {
       const li = document.createElement('li');
       li.className = 'find-replace-row';
@@ -110,7 +136,7 @@ function wire(dlg: HTMLDialogElement): void {
       go.className = 'find-replace-go';
       const where = document.createElement('span');
       where.className = 'find-replace-where';
-      where.textContent = `${m.path.length ? `${whereLabel(m.path)} · ` : ''}${m.field}`;
+      where.textContent = `${m.path.length || m.page !== undefined ? `${whereLabel(m.path, m.page)} · ` : ''}${m.field}`;
       const text = document.createElement('span');
       text.textContent = snippet(m.text, find.value);
       go.append(where, text);
@@ -137,6 +163,7 @@ function wire(dlg: HTMLDialogElement): void {
 
   const jump = (m: FindMatch) => {
     dlg.close();
+    if (!onOpenPage(m) && m.page !== undefined) goToPage(m.page);
     if (m.path.join('/') !== app.levelPath.join('/')) goToLevel(m.path);
     setSelection(
       m.kind === 'node' ? { type: 'node', id: m.id } : m.kind === 'edge' ? { type: 'edge', id: m.id } : m.kind === 'zone' ? { type: 'zone', id: m.id } : { type: 'notes', id: m.id },
@@ -160,7 +187,7 @@ function wire(dlg: HTMLDialogElement): void {
   });
 
   btnSelect.addEventListener('click', () => {
-    const ids = idsInLevel(matches, app.levelPath);
+    const ids = idsInLevel(matches, app.levelPath, scope() === 'pages' ? app.pageIndex : undefined);
     const total = ids.node.length + ids.edge.length + ids.note.length + ids.zone.length;
     if (total === 0) return;
     dlg.close();

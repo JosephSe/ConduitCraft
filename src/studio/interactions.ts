@@ -166,6 +166,7 @@ import {
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
+import { pageCount } from '../core/pages';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { selectionOfStage } from './selection';
 import {
@@ -2001,6 +2002,8 @@ export function initEvents(): void {
     updatePngExportEstimate();
     if (exportAltText) exportAltText.value = describeDiagramBrief(app.doc);
     void updateShareLinkPreview();
+    const allPages = document.getElementById('btn-export-svg-pages');
+    if (allPages) allPages.hidden = pageCount(app.pageRoot ?? app.levelRoot ?? app.doc) < 2;
     exportDialog.showModal();
   };
   btnCopyAltText?.addEventListener('click', () => {
@@ -2038,6 +2041,13 @@ export function initEvents(): void {
     );
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
+  });
+  document.getElementById('btn-export-svg-pages')?.addEventListener('click', () => {
+    void import('./exportAllPages').then((m) => {
+      const filename = m.downloadPagesZip(getSafeFilenameSlug());
+      void closeDialogSmoothly(exportDialog);
+      notify(`Exported ${filename}`);
+    });
   });
   btnExportSvgClone?.addEventListener('click', () => {
     expandStageToFit(app.doc);

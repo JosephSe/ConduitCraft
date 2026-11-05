@@ -652,6 +652,11 @@
             <strong>Vector Picture (.svg)</strong>
             <span>Clean, portable standalone SVG (foreignObject-free). Opens cleanly in Figma, Illustrator, and markdown image tags.</span>
           </button>
+          <button type="button" class="export-option-card" id="btn-export-svg-pages" hidden>
+            <span class="export-option-kicker">All pages · Vector</span>
+            <strong>Every page as a picture (.zip)</strong>
+            <span>One vector picture (.svg) for each page, in a zip file. The Vector Picture above is the open page only.</span>
+          </button>
           <button type="button" class="export-option-card" id="btn-export-svg-clone">
             <span class="export-option-kicker">Pixel-Perfect (DOM Clone)</span>
             <strong>Pixel-Perfect (DOM Clone) (.svg)</strong>
@@ -768,8 +773,8 @@
       <div class="dialog-body">
         <p id="drawio-pages-text" style="margin: 0 0 1rem;"></p>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-          <button type="button" class="btn btn-primary" data-drawio-mode="separate" autofocus>One diagram per page</button>
-          <button type="button" class="btn" data-drawio-mode="levels">Pages as levels</button>
+          <button type="button" class="btn btn-primary" data-drawio-mode="tabs" autofocus>One diagram, pages as tabs</button>
+          <button type="button" class="btn" data-drawio-mode="separate">One diagram per page</button>
           <button type="button" class="btn" data-drawio-mode="cancel">Cancel</button>
         </div>
       </div>

@@ -579,11 +579,15 @@ function pagesChanged(): void {
   for (const listener of pageListeners) listener();
 }
 
+function saveCamera(): void {
+  app.pageCameras.set(currentPageId(), { scale: app.scale, panX: app.panX, panY: app.panY });
+}
+
 /** Open page `index`. Not an undo step; edits inside it are. Keeps each page's camera for the session. */
 export function goToPage(index: number): boolean {
   const whole = fullDocument();
   if (index < 0 || index >= pageCount(whole) || index === app.pageIndex) return false;
-  app.pageCameras.set(currentPageId(), { scale: app.scale, panX: app.panX, panY: app.panY });
+  saveCamera();
   applyWhole(whole, [], index);
   announcePageOpened();
   setSelection({ type: 'none' });
@@ -637,7 +641,7 @@ export function editPages(edit: (whole: DiagramDocument) => PageEdit | null): bo
   if (decision.capture) commitHistorySnapshot(before);
   const opened = pageIdAt(result.doc, result.index);
   const same = opened === currentPageId();
-  if (!same) app.pageCameras.set(currentPageId(), { scale: app.scale, panX: app.panX, panY: app.panY });
+  if (!same) saveCamera();
   applyWhole(result.doc, same ? app.levelPath : [], result.index);
   announcePageOpened();
   if (!same) setSelection({ type: 'none' });

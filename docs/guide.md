@@ -133,6 +133,8 @@ Each page has its own components, wires, swimlanes, notes and frames, and a wire
 
 In the Blueprint file, the first page is the file itself and the others are a `pages:` list; `pageTitle:` names the first page. Blueprint JSON carries the same as `pages`, `pageTitle` and `pageId`. A file can hold up to 64 pages.
 
+With several pages, the text outline lists them, Review says how many issues each other page has and jumps to it, and Find and replace can search "All pages". Export: Vector Picture and Image are the open page; "Every page as a picture" saves one SVG per page in a zip; the interactive HTML has every page, with a tab strip. A draw.io file with several pages opens as page tabs.
+
 ## Legend and tags
 
 The **colour legend** is in the inspector when nothing is selected. Give each wire colour a meaning your team uses, such as "Payments" for Control. The names replace the defaults in the pickers, the filter and the exported page.

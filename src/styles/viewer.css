@@ -611,3 +611,13 @@ body[data-presenting="true"] .canvas-hud {
 .level-crumb-sep {
   color: var(--wl-ink-muted);
 }
+
+/* Page tabs in an HTML export (D10): one tab per page along the bottom edge. */
+.export-page-strip { position: fixed; inset-inline: 0; inset-block-end: 0; z-index: 30; display: flex; padding-inline: 0.5rem; background: var(--wl-surface); border-block-start: 1px solid var(--wl-border); }
+.export-page-strip [role='tablist'] { display: flex; overflow-x: auto; }
+.export-page-tab { padding: 0.55rem 0.9rem; border: 0; border-block-start: 2px solid transparent; background: none; color: var(--wl-ink-muted); font: inherit; font-size: 0.8rem; cursor: pointer; white-space: nowrap; }
+.export-page-tab:hover { color: var(--wl-ink); }
+.export-page-tab[aria-selected='true'] { color: var(--wl-ink); font-weight: 600; border-block-start-color: var(--wl-blue); }
+.export-page-tab:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+body:has(.export-page-strip) { padding-block-end: 2.5rem; }
+body:has(.export-page-strip) .canvas-hud { inset-block-end: 3.5rem; }

@@ -26,19 +26,26 @@ test('a compressed page imports the same way', async ({ page }) => {
   await expect(page.locator('.arch-node')).toHaveCount(3);
 });
 
-test('a file with several pages asks, and "pages as levels" makes one overview', async ({ page }) => {
+test('a file with several pages asks, and "pages as tabs" opens one diagram with a tab per page', async ({ page }) => {
   await dropFile(page, 'shop.drawio', fixture('multipage.drawio'));
   const ask = page.locator('#drawio-pages-dialog');
   await expect(ask).toBeVisible();
-  await ask.getByRole('button', { name: 'Pages as levels' }).click();
+  await expect(ask.getByRole('button', { name: 'One diagram, pages as tabs' })).toBeFocused();
+  await ask.getByRole('button', { name: 'One diagram, pages as tabs' }).click();
   await expect(ask).toBeHidden();
+  const tabs = page.locator('#page-tabs [role="tab"]');
+  await expect(tabs).toHaveCount(2);
+  await expect(tabs.nth(0)).toHaveText('Overview');
+  await expect(tabs.nth(1)).toHaveText('Billing');
   await expect(page.locator('.arch-node')).toHaveCount(2);
-  await expect(page.locator('.arch-node', { hasText: 'Billing' })).toBeVisible();
+  await tabs.nth(1).click();
+  await expect(page.locator('.arch-node')).toHaveCount(3);
+  await expect(page.locator('.arch-node', { hasText: /Invoices|Billing/ }).first()).toBeVisible();
 });
 
 test('"one diagram per page" saves every page to Your diagrams and opens the first', async ({ page }) => {
   await dropFile(page, 'shop.drawio', fixture('multipage.drawio'));
-  await page.locator('#drawio-pages-dialog').getByRole('button', { name: 'One diagram per page' }).click();
+  await page.locator('#drawio-pages-dialog').getByRole('button', { name: 'One diagram per page', exact: true }).click();
   await expect(page.locator('.arch-node')).toHaveCount(2);
   await runPaletteCommand(page, 'Your Diagrams');
   await expect(page.locator('.library-row', { hasText: 'Billing' })).toBeVisible();

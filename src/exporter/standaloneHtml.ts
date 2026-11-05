@@ -1,5 +1,6 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
 import { breadcrumb, viewOfLevel } from '../core/levels';
+import { pageList, viewOfPage } from '../core/pages';
 import { describeDiagram } from '../core/describe';
 import { getNotesItemIconMeta } from '../types';
 import { getAdjacencyLists, getEffectiveSimulations, relatedNodeIds, routeDiagramEdges } from '../core/layout';
@@ -154,6 +155,8 @@ export interface StandaloneHtmlOptions {
     /** Levels from the root to this one: the title and the page key that opens it. */
     crumbs: Array<{ title: string; key: string }>;
   };
+  /** Set when the file has several pages (D10): one tab per page, each naming the page key that opens it. */
+  pages?: { tabs: Array<{ title: string; key: string }>; current: number };
 }
 
 export function generateStandaloneHtml(doc: DiagramDocument, options?: StandaloneHtmlOptions): string {
@@ -303,6 +306,15 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
           )
           .join('')}</nav>`
       : '';
+  const pageTabs = options?.pages;
+  const pagesMarkup = pageTabs
+    ? `<nav class="export-page-strip" aria-label="Pages"><div role="tablist" aria-label="Pages">${pageTabs.tabs
+        .map(
+          (t, i) =>
+            `<button type="button" role="tab" class="export-page-tab" aria-selected="${i === pageTabs.current}" data-ccgo="${escapeHtml(t.key)}">${escapeHtml(t.title)}</button>`,
+        )
+        .join('')}</div></nav>`
+    : '';
   const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx, options, related)).join('\n');
 
   const simButtonsMarkup = simulations
@@ -1159,6 +1171,7 @@ ${colorSchemeBoot}
       requestAnimationFrame(fitToViewport);
     })();
   </script>
+  ${pagesMarkup}
   ${options?.levels ? LEVEL_NAV_SCRIPT : ''}
 </body>
 </html>`;
@@ -1180,31 +1193,39 @@ const LEVEL_NAV_SCRIPT = `<script>
   </script>`;
 
 /**
- * The page for a diagram whose components may hold levels. Every level becomes its own page, and the ⤵ badges and
- * the breadcrumb swap between them, so the export stays one file with the same drill-down as the studio.
+ * The page for a diagram whose components may hold levels, and whose file may hold several pages (D10). Every level
+ * of every page becomes its own HTML page, and the ⤵ badges, the breadcrumb and the page tabs swap between them, so
+ * the export stays one file with the same drill-down and the same tabs as the studio.
  */
 export function generateStandaloneHtmlWithLevels(doc: DiagramDocument, options?: StandaloneHtmlOptions): string {
-  const paths: string[][] = [];
-  const walk = (path: string[], content: LevelContent) => {
-    paths.push(path);
-    for (const node of content.nodes) if (node.child) walk([...path, node.id], node.child);
-  };
-  walk([], doc);
-  if (paths.length === 1) return generateStandaloneHtml(doc, options);
+  const entries: Array<{ page: number; path: string[]; pageDoc: DiagramDocument }> = [];
+  const pages = pageList(doc);
+  for (const p of pages) {
+    const pageDoc = viewOfPage(doc, p.index);
+    const walk = (path: string[], content: LevelContent) => {
+      entries.push({ page: p.index, path, pageDoc });
+      for (const node of content.nodes) if (node.child) walk([...path, node.id], node.child);
+    };
+    walk([], pageDoc);
+  }
+  if (entries.length === 1) return generateStandaloneHtml(doc, options);
 
-  const indexOf = new Map(paths.map((p, i) => [p.join('\u0000'), i]));
-  const key = (p: string[]) => String(indexOf.get(p.join('\u0000')) ?? 0);
-  const pages = paths.map((path, i) =>
-    generateStandaloneHtml(viewOfLevel(doc, path), {
+  const slot = (page: number, path: string[]) => `${page}|${path.join('\u0000')}`;
+  const indexOf = new Map(entries.map((e, i) => [slot(e.page, e.path), i]));
+  const key = (page: number, path: string[]) => String(indexOf.get(slot(page, path)) ?? 0);
+  const tabs = pages.map((p) => ({ title: p.title, key: key(p.index, []) }));
+  const html = entries.map((e, i) =>
+    generateStandaloneHtml(viewOfLevel(e.pageDoc, e.path), {
       initialSelection: i === 0 ? options?.initialSelection : undefined,
       levels: {
-        childKey: (id) => key([...path, id]),
-        crumbs: breadcrumb(doc, path).map((c) => ({ title: c.title, key: key(c.path) })),
+        childKey: (id) => key(e.page, [...e.path, id]),
+        crumbs: breadcrumb(e.pageDoc, e.path).map((c) => ({ title: c.title, key: key(e.page, c.path) })),
       },
+      ...(pages.length > 1 ? { pages: { tabs, current: e.page } } : {}),
     }),
   );
-  const table = `<script>window.__ccLevels = window.__ccLevels || ${serializeScriptJson(pages)};</script>`;
-  const root = pages[0];
+  const table = `<script>window.__ccLevels = window.__ccLevels || ${serializeScriptJson(html)};</script>`;
+  const root = html[0];
   const at = root.lastIndexOf('</body>');
   return at < 0 ? root + table : root.slice(0, at) + table + root.slice(at);
 }

@@ -51,11 +51,11 @@ function askChoice<T extends string>(dialog: HTMLDialogElement, datasetKey: stri
 
 /** Ask how to bring in a file with several pages. Resolves null when the visitor cancels. */
 function askPageMode(pageCount: number): Promise<DrawioPageMode | null> {
-  if (!pagesDialog) return Promise.resolve('separate');
+  if (!pagesDialog) return Promise.resolve('tabs');
   if (pagesText) {
-    pagesText.textContent = `It has ${pageCount} pages. Make each page its own diagram, or one overview whose components open the pages as levels?`;
+    pagesText.textContent = `It has ${pageCount} pages. Keep them together as page tabs in one diagram, or make each page its own diagram?`;
   }
-  return askChoice<DrawioPageMode>(pagesDialog, 'drawioMode', ['separate', 'levels']);
+  return askChoice<DrawioPageMode>(pagesDialog, 'drawioMode', ['tabs', 'separate']);
 }
 
 const LEVEL_LABEL: Record<ImportIssue['level'], string> = { error: 'Not imported', warning: 'Changed', info: 'Note' };

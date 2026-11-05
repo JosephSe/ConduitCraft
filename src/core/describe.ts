@@ -5,6 +5,7 @@
  */
 import type { DiagramDocument, DiagramEdge, DiagramNode, LegendEntry, LevelContent, StreamTone } from '../types';
 import { WIRE_PROTOCOL_NAMES } from './wire';
+import { contentOfPage, pageCount, pageList } from './pages';
 
 const TONE_COLOURS: Record<StreamTone, string> = {
   blue: 'Blue',
@@ -138,6 +139,18 @@ function countLine(content: LevelContent): string {
 /** Title, summary and size: short enough for an image's alt text. */
 export function describeDiagramBrief(doc: DiagramDocument): string {
   const title = txt(doc.title) || 'Untitled diagram';
+  if (pageCount(doc) > 1) {
+    const pages = pageList(doc);
+    const total = pages.reduce((sum, p) => sum + (contentOfPage(doc, p.index)?.nodes.length ?? 0), 0);
+    return [
+      `${title}.`,
+      sentence(doc.overviewSummary ?? ''),
+      `It has ${pages.length} pages: ${list(pages.map((p) => p.title))}.`,
+      `Together they hold ${plural(total, 'component')}.`,
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }
   return [`${title}.`, sentence(doc.overviewSummary ?? ''), countLine(doc)].filter(Boolean).join(' ');
 }
 
@@ -147,9 +160,21 @@ export function describeDiagram(doc: DiagramDocument): string {
   const add = (heading: string, lines: string[]) => {
     if (lines.length) sections.push([heading, ...lines].join('\n'));
   };
-  add((doc.zones ?? []).length ? 'Swimlanes' : 'Components', swimlaneLines(doc));
-  add('Main flows', flowLines(doc));
-  add('Levels', levelLines(doc));
+  if (pageCount(doc) === 1) {
+    add((doc.zones ?? []).length ? 'Swimlanes' : 'Components', swimlaneLines(doc));
+    add('Main flows', flowLines(doc));
+    add('Levels', levelLines(doc));
+  } else {
+    // Each page is told on its own: a wire never crosses pages, so the sentences never mix them.
+    for (const page of pageList(doc)) {
+      const content = contentOfPage(doc, page.index);
+      if (!content) continue;
+      sections.push(`Page ${page.title} holds ${countLine(content).replace(/^It has /, '').replace(/^It is empty\.$/, 'nothing yet.')}`);
+      add(`Page ${page.title}: ${(content.zones ?? []).length ? 'Swimlanes' : 'Components'}`, swimlaneLines(content));
+      add(`Page ${page.title}: Main flows`, flowLines(content));
+      add(`Page ${page.title}: Levels`, levelLines(content));
+    }
+  }
   add('Scenarios', scenarioLines(doc));
   if (doc.legend?.length) add('Colours', legendLines(doc.legend));
   return sections.join('\n\n');

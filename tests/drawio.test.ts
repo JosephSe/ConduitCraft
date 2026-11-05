@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { colourToTone, convertDrawio, labelToText, readDrawio } from '../src/importers/drawio.ts';
 import { looksLikeDrawio } from '../src/importers/sniff.ts';
 import { parseXml } from '../src/importers/xml.ts';
+import { pageList } from '../src/core/pages.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import type { DiagramDocument } from '../src/types.ts';
 
@@ -134,7 +135,7 @@ describe('draw.io import', () => {
     assertRoundTrips(doc);
   });
 
-  it('gives one diagram per page, or one overview whose components open the pages', async () => {
+  it('gives one diagram per page, or one diagram with a tab per page', async () => {
     const file = await readDrawio(fixture('multipage.drawio'));
     assert.equal(file.pages.length, 2);
 
@@ -143,13 +144,24 @@ describe('draw.io import', () => {
     assert.deepEqual(separate.docs.map((d) => d.title), ['Shop – Overview', 'Shop – Billing']);
     assert.deepEqual(separate.docs.map((d) => d.nodes.length), [2, 3]);
 
-    const levels = convertDrawio(file, 'levels', 'shop');
-    assert.equal(levels.docs.length, 1);
-    const overview = levels.docs[0];
-    assert.equal(overview.nodes.length, 2);
-    assert.deepEqual(overview.nodes.map((n) => n.child?.nodes.length), [2, 3]);
-    assert.equal(overview.nodes[1].child?.edges.length, 2);
-    assertRoundTrips(overview);
+    const tabs = convertDrawio(file, 'tabs', 'shop');
+    assert.equal(tabs.docs.length, 1);
+    const doc = tabs.docs[0];
+    assert.equal(doc.title, 'Shop');
+    assert.deepEqual(pageList(doc).map((p) => p.title), ['Overview', 'Billing']);
+    assert.equal(doc.nodes.length, 2);
+    assert.equal(doc.pages?.[0].nodes.length, 3);
+    assert.equal(doc.pages?.[0].edges.length, 2);
+    assert.equal(new Set(pageList(doc).map((p) => p.id)).size, 2);
+    assertRoundTrips(doc);
+    const back = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(back.ok);
+    if (back.ok) assert.deepEqual(pageList(back.doc).map((p) => p.title), ['Overview', 'Billing']);
+  });
+
+  it('a file with one page is one diagram in either mode', async () => {
+    const file = await readDrawio(fixture('compressed.drawio'));
+    assert.equal(convertDrawio(file, 'tabs', 'Jobs').docs[0].pages, undefined);
   });
 
   it('reads a bare mxGraphModel (.xml)', async () => {

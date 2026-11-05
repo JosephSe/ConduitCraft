@@ -246,3 +246,106 @@ for (const scheme of ['light', 'dark'] as const) {
     expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
   });
 }
+
+// ---------------------------------------------------------------------------------------------------------------
+// Pages everywhere else (P1b)
+// ---------------------------------------------------------------------------------------------------------------
+const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
+
+test('the outline lists the pages and opens one', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await addPage(page);
+  await tabs(page).first().click();
+  await runPaletteCommand(page, 'Toggle Text Outline');
+  const rows = page.locator('#outline-tree .outline-row[data-kind="page"]');
+  await expect(rows).toHaveCount(2);
+  await expect(rows.nth(0)).toContainText('open');
+  await rows.nth(1).click();
+  await expect(tabs(page).nth(1)).toHaveAttribute('aria-selected', 'true');
+  await expect(rows.nth(1)).toContainText('open');
+});
+
+test('Review counts the other pages and jumps to one', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await addPage(page);
+  // The new page gets an unconnected component, which the Review rules flag.
+  await runPaletteCommand(page, 'Add Service / API Stencil');
+  await runPaletteCommand(page, 'Add Service / API Stencil');
+  await tabs(page).first().click();
+  await clearSelection(page);
+  await page.keyboard.press('3');
+  const jump = page.locator('#insights-body .insight-page-jump');
+  await expect(jump).toHaveCount(1);
+  await expect(jump).toContainText('Page 2');
+  await expect(page.locator('#insights-heading')).toContainText('on this page');
+  await jump.click();
+  await expect(tabs(page).nth(1)).toHaveAttribute('aria-selected', 'true');
+});
+
+test('find and replace can search every page', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await addPage(page);
+  await runPaletteCommand(page, 'Add Service / API Stencil');
+  await tabs(page).first().click();
+  await clearSelection(page);
+  await page.keyboard.press('ControlOrMeta+Shift+f');
+  const dialog = page.locator('#find-replace-dialog');
+  await expect(dialog.locator('#fr-pages-scope')).toBeVisible();
+  await dialog.locator('#fr-find').fill('Service API 1');
+  await expect(dialog.locator('#fr-status')).toContainText('No matches');
+  await dialog.getByLabel('All pages').check();
+  await expect(dialog.locator('#fr-status')).toContainText(/match/);
+  await expect(dialog.locator('.find-replace-where').first()).toContainText('Page 2');
+  await dialog.locator('#fr-replace').fill('Billing API');
+  await dialog.getByRole('button', { name: 'Replace all' }).click();
+  await expect(dialog.locator('#fr-status')).toContainText('Replaced');
+  await page.keyboard.press('Escape');
+  await tabs(page).nth(1).click();
+  await expect(page.locator('.arch-node .node-title', { hasText: 'Billing API' })).toBeVisible();
+  // One undo step puts it back.
+  await clearSelection(page);
+  await page.keyboard.press('ControlOrMeta+z');
+  // Undo goes back to the page where Replace all was run; the change it undoes is on page 2.
+  await expect(tabs(page).first()).toHaveAttribute('aria-selected', 'true');
+  await tabs(page).nth(1).click();
+  await expect(page.locator('.arch-node .node-title', { hasText: 'Service API 1' })).toBeVisible();
+});
+
+test('the export dialog offers every page as a zip only when there are several', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await runPaletteCommand(page, 'Export Diagram Modal');
+  await expect(page.locator('#btn-export-svg-pages')).toBeHidden();
+  await page.keyboard.press('Escape');
+  await addPage(page);
+  await runPaletteCommand(page, 'Export Diagram Modal');
+  await expect(page.locator('#btn-export-svg-pages')).toBeVisible();
+  const [download] = await Promise.all([page.waitForEvent('download'), page.locator('#btn-export-svg-pages').click()]);
+  expect(download.suggestedFilename()).toMatch(/-pages\.zip$/);
+});
+
+test('components copied on one page paste onto another', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  const hits = page.locator('.arch-node .node-select-hit');
+  await hits.nth(0).click();
+  await hits.nth(1).click({ modifiers: ['Shift'] });
+  await page.keyboard.press(`${mod}+c`);
+  await addPage(page);
+  await expect(nodes(page)).toHaveCount(0);
+  await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
+  await page.keyboard.press(`${mod}+v`);
+  await expect(nodes(page)).toHaveCount(2);
+  // The first page is unchanged.
+  await tabs(page).first().click();
+  expect(await nodes(page).count()).toBeGreaterThan(2);
+});

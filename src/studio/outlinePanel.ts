@@ -6,9 +6,9 @@
  * Enter selects the component or wire and pans to it, and on a level row Enter opens that level. Escape closes.
  * The tree is one tab stop (roving focus, reusing the idea in `rovingFocus.ts`).
  */
-import { buildOutline, flattenOutline, zoneKeys, type OutlineItem, type OutlineRow } from '../core/outline';
+import { buildOutline, flattenOutline, pageItems, zoneKeys, type OutlineItem, type OutlineRow } from '../core/outline';
 import { announce } from './a11y';
-import { app, goToLevel, openPageDocument, panToNodeIfNeeded, setSelection } from './state';
+import { app, goToLevel, goToPage, openPageDocument, panToNodeIfNeeded, setSelection } from './state';
 
 const expanded = new Set<string>();
 const knownZones = new Set<string>();
@@ -29,6 +29,10 @@ function activate(row: OutlineRow): void {
   const { item } = row;
   if (item.kind === 'zone') {
     toggle(row);
+    return;
+  }
+  if (item.kind === 'page') {
+    if (item.pageIndex !== undefined && goToPage(item.pageIndex)) paint(true);
     return;
   }
   if (item.kind === 'level') {
@@ -114,7 +118,7 @@ function onKeydown(e: KeyboardEvent): void {
 function paint(force = false): void {
   const root = tree();
   if (!root || !isOutlineOpen()) return;
-  const items = buildOutline(openPageDocument(), app.levelPath);
+  const items = [...pageItems(app.pageRoot ?? app.levelRoot ?? app.doc, app.pageIndex), ...buildOutline(openPageDocument(), app.levelPath)];
   // Swimlanes start open; later toggles are the reader's choice.
   for (const key of zoneKeys(items)) {
     if (!knownZones.has(key)) {
@@ -154,7 +158,7 @@ function rowElement(row: OutlineRow): HTMLElement {
   if (row.expandable) el.setAttribute('aria-expanded', String(row.expanded));
   el.tabIndex = item.key === focusKey ? 0 : -1;
   el.style.paddingInlineStart = `${0.4 + (row.depth - 1) * 0.9}rem`;
-  const selected = item.kind !== 'zone' && item.kind !== 'level' && isSelected(item);
+  const selected = item.kind !== 'zone' && item.kind !== 'level' && item.kind !== 'page' && isSelected(item);
   el.setAttribute('aria-selected', String(selected));
 
   const twisty = document.createElement('span');

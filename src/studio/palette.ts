@@ -972,7 +972,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Add page',
       subtitle: 'A new blank diagram in this file',
       category: 'Canvas & Layout',
-      keywords: ['page', 'tab', 'sheet', 'new', 'diagram', 'add'],
+      keywords: ['page', 'tab', 'sheet', 'new'],
       run: () => void import('./pageMenu').then((m) => m.runPageAction('add')),
     },
     {
@@ -980,7 +980,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Duplicate page',
       subtitle: 'Copy the open page',
       category: 'Canvas & Layout',
-      keywords: ['page', 'tab', 'sheet', 'copy', 'duplicate', 'clone'],
+      keywords: ['page', 'tab', 'copy', 'clone'],
       run: () => void import('./pageMenu').then((m) => m.runPageAction('duplicate')),
     },
     {
@@ -988,7 +988,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Delete page',
       subtitle: 'Remove the open page (Undo brings it back)',
       category: 'Canvas & Layout',
-      keywords: ['page', 'tab', 'sheet', 'delete', 'remove', 'close'],
+      keywords: ['page', 'tab', 'remove'],
       run: () => void import('./pageMenu').then((m) => m.runPageAction('delete')),
     },
     {
@@ -996,7 +996,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       title: 'Rename page',
       subtitle: 'Change the open page\'s name',
       category: 'Canvas & Layout',
-      keywords: ['page', 'tab', 'sheet', 'rename', 'name', 'title'],
+      keywords: ['page', 'tab', 'name'],
       run: () => void import('./pageMenu').then((m) => m.runPageAction('rename')),
     },
     {
@@ -1005,7 +1005,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Open the page to the right of this one',
       category: 'Canvas & Layout',
       shortcut: `${platformShortcut('⌥')}PageDown`,
-      keywords: ['page', 'tab', 'sheet', 'next', 'right', 'forward'],
+      keywords: ['page', 'tab', 'right'],
       run: () => void stepPage(1),
     },
     {
@@ -1014,7 +1014,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Open the page to the left of this one',
       category: 'Canvas & Layout',
       shortcut: `${platformShortcut('⌥')}PageUp`,
-      keywords: ['page', 'tab', 'sheet', 'previous', 'left', 'back'],
+      keywords: ['page', 'tab', 'left', 'back'],
       run: () => void stepPage(-1),
     },
     {
