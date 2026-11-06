@@ -1016,6 +1016,13 @@ export function duplicateSelected(): void {
  * `conduitcraft` marker, on the system clipboard (through the `copy` event's data, so no permission is needed), which is
  * what lets another tab, window or diagram paste them.
  */
+/** Something to copy is selected: a component, swimlane, frame or note (a lone wire has nothing to carry). */
+function hasCopyableSelection(): boolean {
+  const sel = app.selection;
+  if (sel.type === 'node' || sel.type === 'zone' || sel.type === 'notes' || sel.type === 'frame') return true;
+  return sel.type === 'multi' && (sel.ids.length > 0 || (sel.zoneIds?.length ?? 0) > 0 || (sel.notesIds?.length ?? 0) > 0);
+}
+
 export function copySelection(data?: DataTransfer | null): void {
   const sel = app.selection;
   const nodeIds = new Set(getSelectedNodeIds());
@@ -1027,6 +1034,18 @@ export function copySelection(data?: DataTransfer | null): void {
   else if (sel.type === 'multi') {
     for (const id of sel.zoneIds ?? []) zoneIds.add(id);
     for (const id of sel.notesIds ?? []) noteIds.add(id);
+    // A multi-selection cannot hold a frame, so a frame goes along when everything in it is selected (and all of
+    // them with Select All), keeping its components owned by it in the paste.
+    const doc = app.doc;
+    const everything =
+      doc.nodes.every((n) => nodeIds.has(n.id)) &&
+      doc.zones.every((z) => zoneIds.has(z.id)) &&
+      doc.notesCards.every((c) => noteIds.has(c.id));
+    for (const f of doc.frames ?? []) {
+      const inside = frameAndDescendantIds(doc.frames ?? [], f.id);
+      const owned = doc.nodes.filter((n) => n.frameId && inside.has(n.frameId));
+      if (everything || (owned.length > 0 && owned.every((n) => nodeIds.has(n.id)))) frameIds.add(f.id);
+    }
   } else if (sel.type === 'frame') {
     // A frame goes with the frames inside it, what it owns, and the notes sitting in it.
     const all = frameAndDescendantIds(app.doc.frames ?? [], sel.id);
@@ -1493,7 +1512,7 @@ function initClipboardEvents(): void {
     return !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
   };
   document.addEventListener('copy', (e) => {
-    if (app.workspaceMode !== 'design' || editing(e.target) || getSelectedNodeIds().length === 0) return;
+    if (app.workspaceMode !== 'design' || editing(e.target) || !hasCopyableSelection()) return;
     e.preventDefault();
     copySelection(e.clipboardData);
   });

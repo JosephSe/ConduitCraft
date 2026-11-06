@@ -8,8 +8,8 @@ export const CLIP_MARKER = 1;
 /** Pasted text larger than this is refused outright. */
 export const MAX_CLIP_CHARS = 4_000_000;
 export const MAX_CLIP_NODES = 500;
-/** Embedded pictures are dropped from the copy when the text would be longer than this (the share-link limit, B5). */
-export const IMAGE_LIMIT_CHARS = 8 * 1024;
+/** Embedded pictures are dropped from the copy only when the text would be longer than this (half of what a paste accepts). */
+export const IMAGE_LIMIT_CHARS = MAX_CLIP_CHARS / 2;
 
 export interface Clip {
   nodes: DiagramNode[];
