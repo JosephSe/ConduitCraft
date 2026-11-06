@@ -191,6 +191,7 @@ import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
 import { renameNodeInline, renameNotesInline } from './inlineRename';
 import { serializeClip, type Clip } from '../core/clipboard';
+import { frameAndDescendantIds, notesInFrames } from '../core/frameOps';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
 import { setPointerTool } from './pointerTool';
@@ -1016,22 +1017,42 @@ export function duplicateSelected(): void {
  * what lets another tab, window or diagram paste them.
  */
 export function copySelection(data?: DataTransfer | null): void {
-  const ids = getSelectedNodeIds();
-  if (ids.length === 0) return;
-  const idSet = new Set(ids);
-  app.clipboardNodes = structuredClone(app.doc.nodes.filter((n) => idSet.has(n.id)));
-  app.clipboardEdges = structuredClone(
-    app.doc.edges.filter((e) => idSet.has(e.from) && idSet.has(e.to)),
-  );
-  const { text, droppedImages } = serializeClip(app.clipboardNodes, app.clipboardEdges);
+  const sel = app.selection;
+  const nodeIds = new Set(getSelectedNodeIds());
+  const zoneIds = new Set<string>();
+  const noteIds = new Set<string>();
+  const frameIds = new Set<string>();
+  if (sel.type === 'zone') zoneIds.add(sel.id);
+  else if (sel.type === 'notes') noteIds.add(sel.id);
+  else if (sel.type === 'multi') {
+    for (const id of sel.zoneIds ?? []) zoneIds.add(id);
+    for (const id of sel.notesIds ?? []) noteIds.add(id);
+  } else if (sel.type === 'frame') {
+    // A frame goes with the frames inside it, what it owns, and the notes sitting in it.
+    const all = frameAndDescendantIds(app.doc.frames ?? [], sel.id);
+    for (const id of all) frameIds.add(id);
+    for (const n of app.doc.nodes) if (n.frameId && all.has(n.frameId)) nodeIds.add(n.id);
+    for (const c of notesInFrames(app.doc, all)) noteIds.add(c.id);
+  }
+  if (nodeIds.size + zoneIds.size + noteIds.size + frameIds.size === 0) return;
+  const nodes = structuredClone(app.doc.nodes.filter((n) => nodeIds.has(n.id)));
+  const edges = structuredClone(app.doc.edges.filter((e) => nodeIds.has(e.from) && nodeIds.has(e.to)));
+  const zones = structuredClone(app.doc.zones.filter((z) => zoneIds.has(z.id)));
+  const frames = structuredClone((app.doc.frames ?? []).filter((f) => frameIds.has(f.id)));
+  const notes = structuredClone(app.doc.notesCards.filter((c) => noteIds.has(c.id)));
+  app.clipboard = { nodes, edges, zones, frames, notes, droppedImages: false };
+  const { text, droppedImages } = serializeClip(nodes, edges, { zones, frames, notes });
   if (data) data.setData('text/plain', text);
   else void navigator.clipboard?.writeText(text).catch(() => undefined);
-  const count = app.clipboardNodes.length;
-  const msg = `Copied ${count} ${count === 1 ? 'component' : 'components'} to clipboard${
-    droppedImages ? ' (pictures left out: too large)' : ''
-  }`;
-  hudStatusTip.textContent = msg;
-  notify(msg);
+  const count = nodes.length + zones.length + frames.length + notes.length;
+  const only = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+  const msg =
+    count === nodes.length
+      ? `Copied ${only(count, 'component', 'components')} to clipboard`
+      : `Copied ${only(count, 'item', 'items')} to clipboard`;
+  const full = droppedImages ? `${msg} (pictures left out: too large)` : msg;
+  hudStatusTip.textContent = full;
+  notify(full);
 }
 
 /** Paste what the clipboard text carries; with nothing of ours there, fall back to the in-tab buffer. */
@@ -1046,23 +1067,43 @@ export async function pasteSelection(clipboardText = ''): Promise<void> {
       return;
     }
   }
-  if (!clip && app.clipboardNodes.length > 0) {
-    clip = { nodes: app.clipboardNodes, edges: app.clipboardEdges, droppedImages: false };
-  }
+  if (!clip && app.clipboard) clip = app.clipboard;
   if (!clip) {
     if (clipboardText.trim()) notify('The clipboard does not hold components.');
     return;
   }
   pushHistory();
-  const made = materializeClip(clip, app.doc.nodes, nextUid);
-  app.doc.nodes.push(...made.nodes);
-  app.doc.edges.push(...made.edges);
+  const doc = app.doc;
+  const made = materializeClip(
+    clip,
+    [...doc.nodes, ...(doc.frames ?? []), ...doc.notesCards],
+    nextUid,
+    32,
+    doc.zones.map((z) => z.x),
+  );
+  doc.nodes.push(...made.nodes);
+  doc.edges.push(...made.edges);
+  doc.zones.push(...made.zones);
+  doc.notesCards.push(...made.notes);
+  if (made.frames.length > 0) doc.frames = [...(doc.frames ?? []), ...made.frames];
   const newIds = made.nodes.map((n) => n.id);
-  expandStageToFit(app.doc);
-  setSelection(newIds.length > 1 ? { type: 'multi', ids: newIds } : { type: 'node', id: newIds[0] });
+  const newZoneIds = made.zones.map((z) => z.id);
+  const newNoteIds = made.notes.map((c) => c.id);
+  const topFrames = made.frames.filter((f) => !f.parentId);
+  expandStageToFit(doc);
+  if (topFrames.length === 1 && newZoneIds.length === 0) {
+    // A pasted frame is selected as a frame, the way a duplicated one is.
+    setSelection({ type: 'frame', id: topFrames[0].id });
+  } else {
+    setSelection(selectionOfStage({ nodes: newIds, zones: newZoneIds, notes: newNoteIds }));
+  }
   renderAll(true);
   tagEnteringNodes(newIds);
-  const msg = `Pasted ${newIds.length} ${newIds.length === 1 ? 'component' : 'components'}`;
+  const count = newIds.length + newZoneIds.length + newNoteIds.length + made.frames.length;
+  const msg =
+    count === newIds.length
+      ? `Pasted ${count} ${count === 1 ? 'component' : 'components'}`
+      : `Pasted ${count} ${count === 1 ? 'item' : 'items'}`;
   hudStatusTip.textContent = msg;
   notify(msg);
 }

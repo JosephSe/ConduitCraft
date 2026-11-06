@@ -2,6 +2,7 @@
 
 ## 2.2.0
 
+- **Copy and paste stage containers.** Cmd+C and Cmd+V now take swimlanes, frames and note cards as well as components. Copying a frame brings the frames inside it, the components it owns and the notes sitting in it, and a pasted frame keeps them together. A pasted swimlane lands beside the original, and a pasted copy starts unlocked. It works across tabs and diagrams.
 - **Tools always in reach.** Select, Wire, Hand, Text and Frame stay on show when the component list is open, as a row above it; before, opening the list hid them all. Stage Containers now has Frame and Text. The folded rail scrolls, so Swimlane and Note can be reached on any window height. On a tablet, picking a tool closes the drawer.
 - **Top-bar menu.** A new menu button lists the actions that had no button: Home, New Diagram, Templates, Your Diagrams, Save, Open, Import, Export, Find and Replace, Auto-Layout, Text Outline, Code Pane, Specification Matrix, Snapshots, Presentation, Preferences and Keyboard Shortcuts.
 - **Rules for AI chats.** [docs/llm-rules.md](docs/llm-rules.md) teaches any language model to turn an image, whiteboard photo, draw.io file, Mermaid, PlantUML or C4 model into a Blueprint file. It covers every component kind, the layout grid, swimlanes, frames, scenarios, and what the model may infer and must never invent. **Copy LLM Rules** in the command palette copies it. A Blueprint file pasted or opened with the chat reply still around it (a ```markdown fence and a sentence before it) now imports as the file inside.

@@ -75,3 +75,61 @@ describe('clipboard text', () => {
     assert.equal(serializeClip(small, []).droppedImages, false);
   });
 });
+
+describe('clipboard of stage containers', () => {
+  const frame = (id: string, extra: object = {}) => ({ id, title: id, x: 50, y: 50, width: 600, height: 300, tone: 'blue', ...extra });
+  const zone = { id: 'z1', number: '1', title: 'Edge', subtitle: '', x: 0, width: 300 };
+  const note = { id: 'n1', title: 'Note', code: 'N1', x: 80, y: 80, items: [] };
+
+  it('round-trips swimlanes, frames and notes, even with no components', () => {
+    const { text } = serializeClip([], [], { zones: [zone], frames: [frame('f1') as never], notes: [note as never] });
+    const parsed = parseClip(text);
+    assert.ok(parsed.ok);
+    if (!parsed.ok) return;
+    assert.equal(parsed.clip.nodes.length, 0);
+    assert.equal(parsed.clip.zones?.length, 1);
+    assert.equal(parsed.clip.frames?.length, 1);
+    assert.equal(parsed.clip.notes?.length, 1);
+  });
+
+  it('refuses a damaged frame', () => {
+    const r = parseClip('{"conduitcraft": 1, "nodes": [], "frames": [{"id": "f"}]}');
+    assert.ok(!r.ok && r.reason === 'invalid');
+  });
+
+  it('re-ids a frame, keeps its components and inner frames inside the copy, and drops a lost parent', () => {
+    const ns = nodes();
+    ns[0].frameId = 'f1';
+    ns[1].frameId = 'outside';
+    const clip = {
+      nodes: ns,
+      edges: [],
+      frames: [frame('f1', { locked: true }), frame('f2', { parentId: 'f1' }), frame('f3', { parentId: 'gone' })] as never[],
+      droppedImages: false,
+    };
+    const out = materializeClip(clip, [], newId);
+    const [f1, f2, f3] = out.frames;
+    assert.notEqual(f1.id, 'f1');
+    assert.equal(f2.parentId, f1.id);
+    assert.equal(f3.parentId, undefined);
+    assert.equal(f1.locked, undefined, 'a copy starts unlocked');
+    assert.equal(out.nodes[0].frameId, f1.id);
+    assert.equal(out.nodes[1].frameId, undefined, 'a component whose frame was not copied is no longer owned');
+  });
+
+  it('puts a copied swimlane beside the one it came from', () => {
+    const out = materializeClip({ nodes: [], edges: [], zones: [zone], droppedImages: false }, [], newId, 32, [0]);
+    assert.equal(out.zones[0].x, 324);
+    assert.notEqual(out.zones[0].id, 'z1');
+  });
+
+  it('moves copied frames and notes off the originals', () => {
+    const out = materializeClip(
+      { nodes: [], edges: [], frames: [frame('f1') as never], notes: [note as never], droppedImages: false },
+      [{ x: 50, y: 50 }],
+      newId,
+    );
+    assert.equal(out.frames[0].x, 82);
+    assert.equal(out.notes[0].x, 112);
+  });
+});
