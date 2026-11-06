@@ -116,7 +116,9 @@ test('Select All then copy carries everything, frames and pictures included, to 
   const b = await context.newPage();
   await b.setViewportSize({ width: 1600, height: 900 });
   await b.goto('/');
+  await expect(b.locator('#home-dialog')).toBeVisible();
   await b.keyboard.press('Escape');
+  await expect(b.locator('#home-dialog')).toBeHidden();
   await b.bringToFront();
   await b.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
   await b.keyboard.press(`${mod}+v`);
