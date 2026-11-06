@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { openLumenRelay, runPaletteCommand } from './helpers';
 
 const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
 
@@ -89,4 +89,36 @@ test('copying a swimlane in one tab pastes it in another', async ({ context }) =
   await b.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
   await b.keyboard.press(`${mod}+v`);
   await expect.poll(() => b.locator('.zone-banner').count()).toBe(before + 1);
+});
+
+test('Select All then copy carries everything, frames and pictures included, to another tab', async ({ context }) => {
+  const a = await context.newPage();
+  await a.setViewportSize({ width: 1600, height: 900 });
+  await a.goto('/');
+  await a.keyboard.press('Escape');
+  await runPaletteCommand(a, 'Load Showcase');
+  await expect(a.locator('.arch-node').first()).toBeVisible();
+  const total = async (page: Page) => ({
+    nodes: await page.locator('.arch-node').count(),
+    zones: await page.locator('.zone-banner').count(),
+    notes: await page.locator('.blueprint-spec').count(),
+    frames: await page.locator('.frame-box').count(),
+    wires: await page.locator('.conduit-group').count(),
+  });
+  const original = await total(a);
+  expect(original.frames).toBeGreaterThan(0);
+  await a.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
+  await a.keyboard.press(`${mod}+a`);
+  await expect(a.locator('.node-select-hit[aria-pressed="true"]')).toHaveCount(original.nodes);
+  await a.keyboard.press(`${mod}+c`);
+  await expect(a.getByText(/Copied \d+ items to clipboard$/).first()).toBeVisible();
+
+  const b = await context.newPage();
+  await b.setViewportSize({ width: 1600, height: 900 });
+  await b.goto('/');
+  await b.keyboard.press('Escape');
+  await b.bringToFront();
+  await b.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
+  await b.keyboard.press(`${mod}+v`);
+  await expect.poll(() => total(b)).toEqual(original);
 });

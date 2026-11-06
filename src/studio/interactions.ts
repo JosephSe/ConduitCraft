@@ -1034,6 +1034,18 @@ export function copySelection(data?: DataTransfer | null): void {
   else if (sel.type === 'multi') {
     for (const id of sel.zoneIds ?? []) zoneIds.add(id);
     for (const id of sel.notesIds ?? []) noteIds.add(id);
+    // A multi-selection cannot hold a frame, so a frame goes along when everything in it is selected (and all of
+    // them with Select All), keeping its components owned by it in the paste.
+    const doc = app.doc;
+    const everything =
+      doc.nodes.every((n) => nodeIds.has(n.id)) &&
+      doc.zones.every((z) => zoneIds.has(z.id)) &&
+      doc.notesCards.every((c) => noteIds.has(c.id));
+    for (const f of doc.frames ?? []) {
+      const inside = frameAndDescendantIds(doc.frames ?? [], f.id);
+      const owned = doc.nodes.filter((n) => n.frameId && inside.has(n.frameId));
+      if (everything || (owned.length > 0 && owned.every((n) => nodeIds.has(n.id)))) frameIds.add(f.id);
+    }
   } else if (sel.type === 'frame') {
     // A frame goes with the frames inside it, what it owns, and the notes sitting in it.
     const all = frameAndDescendantIds(app.doc.frames ?? [], sel.id);
