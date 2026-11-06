@@ -1,5 +1,11 @@
 # Release notes
 
+## 2.2.1
+
+- **Paste across tabs now works for swimlanes, frames and notes.** Copying one of these on its own did nothing, so pasting in another tab said the clipboard held no components. Cmd+C now copies whatever is selected.
+- **Select All then copy takes everything.** Frames are included, and the components inside them stay in their frames when pasted.
+- **Pictures survive a copy.** Component pictures are left out only when a copy passes 2 MB, up from 8 KB, so a pasted diagram keeps its icons.
+
 ## 2.2.0
 
 - **Copy and paste stage containers.** Cmd+C and Cmd+V now take swimlanes, frames and note cards as well as components. Copying a frame brings the frames inside it, the components it owns and the notes sitting in it, and a pasted frame keeps them together. A pasted swimlane lands beside the original, and a pasted copy starts unlocked. It works across tabs and diagrams.
