@@ -8,6 +8,7 @@ import {
   zoomReadout,
 } from './dom';
 import { lensOfWorkspaceMode, workspaceModeOf, type Lens, type WorkspaceMode } from '../core/lens';
+import type { Clip } from '../core/clipboard';
 import type { ColourBy } from '../core/meta';
 import type { PointerTool } from './pointerTool';
 import { getActiveDiagramId } from './library';
@@ -25,7 +26,6 @@ import {
 import { getActiveFileHandle, getActiveFileName, isFileDiskDirty, setDiskDirty } from './pwa';
 import type {
   DiagramDocument,
-  DiagramEdge,
   DiagramNode,
   PortSide,
   SelectionTarget,
@@ -122,8 +122,8 @@ export const app = {
   panX: 0,
   panY: 0,
   simTimer: null as number | null,
-  clipboardNodes: [] as DiagramNode[],
-  clipboardEdges: [] as DiagramEdge[],
+  /** What the last copy took: components, wires, swimlanes, frames and notes. Pasted when the system clipboard has nothing of ours. */
+  clipboard: null as Clip | null,
   autosaveTimer: null as number | null,
   hasPendingAutosave: false,
   activeWireDraft: null as ActiveWireDraft | null,
