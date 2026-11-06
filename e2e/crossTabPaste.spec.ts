@@ -71,3 +71,22 @@ test('copy and paste still work in one tab when the system clipboard is unavaila
   await page.keyboard.press(`${mod}+v`);
   await expect.poll(() => nodeCount(page)).toBe(before + 1);
 });
+
+test('copying a swimlane in one tab pastes it in another', async ({ context }) => {
+  const a = await context.newPage();
+  await open(a);
+  await a.locator('.zone-banner').first().click({ position: { x: 6, y: 6 } });
+  await a.keyboard.press(`${mod}+c`);
+
+  const b = await context.newPage();
+  await b.setViewportSize({ width: 1600, height: 900 });
+  await b.goto('/');
+  await expect(b.locator('#home-dialog')).toBeVisible();
+  await b.keyboard.press('Escape');
+  await b.bringToFront();
+  await openLumenRelay(b);
+  const before = await b.locator('.zone-banner').count();
+  await b.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
+  await b.keyboard.press(`${mod}+v`);
+  await expect.poll(() => b.locator('.zone-banner').count()).toBe(before + 1);
+});

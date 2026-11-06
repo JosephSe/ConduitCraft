@@ -1016,6 +1016,13 @@ export function duplicateSelected(): void {
  * `conduitcraft` marker, on the system clipboard (through the `copy` event's data, so no permission is needed), which is
  * what lets another tab, window or diagram paste them.
  */
+/** Something to copy is selected: a component, swimlane, frame or note (a lone wire has nothing to carry). */
+function hasCopyableSelection(): boolean {
+  const sel = app.selection;
+  if (sel.type === 'node' || sel.type === 'zone' || sel.type === 'notes' || sel.type === 'frame') return true;
+  return sel.type === 'multi' && (sel.ids.length > 0 || (sel.zoneIds?.length ?? 0) > 0 || (sel.notesIds?.length ?? 0) > 0);
+}
+
 export function copySelection(data?: DataTransfer | null): void {
   const sel = app.selection;
   const nodeIds = new Set(getSelectedNodeIds());
@@ -1493,7 +1500,7 @@ function initClipboardEvents(): void {
     return !!el && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
   };
   document.addEventListener('copy', (e) => {
-    if (app.workspaceMode !== 'design' || editing(e.target) || getSelectedNodeIds().length === 0) return;
+    if (app.workspaceMode !== 'design' || editing(e.target) || !hasCopyableSelection()) return;
     e.preventDefault();
     copySelection(e.clipboardData);
   });
