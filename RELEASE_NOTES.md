@@ -1,6 +1,6 @@
 # Release notes
 
-## Unreleased
+## 2.2.0
 
 - **Tools always in reach.** Select, Wire, Hand, Text and Frame stay on show when the component list is open, as a row above it; before, opening the list hid them all. Stage Containers now has Frame and Text. The folded rail scrolls, so Swimlane and Note can be reached on any window height. On a tablet, picking a tool closes the drawer.
 - **Top-bar menu.** A new menu button lists the actions that had no button: Home, New Diagram, Templates, Your Diagrams, Save, Open, Import, Export, Find and Replace, Auto-Layout, Text Outline, Code Pane, Specification Matrix, Snapshots, Presentation, Preferences and Keyboard Shortcuts.
