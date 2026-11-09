@@ -567,7 +567,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 
 #### [x] Z1. Branch and baseline · S
 - **Do:** create `v3`. Run `pnpm test`, `pnpm build`, `pnpm check:size`, `pnpm test:e2e`; write counts and sizes into the table at the end of this section. Save the eight views (10.4) to `docs/v3/before/` (view 3 as the current component panel, open).
-- Branch `v3` cut from `v3-plan` at `5b42b5c` (`main` is `2d9115c`, release 2.2.1). No pull request yet.
+- Branch `v3` cut from `v3-plan` at `5b42b5c` (`main` is `2d9115c`, release 2.2.1). Pull request #95.
 - The eight views are in `docs/v3/before/`, light and dark, 1440×900, reduced motion. View 2 is at 99%, the nearest zoom step to 100%. View 3 is the current component panel with Message Queue highlighted. View 7 is the current first run (the showcase in Traffic, with the three actions); reduced motion shows the failed state at once, so it is not a blank sheet.
 - The untracked owner file `e2e/zz_debug.spec.ts` was not changed. The Playwright run excluded that one test (`--grep-invert '^debug$'`).
 
