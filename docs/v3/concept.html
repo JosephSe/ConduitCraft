@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en" data-theme="vellum" data-lens="design">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ConduitCraft 3.0 concept</title>
+<!-- Concept mockup for REDESIGN_PLAN_V3.md. Static, hand-written, not wired to the app. Fonts load from Google Fonts
+     here only for convenience; the app ships them itself (plan decision D3). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=Geist+Mono:wght@400..600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --blue: #1d4ed8; --emerald: #047857; --rose: #be123c; --violet: #5b21b6; --amber: #b45309; --cyan: #0b7c9e; --fuchsia: #b5179e;
+  --canvas: #ECEFEE; --canvas-run: #E0E5E4; --dot: #8CC4D8;
+  --sheet: #ffffff; --island: rgba(255,255,255,.84); --well: rgba(21,24,28,.055);
+  --ink: #15181C; --ink-2: #565C64; --ink-3: #6C727A; --on-ink: #ffffff;
+  --hair: rgba(21,24,28,.11); --hair-2: rgba(21,24,28,.2);
+  --redline: #D4291C;
+  --lift: 0 1px 1px rgba(21,24,28,.05), 0 10px 30px -10px rgba(21,24,28,.22);
+  --contact: 0 1px 2px rgba(21,24,28,.07);
+  --spring: linear(0, .36 9%, .89 22%, 1.08 32%, 1.02 46%, .99 60%, 1);
+  --out: cubic-bezier(.2,.8,.2,1);
+}
+[data-theme="graphite"] {
+  --blue: #60a5fa; --emerald: #34d399; --rose: #fb7185; --violet: #a78bfa; --amber: #fbbf24; --cyan: #22d3ee; --fuchsia: #f0abfc;
+  --canvas: #1D1F21; --canvas-run: #151617; --dot: rgba(140,196,216,.3);
+  --sheet: #2A2C2F; --island: rgba(46,48,51,.84); --well: rgba(255,255,255,.07);
+  --ink: #F2F3F1; --ink-2: #B7BBBF; --ink-3: #92979C; --on-ink: #1D1F21;
+  --hair: rgba(255,255,255,.1); --hair-2: rgba(255,255,255,.2);
+  --redline: #FF6B5E;
+  --lift: 0 0 0 .5px rgba(0,0,0,.5), 0 14px 34px -12px rgba(0,0,0,.6);
+  --contact: 0 1px 2px rgba(0,0,0,.3);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font: 400 13px/20px var(--sans); color: var(--ink); background: var(--canvas); transition: background .32s var(--out); -webkit-font-smoothing: antialiased; }
+[data-lens="traffic"] body { background: var(--canvas-run); }
+button, input { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+svg { display: block; }
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- the sheet (canvas) ---- */
+.sheet { position: fixed; inset: 0; background-image: radial-gradient(var(--dot) 1.1px, transparent 1.4px); background-size: 24px 24px; transition: opacity .32s; }
+[data-lens="traffic"] .sheet, [data-lens="review"] .sheet { opacity: .45; }
+.stage { position: absolute; left: 50%; top: 50%; width: 1160px; height: 500px; transform: translate(-50%, -54%) scale(var(--fit, 1)); }
+.lane { position: absolute; top: -34px; bottom: -30px; border-inline: 1px solid var(--hair); background: color-mix(in srgb, var(--sheet) 34%, transparent); }
+.lane b { position: absolute; left: 14px; top: 10px; font: 600 15px/20px var(--sans); }
+.lane b i { font-style: normal; color: var(--ink-3); margin-right: 8px; font-variant-numeric: tabular-nums; }
+.wires { position: absolute; inset: 0; overflow: visible; }
+.wire { fill: none; stroke: var(--t); stroke-width: 1.75; }
+.wire.async { stroke-dasharray: 6 5; }
+.casing { fill: none; stroke: var(--canvas); stroke-width: 6; transition: stroke .32s; }
+[data-lens="traffic"] .casing { stroke: var(--canvas-run); }
+.tube { fill: none; stroke: var(--t); stroke-width: 10; stroke-linecap: round; opacity: 0; transition: opacity .32s; }
+.capsule { fill: var(--t); opacity: 0; }
+[data-lens="traffic"] .tube { opacity: .2; }
+[data-lens="traffic"] .capsule { opacity: 1; }
+[data-lens="traffic"] .wire { stroke-width: 1; opacity: .55; }
+.wlabel { position: absolute; transform: translate(-50%, -50%); padding: 1px 7px; border-radius: 5px; background: var(--sheet); border: 1px solid var(--hair); font: 500 11px/16px var(--sans); font-stretch: 88%; color: var(--ink-2); white-space: nowrap; }
+.wlabel code { font: 500 10.5px var(--mono); color: var(--t); margin-right: 5px; }
+[data-lens="review"] .wlabel, [data-lens="traffic"] .wlabel { opacity: 0; }
+
+/* ---- components ---- */
+.node { position: absolute; --tint: color-mix(in oklab, var(--t) 13%, var(--sheet)); --edge: color-mix(in oklab, var(--t) 36%, var(--sheet)); font-stretch: 88%; cursor: default; transition: filter .32s, opacity .32s; }
+.node .plate { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(var(--contact)); }
+.node .plate * { fill: var(--sheet); stroke: var(--hair-2); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.node.card { background: var(--sheet); border: 1px solid var(--hair-2); border-radius: 10px; box-shadow: var(--contact); padding: 12px 12px 10px; display: flex; flex-direction: column; }
+.node .body { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 1px; }
+.tile { width: 30px; height: 30px; border-radius: 8px; background: var(--tint); border: 1px solid var(--edge); color: var(--t); display: grid; place-items: center; flex: none; }
+.node h3 { font: 600 15px/19px var(--sans); font-stretch: 88%; letter-spacing: -.005em; }
+.node p { font-size: 12px; line-height: 16px; color: var(--ink-2); }
+.node .top { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+.node .meta { margin-top: auto; display: flex; justify-content: space-between; font-size: 11px; line-height: 14px; color: var(--ink-3); }
+.node .meta code { font: 500 10.5px/14px var(--mono); color: var(--ink-2); }
+.led { margin-left: auto; width: 7px; height: 7px; border-radius: 50%; background: var(--hair-2); align-self: flex-start; }
+[data-lens="traffic"] .led { background: var(--emerald); box-shadow: 0 0 0 3px color-mix(in srgb, var(--emerald) 22%, transparent); }
+.node.is-selected.card, .node.is-selected .plate { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 10px; }
+.node.actor .fig { width: 46px; height: 56px; margin: 0 auto 4px; stroke: var(--t); fill: var(--tint); stroke-width: 1.5; }
+[data-lens="review"] .node, [data-lens="review"] .wires { filter: grayscale(1); opacity: .62; }
+.redline { position: absolute; inset: 0; overflow: visible; pointer-events: none; opacity: 0; transition: opacity .32s; }
+.redline path { fill: none; stroke: var(--redline); stroke-width: 2; stroke-linecap: round; }
+.redline text { font: 600 13px var(--sans); fill: var(--redline); }
+[data-lens="review"] .redline { opacity: 1; }
+[data-lens="review"] .redline path { stroke-dasharray: 900; stroke-dashoffset: 900; animation: draw .7s var(--out) .15s forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* ---- islands: the plastic template lying on the drawing ---- */
+.island { position: fixed; z-index: 5; display: flex; align-items: center; gap: 2px; padding: 5px; border-radius: 14px; background: var(--island); border: 1px solid var(--hair); box-shadow: var(--lift); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); }
+.nw { left: 14px; top: 14px; padding-right: 12px; gap: 10px; }
+.n  { left: 50%; top: 14px; transform: translateX(-50%); }
+.ne { right: 14px; top: 14px; }
+.sw { left: 14px; bottom: 14px; }
+.se { right: 14px; bottom: 14px; }
+.mark { width: 30px; height: 30px; border-radius: 9px; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; }
+.doc { font-weight: 600; font-size: 14px; }
+.saved { color: var(--ink-3); font-size: 12px; }
+.btn { height: 32px; min-width: 32px; padding: 0 10px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; font-weight: 500; color: var(--ink-2); transition: background .12s, color .12s; }
+.btn:hover { background: var(--well); color: var(--ink); }
+.btn.solid { background: var(--ink); color: var(--on-ink); font-weight: 600; padding: 0 14px 0 11px; }
+.btn kbd, .hint kbd { font: 500 11px var(--mono); color: var(--ink-3); }
+.seg { position: relative; display: flex; }
+.seg button { position: relative; z-index: 1; height: 32px; padding: 0 14px; border-radius: 9px; font-weight: 500; color: var(--ink-2); display: flex; align-items: center; gap: 7px; transition: color .2s; }
+.seg button[aria-pressed="true"] { color: var(--on-ink); }
+.seg .thumb { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 9px; background: var(--ink); transition: transform .34s var(--spring), width .34s var(--spring); }
+.count { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: var(--redline); color: #fff; font: 600 11px/17px var(--sans); }
+.pages button { height: 28px; padding: 0 11px; border-radius: 8px; color: var(--ink-2); font-weight: 500; }
+.pages button[aria-current] { background: var(--well); color: var(--ink); }
+.zoom { font-variant-numeric: tabular-nums; min-width: 44px; text-align: center; font-weight: 500; }
+
+/* ---- the dock: one instrument, three faces ---- */
+.dockwrap { position: fixed; z-index: 6; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.hint { font-size: 12.5px; color: var(--ink-2); text-wrap: balance; text-align: center; }
+.dock { position: static; padding: 6px; border-radius: 18px; gap: 4px; height: 58px; transition: width .4s var(--spring); }
+.face { display: none; align-items: center; gap: 4px; height: 100%; }
+[data-lens="design"] .face.design, [data-lens="traffic"] .face.traffic, [data-lens="review"] .face.review { display: flex; animation: face .28s var(--out); }
+@keyframes face { from { opacity: 0; transform: translateY(5px); } }
+.tool { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--ink-2); transition: background .12s, color .12s; }
+.tool:hover { background: var(--well); color: var(--ink); }
+.tool[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+.rule { width: 1px; height: 26px; background: var(--hair-2); margin: 0 6px; }
+/* cut-outs: a shape is an outline until you reach for it */
+.cut { --t: var(--blue); position: relative; width: 50px; height: 44px; border-radius: 12px; display: grid; place-items: center; transition: transform .26s var(--spring); }
+.cut svg { width: 38px; height: 30px; overflow: visible; }
+.cut svg * { fill: transparent; stroke: var(--ink-3); stroke-width: 1.4; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; transition: fill .16s, stroke .16s; }
+.cut:hover, .cut:focus-visible, .cut.is-on { transform: translateY(-4px) scale(1.12); }
+.cut:hover svg *, .cut:focus-visible svg *, .cut.is-on svg * { fill: color-mix(in oklab, var(--t) 16%, var(--sheet)); stroke: var(--t); }
+.cut:hover svg .nofill, .cut.is-on svg .nofill, .cut:focus-visible svg .nofill { fill: none; }
+.cut::after { content: attr(data-name); position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%); padding: 3px 9px; border-radius: 7px; background: var(--ink); color: var(--on-ink); font: 500 12px/18px var(--sans); white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity .12s; }
+.dock .cut:hover::after, .dock .cut:focus-visible::after { opacity: 1; }
+.lib { height: 44px; padding: 0 14px 0 12px; border-radius: 12px; display: flex; align-items: center; gap: 8px; font-weight: 500; color: var(--ink-2); }
+.lib:hover, .lib[aria-expanded="true"] { background: var(--well); color: var(--ink); }
+.scn, .fail, .lib, .issue { white-space: nowrap; }
+.scn { height: 44px; padding: 0 12px; border-radius: 12px; text-align: left; line-height: 16px; }
+.scn small { display: block; color: var(--ink-3); font-size: 11px; }
+.scn b { font-weight: 600; }
+.scrub { position: relative; width: 210px; height: 44px; margin: 0 6px; }
+.scrub i { position: absolute; top: 21px; height: 2px; left: 0; right: 0; background: var(--hair-2); border-radius: 2px; }
+.scrub i + i { right: 54%; background: var(--ink); }
+.scrub u { position: absolute; top: 15px; left: 46%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--ink); border: 3px solid var(--sheet); box-shadow: var(--contact); }
+.read { font: 500 12px var(--sans); font-variant-numeric: tabular-nums; color: var(--ink-2); padding: 0 8px; white-space: nowrap; }
+.fail { height: 44px; padding: 0 14px; border-radius: 12px; display: flex; gap: 8px; align-items: center; font-weight: 600; color: var(--rose); }
+.fail:hover { background: color-mix(in srgb, var(--rose) 11%, transparent); }
+.issue { height: 44px; padding: 0 12px; border-radius: 12px; text-align: left; line-height: 16px; max-width: 300px; }
+.issue small { display: block; color: var(--redline); font-weight: 600; font-size: 11px; }
+
+/* ---- the component tray: a stencil template ---- */
+.tray { width: min(880px, calc(100vw - 28px)); position: static; display: none; padding: 0; border-radius: 22px; flex-direction: column; align-items: stretch; gap: 0; overflow: hidden; transform-origin: 50% 100%; }
+.tray.is-open { display: flex; animation: rise .34s var(--spring); }
+@keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+.find { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--hair); color: var(--ink-3); }
+.find input { flex: 1; background: none; border: 0; outline: 0; font-size: 15px; color: var(--ink); }
+.find input::placeholder { color: var(--ink-3); }
+.traybody { display: grid; grid-template-columns: 1fr 268px; }
+.shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 8px; padding: 16px 12px 18px 16px; }
+.group > span { display: block; padding: 0 8px 6px; font-size: 12px; color: var(--ink-3); }
+.spec { display: flex; align-items: center; gap: 10px; width: 100%; padding: 2px 8px 2px 2px; border-radius: 12px; text-align: left; font-weight: 500; }
+.spec .cut { flex: none; }
+.spec:hover, .spec.is-on { background: var(--well); }
+.spec:hover .cut, .spec.is-on .cut { transform: scale(1.1); }
+.spec:hover .cut svg *, .spec.is-on .cut svg * { fill: color-mix(in oklab, var(--t) 16%, var(--sheet)); stroke: var(--t); }
+.spec:hover .cut svg .nofill, .spec.is-on .cut svg .nofill { fill: none; }
+.spec[hidden] { display: none; }
+.spec em { font-style: normal; display: block; font-size: 11.5px; line-height: 14px; font-weight: 400; color: var(--ink-3); }
+.demo { --t: var(--blue); margin: 12px 12px 12px 0; border-radius: 14px; background: color-mix(in oklab, var(--t) 7%, var(--sheet)); border: 1px solid color-mix(in oklab, var(--t) 18%, transparent); padding: 14px 16px 14px; display: flex; flex-direction: column; }
+.demo svg { width: 100%; height: 132px; overflow: visible; }
+.demo .rail { fill: none; stroke: var(--t); stroke-width: 1.5; opacity: .5; }
+.demo .unit * { fill: var(--sheet); stroke: var(--t); stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.demo .unit .nofill { fill: none; }
+.demo .cap { fill: var(--t); }
+.demo .cap.no { fill: var(--rose); }
+.demo .end { fill: var(--sheet); stroke: var(--t); stroke-width: 1.5; }
+.demo h4 { font: 600 15px/20px var(--sans); margin-top: 6px; }
+.demo p { color: var(--ink-2); font-size: 12.5px; line-height: 18px; margin-top: 2px; min-height: 54px; }
+.demo footer { margin-top: auto; padding-top: 8px; color: var(--ink-3); font-size: 12px; }
+
+/* ---- inspector ---- */
+.insp { right: 14px; top: 70px; width: 284px; flex-direction: column; align-items: stretch; gap: 0; padding: 0; border-radius: 16px; display: none; }
+.insp.is-open { display: flex; animation: slide .3s var(--spring); }
+@keyframes slide { from { opacity: 0; transform: translateX(14px); } }
+.insp header { display: flex; gap: 12px; align-items: center; padding: 14px 16px 12px; }
+.insp header b { display: block; font: 600 16px/20px var(--sans); }
+.insp header span { color: var(--ink-3); font-size: 12px; }
+.tabs { display: flex; gap: 2px; margin: 0 12px; padding: 3px; border-radius: 10px; background: var(--well); }
+.tabs button { flex: 1; height: 26px; border-radius: 7px; font-weight: 500; color: var(--ink-2); font-size: 12.5px; }
+.tabs button[aria-selected="true"] { background: var(--sheet); color: var(--ink); box-shadow: var(--contact); }
+.rows { padding: 10px 16px 16px; display: grid; grid-template-columns: 92px 1fr; row-gap: 6px; align-items: center; }
+.rows label { color: var(--ink-2); font-size: 12.5px; }
+.field { height: 30px; border-radius: 8px; background: var(--well); padding: 0 10px; display: flex; align-items: center; justify-content: space-between; font-weight: 500; }
+.dots { display: flex; gap: 5px; }
+.dots i { width: 18px; height: 18px; border-radius: 50%; background: var(--c); }
+.dots i.on { box-shadow: 0 0 0 2px var(--sheet), 0 0 0 3.5px var(--ink); }
+.step { display: flex; gap: 0; }
+.step b { flex: 1; text-align: center; font-variant-numeric: tabular-nums; }
+.sw-t { display: block; width: 34px; height: 20px; border-radius: 10px; background: var(--hair-2); position: relative; }
+.sw-t::after { content: ""; position: absolute; left: 2px; top: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--sheet); box-shadow: var(--contact); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } .capsule, .demo .cap { display: none; } }
+@media (prefers-reduced-transparency: reduce) { .island { background: var(--sheet); backdrop-filter: none; } }
+@media (max-width: 900px) { .saved, .ne .lbl, .sw, .cut.fav:nth-of-type(n+4) { display: none; } .traybody { grid-template-columns: 1fr; } .demo { display: none; } .shelf { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+
+<!-- Shapes are defined once and used by the dock, the library, the inspector and the demo stage. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="s-actor" viewBox="0 0 38 30"><circle cx="19" cy="8" r="5"/><path d="M8 28c0-7 4.5-11 11-11s11 4 11 11z"/></symbol>
+    <symbol id="s-client" viewBox="0 0 38 30"><rect x="4" y="5" width="30" height="20" rx="10"/></symbol>
+    <symbol id="s-scheduler" viewBox="0 0 38 30"><circle cx="19" cy="15" r="11"/><path class="nofill" d="M19 8v7l5 3"/></symbol>
+    <symbol id="s-balancer" viewBox="0 0 38 30"><path d="M5 9l28-5v22L5 21z"/></symbol>
+    <symbol id="s-gate" viewBox="0 0 38 30"><path d="M11 3h16l8 12-8 12H11L3 15z"/></symbol>
+    <symbol id="s-limiter" viewBox="0 0 38 30"><rect x="4" y="5" width="30" height="20" rx="4"/><path class="nofill" d="M12 20a7 7 0 0 1 14 0M19 20l4-6"/></symbol>
+    <symbol id="s-core" viewBox="0 0 38 30"><rect x="3" y="3" width="32" height="24" rx="4"/><rect class="nofill" x="7" y="7" width="24" height="16" rx="2"/></symbol>
+    <symbol id="s-service" viewBox="0 0 38 30"><rect x="4" y="5" width="30" height="20" rx="4"/></symbol>
+    <symbol id="s-queue" viewBox="0 0 38 30"><path d="M8 7h22c2.5 0 4 3.6 4 8s-1.5 8-4 8H8c-2.5 0-4-3.6-4-8s1.500-8 4-8z"/><ellipse class="nofill" cx="30" cy="15" rx="4" ry="8"/></symbol>
+    <symbol id="s-stream" viewBox="0 0 38 30"><path d="M8 7h22c2.5 0 4 3.6 4 8s-1.5 8-4 8H8c-2.5 0-4-3.6-4-8s1.500-8 4-8z"/><path class="nofill" d="M7 12.300h20M7 17.700h20"/><ellipse class="nofill" cx="30" cy="15" rx="4" ry="8"/></symbol>
+    <symbol id="s-broker" viewBox="0 0 38 30"><rect x="3" y="10" width="32" height="10" rx="5"/><path class="nofill" d="M11 10V4M19 10V4M27 10V4M11 20v6M19 20v6M27 20v6"/></symbol>
+    <symbol id="s-store" viewBox="0 0 38 30"><path d="M7 7c0-2.200 5.400-4 12-4s12 1.800 12 4v16c0 2.200-5.400 4-12 4S7 25.200 7 23z"/><path class="nofill" d="M7 7c0 2.200 5.400 4 12 4s12-1.800 12-4"/></symbol>
+    <symbol id="s-bucket" viewBox="0 0 38 30"><path d="M6 7l4 18c.4 1.600 4.200 2.500 9 2.500s8.600-.900 9-2.500l4-18z"/><ellipse cx="19" cy="7" rx="13" ry="3.500"/></symbol>
+    <symbol id="s-cache" viewBox="0 0 38 30"><rect x="4" y="5" width="30" height="20" rx="4"/><path class="nofill" d="M20 8l-5 8h7l-4 7"/></symbol>
+    <symbol id="s-lane" viewBox="0 0 38 30"><rect x="8" y="2" width="22" height="26" rx="2"/><path class="nofill" d="M8 9h22"/></symbol>
+    <symbol id="s-frame" viewBox="0 0 38 30"><rect x="4" y="7" width="30" height="20" rx="3" stroke-dasharray="3 3"/><rect x="4" y="3" width="12" height="6" rx="2"/></symbol>
+    <symbol id="s-note" viewBox="0 0 38 30"><path d="M7 4h17l7 7v15H7z"/><path class="nofill" d="M24 4v7h7"/></symbol>
+    <symbol id="s-text" viewBox="0 0 38 30"><path class="nofill" d="M9 24l6-17h1l6 17M11.500 18h8M26 24v-9m0 4.500c0-6 6-6 6 0v4.500"/></symbol>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.500" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.500L9 5 1 8.500z" fill="context-stroke" stroke="none"/></marker>
+    <marker id="chev" viewBox="0 0 10 10" refX="8.500" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M2 1.500L8.500 5 2 8.500" fill="none" stroke="context-stroke" stroke-width="1.500"/></marker>
+  </defs>
+</svg>
+
+<main class="sheet" aria-label="Diagram">
+  <div class="stage" id="stage">
+    <div class="lane" style="left:0;width:352px"><b><i>1</i>Edge</b></div>
+    <div class="lane" style="left:364px;width:454px"><b><i>2</i>Platform</b></div>
+    <div class="lane" style="left:830px;width:330px"><b><i>3</i>Data and events</b></div>
+
+    <svg class="wires" viewBox="0 0 1160 500" aria-hidden="true">
+      <g style="--t:var(--blue)">
+        <path class="casing" d="M92 250H150"/><path class="tube" d="M92 250H150"/><path id="w1" class="wire" marker-end="url(#arrow)" d="M92 250H150"/>
+        <path class="casing" d="M320 250H386"/><path class="tube" d="M320 250H386"/><path id="w2" class="wire" marker-end="url(#arrow)" d="M320 250H386"/>
+        <path class="casing" d="M530 250H600"/><path class="tube" d="M530 250H600"/><path id="w3" class="wire" marker-end="url(#arrow)" d="M530 250H600"/>
+      </g>
+      <g style="--t:var(--cyan)">
+        <path class="casing" d="M790 226C850 226 820 118 884 108"/><path class="tube" d="M790 226C850 226 820 118 884 108"/><path id="w8" class="wire" marker-end="url(#arrow)" d="M790 226C850 226 820 118 884 108"/>
+      </g>
+      <g style="--t:var(--emerald)">
+        <path class="casing" d="M695 196V140"/><path class="tube" d="M695 196V140"/><path id="w4" class="wire" marker-end="url(#arrow)" d="M695 196V140"/>
+        <g style="--t:var(--cyan)"><path class="casing" d="M790 84H884"/><path class="tube" d="M790 84H884"/><path id="w5" class="wire" marker-end="url(#arrow)" d="M790 84H884"/></g>
+      </g>
+      <g style="--t:var(--amber)">
+        <path class="casing" d="M790 262H872"/><path class="tube" d="M790 262H872"/><path id="w6" class="wire async" marker-end="url(#chev)" d="M790 262H872"/>
+        <path class="casing" d="M972 302V372"/><path class="tube" d="M972 302V372"/><path id="w7" class="wire async" marker-end="url(#chev)" d="M972 302V372"/>
+      </g>
+      <g id="capsules"></g>
+    </svg>
+
+    <span class="wlabel" style="left:353px;top:228px;--t:var(--blue)"><code>HTTP</code>Admitted</span>
+    <span class="wlabel" style="left:836px;top:66px;--t:var(--cyan)"><code>SQL</code>Miss: load</span>
+    <span class="wlabel" style="left:830px;top:282px;--t:var(--amber)"><code>AMQP</code>Order placed</span>
+
+    <div class="node actor" style="left:28px;top:196px;width:64px;--t:var(--blue)"><div class="body"><svg class="fig" viewBox="0 0 38 30" preserveAspectRatio="none"><use href="#s-actor"/></svg><h3>Fans</h3></div></div>
+
+    <div class="node" data-kind="gate" data-name="Edge gateway" style="left:150px;top:200px;width:170px;height:100px;--t:var(--fuchsia)"><svg class="plate" viewBox="0 0 38 30" preserveAspectRatio="none"><use href="#s-gate"/></svg><div class="body"><h3>Edge gateway</h3><p>CDN and firewall</p></div></div>
+
+    <div class="node" data-kind="balancer" data-name="Load balancer" style="left:386px;top:204px;width:144px;height:92px;--t:var(--blue)"><svg class="plate" viewBox="0 0 38 30" preserveAspectRatio="none"><use href="#s-balancer"/></svg><div class="body"><h3>Load balancer</h3><p>Least connections</p></div></div>
+
+    <div class="node card" data-kind="service" data-name="Orders API" style="left:600px;top:196px;width:190px;height:112px;--t:var(--blue)"><div class="top"><span class="tile"><svg class="ico" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg></span><span class="led"></span></div><h3>Orders API</h3><p>Takes and tracks orders</p><div class="meta"><span>Service</span><code>3 copies</code></div></div>
+
+    <div class="node card" data-kind="cache" data-name="Seat cache" style="left:600px;top:36px;width:190px;height:104px;--t:var(--emerald)"><div class="top"><span class="tile"><svg class="ico" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></span><span class="led"></span></div><h3>Seat cache</h3><div class="meta"><span>Cache</span><code>hits 80%</code></div></div>
+
+    <div class="node" data-kind="store" data-name="Orders DB" style="left:884px;top:26px;width:150px;height:120px;--t:var(--cyan)"><svg class="plate" viewBox="0 0 38 30" preserveAspectRatio="none"><use href="#s-store"/></svg><div class="body" style="padding-top:18px"><h3>Orders DB</h3><p>Postgres, one primary</p></div></div>
+
+    <div class="node" data-kind="queue" data-name="Order events" style="left:872px;top:222px;width:200px;height:80px;--t:var(--amber)"><svg class="plate" viewBox="0 0 38 30" preserveAspectRatio="none"><use href="#s-queue"/></svg><div class="body" style="padding-right:26px"><h3>Order events</h3><p>First in, first out</p></div></div>
+
+    <div class="node card" data-kind="service" data-name="Fulfilment" style="left:877px;top:372px;width:190px;height:104px;--t:var(--amber)"><div class="top"><span class="tile"><svg class="ico" viewBox="0 0 24 24"><path d="M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8"/></svg></span><span class="led"></span></div><h3>Fulfilment</h3><div class="meta"><span>Service</span><code>1 copy</code></div></div>
+
+    <svg class="redline" viewBox="0 0 1160 500" aria-hidden="true">
+      <path d="M874 92C870 30 930 8 968 12c58 6 86 40 80 84-6 46-52 66-98 62-44-4-74-26-76-66z"/>
+      <text x="1056" y="34">1</text>
+      <path d="M862 268c-4-34 40-58 112-58 70 0 110 22 108 54-2 34-46 50-112 50-64 0-104-14-108-46z"/>
+      <text x="1090" y="232">2</text>
+    </svg>
+  </div>
+</main>
+
+<div class="island nw">
+  <span class="mark"><svg class="ico" viewBox="0 0 24 24"><circle cx="6" cy="7" r="2.500"/><circle cx="18" cy="17" r="2.500"/><path d="M8.500 7H13a3 3 0 0 1 3 3v4.500"/></svg></span>
+  <span class="doc">Checkout platform</span><span class="saved">Saved</span>
+</div>
+
+<div class="island n">
+  <div class="seg" id="lens" role="group" aria-label="Lens">
+    <span class="thumb"></span>
+    <button data-lens="design" aria-pressed="true">Design</button>
+    <button data-lens="traffic" aria-pressed="false">Traffic</button>
+    <button data-lens="review" aria-pressed="false">Review <span class="count">2</span></button>
+  </div>
+</div>
+
+<div class="island ne">
+  <button class="btn" id="theme" aria-label="Switch theme"><svg class="ico" viewBox="0 0 24 24"><path d="M20 14.500A8 8 0 0 1 9.500 4a8 8 0 1 0 10.500 10.500z"/></svg></button>
+  <button class="btn"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M16 16l4.500 4.500"/></svg><kbd class="lbl">⌘K</kbd></button>
+  <button class="btn"><span class="lbl">Share</span></button>
+  <button class="btn solid" id="run"><svg class="ico" viewBox="0 0 24 24"><path d="M8 5.500v13l10.500-6.500z" fill="currentColor"/></svg>Run</button>
+</div>
+
+<aside class="island insp" id="insp" aria-label="Properties">
+  <header><span class="cut is-on" id="insp-cut"><svg viewBox="0 0 38 30"><use href="#s-service"/></svg></span><div><b id="insp-name">Orders API</b><span id="insp-kind">Service</span></div></header>
+  <div class="tabs" role="tablist"><button role="tab" aria-selected="true">Look</button><button role="tab" aria-selected="false">Behaviour</button><button role="tab" aria-selected="false">Notes</button></div>
+  <div class="rows">
+    <label>Colour</label><div class="dots"><i class="on" style="--c:var(--blue)"></i><i style="--c:var(--emerald)"></i><i style="--c:var(--rose)"></i><i style="--c:var(--violet)"></i><i style="--c:var(--amber)"></i><i style="--c:var(--cyan)"></i><i style="--c:var(--fuchsia)"></i></div>
+    <label>Shape</label><div class="field">Card <svg class="ico" viewBox="0 0 24 24" style="width:14px"><path d="M7 10l5 5 5-5"/></svg></div>
+    <label>Copies</label><div class="field step"><span>−</span><b>3</b><span>+</span></div>
+    <label>Status</label><div class="field">Live <svg class="ico" viewBox="0 0 24 24" style="width:14px"><path d="M7 10l5 5 5-5"/></svg></div>
+    <label>Owner</label><div class="field">Team Platform</div>
+    <label>External</label><div><span class="sw-t"></span></div>
+  </div>
+</aside>
+
+<div class="island sw pages"><button aria-current="page">Overview</button><button>Regions</button><button aria-label="Add page">+</button></div>
+<div class="island se"><button class="btn" aria-label="Zoom out">−</button><span class="zoom">85%</span><button class="btn" aria-label="Zoom in">+</button><button class="btn">Fit</button></div>
+
+<div class="dockwrap">
+  <section class="island tray" id="tray" aria-label="Components">
+    <div class="find"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M16 16l4.500 4.500"/></svg><input id="q" placeholder="Search, or type what you run: redis, kafka, nginx" autocomplete="off" spellcheck="false"></div>
+    <div class="traybody">
+      <div class="shelf" id="shelf"></div>
+      <div class="demo" id="demo">
+        <svg viewBox="0 0 236 118" id="demo-svg" aria-hidden="true"></svg>
+        <h4 id="demo-name"></h4><p id="demo-text"></p>
+        <footer>Drag onto the sheet, or press <kbd style="font:500 11px var(--mono)">↵</kbd> to place</footer>
+      </div>
+    </div>
+  </section>
+
+  <p class="hint" id="hint"></p>
+
+  <nav class="island dock" aria-label="Tools">
+    <div class="face design">
+      <button class="tool" aria-pressed="true" aria-label="Select"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4l5.500 15 2.500-6.500L19.500 10z"/></svg></button>
+      <button class="tool" aria-pressed="false" aria-label="Wire"><svg class="ico" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.500"/><circle cx="18" cy="6" r="2.500"/><path d="M8.500 18H12a3 3 0 0 0 3-3V8.500"/></svg></button>
+      <button class="tool" aria-pressed="false" aria-label="Hand"><svg class="ico" viewBox="0 0 24 24"><path d="M8 12V6a1.500 1.500 0 0 1 3 0v5V4.500a1.500 1.500 0 0 1 3 0V11V6a1.500 1.500 0 0 1 3 0v8a6 6 0 0 1-6 6h-.500a6 6 0 0 1-5-2.700L3.500 14a1.600 1.600 0 0 1 2.500-2z"/></svg></button>
+      <button class="tool" aria-pressed="false" aria-label="Text"><svg class="ico" viewBox="0 0 24 24"><path d="M5 6V5h14v1M12 5v14M9.500 19h5"/></svg></button>
+      <span class="rule"></span>
+      <button class="cut fav" data-name="Service" style="--t:var(--blue)"><svg viewBox="0 0 38 30"><use href="#s-service"/></svg></button>
+      <button class="cut fav" data-name="Data store" style="--t:var(--emerald)"><svg viewBox="0 0 38 30"><use href="#s-store"/></svg></button>
+      <button class="cut fav" data-name="Message queue" style="--t:var(--amber)"><svg viewBox="0 0 38 30"><use href="#s-queue"/></svg></button>
+      <button class="cut fav" data-name="Load balancer" style="--t:var(--blue)"><svg viewBox="0 0 38 30"><use href="#s-balancer"/></svg></button>
+      <button class="cut fav" data-name="Gateway" style="--t:var(--violet)"><svg viewBox="0 0 38 30"><use href="#s-gate"/></svg></button>
+      <button class="cut fav" data-name="Actor" style="--t:var(--blue)"><svg viewBox="0 0 38 30"><use href="#s-actor"/></svg></button>
+      <span class="rule"></span>
+      <button class="lib" id="lib" aria-expanded="false">All components <kbd style="font:500 11px var(--mono);color:var(--ink-3)">C</kbd></button>
+    </div>
+    <div class="face traffic">
+      <button class="scn"><small>Scenario</small><b>Fan buys a ticket</b></button>
+      <span class="rule"></span>
+      <button class="tool" aria-label="Previous step"><svg class="ico" viewBox="0 0 24 24"><path d="M17 6v12L8 12zM7 6v12"/></svg></button>
+      <button class="tool" aria-pressed="true" aria-label="Pause"><svg class="ico" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>
+      <button class="tool" aria-label="Next step"><svg class="ico" viewBox="0 0 24 24"><path d="M7 6v12l9-6zM17 6v12"/></svg></button>
+      <div class="scrub"><i></i><i></i><u></u></div>
+      <span class="read">Step 4 of 9</span>
+      <button class="tool" aria-label="Speed" style="font-weight:600;font-size:12px">1×</button>
+      <span class="rule"></span>
+      <button class="fail"><svg class="ico" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>Fail a component</button>
+    </div>
+    <div class="face review">
+      <button class="tool" aria-label="Previous issue"><svg class="ico" viewBox="0 0 24 24"><path d="M14 7l-5 5 5 5"/></svg></button>
+      <button class="issue"><small>1 of 2</small>Orders DB is a single point of failure</button>
+      <button class="tool" aria-label="Next issue"><svg class="ico" viewBox="0 0 24 24"><path d="M10 7l5 5-5 5"/></svg></button>
+      <span class="rule"></span>
+      <button class="lib">Add a standby</button>
+      <button class="lib">Ignore this rule</button>
+    </div>
+  </nav>
+</div>
+
+<script>
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = document.documentElement;
+
+// name, shape, colour, what it does in a run, demo type, words people type when they mean it
+const GROUPS = [
+  ['Entry points', [
+    ['Actor', 'actor', 'blue', 'A person who starts a request.', 'emit', 'user person customer'],
+    ['Client', 'client', 'blue', 'An app or browser that calls in.', 'emit', 'browser app mobile web ios android'],
+    ['Scheduler', 'scheduler', 'violet', 'Starts work on a timer. Each tick sends a job.', 'emit', 'cron timer job airflow'],
+  ]],
+  ['Traffic control', [
+    ['Load balancer', 'balancer', 'blue', 'Spreads requests over its targets. If one fails, the rest take the load.', 'fan', 'lb haproxy elb alb'],
+    ['Gateway', 'gate', 'violet', 'Checks a request and lets it through or turns it away.', 'pass', 'nginx envoy kong traefik api gateway waf cdn'],
+    ['Rate limiter', 'limiter', 'rose', 'Admits four of every five. The fifth gets a 429.', 'bounce', 'throttle quota 429'],
+  ]],
+  ['Compute', [
+    ['Service', 'service', 'blue', 'Does one job and answers the caller.', 'pass', 'api microservice lambda function worker pod'],
+    ['Core system', 'core', 'blue', 'The system the diagram is about.', 'pass', 'platform monolith'],
+    ['Cache', 'cache', 'emerald', 'Answers repeat reads itself. A miss goes on to the store.', 'hit', 'memcached varnish redis'],
+  ]],
+  ['Messaging', [
+    ['Message queue', 'queue', 'amber', 'Holds work until a reader is free. If the reader stops, it buffers.', 'stack', 'sqs rabbitmq amqp mq'],
+    ['Stream', 'stream', 'amber', 'Keeps a log that every reader replays at its own pace.', 'fan', 'kafka redpanda pulsar kinesis log'],
+    ['Event bus', 'broker', 'amber', 'Announces an event to everyone who subscribed.', 'fan', 'pubsub nats sns eventbridge'],
+  ]],
+  ['Data', [
+    ['Data store', 'store', 'emerald', 'Keeps state. Reads and writes end here.', 'sink', 'postgres mysql mongo database db sql'],
+    ['Object storage', 'bucket', 'emerald', 'Keeps files. Often written by one part and read by another.', 'sink', 's3 minio gcs blob bucket'],
+  ]],
+  ['Structure', [
+    ['Swimlane', 'lane', 'blue', 'A numbered column for one stage of the flow.', '', 'zone column stage'],
+    ['Frame', 'frame', 'violet', 'A titled box that owns what is inside it.', '', 'group container vpc region boundary'],
+    ['Note', 'note', 'amber', 'A checklist or a few lines of explanation.', '', 'comment spec'],
+    ['Text', 'text', 'blue', 'A plain label anywhere on the sheet.', '', 'label'],
+  ]],
+];
+
+const shelf = $('#shelf');
+shelf.innerHTML = GROUPS.map(([title, items]) => `<div class="group"><span>${title}</span>${items.map(([name, shape, tone, , , words]) =>
+  `<button class="spec" data-name="${name}" data-words="${(name + ' ' + words).toLowerCase()}" style="--t:var(--${tone})"><span class="cut"><svg viewBox="0 0 38 30"><use href="#s-${shape}"/></svg></span><span>${name}<em></em></span></button>`).join('')}</div>`).join('');
+const ALL = GROUPS.flatMap(([, items]) => items);
+
+// One small run per behaviour: capsules are the messages.
+const cap = (path, dur, begin = 0, cls = '') => `<rect class="cap ${cls}" x="-6" y="-3" width="12" height="6" rx="3"><animateMotion dur="${dur}s" begin="${begin}s" repeatCount="indefinite" rotate="auto" path="${path}"/></rect>`;
+const DEMOS = {
+  pass: () => `<path class="rail" d="M14 59H222"/>` + cap('M14 59H222', 2.2) + cap('M14 59H222', 2.2, 1.1),
+  emit: () => `<path class="rail" d="M118 59H222"/>` + cap('M118 59H222', 1.6) + cap('M118 59H222', 1.6, .8),
+  sink: () => `<path class="rail" d="M14 59H118"/>` + cap('M14 59H100', 1.6) + cap('M14 59H100', 1.6, .8),
+  fan: () => `<path class="rail" d="M14 59H118M118 59C170 59 170 22 222 22M118 59H222M118 59C170 59 170 96 222 96"/>` + cap('M14 59H118C170 59 170 22 222 22', 2.4) + cap('M14 59H222', 2.4, .8) + cap('M14 59H118C170 59 170 96 222 96', 2.4, 1.6),
+  bounce: () => `<path class="rail" d="M14 59H222"/>` + cap('M14 59H222', 2.4) + cap('M14 59H222', 2.4, .6) + cap('M14 59H96C84 59 80 78 60 88', 2.4, 1.6, 'no'),
+  hit: () => `<path class="rail" d="M14 52H222M14 66H96"/>` + cap('M14 52H100C112 52 112 66 100 66H14', 2, 0) + cap('M14 52H222', 2.4, 1),
+  stack: () => `<path class="rail" d="M14 59H222"/>` + cap('M14 59H100', .9) + cap('M14 59H100', .9, .45) + cap('M140 59H222', 2.6),
+};
+const ends = (type) => (type === 'emit' ? '' : `<circle class="end" cx="14" cy="59" r="5"/>`) + (type === 'sink' ? '' : type === 'fan' ? `<circle class="end" cx="222" cy="22" r="5"/><circle class="end" cx="222" cy="59" r="5"/><circle class="end" cx="222" cy="96" r="5"/>` : `<circle class="end" cx="222" cy="59" r="5"/>`);
+
+function show(name) {
+  const [, shape, tone, text, type] = ALL.find((i) => i[0] === name);
+  $('#demo').style.setProperty('--t', `var(--${tone})`);
+  $('#demo-name').textContent = name;
+  $('#demo-text').textContent = text;
+  $('#demo-svg').innerHTML = (DEMOS[type] ? DEMOS[type]() : '') + `<svg class="unit" x="80" y="29" width="76" height="60" viewBox="0 0 38 30"><use href="#s-${shape}"/></svg>` + (DEMOS[type] ? ends(type) : '');
+  $$('.spec').forEach((b) => b.classList.toggle('is-on', b.dataset.name === name));
+}
+$$('.spec').forEach((b) => { b.addEventListener('pointerenter', () => show(b.dataset.name)); b.addEventListener('focus', () => show(b.dataset.name)); });
+
+$('#q').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  let first = null;
+  $$('.spec').forEach((b) => {
+    const hit = !q || b.dataset.words.includes(q);
+    b.hidden = !hit;
+    const viaWord = q && hit && !b.dataset.name.toLowerCase().includes(q);
+    $('em', b).textContent = viaWord ? `named ${q[0].toUpperCase() + q.slice(1)}` : '';
+    if (hit && !first) first = b;
+  });
+  $$('.group').forEach((g) => { g.hidden = !$$('.spec:not([hidden])', g).length; });
+  if (first) show(first.dataset.name);
+});
+
+const tray = $('#tray');
+function toggleTray(open = !tray.classList.contains('is-open')) {
+  tray.classList.toggle('is-open', open);
+  $('#lib').setAttribute('aria-expanded', open);
+  $('#hint').hidden = open;
+  if (open) { show('Message queue'); $('#q').focus(); }
+}
+$('#lib').addEventListener('click', () => toggleTray());
+
+const HINTS = { design: 'Drag a shape onto the sheet, or drag from a port to connect.', traffic: 'Select a component and press X to fail it.', review: 'Two things to look at on this page.' };
+function setLens(lens) {
+  root.dataset.lens = lens;
+  toggleTray(false);
+  $('#hint').textContent = HINTS[lens];
+  $$('#lens button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.lens === lens));
+  const on = $(`#lens button[data-lens="${lens}"]`), thumb = $('#lens .thumb');
+  thumb.style.width = on.offsetWidth + 'px';
+  thumb.style.transform = `translateX(${on.offsetLeft}px)`;
+}
+$$('#lens button').forEach((b) => b.addEventListener('click', () => setLens(b.dataset.lens)));
+$('#run').addEventListener('click', () => setLens('traffic'));
+$('#theme').addEventListener('click', () => { root.dataset.theme = root.dataset.theme === 'vellum' ? 'graphite' : 'vellum'; });
+
+// Capsules run in every animated wire while the Traffic lens is on.
+$('#capsules').innerHTML = [['w1', 'blue', 0], ['w2', 'blue', .5], ['w3', 'blue', 1], ['w4', 'emerald', 1.5], ['w5', 'cyan', 2], ['w8', 'cyan', 1.6], ['w6', 'amber', 1.7], ['w7', 'amber', 2.4]]
+  .map(([id, tone, begin]) => `<rect class="capsule" style="--t:var(--${tone})" x="-7" y="-3.5" width="14" height="7" rx="3.5"><animateMotion dur="1.5s" begin="${begin}s" repeatCount="indefinite" rotate="auto"><mpath href="#${id}"/></animateMotion></rect>`).join('');
+
+$$('.node[data-kind]').forEach((n) => n.addEventListener('click', (e) => {
+  e.stopPropagation();
+  $$('.node').forEach((m) => m.classList.toggle('is-selected', m === n));
+  $('#insp').classList.add('is-open');
+  $('#insp-name').textContent = n.dataset.name;
+  $('#insp-kind').textContent = { gate: 'Gateway', balancer: 'Load balancer', service: 'Service', cache: 'Cache', store: 'Data store', queue: 'Message queue' }[n.dataset.kind];
+  $('#insp-cut use').setAttribute('href', '#s-' + n.dataset.kind);
+  $('#insp-cut').style.setProperty('--t', getComputedStyle(n).getPropertyValue('--t'));
+}));
+$('.sheet').addEventListener('click', () => { $$('.node').forEach((m) => m.classList.remove('is-selected')); $('#insp').classList.remove('is-open'); toggleTray(false); });
+
+addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') { if (e.key === 'Escape') toggleTray(false); return; }
+  if (e.key === 'c') { e.preventDefault(); toggleTray(); }
+  if (e.key === 'Escape') toggleTray(false);
+  if ('123'.includes(e.key)) setLens(['design', 'traffic', 'review'][e.key - 1]);
+});
+const fit = () => root.style.setProperty('--fit', Math.min(1, (innerWidth - 60) / 1160, (innerHeight - 250) / 500).toFixed(3));
+addEventListener('resize', fit); fit();
+document.fonts.ready.then(() => setLens('design'));
+const p = new URLSearchParams(location.search);
+if (p.get('theme')) root.dataset.theme = p.get('theme');
+if (p.get('lens')) document.fonts.ready.then(() => setLens(p.get('lens')));
+if (p.has('tray')) document.fonts.ready.then(() => toggleTray(true));
+</script>
+</body>
+</html>
