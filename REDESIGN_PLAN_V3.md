@@ -7,6 +7,8 @@
 
 ---
 
+**What comes after 3.0** is in [FEATURES_AFTER_V3.md](FEATURES_AFTER_V3.md): features, a simpler model, and what was left out. Nothing in it starts before R3.
+
 ## Contents
 
 1. [How to use this file](#1-how-to-use-this-file)
@@ -392,7 +394,7 @@ Fits the existing boxes (D6). One anatomy for every rectangular kind:
 - **Status light:** a 7 px dot at the top right. Grey in Design. In Traffic it is emerald with a soft halo while the component is up, and takes the state's colour otherwise (8.5). When a status is set it shows the word beside the dot.
 - **Bottom line:** the kind name (or `eyebrow` if set, then `footerLeft`) on the left; the `chip` on the right as a mono readout. The three document fields are unchanged; only where they are drawn changes. No separators.
 - **Badges:** has-child-level, comment and lock share one row at the bottom right, 14 px, `--ink-3`.
-- **Shaped kinds** use their outline as the plate, filled `--sheet`, stroked `--hair-2`, with the title and subtitle centred and no tile. The **actor** is its figure, tinted, over its name.
+- **Shaped kinds** use their outline as the plate and carry their colour in it: the fill is `color-mix(in oklab, var(--t) 5%, var(--sheet))` and the 1.25 px stroke is `color-mix(in oklab, var(--t) 58%, var(--sheet))`. The title and subtitle are centred and there is no tile. A card shows its colour in the tile; a shaped kind shows it in the outline. The **actor** is its figure, tinted, over its name.
 - **External** components keep the dashed outline and say "External" where the kind name goes.
 
 ### 8.3 Wires
