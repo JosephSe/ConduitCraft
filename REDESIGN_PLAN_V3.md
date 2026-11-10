@@ -585,9 +585,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - The spec passed twice in a row with no diff.
 - Pull request #97.
 
-#### [ ] Z4. Fonts · S
+#### [x] Z4. Fonts · S
 - **Do:** add Instrument Sans and Geist Mono as self-hosted `woff2`, Latin subset, with their licence files; `@font-face` with `swap` and a size-adjusted fallback; precache them; add the font budget line. Confirm tabular figures work in Instrument Sans; if they do not, use Geist Mono for changing numbers and say so here.
 - **Done:** offline test passes; fonts ≤ 150 kB; no layout jump on load in view 1. **Needs:** Z1.
+- Q1 is answered by the default: yes, ship both faces.
+- Latin subsets, with the SIL Open Font License files beside them. Instrument Sans is 57.3 kB (weight 400 to 700, width 75 to 100). Geist Mono is 23.1 kB (weight 400 to 700). Together 78.6 kB of the 150 kB budget, on its own line in `tools/checkBundleSize.mjs`.
+- `@font-face` uses `font-display: swap`. The fallback is local Arial and Arial Bold (Liberation Sans on Linux), and Courier New (Liberation Mono), with `size-adjust` measured so the view 1 title moves by less than 2 px. Both files are precached. The offline test passed.
+- Instrument Sans has working tabular figures (`tnum`), confirmed in the browser: six proportional "1"s are narrower than the tabular run. Changing numbers stay in Instrument Sans. Geist Mono is not used for them. Putting `tabular-nums` on the changing readouts is T2.
+- The studio stacks and the stage-picture fallback name the new families. The font bytes are not embedded in SVG or HTML exports; that is C6 (Q3). `viewer.css` still names Inter and JetBrains Mono. The sheet stays at normal width. The 88% diagram width, the type scale, and removing uppercase are T2.
+- Entry CSS is 112.0 kB of 115 (`index-BT42V7Ec.css`). Entry JS is 530.8 kB of 540 (`index-ja32lMh9.js`). Unit tests 894 passed. Browser tests 344 passed, including the offline test and the view 1 jump check. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views were re-recorded on macOS. The 20% pixel slack stays until a Linux run shows the real gap. The view spec passed twice with no diff.
 
 ### Milestone T: Foundations
 

@@ -4,10 +4,10 @@ import { runPaletteCommand, seedStorage } from './helpers';
 /**
  * Z3, section 10.4. The eight views, both themes, 1440×900, reduced motion.
  * View 6 is its own visit so the failure from view 5 is not in the picture.
- * Text is the system font, so a Linux run is not pixel-identical to these macOS baselines.
- * The fit view differed by about 10% of pixels at the export-picture slack. This check allows
- * 20% at the default colour threshold, which still fails if a panel or the theme goes missing.
- * Two runs on one machine match exactly. Z4's self-hosted fonts are what make the pictures agree.
+ * Z4 re-recorded these after Instrument Sans and Geist Mono became the studio faces.
+ * The check still allows 20% of pixels at the default colour threshold. A Linux run can
+ * still differ (keyboard symbols, and any glyph outside the Latin subset) until that run
+ * shows the real gap. Two runs on one machine match exactly.
  */
 const THEMES = ['light', 'dark'] as const;
 const PORT = 4281;
