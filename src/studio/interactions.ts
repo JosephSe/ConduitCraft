@@ -38,7 +38,6 @@ import {
   restoreSessionBanner,
   saveStatusPill,
   btnZoomFit,
-  btnZoomFitSelection,
   btnZoomIn,
   btnZoomOut,
   chkSnapGrid,
@@ -675,11 +674,17 @@ function legendCardWanted(): boolean {
 function syncLegendCard(): void {
   const card = document.getElementById('legend-card');
   const list = document.getElementById('legend-card-list');
-  if (!card || !list) return;
+  const key = document.getElementById('btn-legend-key');
+  if (!card || !list || !key) return;
   // Under "Colour by status" or "tag" the card explains those colours; otherwise it shows the document's own legend.
-  const key = colourKey(app.doc, app.colourBy);
-  const entries = key.length ? key : (app.doc.legend ?? []);
-  card.hidden = entries.length === 0 || !legendCardWanted();
+  const colours = colourKey(app.doc, app.colourBy);
+  const entries = colours.length ? colours : (app.doc.legend ?? []);
+  // The Key button is there when there is something to explain; the card opens from it (6.3).
+  key.hidden = entries.length === 0 || !legendCardWanted();
+  if (key.hidden) {
+    card.hidden = true;
+    key.setAttribute('aria-expanded', 'false');
+  }
   list.replaceChildren();
   for (const entry of entries) {
     const li = document.createElement('li');
@@ -726,7 +731,7 @@ function syncTagFilter(): void {
   for (const select of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) select.value = app.colourBy;
 }
 
-/** "Colour by" and "tag" controls: the run bar. */
+/** "Colour by" and "tag" controls: the view popover. */
 export function bindViewFilters(): void {
   for (const colour of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) {
     colour.addEventListener('change', () => {
@@ -2635,7 +2640,6 @@ export function initEvents(): void {
     zoomAround(app.scale / 1.16, rect.width / 2, rect.height / 2);
   });
   btnZoomFit.addEventListener('click', fitToViewport);
-  btnZoomFitSelection.addEventListener('click', fitSelection);
   trackViewportResize();
 
   // Global Keyboard Shortcuts (Undo, Redo, Duplicate, Delete, Escape)

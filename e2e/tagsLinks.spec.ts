@@ -39,7 +39,7 @@ test('a component takes an owner, tags and links, and the legend renames a colou
   await expect(page.locator('#legend-card-list')).toContainText('PII');
 });
 
-test('the Traffic toolbar colours by tag and filters by tag, and the legend card shows on the canvas', async ({ page }) => {
+test('the view options colour by tag and filter by tag, and the Key opens the legend', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -51,7 +51,8 @@ test('the Traffic toolbar colours by tag and filters by tag, and the legend card
   await page.locator('#prop-node-owner').blur();
 
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
-  const scope = page.locator('#run-bar');
+  await page.locator('#zoom-readout').click();
+  const scope = page.locator('#view-popover');
   const tagFilter = scope.locator('.js-tag-filter');
   const colourBy = scope.locator('.js-colour-by');
   await expect(tagFilter.locator('option[value="pii"]')).toHaveCount(1);
@@ -63,8 +64,13 @@ test('the Traffic toolbar colours by tag and filters by tag, and the legend card
   await expect(page.locator('.arch-node.is-tag-dimmed')).toHaveCount(0);
 
   await colourBy.selectOption('tag');
+  await expect(page.locator('#legend-card')).toBeHidden();
+  await page.locator('#btn-legend-key').click();
   await expect(page.locator('#legend-card')).toBeVisible();
   await expect(page.locator('#legend-card-list')).toContainText('pii');
-  await colourBy.selectOption('tone');
+  await page.keyboard.press('Escape');
   await expect(page.locator('#legend-card')).toBeHidden();
+  await page.locator('#zoom-readout').click();
+  await colourBy.selectOption('tone');
+  await expect(page.locator('#btn-legend-key')).toBeHidden();
 });

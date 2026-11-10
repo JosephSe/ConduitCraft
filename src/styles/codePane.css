@@ -19,7 +19,6 @@
 /* The canvas and the slots give way to the pane. */
 .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: calc(100% - var(--code-pane-w)); }
 .canvas-shell[data-code-pane="open"] .slots { inset-inline-end: var(--code-pane-w); }
-.canvas-shell[data-code-pane="open"] .legend-card { inset-inline-end: calc(var(--code-pane-w) + 0.875rem); }
 
 .code-pane-resize {
   position: absolute;
@@ -84,7 +83,6 @@
   .code-pane { inset-block: auto 0; inset-inline: 0; inline-size: auto; max-inline-size: none; block-size: var(--code-pane-h); border-inline-start: 0; border-block-start: 1px solid var(--wl-border); }
   .code-pane-resize { inset-block: -4px auto; inset-inline: 0; block-size: 8px; inline-size: auto; cursor: row-resize; }
   .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: 100%; block-size: calc(100% - var(--code-pane-h)); }
-  .canvas-shell[data-code-pane="open"] .legend-card { inset-inline-end: 0.875rem; }
   .canvas-shell[data-code-pane="open"] .slots { inset-inline-end: 0; inset-block-end: var(--code-pane-h); }
 }
 

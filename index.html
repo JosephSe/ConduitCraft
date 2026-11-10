@@ -345,34 +345,24 @@
         <div class="outline-tree" id="outline-tree" role="tree" aria-labelledby="outline-heading"></div>
       </aside>
 
-      <!-- Colour legend card: shown only when the document names its colours -->
-      <aside class="legend-card" id="legend-card" aria-label="Colour legend" hidden>
-        <h2 class="legend-card-title">Legend</h2>
-        <ul class="legend-card-list" id="legend-card-list"></ul>
-      </aside>
-
       <!-- The seven slots (6.1): one grid over the sheet. SW, S and SE are here; the top three are in the top bar. Islands are the
-           [data-island] children; popovers (the find box) anchor to a slot and are not islands. S grows upward. -->
+           [data-island] children; popovers (legend, view options, find box) anchor to a slot and are not islands. S grows upward. -->
       <div class="slots" id="slots">
         <div class="slots-grid">
           <div class="slot slot-sw" id="slot-sw">
-        <div class="hud-card hud-minimap-card" data-island>
-          <canvas
-            id="minimap"
-            class="minimap"
-            width="168"
-            height="96"
-            aria-label="Diagram minimap. Click or drag to pan the canvas."
-          ></canvas>
-        </div>
       <!-- Page tabs (D10): one tab per diagram in the file -->
       <div class="page-strip" id="page-strip" data-island>
         <div class="page-tabs" id="page-tabs" role="tablist" aria-label="Pages"></div>
         <button type="button" class="page-add" id="page-add" aria-label="Add page" data-tip="Add page" data-tip-pos="top">
           <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
+        <button type="button" class="page-tab" id="btn-legend-key" aria-haspopup="dialog" aria-expanded="false" aria-controls="legend-card" data-tip="What the colours mean" data-tip-pos="top" hidden>Key</button>
       </div>
-
+            <!-- The legend: a popover over SW, opened by the Key button. -->
+            <aside class="hud-card slot-popover legend-card" id="legend-card" aria-label="Colour legend" hidden>
+              <h2 class="legend-card-title">Legend</h2>
+              <ul class="legend-card-list" id="legend-card-list"></ul>
+            </aside>
           </div>
           <div class="slot slot-s" id="slot-s">
             <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</p>
@@ -405,16 +395,6 @@
           <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
           </button>
-        </div>
-        <div class="run-bar-group" role="group" aria-label="View">
-          <select class="run-bar-scenario js-colour-by" aria-label="Colour components by">
-            <option value="tone">Colour: tone</option>
-            <option value="status">Colour: status</option>
-            <option value="tag">Colour: tag</option>
-          </select>
-          <select class="run-bar-scenario js-tag-filter" aria-label="Show only components with tag">
-            <option value="">All tags</option>
-          </select>
           <button type="button" class="help-btn" data-help="traffic" aria-label="Help: Traffic and scenarios" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
         </div>
       </div>
@@ -422,7 +402,27 @@
           </div>
           <div class="slot slot-se" id="slot-se">
         <!-- Find a component (Cmd/Ctrl+F): a popover over SE, closed until asked for -->
-        <div class="hud-card hud-search-card" id="hud-search-card" role="search" hidden>
+        <!-- View options: a popover over SE, opened by the zoom readout. -->
+        <div class="hud-card slot-popover view-popover" id="view-popover" role="group" aria-label="View options" hidden>
+          <canvas
+          id="minimap"
+          class="minimap"
+          width="168"
+          height="96"
+          aria-label="Diagram minimap. Click or drag to pan the canvas."
+          ></canvas>
+          <label class="field-label" for="view-colour-by">Colour by</label>
+          <select class="field js-colour-by" id="view-colour-by">
+            <option value="tone">Tone</option>
+            <option value="status">Status</option>
+            <option value="tag">Tag</option>
+          </select>
+          <label class="field-label" for="view-tag-filter">Show only tag</label>
+          <select class="field js-tag-filter" id="view-tag-filter">
+            <option value="">All tags</option>
+          </select>
+        </div>
+        <div class="hud-card slot-popover hud-search-card" id="hud-search-card" role="search" hidden>
           <span class="hud-search-icon" aria-hidden="true">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </span>
@@ -443,12 +443,11 @@
           <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <span class="zoom-readout" id="zoom-readout" aria-live="polite">100%</span>
+          <button type="button" class="zoom-readout" id="zoom-readout" aria-haspopup="dialog" aria-expanded="false" aria-controls="view-popover" data-tip="View options" data-tip-pos="top">100%</button>
           <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in" data-tip="Zoom in (+)" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <button type="button" class="btn" id="btn-zoom-fit" data-tip="Fit diagram to viewport" data-tip-pos="top">Fit</button>
-          <button type="button" class="btn" id="btn-zoom-fit-selection" data-tip="Fit selection to view" data-tip-pos="top">Fit selection</button>
         </div>
           </div>
         </div>

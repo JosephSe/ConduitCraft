@@ -160,3 +160,51 @@ test('the top bar is three slots and the bottom has one hint line', async ({ pag
   // The status and coach cards are gone.
   await expect(page.locator('#hud-status-card, #hud-coach-card')).toHaveCount(0);
 });
+
+test('the zoom readout opens the view options above SE: minimap, Colour by and the tag filter', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  const readout = page.locator('#zoom-readout');
+  const popover = page.locator('#view-popover');
+  await expect(popover).toBeHidden();
+  await expect(page.locator('#btn-zoom-fit-selection')).toHaveCount(0);
+  await expect(readout).toHaveAttribute('aria-expanded', 'false');
+
+  await readout.click();
+  await expect(popover).toBeVisible();
+  await expect(readout).toHaveAttribute('aria-expanded', 'true');
+  await expect(popover.locator('#minimap')).toBeVisible();
+  await expect(popover.locator('.js-colour-by')).toBeVisible();
+  await expect(popover.locator('.js-tag-filter')).toBeVisible();
+  // The minimap is painted, not blank: some pixel is not transparent.
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const c = document.getElementById('minimap') as HTMLCanvasElement;
+        const data = c.getContext('2d')!.getImageData(0, 0, c.width, c.height).data;
+        return data.some((v, i) => i % 4 === 3 && v > 0);
+      }),
+    )
+    .toBe(true);
+  const [box, zoom] = await Promise.all([popover.boundingBox(), page.locator('.hud-zoom-card').boundingBox()]);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(zoom!.y);
+
+  await page.keyboard.press('Escape');
+  await expect(popover).toBeHidden();
+  await readout.click();
+  await expect(popover).toBeVisible();
+  await page.mouse.click(300, 300);
+  await expect(popover).toBeHidden();
+});
+
+test('only one corner popover is open at a time', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await page.locator('#zoom-readout').click();
+  await expect(page.locator('#view-popover')).toBeVisible();
+  await page.keyboard.press('ControlOrMeta+f');
+  await expect(page.locator('#hud-search-card')).toBeVisible();
+  await expect(page.locator('#view-popover')).toBeHidden();
+});

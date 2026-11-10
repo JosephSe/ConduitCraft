@@ -63,11 +63,6 @@
     .slot-s { margin-block-end: 0; }
   }
 
-  /* A short window has no room for the minimap above the pages; it comes back with height. */
-  @media (max-height: 44rem) {
-    .hud-minimap-card { display: none; }
-  }
-
   /* The hint line: plain text, no container; it is also the status line for screen readers. */
   .hint-line {
     margin: 0;
@@ -79,12 +74,22 @@
     pointer-events: none;
   }
 
-  /* The find box is a popover over SE, not an island. */
-  .slot-se > .hud-search-card {
+  /* Popovers (the legend, the view options, the find box) hang above their corner island; they are not islands. */
+  .slot-popover {
     position: absolute;
     inset-block-end: calc(100% + 0.625rem);
-    inset-inline-end: 0;
     z-index: 2;
+  }
+
+  .slot-sw > .slot-popover { inset-inline-start: 0; }
+  .slot-se > .slot-popover { inset-inline-end: 0; }
+  .slot-sw { position: relative; }
+
+  .view-popover {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    inline-size: min(15rem, 80cqi);
   }
 
   .brand-cluster {

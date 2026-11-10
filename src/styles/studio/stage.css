@@ -1079,6 +1079,7 @@
     .btn-rail-expand,
     .rail-stencil-btn,
     .tab-btn,
+    .zoom-readout,
     .brand-mark-btn {
       min-inline-size: 2.75rem;
       min-block-size: 2.75rem;
@@ -1665,16 +1666,18 @@
     min-inline-size: 3.1rem;
     text-align: center;
     font-weight: 600;
+    color: inherit;
+    background: none;
+    border: 0;
+    cursor: pointer;
   }
 
-  .hud-minimap-card {
-    padding: 0.35rem;
-  }
+  .zoom-readout:hover { background: var(--cc-well); }
 
   .minimap {
     display: block;
-    width: 168px;
-    height: 96px;
+    width: 100%;
+    aspect-ratio: 168 / 96;
     border-radius: 0.4rem;
     cursor: grab;
     touch-action: none;
