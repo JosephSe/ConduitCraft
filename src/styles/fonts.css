@@ -1,7 +1,8 @@
 /* Latin subsets, SIL Open Font License. The licence files sit beside the fonts.
    One local() name per face, so a missing name cannot hide the next one.
    The bold face is listed last, so it wins where it is installed. Otherwise the
-   regular face is scaled to the bold width. Widths were measured in the browser.
+   regular face is scaled to the bold width. Body turns weight synthesis off,
+   so that scale is the only width change. Widths were measured in the browser.
    Vertical metrics follow the typo line. */
 
 @font-face {

@@ -270,6 +270,8 @@
 @layer layout {
   body {
     font-family: var(--wl-font-sans);
+    /* The bold fallback is a scaled regular face. Faux bold would add its own width. */
+    font-synthesis-weight: none;
     font-size: 0.9375rem;
     line-height: 1.5;
     background-color: var(--wl-canvas);
