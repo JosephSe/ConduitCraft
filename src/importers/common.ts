@@ -166,6 +166,11 @@ const BALANCER_IMAGES = ['haproxy'];
 const CACHE_IMAGES = ['memcached', 'varnish'];
 const GATE_IMAGES = ['nginx', 'traefik', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
 
+/** Every image word the importers recognise, for the component tray's search (7.3). */
+export const IMAGE_WORDS: string[] = [
+  ...new Set([...STORE_IMAGES, ...QUEUE_IMAGES, ...STREAM_IMAGES, ...BUCKET_IMAGES, ...BUS_IMAGES, ...BALANCER_IMAGES, ...CACHE_IMAGES, ...GATE_IMAGES]),
+];
+
 /** The kind of component a container image most likely is: a data store, a message bus, a gateway, else a service. */
 export function kindForImage(image: string): NodeKind {
   const name = image.toLowerCase().split('@')[0].split(':')[0];

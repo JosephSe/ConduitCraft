@@ -37,6 +37,7 @@ export function setFavourite(index: number, id: string): void {
 }
 
 let armedId: string | null = null;
+let armedName: string | undefined;
 let ghost: HTMLElement | null = null;
 
 function favButtons(): HTMLButtonElement[] {
@@ -66,11 +67,12 @@ function moveGhost(x: number, y: number): void {
   ghost?.style.setProperty('--gy', String(y));
 }
 
-export function arm(id: string, x?: number, y?: number): void {
+export function arm(id: string, x?: number, y?: number, name?: string): void {
   const stencil = findStencil(id);
   if (!stencil) return;
   ghost?.remove();
   armedId = id;
+  armedName = name;
   const drawing = cutoutDrawing(stencil);
   ghost = document.createElement('div');
   ghost.className = 'stencil-drag-ghost cutout-carry is-full';
@@ -89,7 +91,7 @@ function placeArmed(clientX: number, clientY: number): void {
   if (!armedId) return;
   const dims = getNodeDimensions(findStencil(armedId)?.kind ?? 'service');
   const [wx, wy] = screenToWorld(clientX, clientY);
-  addNodeAt(armedId, wx - dims.width / 2, wy - dims.height / 2);
+  addNodeAt(armedId, wx - dims.width / 2, wy - dims.height / 2, armedName);
 }
 
 function renderFavourites(): void {

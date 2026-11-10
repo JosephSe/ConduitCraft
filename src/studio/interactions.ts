@@ -238,6 +238,8 @@ export function attachStencilDragAndDrop(
     onDrop?: (e: PointerEvent) => boolean;
     /** Something was placed on the sheet by a drag or by Enter. */
     onPlaced?: () => void;
+    /** A name for the new component, when it was found by a word like `kafka`. */
+    name?: () => string | undefined;
   } = {},
 ): void {
   // Pointer drag onto canvas OR simple click to add at viewport center
@@ -302,7 +304,7 @@ export function attachStencilDragAndDrop(
       ) {
         const [wx, wy] = screenToWorld(e.clientX, e.clientY);
         const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
-        addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2);
+        addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2, options.name?.());
       }
     } else if (options.onTap) {
       options.onTap(e);
@@ -310,7 +312,7 @@ export function attachStencilDragAndDrop(
       const [cx, cy] = getViewportWorldCenter();
       const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
       const cascade = (app.doc.nodes.length % 5) * 24;
-      addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
+      addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade, options.name?.());
     }
     options.onPlaced?.();
   };
@@ -324,7 +326,7 @@ export function attachStencilDragAndDrop(
       e.preventDefault();
       const [cx, cy] = getViewportWorldCenter();
       const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
-      addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2);
+      addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2, options.name?.());
       options.onPlaced?.();
     }
   });
@@ -343,11 +345,12 @@ export function tagEnteringNodes(ids: string[]): void {
   });
 }
 
-export function addNodeAt(kind: NodeKind | string, rawX: number, rawY: number): DiagramNode {
+export function addNodeAt(kind: NodeKind | string, rawX: number, rawY: number, title?: string): DiagramNode {
   pushHistory();
   const clampedX = Math.max(24, rawX);
   const clampedY = Math.max(32, rawY);
   const node = createNodeFromStencil(kind, clampedX, clampedY, app.doc.nodes.length);
+  if (title) node.title = title;
   if (!app.snapToGrid) {
     node.x = Math.round(clampedX);
     node.y = Math.round(clampedY);
