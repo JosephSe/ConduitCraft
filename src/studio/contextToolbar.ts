@@ -9,6 +9,7 @@ import { viewport } from './dom';
 import { openContextMenu } from './contextMenu';
 import { findPaletteCommand } from './palette';
 import { app, onSelectionChange } from './state';
+import { createUiIconSvg, type UiIconName } from '../ui/icons';
 import { placeTooltip } from './tooltips';
 
 
@@ -23,6 +24,30 @@ const SHORT_LABEL: Record<string, string> = {
   'wire-from-selection': 'Wire',
   'auto-layout-selection': 'Arrange',
 };
+
+const ICON: Record<string, UiIconName> = {
+  'edit-rename': 'pencil',
+  'edit-duplicate': 'copy',
+  'edit-lock': 'lock',
+  'edit-group-frame': 'frame',
+  'edit-group': 'group',
+  'edit-ungroup': 'ungroup',
+  'edit-delete': 'trash',
+  'wire-from-selection': 'connect',
+  'auto-layout-selection': 'layout',
+};
+
+/** An icon button: the name is its accessible name and its tooltip. */
+function iconButton(label: string, icon: UiIconName): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'context-toolbar-btn';
+  button.setAttribute('aria-label', label);
+  button.dataset.tip = label;
+  button.dataset.tipPos = 'top';
+  button.appendChild(createUiIconSvg(icon, 16));
+  return button;
+}
 
 let bar: HTMLElement | null = null;
 let builtFor = '';
@@ -84,11 +109,8 @@ function rebuild(host: HTMLElement, ids: string[], withPickers: boolean): void {
   closePicker();
   host.replaceChildren();
   for (const id of ids) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'context-toolbar-btn';
+    const button = iconButton(SHORT_LABEL[id] ?? id, ICON[id] ?? 'more');
     button.dataset.action = id;
-    button.textContent = SHORT_LABEL[id] ?? id;
     button.addEventListener('click', () => findPaletteCommand(id)?.run());
     host.appendChild(button);
   }
@@ -98,11 +120,8 @@ function rebuild(host: HTMLElement, ids: string[], withPickers: boolean): void {
       ['kind', 'Kind'],
       ['shape', 'Shape'],
     ] as const) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'context-toolbar-btn';
+      const button = iconButton(label, which === 'colour' ? 'colour' : which === 'kind' ? 'kind' : 'shape');
       button.dataset.picker = which;
-      button.textContent = label;
       button.setAttribute('aria-haspopup', 'menu');
       button.setAttribute('aria-expanded', 'false');
       // The menus and their code load the first time one is opened.
@@ -112,11 +131,7 @@ function rebuild(host: HTMLElement, ids: string[], withPickers: boolean): void {
       host.appendChild(button);
     }
   }
-  const more = document.createElement('button');
-  more.type = 'button';
-  more.className = 'context-toolbar-btn';
-  more.textContent = '⋯';
-  more.setAttribute('aria-label', 'More actions');
+  const more = iconButton('More actions', 'more');
   more.setAttribute('aria-haspopup', 'menu');
   more.addEventListener('click', () => {
     const r = more.getBoundingClientRect();

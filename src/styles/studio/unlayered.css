@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
   max-width: 90vw;
 }
 
@@ -21,10 +21,10 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.45rem 0.85rem;
-  background: var(--wl-surface-elevated);
+  background: var(--cc-sheet);
   color: var(--wl-ink);
   border: 1px solid var(--wl-border-ui);
-  border-radius: 9999px;
+  border-radius: 14px;
   box-shadow: var(--wl-shadow-elevated);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -333,6 +333,7 @@ kbd {
 
 /* Command Palette Dialog */
 .command-palette-dialog {
+  border-radius: 14px;
   margin: 12vh auto auto auto;
   max-inline-size: 38rem;
   inline-size: 90vw;
@@ -390,8 +391,9 @@ kbd {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.5rem;
+  min-block-size: 32px;
+  padding: 0 0.75rem;
+  border-radius: 8px;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -439,7 +441,9 @@ kbd {
 
 .palette-item-shortcut {
   flex-shrink: 0;
+  font-family: var(--wl-font-mono);
   font-size: 0.75rem;
+  color: var(--cc-ink-3);
 }
 
 .palette-footer {
@@ -1083,9 +1087,9 @@ kbd {
   position: fixed;
   z-index: 1000;
   min-width: 13rem;
-  padding: var(--cc-space-1);
-  border-radius: var(--cc-radius-m);
-  background: var(--cc-surface-2);
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--cc-sheet);
   border: 1px solid var(--wl-border-ui);
   box-shadow: var(--cc-shadow-3);
   color: var(--cc-ink);
@@ -1098,9 +1102,10 @@ kbd {
   justify-content: space-between;
   gap: 1.5rem;
   width: 100%;
-  padding: 0.4rem 0.6rem;
+  min-block-size: 32px;
+  padding: 0 0.6rem;
   border: 0;
-  border-radius: 0.4rem;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -1124,7 +1129,7 @@ kbd {
   font-family: var(--wl-font-mono);
   font-size: 0.7rem;
   font-weight: 400;
-  color: var(--wl-ink-secondary);
+  color: var(--cc-ink-3);
 }
 .context-menu-sep {
   height: 1px;
@@ -1282,29 +1287,36 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   position: fixed;
   z-index: 900;
   display: flex;
-  gap: 0.15rem;
-  padding: var(--cc-space-1);
-  border-radius: var(--cc-radius-m);
-  background: var(--cc-surface-1);
+  gap: 2px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--cc-sheet);
   border: 1px solid var(--wl-border-ui);
   box-shadow: var(--cc-shadow-2);
 }
 .context-toolbar[hidden] {
   display: none;
 }
+/* Icon buttons (6.6): 32 px squares; the name is the tooltip. */
 .context-toolbar-btn {
-  padding: 0.3rem 0.6rem;
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
   border: 0;
-  border-radius: 0.4rem;
+  border-radius: 8px;
   background: transparent;
-  color: var(--wl-ink);
+  color: var(--cc-ink-2);
   font: inherit;
   font-size: 0.78rem;
   cursor: pointer;
 }
+
 .context-toolbar-btn:hover,
 .context-toolbar-btn:focus-visible {
-  background: var(--cc-accent-soft);
+  background: var(--cc-well);
+  color: var(--cc-ink);
   outline: none;
 }
 .context-toolbar-btn:focus-visible {

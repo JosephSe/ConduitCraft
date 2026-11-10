@@ -233,7 +233,15 @@ export type UiIconName =
   | 'pause'
   | 'help'
   | 'sidebarLeft'
-  | 'sidebarRight';
+  | 'sidebarRight'
+  | 'lock'
+  | 'frame'
+  | 'group'
+  | 'ungroup'
+  | 'colour'
+  | 'kind'
+  | 'shape'
+  | 'more';
 
 const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
   sidebarLeft: [
@@ -317,6 +325,39 @@ const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
   pause: [
     { tag: 'rect', attrs: { x: '6', y: '4', width: '4', height: '16' } },
     { tag: 'rect', attrs: { x: '14', y: '4', width: '4', height: '16' } },
+  ],
+  lock: [
+    { tag: 'rect', attrs: { x: '4', y: '11', width: '16', height: '10', rx: '2' } },
+    { tag: 'path', attrs: { d: 'M8 11V7a4 4 0 0 1 8 0v4' } },
+  ],
+  frame: [
+    { tag: 'path', attrs: { d: 'M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3' } },
+  ],
+  group: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '8', height: '8', rx: '1.5' } },
+    { tag: 'rect', attrs: { x: '13', y: '13', width: '8', height: '8', rx: '1.5' } },
+  ],
+  ungroup: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '8', height: '8', rx: '1.5', 'stroke-dasharray': '2 2' } },
+    { tag: 'rect', attrs: { x: '13', y: '13', width: '8', height: '8', rx: '1.5', 'stroke-dasharray': '2 2' } },
+  ],
+  colour: [
+    { tag: 'circle', attrs: { cx: '12', cy: '12', r: '9' } },
+    { tag: 'circle', attrs: { cx: '12', cy: '12', r: '3.5' } },
+  ],
+  kind: [
+    { tag: 'rect', attrs: { x: '3', y: '3', width: '7', height: '7', rx: '1.5' } },
+    { tag: 'rect', attrs: { x: '14', y: '3', width: '7', height: '7', rx: '1.5' } },
+    { tag: 'rect', attrs: { x: '3', y: '14', width: '7', height: '7', rx: '1.5' } },
+    { tag: 'rect', attrs: { x: '14', y: '14', width: '7', height: '7', rx: '1.5' } },
+  ],
+  shape: [
+    { tag: 'path', attrs: { d: 'M12 3 21 19H3z' } },
+  ],
+  more: [
+    { tag: 'circle', attrs: { cx: '5', cy: '12', r: '1' } },
+    { tag: 'circle', attrs: { cx: '12', cy: '12', r: '1' } },
+    { tag: 'circle', attrs: { cx: '19', cy: '12', r: '1' } },
   ],
   help: [
     { tag: 'circle', attrs: { cx: '12', cy: '12', r: '10' } },

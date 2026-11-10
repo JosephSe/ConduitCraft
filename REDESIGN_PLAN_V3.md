@@ -791,8 +791,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - The name is no longer opened straight away; the old test now asserts the strip and typing.
   - **Size:** entry JS is 540.7 kB with the catalog data, so the cap moves 540 to 550 KiB, as you allowed. Tests: `tests/stencils.test.ts` (936 unit tests), `e2e/interactions.spec.ts`.
 
-#### [ ] S8. Menus, command palette, contextual toolbar, dialogs, toasts · M
+#### [x] S8. Menus, command palette, contextual toolbar, dialogs, toasts · M
 - **Needs:** T3, T4.
+
+- **S8 result.**
+  - The contextual toolbar is an island of 32 px icon buttons (`contextToolbar.ts`, eight new `ui/icons.ts` icons). Each button's name is its `aria-label` and its tooltip, so specs that find buttons by role and name are unchanged. It still flips below the selection when it would leave the sheet.
+  - The context menu and the command palette are `--sheet`, 14 px radius, 32 px rows, with shortcuts in mono `--ink-3`. Toasts are 14 px islands with a 10 px gap, over the bottom slots as before.
+  - The dialog shell has 24 px padding and a 16/600 title.
+  - **Not done:** primary actions sit where each dialog already puts them; moving every one to the bottom right needs a per-dialog footer and is left for S9 and S10. Toasts do not live inside slot S itself; they still measure the top of SW, S and SE.
+  - Size: entry JS 542.0 of 550 kB, CSS 113.7 of 116. Three baselines re-recorded (02 design dark, 08 home light and dark).
 
 #### [ ] S9. Templates, Home, first run · M
 - **Read:** `templatesGallery.ts`, `homeScreen.ts`, `firstRun.ts`.
