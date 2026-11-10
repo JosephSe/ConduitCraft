@@ -92,8 +92,8 @@ export const WL_RESOLVED_TOKENS: Record<string, string> = {
   '--wl-violet-soft': 'rgba(91, 33, 182, 0.12)',
   '--wl-violet-soft-light': 'rgba(91, 33, 182, 0.12)',
   '--wl-violet-soft-dark': 'rgba(167, 139, 250, 0.2)',
-  '--wl-font-sans': "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
-  '--wl-font-mono': "'JetBrains Mono', 'SF Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace",
+  '--wl-font-sans': "'Instrument Sans', 'Instrument Sans Fallback', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
+  '--wl-font-mono': "'Geist Mono', 'Geist Mono Fallback', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace",
 };
 
 /**
@@ -447,7 +447,7 @@ export function renderStagePictureSvg(
     `overflow:visible !important`,
     `margin:0`,
     `color:${bodyStyle?.color || '#0b1324'}`,
-    `font-family:${bodyStyle?.fontFamily || "'Inter', system-ui, sans-serif"}`,
+    `font-family:${bodyStyle?.fontFamily || "'Instrument Sans', 'Instrument Sans Fallback', system-ui, sans-serif"}`,
     `font-size:${bodyStyle?.fontSize || '16px'}`,
     `line-height:${bodyStyle?.lineHeight || '1.5'}`,
     `color-scheme:${rootStyle?.colorScheme || 'light'}`,

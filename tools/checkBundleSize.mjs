@@ -44,6 +44,20 @@ for (const { pattern, maxBytes, label } of budgets) {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${label}: ${(size / 1024).toFixed(1)} kB / ${(maxBytes / 1024).toFixed(0)} kB (${match})`);
   if (!ok) failed = true;
 }
+
+// Self-hosted fonts (Z4). Their own line, separate from the entry CSS budget.
+const FONT_MAX_BYTES = 150 * 1024;
+const fontFiles = files.filter((f) => f.endsWith('.woff2'));
+const fontBytes = fontFiles.reduce((sum, file) => sum + fs.statSync(path.join(dist, file)).size, 0);
+if (fontFiles.length === 0) {
+  console.error('FAIL fonts: no woff2 files in dist/assets');
+  failed = true;
+} else {
+  const ok = fontBytes <= FONT_MAX_BYTES;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} fonts: ${(fontBytes / 1024).toFixed(1)} kB / ${(FONT_MAX_BYTES / 1024).toFixed(0)} kB (${fontFiles.length} files)`);
+  if (!ok) failed = true;
+}
+
 const entryJs = files.find((f) => /^index-.*\.js$/.test(f));
 for (const file of files.filter((f) => f.endsWith('.js') && f !== entryJs)) {
   const budget = lazyBudgets.find((b) => b.pattern.test(file));

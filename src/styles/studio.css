@@ -1,5 +1,6 @@
 @layer reset, tokens, layout, palette, stage, components, inspector, dialogs, utilities;
 
+@import "./fonts.css";
 @import "./shared.css";
 @import "./studio/reset.css";
 @import "./studio/tokens.css";

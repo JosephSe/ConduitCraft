@@ -5,8 +5,8 @@
     --wl-panel-light: rgba(255, 255, 255, 0.9);
     --wl-panel-dark: rgba(13, 19, 34, 0.88);
 
-    --wl-font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-    --wl-font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace;
+    --wl-font-sans: "Instrument Sans", "Instrument Sans Fallback", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    --wl-font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
   }
 
   @supports (background: linear-gradient(in oklab, white, black)) {
