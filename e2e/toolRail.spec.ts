@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
+/** The dock (6.4, 7.1, 7.2): tools, six favourite cut-outs, "All components". Design face. */
 async function open(page: Page, query = '') {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`/${query}`);
@@ -9,13 +10,43 @@ async function open(page: Page, query = '') {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
-const tool = (page: Page, name: string) => page.locator(`[data-rail-tool="${name}"]`);
+const tool = (page: Page, name: string) => page.locator(`#dock [data-rail-tool="${name}"]`);
+const favourite = (page: Page, id: string) => page.locator(`#dock .dock-fav[data-stencil-id="${id}"]`);
+const nodes = (page: Page) => page.locator('.arch-node');
 
-test('starts with the component list folded into a rail that has Select and Wire tools', async ({ page }) => {
+/** A spot on the sheet with nothing on it. */
+async function emptySpot(page: Page): Promise<{ x: number; y: number }> {
+  const box = (await page.locator('#canvas-viewport').boundingBox())!;
+  return { x: box.x + box.width - 160, y: box.y + 140 };
+}
+
+test('the dock holds five tools, six favourites and All components, and the old rail is gone', async ({ page }) => {
   await open(page);
-  await expect(page.locator('#workspace')).toHaveAttribute('data-palette-collapsed', 'true');
+  await expect(page.locator('#dock')).toBeVisible();
+  await expect(page.locator('#dock [data-rail-tool]')).toHaveCount(5);
+  await expect(page.locator('#dock .dock-fav')).toHaveCount(6);
+  await expect(page.locator('#btn-all-components')).toBeVisible();
+  await expect(page.locator('.rail-stencil-btn, #btn-rail-expand-palette')).toHaveCount(0);
   await expect(tool(page, 'select')).toHaveAttribute('aria-pressed', 'true');
-  await expect(tool(page, 'connect')).toHaveAttribute('aria-pressed', 'false');
+  // The component list is a drawer, closed until asked for.
+  await expect(page.locator('#workspace')).toHaveAttribute('data-palette-collapsed', 'true');
+  await expect(page.locator('#palette-sidebar')).toBeHidden();
+});
+
+test('the defaults are Service, Data store, Message queue, Load balancer, Gateway and Actor, each named by its tooltip', async ({ page }) => {
+  await open(page);
+  const ids = await page.locator('#dock .dock-fav').evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.stencilId));
+  expect(ids).toEqual(['service', 'store', 'queue', 'balancer', 'gate', 'actor']);
+  await favourite(page, 'queue').hover();
+  await expect(page.locator('.tooltip-layer[data-visible="true"]')).toContainText('Message Queue');
+});
+
+test('a saved list of favourites is what the dock shows, with unknown ids dropped', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('conduitcraft:dock-favourites', JSON.stringify(['cache', 'nope', 'client'])));
+  await open(page);
+  const ids = await page.locator('#dock .dock-fav').evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.stencilId));
+  expect(ids.slice(0, 2)).toEqual(['cache', 'client']);
+  expect(ids).toHaveLength(6);
 });
 
 test('clicking Wire switches the tool and the pressed state follows it', async ({ page }) => {
@@ -46,6 +77,7 @@ test('V and W switch tools, Z and N add a swimlane and a note, C opens the compo
 
   await page.keyboard.press('c');
   await expect(page.locator('#workspace')).not.toHaveAttribute('data-palette-collapsed', 'true');
+  await expect(page.locator('#btn-all-components')).toHaveAttribute('aria-expanded', 'true');
 });
 
 test('tool letters do nothing while typing', async ({ page }) => {
@@ -60,63 +92,142 @@ test('tool letters do nothing while typing', async ({ page }) => {
 });
 
 for (const scheme of ['light', 'dark'] as const) {
-  test(`the rail has no axe violations (${scheme})`, async ({ page }) => {
+  test(`the dock has no axe violations (${scheme})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: scheme });
     await open(page);
     const results = await new AxeBuilder({ page })
-      .include('#palette-sidebar')
+      .include('#dock')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 }
 
-test('clicking a component on the collapsed rail adds exactly one', async ({ page }) => {
+test('every tool, favourite and the All components button can be reached with Tab', async ({ page }) => {
   await open(page);
-  const before = await page.locator('.arch-node').count();
-  await page.locator('.rail-stencil-btn[data-stencil-kind="service"]').click();
-  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+  await tool(page, 'select').focus();
+  const seen: string[] = [];
+  for (let i = 0; i < 12; i += 1) {
+    seen.push(await page.evaluate(() => (document.activeElement as HTMLElement).dataset.railTool ?? (document.activeElement as HTMLElement).dataset.stencilId ?? document.activeElement!.id));
+    await page.keyboard.press('Tab');
+  }
+  expect(seen).toEqual(['select', 'connect', 'hand', 'text', 'frame', 'service', 'store', 'queue', 'balancer', 'gate', 'actor', 'btn-all-components']);
+});
+
+test('Enter on a favourite places exactly one at the centre of the view', async ({ page }) => {
+  await open(page);
+  const before = await nodes(page).count();
+  await favourite(page, 'service').focus();
+  await page.keyboard.press('Enter');
+  await expect(nodes(page)).toHaveCount(before + 1);
   await page.waitForTimeout(300);
-  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+  await expect(nodes(page)).toHaveCount(before + 1);
 });
 
-test('all five tools stay visible and work with the palette expanded', async ({ page }) => {
+test('click arms a favourite, and the next click on the sheet places it there', async ({ page }) => {
   await open(page);
-  await page.locator('#btn-rail-expand-palette').click();
+  const before = await nodes(page).count();
+  await favourite(page, 'queue').click();
+  await expect(favourite(page, 'queue')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', 'queue');
+  await expect(page.locator('.stencil-drag-ghost')).toHaveCount(1);
+  await expect(nodes(page)).toHaveCount(before);
+
+  const spot = await emptySpot(page);
+  await page.mouse.click(spot.x, spot.y);
+  await expect(nodes(page)).toHaveCount(before + 1);
+  const placed = page.locator('.arch-node[data-kind="queue"]').last();
+  const box = (await placed.boundingBox())!;
+  expect(Math.abs(box.x + box.width / 2 - spot.x)).toBeLessThan(40);
+  expect(Math.abs(box.y + box.height / 2 - spot.y)).toBeLessThan(40);
+  // One placement, then it is put away.
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-armed', /.*/);
+  await expect(page.locator('.stencil-drag-ghost')).toHaveCount(0);
+  await expect(favourite(page, 'queue')).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('Shift keeps placing, and Esc puts the component back', async ({ page }) => {
+  await open(page);
+  const before = await nodes(page).count();
+  await favourite(page, 'store').click();
+  const spot = await emptySpot(page);
+  await page.keyboard.down('Shift');
+  await page.mouse.click(spot.x, spot.y);
+  await page.mouse.click(spot.x, spot.y + 150);
+  await page.keyboard.up('Shift');
+  await expect(nodes(page)).toHaveCount(before + 2);
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', 'store');
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-armed', /.*/);
+  await expect(page.locator('.stencil-drag-ghost')).toHaveCount(0);
+  await expect(nodes(page)).toHaveCount(before + 2);
+});
+
+test('choosing a tool, or clicking the armed favourite again, puts the component back', async ({ page }) => {
+  await open(page);
+  await favourite(page, 'actor').click();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', 'actor');
+  await favourite(page, 'actor').click();
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-armed', /.*/);
+
+  await favourite(page, 'actor').click();
+  await tool(page, 'hand').click();
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-armed', /.*/);
+});
+
+test('dragging a favourite onto the sheet places it under the pointer and leaves an empty outline behind', async ({ page }) => {
+  await open(page);
+  const before = await nodes(page).count();
+  const from = (await favourite(page, 'balancer').boundingBox())!;
+  const spot = await emptySpot(page);
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(spot.x, spot.y, { steps: 10 });
+  await expect(favourite(page, 'balancer')).toHaveClass(/is-empty/);
+  await page.mouse.up();
+  await expect(nodes(page)).toHaveCount(before + 1);
+  await expect(favourite(page, 'balancer')).not.toHaveClass(/is-empty/);
+  const placed = (await page.locator('.arch-node[data-kind="balancer"]').last().boundingBox())!;
+  expect(Math.abs(placed.x + placed.width / 2 - spot.x)).toBeLessThan(40);
+});
+
+test('the dock is the Design face: Traffic and Review leave it for the run bar', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#dock')).toBeVisible();
+  await page.keyboard.press('2');
+  await expect(page.locator('#dock')).toBeHidden();
+  await page.keyboard.press('1');
+  await expect(page.locator('#dock')).toBeVisible();
+});
+
+test('All components opens the list, Esc and a click on the sheet close it', async ({ page }) => {
+  await open(page);
+  const all = page.locator('#btn-all-components');
+  await all.click();
+  await expect(page.locator('#palette-sidebar')).toBeVisible();
   await expect(page.locator('#stencil-grid')).toBeVisible();
-  for (const name of ['select', 'connect', 'hand', 'text', 'frame']) await expect(tool(page, name)).toBeVisible();
-  await tool(page, 'frame').click();
-  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
-  await expect(tool(page, 'frame')).toHaveAttribute('aria-pressed', 'true');
+  await expect(all).toHaveAttribute('aria-expanded', 'true');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#palette-sidebar')).toBeHidden();
+  await expect(all).toBeFocused();
+
+  await all.click();
+  await expect(page.locator('#palette-sidebar')).toBeVisible();
+  const spot = await emptySpot(page);
+  await page.mouse.click(spot.x, spot.y);
+  await expect(page.locator('#palette-sidebar')).toBeHidden();
 });
 
-test('expanding the palette shows only the tools from the rail, not its component icons', async ({ page }) => {
+test('Stage containers in the list offer Frame and Text, and they pick the same tools as the dock', async ({ page }) => {
   await open(page);
-  await page.locator('#btn-rail-expand-palette').click();
-  await expect(page.locator('.rail-stencil-btn').first()).toBeHidden();
-  await expect(page.locator('#btn-rail-expand-palette')).toBeHidden();
-});
-
-test('the last rail buttons can be reached on a short window', async ({ page }) => {
-  await open(page);
-  await page.setViewportSize({ width: 1440, height: 700 });
-  const note = page.locator('.rail-stencil-btn[data-stencil-kind="notes"]');
-  await expect(note).not.toBeInViewport();
-  // The mouse wheel, because Playwright's own click can scroll a box that a person could not.
-  await page.locator('.rail-tool-btn[data-rail-tool="frame"]').hover();
-  await page.mouse.wheel(0, 2000);
-  await expect(note).toBeInViewport();
-  const before = await page.locator('.blueprint-spec').count();
-  await note.click();
-  await expect(page.locator('.blueprint-spec')).toHaveCount(before + 1);
-});
-
-test('Stage Containers offers Frame and Text, and they pick the same tools as the rail', async ({ page }) => {
-  await open(page);
-  await page.locator('#btn-rail-expand-palette').click();
+  await page.locator('#btn-all-components').click();
   await page.locator('#btn-add-frame').click();
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
   await expect(page.locator('#btn-add-frame')).toHaveAttribute('aria-pressed', 'true');
+  await expect(tool(page, 'frame')).toHaveAttribute('aria-pressed', 'true');
+  // Picking a tool puts the list away, as it does for the dock.
+  await page.locator('#btn-all-components').click();
   await page.locator('#btn-add-text').click();
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'text');
   await expect(page.locator('#btn-add-frame')).toHaveAttribute('aria-pressed', 'false');

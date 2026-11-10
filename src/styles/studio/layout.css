@@ -213,7 +213,7 @@
 
   .workspace {
     display: grid;
-    grid-template-columns: 16.5rem minmax(0, 1fr) 22.5rem;
+    grid-template-columns: minmax(0, 1fr) 22.5rem;
     min-block-size: 0;
     min-inline-size: 0;
     max-inline-size: 100vw;
@@ -222,17 +222,11 @@
     transition: grid-template-columns 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .workspace[data-palette-collapsed="true"] {
-    grid-template-columns: 3.25rem minmax(0, 1fr) 22.5rem;
-  }
 
   .workspace[data-inspector-collapsed="true"] {
-    grid-template-columns: 16.5rem minmax(0, 1fr) 3.25rem;
+    grid-template-columns: minmax(0, 1fr) 3.25rem;
   }
 
-  .workspace[data-palette-collapsed="true"][data-inspector-collapsed="true"] {
-    grid-template-columns: 3.25rem minmax(0, 1fr) 3.25rem;
-  }
 
   .workspace[data-mode="data"] {
     grid-template-columns: minmax(0, 1fr) 23.5rem;
@@ -242,59 +236,23 @@
     grid-template-columns: minmax(0, 1fr) 3.25rem;
   }
 
-  .palette-rail-content,
-  .inspector-rail-content {
-    display: none;
+  /* The palette is a drawer over the sheet, closed until the dock's "All components" or C opens it (S4 replaces it with the tray). */
+  .palette-sidebar {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 16.5rem;
+    max-inline-size: min(16.5rem, 85vw);
+    z-index: 40;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
   }
 
   .workspace[data-palette-collapsed="true"] .palette-sidebar {
-    overflow: visible;
-  }
-
-  .workspace[data-palette-collapsed="true"] .palette-header,
-  .workspace[data-palette-collapsed="true"] .palette-scroll {
     display: none !important;
   }
 
-  .workspace[data-palette-collapsed="true"] .palette-rail-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.45rem;
-    padding-block: 0.65rem;
-    padding-inline: 0.25rem;
-  }
-
-  .rail-divider {
-    inline-size: 1.5rem;
-    block-size: 1px;
-    background: var(--wl-border-subtle);
-    margin-block: 0.2rem;
-  }
-
-  .rail-stencil-btn {
-    position: relative;
-    inline-size: 2.2rem;
-    block-size: 2.2rem;
-    display: grid;
-    place-items: center;
-    border-radius: 0.45rem;
-    background: transparent;
-    border: 1px solid transparent;
-    color: var(--wl-ink-muted);
-    cursor: pointer;
-    transition: all 0.15s ease;
-  }
-
-  .rail-stencil-btn:hover {
-    background: var(--wl-surface-elevated);
-    border-color: var(--wl-border-subtle);
-    color: var(--wl-ink);
-    z-index: 100;
-  }
-
-  .rail-stencil-btn:focus-visible {
-    z-index: 100;
+  .inspector-rail-content {
+    display: none;
   }
 
   .workspace[data-inspector-collapsed="true"] .inspector {
@@ -339,20 +297,14 @@
     }
 
     .workspace {
-      grid-template-columns: 14.5rem minmax(0, 1fr) 21.5rem;
+      grid-template-columns: minmax(0, 1fr) 21.5rem;
     }
 
-    .workspace[data-palette-collapsed="true"] {
-      grid-template-columns: 3.25rem minmax(0, 1fr) 21.5rem;
-    }
 
     .workspace[data-inspector-collapsed="true"] {
-      grid-template-columns: 14.5rem minmax(0, 1fr) 3.25rem;
+      grid-template-columns: minmax(0, 1fr) 3.25rem;
     }
 
-    .workspace[data-palette-collapsed="true"][data-inspector-collapsed="true"] {
-      grid-template-columns: 3.25rem minmax(0, 1fr) 3.25rem;
-    }
 
     .workspace[data-mode="data"] {
       grid-template-columns: minmax(0, 1fr) 21.5rem;
@@ -383,25 +335,9 @@
     .workspace,
     .workspace[data-mode="design"],
     .workspace[data-mode="data"],
-    .workspace[data-palette-collapsed="true"],
     .workspace[data-inspector-collapsed="true"],
-    .workspace[data-palette-collapsed="true"][data-inspector-collapsed="true"],
     .workspace[data-mode="data"][data-inspector-collapsed="true"] {
       grid-template-columns: minmax(0, 1fr);
-    }
-
-    .palette-sidebar {
-      position: absolute;
-      inset-block: 0;
-      inset-inline-start: 0;
-      inline-size: 16.5rem;
-      max-inline-size: min(16.5rem, 85vw);
-      z-index: 40;
-      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .workspace[data-palette-collapsed="true"] .palette-sidebar {
-      display: none !important;
     }
 
     .inspector {

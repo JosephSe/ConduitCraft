@@ -102,7 +102,7 @@ const REGIONS: Array<[name: string, selector: string]> = [
   ['top bar: document', '.slot-nw'],
   ['top bar: lens', '.slot-n'],
   ['top bar: actions', '.slot-ne'],
-  ['tool rail', '#palette-sidebar'],
+  ['dock', '#dock'],
   ['zoom (SE)', '.hud-zoom-card'],
   ['find box', '#hud-search-card'],
   ['inspector', '#inspector-panel'],
@@ -113,7 +113,7 @@ const REGIONS: Array<[name: string, selector: string]> = [
   ['text outline', '#outline-panel'],
   ['page strip', '#page-strip'],
 ];
-const NOT_COUNTED = '.rail-stencil-btn, .insight-item, #toast-container, #canvas-stage, .arch-node';
+const NOT_COUNTED = '.dock-fav, .insight-item, #toast-container, #canvas-stage, .arch-node';
 
 const countByRegion = (page: Page) =>
   page.evaluate(

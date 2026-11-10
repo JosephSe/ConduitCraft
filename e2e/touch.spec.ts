@@ -153,24 +153,41 @@ test('tap places a component from the palette drawer', async ({ page }) => {
   await open(page);
   const before = await page.locator('.arch-node').count();
   await expect(page.locator('#palette-sidebar')).toBeHidden();
-  await page.locator('#btn-drawer-palette').tap();
+  await page.locator('#btn-all-components').tap();
   await expect(page.locator('#palette-sidebar')).toBeVisible();
-  await expect(page.locator('#btn-drawer-palette')).toBeHidden();
   await page.locator('#palette-sidebar .stencil-card').first().tap();
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
 test('a tool in the palette drawer closes the drawer so the canvas can be used', async ({ page }) => {
   await open(page);
-  await page.locator('#btn-drawer-palette').tap();
-  await page.locator('[data-rail-tool="frame"]').tap();
+  await page.locator('#btn-all-components').tap();
+  await page.locator('#palette-sidebar [data-palette-tool="frame"]').tap();
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
   await expect(page.locator('#palette-sidebar')).toBeHidden();
 });
 
+test('tap a favourite on the dock to carry it, then tap the sheet to place it', async ({ page }) => {
+  await open(page);
+  const before = await page.locator('.arch-node').count();
+  await page.locator('#dock .dock-fav').first().tap();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', /.+/);
+  const box = (await page.locator('#canvas-viewport').boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + 120);
+  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-armed', /.*/);
+});
+
+test('the dock keeps three favourites and scrolls sideways on a phone', async ({ page }) => {
+  await open(page);
+  await page.setViewportSize({ width: 480, height: 800 });
+  await expect(page.locator('#dock .dock-fav:visible')).toHaveCount(3);
+  expect(await page.locator('#dock').evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+});
+
 test('the drawer tabs are full-size targets that never overlap the top bar', async ({ page }) => {
   await open(page);
-  for (const id of ['#btn-drawer-palette', '#btn-drawer-inspector']) {
+  for (const id of ['#btn-drawer-inspector']) {
     const box = await page.locator(id).boundingBox();
     expect(box!.width).toBeGreaterThanOrEqual(43.5);
     expect(box!.height).toBeGreaterThanOrEqual(43.5);

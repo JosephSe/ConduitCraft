@@ -55,7 +55,10 @@ test('every item can be reached on a short window', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 420 });
   // The selection's toolbar floats over the top left on a window this short; let go of the selection first.
   await clearSelection(page);
-  await button(page).click();
+  // Keyboard, not a click: with the wider sheet the selection's toolbar can still sit over the mark on a window this short.
+  await button(page).focus();
+  await page.keyboard.press('Enter');
+  await expect(menu(page)).toBeVisible();
   const last = menu(page).getByRole('menuitem').last();
   await last.scrollIntoViewIfNeeded();
   await expect(last).toBeInViewport();

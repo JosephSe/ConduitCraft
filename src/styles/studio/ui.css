@@ -374,11 +374,6 @@
     block-size: 30px;
   }
 
-  .rail-stencil-btn.cut .cutout {
-    inline-size: 30px;
-    block-size: 24px;
-  }
-
   .stencil-drag-ghost.cutout-carry {
     padding: 0;
     border: 0;

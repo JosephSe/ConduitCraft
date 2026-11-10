@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { runPaletteCommand } from './helpers';
+import { placeComponent, runPaletteCommand } from './helpers';
 
 const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
 
@@ -29,21 +29,17 @@ test('a Message Queue from the rail draws as a pipe, and wires into and out of i
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
 
-  const service = page.locator('.rail-stencil-btn[data-stencil-id="service"]');
-  const queue = page.locator('.rail-stencil-btn[data-stencil-id="queue"]');
-  await expect(queue).toBeVisible();
-
-  await service.click();
+  await placeComponent(page, 'service');
   await expect(page.locator('.arch-node')).toHaveCount(1);
   await dragTo(page, page.locator('.arch-node .node-select-hit').first(), 360, 460);
 
-  await queue.click();
+  await placeComponent(page, 'queue');
   await expect(page.locator('.arch-node')).toHaveCount(2);
   await expect(page.locator('.arch-node[data-kind="queue"]')).toHaveAttribute('data-shape', 'pipe');
   await expect(page.locator('.arch-node[data-kind="queue"] [data-plate="pipe"]')).toHaveCount(1);
   await dragTo(page, page.locator('.arch-node[data-kind="queue"] .node-select-hit'), 760, 460);
 
-  await service.click();
+  await placeComponent(page, 'service');
   await expect(page.locator('.arch-node')).toHaveCount(3);
   await dragTo(page, page.locator('.arch-node[data-kind="service"] .node-select-hit').last(), 1160, 460);
 

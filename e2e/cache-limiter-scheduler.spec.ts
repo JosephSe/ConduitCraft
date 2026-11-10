@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { placeComponent } from './helpers';
 
 async function open(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -7,15 +8,13 @@ async function open(page: Page): Promise<void> {
 }
 
 async function addFromRail(page: Page, id: string, kind: string) {
-  const button = page.locator(`.rail-stencil-btn[data-stencil-id="${id}"]`);
-  await expect(button).toBeVisible();
-  await button.click();
+  await placeComponent(page, id);
   const added = page.locator(`.arch-node[data-kind="${kind}"]`);
   await expect(added).toHaveCount(1);
   return added;
 }
 
-test('a Cache from the rail shows its hit rate, and the Hit rate field changes the chip', async ({ page }) => {
+test('a Cache from the list shows its hit rate, and the Hit rate field changes the chip', async ({ page }) => {
   await open(page);
   const cache = await addFromRail(page, 'cache', 'cache');
   await expect(cache.locator('.micro-chip')).toHaveText('HIT 80%');
@@ -30,7 +29,7 @@ test('a Cache from the rail shows its hit rate, and the Hit rate field changes t
   expect(results.violations.map((v) => v.id)).toEqual([]);
 });
 
-test('a Rate Limiter from the rail shows 4/5, and Admit changes the chip', async ({ page }) => {
+test('a Rate Limiter from the list shows 4/5, and Admit changes the chip', async ({ page }) => {
   await open(page);
   const limiter = await addFromRail(page, 'limiter', 'limiter');
   await expect(limiter.locator('.micro-chip')).toHaveText('4/5');

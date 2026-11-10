@@ -165,23 +165,21 @@ describe('responsive and compact toolbar', () => {
     elementsById.set('drawer-scrim', drawerScrim);
   });
 
-  it('toggles palette collapsed state and persists in localStorage', () => {
+  it('starts with the component list closed, and opens and closes it', () => {
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
-    assert.strictEqual(manager.isPaletteCollapsed(), false);
+    assert.strictEqual(manager.isPaletteCollapsed(), true);
 
-    // Collapse
-    const collapsed = manager.togglePalette();
-    assert.strictEqual(collapsed, true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
-    assert.strictEqual(mockStorage.get('conduitcraft:palette-collapsed'), 'true');
-
-    // Expand
+    // Open
     const expanded = manager.togglePalette();
     assert.strictEqual(expanded, false);
     assert.strictEqual(workspace.hasAttribute('data-palette-collapsed'), false);
-    assert.strictEqual(mockStorage.has('conduitcraft:palette-collapsed'), false);
+
+    // Close
+    const collapsed = manager.togglePalette();
+    assert.strictEqual(collapsed, true);
+    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
   });
 
   it('toggles inspector collapsed state and persists in localStorage', () => {
@@ -355,30 +353,13 @@ describe('responsive and compact toolbar', () => {
     );
   });
 
-  it('verifies collapsed palette rail in index.html is rebuilt from STENCIL_CATALOG (item 9)', () => {
-    const htmlPath = resolve(process.cwd(), 'index.html');
-    const html = readFileSync(htmlPath, 'utf8');
-
-    const railStart = html.indexOf('id="palette-rail-content"');
-    const railEnd = html.indexOf('<!-- Expanded Palette Header', railStart);
-    const railHtml = html.slice(railStart, railEnd);
-
-    // Must contain real NodeKinds from STENCIL_CATALOG
-    assert.ok(railHtml.includes('data-stencil-kind="actor"'), 'Rail must contain actor');
-    assert.ok(railHtml.includes('data-stencil-kind="core"'), 'Rail must contain core');
-    assert.ok(railHtml.includes('data-stencil-kind="service"'), 'Rail must contain service');
-    assert.ok(railHtml.includes('data-stencil-kind="bus"'), 'Rail must contain bus');
-    assert.ok(railHtml.includes('data-stencil-kind="queue"'), 'Rail must contain queue');
-    assert.ok(railHtml.includes('data-stencil-id="queue"'), 'Rail must carry stencil ids');
-    assert.ok(railHtml.includes('data-stencil-kind="balancer"'), 'Rail must contain balancer');
-    assert.ok(railHtml.includes('data-stencil-kind="store"'), 'Rail must contain store');
-    assert.ok(railHtml.includes('data-stencil-kind="gate"'), 'Rail must contain gate');
-    assert.ok(railHtml.includes('data-stencil-kind="client"'), 'Rail must contain client');
-    assert.ok(railHtml.includes('data-stencil-kind="zone"'), 'Rail must contain zone');
-    assert.ok(railHtml.includes('data-stencil-kind="notes"'), 'Rail must contain notes');
-
-    // Must NOT contain invalid kinds database, cloud
-    assert.ok(!railHtml.includes('data-stencil-kind="database"'), 'Rail must not contain bogus kind database');
-    assert.ok(!railHtml.includes('data-stencil-kind="cloud"'), 'Rail must not contain bogus kind cloud');
+  it('has a dock with the five tools and an All components button, and no icon rail', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    assert.ok(!html.includes('palette-rail-content'), 'the collapsed rail is gone');
+    const dock = html.slice(html.indexOf('id="dock"'), html.indexOf('id="btn-all-components"'));
+    for (const tool of ['select', 'connect', 'hand', 'text', 'frame']) {
+      assert.ok(dock.includes(`data-rail-tool="${tool}"`), `dock has the ${tool} tool`);
+    }
+    assert.ok(html.includes('id="btn-all-components"'), 'dock has All components');
   });
 });

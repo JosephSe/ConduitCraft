@@ -6,7 +6,6 @@
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     min-block-size: 0;
-    z-index: 14;
   }
 
   /* This layer is later than `layout`, so the hide rule has to live here. */
