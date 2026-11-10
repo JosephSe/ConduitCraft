@@ -70,6 +70,7 @@ test('view 1 does not jump when the webfonts swap in', async ({ page }) => {
   await expect.poll(() => page.evaluate(() => document.fonts.check('700 16px "Instrument Sans"'))).toBe(false);
 
   const before = await measureTitle(page);
+  const fallbackFonts = await platformFonts(page, '#doc-title-heading');
   releaseFonts();
   await expect.poll(() => page.evaluate(() => document.fonts.check('700 16px "Instrument Sans"'))).toBe(true);
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
@@ -77,11 +78,26 @@ test('view 1 does not jump when the webfonts swap in', async ({ page }) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined)));
   }));
   const after = await measureTitle(page);
-  expect(Math.abs(after.probe.width - before.probe.width)).toBeLessThan(2);
-  expect(Math.abs(after.probe.height - before.probe.height)).toBeLessThan(2);
-  expect(Math.abs(after.heading.width - before.heading.width)).toBeLessThan(2);
-  expect(Math.abs(after.heading.height - before.heading.height)).toBeLessThan(2);
+  const detail = JSON.stringify({ before, after, fallbackFonts });
+  expect(Math.abs(after.probe.width - before.probe.width), detail).toBeLessThan(2);
+  expect(Math.abs(after.probe.height - before.probe.height), detail).toBeLessThan(2);
+  expect(Math.abs(after.heading.width - before.heading.width), detail).toBeLessThan(2);
+  expect(Math.abs(after.heading.height - before.heading.height), detail).toBeLessThan(2);
 });
+
+async function platformFonts(page: Page, selector: string): Promise<unknown> {
+  try {
+    const client = await page.context().newCDPSession(page);
+    const doc = await client.send('DOM.getDocument');
+    const found = await client.send('DOM.querySelector', { nodeId: doc.root.nodeId, selector });
+    if (!found.nodeId) return [];
+    const { fonts } = await client.send('CSS.getPlatformFontsForNode', { nodeId: found.nodeId });
+    await client.detach();
+    return fonts;
+  } catch (error) {
+    return String(error);
+  }
+}
 
 async function measureTitle(page: Page) {
   return page.evaluate(() => {
