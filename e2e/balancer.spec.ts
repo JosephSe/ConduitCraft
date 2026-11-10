@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { runPaletteCommand } from './helpers';
+import { placeComponent, runPaletteCommand } from './helpers';
 
 const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
 
@@ -14,9 +14,7 @@ async function openThreeTier(page: Page): Promise<void> {
 test('a Load Balancer from the rail draws as a trapezoid with its own icon and chip', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  const balancer = page.locator('.rail-stencil-btn[data-stencil-id="balancer"]');
-  await expect(balancer).toBeVisible();
-  await balancer.click();
+  await placeComponent(page, 'balancer');
   const added = page.locator('.arch-node[data-kind="balancer"]');
   await expect(added).toHaveCount(1);
   await expect(added).toHaveAttribute('data-shape', 'trapezoid');

@@ -34,7 +34,6 @@ export class ResponsiveToolbarManager {
     this.workspaceEl = container || (document.getElementById('workspace') as HTMLElement | null);
 
     this.initPanelToggles();
-    this.initRailQuickActions();
     this.restoreSavedState();
   }
 
@@ -49,10 +48,7 @@ export class ResponsiveToolbarManager {
 
   /** Initialize Panel Toggle Buttons */
   private initPanelToggles(): void {
-    // Edge tabs: the touch way to open each drawer
-    document.getElementById('btn-drawer-palette')?.addEventListener('click', () => {
-      this.togglePalette(false);
-    });
+    // Edge tab: the touch way to open the inspector (the dock's All components opens the list)
     document.getElementById('btn-drawer-inspector')?.addEventListener('click', () => {
       this.toggleInspector(false);
     });
@@ -61,11 +57,6 @@ export class ResponsiveToolbarManager {
     const btnCollapsePalette = document.getElementById('btn-collapse-palette');
     btnCollapsePalette?.addEventListener('click', () => {
       this.togglePalette(true);
-    });
-
-    const btnRailExpandPalette = document.getElementById('btn-rail-expand-palette');
-    btnRailExpandPalette?.addEventListener('click', () => {
-      this.togglePalette(false);
     });
 
     // Right Inspector Collapse/Expand buttons
@@ -101,35 +92,6 @@ export class ResponsiveToolbarManager {
       const target = e.target as HTMLElement | null;
       if (!target?.closest('button')) {
         this.toggleInspector(false);
-      }
-    });
-  }
-
-  /** Initialize quick-add actions from collapsed palette rail */
-  private initRailQuickActions(): void {
-    const paletteRail = document.getElementById('palette-rail-content');
-    if (!paletteRail) return;
-
-    paletteRail.addEventListener('click', (e) => {
-      const btn = (e.target as HTMLElement | null)?.closest<HTMLButtonElement>('.rail-stencil-btn');
-      if (!btn) return;
-      const kind = btn.getAttribute('data-stencil-id') ?? btn.getAttribute('data-stencil-kind');
-      if (!kind) return;
-
-      if (kind === 'zone') {
-        const btnAddZone = document.getElementById('btn-add-zone');
-        if (btnAddZone) btnAddZone.click();
-        else if (this.options.onAddZone) this.options.onAddZone();
-      } else if (kind === 'notes') {
-        const btnAddNotes = document.getElementById('btn-add-notes');
-        if (btnAddNotes) btnAddNotes.click();
-        else if (this.options.onAddNotes) this.options.onAddNotes();
-      }
-      // Any other kind is a component stencil. Its own pointer handler (attachStencilDragAndDrop) already added it,
-      // so adding it again here would put two on the canvas.
-
-      if (this.isNarrowScreen() || (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches)) {
-        this.togglePalette(true);
       }
     });
   }
@@ -211,18 +173,16 @@ export class ResponsiveToolbarManager {
   }
 
   private restoreSavedState(): void {
+    // The component list is a drawer over the sheet: it always starts closed.
+    this.togglePalette(true);
     if (this.isNarrowScreen()) {
-      // Below 66rem, boot with both panels collapsed by default on narrow screens
-      this.togglePalette(true);
+      // Below 66rem the inspector is a drawer too
       this.toggleInspector(true);
       return;
     }
 
     if (typeof localStorage === 'undefined') return;
     try {
-      if (localStorage.getItem(STORAGE_PALETTE_KEY) === 'true') {
-        this.togglePalette(true);
-      }
       if (localStorage.getItem(STORAGE_INSPECTOR_KEY) === 'true') {
         this.toggleInspector(true);
       }

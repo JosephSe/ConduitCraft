@@ -177,7 +177,7 @@ for (const theme of THEMES) {
       await fit(page);
       await shoot(page, `01-design-fit-${theme}.png`);
 
-      expect(await zoomNear100(page)).toBe('97%');
+      expect(await zoomNear100(page)).toBe('101%');
       const search = page.locator('#hud-search-input');
       await page.keyboard.press('ControlOrMeta+f');
       await search.fill('Virtual Waiting Room');
@@ -190,7 +190,7 @@ for (const theme of THEMES) {
       await shoot(page, `02-design-100-selected-${theme}.png`);
 
       await fit(page);
-      await page.locator('#btn-rail-expand-palette').click();
+      await page.locator('#btn-all-components').click();
       await expect(page.locator('#workspace')).not.toHaveAttribute('data-palette-collapsed', 'true');
       const queue = page.locator('.stencil-card[data-stencil-id="queue"]');
       await expect(queue).toBeVisible();
@@ -252,6 +252,35 @@ for (const theme of THEMES) {
       await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 20_000 });
       await expect(page.locator('#workspace')).toHaveAttribute('data-lens', 'traffic');
       await expect(page.locator('.arch-node[data-chaos="failed"]')).toBeVisible();
+      // The side column folds on a short transition and the sheet is fitted around it: shoot once both stop moving.
+      let last = '';
+      await expect
+        .poll(
+          async () => {
+            const now = await page.evaluate(
+              () => `${document.getElementById('canvas-viewport')!.getBoundingClientRect().width}|${document.getElementById('zoom-readout')!.textContent}`,
+            );
+            const settled = now === last;
+            last = now;
+            return settled;
+          },
+          { timeout: 5_000, intervals: [400] },
+        )
+        .toBe(true);
+      // The first fit can land on 40% or 41% depending on when it ran against the folding column. Fit again, now it is still.
+      await page.locator('#btn-zoom-fit').click();
+      last = '';
+      await expect
+        .poll(
+          async () => {
+            const now = await page.evaluate(() => document.getElementById('zoom-readout')!.textContent ?? '');
+            const settled = now === last;
+            last = now;
+            return settled;
+          },
+          { timeout: 5_000, intervals: [400] },
+        )
+        .toBe(true);
       await shoot(page, `07-first-run-${theme}.png`);
     });
   });

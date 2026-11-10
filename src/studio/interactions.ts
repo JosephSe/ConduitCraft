@@ -239,6 +239,7 @@ export function attachStencilDragAndDrop(
   btn: HTMLElement,
   stencilId: string,
   title: string,
+  options: { onTap?: (e: PointerEvent) => void } = {},
 ): void {
   // Pointer drag onto canvas OR simple click to add at viewport center
   const kind = stencilId;
@@ -303,6 +304,8 @@ export function attachStencilDragAndDrop(
         const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
         addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2);
       }
+    } else if (options.onTap) {
+      options.onTap(e);
     } else {
       const [cx, cy] = getViewportWorldCenter();
       const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
@@ -371,21 +374,6 @@ export function initStencilPalette(): void {
 
     stencilGrid.appendChild(btn);
   }
-
-  // Also wire drag-and-drop & click actions for collapsed palette rail buttons
-  const railBtns = document.querySelectorAll<HTMLButtonElement>('.rail-stencil-btn[data-stencil-kind], .rail-stencil-btn[data-stencil-id]');
-  railBtns.forEach((railBtn) => {
-    const id = railBtn.getAttribute('data-stencil-id') ?? railBtn.getAttribute('data-stencil-kind');
-    if (id && id !== 'zone' && id !== 'notes') {
-      const stencil = findStencil(id);
-      if (stencil) {
-        railBtn.classList.add('cut');
-        railBtn.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
-        railBtn.innerHTML = renderCutoutMarkup(stencil);
-      }
-      attachStencilDragAndDrop(railBtn, stencil?.id ?? id, stencil?.paletteTitle ?? id);
-    }
-  });
 }
 
 export function tagEnteringNodes(ids: string[]): void {

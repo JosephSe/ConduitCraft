@@ -8,7 +8,7 @@ import { app } from './state';
 
 export type PointerTool = 'select' | 'connect' | 'hand' | 'text' | 'frame';
 
-const TIPS: Record<PointerTool, string> = {
+export const TOOL_TIPS: Record<PointerTool, string> = {
   select: 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire',
   connect: 'Connect Mode · Drag from any component or port to another component to draw an animated wire',
   hand: 'Hand tool · Drag anywhere to move around the canvas',
@@ -23,6 +23,6 @@ export function setPointerTool(tool: PointerTool): void {
   app.connectSourceNodeId = null;
   // The code that draws frames loads the first time the tool is used.
   if (tool === 'frame') void import('./frameStage');
-  hudStatusTip.textContent = TIPS[tool];
+  hudStatusTip.textContent = TOOL_TIPS[tool];
   announceToolChange(tool);
 }

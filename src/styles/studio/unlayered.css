@@ -1159,60 +1159,52 @@ kbd {
    Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
    --------------------------------------------------------------------------------------------- */
-/* Tool rail: select / wire tools above the component icons */
-.rail-tool-btn {
+/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Design lens only until S5 gives the other lenses a face. */
+.dock {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-inline-size: 100%;
+  padding: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--cc-island);
+  border: 1px solid var(--cc-hair);
+  border-radius: 1.125rem;
+  box-shadow: var(--wl-shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+.workspace[data-mode="data"] .dock { display: none; }
+.dock-btn, .dock-fav {
   position: relative;
+  flex: none;
   display: grid;
   place-items: center;
-  inline-size: 2.2rem;
-  block-size: 2.2rem;
-  border-radius: 0.45rem;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--wl-ink-secondary);
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  background: none;
+  color: var(--cc-ink-2);
+  font: inherit;
   cursor: pointer;
 }
-.rail-divider.rail-tool-only {
-  display: block;
-}
-/* The tools are always on show. With the palette open the rail shrinks to a row of them above the component list. */
-.palette-sidebar {
-  grid-template-rows: auto auto minmax(0, 1fr);
-}
-.workspace:not([data-palette-collapsed="true"]) .palette-rail-content {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  padding-block: 0.5rem 0;
-  padding-inline: 0.75rem;
-}
-.workspace:not([data-palette-collapsed="true"]) .palette-rail-content > :not(.rail-tool-btn) {
-  display: none;
-}
-/* Folded, the rail is taller than most windows, so it scrolls. */
-.workspace[data-palette-collapsed="true"] .palette-sidebar {
-  grid-template-rows: minmax(0, 1fr);
-}
-.workspace[data-palette-collapsed="true"] .palette-rail-content {
-  block-size: 100%;
-  min-block-size: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-.workspace[data-palette-collapsed="true"] .palette-rail-content > * {
-  flex: none;
-}
-.rail-tool-btn:hover {
-  background: var(--wl-surface-elevated);
-  border-color: var(--wl-border-subtle);
-  color: var(--wl-ink);
-}
-.rail-tool-btn[aria-pressed="true"] {
-  background: var(--cc-accent-soft);
-  border-color: var(--cc-accent);
-  color: var(--wl-ink);
-}
+.dock-btn:hover, .dock-fav:hover { background: var(--cc-well); color: var(--cc-ink); }
+.dock-btn:focus-visible, .dock-fav:focus-visible, .dock-all:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.dock-btn[aria-pressed="true"] { background: var(--cc-ink); color: var(--cc-sheet); }
+.dock-fav[aria-pressed="true"] { background: var(--cc-well); }
+.dock-fav .cutout { inline-size: 30px; block-size: 24px; }
+.dock-sep { flex: none; inline-size: 1px; block-size: 1.5rem; margin-inline: 0.25rem; background: var(--cc-hair); }
+.dock-all { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2.75rem; padding-inline: 0.75rem; border: 0; border-radius: 0.7rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); cursor: pointer; white-space: nowrap; }
+.dock-all:hover, .dock-all[aria-expanded="true"] { background: var(--cc-well); color: var(--cc-ink); }
+.dock-all kbd { font: 0.7rem var(--wl-font-mono); color: var(--cc-ink-3); }
+@media (max-width: 56rem) { .dock-fav:nth-of-type(n+4) { display: none; } }
+/* Click to arm (7.1): the ghost follows the pointer until the next click on the sheet. */
+.workspace[data-armed] .canvas-viewport { cursor: copy; }
+.dock-fav, .dock-btn { touch-action: manipulation; }
+.dock-fav[data-tip] { overflow: visible; }
 
 /* Contextual toolbar: actions floating beside the selection */
 .context-toolbar {
@@ -1746,17 +1738,12 @@ kbd {
 /* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
 @media (pointer: coarse) {
   .btn, .btn-icon-only, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
-  .title-edit-trigger, .context-menu-item, .rail-tool-btn, .rail-stencil-btn, .stencil-aux-btn, .help-popover-link {
+  .title-edit-trigger, .context-menu-item, .stencil-aux-btn, .help-popover-link {
     min-inline-size: 2.75rem;
     min-block-size: 2.75rem;
   }
   .hud-search-input { min-block-size: 2.75rem; font-size: 1rem; }
   .context-toolbar-btn, .toast-action-btn { display: inline-flex; align-items: center; justify-content: center; }
-}
-
-/* The palette layer sets z-index 14 after the layout layer set 40, which put the palette drawer under its own scrim. */
-@media (max-width: 66rem) {
-  .palette-sidebar { z-index: 40; }
 }
 
 /* Edge tabs (A12b): open the palette and inspector drawers by touch. Not shown on a mouse, or when the panels sit beside the canvas. */
@@ -1777,7 +1764,6 @@ kbd {
     border: 1px solid var(--wl-border-subtle);
     cursor: pointer;
   }
-  .drawer-tab-start { inset-inline-start: 0; border-start-end-radius: 0.75rem; border-end-end-radius: 0.75rem; border-inline-start: 0; }
   .drawer-tab-end { inset-inline-end: 0; border-start-start-radius: 0.75rem; border-end-start-radius: 0.75rem; border-inline-end: 0; }
   .drawer-tab[aria-expanded="true"] { display: none; }
 }

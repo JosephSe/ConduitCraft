@@ -90,88 +90,13 @@
     <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
     <div class="drawer-scrim" id="drawer-scrim" hidden></div>
 
-    <!-- Edge tabs that open the side drawers by touch (shown for a coarse pointer, below 66rem) -->
-    <button type="button" class="drawer-tab drawer-tab-start" id="btn-drawer-palette" aria-label="Open component palette" aria-controls="palette-sidebar" aria-expanded="false">
-      <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
-    </button>
+    <!-- Edge tab that opens the inspector by touch (shown for a coarse pointer, below 66rem) -->
     <button type="button" class="drawer-tab drawer-tab-end" id="btn-drawer-inspector" aria-label="Open properties inspector" aria-controls="inspector-panel" aria-expanded="false">
       <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
     </button>
 
     <!-- Left Stencil Palette (Design Mode) -->
     <aside class="palette-sidebar" id="palette-sidebar" aria-label="Component stencil palette">
-      <!-- Collapsed Icon Rail View -->
-      <div class="palette-rail-content" id="palette-rail-content" aria-label="Quick component stencils">
-        <button type="button" class="btn btn-icon-only btn-rail-expand" id="btn-rail-expand-palette" aria-label="Expand component palette ([)" data-tip="Expand palette ([)" data-tip-pos="right">
-          <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-        </button>
-        <div class="rail-divider rail-tool-only"></div>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" aria-label="Select tool (V)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="connect" aria-pressed="false" data-tip="Wire (W)" aria-label="Wire tool (W)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="hand" aria-pressed="false" data-tip="Hand (H)" aria-label="Hand tool (H)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.4L3.4 16a2 2 0 0 1 3.2-2.4L8 15"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="text" aria-pressed="false" data-tip="Text (T)" aria-label="Text tool (T)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="frame" aria-pressed="false" data-tip="Frame (F)" aria-label="Frame tool (F)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
-        </button>
-        <div class="rail-divider"></div>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="actor" data-stencil-kind="actor" data-tip="Add Actor component" data-tip-pos="right" aria-label="Add Actor component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6 21v-2a6 6 0 0 1 12 0v2"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="core" data-stencil-kind="core" data-tip="Add Core System component" data-tip-pos="right" aria-label="Add Core System component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="service" data-stencil-kind="service" data-tip="Add Service / API component" data-tip-pos="right" aria-label="Add Service / API component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="stream" data-stencil-kind="queue" data-tip="Add Stream / Log component" data-tip-pos="right" aria-label="Add Stream / Log component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18M17 4l4 3-4 3M17 14l4 3-4 3"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="object-store" data-stencil-kind="store" data-tip="Add Object Storage component" data-tip-pos="right" aria-label="Add Object Storage component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6l2.5 13a2 2 0 0 0 2 1.5h7a2 2 0 0 0 2-1.5L20 6"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="bus" data-stencil-kind="bus" data-tip="Add Event Broker component" data-tip-pos="right" aria-label="Add Event Broker component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M4 15h16M8 15V9a4 4 0 0 1 8 0v6M12 9v6"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="balancer" data-stencil-kind="balancer" data-tip="Add Load Balancer component" data-tip-pos="right" aria-label="Add Load Balancer component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h6M8 12l8-7M8 12h8M8 12l8 7"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="19" cy="19" r="2"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="cache" data-stencil-kind="cache" data-tip="Add Cache component" data-tip-pos="right" aria-label="Add Cache component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="limiter" data-stencil-kind="limiter" data-tip="Add Rate Limiter component" data-tip-pos="right" aria-label="Add Rate Limiter component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17a9 9 0 1 1 16 0M12 17l4-6"/><circle cx="12" cy="17" r="1.5"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="scheduler" data-stencil-kind="scheduler" data-tip="Add Scheduler component" data-tip-pos="right" aria-label="Add Scheduler component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="queue" data-stencil-kind="queue" data-tip="Add Message Queue component" data-tip-pos="right" aria-label="Add Message Queue component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="10" height="4" rx="1"/><rect x="2" y="10" width="10" height="4" rx="1"/><rect x="2" y="16" width="10" height="4" rx="1"/><path d="M15 12h7M19 8l3 4-3 4"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="store" data-stencil-kind="store" data-tip="Add Data Store component" data-tip-pos="right" aria-label="Add Data Store component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="gate" data-stencil-kind="gate" data-tip="Add Control Gate component" data-tip-pos="right" aria-label="Add Control Gate component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="client" data-stencil-kind="client" data-tip="Add Client Device component" data-tip-pos="right" aria-label="Add Client Device component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="zone" data-tip="Add Swimlane Stage" data-tip-pos="right" aria-label="Add Swimlane Stage">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="notes" data-tip="Add Note" data-tip-pos="right" aria-label="Add Note">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-        </button>
-      </div>
-
       <!-- Expanded Palette Header & Content -->
       <div class="palette-header">
         <h2 class="section-heading">Components</h2>
@@ -366,6 +291,28 @@
           </div>
           <div class="slot slot-s" id="slot-s">
             <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</p>
+
+          <div class="dock" id="dock" data-island role="toolbar" aria-label="Tools and components">
+          <button type="button" class="dock-btn" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" data-tip-pos="top" aria-label="Select tool (V)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="connect" aria-pressed="false" data-tip="Wire (W)" data-tip-pos="top" aria-label="Wire tool (W)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="hand" aria-pressed="false" data-tip="Hand (H)" data-tip-pos="top" aria-label="Hand tool (H)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.4L3.4 16a2 2 0 0 1 3.2-2.4L8 15"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="text" aria-pressed="false" data-tip="Text (T)" data-tip-pos="top" aria-label="Text tool (T)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="frame" aria-pressed="false" data-tip="Frame (F)" data-tip-pos="top" aria-label="Frame tool (F)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
+          </button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <span class="dock-favs" id="dock-favs" role="group" aria-label="Favourite components" style="display: contents"></span>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button type="button" class="dock-all" id="btn-all-components" aria-haspopup="dialog" aria-expanded="false" aria-controls="palette-sidebar" aria-keyshortcuts="C">All components <kbd>C</kbd></button>
+          </div>
       <!-- Chaos summary (Traffic lens): what the current failures break -->
       <section class="chaos-panel" id="chaos-panel" data-island aria-label="Failure summary" hidden>
         <div class="chaos-panel-head">

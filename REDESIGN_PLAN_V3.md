@@ -709,10 +709,20 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - Tests: `slots.spec.ts` gains the view popover (opens above SE, minimap painted, Escape and outside click close it, no Fit selection) and one-popover-at-a-time; `tagsLinks.spec.ts` drives Colour by and the tag filter through the popover and the legend through the Key. The island count dropped the minimap card.
   - Entry CSS is still 112.0 kB of 112.
 
-#### [ ] S3. Dock, Design face · M
+#### [x] S3. Dock, Design face · M
 - **Read:** `toolRail.ts`, `pointerTool.ts`, the stencil wiring in `interactions.ts`.
 - **Do:** 6.4 and 7.1 to 7.2: tools, six cut-outs, drag out, click to arm, favourites.
 - **Done:** `e2e/toolRail.spec.ts` rewritten and passing; every tool and favourite reachable by keyboard and touch. **Needs:** S1, T4.
+
+- **S3 result.**
+  - The dock is one island in slot S, under the hint line: Select, Wire, Hand, Text, Frame; six favourite cut-outs; "All components `C`". It shows in the Design lens only. Traffic and Review show the run bar until S5 gives them a face. The collapsed icon rail, its expand button and the palette's edge tab are gone.
+  - Tool buttons keep `data-rail-tool` and the actions they ran (`toolRail.ts`). Favourites are `.dock-fav` buttons made by `src/studio/dock.ts` from the saved list in `src/studio/dockFavourites.ts` (`conduitcraft:dock-favourites`; unknown ids are dropped and gaps filled from the defaults). Defaults: Service, Data store, Message queue, Load balancer, **Control gate** (there is no stencil called Gateway), Actor.
+  - **Click to arm:** a click or tap on a favourite carries a ghost of the component, sized for the current zoom; the next press on the sheet places it there. Shift keeps placing; Esc, choosing a tool, leaving Design, or clicking the favourite again puts it back. Dragging still takes it straight to the drop point and leaves an empty outline. Enter on a favourite places it at the centre of the view, for the keyboard.
+  - **The list is a drawer until S4.** The left column is gone: the sheet runs under it. "All components" and `C` open the old component list as an overlay on the left; Esc, a press on the sheet, or choosing a tool closes it. It always starts closed. S4 replaces it with the tray.
+  - **Not built here:** changing a favourite (S4's drag onto the dock calls `setFavourite`). Q5 stands: favourites stay where you put them.
+  - Narrow: below 56 rem the dock keeps three favourites and scrolls sideways.
+  - Tests: `toolRail.spec.ts` rewritten (dock contents, defaults, a saved list, Tab order, Enter, click to arm, Shift, Esc, drag, Traffic hides it, the list drawer, axe); touch adds tap to arm and the phone dock; `helpers.ts` has `placeComponent` and the queue, balancer, cache, stream specs use it. `dockFavourites.test.ts` covers the list. The first-run view now presses Fit once the side column stops moving, because the first fit landed on 40% or 41%. The sheet is wider, so the view spec's near-100 zoom is 101%. All eight views were re-recorded on macOS.
+  - Entry CSS is 110.7 kB of 112; entry JS is 538.2 kB of 540 (1.8 kB left).
 
 #### [ ] S4. Component tray · L, split
 - **S4a · M:** shelf, keyboard grid, place with `↵`, drag out, drag to the dock, close and focus return (7.3).
