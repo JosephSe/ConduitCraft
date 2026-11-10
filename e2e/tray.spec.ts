@@ -288,3 +288,94 @@ test('the selection toolbar steps aside while the tray is open, so it never cove
   await expect(tray(page)).toBeVisible();
   await expect(page.locator('.context-toolbar')).toBeHidden();
 });
+
+const demoName = (page: Page) => page.locator('#tray .tray-demo-name');
+
+test('the demo pane shows the highlighted component, its name and what it does, following focus and the pointer', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await expect(page.locator('#tray .tray-demo')).toBeVisible();
+  await expect(demoName(page)).toHaveText('Actor');
+  await expect(page.locator('#tray .tray-demo-text')).toContainText('starts traffic');
+
+  await item(page, 'limiter').hover();
+  await expect(demoName(page)).toHaveText('Rate Limiter');
+  await expect(page.locator('#tray .tray-demo-text')).toContainText('turns the rest away');
+
+  await search(page).focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowRight');
+  await expect(demoName(page)).toHaveText('Load Balancer');
+  // The panel takes the component's colour.
+  const tone = await page.locator('#tray .tray-demo').evaluate((el) => (el as HTMLElement).style.getPropertyValue('--t'));
+  expect(tone).not.toBe('');
+});
+
+test('the loops: each behaviour runs its own capsules, and structure items show a still picture', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  const caps = (id: string) => item(page, id).hover().then(() => page.locator('#tray .tray-stage .cap'));
+  await expect(await caps('balancer')).toHaveCount(4);
+  await expect(page.locator('#tray .tray-stage .cap').first()).toHaveCSS('animation-name', 'k-in');
+  await expect(await caps('limiter')).toHaveCount(5);
+  await expect(await caps('queue')).toHaveCount(3);
+  await expect(page.locator('#tray .tray-stage.is-over')).toHaveCount(1);
+  await expect(await caps('cache')).toHaveCount(2);
+  await expect(await caps('store')).toHaveCount(3);
+  await expect(await caps('actor')).toHaveCount(2);
+  await expect(await caps('service')).toHaveCount(2);
+  // Structure: the picture alone, no capsules, no lead line.
+  await item(page, 'notes').hover();
+  await expect(demoName(page)).toHaveText('Note');
+  await expect(page.locator('#tray .tray-stage .cap')).toHaveCount(0);
+  await expect(page.locator('#tray .tray-stage .cutout')).toHaveCount(1);
+});
+
+test('under reduced motion every demo is a still picture of the loop end state', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await item(page, 'limiter').hover();
+  await expect(page.locator('#tray .tray-demo')).toHaveClass(/is-still/);
+  const caps = page.locator('#tray .tray-stage .cap');
+  await expect(caps).toHaveCount(5);
+  for (let i = 0; i < 5; i += 1) {
+    await expect(caps.nth(i)).toHaveCSS('animation-name', 'none');
+    await expect(caps.nth(i)).toHaveCSS('opacity', '1');
+  }
+  // Four have passed to the far side; the rose one has fallen back, left of the component and below the line.
+  const stage = (await page.locator('#tray .tray-stage').boundingBox())!;
+  const box = (i: number) => caps.nth(i).boundingBox().then((b) => b!);
+  expect((await box(0)).x).toBeGreaterThan(stage.x + stage.width * 0.8);
+  const rose = await box(4);
+  expect(rose.x).toBeLessThan(stage.x + stage.width * 0.3);
+  expect(rose.y).toBeGreaterThan(stage.y + stage.height / 2);
+});
+
+test('typing a word moves the demo to the first match', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('kafka');
+  await expect(demoName(page)).toHaveText('Stream / Log');
+  await search(page).fill('zzzzz');
+  await expect(page.locator('#tray .tray-demo')).toBeHidden();
+});
+
+test('the demo pane has no axe violations in both themes and is left out on a narrow window', async ({ page }) => {
+  for (const scheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: scheme });
+    await open(page);
+    await page.locator('#btn-all-components').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#tray .tray-demo')).toBeVisible();
+    await page.waitForTimeout(300);
+    const results = await new AxeBuilder({ page }).include('#tray').withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+    await page.keyboard.press('Escape');
+  }
+  await page.setViewportSize({ width: 700, height: 800 });
+  await page.locator('#btn-all-components').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#tray')).toBeVisible();
+  await expect(page.locator('#tray .tray-demo')).toBeHidden();
+});

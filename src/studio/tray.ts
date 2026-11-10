@@ -15,6 +15,7 @@ import { FAVOURITE_COUNT } from './dockFavourites';
 import { viewport } from './dom';
 import { attachStencilDragAndDrop } from './interactions';
 import { findPaletteCommand } from './palette';
+import { createDemoPane, showDemo } from './trayDemo';
 import { searchTray } from './trayWords';
 
 /** A stencil id, or one of the four structure items. */
@@ -43,6 +44,8 @@ const GROUPS: Array<{ label: string; items: Item[] }> = [
 
 let tray: HTMLElement | null = null;
 let search: HTMLInputElement | null = null;
+let demo: HTMLElement | null = null;
+let shown: HTMLButtonElement | null = null;
 let opener: HTMLElement | null = null;
 
 const isOpen = (): boolean => !!tray && !tray.hidden;
@@ -67,6 +70,19 @@ export function closeTray(returnFocus = false): void {
   }
   sync(false);
   if (returnFocus) (opener ?? document.getElementById('btn-all-components'))?.focus();
+}
+
+/** The demo follows the highlighted row: the one with focus or under the pointer. */
+function highlight(btn: HTMLButtonElement | null | undefined): void {
+  if (!demo || btn === shown) return;
+  shown = btn ?? null;
+  const cut = btn?.querySelector<HTMLElement>('.cut');
+  showDemo(
+    demo,
+    btn && cut
+      ? { id: btn.dataset.stencilId ?? '', title: btn.dataset.title ?? '', cutout: cut.innerHTML, tone: cut.style.getPropertyValue('--t') || 'var(--cc-ink-2)' }
+      : null,
+  );
 }
 
 function focusItem(btn: HTMLButtonElement | undefined): void {
@@ -146,6 +162,8 @@ function applyFilter(): void {
   for (const b of buttons) b.tabIndex = -1;
   const first = items()[0];
   if (first) first.tabIndex = 0;
+  shown = null;
+  highlight(first);
 }
 
 function build(): HTMLElement {
@@ -164,12 +182,15 @@ function build(): HTMLElement {
   search.spellcheck = false;
   search.addEventListener('input', applyFilter);
   el.appendChild(search);
+  const shelf = document.createElement('div');
+  shelf.className = 'tray-shelf';
+  el.appendChild(shelf);
   const empty = document.createElement('p');
   empty.className = 'tray-empty';
   empty.setAttribute('role', 'status');
   empty.textContent = 'Nothing matches. Try the name of what you run, like redis or nginx.';
   empty.hidden = true;
-  el.appendChild(empty);
+  shelf.appendChild(empty);
   for (const group of GROUPS) {
     const section = document.createElement('section');
     section.className = 'tray-group';
@@ -183,9 +204,18 @@ function build(): HTMLElement {
     list.setAttribute('aria-label', group.label);
     for (const item of group.items) list.appendChild(makeItem(item));
     section.appendChild(list);
-    el.appendChild(section);
+    shelf.appendChild(section);
   }
+  demo = createDemoPane();
+  el.appendChild(demo);
   el.addEventListener('keydown', onKeydown);
+  // Only a row changes the demo: the search box and the gaps leave the last one showing.
+  const follow = (e: Event) => {
+    const row = (e.target as HTMLElement).closest<HTMLButtonElement>('.tray-item');
+    if (row) highlight(row);
+  };
+  el.addEventListener('focusin', follow);
+  el.addEventListener('mouseover', follow);
   document.getElementById('slot-s')?.appendChild(el);
   // A press on the sheet puts the tray away; it is not modal.
   viewport.addEventListener('pointerdown', () => closeTray());
@@ -226,8 +256,6 @@ function makeItem(item: Item): HTMLButtonElement {
     name.textContent = stencil.paletteTitle;
     btn.dataset.title = stencil.paletteTitle;
     btn.setAttribute('aria-label', `${stencil.paletteTitle}: ${stencil.paletteSub}`);
-    btn.setAttribute('data-tip', stencil.paletteSub);
-    btn.setAttribute('data-tip-pos', 'top');
     cut.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
     cut.innerHTML = renderCutoutMarkup(stencil);
     attachStencilDragAndDrop(btn, stencil.id, stencil.paletteTitle, {
@@ -262,6 +290,8 @@ export function openTray(opener_?: HTMLElement | null): void {
   disarm();
   tray.hidden = false;
   sync(true);
+  shown = null;
+  highlight(items()[0]);
   search?.focus();
 }
 
