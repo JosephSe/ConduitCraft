@@ -699,17 +699,8 @@
     padding: 0.625rem 0.75rem;
   }
 
-  .trace-item[data-tone="emerald"] {
-    border-inline-start-color: var(--wl-emerald);
-  }
-  .trace-item[data-tone="rose"] {
-    border-inline-start-color: var(--wl-rose);
-  }
-  .trace-item[data-tone="violet"] {
-    border-inline-start-color: var(--wl-violet);
-  }
-  .trace-item[data-tone="amber"] {
-    border-inline-start-color: var(--wl-amber);
+  .trace-item[data-tone] {
+    border-inline-start-color: var(--t);
   }
 
   .trace-meta {
