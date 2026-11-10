@@ -756,10 +756,17 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - Tests: `trayDemo.test.ts` (4: seven loops, which components run which, a line for every item, the still rules exist); five more tray specs (the pane follows focus and the pointer; each behaviour's capsule count and keyframes; structure shows no capsules; reduced motion gives stills with the rose capsule fallen back; typing moves it; axe in both themes; hidden when narrow). View 03 re-recorded, in reduced motion, so it shows the queue's end state.
   - **Entry CSS cap raised from 112 to 116 KiB** (the owner allowed it): this PR took 2.7 kB, and S5 to S8 still have chrome to draw. Entry CSS is 111.1 kB of 116; entry JS 535.3 kB of 540.
 
-#### [ ] S5. Dock, Traffic and Review faces · M
+#### [x] S5. Dock, Traffic and Review faces · M
 - **Read:** `runBar.ts`, `simulationPlayback.ts`, `chaos.ts`, `studio/insights.ts`.
 - **Do:** 6.4. Run-control ids are kept.
 - **Done:** `e2e/runBar.spec.ts`, `chaos.spec.ts`, `insights.spec.ts` pass. **Needs:** S3.
+
+- **S5 result.**
+  - **One island, three faces.** `#dock` is always on screen. `dockFaces.ts` shows the Design, Traffic or Review face for the lens. The run bar keeps its ids (`#run-bar`, `#run-bar-*`) and is now the Traffic face inside the dock; its own box styling is gone.
+  - **Fail a component** (`#run-bar-fail`, rose, `X`): with a component selected it fails that one, as `X` does; with nothing selected it arms, and the next component picked fails. Esc or a lens change disarms.
+  - **Review face** (`#review-face`): previous, "1 of 3", next, the issue's sentence, the fixes it offers, "Ignore this rule". It steps through the same list the Review panel shows (`orderedInsights`), and selecting moves the camera as before. One fix exists so far: "Add a standby" on a single point of failure (adds a replica). Other rules offer none, because they have no single obvious answer.
+  - **Not here:** the redline mark pulsing once when stepping. The Traffic face's `?` is gone (the face is at the 8-control limit); every help topic is still in the palette.
+  - Baselines re-recorded: 04, 05, 06, 07 in light and dark.
 
 #### [ ] S6. Inspector · L, split
 - **S6a · M:** island, header with cut-out, tabs, row and control styles.

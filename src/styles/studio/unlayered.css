@@ -1159,7 +1159,7 @@ kbd {
    Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
    --------------------------------------------------------------------------------------------- */
-/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Design lens only until S5 gives the other lenses a face. */
+/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Three faces: Design, Traffic (the run bar) and Review. */
 .dock {
   display: flex;
   align-items: center;
@@ -1175,7 +1175,17 @@ kbd {
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   backdrop-filter: blur(18px) saturate(1.4);
 }
-.workspace[data-mode="data"] .dock { display: none; }
+/* One island, three faces (6.4): the lens picks which one shows. */
+.dock-face { display: flex; align-items: center; gap: 0.25rem; min-inline-size: 0; }
+.dock-face[hidden] { display: none; }
+.dock-fail { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2rem; padding-inline: 0.7rem; border: 1px solid transparent; border-radius: 0.6rem; background: none; color: var(--wl-rose); font: var(--cc-font-small); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.dock-fail:hover { background: var(--cc-well); }
+.dock-fail kbd { font: 0.7rem var(--wl-font-mono); opacity: 0.7; }
+.dock-fail[aria-pressed="true"] { background: var(--wl-rose); color: var(--cc-sheet); }
+.workspace[data-fail-armed] .arch-node { cursor: crosshair; }
+.review-count { flex: none; font: var(--cc-font-small); font-variant-numeric: tabular-nums; color: var(--cc-ink-2); white-space: nowrap; }
+.review-sentence { flex: 1 1 14rem; min-inline-size: 8rem; max-inline-size: 28rem; font: var(--cc-font-small); color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-fixes { display: contents; }
 .dock-btn, .dock-fav {
   position: relative;
   flex: none;
@@ -1361,16 +1371,9 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 
 /* Run bar: scenario picker and transport for the Traffic lens (redesigned interface only). */
 .run-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
   gap: 0.4rem;
-  inline-size: min(40rem, 100%);
-  padding: 0.4rem 0.6rem;
-  background: var(--wl-surface);
-  border: 1px solid var(--wl-border);
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.14);
+  inline-size: min(42rem, 100%);
 }
 .run-bar[hidden] {
   display: none;

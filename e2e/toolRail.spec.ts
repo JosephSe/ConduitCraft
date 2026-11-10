@@ -192,12 +192,21 @@ test('dragging a favourite onto the sheet places it under the pointer and leaves
   expect(Math.abs(placed.x + placed.width / 2 - spot.x)).toBeLessThan(40);
 });
 
-test('the dock is the Design face: Traffic and Review leave it for the run bar', async ({ page }) => {
+test('the dock is one island with three faces: the lens picks which one shows', async ({ page }) => {
   await open(page);
+  const face = (name: string) => page.locator(`#dock [data-face="${name}"]`);
   await expect(page.locator('#dock')).toBeVisible();
+  await expect(face('design')).toBeVisible();
   await page.keyboard.press('2');
-  await expect(page.locator('#dock')).toBeHidden();
-  await page.keyboard.press('1');
   await expect(page.locator('#dock')).toBeVisible();
+  await expect(face('traffic')).toBeVisible();
+  await expect(face('design')).toBeHidden();
+  await page.keyboard.press('3');
+  await expect(face('review')).toBeVisible();
+  await expect(face('traffic')).toBeHidden();
+  await page.keyboard.press('1');
+  await expect(face('design')).toBeVisible();
+  await expect(face('review')).toBeHidden();
 });
+
 

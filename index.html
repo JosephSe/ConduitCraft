@@ -221,6 +221,7 @@
             <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</p>
 
           <div class="dock" id="dock" data-island role="toolbar" aria-label="Tools and components">
+          <div class="dock-face" data-face="design" role="group" aria-label="Tools and components">
           <button type="button" class="dock-btn" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" data-tip-pos="top" aria-label="Select tool (V)">
             <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
           </button>
@@ -241,18 +242,8 @@
           <span class="dock-sep" aria-hidden="true"></span>
           <button type="button" class="dock-all" id="btn-all-components" aria-haspopup="dialog" aria-expanded="false" aria-controls="tray" aria-keyshortcuts="C">All components <kbd>C</kbd></button>
           </div>
-      <!-- Chaos summary (Traffic lens): what the current failures break -->
-      <section class="chaos-panel" id="chaos-panel" data-island aria-label="Failure summary" hidden>
-        <div class="chaos-panel-head">
-          <button type="button" class="btn btn-compact" id="chaos-summary" aria-expanded="false" aria-controls="chaos-list"></button>
-          <button type="button" class="btn btn-compact" id="chaos-reset">Restore all</button>
-          <button type="button" class="help-btn" data-help="failing" aria-label="Help: Failing components" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
-        </div>
-        <ul class="chaos-list" id="chaos-list" hidden></ul>
-      </section>
-
-      <!-- Run bar (redesigned interface, Traffic lens): scenario picker and transport controls -->
-      <div class="run-bar" id="run-bar" data-island role="region" aria-label="Run bar" hidden>
+      <!-- Traffic face of the dock (6.4): scenario picker, transport, and Fail a component -->
+      <div class="dock-face run-bar" id="run-bar" data-face="traffic" role="group" aria-label="Run bar" hidden>
         <div class="run-bar-group" role="group" aria-label="Playback">
           <select class="run-bar-scenario" id="run-bar-scenario" aria-label="Scenario"></select>
           <button type="button" class="btn btn-icon-only btn-compact" data-run-step="-1" aria-label="Previous step" data-tip="Previous step" data-tip-pos="top">
@@ -270,9 +261,35 @@
           <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
           </button>
-          <button type="button" class="help-btn" data-help="traffic" aria-label="Help: Traffic and scenarios" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button type="button" class="dock-fail" id="run-bar-fail" aria-pressed="false" aria-keyshortcuts="X" data-tip="Fail a component, then click the one to fail" data-tip-pos="top">Fail a component <kbd>X</kbd></button>
         </div>
       </div>
+
+      <!-- Review face of the dock (6.4): step through the issues, with the fixes each offers -->
+      <div class="dock-face" id="review-face" data-face="review" role="group" aria-label="Review" hidden>
+        <button type="button" class="btn btn-icon-only btn-compact" id="review-prev" aria-label="Previous issue" data-tip="Previous issue" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="review-count" id="review-count" role="status" aria-live="polite"></span>
+        <button type="button" class="btn btn-icon-only btn-compact" id="review-next" aria-label="Next issue" data-tip="Next issue" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <span class="review-sentence" id="review-sentence"></span>
+        <span class="review-fixes" id="review-fixes"></span>
+        <button type="button" class="btn btn-compact" id="review-ignore" data-tip="Stop flagging this kind of issue" data-tip-pos="top">Ignore this rule</button>
+      </div>
+          </div>
+      <!-- Chaos summary (Traffic lens): what the current failures break -->
+      <section class="chaos-panel" id="chaos-panel" data-island aria-label="Failure summary" hidden>
+        <div class="chaos-panel-head">
+          <button type="button" class="btn btn-compact" id="chaos-summary" aria-expanded="false" aria-controls="chaos-list"></button>
+          <button type="button" class="btn btn-compact" id="chaos-reset">Restore all</button>
+          <button type="button" class="help-btn" data-help="failing" aria-label="Help: Failing components" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
+        </div>
+        <ul class="chaos-list" id="chaos-list" hidden></ul>
+      </section>
+
 
           </div>
           <div class="slot slot-se" id="slot-se">

@@ -53,10 +53,8 @@ test('wire fields, routing and the legend each have a ?', async ({ page }) => {
   await checkHelpButton(page, legend, /Legend and tags/);
 });
 
-test('the run bar, failure summary and Review panel each have a ?', async ({ page }) => {
+test('the failure summary and Review panel each have a ? (the dock faces have none; the palette lists every topic)', async ({ page }) => {
   await page.keyboard.press('2');
-  await checkHelpButton(page, page.locator('#run-bar .help-btn'), /Traffic and scenarios/);
-
   await page.locator('.arch-node').first().click();
   await page.keyboard.press('x');
   await expect(page.locator('#chaos-panel')).toBeVisible();

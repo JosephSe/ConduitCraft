@@ -192,6 +192,7 @@ import { initChaosPanel } from './chaosPanel';
 import { initQueueBacklog } from './queueBacklog';
 import { queueWireDefaults } from '../core/appearance';
 import { initInsightsPanel } from './insights';
+import { initDockFaces } from './dockFaces';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
@@ -2181,6 +2182,7 @@ export function initEvents(): void {
   initChaosPanel();
   initQueueBacklog();
   initInsightsPanel();
+  initDockFaces();
   initHelp();
   initChaosPreview(chaosNodesLayer);
 
