@@ -283,7 +283,7 @@ kbd {
   padding: 0.6rem 0.75rem;
   border: 1px dashed var(--wl-border-ui);
   border-radius: 0.5rem;
-  background: var(--wl-surface-code);
+  background: var(--cc-well);
   cursor: pointer;
   transition: border-color 0.15s, background-color 0.15s;
   min-inline-size: 0;
@@ -323,12 +323,12 @@ kbd {
 
 .custom-icon-upload-title {
   font-weight: 600;
-  color: var(--wl-ink);
+  color: var(--cc-ink);
 }
 
 .custom-icon-upload-sub {
   font-size: 0.7rem;
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-2);
 }
 
 /* Command Palette Dialog */
@@ -1159,7 +1159,7 @@ kbd {
    Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
    --------------------------------------------------------------------------------------------- */
-/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Design lens only until S5 gives the other lenses a face. */
+/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Three faces: Design, Traffic (the run bar) and Review. */
 .dock {
   display: flex;
   align-items: center;
@@ -1175,7 +1175,17 @@ kbd {
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   backdrop-filter: blur(18px) saturate(1.4);
 }
-.workspace[data-mode="data"] .dock { display: none; }
+/* One island, three faces (6.4): the lens picks which one shows. */
+.dock-face { display: flex; align-items: center; gap: 0.25rem; min-inline-size: 0; }
+.dock-face[hidden] { display: none; }
+.dock-fail { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2rem; padding-inline: 0.7rem; border: 1px solid transparent; border-radius: 0.6rem; background: none; color: var(--wl-rose); font: var(--cc-font-small); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.dock-fail:hover { background: var(--cc-well); }
+.dock-fail kbd { font: 0.7rem var(--wl-font-mono); opacity: 0.7; }
+.dock-fail[aria-pressed="true"] { background: var(--wl-rose); color: var(--cc-sheet); }
+.workspace[data-fail-armed] .arch-node { cursor: crosshair; }
+.review-count { flex: none; font: var(--cc-font-small); font-variant-numeric: tabular-nums; color: var(--cc-ink-2); white-space: nowrap; }
+.review-sentence { flex: 1 1 14rem; min-inline-size: 8rem; max-inline-size: 28rem; font: var(--cc-font-small); color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-fixes { display: contents; }
 .dock-btn, .dock-fav {
   position: relative;
   flex: none;
@@ -1361,16 +1371,9 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 
 /* Run bar: scenario picker and transport for the Traffic lens (redesigned interface only). */
 .run-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
   gap: 0.4rem;
-  inline-size: min(40rem, 100%);
-  padding: 0.4rem 0.6rem;
-  background: var(--wl-surface);
-  border: 1px solid var(--wl-border);
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.14);
+  inline-size: min(42rem, 100%);
 }
 .run-bar[hidden] {
   display: none;
@@ -1942,3 +1945,25 @@ body[data-presenting="true"] .page-strip { display: none; }
   border: 1px dashed currentColor;
   pointer-events: none;
 }
+
+/* The inspector (6.5): a header with the selection's cut-out, then Look, Behaviour and Notes in a well. */
+.prop-selection-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.25rem 0 0.75rem; }
+.prop-selection-art { flex: none; display: grid; place-items: center; inline-size: 3rem; block-size: 2.25rem; border-radius: 0.6rem; background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 22%, transparent); }
+.prop-selection-art .cutout { inline-size: 2.25rem; block-size: auto; }
+.prop-selection-text { display: grid; min-inline-size: 0; }
+.prop-selection-name { font-size: 1rem; font-weight: 600; color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prop-selection-kind { font: var(--cc-font-small); color: var(--cc-ink-3); }
+.prop-tablist { display: flex; gap: 0.2rem; padding: 0.2rem; margin-block-end: 0.75rem; background: var(--cc-well); border-radius: 0.7rem; }
+.prop-tab { flex: 1; block-size: 1.9rem; border: 0; border-radius: 0.5rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); font-weight: 600; cursor: pointer; }
+.prop-tab:hover { color: var(--cc-ink); }
+.prop-tab[aria-selected="true"] { background: var(--cc-sheet); color: var(--cc-ink); box-shadow: 0 1px 2px rgba(2, 6, 23, 0.12); }
+.prop-tab:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
+.prop-tabpanel[hidden] { display: none; }
+.prop-tabpanel { display: grid; gap: 0.75rem; }
+
+/* Create by wiring (7.4): four cut-outs above the new component. */
+.kind-strip { position: fixed; z-index: 40; display: flex; gap: 0.2rem; padding: 0.3rem; transform: translate(-50%, -100%); background: var(--cc-island); border: 1px solid var(--cc-hair); border-radius: 0.9rem; box-shadow: var(--wl-shadow-card); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); }
+.kind-strip-item { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.25rem; border: 0; border-radius: 0.6rem; background: none; color: inherit; cursor: pointer; }
+.kind-strip-item:hover { background: var(--cc-well); }
+.kind-strip-item.is-on { background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 26%, transparent); box-shadow: inset 0 0 0 1.5px var(--t, var(--cc-ink)); }
+.kind-strip-item .cutout { inline-size: 30px; block-size: 24px; }

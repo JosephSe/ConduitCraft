@@ -77,7 +77,7 @@ Checked on 2026-11-09 by reading the source and running the app at 1440 × 900 a
 | Renderer | Keyed DOM for components, SVG for wires | `src/studio/keyedStage.ts` |
 | Styles | `studio.css` is 5,686 lines in nine `@layer`s; `shared.css` and `viewer.css` also feed the HTML export | `src/styles/` |
 | Tokens | 142 `--wl-*` tokens with a thin `--cc-*` layer on top | `src/styles/shared.css` |
-| Entry CSS / JS | 110.0 of 115 kB / 530.7 of 540 kB | `tools/checkBundleSize.mjs` |
+| Entry CSS / JS | 110.0 of 115 kB / 530.7 of 550 kB | `tools/checkBundleSize.mjs` |
 | Font | The stack names `Inter` but no font ships, so the app differs by machine | `--wl-font-sans` |
 | Component boxes | Fixed per kind and **saved in every file** | `getNodeDimensions`, `src/core/layout.ts:13` |
 | Shape outlines | Already computed as geometry | `nodeShapePlate`, `src/core/nodeStyle.ts` |
@@ -756,20 +756,40 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - Tests: `trayDemo.test.ts` (4: seven loops, which components run which, a line for every item, the still rules exist); five more tray specs (the pane follows focus and the pointer; each behaviour's capsule count and keyframes; structure shows no capsules; reduced motion gives stills with the rose capsule fallen back; typing moves it; axe in both themes; hidden when narrow). View 03 re-recorded, in reduced motion, so it shows the queue's end state.
   - **Entry CSS cap raised from 112 to 116 KiB** (the owner allowed it): this PR took 2.7 kB, and S5 to S8 still have chrome to draw. Entry CSS is 111.1 kB of 116; entry JS 535.3 kB of 540.
 
-#### [ ] S5. Dock, Traffic and Review faces · M
+#### [x] S5. Dock, Traffic and Review faces · M
 - **Read:** `runBar.ts`, `simulationPlayback.ts`, `chaos.ts`, `studio/insights.ts`.
 - **Do:** 6.4. Run-control ids are kept.
 - **Done:** `e2e/runBar.spec.ts`, `chaos.spec.ts`, `insights.spec.ts` pass. **Needs:** S3.
 
-#### [ ] S6. Inspector · L, split
-- **S6a · M:** island, header with cut-out, tabs, row and control styles.
-- **S6b · M:** move each field into its tab.
+- **S5 result.**
+  - **One island, three faces.** `#dock` is always on screen. `dockFaces.ts` shows the Design, Traffic or Review face for the lens. The run bar keeps its ids (`#run-bar`, `#run-bar-*`) and is now the Traffic face inside the dock; its own box styling is gone.
+  - **Fail a component** (`#run-bar-fail`, rose, `X`): with a component selected it fails that one, as `X` does; with nothing selected it arms, and the next component picked fails. Esc or a lens change disarms.
+  - **Review face** (`#review-face`): previous, "1 of 3", next, the issue's sentence, the fixes it offers, "Ignore this rule". It steps through the same list the Review panel shows (`orderedInsights`), and selecting moves the camera as before. One fix exists so far: "Add a standby" on a single point of failure (adds a replica). Other rules offer none, because they have no single obvious answer.
+  - **Not here:** the redline mark pulsing once when stepping. The Traffic face's `?` is gone (the face is at the 8-control limit); every help topic is still in the palette.
+  - Baselines re-recorded: 04, 05, 06, 07 in light and dark.
+
+#### [x] S6. Inspector · L, split
+- **S6a · M [x]:** island, header with cut-out, tabs, row and control styles.
+- **S6b · M [x]:** move each field into its tab.
 - **Done:** every field that existed still exists with the same accessible name. **Needs:** T3, T4.
 
-#### [ ] S7. Create by wiring · S
+- **S6 result** (a and b in one change, to save a build).
+  - **Header and tabs.** A selected component shows its cut-out filled in its colour, its name at 16/600 and its kind, then **Look / Behaviour / Notes** in a well (`#prop-tab-*`, `#prop-panel-*`; arrow keys, Home and End move between tabs; the open tab is kept while you select other components). Each panel ends with its `?`.
+  - **Where each field went.** Look: Name, Kind, accent colour, icon, custom icon, shape, subtitle, label above title, badge, card footer. Behaviour: status, copies and fallback, external, queue, balancer, cache, limiter and schedule settings, interface, metrics and contract. Notes: description, owner, tags, links, review comment. Every id and label is as before; the old Basics, Appearance and More details sections are gone, so nothing is collapsible and nothing is hidden by default except the other two tabs.
+  - **Found on the way.** The custom-icon upload was never scanned by axe because it sat in a closed section. It had no label on its file input, a name that did not contain its visible text, and low contrast. All three are fixed.
+  - **Not here:** the 92 px label column and the 30 px control wells, steppers and switches (rows still stack label over control). Wire and document forms keep their current layout.
+  - Specs that reach a field now open its tab first (`showInspectorTab`).
+
+#### [x] S7. Create by wiring · S
 - **Read:** `interactions.ts` around line 521.
 - **Do:** 7.4, with the "likely next" kinds in `STENCIL_CATALOG` and a unit test in `tests/stencils.test.ts`.
 - **Needs:** S3.
+
+- **S7 result.**
+  - Each catalog stencil has a `next` list of four stencil ids (`likelyNext(kind)` in `presets.ts`; unknown kinds fall back to service, store, queue, cache). A wire dropped on empty sheet now makes the first of the source's list instead of always a Service.
+  - The new component carries a strip of four cut-outs (`kindStrip.ts`, loaded on first use, 2.6 kB). ← → or a click changes the kind in place: same id, centre and wires, and still one undo step with the creation. Typing opens the name with that first letter; Enter opens the name; any other key, a press elsewhere, or a scroll dismisses it.
+  - The name is no longer opened straight away; the old test now asserts the strip and typing.
+  - **Size:** entry JS is 540.7 kB with the catalog data, so the cap moves 540 to 550 KiB, as you allowed. Tests: `tests/stencils.test.ts` (936 unit tests), `e2e/interactions.spec.ts`.
 
 #### [ ] S8. Menus, command palette, contextual toolbar, dialogs, toasts · M
 - **Needs:** T3, T4.

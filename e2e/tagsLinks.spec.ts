@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { openLumenRelay, showInspectorTab } from './helpers';
 
 test('a component takes an owner, tags and links, and the legend renames a colour', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -9,6 +9,7 @@ test('a component takes an owner, tags and links, and the legend renames a colou
   await expect(node).toBeVisible();
   await node.click();
 
+  await showInspectorTab(page, 'notes');
   await page.locator('#prop-node-owner').fill('Payments team');
   await page.locator('#prop-node-tags').fill('pii, payments');
 
@@ -47,6 +48,7 @@ test('the view options colour by tag and filter by tag, and the Key opens the le
   await expect(nodes.first()).toBeVisible();
 
   await nodes.first().click();
+  await showInspectorTab(page, 'notes');
   await page.locator('#prop-node-tags').fill('pii');
   await page.locator('#prop-node-owner').blur();
 

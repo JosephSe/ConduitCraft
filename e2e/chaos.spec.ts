@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, showInspectorTab } from './helpers';
 
 test('Traffic lens: failing a component shows the blast radius, announces it, and restores', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -62,6 +62,7 @@ test('the inspector sets replicas, so a failure degrades instead of failing', as
   await openLumenRelay(page);
   const node = page.locator('.arch-node').first();
   await node.click();
+  await showInspectorTab(page, 'behaviour');
   await page.locator('#prop-node-replicas').fill('3');
   await page.locator('#prop-node-replicas').press('Tab');
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
@@ -152,4 +153,20 @@ test('a component that calls a failed one glows orange and pulses', async ({ pag
   const hit = risk.locator('.node-select-hit');
   await expect(hit).toHaveCSS('animation-name', 'chaos-pulse');
   await expect(hit).toHaveCSS('border-top-color', 'rgb(249, 115, 22)');
+});
+
+test('the dock\'s Fail a component arms the action, and the next component clicked fails', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await page.keyboard.press('2');
+  await clearSelection(page);
+  const fail = page.locator('#run-bar-fail');
+  await expect(fail).toBeVisible();
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(0);
+  await fail.click();
+  await expect(fail).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.arch-node').first().click();
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(1);
+  await expect(fail).toHaveAttribute('aria-pressed', 'false');
 });

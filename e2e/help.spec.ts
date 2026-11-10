@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Locator, type Page, test } from '@playwright/test';
-import { clearSelection, openLumenRelay, runPaletteCommand } from './helpers';
+import { clearSelection, openLumenRelay, runPaletteCommand, showInspectorTab } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -33,12 +33,17 @@ async function checkHelpButton(page: Page, button: Locator, title: RegExp): Prom
   await expect(button).toHaveAttribute('aria-expanded', 'false');
 }
 
-test('every inspector section has a ? that works from the keyboard and closes with Esc', async ({ page }) => {
+test('every inspector tab has a ? that works from the keyboard and closes with Esc', async ({ page }) => {
   await page.locator('.arch-node').first().click();
-  const sections = page.locator('#prop-form-container .prop-section-wrap > .help-btn');
-  await expect(sections).toHaveCount(5);
-  await checkHelpButton(page, sections.first(), /Component fields/);
-  for (let i = 1; i < 5; i += 1) await checkHelpButton(page, sections.nth(i), /./);
+  const tabs: Array<['look' | 'behaviour' | 'notes', RegExp]> = [
+    ['look', /Component fields/],
+    ['behaviour', /./],
+    ['notes', /./],
+  ];
+  for (const [tab, title] of tabs) {
+    await showInspectorTab(page, tab);
+    await checkHelpButton(page, page.locator(`#prop-panel-${tab} > .help-btn`), title);
+  }
 });
 
 test('wire fields, routing and the legend each have a ?', async ({ page }) => {
@@ -53,10 +58,8 @@ test('wire fields, routing and the legend each have a ?', async ({ page }) => {
   await checkHelpButton(page, legend, /Legend and tags/);
 });
 
-test('the run bar, failure summary and Review panel each have a ?', async ({ page }) => {
+test('the failure summary and Review panel each have a ? (the dock faces have none; the palette lists every topic)', async ({ page }) => {
   await page.keyboard.press('2');
-  await checkHelpButton(page, page.locator('#run-bar .help-btn'), /Traffic and scenarios/);
-
   await page.locator('.arch-node').first().click();
   await page.keyboard.press('x');
   await expect(page.locator('#chaos-panel')).toBeVisible();

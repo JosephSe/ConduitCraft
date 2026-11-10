@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { STENCIL_CATALOG, createNodeFromStencil, findStencil, kindStencils } from '../src/templates/presets.ts';
+import { STENCIL_CATALOG, createNodeFromStencil, findStencil, kindStencils, likelyNext } from '../src/templates/presets.ts';
 
 describe('stencil ids (phase 0)', () => {
   it('gives every stencil an id; the existing ones equal their kind', () => {
@@ -61,5 +61,26 @@ describe('stencil ids (phase 0)', () => {
     } finally {
       STENCIL_CATALOG.pop();
     }
+  });
+});
+
+describe('likely next kinds (7.4)', () => {
+  it('every stencil names four different stencils that exist', () => {
+    for (const s of STENCIL_CATALOG.filter((x) => x.id !== 'test-bucket')) {
+      assert.equal(s.next?.length, 4, `${s.id} lists four`);
+      assert.equal(new Set(s.next).size, 4, `${s.id} lists four different kinds`);
+      for (const id of s.next!) assert.ok(findStencil(id), `${s.id} -> ${id} exists`);
+    }
+  });
+
+  it('follows the table the plan names', () => {
+    const ids = (from: string) => likelyNext(from).map((s) => s.id);
+    assert.deepEqual(ids('gate').slice(0, 2), ['balancer', 'service']);
+    for (const id of ['store', 'queue', 'cache']) assert.ok(ids('service').includes(id), `after a service: ${id}`);
+  });
+
+  it('falls back to the service kinds for something it does not know', () => {
+    assert.equal(likelyNext('nope').length, 4);
+    assert.equal(likelyNext('nope')[0].id, 'service');
   });
 });

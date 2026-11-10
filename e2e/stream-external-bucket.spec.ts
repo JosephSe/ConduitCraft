@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { placeComponent } from './helpers';
+import { placeComponent, showInspectorTab } from './helpers';
 
 async function open(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -22,6 +22,7 @@ test('a Stream / Log from the list is a pipe with lanes, and Partitions changes 
   await expect(stream.locator('.node-shape-lanes')).toHaveCount(1);
   await page.keyboard.press('1');
   await stream.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const partitions = page.locator('#prop-node-queue-partitions');
   await expect(partitions).toBeVisible();
   await partitions.fill('6');
@@ -38,6 +39,7 @@ test('Run by someone else draws a component dashed with an external flag', async
   await expect(service).not.toHaveAttribute('data-external', 'true');
   await page.keyboard.press('1');
   await service.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const box = page.locator('#prop-node-external');
   await expect(box).toBeVisible();
   await box.check();
