@@ -125,13 +125,14 @@
   line-gap-override: 0%;
 }
 
+/* These overrides stayed with the linear Linux measurement. */
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("LiberationSans");
   font-weight: 700;
   size-adjust: 107.32%;
-  ascent-override: 90.38%;
-  descent-override: 23.30%;
+  ascent-override: 93.74%;
+  descent-override: 24.16%;
   line-gap-override: 0%;
 }
 
@@ -140,8 +141,8 @@
   src: local("Liberation Sans");
   font-weight: 700;
   size-adjust: 107.32%;
-  ascent-override: 90.38%;
-  descent-override: 23.30%;
+  ascent-override: 93.74%;
+  descent-override: 24.16%;
   line-gap-override: 0%;
 }
 
@@ -150,8 +151,8 @@
   src: local("Arial");
   font-weight: 700;
   size-adjust: 107.32%;
-  ascent-override: 90.38%;
-  descent-override: 23.30%;
+  ascent-override: 93.74%;
+  descent-override: 24.16%;
   line-gap-override: 0%;
 }
 
