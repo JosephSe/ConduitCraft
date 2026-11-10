@@ -1852,7 +1852,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   .node-level-badge[data-has-child='true']::after {
     content: '';
     position: absolute;
-    inset: -12px;
+    inset: -14px;
   }
 }
 
@@ -1979,3 +1979,53 @@ body[data-presenting="true"] .page-strip { display: none; }
 .kind-strip-item:hover { background: var(--cc-well); }
 .kind-strip-item.is-on { background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 26%, transparent); box-shadow: inset 0 0 0 1.5px var(--t, var(--cc-ink)); }
 .kind-strip-item .cutout { inline-size: 30px; block-size: 24px; }
+
+/* Components (8.2): one card anatomy. Tile, title, subtitle, then kind on the left and readout on the right. */
+.arch-node:not([data-shape],[data-kind="actor"]) .node-select-hit { padding: 0.8rem 0.9rem; border: 1px solid var(--cc-hair-2); border-radius: 10px; background: var(--cc-sheet); box-shadow: var(--cc-shadow-1); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-icon { inline-size: 30px; block-size: 30px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--node-accent) 35%, var(--cc-sheet)); background: color-mix(in oklab, var(--node-accent) 12%, var(--cc-sheet)); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-title { font: var(--cc-font-title); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-sub { font: var(--cc-font-small); color: var(--cc-ink-2); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-footer { gap: 0.5rem; border: 0; padding: 0; font: 400 11px/14px var(--wl-font-mono); }
+.arch-node:not([data-shape],[data-kind="actor"]) .micro-chip { margin-inline-start: auto; padding: 0; border: 0; background: none; font: inherit; color: var(--cc-ink-2); }
+.arch-node:not([data-shape]) .node-eyebrow { color: var(--cc-ink-3); font: inherit; }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-footer-label:empty { display: none; }
+.arch-node[data-shape] .node-light { display: none; }
+.node-light { inline-size: 7px; block-size: 7px; margin: 3px; border-radius: 50%; background: var(--cc-ink-3); opacity: 0.55; }
+#workspace[data-lens="traffic"] .node-light { background: var(--cc-emerald); opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--cc-emerald) 22%, transparent); }
+
+/* Shaped kinds (8.2): the outline is the plate and carries the colour. The title and subtitle are centred and there is no tile. */
+.arch-node[data-shape] .node-shape-geom { fill: color-mix(in oklab, var(--node-accent) 5%, var(--cc-sheet)); stroke: color-mix(in oklab, var(--node-accent) 58%, var(--cc-sheet)); stroke-width: 1.25; }
+.arch-node[data-shape] .node-select-hit:hover .node-shape-geom,
+.arch-node[data-shape].is-related .node-shape-geom { stroke: var(--node-accent); }
+.arch-node[data-shape] .node-select-hit[aria-pressed="true"] .node-shape-geom { stroke: var(--cc-ink); stroke-width: 2; }
+.arch-node[data-shape] .node-select-hit { padding-inline: 1rem; }
+
+/* Selected (8.5): a 2 px ink ring with a 3 px gap. */
+.arch-node:not([data-shape]) .node-select-hit[aria-pressed="true"] { border-color: var(--cc-ink); outline: 2px solid var(--cc-ink); outline-offset: 3px; box-shadow: var(--cc-shadow-1); }
+
+/* Badges (8.2): lock, comment and level share one row on the bottom edge. */
+.arch-node .node-lock-badge, .arch-node .node-comment-badge, .arch-node .node-level-badge { inset: auto auto -8px auto; inline-size: 16px; min-inline-size: 16px; block-size: 16px; padding: 0; box-shadow: none; background: var(--cc-sheet); border: 1px solid var(--cc-hair-2); color: var(--cc-ink-3); font-size: 10px; }
+.arch-node .node-lock-badge { inset-inline-end: 8px; }
+.arch-node .node-comment-badge { inset-inline-end: 28px; }
+.arch-node .node-level-badge { inset-inline-end: 48px; }
+.arch-node .node-lock-badge svg, .arch-node .node-comment-badge svg { inline-size: 10px; block-size: 10px; }
+
+/* States (8.5): a ring, the light, and a word. Colour never stands alone. */
+.arch-node[data-chaos] { --st: var(--cc-ink-3); }
+.arch-node[data-chaos="failed"] { --st: var(--wl-rose); }
+.arch-node[data-chaos="degraded"], .arch-node[data-chaos="slowed"], .arch-node[data-chaos="at-risk"], .arch-node[data-chaos="delayed"], .arch-node[data-chaos="buffering"] { --st: var(--wl-amber, #d97706); }
+.arch-node[data-chaos="rerouted"], .arch-node[data-chaos="bypassed"] { --st: var(--wl-blue); }
+.arch-node[data-chaos] .node-select-hit { border-color: var(--st); box-shadow: var(--cc-shadow-1); outline: 2px solid var(--st); outline-offset: 0; }
+.arch-node[data-chaos="delayed"] .node-select-hit, .arch-node[data-chaos="buffering"] .node-select-hit, .arch-node[data-chaos="rerouted"] .node-select-hit, .arch-node[data-chaos="bypassed"] .node-select-hit { outline-style: dashed; }
+.arch-node[data-chaos="slowed"] .node-select-hit { outline-style: solid; }
+.arch-node[data-chaos="unreachable"] .node-select-hit { outline-width: 1px; outline-style: dashed; filter: grayscale(1); opacity: 0.55; }
+.arch-node[data-chaos="failed"] .node-select-hit:not(:has(.node-shape-plate)) { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--wl-rose) 6%, transparent) 0 2px, transparent 2px 7px); }
+.arch-node[data-chaos="failed"] .node-icon { transform: rotate(8deg); }
+.arch-node[data-chaos] .node-light { background: var(--st); opacity: 1; box-shadow: none; }
+.arch-node[data-shape][data-chaos] .node-shape-geom { stroke: var(--st); stroke-width: 2; }
+.arch-node[data-chaos] .chaos-badge { background: var(--cc-sheet); color: var(--st); border: 1px solid var(--st); font: 600 11px/1.3 var(--wl-font-sans, inherit); }
+.arch-node[data-chaos="unreachable"] .chaos-badge { color: var(--cc-ink-2); }
+.arch-node:not([data-shape],[data-kind="actor"])[data-chaos] .chaos-badge { inset-block-start: 0.7rem; inset-inline-start: auto; inset-inline-end: 1.8rem; transform: none; padding: 0; background: none; border: 0; }
+.arch-node[data-shape="rounded"]:not([data-chaos]) .node-select-hit, .arch-node[data-shape="pill"]:not([data-chaos]) .node-select-hit { background: color-mix(in oklab, var(--node-accent) 5%, var(--cc-sheet)); border: 1.25px solid color-mix(in oklab, var(--node-accent) 58%, var(--cc-sheet)); box-shadow: var(--cc-shadow-1); }
+.arch-node[data-shape="rounded"] .node-select-hit[aria-pressed="true"], .arch-node[data-shape="pill"] .node-select-hit[aria-pressed="true"] { border-color: var(--cc-ink); outline: 2px solid var(--cc-ink); outline-offset: 3px; box-shadow: var(--cc-shadow-1); }

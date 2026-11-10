@@ -143,7 +143,7 @@ function renderExportedNode(
       ${badges}
       <div class="node-top">
         <span class="node-icon">${exportedIconMarkup(node, 19, '')}</span>
-        <span class="node-eyebrow">${escapeHtml(node.eyebrow)}</span>
+        <span class="node-eyebrow">${node.external ? 'External' : escapeHtml(node.eyebrow)}</span>
       </div>
       <div>
         <span class="node-title">${escapeHtml(node.title)}</span>

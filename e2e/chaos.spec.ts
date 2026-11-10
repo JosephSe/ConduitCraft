@@ -140,7 +140,7 @@ test('only the failed component\'s own wires stop, and nothing stays dimmed once
   expect(state).toEqual({ ownRunning: 0, othersStopped: 0, dimmedNodes: 0, dimmedWires: 0 });
 });
 
-test('a component that calls a failed one glows orange and pulses', async ({ page }) => {
+test('a component that calls a failed one glows amber and pulses', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -152,7 +152,7 @@ test('a component that calls a failed one glows orange and pulses', async ({ pag
   await expect(risk.locator('.chaos-badge')).toHaveText(/Potential disruption/);
   const hit = risk.locator('.node-select-hit');
   await expect(hit).toHaveCSS('animation-name', 'chaos-pulse');
-  await expect(hit).toHaveCSS('border-top-color', 'rgb(249, 115, 22)');
+  await expect(hit).toHaveCSS('border-top-color', 'rgb(180, 83, 9)');
 });
 
 test('the dock\'s Fail a component arms the action, and the next component clicked fails', async ({ page }) => {

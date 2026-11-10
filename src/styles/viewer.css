@@ -656,3 +656,16 @@ body:has(.export-page-strip) .canvas-hud { inset-block-end: 3.5rem; }
   border: 1px dashed currentColor;
   pointer-events: none;
 }
+
+/* Components (8.2): one card anatomy. Tile, title, subtitle, then kind on the left and readout on the right. */
+.arch-node:not([data-shape],[data-kind="actor"]) .node-select-hit { padding: 0.8rem 0.9rem; border: 1px solid var(--cc-hair-2); border-radius: 10px; background: var(--cc-sheet); box-shadow: var(--cc-shadow-1); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-icon { inline-size: 30px; block-size: 30px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--node-accent) 35%, var(--cc-sheet)); background: color-mix(in oklab, var(--node-accent) 12%, var(--cc-sheet)); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-title { font: var(--cc-font-title); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-sub { font: var(--cc-font-small); color: var(--cc-ink-2); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-footer { gap: 0.5rem; border: 0; padding: 0; font: 400 11px/14px var(--wl-font-mono); }
+.arch-node:not([data-shape],[data-kind="actor"]) .micro-chip { margin-inline-start: auto; padding: 0; border: 0; background: none; font: inherit; color: var(--cc-ink-2); }
+.arch-node:not([data-shape]) .node-eyebrow { color: var(--cc-ink-3); font: inherit; }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-footer-label:empty { display: none; }
+.arch-node[data-shape] .node-light { display: none; }
+.node-light { inline-size: 7px; block-size: 7px; margin: 3px; border-radius: 50%; background: var(--cc-ink-3); opacity: 0.55; }
