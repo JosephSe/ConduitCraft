@@ -832,14 +832,16 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Do:** 8.5. **Done:** a new `e2e/states.spec.ts` asserts each state's word is visible. **Needs:** C2.
 - **Done (C3, with C2b):** every state sets `--st` on `.arch-node[data-chaos]`; ring, light and the word beside the light use it. Failed is rose with a 6% hatch and an 8° tile; degraded, slowed, at risk, delayed and buffering are amber (dashed for delayed and buffering); rerouted and bypassed are blue dashed; unreachable is a 1 px grey dashed ring, greyscale at 55%. The words lost their emoji. The selected card has a 2 px ink ring with a 3 px gap. Entry CSS budget raised to 124 kB.
 
-#### [ ] C4. Wires · M
+#### [x] C4. Wires · M
 - **Read:** the `conduit` code in `keyedStage.ts`; `studio.css` 1300 to 1400.
 - **Do:** 8.3 for the Design look, label rules, and D8 with its preference.
 - **Done:** on view 1, sync and async can be told apart in a still. **Needs:** C1.
+- **Done (C4, with C5):** every wire has a 6 px casing under a 1.75 px line in its tone; async is dashed `6 5` with an open chevron, sync has a filled head (both on the rail, so they show while Design is still). Design flow is paused and hidden unless hovered, selected or highlighted; Preferences has "Animate wires while designing" (off). Pills sit on the sheet with radius 5. Not yet: label visibility by zoom, the mono protocol prefix, "Always show wire labels".
 
-#### [ ] C5. Lens lighting · M
+#### [x] C5. Lens lighting · M
 - **Do:** 8.4: lights down, tubes, status lights; `core/roughen.ts` with unit tests; redline marks.
 - **Done:** views 4 and 6 match the mockup's Traffic and Review. **Needs:** C3, C4.
+- **Done (C5, with C4):** Traffic dims the sheet to `--canvas-run` over 320 ms, thins the line to 1 px at 55% and fades in a 10 px tube; Review greys components and wires at 62% and hides labels. `core/roughen.ts` (seeded, unit-tested) draws the redline ellipses in `studio/redline.ts`: solid and self-drawing for errors, dashed for warnings and notes, numbered like the issue list. The insight badges and wire restyling are gone. Not yet: "Keep colour in Review", wire ellipses at the true label position.
 
 #### [ ] C6. The map, the title block, export audit · M
 - **Do:** 8.6 and 8.7; compare canvas with SVG, PNG, HTML and GIF exports in both themes and fix every difference; re-record README media.

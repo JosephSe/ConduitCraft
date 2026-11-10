@@ -665,6 +665,27 @@ export function bindLegendPreference(): void {
   });
 }
 
+/** "Animate wires while designing" (D8): off by default; the flag on the body lets the Design lens move its flow. */
+export function bindAnimateWiresPreference(): void {
+  const box = document.getElementById('chk-animate-wires') as HTMLInputElement | null;
+  if (!box) return;
+  const apply = () => document.body.toggleAttribute('data-animate-wires', box.checked);
+  try {
+    box.checked = localStorage.getItem('cc-animate-wires') === 'true';
+  } catch {
+    // Storage unavailable: the preference lasts until the page reloads.
+  }
+  apply();
+  box.addEventListener('change', () => {
+    apply();
+    try {
+      localStorage.setItem('cc-animate-wires', String(box.checked));
+    } catch {
+      // As above.
+    }
+  });
+}
+
 /** Keeps every tag filter's options in step with the tags in the document. */
 function syncTagFilter(): void {
   const tags = allTags(app.doc);

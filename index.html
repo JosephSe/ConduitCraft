@@ -162,6 +162,13 @@
               <marker id="arrow-fuchsia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
                 <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="var(--wl-fuchsia)"/>
               </marker>
+              <marker id="chevron-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-blue)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-emerald)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-rose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-rose)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-violet)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-amber)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-cyan)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-fuchsia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-fuchsia)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
             </defs>
             <g id="wires-group"></g>
             <g id="dlq-links"></g>
@@ -845,6 +852,17 @@
               <span class="theme-option-sub">Keep components cleanly aligned while dragging</span>
             </span>
             <input type="checkbox" id="chk-snap-grid" name="snap-grid" checked>
+          </label>
+        </fieldset>
+
+        <fieldset class="theme-fieldset">
+          <legend style="font-weight: 700; padding-inline: 0.35rem; font-size: 0.85rem;">Wires</legend>
+          <label class="theme-option">
+            <span>
+              <strong>Animate wires while designing</strong>
+              <span class="theme-option-sub">Off by default: Design stays still and Traffic moves</span>
+            </span>
+            <input type="checkbox" id="chk-animate-wires" name="animate-wires">
           </label>
         </fieldset>
 

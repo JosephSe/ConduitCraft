@@ -10,7 +10,7 @@ test('Review lens lists insights, selects the target on click, and mutes a rule'
 
   // Nothing review-related shows in the other lenses.
   await expect(page.locator('#insights-panel')).toBeHidden();
-  await expect(page.locator('.insight-badge')).toHaveCount(0);
+  await expect(page.locator('.redline-mark')).toHaveCount(0);
 
   await page.keyboard.press('3');
   await expect(page.locator('#workspace')).toHaveAttribute('data-lens', 'review');
@@ -24,7 +24,7 @@ test('Review lens lists insights, selects the target on click, and mutes a rule'
   // Clicking an issue selects its target.
   const item = page.locator('.insight-item[data-type="node"]').first();
   await expect(item).toBeVisible();
-  await expect(page.locator('.insight-badge').first()).toBeVisible();
+  await expect(page.locator('.redline-mark').first()).toBeVisible();
   await item.click();
   await expect(page.locator('.arch-node .node-select-hit[aria-pressed="true"]')).toHaveCount(1);
 
@@ -39,7 +39,7 @@ test('Review lens lists insights, selects the target on click, and mutes a rule'
   // Back in Design the panel and badges are gone.
   await page.keyboard.press('1');
   await expect(panel).toBeHidden();
-  await expect(page.locator('.insight-badge')).toHaveCount(0);
+  await expect(page.locator('.redline-mark')).toHaveCount(0);
 });
 
 test('the dock shows the Review face: step through issues, fix one, ignore a rule', async ({ page }) => {

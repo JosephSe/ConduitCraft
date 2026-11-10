@@ -1591,25 +1591,6 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 }
 .insight-item:hover, .insight-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 .insight-empty { margin: 0; font-size: 0.8rem; color: var(--wl-muted, var(--wl-ink)); }
-.insight-badge {
-  position: absolute;
-  inset-block-start: -0.55rem;
-  inset-inline-end: -0.4rem;
-  z-index: 3;
-  padding: 0.05rem 0.4rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  pointer-events: none;
-  background: #f59e0b;
-  color: #1f1300;
-  box-shadow: 0 1px 4px rgba(2, 6, 23, 0.3);
-}
-.arch-node[data-insight="error"] .insight-badge { background: #e11d48; color: #fff; }
-.arch-node[data-insight="info"] .insight-badge { background: #3b82f6; color: #fff; }
-.conduit-group[data-insight="error"] .conduit-rail { stroke: #e11d48; stroke-dasharray: 6 4; }
-.conduit-group[data-insight="warning"] .conduit-rail { stroke: #f59e0b; stroke-dasharray: 6 4; }
-
 /* Nested levels (F-03) */
 .node-level-badge {
   position: absolute;
@@ -2029,3 +2010,30 @@ body[data-presenting="true"] .page-strip { display: none; }
 .arch-node:not([data-shape],[data-kind="actor"])[data-chaos] .chaos-badge { inset-block-start: 0.7rem; inset-inline-start: auto; inset-inline-end: 1.8rem; transform: none; padding: 0; background: none; border: 0; }
 .arch-node[data-shape="rounded"]:not([data-chaos]) .node-select-hit, .arch-node[data-shape="pill"]:not([data-chaos]) .node-select-hit { background: color-mix(in oklab, var(--node-accent) 5%, var(--cc-sheet)); border: 1.25px solid color-mix(in oklab, var(--node-accent) 58%, var(--cc-sheet)); box-shadow: var(--cc-shadow-1); }
 .arch-node[data-shape="rounded"] .node-select-hit[aria-pressed="true"], .arch-node[data-shape="pill"] .node-select-hit[aria-pressed="true"] { border-color: var(--cc-ink); outline: 2px solid var(--cc-ink); outline-offset: 3px; box-shadow: var(--cc-shadow-1); }
+
+/* C4 wires (8.3). The casing makes a crossing read as over and under; the line is thin in the wire's colour. */
+.conduit-casing { fill: none; stroke: var(--cc-canvas); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; transition: stroke 320ms; }
+.workspace[data-lens="traffic"] .conduit-casing, .workspace[data-lens="review"] .conduit-casing { stroke: var(--cc-canvas-run); }
+.conduit-group .conduit-rail { stroke: var(--t, var(--wl-border-ui)); stroke-width: 1.75; opacity: 1; transition: stroke-width 320ms, opacity 320ms; }
+.conduit-group[data-sync="async"] .conduit-rail { stroke-dasharray: 6 5; }
+.conduit-group:focus-visible .conduit-rail, .conduit-group.is-selected .conduit-rail { stroke-width: 2.5; }
+.route-pill-bg { fill: var(--cc-sheet); rx: 5px; stroke: var(--cc-hair-2); stroke-width: 1; }
+/* D8: Design is still. The flow only moves on hover, selection or a highlighted path, or with the preference on. */
+body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not(:hover, .is-selected, .is-highlighted) :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
+/* C5 lens lighting (8.4). Traffic dims the sheet, thins the line and fades in a 10 px tube; Review greys everything. */
+.conduit-glow { display: inline; fill: none; stroke: var(--t, var(--wl-border-ui)); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity 320ms; }
+.workspace[data-lens="traffic"] .conduit-glow { opacity: 0.2; }
+.workspace[data-lens="traffic"] .conduit-rail { stroke-width: 1; opacity: 0.55; }
+.workspace[data-lens="traffic"] .canvas-shell { background-color: var(--cc-canvas-run); transition: background-color 320ms; }
+.workspace[data-lens="traffic"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit,
+.workspace[data-lens="review"] .conduit-badge-hit { display: none; }
+.workspace[data-lens="review"] :is(.arch-node, .conduit-group) { filter: grayscale(1); opacity: 0.62; }
+/* The redline: hand-drawn ellipses and numbers, drawn once in 700 ms when the lens opens. */
+#redline-layer { pointer-events: none; }
+.redline-mark path { fill: none; stroke: var(--cc-redline); stroke-width: 2; stroke-linecap: round; }
+.redline-mark[data-level="error"] path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: redline-draw 700ms ease-out forwards; }
+.redline-mark:not([data-level="error"]) path { stroke-dasharray: 0.04 0.02; animation: redline-fade 700ms ease-out; }
+.redline-mark text { fill: var(--cc-redline); font: 700 13px var(--cc-font-mono, monospace); }
+@keyframes redline-draw { to { stroke-dashoffset: 0; } }
+@keyframes redline-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .redline-mark path { animation: none; stroke-dashoffset: 0; } }

@@ -58,7 +58,6 @@ import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
 import { paintBacklog, paintDlqLinks } from './queueBacklog';
 import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
-import { insightsFor, worstLevel } from './insights';
 import { scheduleMinimapPaint } from './minimap';
 import { clearGuides, paintGuides } from './guideOverlay';
 import { distancesTo, snapToGuides } from './guides';
@@ -624,6 +623,8 @@ function createWireGroup(edgeId: string): SVGGElement {
     selectWire(e);
   });
 
+  const casing = document.createElementNS(SVG_NS, 'path');
+  casing.setAttribute('class', 'conduit-casing');
   const glow = document.createElementNS(SVG_NS, 'path');
   glow.setAttribute('class', 'conduit-glow');
   const rail = document.createElementNS(SVG_NS, 'path');
@@ -635,7 +636,7 @@ function createWireGroup(edgeId: string): SVGGElement {
   const portDot = document.createElementNS(SVG_NS, 'circle');
   portDot.setAttribute('class', 'port-dot');
   portDot.setAttribute('r', '4');
-  g.append(hit, glow, rail, stream, streamRev, portDot);
+  g.append(hit, casing, glow, rail, stream, streamRev, portDot);
 
   const ensureBadge = (edge: RoutedDiagramEdge) => {
     let badge = g.querySelector<SVGGElement>('.conduit-badge-hit');
@@ -819,9 +820,6 @@ function createWireGroup(edgeId: string): SVGGElement {
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
     const cut = chaosLensActive() && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
     g.classList.toggle('is-chaos-cut', cut);
-    const wireLevel = worstLevel(insightsFor('edge', edge.id));
-    if (wireLevel) g.dataset.insight = wireLevel;
-    else delete g.dataset.insight;
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;
@@ -833,17 +831,16 @@ function createWireGroup(edgeId: string): SVGGElement {
       edge.laneOffset && (edge.laneOffset[0] !== 0 || edge.laneOffset[1] !== 0)
         ? `translate(${edge.laneOffset[0]}, ${edge.laneOffset[1]})`
         : null;
-    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-glow, .conduit-rail, .conduit-stream, .conduit-stream-reverse')) {
+    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-casing, .conduit-glow, .conduit-rail, .conduit-stream, .conduit-stream-reverse')) {
       path.setAttribute('d', edge.pathD);
       if (laneTx) path.setAttribute('transform', laneTx);
       else path.removeAttribute('transform');
     }
-    const stream = g.querySelector('.conduit-stream');
-    if (edge.flow === 'both') {
-      stream?.removeAttribute('marker-end');
-    } else {
-      stream?.setAttribute('marker-end', `url(#arrow-${edge.tone})`);
-    }
+    // The arrowhead sits on the rail, which is always drawn, so it survives the still Design lens (D8). Sync is a
+    // filled head, async an open chevron, and a two-way wire has none.
+    const rail = g.querySelector('.conduit-rail');
+    if (edge.flow === 'both') rail?.removeAttribute('marker-end');
+    else rail?.setAttribute('marker-end', `url(#${edge.sync === 'async' ? 'chevron' : 'arrow'}-${edge.tone})`);
     const dot = g.querySelector('.port-dot');
     dot?.setAttribute('cx', String(edge.startPoint[0]));
     dot?.setAttribute('cy', String(edge.startPoint[1]));
@@ -1386,26 +1383,6 @@ function paintChaos(wrapper: HTMLElement, nodeId: string): void {
   if (before !== status) badge.textContent = CHAOS_BADGES[status];
 }
 
-/** Review lens only (F-02): a small badge with the number of issues on this component, coloured by the worst. */
-function paintInsights(wrapper: HTMLElement, nodeId: string): void {
-  const issues = insightsFor('node', nodeId);
-  const level = worstLevel(issues);
-  let badge = wrapper.querySelector<HTMLElement>(':scope > .insight-badge');
-  if (!level) {
-    delete wrapper.dataset.insight;
-    badge?.remove();
-    return;
-  }
-  wrapper.dataset.insight = level;
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.className = 'insight-badge';
-    badge.setAttribute('aria-hidden', 'true');
-    wrapper.appendChild(badge);
-  }
-  badge.textContent = `⚠ ${issues.length}`;
-}
-
 function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.id = 'node-' + node.id;
   wrapper.dataset.node = node.id;
@@ -1414,7 +1391,6 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.dataset.accent = effectiveTone(app.doc, node, app.colourBy);
   wrapper.classList.toggle('is-tag-dimmed', !matchesTag(node, app.tagFilter));
   paintChaos(wrapper, node.id);
-  paintInsights(wrapper, node.id);
   paintBacklog(wrapper, node);
   if (node.external) wrapper.dataset.external = 'true';
   else delete wrapper.dataset.external;
