@@ -606,6 +606,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Two Vellum values moved so the text pairs clear 4.5:1. `--cc-ink-3` is `#5C626A` (the spec `#6C727A` was 3.81:1 on the dimmed sheet). `--cc-redline` is `#C42316` (the spec `#D4291C` was 3.99:1 there). Graphite already cleared. Hair stays at the mockup alpha. Cyan and fuchsia are T5. The `--t` tint recipe and collapsing the per-tone rules are later.
 - Glows, painted gradients, and inset highlights are gone. The mark is ink, and a document's own brand colour still recolours it. The primary button is an ink fill. Focus outlines are ink. Island blur stays; that is the mockup's glass. The sheet width, the type scale, uppercase, and `tabular-nums` stay for T2.
 - Entry CSS is 109.4 kB of 115 (`index-CxI8Rhej.css`). Entry JS is 531.0 kB of 540 (`index-BdrgouoB.js`). Fonts stay 78.6 kB. Unit tests 895 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views and the six export pictures were re-recorded on macOS. The 20% pixel slack stays. The view spec passed twice with no diff.
+- Pull request #99.
 
 #### [ ] T2. Type · M
 - **Do:** 5.2. The scale as tokens; 88% width on the sheet; mono only for literal things; no uppercase.
