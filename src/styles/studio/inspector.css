@@ -99,7 +99,7 @@
   }
 
   .tab-btn:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -272,14 +272,14 @@
 
   .icon-picker-option:focus-visible,
   .icon-picker-trigger:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
   .prop-input:focus-visible,
   .prop-select:focus-visible,
   .prop-textarea:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -311,7 +311,7 @@
   }
 
   .swatch-option:has(input:focus-visible) {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -360,7 +360,7 @@
   }
 
   .route-style-option:has(input:focus-visible) {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -639,7 +639,7 @@
   }
 
   .sim-card-toggle:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 1px;
   }
 

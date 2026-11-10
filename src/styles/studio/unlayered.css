@@ -862,7 +862,7 @@ kbd {
 .arch-node.is-search-match {
   opacity: 1 !important;
   filter: none !important;
-  outline: 2px solid var(--wl-blue) !important;
+  outline: 2px solid var(--cc-ink) !important;
   outline-offset: 3px !important;
   z-index: 5;
 }
@@ -870,7 +870,6 @@ kbd {
 .arch-node.is-active-match {
   outline: 3px solid #d97706 !important;
   outline-offset: 4px !important;
-  box-shadow: 0 0 16px rgba(217, 119, 6, 0.45) !important;
   z-index: 6;
 }
 
@@ -1461,8 +1460,8 @@ kbd {
   animation: chaos-pulse 2.4s ease-in-out infinite;
 }
 @keyframes chaos-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgb(249 115 22 / 0.35), 0 0 6px 1px rgb(249 115 22 / 0.25); }
-  50% { box-shadow: 0 0 0 2px rgb(249 115 22 / 0.55), 0 0 16px 4px rgb(249 115 22 / 0.45); }
+  0%, 100% { box-shadow: 0 0 0 1px rgb(249 115 22 / 0.35); }
+  50% { box-shadow: 0 0 0 2px rgb(249 115 22 / 0.55); }
 }
 .arch-node[data-chaos="at-risk"] .chaos-badge { background: #f97316; color: #fff; border-color: #f97316; }
 .chaos-item[data-status="at-risk"] { color: #c2410c; }
@@ -1515,7 +1514,7 @@ kbd {
 }
 @media (prefers-reduced-motion: reduce) {
   .arch-node[data-chaos="failed"] .node-select-hit { animation: none; }
-  .arch-node[data-chaos="at-risk"] .node-select-hit { animation: none; box-shadow: 0 0 0 2px rgb(249 115 22 / 0.5), 0 0 10px 2px rgb(249 115 22 / 0.35); }
+  .arch-node[data-chaos="at-risk"] .node-select-hit { animation: none; box-shadow: 0 0 0 2px rgb(249 115 22 / 0.5); }
 }
 
 .chaos-panel {
@@ -1536,7 +1535,7 @@ kbd {
 .chaos-panel-head { display: flex; gap: 0.4rem; align-items: center; }
 .chaos-list { list-style: none; margin: 0; padding: 0; max-block-size: 10rem; overflow: auto; display: grid; gap: 0.15rem; }
 .chaos-item { all: unset; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: 0.4rem; font-size: 0.78rem; color: var(--wl-ink); }
-.chaos-item:hover, .chaos-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.chaos-item:hover, .chaos-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 .chaos-item[data-status="failed"] { color: var(--wl-rose); font-weight: 600; }
 
 /* A failed component carries nothing: the flowing dashes on its own wires (not those of components it cuts off) stop. */
@@ -1594,7 +1593,7 @@ kbd {
   line-height: 1.35;
   color: var(--wl-ink);
 }
-.insight-item:hover, .insight-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.insight-item:hover, .insight-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 .insight-empty { margin: 0; font-size: 0.8rem; color: var(--wl-muted, var(--wl-ink)); }
 .insight-badge {
   position: absolute;
@@ -1797,7 +1796,7 @@ kbd {
   letter-spacing: 0;
 }
 .help-btn:hover, .help-btn[aria-expanded="true"] { color: var(--wl-ink); border-color: var(--wl-blue); }
-.help-btn:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: 2px; }
+.help-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
 .prop-section-wrap { position: relative; }
 .prop-section-wrap > .help-btn { position: absolute; inset-inline-end: 2.2rem; inset-block-start: 0.55rem; margin: 0; z-index: 1; }
 .insights-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-block-end: 0.4rem; }
@@ -1814,7 +1813,7 @@ kbd {
   box-shadow: 0 8px 28px rgba(2, 6, 23, 0.22);
 }
 .help-popover[hidden] { display: none; }
-.help-popover:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: 2px; }
+.help-popover:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
 .help-popover-title { margin: 0 0 0.35rem; font-size: 0.9rem; }
 .help-popover-body { margin: 0 0 0.6rem; font-size: 0.82rem; line-height: 1.45; }
 .help-popover-link { font-size: 0.8rem; color: var(--wl-blue-ink, var(--wl-blue)); }
@@ -1940,7 +1939,7 @@ kbd {
   cursor: pointer;
 }
 .page-add:hover { color: var(--wl-ink); border-color: var(--wl-border); }
-.page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 body[data-presenting="true"] .page-strip { display: none; }
 /* Touch (A12): the strip's tabs and + button are full-size targets, and the HUD above them makes room. */
 @media (pointer: coarse) {

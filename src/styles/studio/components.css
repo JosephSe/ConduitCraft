@@ -33,7 +33,7 @@
   }
 
   .segmented-label:has(input:focus-visible) {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -90,7 +90,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--brand-accent, var(--wl-blue));
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -99,9 +99,8 @@
   .stencil-aux-btn:focus-visible,
   .tab-btn:focus-visible,
   .dialog-close:focus-visible {
-    outline: 2px solid var(--brand-accent, var(--wl-blue));
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
-    box-shadow: 0 0 0 3px var(--wl-blue-soft);
   }
 
   .btn-compact {
@@ -123,14 +122,13 @@
   }
 
   .btn-primary-export {
-    background: linear-gradient(135deg var(--in-oklab), var(--wl-blue), var(--wl-emerald));
-    color: var(--wl-on-blue);
+    background: var(--cc-ink);
+    color: var(--cc-on-ink);
     border-color: transparent;
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.32);
   }
 
   .btn-primary-export:hover:not(:disabled) {
-    background: linear-gradient(135deg var(--in-oklab), var(--wl-blue), var(--wl-emerald));
+    background: var(--cc-ink);
     filter: brightness(1.07);
   }
 

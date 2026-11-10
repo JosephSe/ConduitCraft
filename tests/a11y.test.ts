@@ -110,10 +110,10 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
 
   it('verifies high-contrast ink tokens in shared.css', () => {
     const sharedCss = fs.readFileSync(path.resolve('src/styles/shared.css'), 'utf8');
-    assert.ok(sharedCss.includes('--wl-ink-muted-dark: #9bb0d0;'), 'ink-muted-dark must use high-contrast #9bb0d0');
-    assert.ok(sharedCss.includes('--wl-ink-muted-light: #485973;'), 'ink-muted-light must use high-contrast #485973');
-    assert.ok(sharedCss.includes('--wl-ink-secondary-dark: #cbd5e1;'), 'ink-secondary-dark must use high-contrast #cbd5e1');
-    assert.ok(sharedCss.includes('--wl-ink-secondary-light: #334155;'), 'ink-secondary-light must use high-contrast #334155');
+    assert.ok(sharedCss.includes('--cc-ink-3: #92979C;'), 'graphite hints must stay #92979C');
+    assert.ok(sharedCss.includes('--cc-ink-3: #5C626A;'), 'vellum hints must stay #5C626A');
+    assert.ok(sharedCss.includes('--cc-ink-2: #B7BBBF;'), 'graphite secondary text must stay #B7BBBF');
+    assert.ok(sharedCss.includes('--cc-ink-2: #565C64;'), 'vellum secondary text must stay #565C64');
   });
 
   it('verifies Level-of-Detail (LoD) CSS rules for low zoom', () => {

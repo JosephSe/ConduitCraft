@@ -3,11 +3,8 @@
     position: relative;
     overflow: hidden;
     background-color: var(--wl-canvas);
-    background-image:
-      radial-gradient(circle at 18% 22%, var(--wl-blue-soft), transparent 42%),
-      radial-gradient(circle at 80% 72%, var(--wl-emerald-soft), transparent 45%),
-      radial-gradient(var(--wl-grid-dot) 1.25px, transparent 1.25px);
-    background-size: 100% 100%, 100% 100%, 24px 24px;
+    background-image: radial-gradient(var(--wl-grid-dot) 1.25px, transparent 1.25px);
+    background-size: 24px 24px;
     isolation: isolate;
   }
 
@@ -186,7 +183,7 @@
   }
 
   .canvas-viewport:focus-visible {
-    outline: 3px solid var(--wl-blue);
+    outline: 3px solid var(--cc-ink);
     outline-offset: -3px;
   }
 
@@ -466,12 +463,7 @@
   }
 
   .conduit-glow {
-    fill: none;
-    stroke-width: 8;
-    stroke-linecap: round;
-    opacity: 0.14;
-    filter: blur(4px);
-    pointer-events: none;
+    display: none;
   }
 
   .conduit-stream {
@@ -901,7 +893,7 @@
   }
 
   .node-select-hit:focus-visible {
-    outline: 3px solid var(--wl-blue);
+    outline: 3px solid var(--cc-ink);
     outline-offset: 4px;
   }
 
@@ -971,7 +963,7 @@
   }
 
   .node-drag-handle:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 
@@ -1013,11 +1005,11 @@
   @keyframes portPulse {
     0%, 100% {
       transform: scale(1.08);
-      box-shadow: 0 0 0 2px var(--wl-blue-soft), 0 0 6px var(--wl-blue-soft);
+      box-shadow: 0 0 0 2px var(--wl-blue-soft);
     }
     50% {
       transform: scale(1.36);
-      box-shadow: 0 0 0 5px var(--wl-blue-soft), 0 0 14px var(--wl-blue);
+      box-shadow: 0 0 0 5px var(--wl-blue-soft);
     }
   }
 
@@ -1109,7 +1101,7 @@
   .node-port.is-target-port {
     transform: scale(1.48);
     background: var(--wl-blue);
-    box-shadow: 0 0 14px var(--wl-blue), 0 0 0 5px var(--wl-blue-soft);
+    box-shadow: 0 0 0 5px var(--wl-blue-soft);
   }
 
   .workspace[data-wiring="true"] .node-port:hover,
@@ -1185,9 +1177,7 @@
   .arch-node[data-kind="core"] .node-select-hit,
   .arch-node[data-kind="gate"] .node-select-hit,
   .arch-node[data-kind="store"] .node-select-hit {
-    background:
-      linear-gradient(160deg var(--in-oklab), var(--node-accent-soft) 0%, transparent 55%),
-      var(--wl-surface);
+    background: var(--wl-surface);
   }
 
   .arch-node[data-kind="client"] .node-select-hit {
@@ -1235,7 +1225,7 @@
 
   .arch-node[data-kind="actor"] .node-select-hit:hover .actor-figure,
   .arch-node[data-kind="actor"] .node-select-hit[aria-pressed="true"] .actor-figure {
-    filter: drop-shadow(0 0 14px var(--node-accent));
+    filter: none;
   }
 
   .arch-node.is-related[data-kind="actor"] .actor-shape,
@@ -1251,7 +1241,7 @@
 
   .arch-node[data-kind="actor"][data-sim-active="true"] .actor-figure {
     color: var(--sim-accent, var(--node-accent));
-    filter: drop-shadow(0 0 18px var(--sim-accent, var(--node-accent)));
+    filter: none;
   }
 
   .arch-node[data-kind="actor"][data-sim-active="true"] .actor-shape {
@@ -1361,7 +1351,6 @@
 
   .arch-node.is-related .node-shape-plate {
     color: var(--node-accent);
-    filter: drop-shadow(0 0 8px var(--node-accent-soft));
   }
 
   .node-select-hit:hover .node-shape-plate,
@@ -1673,7 +1662,6 @@
     font-family: var(--wl-font-mono);
     font-size: 0.75rem;
     font-weight: 700;
-    box-shadow: 0 0 24px rgba(52, 211, 153, 0.55);
     pointer-events: none;
     z-index: 15;
     translate: calc(var(--px, 0) * 1px - 50%) calc(var(--py, 0) * 1px - 50%);
@@ -1691,25 +1679,10 @@
     display: none;
   }
 
-  .sim-packet[data-tone="rose"] {
-    border-color: var(--wl-rose);
-    box-shadow: 0 0 24px rgba(251, 113, 133, 0.55);
-  }
-
-  .sim-packet[data-tone="blue"] {
-    border-color: var(--wl-blue);
-    box-shadow: 0 0 24px rgba(96, 165, 250, 0.55);
-  }
-
-  .sim-packet[data-tone="violet"] {
-    border-color: var(--wl-violet);
-    box-shadow: 0 0 24px rgba(167, 139, 250, 0.55);
-  }
-
-  .sim-packet[data-tone="amber"] {
-    border-color: var(--wl-amber);
-    box-shadow: 0 0 24px rgba(251, 191, 36, 0.55);
-  }
+  .sim-packet[data-tone="rose"] { border-color: var(--wl-rose); }
+  .sim-packet[data-tone="blue"] { border-color: var(--wl-blue); }
+  .sim-packet[data-tone="violet"] { border-color: var(--wl-violet); }
+  .sim-packet[data-tone="amber"] { border-color: var(--wl-amber); }
 
   .canvas-hud {
     position: absolute;
