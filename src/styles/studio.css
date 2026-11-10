@@ -1,4 +1,4 @@
-@layer reset, tokens, layout, palette, stage, components, inspector, dialogs, utilities;
+@layer reset, tokens, layout, palette, stage, ui, components, inspector, dialogs, utilities;
 
 @import "./fonts.css";
 @import "./shared.css";
@@ -8,6 +8,7 @@
 @import "./studio/palette.css";
 @import "./studio/components.css";
 @import "./studio/stage.css";
+@import "./studio/ui.css";
 @import "./studio/inspector.css";
 @import "./studio/dialogs.css";
 @import "./studio/unlayered.css";

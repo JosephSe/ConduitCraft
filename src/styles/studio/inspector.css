@@ -142,32 +142,6 @@
     color: var(--wl-ink-secondary);
   }
 
-  .prop-input,
-  .prop-select,
-  .prop-textarea {
-    inline-size: 100%;
-    max-inline-size: 100%;
-    min-inline-size: 0;
-    box-sizing: border-box;
-    padding: 0.45rem 0.6rem;
-    border-radius: 0.55rem;
-    border: 1px solid var(--wl-border-ui);
-    background: var(--wl-surface);
-    color: var(--wl-ink);
-    font-size: 0.8125rem;
-    line-height: 1.4;
-
-    @media (pointer: coarse) {
-      font-size: 1rem;
-      min-block-size: 2.75rem;
-    }
-  }
-
-  .prop-textarea {
-    resize: vertical;
-    min-block-size: 4.5rem;
-  }
-
   .prop-file {
     inline-size: 100%;
     font-size: 0.75rem;
@@ -192,14 +166,6 @@
   .prop-field .btn-compact {
     margin-block-start: 0.35rem;
     flex: 0 0 auto;
-  }
-
-  .prop-textarea-code {
-    font-family: var(--wl-font-mono);
-    font-size: 0.75rem;
-    background: var(--wl-surface-code);
-    color: #e2e8f0;
-    min-block-size: 6rem;
   }
 
   .icon-picker {
@@ -272,13 +238,6 @@
 
   .icon-picker-option:focus-visible,
   .icon-picker-trigger:focus-visible {
-    outline: 2px solid var(--cc-ink);
-    outline-offset: 2px;
-  }
-
-  .prop-input:focus-visible,
-  .prop-select:focus-visible,
-  .prop-textarea:focus-visible {
     outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }

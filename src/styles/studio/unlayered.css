@@ -354,27 +354,14 @@ kbd {
 
 /* Command Palette Dialog */
 .command-palette-dialog {
-  border: 1px solid var(--wl-border-ui);
-  border-radius: 0.85rem;
-  background: var(--wl-panel);
-  backdrop-filter: blur(20px);
-  box-shadow: var(--wl-shadow-elevated), 0 0 0 1px var(--wl-border-subtle);
-  color: var(--wl-ink);
-  padding: 0;
-  max-width: 38rem;
-  width: 90vw;
-  overflow: hidden;
   margin: 12vh auto auto auto;
+  max-inline-size: 38rem;
+  inline-size: 90vw;
+  overflow: hidden;
 }
 
-.command-palette-dialog::backdrop {
-  background: rgba(2, 6, 23, 0.55);
-  backdrop-filter: blur(4px);
-}
-
-.palette-modal-shell {
-  display: flex;
-  flex-direction: column;
+.command-palette-dialog .dialog-shell {
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .palette-search-row {
@@ -1193,10 +1180,6 @@ kbd {
    Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
    --------------------------------------------------------------------------------------------- */
-.btn-share-v2 {
-  display: inline-flex;
-}
-
 /* Tool rail: select / wire tools above the component icons */
 .rail-tool-btn {
   position: relative;
@@ -1295,10 +1278,6 @@ kbd {
   max-height: 60vh;
   overflow: auto;
   padding: var(--cc-space-1);
-  border-radius: var(--cc-radius-m);
-  background: var(--cc-surface-1);
-  border: 1px solid var(--wl-border-ui);
-  box-shadow: var(--cc-shadow-2);
 }
 .appearance-choice {
   display: flex;
@@ -1795,9 +1774,6 @@ kbd {
   z-index: 60;
   inline-size: min(20rem, calc(100vw - 1rem));
   padding: 0.75rem 0.85rem;
-  background: var(--wl-surface);
-  color: var(--wl-ink);
-  border: 1px solid var(--wl-border);
   border-radius: 0.75rem;
   box-shadow: 0 8px 28px rgba(2, 6, 23, 0.22);
 }
@@ -1809,7 +1785,7 @@ kbd {
 
 /* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
 @media (pointer: coarse) {
-  .btn, .btn-icon-only, .btn-action-compact, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
+  .btn, .btn-icon-only, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
   .title-edit-trigger, .context-menu-item, .rail-tool-btn, .rail-stencil-btn, .stencil-aux-btn, .help-popover-link {
     min-inline-size: 2.75rem;
     min-block-size: 2.75rem;
@@ -1872,7 +1848,7 @@ kbd {
 
 .bulk-row { display: grid; gap: 0.25rem; margin-block-start: 0.5rem; }
 .bulk-tag-row { display: flex; gap: 0.4rem; align-items: center; }
-.bulk-tag-row .prop-input { flex: 1; min-inline-size: 0; }
+.bulk-tag-row .field { flex: 1; min-inline-size: 0; }
 .bulk-tag-buttons { display: inline-flex; gap: 0.25rem; }
 
 /* Page tabs (D10): along the bottom edge of the canvas, always shown. The HUD, run bar and failure summary sit above it. */
@@ -1937,7 +1913,6 @@ body[data-presenting="true"] .page-strip { display: none; }
 }
 
 /* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */
-.prop-select.is-inferred { color: var(--text-muted, #64748b); }
 .arch-node[data-kind="cache"] .node-sub,
 .arch-node[data-kind="scheduler"] .node-sub { display: none; }
 

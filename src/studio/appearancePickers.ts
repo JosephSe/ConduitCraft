@@ -77,7 +77,7 @@ export function openAppearancePicker(button: HTMLElement, which: 'colour' | 'kin
   const nodes = selectedNodes();
   if (nodes.length === 0) return;
   const pop = document.createElement('div');
-  pop.className = 'appearance-popover';
+  pop.className = 'popover appearance-popover';
   pop.setAttribute('role', 'menu');
   pop.setAttribute('aria-label', which === 'colour' ? 'Colour' : which === 'kind' ? 'Kind' : 'Shape');
   for (const c of choicesFor(which, nodes)) {

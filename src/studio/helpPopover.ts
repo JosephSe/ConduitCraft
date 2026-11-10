@@ -29,7 +29,7 @@ function popover(): HTMLElement {
   if (el) return el;
   el = document.createElement('div');
   el.id = POPOVER_ID;
-  el.className = 'help-popover';
+  el.className = 'popover help-popover';
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-labelledby', `${POPOVER_ID}-title`);
   el.setAttribute('aria-describedby', `${POPOVER_ID}-body`);

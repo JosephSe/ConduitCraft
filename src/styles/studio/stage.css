@@ -77,12 +77,6 @@
     gap: 0.4rem;
   }
 
-  .btn-sm {
-    padding: 0.2rem 0.65rem;
-    font-size: 0.78rem;
-    border-radius: 9999px;
-  }
-
   /* Empty canvas: a single line of hint */
   .empty-stage-overlay {
     position: absolute;
@@ -1114,7 +1108,6 @@
     .btn,
     .btn-icon-only,
     .btn-panel-collapse,
-    .btn-action-compact,
     .btn-rail-expand,
     .rail-stencil-btn,
     .coach-dismiss-btn,

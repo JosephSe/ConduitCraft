@@ -8,7 +8,7 @@ const dist = path.resolve('dist/assets');
 const budgets = [
   // Raised from 480 kB for the new components (COMPONENTS_PLAN.md); the queue (K1) added about 18 kB raw, 6 kB gzip.
   { pattern: /^index-.*\.js$/, maxBytes: 540 * 1024, label: 'entry JS' },
-  { pattern: /^index-.*\.css$/, maxBytes: 115 * 1024, label: 'entry CSS' },
+  { pattern: /^index-.*\.css$/, maxBytes: 112 * 1024, label: 'entry CSS' },
 ];
 
 // Lazy chunks: every one is checked (not just the first match). Patterns are tried in order; a chunk that matches

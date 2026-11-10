@@ -1993,8 +1993,8 @@ export function initEvents(): void {
       if (shareLinkOptions) shareLinkOptions.hidden = !hasImages;
       if (shareImageSizes) shareImageSizes.textContent = notice.images;
       // Too long: the file is the main action and the link is still there as a smaller one.
-      btnShareDownloadFile?.classList.toggle('btn-primary-export', notice.preferFile);
-      btnCopyShareLink?.classList.toggle('btn-primary-export', !notice.preferFile);
+      btnShareDownloadFile?.classList.toggle('solid', notice.preferFile);
+      btnCopyShareLink?.classList.toggle('solid', !notice.preferFile);
     } catch {
       clearTimeout(timeoutId);
       shareLinkInput.value = 'Error generating link';

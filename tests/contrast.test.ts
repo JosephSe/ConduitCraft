@@ -85,7 +85,7 @@ describe('5.1 colour pairs', () => {
   });
 
   it('fills the primary button with ink instead of a gradient', () => {
-    const rule = /\.btn-primary-export \{[^}]*\}/.exec(studio)?.[0] ?? '';
+    const rule = /\.btn\.solid \{[^}]*\}/.exec(studio)?.[0] ?? '';
     assert.match(rule, /background:\s*var\(--cc-ink\)/);
     assert.match(rule, /color:\s*var\(--cc-on-ink\)/);
     assert.doesNotMatch(rule, /linear-gradient/);

@@ -270,7 +270,7 @@ export function refreshLibraryDialog(): void {
   const activeId = getActiveDiagramId();
   libraryDialogBody.innerHTML = `
     <div class="library-toolbar">
-      <button type="button" class="btn btn-primary" id="btn-library-new">New diagram</button>
+      <button type="button" class="btn solid" id="btn-library-new">New diagram</button>
       <button type="button" class="btn" id="btn-library-export"${entries.length === 0 ? ' disabled' : ''}>Export all as .zip</button>
     </div>
     ${
