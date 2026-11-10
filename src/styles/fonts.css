@@ -125,14 +125,14 @@
   line-gap-override: 0%;
 }
 
-/* These overrides stayed with the linear Linux measurement. */
+/* 105.30% is the chord between the Linux widths: 233 px at 103.48% and 252 px at 107.32%. */
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("LiberationSans");
   font-weight: 700;
-  size-adjust: 107.32%;
-  ascent-override: 93.74%;
-  descent-override: 24.16%;
+  size-adjust: 105.30%;
+  ascent-override: 92.12%;
+  descent-override: 23.74%;
   line-gap-override: 0%;
 }
 
@@ -140,9 +140,9 @@
   font-family: "Instrument Sans Fallback";
   src: local("Liberation Sans");
   font-weight: 700;
-  size-adjust: 107.32%;
-  ascent-override: 93.74%;
-  descent-override: 24.16%;
+  size-adjust: 105.30%;
+  ascent-override: 92.12%;
+  descent-override: 23.74%;
   line-gap-override: 0%;
 }
 
@@ -150,9 +150,9 @@
   font-family: "Instrument Sans Fallback";
   src: local("Arial");
   font-weight: 700;
-  size-adjust: 107.32%;
-  ascent-override: 93.74%;
-  descent-override: 24.16%;
+  size-adjust: 105.30%;
+  ascent-override: 92.12%;
+  descent-override: 23.74%;
   line-gap-override: 0%;
 }
 
