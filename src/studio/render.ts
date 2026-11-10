@@ -1,6 +1,7 @@
 /** Stage rendering for zones, notes, wires, and components. */
 import { invalidateChaos } from './chaos';
 import { paintDlqLinks } from './queueBacklog';
+import { paintRedline } from './redline';
 import { invalidateInsights } from './insights';
 import { paintGroupOutlines } from './groupOutlines';
 import {
@@ -158,6 +159,7 @@ export function renderAll(rebuildInspector = true): void {
   renderWiresOnly();
   renderNodes();
   paintDlqLinks();
+  paintRedline();
   renderSimButtons();
   renderMatrixTable();
   updateVisualSelectionHighlights();

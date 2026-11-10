@@ -1,7 +1,7 @@
 /** Studio entry. Runtime lives in `src/studio/*`. */
 import { app, onSelectionChange, setHistoryApplied } from './studio/state';
 import { renderAll, renderWiresOnly, requestInspectorRefresh, updateVisualSelectionHighlights } from './studio/render';
-import { bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
+import { bindAnimateWiresPreference, bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
 import { initSlotPopovers } from './studio/slotPopovers';
 import { announceSelectionChange } from './studio/a11y';
@@ -48,6 +48,7 @@ try {
   // Storage unavailable: nothing was stored that we could read.
 }
 bindLegendPreference();
+bindAnimateWiresPreference();
 bindViewFilters();
 bootStudio();
 initToolRail();
