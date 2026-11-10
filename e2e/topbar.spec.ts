@@ -72,7 +72,7 @@ for (const scheme of ['light', 'dark'] as const) {
 
 /**
  * The rule (A14, V1 section 10): at 1280 px, with a diagram open and nothing selected, no region of the screen outside
- * the canvas has more than 8 always-visible controls. A region is the top bar, the tool rail, the canvas HUD, a side
+ * the canvas has more than 8 always-visible controls. A region is the top bar, the tool rail, the SE zoom island, a side
  * panel, or one labelled group of the run bar. The screen as a whole has far more than 8 (see the logged totals), so the
  * rule is per region: each region is something the eye takes in at once.
  *
@@ -85,7 +85,8 @@ for (const scheme of ['light', 'dark'] as const) {
 const REGIONS: Array<[name: string, selector: string]> = [
   ['top bar', '.topbar'],
   ['tool rail', '#palette-sidebar'],
-  ['canvas HUD', '.canvas-hud'],
+  ['zoom (SE)', '.hud-zoom-card'],
+  ['find box', '#hud-search-card'],
   ['inspector', '#inspector-panel'],
   ['run bar: playback', '#run-bar [role="group"][aria-label="Playback"]'],
   ['run bar: view', '#run-bar [role="group"][aria-label="View"]'],

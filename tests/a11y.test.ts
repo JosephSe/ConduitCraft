@@ -146,19 +146,11 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
     );
   });
 
-  it('verifies #hud-status-tip is decoupled from dismissible #hud-coach-card in index.html', () => {
+  it('keeps the status line as the one role="status" hint line, with no dismissible card around it', () => {
     const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
-    // Ensure #hud-coach-card does not contain #hud-status-tip
-    const coachCardMatch = indexHtml.match(/<div[^>]*id="hud-coach-card"[^>]*>([\s\S]*?)<\/div>/);
-    assert.ok(coachCardMatch, 'hud-coach-card exists in index.html');
-    assert.ok(
-      !coachCardMatch[1].includes('id="hud-status-tip"'),
-      '#hud-status-tip must not live inside #hud-coach-card so dismissal does not silence status messages',
-    );
-    assert.ok(
-      indexHtml.includes('id="hud-status-tip"'),
-      '#hud-status-tip exists in index.html',
-    );
+    assert.match(indexHtml, /<p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">/);
+    assert.ok(!indexHtml.includes('hud-coach-card'), 'the coach card is gone');
+    assert.ok(!indexHtml.includes('hud-status-card'), 'the status card is gone');
   });
 
   it('verifies the copy link button starts disabled and the empty-state doors are gone', () => {

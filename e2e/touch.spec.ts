@@ -108,7 +108,7 @@ const stageTransform = (page: Page) => page.locator('#stage-world').evaluate((el
 async function emptyPoint(page: Page, spread = 0): Promise<Pt> {
   const p = await page.evaluate((r) => {
     const vp = document.getElementById('canvas-viewport')!.getBoundingClientRect();
-    const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, .context-toolbar, button, input, a';
+    const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, [data-island], .context-toolbar, button, input, a';
     for (let y = vp.top + 80; y < vp.bottom - 80; y += 30) {
       for (let x = vp.left + 40; x < vp.right - 40; x += 30) {
         const clear = [x - r, x, x + r].every((px) => !document.elementFromPoint(px, y)?.closest(blocked));

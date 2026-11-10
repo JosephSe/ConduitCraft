@@ -16,7 +16,7 @@ body[data-presenting="true"] .workspace {
 
 body[data-presenting="true"] .palette-sidebar,
 body[data-presenting="true"] .inspector,
-body[data-presenting="true"] .canvas-hud .hud-search-card {
+body[data-presenting="true"] .hud-search-card {
   display: none !important;
 }
 

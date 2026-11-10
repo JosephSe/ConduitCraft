@@ -67,8 +67,6 @@ import {
   gifExportPanel,
   gifScenarioEmpty,
   gifScenarioList,
-  hudCoachCard,
-  btnDismissHudCoach,
   hudStatusTip,
   hudSearchInput,
   hudSearchCount,
@@ -594,7 +592,7 @@ const WIRE_DROP_MIN_DRAG_PX = 32;
 /** True for a point on bare canvas: inside the viewport, and not on a component, wire, note, swimlane or control. */
 function isEmptyCanvasPoint(hitEl: Element | null): boolean {
   if (!hitEl || !viewport.contains(hitEl)) return false;
-  return !hitEl.closest('.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a');
+  return !hitEl.closest('.arch-node, .blueprint-spec, .zone-banner, .conduit-group, [data-island], button, input, a');
 }
 
 /**
@@ -2240,26 +2238,10 @@ export function initEvents(): void {
     installApp: () => void installApp(),
   });
 
-  // Dismissible Coach Mark Card
-  try {
-    if (localStorage.getItem('conduitcraft-coach-dismissed') === '1' && hudCoachCard) {
-      hudCoachCard.hidden = true;
-    }
-  } catch {
-    // Ignore storage issues
-  }
-  btnDismissHudCoach?.addEventListener('click', () => {
-    if (hudCoachCard) hudCoachCard.hidden = true;
-    try {
-      localStorage.setItem('conduitcraft-coach-dismissed', '1');
-    } catch {
-      // Ignore storage issues
-    }
-  });
-
-  // Node Search in Canvas HUD (Cmd/Ctrl+F)
+  // Find a component (Cmd/Ctrl+F), a popover over the SE slot
   if (hudSearchInput && hudSearchCount && btnClearSearch) {
     initNodeSearch({
+      popover: document.getElementById('hud-search-card') ?? undefined,
       searchInput: hudSearchInput,
       searchCount: hudSearchCount,
       clearButton: btnClearSearch,

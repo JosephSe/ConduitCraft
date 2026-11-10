@@ -239,7 +239,7 @@ async function emptyCanvasPoint(page: Page, from: { x: number; y: number }, minG
   const point = await page.evaluate(
     ([fx, fy, gap]) => {
       const vp = document.getElementById('canvas-viewport')!.getBoundingClientRect();
-      const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a';
+      const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, [data-island], button, input, a';
       for (let y = vp.top + 120; y < vp.bottom - 140; y += 30) {
         for (let x = vp.left + 40; x < vp.right - 40; x += 30) {
           if (Math.hypot(x - (fx as number), y - (fy as number)) < (gap as number)) continue;

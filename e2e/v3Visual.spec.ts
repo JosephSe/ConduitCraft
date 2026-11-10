@@ -179,7 +179,7 @@ for (const theme of THEMES) {
 
       expect(await zoomNear100(page)).toBe('97%');
       const search = page.locator('#hud-search-input');
-      await search.click();
+      await page.keyboard.press('ControlOrMeta+f');
       await search.fill('Virtual Waiting Room');
       const selected = page.locator('.arch-node .node-select-hit[aria-pressed="true"]');
       await expect(selected).toBeVisible();
