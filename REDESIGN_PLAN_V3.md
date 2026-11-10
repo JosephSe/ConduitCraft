@@ -727,7 +727,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 #### [ ] S4. Component tray · L, split
 - **S4a · M [x]:** shelf, keyboard grid, place with `↵`, drag out, drag to the dock, close and focus return (7.3).
 - **S4b · S [x]:** search with the word table and "named X" (7.3).
-- **S4c · M:** the demo pane and its seven loops, lazy (7.3).
+- **S4c · M [x]:** the demo pane and its seven loops, lazy (7.3).
 - **Done:** a spec for each of: open with `C`, arrow to a component, place it; type `kafka`, place it, the component is a stream named "Kafka"; reduced motion shows stills. **Needs:** S3.
 
 - **S4a result.**
@@ -748,6 +748,13 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - The selection's toolbar waits while the tray is open; it floated over the search box.
   - Tests: `trayWords.test.ts` (8) and six more in `tray.spec.ts`. The old tray tests start from the box. View 03 re-recorded.
   - Entry CSS 108.4 kB of 112; entry JS 535.3 kB of 540; the tray chunk is 6.9 kB.
+
+- **S4c result.**
+  - The tray has a right column, 15 rem: the highlighted component at full size on a panel tinted with its colour (the 9% mix), its name at 16/600, and one plain line about it. The highlight follows focus and the pointer; the search box and gaps leave the last one showing, and typing moves it to the first match. With no match the pane hides. Below 56 rem the pane is left out (the narrow tray is M4). The old hover tip on each row is gone, because the pane says it.
+  - `src/studio/trayDemo.ts` (part of the lazy tray chunk, now 10.5 kB) holds the seven loops as capsules on CSS keyframes, three seconds each: Starts traffic (Actor, External Client, Scheduler: leave on a beat); Passes it on (Service / API, Core System, Control Gate: in one side, out the other); Spreads it (Load Balancer, Stream / Log, Event Broker: one in, fanned to three); Turns some away (Rate Limiter: four pass, the fifth turns rose and falls back); Answers some itself (Cache: one turns round, the next goes through); Holds it (Message Queue: arrive fast, leave slowly); Keeps it (Data Store, Object Storage: arrive and stay). Swimlane, Frame, Note and Text show the outline alone.
+  - **Reduced motion:** `.is-still` stops every loop and puts each capsule at its end state, which is set in the markup (`--el`, `--et`, `--eo`, `--ec`). The loop runs only while a row is highlighted, so it is user-triggered (D10).
+  - Tests: `trayDemo.test.ts` (4: seven loops, which components run which, a line for every item, the still rules exist); five more tray specs (the pane follows focus and the pointer; each behaviour's capsule count and keyframes; structure shows no capsules; reduced motion gives stills with the rose capsule fallen back; typing moves it; axe in both themes; hidden when narrow). View 03 re-recorded, in reduced motion, so it shows the queue's end state.
+  - **Entry CSS cap raised from 112 to 116 KiB** (the owner allowed it): this PR took 2.7 kB, and S5 to S8 still have chrome to draw. Entry CSS is 111.1 kB of 116; entry JS 535.3 kB of 540.
 
 #### [ ] S5. Dock, Traffic and Review faces · M
 - **Read:** `runBar.ts`, `simulationPlayback.ts`, `chaos.ts`, `studio/insights.ts`.
