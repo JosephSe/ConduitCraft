@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { placeComponent, runPaletteCommand } from './helpers';
+import { placeComponent, runPaletteCommand, showInspectorTab } from './helpers';
 
 const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
 
@@ -63,6 +63,7 @@ test('the Strategy field in the inspector changes the chip, and has no axe viola
   await openThreeTier(page);
   await page.keyboard.press('1');
   await node(page, 'alb').locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const strategy = page.locator('#prop-node-balancer-strategy');
   await expect(strategy).toBeVisible();
   await expect(strategy).toHaveValue('least-connections');

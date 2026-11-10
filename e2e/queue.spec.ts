@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { placeComponent, runPaletteCommand } from './helpers';
+import { placeComponent, runPaletteCommand, showInspectorTab } from './helpers';
 
 const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
 
@@ -108,6 +108,7 @@ test('the Queue group in the inspector has no axe violations', async ({ page }) 
   await openEventDriven(page);
   await page.keyboard.press('1');
   await node(page, 'fulfilment-queue').locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   await expect(page.locator('#prop-node-queue-depth')).toBeVisible();
   await expect(page.locator('#prop-node-queue-depth')).toHaveValue('50');
   await expect(page.locator('#prop-node-queue-dlq')).toHaveValue('fulfilment-dlq');
@@ -122,6 +123,7 @@ test('the inspector sets a queue limit and the card shows it', async ({ page }) 
   await openEventDriven(page);
   await page.keyboard.press('1');
   await node(page, 'fulfilment-queue').locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const depth = page.locator('#prop-node-queue-depth');
   await depth.fill('120');
   await depth.press('Tab');

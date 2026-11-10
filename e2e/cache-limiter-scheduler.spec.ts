@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { placeComponent } from './helpers';
+import { placeComponent, showInspectorTab } from './helpers';
 
 async function open(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -20,6 +20,7 @@ test('a Cache from the list shows its hit rate, and the Hit rate field changes t
   await expect(cache.locator('.micro-chip')).toHaveText('HIT 80%');
   await page.keyboard.press('1');
   await cache.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const rate = page.locator('#prop-node-cache-hitrate');
   await expect(rate).toBeVisible();
   await rate.fill('50');
@@ -35,6 +36,7 @@ test('a Rate Limiter from the list shows 4/5, and Admit changes the chip', async
   await expect(limiter.locator('.micro-chip')).toHaveText('4/5');
   await page.keyboard.press('1');
   await limiter.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const admit = page.locator('#prop-node-limiter-admit');
   await expect(admit).toBeVisible();
   await admit.fill('2');
@@ -50,10 +52,11 @@ test('a Scheduler shows its timing, and failing the only scheduler fails it', as
   const scheduler = await addFromRail(page, 'scheduler', 'scheduler');
   await page.keyboard.press('1');
   await scheduler.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const every = page.locator('#prop-node-schedule-every');
   await expect(every).toBeVisible();
   await every.fill('5m');
-  await every.press('Tab');
+  await every.blur(); // Tab would land in a metric field now in the same tab, which would swallow the lens key
   await expect(scheduler.locator('.micro-chip')).toHaveText('5m');
 
   await page.keyboard.press('2');

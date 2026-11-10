@@ -8,6 +8,14 @@ export async function runPaletteCommand(page: Page, query: string): Promise<void
   await page.locator('#command-palette-dialog').waitFor({ state: 'hidden' });
 }
 
+/** Show one of the inspector's tabs (6.5): Look, Behaviour or Notes. Every field is in exactly one. */
+export async function showInspectorTab(page: Page, tab: 'look' | 'behaviour' | 'notes'): Promise<void> {
+  const button = page.locator(`#prop-tab-${tab}`);
+  await expect(button).toBeVisible();
+  await button.click();
+  await expect(button).toHaveAttribute('aria-selected', 'true');
+}
+
 /** Open the export dialog from the command palette (the top bar has no Export button). */
 export async function openExportDialog(page: Page): Promise<void> {
   await runPaletteCommand(page, 'Export Diagram Modal');

@@ -768,10 +768,17 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - **Not here:** the redline mark pulsing once when stepping. The Traffic face's `?` is gone (the face is at the 8-control limit); every help topic is still in the palette.
   - Baselines re-recorded: 04, 05, 06, 07 in light and dark.
 
-#### [ ] S6. Inspector · L, split
-- **S6a · M:** island, header with cut-out, tabs, row and control styles.
-- **S6b · M:** move each field into its tab.
+#### [x] S6. Inspector · L, split
+- **S6a · M [x]:** island, header with cut-out, tabs, row and control styles.
+- **S6b · M [x]:** move each field into its tab.
 - **Done:** every field that existed still exists with the same accessible name. **Needs:** T3, T4.
+
+- **S6 result** (a and b in one change, to save a build).
+  - **Header and tabs.** A selected component shows its cut-out filled in its colour, its name at 16/600 and its kind, then **Look / Behaviour / Notes** in a well (`#prop-tab-*`, `#prop-panel-*`; arrow keys, Home and End move between tabs; the open tab is kept while you select other components). Each panel ends with its `?`.
+  - **Where each field went.** Look: Name, Kind, accent colour, icon, custom icon, shape, subtitle, label above title, badge, card footer. Behaviour: status, copies and fallback, external, queue, balancer, cache, limiter and schedule settings, interface, metrics and contract. Notes: description, owner, tags, links, review comment. Every id and label is as before; the old Basics, Appearance and More details sections are gone, so nothing is collapsible and nothing is hidden by default except the other two tabs.
+  - **Found on the way.** The custom-icon upload was never scanned by axe because it sat in a closed section. It had no label on its file input, a name that did not contain its visible text, and low contrast. All three are fixed.
+  - **Not here:** the 92 px label column and the 30 px control wells, steppers and switches (rows still stack label over control). Wire and document forms keep their current layout.
+  - Specs that reach a field now open its tab first (`showInspectorTab`).
 
 #### [ ] S7. Create by wiring · S
 - **Read:** `interactions.ts` around line 521.

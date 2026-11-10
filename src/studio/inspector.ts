@@ -88,6 +88,8 @@ import { normalizeBrandAccent } from '../core/brand';
 import { normalizeBudgetMs } from '../core/insights';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
+import { findStencil } from '../templates/presets';
+import { renderCutoutMarkup } from '../ui/cutout';
 import {
   LINK_KINDS,
   LINK_KIND_NAMES,
@@ -802,17 +804,6 @@ export function makeCollapsibleSection(
   return details;
 }
 
-/**
- * A section with a `?` beside its title. The button sits next to the <summary>, not inside it, because a
- * control nested in a <summary> is a nested interactive element (axe `nested-interactive`).
- */
-function sectionWithHelp(details: HTMLDetailsElement, topicId: string): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'prop-section-wrap';
-  wrap.append(details, helpButton(topicId));
-  return wrap;
-}
-
 function updateSelectionActionButtons(sel: SelectionTarget): void {
   if (sel.type === 'none') {
     propSelectionActions.hidden = true;
@@ -846,6 +837,86 @@ function updateSelectionActionButtons(sel: SelectionTarget): void {
       btnPropGroup.hidden = true;
     }
   }
+}
+
+let inspectorTab = 'look';
+
+/** The selection's cut-out in its colour, its name, and its kind (6.5). */
+function makeSelectionHeader(node: DiagramNode): HTMLElement {
+  const stencil = findStencil(node.kind);
+  const head = document.createElement('div');
+  head.className = 'prop-selection-head';
+  const tone = TONE_CSS[node.accent ?? stencil?.accent ?? 'slate']?.[0];
+  if (tone) head.style.setProperty('--t', tone);
+  const art = document.createElement('span');
+  art.className = 'prop-selection-art';
+  if (stencil) art.innerHTML = renderCutoutMarkup({ ...stencil, icon: node.icon ?? stencil.icon });
+  const text = document.createElement('div');
+  text.className = 'prop-selection-text';
+  const name = document.createElement('span');
+  name.className = 'prop-selection-name';
+  name.textContent = node.title || node.id;
+  const kind = document.createElement('span');
+  kind.className = 'prop-selection-kind';
+  kind.textContent = stencil?.paletteTitle ?? node.kind;
+  text.append(name, kind);
+  head.append(art, text);
+  return head;
+}
+
+/** Look, Behaviour and Notes: a tablist in a well, and one panel each. Hidden panels keep their fields in the page. */
+function makeInspectorTabs(tabs: Array<{ id: string; label: string; help: string; elements: HTMLElement[] }>): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'prop-tabs';
+  if (!tabs.some((t) => t.id === inspectorTab)) inspectorTab = tabs[0].id;
+  const list = document.createElement('div');
+  list.className = 'prop-tablist';
+  list.setAttribute('role', 'tablist');
+  list.setAttribute('aria-label', 'Component properties');
+  const buttons: HTMLButtonElement[] = [];
+  const panels: HTMLElement[] = [];
+  const show = (id: string, focus = false) => {
+    inspectorTab = id;
+    tabs.forEach((tab, i) => {
+      const on = tab.id === id;
+      buttons[i].setAttribute('aria-selected', String(on));
+      buttons[i].tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+      if (on && focus) buttons[i].focus();
+    });
+  };
+  tabs.forEach((tab, i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'prop-tab';
+    button.id = `prop-tab-${tab.id}`;
+    button.setAttribute('role', 'tab');
+    button.setAttribute('aria-controls', `prop-panel-${tab.id}`);
+    button.textContent = tab.label;
+    button.addEventListener('click', () => show(tab.id));
+    button.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (step) {
+        e.preventDefault();
+        show(tabs[(i + step + tabs.length) % tabs.length].id, true);
+      } else if (e.key === 'Home' || e.key === 'End') {
+        e.preventDefault();
+        show(tabs[e.key === 'Home' ? 0 : tabs.length - 1].id, true);
+      }
+    });
+    buttons.push(button);
+    const panel = document.createElement('div');
+    panel.className = 'prop-tabpanel';
+    panel.id = `prop-panel-${tab.id}`;
+    panel.setAttribute('role', 'tabpanel');
+    panel.setAttribute('aria-labelledby', button.id);
+    panel.append(...tab.elements, helpButton(tab.help));
+    panels.push(panel);
+    list.appendChild(button);
+  });
+  wrap.append(list, ...panels);
+  show(inspectorTab);
+  return wrap;
 }
 
 export function renderPropertyEditor(): void {
@@ -971,6 +1042,8 @@ export function renderPropertyEditor(): void {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.className = 'visually-hidden';
+    fileInput.setAttribute('aria-label', 'Custom icon image file');
+    fileInput.tabIndex = -1;
     fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
 
     const iconHint = document.createElement('p');
@@ -981,7 +1054,6 @@ export function renderPropertyEditor(): void {
     uploadZone.className = 'custom-icon-upload-zone';
     uploadZone.setAttribute('role', 'button');
     uploadZone.setAttribute('tabindex', '0');
-    uploadZone.setAttribute('aria-label', 'Upload custom icon image');
 
     const handleIconFile = (picked: File) => {
       if (!picked.type.startsWith('image/') || picked.size > 280_000) {
@@ -1057,6 +1129,9 @@ export function renderPropertyEditor(): void {
       promptWrap.append(promptTitle, promptSub);
       uploadZone.append(uploadIcon, promptWrap);
     }
+
+    // The name keeps its first words and contains the visible text (WCAG 2.5.3).
+    uploadZone.setAttribute('aria-label', `Upload custom icon image. ${uploadZone.querySelector('.custom-icon-upload-prompt')?.textContent ?? ''}`.trim());
 
     uploadZone.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).tagName !== 'BUTTON') {
@@ -1310,13 +1385,26 @@ export function renderPropertyEditor(): void {
     if (node.kind === 'limiter') reviewElements.push(...makeLimiterFields(node));
     if (node.kind === 'scheduler') reviewElements.push(...makeSchedulerFields(node));
 
-    // Assemble Form Sections
+    // Assemble the form (6.5): a header, then three tabs. Every field goes in exactly one tab.
+    const onNotes = (el: HTMLElement) =>
+      el === linksField || el.matches('#prop-node-comment, #prop-node-owner, #prop-node-tags') || el.querySelector('#prop-node-comment, #prop-node-owner, #prop-node-tags') !== null;
+    const isSummary = (el: HTMLElement) => el.querySelector('#prop-node-summary') !== null;
+    const isInterface = (el: HTMLElement) => el.querySelector('#prop-node-interface') !== null;
+    const reviewBehaviour = reviewElements.filter((el) => !onNotes(el));
+    const notesElements = [...basicsElements.filter(isSummary), ...reviewElements.filter(onNotes)];
+    const lookElements = [
+      ...basicsElements.filter((el) => !isSummary(el)),
+      ...appearanceElements,
+      ...metadataElements.filter((el) => !isInterface(el)),
+    ];
+    const behaviourElements = [...reviewBehaviour, ...metadataElements.filter(isInterface), ...telemetryElements];
     form.append(
-      sectionWithHelp(makeCollapsibleSection('basics', 'Basics', true, basicsElements), 'components'),
-      sectionWithHelp(makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements), 'components'),
-      sectionWithHelp(makeCollapsibleSection('review', 'Review & Status', true, reviewElements), 'links-owner'),
-      sectionWithHelp(makeCollapsibleSection('metadata', 'More details', false, metadataElements), 'components'),
-      sectionWithHelp(makeCollapsibleSection('telemetry', 'Metrics & Contract', false, telemetryElements), 'traffic'),
+      makeSelectionHeader(node),
+      makeInspectorTabs([
+        { id: 'look', label: 'Look', help: 'components', elements: lookElements },
+        { id: 'behaviour', label: 'Behaviour', help: 'traffic', elements: behaviourElements },
+        { id: 'notes', label: 'Notes', help: 'links-owner', elements: notesElements },
+      ]),
     );
   } else if (sel.type === 'edge') {
     const edge = app.doc.edges.find((e) => e.id === sel.id);

@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { clearSelection, openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, showInspectorTab } from './helpers';
 
 test('Traffic lens: failing a component shows the blast radius, announces it, and restores', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -62,6 +62,7 @@ test('the inspector sets replicas, so a failure degrades instead of failing', as
   await openLumenRelay(page);
   const node = page.locator('.arch-node').first();
   await node.click();
+  await showInspectorTab(page, 'behaviour');
   await page.locator('#prop-node-replicas').fill('3');
   await page.locator('#prop-node-replicas').press('Tab');
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
