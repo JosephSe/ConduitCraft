@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { runPaletteCommand, seedStorage } from './helpers';
+import { clearSelection, runPaletteCommand, seedStorage } from './helpers';
 
 /**
  * Z3, section 10.4. The eight views, both themes, 1440×900, reduced motion.
@@ -7,13 +7,14 @@ import { runPaletteCommand, seedStorage } from './helpers';
  * T2 re-recorded these after the type scale and the 88% sheet.
  * T3 re-recorded home after the ink primary button.
  * T4 re-recorded the design rail and the component panel (views 1 to 3).
- * The check still allows 20% of pixels at the default colour threshold. A Linux run can
- * still differ (keyboard symbols, and any glyph outside the Latin subset) until that run
- * shows the real gap. Two runs on one machine match exactly.
+ * T4d: the baselines are macOS pictures, and two runs on one machine match exactly, so on
+ * macOS the check allows 0.1% of pixels (about 1,300), less than one button. Elsewhere it
+ * still allows 20%: a Linux run can differ (keyboard symbols, system glyphs) until one
+ * shows the real gap, and then the Linux baselines get their own tolerance.
  */
 const THEMES = ['light', 'dark'] as const;
 const PORT = 4281;
-const TOLERANCE = { maxDiffPixelRatio: 0.2, threshold: 0.2 } as const;
+const TOLERANCE = { maxDiffPixelRatio: process.platform === 'darwin' ? 0.001 : 0.2, threshold: 0.2 } as const;
 const SAVED_AT = Date.UTC(2020, 0, 15, 12, 0, 0);
 
 type Theme = (typeof THEMES)[number];
@@ -55,11 +56,43 @@ async function shoot(page: Page, name: string): Promise<void> {
 async function loadShowcase(page: Page): Promise<void> {
   await runPaletteCommand(page, 'Load Showcase');
   await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 20_000 });
+  // The load can leave a component selected, depending on timing. Every view starts with nothing selected.
+  await clearSelection(page);
+}
+
+/** Wait until the canvas stops changing width (a side panel folding in or out), so Fit measures the final size. */
+async function settleCanvas(page: Page): Promise<void> {
+  let last = -1;
+  await expect
+    .poll(
+      async () => {
+        const width = await page.locator('#canvas-viewport').evaluate((el) => Math.round(el.getBoundingClientRect().width));
+        const settled = width === last;
+        last = width;
+        return settled;
+      },
+      { timeout: 5_000, intervals: [200] },
+    )
+    .toBe(true);
 }
 
 async function fit(page: Page): Promise<void> {
+  await settleCanvas(page);
   await page.locator('#btn-zoom-fit').click();
   await expect(page.locator('#zoom-readout')).toHaveText(/%/);
+  // The camera eases to the fitted view. Wait until the sheet has stopped moving.
+  let last = '';
+  await expect
+    .poll(
+      async () => {
+        const now = await page.locator('.stage-world').evaluate((el) => getComputedStyle(el).transform);
+        const settled = now === last;
+        last = now;
+        return settled;
+      },
+      { timeout: 5_000, intervals: [200] },
+    )
+    .toBe(true);
 }
 
 /** Zoom steps are ×1.2, so Fit cannot land on 100%. Stop on the nearest step. */
@@ -144,7 +177,7 @@ for (const theme of THEMES) {
       await fit(page);
       await shoot(page, `01-design-fit-${theme}.png`);
 
-      expect(await zoomNear100(page)).toBe('99%');
+      expect(await zoomNear100(page)).toBe('97%');
       const search = page.locator('#hud-search-input');
       await search.click();
       await search.fill('Virtual Waiting Room');
@@ -160,8 +193,23 @@ for (const theme of THEMES) {
       await page.locator('#btn-rail-expand-palette').click();
       await expect(page.locator('#workspace')).not.toHaveAttribute('data-palette-collapsed', 'true');
       const queue = page.locator('.stencil-card[data-stencil-id="queue"]');
-      await queue.scrollIntoViewIfNeeded();
       await expect(queue).toBeVisible();
+      // The panel animates open and scrolls itself while it does. Put every scroller back to the top.
+      await queue.evaluate((el) => {
+        for (let n: HTMLElement | null = el; n; n = n.parentElement) n.scrollTop = 0;
+      });
+      let last = -1;
+      await expect
+        .poll(
+          async () => {
+            const top = await queue.evaluate((el) => Math.round(el.getBoundingClientRect().top));
+            const settled = top === last;
+            last = top;
+            return settled;
+          },
+          { timeout: 5_000, intervals: [150] },
+        )
+        .toBe(true);
       await queue.hover();
       await shoot(page, `03-component-panel-${theme}.png`);
       await page.locator('#btn-collapse-palette').click();
@@ -184,6 +232,10 @@ for (const theme of THEMES) {
       await expect(page.locator('#insights-panel')).toBeVisible();
       await fit(page);
       await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(0);
+      // Review may select a component on its own. The picture is of the lens, not of a selection.
+      await clearSelection(page);
+      await expect(page.locator('.arch-node .node-select-hit[aria-pressed="true"]')).toHaveCount(0);
+      await fit(page);
       await shoot(page, `06-review-${theme}.png`);
     });
   });
