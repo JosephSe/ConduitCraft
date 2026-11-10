@@ -623,6 +623,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - **Done:** one dialog shell serves every dialog; entry CSS ≤ 112 kB. **Needs:** T2.
 - `ui.css` holds the button, field, switch, stepper, segmented control, popover, and dialog. The `ui` layer sits after `stage`, so the layout and stage rules that already lost to the button rules still lose, and before `components`, so the inspector can still override a control. Button and field geometry is unchanged. `.btn.solid` is the ink fill that `btn-primary` and `btn-primary-export` both were. The dead names are gone: `btn-ghost`, `btn-sm`, `btn-share-v2`, and `btn-action-compact`. Fields are `.field` (and `.field-code`). The command palette, home, and snapshots use the same `.dialog-shell` as every other dialog. The palette stays top-aligned, at 38rem, with three rows.
 - Entry CSS is 109.0 kB of 112 (`index-Du47sFhh.css`). Entry JS is 530.8 kB of 540 (`index-CUxe4THd.js`). Fonts stay 78.6 kB. The checker now fails entry CSS above 112 KiB. Unit tests 902 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. Home was re-recorded on macOS, because New diagram is now an ink fill. The other seven views were not. The 20% pixel slack stays. The view spec passed twice with no diff.
+- Pull request #101.
 
 #### [ ] T4. Icons and the cut-out · M
 - **Do:** 5.4 and `src/ui/cutout.ts` (7.1), with a unit test that every entry in `STENCIL_CATALOG` yields a cut-out.
