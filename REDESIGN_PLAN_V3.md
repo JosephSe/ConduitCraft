@@ -651,10 +651,14 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - `shared.css` makes islands solid (`--cc-island` becomes `--cc-sheet`) and drops every blur under `prefers-reduced-transparency`, and where `backdrop-filter` is unsupported. `tests/reducedTransparency.test.ts` covers it; a browser spec is not possible while Playwright cannot emulate that media feature. `viewer.css` names Instrument Sans and Geist Mono.
 - Entry CSS is 110.8 kB of 112 (`index-DlGIrn25.css`). Entry JS is 533.5 kB of 540. Unit tests 910 passed. Browser tests 344 passed. No picture was re-recorded: the changes sit inside the 20% pixel slack, which is the gap T4d closes, so T4d should re-record all sixteen.
 
-#### [ ] T4d. Make the view check sharper · S
+#### [x] T4d. Make the view check sharper · S
 - **Why:** the eight-view check allows 20% of pixels to differ, so T3 and T4 passed without re-recording views they visibly change.
 - **Do:** one baseline set per platform with a tolerance of 1% or less on macOS; keep a looser value only for Linux until a Linux run measures the real gap. Re-record all sixteen images and attach before and after in the PR.
 - **Done:** changing a button's fill colour on a test branch fails the check.
+- On macOS the check allows 0.1% of pixels (about 1,300), not the 1% first written: a 1% allowance is about 13,000 pixels, more than a whole button. Other platforms keep 20% until a Linux run measures the real gap. A scratch edit that turned the primary button blue failed the Home view in both themes (4,245 pixels), then was reverted.
+- The tighter check found four sources of nondeterminism that the 20% slack had hidden, all in the test: the showcase load can leave a component selected (so the inspector was open in some runs); Review can select one on its own; the component panel animates open and scrolls itself; and Fit ran while a side panel was still folding. Now `loadShowcase` clears the selection, Review clears it again, the panel's scrollers are reset and waited on, and `fit` waits for the canvas width and the sheet's transform to settle.
+- Because nothing is selected now, the inspector is closed in views 1, 2 and 6, so the canvas is wider and the nearest step to 100% is 97%. All sixteen pictures were re-recorded on macOS. They changed from the T3, T4 and T4c pictures wherever those PRs changed the screen.
+- Eight repeats of the eight views (64 runs): 63 passed. One Review run differed by about 8,800 pixels. That is a known remaining flake in the test (view 6), not in the app; if it shows in CI, look for a second camera or panel move in the Review lens first. Unit tests 910 passed. Browser tests 344 passed.
 
 #### [ ] T5. Two more colours: cyan and fuchsia · M
 - **Read:** `src/types.ts` (`StreamTone`), `src/shared/tones.ts`, `src/core/meta.ts`, `src/core/frames.ts`, `src/core/parser.ts` (`normalizeTone`, `COLOR_NAME_MAP`, `FRAME_TONES`), `src/importers/common.ts` (hue buckets), `src/templates/presets.ts` (the tone list), `src/exporter/blueprintJson.ts`, `diagramSvg.ts`, `standaloneHtml.ts`, `shared.css`.
