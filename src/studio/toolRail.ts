@@ -4,7 +4,6 @@
  * stays right however the tool was changed. The component list's Stage containers repeat Frame and Text.
  */
 import { findPaletteCommand } from './palette';
-import { responsiveToolbar } from './responsiveToolbar';
 
 const TOOL_ACTION: Record<string, string> = {
   select: 'tool-select',
@@ -29,8 +28,8 @@ export function initToolRail(): void {
     btn.addEventListener('click', () => {
       const id = TOOL_ACTION[toolOf(btn)];
       if (id) findPaletteCommand(id)?.run();
-      // The list is a drawer over the sheet the tool is about to be used on.
-      responsiveToolbar.togglePalette(true);
+      // The tray is not over the sheet the tool is about to be used on.
+      void import('./tray').then((m) => m.closeTray());
     });
   }
   new MutationObserver(sync).observe(workspace, { attributes: true, attributeFilter: ['data-tool'] });

@@ -61,11 +61,28 @@ describe('cut-outs', () => {
     const carried = renderCutoutMarkup({ kind: 'service' }, { carried: true });
     assert.match(carried, /class="cutout is-carried"/);
     assert.match(carried, /viewBox="0 0 222 142"/);
-    const interactions = readFileSync(new URL('../src/studio/interactions.ts', import.meta.url), 'utf8');
-    assert.match(interactions, /renderCutoutMarkup\(stencil\)/);
+    const tray = readFileSync(new URL('../src/studio/tray.ts', import.meta.url), 'utf8');
+    assert.match(tray, /renderCutoutMarkup\(stencil\)/);
     const css = readFileSync(new URL('../src/styles/studio/ui.css', import.meta.url), 'utf8');
     assert.match(css, /translateY\(-4px\) scale\(1\.12\)/);
     assert.match(css, /\.cut\.is-empty/);
     assert.match(css, /color-mix\(in oklab, var\(--t, var\(--cc-blue\)\) 13%, var\(--cc-sheet\)\)/);
+  });
+
+  it('puts the kind icon inside card outlines only, so cards can be told apart (Q10)', () => {
+    for (const id of ['service', 'core', 'cache', 'scheduler', 'bus', 'limiter']) {
+      const stencil = STENCIL_CATALOG.find((s) => s.id === id)!;
+      const markup = renderCutoutMarkup(stencil);
+      if (/data-cutout="card"/.test(markup)) assert.match(markup, /class="cutout-icon"/, `${id} shows its icon`);
+    }
+    const cards = STENCIL_CATALOG.filter((s) => /data-cutout="card"/.test(renderCutoutMarkup(s)));
+    assert.ok(cards.length >= 4, 'several kinds are cards');
+    const marks = new Set(cards.map((s) => renderCutoutMarkup(s)));
+    assert.equal(marks.size, cards.length, 'no two card cut-outs are the same drawing');
+    for (const id of ['actor', 'store', 'queue', 'balancer']) {
+      const stencil = STENCIL_CATALOG.find((s) => s.id === id)!;
+      assert.doesNotMatch(renderCutoutMarkup(stencil), /cutout-icon/, `${id} has its own outline and no mark`);
+    }
+    assert.doesNotMatch(renderCutoutMarkup(cards[0], { carried: true }), /cutout-icon/, 'a carried copy grows into the node, which has its own icon');
   });
 });

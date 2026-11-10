@@ -1083,10 +1083,6 @@
       min-block-size: 2.75rem;
     }
 
-    .stencil-card {
-      min-block-size: 3.25rem;
-    }
-
     .segmented-label {
       min-block-size: 2.75rem;
       padding-inline: 0.75rem;

@@ -83,8 +83,4 @@ describe('tooltip styles', () => {
     assert.ok(css.includes('.tooltip-layer[data-visible="true"]'), 'defines its visible state');
     assert.ok(!css.includes('[data-tip]::after'), 'no per-element ::after tooltips remain');
   });
-
-  it('keeps stencil cards positioned', () => {
-    assert.ok(css.includes('.stencil-card {\n    position: relative;'));
-  });
 });

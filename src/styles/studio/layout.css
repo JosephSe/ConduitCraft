@@ -236,21 +236,6 @@
     grid-template-columns: minmax(0, 1fr) 3.25rem;
   }
 
-  /* The palette is a drawer over the sheet, closed until the dock's "All components" or C opens it (S4 replaces it with the tray). */
-  .palette-sidebar {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-start: 0;
-    inline-size: 16.5rem;
-    max-inline-size: min(16.5rem, 85vw);
-    z-index: 40;
-    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
-  }
-
-  .workspace[data-palette-collapsed="true"] .palette-sidebar {
-    display: none !important;
-  }
-
   .inspector-rail-content {
     display: none;
   }

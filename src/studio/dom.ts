@@ -58,15 +58,9 @@ export const btnRestoreDiscard = document.getElementById('btn-restore-discard') 
 
 
 export const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement;
-export const paletteSidebar = document.getElementById('palette-sidebar') as HTMLElement | null;
 export const inspectorPanel = document.getElementById('inspector-panel') as HTMLElement | null;
 
 export const canvasStatsPill = document.getElementById('canvas-stats-pill') as HTMLElement;
-export const stencilGrid = document.getElementById('stencil-grid') as HTMLElement;
-export const btnAddZone = document.getElementById('btn-add-zone') as HTMLButtonElement;
-export const btnAddNotes = document.getElementById('btn-add-notes') as HTMLButtonElement;
-export const btnPaletteImport = document.getElementById('btn-palette-import') as HTMLButtonElement;
-export const btnPaletteCode = document.getElementById('btn-palette-code') as HTMLButtonElement;
 
 export const windowDropVeil = document.getElementById('window-drop-veil') as HTMLElement;
 export const emptyStageOverlay = document.getElementById('empty-stage-overlay') as HTMLElement;

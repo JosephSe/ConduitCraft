@@ -28,9 +28,9 @@ test('the dock holds five tools, six favourites and All components, and the old 
   await expect(page.locator('#btn-all-components')).toBeVisible();
   await expect(page.locator('.rail-stencil-btn, #btn-rail-expand-palette')).toHaveCount(0);
   await expect(tool(page, 'select')).toHaveAttribute('aria-pressed', 'true');
-  // The component list is a drawer, closed until asked for.
-  await expect(page.locator('#workspace')).toHaveAttribute('data-palette-collapsed', 'true');
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
+  // The tray is not built until it is asked for.
+  await expect(page.locator('#tray')).toHaveCount(0);
+  await expect(page.locator('#palette-sidebar')).toHaveCount(0);
 });
 
 test('the defaults are Service, Data store, Message queue, Load balancer, Gateway and Actor, each named by its tooltip', async ({ page }) => {
@@ -76,7 +76,7 @@ test('V and W switch tools, Z and N add a swimlane and a note, C opens the compo
   await expect(page.locator('.blueprint-spec')).toHaveCount(notes + 1);
 
   await page.keyboard.press('c');
-  await expect(page.locator('#workspace')).not.toHaveAttribute('data-palette-collapsed', 'true');
+  await expect(page.locator('#tray')).toBeVisible();
   await expect(page.locator('#btn-all-components')).toHaveAttribute('aria-expanded', 'true');
 });
 
@@ -201,34 +201,3 @@ test('the dock is the Design face: Traffic and Review leave it for the run bar',
   await expect(page.locator('#dock')).toBeVisible();
 });
 
-test('All components opens the list, Esc and a click on the sheet close it', async ({ page }) => {
-  await open(page);
-  const all = page.locator('#btn-all-components');
-  await all.click();
-  await expect(page.locator('#palette-sidebar')).toBeVisible();
-  await expect(page.locator('#stencil-grid')).toBeVisible();
-  await expect(all).toHaveAttribute('aria-expanded', 'true');
-  await page.keyboard.press('Escape');
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
-  await expect(all).toBeFocused();
-
-  await all.click();
-  await expect(page.locator('#palette-sidebar')).toBeVisible();
-  const spot = await emptySpot(page);
-  await page.mouse.click(spot.x, spot.y);
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
-});
-
-test('Stage containers in the list offer Frame and Text, and they pick the same tools as the dock', async ({ page }) => {
-  await open(page);
-  await page.locator('#btn-all-components').click();
-  await page.locator('#btn-add-frame').click();
-  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
-  await expect(page.locator('#btn-add-frame')).toHaveAttribute('aria-pressed', 'true');
-  await expect(tool(page, 'frame')).toHaveAttribute('aria-pressed', 'true');
-  // Picking a tool puts the list away, as it does for the dock.
-  await page.locator('#btn-all-components').click();
-  await page.locator('#btn-add-text').click();
-  await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'text');
-  await expect(page.locator('#btn-add-frame')).toHaveAttribute('aria-pressed', 'false');
-});

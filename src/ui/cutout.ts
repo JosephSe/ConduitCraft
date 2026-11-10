@@ -13,8 +13,8 @@ import {
   storeDrawsCylinder,
 } from '../core/nodeStyle';
 import { streamLanes } from '../core/queues';
-import type { NodeKind, NodeQueue, NodeShape } from '../types';
-import { ACTOR_FIGURE } from './icons';
+import type { NodeIconName, NodeKind, NodeQueue, NodeShape } from '../types';
+import { ACTOR_FIGURE, nodeIconShapes } from './icons';
 
 export const CUTOUT_WIDTH = 38;
 export const CUTOUT_HEIGHT = 30;
@@ -26,6 +26,8 @@ const ROUNDED_RADIUS = 28;
 
 export interface CutoutSource {
   kind: string;
+  /** Card kinds are all one outline, so the kind's icon is drawn small inside it (Q10). */
+  icon?: NodeIconName;
   shape?: NodeShape;
   queue?: NodeQueue;
   /** Stencils keep the queue on `preset`, the same place `createNodeFromStencil` reads it. */
@@ -132,7 +134,12 @@ export function renderCutoutMarkup(source: CutoutSource, options: CutoutOptions 
   if (options.carried) {
     return `<svg class="cutout is-carried" data-cutout="${drawing.kind}" viewBox="0 0 ${drawing.width} ${drawing.height}" width="100%" height="100%" ${paint} preserveAspectRatio="xMidYMid meet" overflow="visible" aria-hidden="true" focusable="false">${drawing.inner}</svg>`;
   }
-  return `<svg class="cutout" data-cutout="${drawing.kind}" viewBox="0 0 ${CUTOUT_WIDTH} ${CUTOUT_HEIGHT}" width="${CUTOUT_WIDTH}" height="${CUTOUT_HEIGHT}" ${paint} overflow="visible" aria-hidden="true" focusable="false"><g transform="${fit(drawing.width, drawing.height)}">${drawing.inner}</g></svg>`;
+  // A 12 px kind mark, centred. fill-opacity is inherited and the reach rules only set `fill`, so the mark stays unfilled.
+  const mark =
+    drawing.kind === 'card' && source.icon
+      ? `<g class="cutout-icon" fill-opacity="0" stroke-width="2.6" transform="translate(${(CUTOUT_WIDTH - 12) / 2} ${(CUTOUT_HEIGHT - 12) / 2}) scale(0.5)">${nodeIconShapes(source.icon)}</g>`
+      : '';
+  return `<svg class="cutout" data-cutout="${drawing.kind}" viewBox="0 0 ${CUTOUT_WIDTH} ${CUTOUT_HEIGHT}" width="${CUTOUT_WIDTH}" height="${CUTOUT_HEIGHT}" ${paint} overflow="visible" aria-hidden="true" focusable="false"><g transform="${fit(drawing.width, drawing.height)}">${drawing.inner}</g>${mark}</svg>`;
 }
 
 /** True when this source has an outline. Every stencil does. */

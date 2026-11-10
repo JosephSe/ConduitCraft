@@ -1200,6 +1200,36 @@ kbd {
 .dock-all { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2.75rem; padding-inline: 0.75rem; border: 0; border-radius: 0.7rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); cursor: pointer; white-space: nowrap; }
 .dock-all:hover, .dock-all[aria-expanded="true"] { background: var(--cc-well); color: var(--cc-ink); }
 .dock-all kbd { font: 0.7rem var(--wl-font-mono); color: var(--cc-ink-3); }
+/* The tray (7.3): opens above the dock. Six groups, each a quiet label over a list of cut-outs. Not modal. */
+.tray {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: calc(100% + 0.625rem);
+  translate: -50% 0;
+  inline-size: min(55rem, 100cqi);
+  max-block-size: calc(100vh - 11.5rem);
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem 1rem;
+  background: var(--cc-island);
+  border: 1px solid var(--cc-hair);
+  border-radius: 1.375rem;
+  box-shadow: var(--wl-shadow-elevated);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  pointer-events: auto;
+  z-index: 3;
+}
+#slot-s { position: relative; }
+.tray-label { margin: 0 0 0.25rem; padding-inline: 0.5rem; font: var(--cc-font-small); color: var(--cc-ink-3); }
+.tray-list { display: flex; flex-direction: column; }
+.tray-item { display: flex; align-items: center; gap: 0.75rem; min-block-size: 2.75rem; padding: 0.25rem 0.5rem; border: 0; border-radius: 0.65rem; background: none; color: var(--cc-ink); font: var(--cc-font-body, inherit); text-align: start; cursor: pointer; touch-action: manipulation; }
+.tray-item:hover, .tray-item:focus-visible { background: var(--cc-well); }
+.tray-item:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.tray-item .cut { flex: none; display: grid; inline-size: 38px; block-size: 30px; }
+.workspace[data-tray] .hint-line, .workspace[data-mode="data"] .tray { display: none; }
 @media (max-width: 56rem) { .dock-fav:nth-of-type(n+4) { display: none; } }
 /* Click to arm (7.1): the ghost follows the pointer until the next click on the sheet. */
 .workspace[data-armed] .canvas-viewport { cursor: copy; }
@@ -1738,7 +1768,7 @@ kbd {
 /* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
 @media (pointer: coarse) {
   .btn, .btn-icon-only, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
-  .title-edit-trigger, .context-menu-item, .stencil-aux-btn, .help-popover-link {
+  .title-edit-trigger, .context-menu-item, .help-popover-link {
     min-inline-size: 2.75rem;
     min-block-size: 2.75rem;
   }

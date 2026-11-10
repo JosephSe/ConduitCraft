@@ -95,78 +95,6 @@
       <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
     </button>
 
-    <!-- Left Stencil Palette (Design Mode) -->
-    <aside class="palette-sidebar" id="palette-sidebar" aria-label="Component stencil palette">
-      <!-- Expanded Palette Header & Content -->
-      <div class="palette-header">
-        <h2 class="section-heading">Components</h2>
-        <div class="palette-header-right" style="display: flex; align-items: center; gap: 0.4rem;">
-          <span class="compile-pill" id="canvas-stats-pill">0 NODES</span>
-          <button type="button" class="btn btn-icon-only btn-panel-collapse" id="btn-collapse-palette" aria-label="Collapse component palette ([)" data-tip="Collapse palette ([)">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="palette-scroll">
-        <p class="palette-hint">Click to add or drag directly onto the canvas.</p>
-        <div class="stencil-grid" id="stencil-grid" role="list"></div>
-
-        <div class="palette-section">
-          <h3 class="section-heading">Stage containers</h3>
-          <div class="palette-stack">
-            <button type="button" class="stencil-aux-btn" id="btn-add-zone">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
-              </span>
-              <span>
-                <strong>Swimlane Stage</strong>
-                <small>Column header banner</small>
-              </span>
-            </button>
-            <button type="button" class="stencil-aux-btn" id="btn-add-frame" data-palette-tool="frame" aria-pressed="false" data-tip="Drag on the canvas to draw a frame (F)" data-tip-pos="top">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
-              </span>
-              <span>
-                <strong>Frame</strong>
-                <small>Box that holds components</small>
-              </span>
-            </button>
-            <button type="button" class="stencil-aux-btn" id="btn-add-notes">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-              </span>
-              <span>
-                <strong>Note</strong>
-                <small>Checklist annotation box</small>
-              </span>
-            </button>
-            <button type="button" class="stencil-aux-btn" id="btn-add-text" data-palette-tool="text" aria-pressed="false" data-tip="Click the canvas to add a label (T)" data-tip-pos="top">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-              </span>
-              <span>
-                <strong>Text</strong>
-                <small>Free label on the canvas</small>
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <div class="palette-section">
-          <h3 class="section-heading">File import</h3>
-          <div class="upload-card" id="palette-dropzone">
-            <p class="upload-card-text">Drop a <code>.mmd</code>, <code>.md</code>, or <code>.blueprint.json</code> file anywhere, or browse from disk.</p>
-            <div class="palette-import-actions">
-              <button type="button" class="btn btn-compact" id="btn-palette-import">Choose File…</button>
-              <button type="button" class="btn btn-compact" id="btn-palette-code">Paste Code</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
     <!-- Center Interactive Canvas -->
     <section class="canvas-shell" aria-label="Interactive architecture canvas">
       <!-- Drag-and-Drop Overlay -->
@@ -311,7 +239,7 @@
           <span class="dock-sep" aria-hidden="true"></span>
           <span class="dock-favs" id="dock-favs" role="group" aria-label="Favourite components" style="display: contents"></span>
           <span class="dock-sep" aria-hidden="true"></span>
-          <button type="button" class="dock-all" id="btn-all-components" aria-haspopup="dialog" aria-expanded="false" aria-controls="palette-sidebar" aria-keyshortcuts="C">All components <kbd>C</kbd></button>
+          <button type="button" class="dock-all" id="btn-all-components" aria-haspopup="dialog" aria-expanded="false" aria-controls="tray" aria-keyshortcuts="C">All components <kbd>C</kbd></button>
           </div>
       <!-- Chaos summary (Traffic lens): what the current failures break -->
       <section class="chaos-panel" id="chaos-panel" data-island aria-label="Failure summary" hidden>
@@ -368,6 +296,7 @@
           <select class="field js-tag-filter" id="view-tag-filter">
             <option value="">All tags</option>
           </select>
+          <span class="compile-pill" id="canvas-stats-pill" role="status">0 NODES</span>
         </div>
         <div class="hud-card slot-popover hud-search-card" id="hud-search-card" role="search" hidden>
           <span class="hud-search-icon" aria-hidden="true">

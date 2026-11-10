@@ -12,7 +12,6 @@ import { FAVOURITE_COUNT, normaliseFavourites } from './dockFavourites';
 import { hudStatusTip, viewport } from './dom';
 import { addNodeAt, attachStencilDragAndDrop } from './interactions';
 import { TOOL_TIPS } from './pointerTool';
-import { responsiveToolbar } from './responsiveToolbar';
 import { app, screenToWorld } from './state';
 
 const STORAGE_KEY = 'conduitcraft:dock-favourites';
@@ -153,24 +152,8 @@ export function initDock(): void {
     if (armedId && (app.pointerTool !== 'select' || app.workspaceMode !== 'design')) disarm();
   }).observe(document.getElementById('workspace')!, { attributes: true, attributeFilter: ['data-tool', 'data-mode'] });
 
-  // "All components" opens the list (the tray, once S4 lands). Esc or a press on the sheet closes it again.
-  const all = document.getElementById('btn-all-components');
-  const palette = document.getElementById('palette-sidebar');
-  const workspace = document.getElementById('workspace');
-  const syncAll = () => all?.setAttribute('aria-expanded', String(workspace?.getAttribute('data-palette-collapsed') !== 'true'));
-  all?.addEventListener('click', () => {
-    disarm();
-    responsiveToolbar.togglePalette();
-    if (workspace?.getAttribute('data-palette-collapsed') !== 'true') document.querySelector<HTMLElement>('#stencil-grid button')?.focus();
-  });
-  if (workspace) new MutationObserver(syncAll).observe(workspace, { attributes: true, attributeFilter: ['data-palette-collapsed'] });
-  syncAll();
-  viewport.addEventListener('pointerdown', () => {
-    if (workspace?.getAttribute('data-palette-collapsed') !== 'true') responsiveToolbar.togglePalette(true);
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape' || workspace?.getAttribute('data-palette-collapsed') === 'true' || !palette?.contains(document.activeElement)) return;
-    responsiveToolbar.togglePalette(true);
-    all?.focus();
+  // "All components" opens the tray (7.3). It loads the first time it is asked for.
+  document.getElementById('btn-all-components')?.addEventListener('click', (e) => {
+    void import('./tray').then((m) => m.toggleTray(e.currentTarget as HTMLElement));
   });
 }

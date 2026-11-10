@@ -165,23 +165,6 @@ describe('responsive and compact toolbar', () => {
     elementsById.set('drawer-scrim', drawerScrim);
   });
 
-  it('starts with the component list closed, and opens and closes it', () => {
-    const manager = new ResponsiveToolbarManager();
-    manager.init(workspace as unknown as HTMLElement);
-
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
-
-    // Open
-    const expanded = manager.togglePalette();
-    assert.strictEqual(expanded, false);
-    assert.strictEqual(workspace.hasAttribute('data-palette-collapsed'), false);
-
-    // Close
-    const collapsed = manager.togglePalette();
-    assert.strictEqual(collapsed, true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
-  });
-
   it('toggles inspector collapsed state and persists in localStorage', () => {
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
@@ -202,15 +185,12 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('restores collapsed states from localStorage on initialization', () => {
-    mockStorage.set('conduitcraft:palette-collapsed', 'true');
     mockStorage.set('conduitcraft:inspector-collapsed', 'true');
 
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
     assert.strictEqual(manager.isInspectorCollapsed(), true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
     assert.strictEqual(workspace.getAttribute('data-inspector-collapsed'), 'true');
   });
 
@@ -219,7 +199,6 @@ describe('responsive and compact toolbar', () => {
 
     assert.ok(css.includes('.slot-nw'), 'CSS defines the NW slot');
     assert.ok(!css.includes('.doc-history-controls'), 'undo and redo left the top bar (6.2)');
-    assert.ok(css.includes('workspace[data-palette-collapsed="true"]'), 'CSS defines palette collapsed rail layout');
     assert.ok(css.includes('workspace[data-inspector-collapsed="true"]'), 'CSS defines inspector collapsed rail layout');
     assert.ok(css.includes('@media (max-width: 82rem)'), 'CSS defines 82rem breakpoint');
     assert.ok(css.includes('@media (max-width: 66rem)'), 'CSS defines 66rem breakpoint');
@@ -230,7 +209,7 @@ describe('responsive and compact toolbar', () => {
     // Breakpoints to test per MUST_DO_PLAN.md Item 7
     const viewports = [390, 768, 1024, 1312, 1440];
     const rem = 16;
-    const railWidthPx = 3.25 * rem; // 52px per compact icon rail
+    const railWidthPx = 3.25 * rem; // 52px for the collapsed inspector rail
 
     for (const vpWidth of viewports) {
       for (const mode of ['design', 'data'] as const) {
@@ -241,14 +220,9 @@ describe('responsive and compact toolbar', () => {
           // Drawers are overlay drawers; when no drawer is open, sidebars are hidden (display: none).
           canvasWidth = vpWidth;
         } else {
-          // > 66rem: desktop multi-column layout with collapsed icon rails.
-          if (mode === 'design') {
-            // Both palette and inspector rails are collapsed: 52px left + 52px right = 104px
-            canvasWidth = vpWidth - (railWidthPx * 2);
-          } else {
-            // Data mode: palette sidebar is display: none; inspector rail is collapsed (52px)
-            canvasWidth = vpWidth - railWidthPx;
-          }
+          // > 66rem: the sheet runs under the left side; only the collapsed inspector rail (52px) takes room.
+          canvasWidth = vpWidth - railWidthPx;
+          void mode;
         }
 
         const share = canvasWidth / vpWidth;
@@ -265,7 +239,7 @@ describe('responsive and compact toolbar', () => {
 
     // Verify fragile :not() chain that broke cascade was removed
     assert.ok(
-      !css.includes('.workspace:not([data-palette-collapsed="true"]):not([data-inspector-collapsed="true"])'),
+      !css.includes('.workspace:not([data-palette-collapsed="true"]):not([data-inspector-collapsed="true"])') && !css.includes('palette-collapsed'),
       'Must eliminate fragile (0, 3, 0) :not() chain at 82rem'
     );
 
@@ -276,47 +250,33 @@ describe('responsive and compact toolbar', () => {
     );
   });
 
-  it('boots with both panels collapsed by default below 66rem (item 8)', () => {
+  it('boots with the inspector collapsed by default below 66rem (item 8)', () => {
     globalThis.window.innerWidth = 768;
 
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
     assert.strictEqual(manager.isNarrowScreen(), true);
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
     assert.strictEqual(manager.isInspectorCollapsed(), true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
     assert.strictEqual(workspace.getAttribute('data-inspector-collapsed'), 'true');
   });
 
-  it('mutually closes the other drawer on narrow screens and manages tap-to-dismiss scrim (item 8)', () => {
+  it('shows the scrim while the inspector drawer is open on a narrow screen, and a tap closes it (item 8)', () => {
     globalThis.window.innerWidth = 768;
 
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
-    // Initial state: both collapsed, scrim hidden
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
     assert.strictEqual(manager.isInspectorCollapsed(), true);
     assert.strictEqual(drawerScrim.hasAttribute('hidden'), true);
 
-    // Open palette drawer
-    manager.togglePalette(false);
-    assert.strictEqual(manager.isPaletteCollapsed(), false, 'Palette must be open');
-    assert.strictEqual(manager.isInspectorCollapsed(), true, 'Inspector must stay collapsed');
-    assert.strictEqual(drawerScrim.hasAttribute('hidden'), false, 'Scrim must be visible when palette is open');
-
-    // Opening inspector drawer must close palette drawer
     manager.toggleInspector(false);
     assert.strictEqual(manager.isInspectorCollapsed(), false, 'Inspector must be open');
-    assert.strictEqual(manager.isPaletteCollapsed(), true, 'Palette must be automatically closed');
-    assert.strictEqual(drawerScrim.hasAttribute('hidden'), false, 'Scrim must remain visible');
+    assert.strictEqual(drawerScrim.hasAttribute('hidden'), false, 'Scrim must be visible when the drawer is open');
 
-    // Tapping the scrim closes both drawers
     drawerScrim.click();
-    assert.strictEqual(manager.isPaletteCollapsed(), true, 'Palette must close on scrim tap');
     assert.strictEqual(manager.isInspectorCollapsed(), true, 'Inspector must close on scrim tap');
-    assert.strictEqual(drawerScrim.hasAttribute('hidden'), true, 'Scrim must be hidden when both drawers close');
+    assert.strictEqual(drawerScrim.hasAttribute('hidden'), true, 'Scrim must be hidden when the drawer closes');
   });
 
   it('verifies 44px minimum tap targets inside @media (pointer: coarse) (item 8)', () => {
