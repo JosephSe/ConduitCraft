@@ -2051,9 +2051,7 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 }
 #stage-world[data-lod="low"] .node-sub,
 #stage-world[data-lod="low"] .node-light,
-#stage-world[data-lod="low"] .chaos-badge,
 #stage-world[data-lod="low"] .node-status-badge,
-#stage-world[data-lod="low"] .node-level-badge,
 #stage-world[data-lod="low"] .node-comment-badge,
 #stage-world[data-lod="low"] .node-lock-badge { display: none; }
 #stage-world[data-lod="low"] .arch-node { box-shadow: none; }
