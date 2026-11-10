@@ -144,6 +144,7 @@ export function renderAll(rebuildInspector = true): void {
 
   stageWorld.style.width = `${app.doc.stageWidth}px`;
   stageWorld.style.height = `${app.doc.stageHeight}px`;
+  stageWorld.style.setProperty('--stage-h', String(app.doc.stageHeight));
   wiresSvg.setAttribute('viewBox', `0 0 ${app.doc.stageWidth} ${app.doc.stageHeight}`);
   wiresSvg.setAttribute('width', String(app.doc.stageWidth));
   wiresSvg.setAttribute('height', String(app.doc.stageHeight));
