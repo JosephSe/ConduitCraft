@@ -275,4 +275,103 @@
     padding: 1.25rem;
     overflow: auto;
   }
+
+  /* Cut-out (7.1). Rest is an ink-3 outline. Reaching fills it and lifts it. */
+  .cutout {
+    display: block;
+    overflow: visible;
+  }
+
+  .cutout :is(path, rect, ellipse, circle, polygon) {
+    fill: transparent;
+    stroke: var(--cc-ink-3);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    transition: fill var(--cc-dur-fast) var(--cc-ease-out), stroke var(--cc-dur-fast) var(--cc-ease-out);
+  }
+
+  .cut {
+    transition: transform 0.26s var(--cc-spring);
+  }
+
+  .cut:hover,
+  .cut:focus-visible,
+  .cut.is-on,
+  .stencil-card:hover .cut,
+  .stencil-card:focus-visible .cut {
+    transform: translateY(-4px) scale(1.12);
+  }
+
+  .cut:hover .cutout :is(path, rect, ellipse, circle, polygon),
+  .cut:focus-visible .cutout :is(path, rect, ellipse, circle, polygon),
+  .cut.is-on .cutout :is(path, rect, ellipse, circle, polygon),
+  .stencil-card:hover .cut .cutout :is(path, rect, ellipse, circle, polygon),
+  .stencil-card:focus-visible .cut .cutout :is(path, rect, ellipse, circle, polygon),
+  .cutout.is-carried :is(path, rect, ellipse, circle, polygon) {
+    fill: color-mix(in oklab, var(--t, var(--cc-blue)) 13%, var(--cc-sheet));
+    stroke: var(--t, var(--cc-blue));
+  }
+
+  .cutout .cutout-mark,
+  .cut:hover .cutout .cutout-mark,
+  .cut:focus-visible .cutout .cutout-mark,
+  .cut.is-on .cutout .cutout-mark,
+  .stencil-card:hover .cut .cutout .cutout-mark,
+  .cutout.is-carried .cutout-mark {
+    fill: none;
+  }
+
+  /* The slot left behind while the filled copy is under the pointer. */
+  .cut.is-empty,
+  .stencil-card:hover .cut.is-empty {
+    transform: none;
+  }
+
+  .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon),
+  .stencil-card:hover .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon) {
+    fill: transparent;
+    stroke: var(--cc-ink-3);
+  }
+
+  .stencil-preview.cut {
+    background: none;
+    border-color: transparent;
+    inline-size: 38px;
+    block-size: 30px;
+  }
+
+  .rail-stencil-btn.cut .cutout {
+    inline-size: 30px;
+    block-size: 24px;
+  }
+
+  .stencil-drag-ghost.cutout-carry {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    inline-size: 38px;
+    block-size: 30px;
+    transition: inline-size 0.26s var(--cc-spring), block-size 0.26s var(--cc-spring);
+  }
+
+  .stencil-drag-ghost.cutout-carry.is-full {
+    inline-size: var(--carry-w);
+    block-size: var(--carry-h);
+  }
+
+  .cutout-carry .cutout {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cut,
+    .cutout :is(path, rect, ellipse, circle, polygon),
+    .stencil-drag-ghost.cutout-carry {
+      transition: none;
+    }
+  }
 }

@@ -1464,7 +1464,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
       lockBadge = document.createElement('span');
       lockBadge.className = 'node-lock-badge';
       lockBadge.setAttribute('aria-label', 'Locked component');
-      lockBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+      lockBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
       wrapper.appendChild(lockBadge);
     }
   } else {
@@ -1518,7 +1518,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
       commentBadge.className = 'node-comment-badge';
       // A plain span may not carry a label; as an image it can, and screen readers read the comment.
       commentBadge.setAttribute('role', 'img');
-      commentBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+      commentBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
       wrapper.appendChild(commentBadge);
     }
     commentBadge.setAttribute('data-tip', node.comment.length > 70 ? `${node.comment.slice(0, 67)}…` : node.comment);

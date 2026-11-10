@@ -625,9 +625,12 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Entry CSS is 109.0 kB of 112 (`index-Du47sFhh.css`). Entry JS is 530.8 kB of 540 (`index-CUxe4THd.js`). Fonts stay 78.6 kB. The checker now fails entry CSS above 112 KiB. Unit tests 902 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. Home was re-recorded on macOS, because New diagram is now an ink fill. The other seven views were not. The 20% pixel slack stays. The view spec passed twice with no diff.
 - Pull request #101.
 
-#### [ ] T4. Icons and the cut-out · M
+#### [x] T4. Icons and the cut-out · M
 - **Do:** 5.4 and `src/ui/cutout.ts` (7.1), with a unit test that every entry in `STENCIL_CATALOG` yields a cut-out.
 - **Needs:** T1.
+- One icon set: a 24 box, a 1.6 stroke, round caps and joins, and no fill. Play and pause use that set. Kind icons stay on the tile of a component card and in the inspector picker. Swimlanes and notes stay icons.
+- A cut-out is the kind's real outline, fitted into 38×30 from the plates the canvas draws: the shape plate, the pipe, the cylinder, the bucket, and the actor figure. The rail and the component panel show those. Reaching fills with the 13% tone mix, takes the tone as the stroke, and lifts 4 px at 1.12 on the spring. Dragging leaves an empty outline in the slot and grows a filled copy to the node's own size. Clicking still places at the centre of the view. Click to arm is S3.
+- Entry CSS is 111.1 kB of 112 (`index-Dva6H7Yc.css`). Entry JS is 533.5 kB of 540 (`index-73fo8ixY.js`). Fonts stay 78.6 kB. The HTML export chunk is 91.5 kB. Unit tests 907 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. Views 1 to 3 were re-recorded on macOS. The other five views were not. The export pictures stayed inside the 3% slack, so they were not re-recorded. The 20% pixel slack stays. The view spec passed again with no diff.
 
 #### [ ] T5. Two more colours: cyan and fuchsia · M
 - **Read:** `src/types.ts` (`StreamTone`), `src/shared/tones.ts`, `src/core/meta.ts`, `src/core/frames.ts`, `src/core/parser.ts` (`normalizeTone`, `COLOR_NAME_MAP`, `FRAME_TONES`), `src/importers/common.ts` (hue buckets), `src/templates/presets.ts` (the tone list), `src/exporter/blueprintJson.ts`, `diagramSvg.ts`, `standaloneHtml.ts`, `shared.css`.

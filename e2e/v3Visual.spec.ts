@@ -6,6 +6,7 @@ import { runPaletteCommand, seedStorage } from './helpers';
  * View 6 is its own visit so the failure from view 5 is not in the picture.
  * T2 re-recorded these after the type scale and the 88% sheet.
  * T3 re-recorded home after the ink primary button.
+ * T4 re-recorded the design rail and the component panel (views 1 to 3).
  * The check still allows 20% of pixels at the default colour threshold. A Linux run can
  * still differ (keyboard symbols, and any glyph outside the Latin subset) until that run
  * shows the real gap. Two runs on one machine match exactly.
