@@ -151,6 +151,15 @@
     --cc-space-7: 28px;
     --cc-space-8: 32px;
 
+    /* 5.2. Chrome stays at 100% width. The sheet sets 88% on .stage-world. */
+    --cc-font-meta: 400 11px/14px var(--wl-font-sans);
+    --cc-font-small: 400 12px/16px var(--wl-font-sans);
+    --cc-font-body: 400 13px/20px var(--wl-font-sans);
+    --cc-font-control: 500 13px/20px var(--wl-font-sans);
+    --cc-font-title: 600 15px/19px var(--wl-font-sans);
+    --cc-font-panel: 600 16px/20px var(--wl-font-sans);
+    --cc-font-display: 600 24px/30px var(--wl-font-sans);
+
     --cc-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
     --cc-dur-fast: 120ms;
     --cc-dur-base: 200ms;
@@ -166,11 +175,10 @@
 
 @layer layout {
   body {
-    font-family: var(--wl-font-sans);
+    font: var(--cc-font-body);
+    font-stretch: 100%;
     /* The bold fallback is a scaled regular face. Faux bold would add its own width. */
     font-synthesis-weight: none;
-    font-size: 0.9375rem;
-    line-height: 1.5;
     background-color: var(--wl-canvas);
     color: var(--wl-ink);
     display: grid;

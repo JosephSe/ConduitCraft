@@ -75,7 +75,7 @@ function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direct
   const outline = nodeOutlineBase(node, pal, isSelected, direction);
   if (!node.external) return outline;
   const dashed = outline.replace(/ stroke-width="/g, ' stroke-dasharray="6 4" stroke-width="');
-  const label = `<text x="${node.x + node.width - 14}" y="${node.y - 6}" text-anchor="end" font-family="${MONO}" font-size="10" font-weight="600" letter-spacing="0.6" fill="${pal.muted}">EXTERNAL</text>`;
+  const label = `<text x="${node.x + node.width - 14}" y="${node.y - 6}" text-anchor="end" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.muted}">External</text>`;
   return dashed + label;
 }
 
@@ -274,7 +274,7 @@ function nodeMarkup(
       ? chipMarkup(node.chip, right, topMid, pal)
       : ''
     : node.eyebrow
-      ? `<text x="${right}" y="${topMid + 4}" text-anchor="end" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.muted}">${escapeXml(node.eyebrow)}</text>`
+      ? `<text x="${right}" y="${topMid + 4}" text-anchor="end" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.muted}">${escapeXml(node.eyebrow)}</text>`
       : '';
   const titleY = y + 14 + iconSize + 26;
   const card = queueCardText(node);
@@ -317,7 +317,7 @@ function legendMarkup(doc: DiagramDocument, height: number, pal: Palette): strin
       return `<circle cx="34" cy="${cy - 4}" r="5" fill="${pal.tone[entry.tone]}"/><text x="48" y="${cy}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">${escapeXml(text)}</text>`;
     })
     .join('');
-  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="${pal.surface}" stroke="${pal.border}"/><text x="28" y="${y + 20}" font-family="${MONO}" font-size="11" font-weight="700" fill="${pal.tone.blue}">LEGEND</text>${rows}</g>`;
+  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="${pal.surface}" stroke="${pal.border}"/><text x="28" y="${y + 20}" font-family="${SANS}" font-size="11" font-weight="700" fill="${pal.tone.blue}">Legend</text>${rows}</g>`;
 }
 
 export function renderDiagramSvg(
@@ -412,7 +412,7 @@ export function renderDiagramSvg(
           ? (() => {
               const w = monoWidth(edge.label, 11) + 20;
               const [bx, by] = edge.badgePos;
-              return `<rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="11" fill="${pal.surface}" stroke="${pal.subtle}"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.ink}">${escapeXml(edge.label)}</text>`;
+              return `<rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="11" fill="${pal.surface}" stroke="${pal.subtle}"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.ink}">${escapeXml(edge.label)}</text>`;
             })()
           : '';
       const isBoth = edge.flow === 'both';
@@ -448,7 +448,7 @@ export function renderDiagramSvg(
   const legend = legendMarkup(doc, height, pal);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="diagram-title diagram-desc">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-stretch="88%" role="img" aria-labelledby="diagram-title diagram-desc">
   <title id="diagram-title">${escapeXml(doc.title.trim() || 'Untitled diagram')}</title>
   <desc id="diagram-desc">${escapeXml(describeDiagram(doc))}</desc>
   <defs>${markers}</defs>

@@ -94,11 +94,11 @@
   .inspector-title { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.25; margin-block-end: 0.375rem; }
   .inspector-summary { font-size: 0.875rem; color: var(--wl-ink-secondary); line-height: 1.55; margin-block-end: 1rem; }
   .inspector-section { margin-block-start: 1rem; padding-block-start: 0.875rem; border-block-start: 1px solid var(--wl-border-subtle); }
-  .section-heading { font-family: var(--wl-font-mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; color: var(--wl-ink-muted); margin-block-end: 0.55rem; }
+  .section-heading { font: var(--cc-font-meta); font-weight: 600; color: var(--wl-ink-muted); margin-block-end: 0.55rem; }
   .metrics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
   .metric-box { background: var(--wl-surface); border: 1px solid var(--wl-border-subtle); border-radius: 0.625rem; padding: 0.625rem 0.75rem; }
   .metric-label { font-size: 0.75rem; color: var(--wl-ink-muted); display: block; }
-  .metric-value { font-family: var(--wl-font-mono); font-size: 0.875rem; font-weight: 700; color: var(--wl-ink); margin-block-start: 0.125rem; display: block; }
+  .metric-value { font-family: var(--wl-font-sans); font-variant-numeric: tabular-nums; font-size: 0.875rem; font-weight: 700; color: var(--wl-ink); margin-block-start: 0.125rem; display: block; }
   .lineage-group { display: flex; flex-direction: column; gap: 0.5rem; }
   .lineage-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; }
   .lineage-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.625rem; border-radius: 0.5rem; border: 1px solid var(--wl-border-ui); background: var(--wl-surface); font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
@@ -124,7 +124,7 @@
   .canvas-viewport { inline-size: 100%; block-size: 100%; position: relative; overflow: hidden; cursor: grab; touch-action: none; }
   .canvas-viewport.is-dragging { cursor: grabbing; }
   .canvas-viewport:focus-visible { outline: 3px solid var(--cc-ink); outline-offset: -3px; }
-  .stage-world { position: absolute; top: 0; left: 0; width: var(--stage-w); height: var(--stage-h); transform-origin: 0 0; }
+  .stage-world { position: absolute; top: 0; left: 0; width: var(--stage-w); height: var(--stage-h); transform-origin: 0 0; font-stretch: 88%; }
 
   .zone-banner {
     position: absolute; top: 18px; left: calc(var(--zx) * 1px); width: calc(var(--zw) * 1px);
@@ -297,9 +297,9 @@
   .arch-node[data-shape] .micro-chip { white-space: nowrap; flex-shrink: 0; }
   .arch-node[data-shape] .node-title,
   .arch-node[data-shape] .node-sub { overflow-wrap: break-word; text-align: center; }
-  .node-eyebrow { font-family: var(--wl-font-mono); font-size: 0.75rem; font-weight: 600; color: var(--wl-ink-muted); }
-  .node-title { display: block; font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; color: var(--wl-ink); }
-  .arch-node[data-kind="core"] .node-title, .arch-node[data-kind="gate"] .node-title, .arch-node[data-kind="store"] .node-title { font-size: 1.25rem; }
+  .node-eyebrow { font: var(--cc-font-meta); font-stretch: 88%; color: var(--wl-ink-muted); }
+  .node-title { display: block; font: var(--cc-font-title); font-stretch: 88%; letter-spacing: -0.005em; color: var(--wl-ink); }
+  .arch-node[data-kind="core"] .node-title, .arch-node[data-kind="gate"] .node-title, .arch-node[data-kind="store"] .node-title { font-size: 1.25rem; line-height: 1.2; }
   .arch-node[data-kind="client"] .node-title {
     font-size: 0.95rem;
     display: -webkit-box;
@@ -382,7 +382,7 @@
 
   .canvas-hud { position: absolute; inset-block-end: 1rem; inset-inline: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; pointer-events: none; z-index: 10; flex-wrap: wrap; }
   .hud-card { pointer-events: auto; display: inline-flex; align-items: center; gap: 0.625rem; padding: 0.45rem 0.75rem; border-radius: 0.75rem; background: var(--wl-panel); backdrop-filter: blur(16px); border: 1px solid var(--wl-border-subtle); box-shadow: var(--wl-shadow-card); font-size: 0.78rem; color: var(--wl-ink-secondary); }
-  .zoom-readout { font-family: var(--wl-font-mono); font-size: 0.78rem; min-inline-size: 3.1rem; text-align: center; font-weight: 600; }
+  .zoom-readout { font-family: var(--wl-font-sans); font-variant-numeric: tabular-nums; font-size: 0.78rem; min-inline-size: 3.1rem; text-align: center; font-weight: 600; }
 }
 
 @layer dialogs {

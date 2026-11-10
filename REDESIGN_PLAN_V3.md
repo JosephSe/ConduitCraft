@@ -608,9 +608,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Entry CSS is 109.4 kB of 115 (`index-CxI8Rhej.css`). Entry JS is 531.0 kB of 540 (`index-BdrgouoB.js`). Fonts stay 78.6 kB. Unit tests 895 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views and the six export pictures were re-recorded on macOS. The 20% pixel slack stays. The view spec passed twice with no diff.
 - Pull request #99.
 
-#### [ ] T2. Type · M
+#### [x] T2. Type · M
 - **Do:** 5.2. The scale as tokens; 88% width on the sheet; mono only for literal things; no uppercase.
 - **Done:** `grep -c 'text-transform: uppercase' src/styles` is 0; `tests/plainLanguage.test.ts` passes. **Needs:** T1, Z4.
+- The scale is seven tokens: meta 11/14/400, small 12/16/400, body 13/20/400, control 13/20/500, title 15/19/600, panel 16/20/600, display 24/30/600. Body uses the body token at full width. The sheet is 88% (`.stage-world`, and the SVG root). The HUD and the rest of the chrome stay at 100% because they sit outside the sheet. A `font` shorthand resets stretch, so each sheet rule that uses one sets 88% again after it.
+- Words that were mono are sans: the brand name, section headings, eyebrows, the legend title, badges, the selection subheading, shortcut categories, the export kicker, the diff ledger title, and the HUD tip. Keyboard keys, code, ids, and protocol footers stay mono. Changing numbers (the zoom readout, the run step, metric values) stay in Instrument Sans with `tabular-nums`.
+- Nine uppercase rules are gone, and the tracking that only served them. Stencil eyebrows are sentence case. Saved diagrams keep the eyebrows they stored, including the flash-sale showcase, so view 1 still shows those in capitals. Chips stay as authored.
+- Kind-specific title sizes stay, with `line-height: 1.2`, because the title token's 19px line clipped those larger sizes. The page title is unchanged, so the Z4 jump measurement still holds. The display and control tokens are there for the primitives that come later.
+- Entry CSS is 109.3 kB of 115 (`index-Da7uZNr1.css`). Entry JS is 531.0 kB of 540 (`index-CettnLcZ.js`). Fonts stay 78.6 kB. Unit tests 898 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views and the six export pictures were re-recorded on macOS. The 20% pixel slack stays. The view spec passed twice with no diff.
+- Pull request #100.
 
 #### [ ] T3. Primitives · M
 - **Do:** `ui.css` per 10.2, converting existing markup and deleting old button and field variants.
