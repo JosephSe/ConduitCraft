@@ -576,6 +576,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - **Done:** built entry CSS within 200 bytes of baseline; no visual diff. **Needs:** Z1.
 - `studio.css` is the import list. Each existing `@layer` is its own file under `src/styles/studio/`: reset, tokens, layout, palette, components, stage, inspector, dialogs. The tail after `@layer dialogs` stays unlayered in `unlayered.css`, because unlayered rules beat every layer. The empty `utilities` layer stays in the order statement and has no file. `shared.css` stays an `@import`. The HTML export does not include `studio.css` (`standaloneHtml.ts` still inlines `shared.css`, `viewer.css`, and `frames.css` only).
 - Built entry CSS is byte-identical to the Z1 baseline: `index-CS3wg9RI.css`, 112663 bytes (110.0 kB). Unit tests 894 passed. The later names in 10.2 (`base.css`, `ui.css`, `slots.css`, and the rest) are not this split.
+- Pull request #96.
 
 #### [ ] Z3. Visual check for the eight views · S
 - **Done:** passes twice in a row with no diff. **Needs:** Z1.
