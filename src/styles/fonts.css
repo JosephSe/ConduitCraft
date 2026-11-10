@@ -1,7 +1,7 @@
 /* Latin subsets, SIL Open Font License. The licence files sit beside the fonts.
    One local() name per face, so a missing name cannot hide the next one.
-   Bold and semibold try the bold face first. Where that face is not installed,
-   the regular face is scaled to the bold width. Widths were measured in the browser.
+   The bold face is listed last, so it wins where it is installed. Otherwise the
+   regular face is scaled to the bold width. Widths were measured in the browser.
    Vertical metrics follow the typo line. */
 
 @font-face {
@@ -76,6 +76,36 @@
 
 @font-face {
   font-family: "Instrument Sans Fallback";
+  src: local("LiberationSans");
+  font-weight: 600;
+  size-adjust: 102.12%;
+  ascent-override: 94.99%;
+  descent-override: 24.48%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
+  src: local("Liberation Sans");
+  font-weight: 600;
+  size-adjust: 102.12%;
+  ascent-override: 94.99%;
+  descent-override: 24.48%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
+  src: local("Arial");
+  font-weight: 600;
+  size-adjust: 102.12%;
+  ascent-override: 94.99%;
+  descent-override: 24.48%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
   src: local("Arial-BoldMT");
   font-weight: 600;
   size-adjust: 98.97%;
@@ -97,30 +127,30 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("LiberationSans");
-  font-weight: 600;
-  size-adjust: 106.18%;
-  ascent-override: 91.35%;
-  descent-override: 23.55%;
+  font-weight: 700;
+  size-adjust: 103.48%;
+  ascent-override: 93.74%;
+  descent-override: 24.16%;
   line-gap-override: 0%;
 }
 
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Liberation Sans");
-  font-weight: 600;
-  size-adjust: 106.18%;
-  ascent-override: 91.35%;
-  descent-override: 23.55%;
+  font-weight: 700;
+  size-adjust: 103.48%;
+  ascent-override: 93.74%;
+  descent-override: 24.16%;
   line-gap-override: 0%;
 }
 
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Arial");
-  font-weight: 600;
-  size-adjust: 106.18%;
-  ascent-override: 91.35%;
-  descent-override: 23.55%;
+  font-weight: 700;
+  size-adjust: 103.48%;
+  ascent-override: 93.74%;
+  descent-override: 24.16%;
   line-gap-override: 0%;
 }
 
@@ -141,36 +171,6 @@
   size-adjust: 100.41%;
   ascent-override: 96.60%;
   descent-override: 24.90%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
-  src: local("LiberationSans");
-  font-weight: 700;
-  size-adjust: 107.59%;
-  ascent-override: 90.16%;
-  descent-override: 23.24%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
-  src: local("Liberation Sans");
-  font-weight: 700;
-  size-adjust: 107.59%;
-  ascent-override: 90.16%;
-  descent-override: 23.24%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
-  src: local("Arial");
-  font-weight: 700;
-  size-adjust: 107.59%;
-  ascent-override: 90.16%;
-  descent-override: 23.24%;
   line-gap-override: 0%;
 }
 
