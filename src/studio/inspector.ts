@@ -863,7 +863,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'COMPONENT PROPERTIES';
+    propPanelHeading.textContent = 'Component properties';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -1183,7 +1183,7 @@ export function renderPropertyEditor(): void {
     mHeader.className = 'prop-list-header';
     const mTitle = document.createElement('span');
     mTitle.className = 'section-heading';
-    mTitle.textContent = 'METRICS';
+    mTitle.textContent = 'Metrics';
     const btnAddMetric = document.createElement('button');
     btnAddMetric.type = 'button';
     btnAddMetric.className = 'btn btn-compact';
@@ -1325,13 +1325,13 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'WIRE PROPERTIES';
+    propPanelHeading.textContent = 'Wire properties';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
 
     const wireHeading = document.createElement('h3');
     wireHeading.className = 'section-heading';
-    wireHeading.textContent = 'WIRE FIELDS';
+    wireHeading.textContent = 'Wire fields';
     wireHeading.appendChild(helpButton('wire-fields'));
     form.appendChild(wireHeading);
     form.appendChild(
@@ -1551,7 +1551,7 @@ export function renderPropertyEditor(): void {
       for (const side of ['auto', 'top', 'right', 'bottom', 'left'] as PortSide[]) {
         const opt = document.createElement('option');
         opt.value = side;
-        opt.textContent = side.toUpperCase();
+        opt.textContent = side.charAt(0).toUpperCase() + side.slice(1);
         opt.selected = side === current;
         sel.appendChild(opt);
       }
@@ -1728,10 +1728,10 @@ export function renderPropertyEditor(): void {
     const excludedEdges = app.doc.edges.filter((e) => sel.excludedEdgeIds?.includes(e.id));
 
     const counts = [
-      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'NODE' : 'NODES'}` : '',
-      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'CONNECTOR' : 'CONNECTORS'}` : '',
-      zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'SWIMLANE' : 'SWIMLANES'}` : '',
-      notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'NOTE' : 'NOTES'}` : '',
+      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'node' : 'nodes'}` : '',
+      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'connector' : 'connectors'}` : '',
+      zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'swimlane' : 'swimlanes'}` : '',
+      notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'note' : 'notes'}` : '',
     ].filter(Boolean);
     propPanelHeading.textContent = `MULTI-SELECT (${counts.join(', ')})`;
     propSelectionActions.hidden = false;
@@ -1743,7 +1743,7 @@ export function renderPropertyEditor(): void {
 
     const membersHeading = document.createElement('span');
     membersHeading.className = 'section-heading';
-    membersHeading.textContent = 'SELECTION MEMBERS';
+    membersHeading.textContent = 'Selection members';
     membersSection.appendChild(membersHeading);
 
     const helpTip = document.createElement('p');
@@ -1997,7 +1997,7 @@ export function renderPropertyEditor(): void {
     alignSection.className = 'prop-divider';
     const alignHeading = document.createElement('span');
     alignHeading.className = 'section-heading';
-    alignHeading.textContent = 'ALIGN & DISTRIBUTE';
+    alignHeading.textContent = 'Align & distribute';
     alignSection.appendChild(alignHeading);
 
     const grid = document.createElement('div');
@@ -2097,7 +2097,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'SWIMLANE STAGE';
+    propPanelHeading.textContent = 'Swimlane stage';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2161,7 +2161,7 @@ export function renderPropertyEditor(): void {
       setSelection({ type: 'none' });
       return;
     }
-    propPanelHeading.textContent = 'FRAME';
+    propPanelHeading.textContent = 'Frame';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
     void import('./frameStage').then((m) => {
@@ -2174,7 +2174,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'NOTE';
+    propPanelHeading.textContent = 'Note';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2210,7 +2210,7 @@ export function renderPropertyEditor(): void {
     iHeader.className = 'prop-list-header';
     const iTitle = document.createElement('span');
     iTitle.className = 'section-heading';
-    iTitle.textContent = 'ITEMS';
+    iTitle.textContent = 'Items';
     const btnAddItem = document.createElement('button');
     btnAddItem.type = 'button';
     btnAddItem.className = 'btn btn-compact';
@@ -2288,7 +2288,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(itemsSection);
   } else {
     // Document Overview Properties
-    propPanelHeading.textContent = 'DOCUMENT PROPERTIES';
+    propPanelHeading.textContent = 'Document properties';
     propSelectionActions.hidden = true;
     if (!app.doc.brand) app.doc.brand = { name: '', accent: '', logo: '' };
 
@@ -2364,7 +2364,7 @@ export function renderPropertyEditor(): void {
 
     const legendHeading = document.createElement('h3');
     legendHeading.className = 'section-heading';
-    legendHeading.textContent = 'COLOUR LEGEND';
+    legendHeading.textContent = 'Colour legend';
     legendHeading.appendChild(helpButton('legend'));
     form.appendChild(legendHeading);
     for (const tone of Object.keys(TONE_META) as StreamTone[]) {
@@ -2387,7 +2387,7 @@ export function renderPropertyEditor(): void {
 
     const brandHeading = document.createElement('h3');
     brandHeading.className = 'section-heading';
-    brandHeading.textContent = 'EXPORTED PAGE';
+    brandHeading.textContent = 'Exported page';
     form.appendChild(brandHeading);
     form.appendChild(
       makeField(
@@ -2598,7 +2598,7 @@ export function syncDataViewInspector(): void {
     if (selected.length > 0) {
       const lineage = lineageOutsideSelection(selected);
       withInspectorTransition(() => {
-        inspBadge.textContent = 'MULTI-SELECT';
+        inspBadge.textContent = 'Multi-select';
         inspId.textContent = `${selected.length} SELECTED`;
         inspTitle.textContent = `${selected.length} components`;
         inspSummary.textContent = selected.map((node) => node.title).join(', ');
@@ -2624,7 +2624,7 @@ export function syncDataViewInspector(): void {
   }
 
   withInspectorTransition(() => {
-    inspBadge.textContent = 'SYSTEM OVERVIEW';
+    inspBadge.textContent = 'System overview';
     inspId.textContent = 'ALL';
     inspTitle.textContent = app.doc.title;
     inspSummary.textContent = app.doc.overviewSummary;
@@ -2679,7 +2679,7 @@ export function addSimulationScenario(): void {
             id: nextUid('step'),
             nodes: [first.id],
             tone: 'blue',
-            label: first.title.toUpperCase(),
+            label: first.title,
             trace: `${first.title} processed a packet.`,
           },
         ]
@@ -3036,7 +3036,7 @@ export function renderSimulationEditor(force = false): void {
 
     const stepsHeading = document.createElement('h3');
     stepsHeading.className = 'section-heading';
-    stepsHeading.textContent = 'HOPS';
+    stepsHeading.textContent = 'Hops';
 
     const steps = document.createElement('div');
     scenario.steps.forEach((step, stepIndex) => {
@@ -3138,7 +3138,7 @@ export function renderSimulationEditor(force = false): void {
         id: nextUid('step'),
         nodes: node ? [node.id] : [],
         tone: live.tone,
-        label: node ? node.title.toUpperCase() : `STEP ${live.steps.length + 1}`,
+        label: node ? node.title : `Step ${live.steps.length + 1}`,
         trace: node ? `${node.title} processed a packet.` : 'Processed telemetry step.',
       });
       renderSimButtons();

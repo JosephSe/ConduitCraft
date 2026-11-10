@@ -412,7 +412,7 @@ export class PresentationManager {
     const toneVar = `var(${toneMeta.cssVar})`;
 
     if (badge) {
-      badge.textContent = step.type === 'overview' ? 'ARCHITECTURE' : 'COMPONENT';
+      badge.textContent = step.type === 'overview' ? 'Architecture' : 'Component';
       (badge as HTMLElement).style?.setProperty('--badge-accent', toneVar);
     }
     if (stepCount) {

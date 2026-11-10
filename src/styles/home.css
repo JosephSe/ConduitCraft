@@ -78,7 +78,7 @@
 }
 .home-card:hover,
 .home-card:focus-visible {
-  border-color: var(--wl-blue);
+  border-color: var(--cc-accent);
 }
 .home-card[aria-current='true'] {
   border-color: var(--wl-border-ui);

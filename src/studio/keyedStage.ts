@@ -570,9 +570,9 @@ function createWireGroup(edgeId: string): SVGGElement {
       if (
         app.selection.type !== 'edge' ||
         app.selection.id !== id ||
-        propPanelHeading.textContent !== 'WIRE PROPERTIES'
+        propPanelHeading.textContent !== 'Wire properties'
       ) {
-        applySelection({ type: 'edge', id }, { expectedHeading: 'WIRE PROPERTIES' });
+        applySelection({ type: 'edge', id }, { expectedHeading: 'Wire properties' });
         renderWiresOnly();
       }
     } else {
@@ -996,7 +996,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         } else {
           applySelection({ type: 'node', id: current.id });
         }
-      } else if (app.selection.type === 'node' && propPanelHeading.textContent !== 'COMPONENT PROPERTIES') {
+      } else if (app.selection.type === 'node' && propPanelHeading.textContent !== 'Component properties') {
         requestInspectorRefresh();
       }
 
@@ -1147,7 +1147,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       const current = liveNode(nodeId);
       if (!current || wasMoved || isToggleNodeEvent(e)) return;
       if (app.workspaceMode === 'design') {
-        applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
+        applySelection({ type: 'node', id: current.id }, { expectedHeading: 'Component properties' });
       } else {
         applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
       }
@@ -1188,7 +1188,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
       }
     } else {
-      applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
+      applySelection({ type: 'node', id: current.id }, { expectedHeading: 'Component properties' });
     }
   });
 

@@ -99,10 +99,8 @@
   }
 
   .save-status-pill {
-    font-family: var(--wl-font-mono);
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
+    font: var(--cc-font-meta);
+    font-weight: 500;
     padding: 0.15rem 0.5rem;
     border-radius: 9999px;
     background: var(--wl-surface-elevated);
@@ -114,8 +112,8 @@
   }
 
   .save-status-pill[data-status="saving"] {
-    color: var(--wl-blue);
-    border-color: var(--wl-blue);
+    color: var(--cc-accent);
+    border-color: var(--cc-accent);
   }
 
   .save-status-pill[data-status="saved"] {

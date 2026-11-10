@@ -51,7 +51,7 @@
 }
 
 .toast-action-btn {
-  background: var(--wl-blue);
+  background: var(--cc-accent);
   color: var(--wl-on-blue);
   border: none;
   border-radius: 9999px;
@@ -156,7 +156,7 @@
   z-index: 10001;
   box-sizing: border-box;
   padding: 0 0.6rem;
-  border: 2px solid var(--wl-blue);
+  border: 2px solid var(--cc-accent);
   border-radius: 6px;
   background: var(--wl-surface-elevated);
   color: var(--wl-ink);
@@ -287,7 +287,7 @@ kbd {
 .swatch-option.swatch-dot-only:has(input:checked) {
   border-color: var(--wl-ink);
   transform: scale(1.12);
-  box-shadow: 0 0 0 2px var(--wl-surface), 0 0 0 3.5px var(--wl-blue);
+  box-shadow: 0 0 0 2px var(--wl-surface), 0 0 0 3.5px var(--cc-accent);
 }
 
 .swatch-option.swatch-dot-only .pill-swatch {
@@ -314,8 +314,8 @@ kbd {
 
 .custom-icon-upload-zone:hover,
 .custom-icon-upload-zone.is-dragover {
-  border-color: var(--wl-blue);
-  background: var(--wl-blue-soft);
+  border-color: var(--cc-accent);
+  background: var(--cc-accent-soft);
 }
 
 .custom-icon-thumb {
@@ -423,7 +423,7 @@ kbd {
 
 .palette-item.is-active,
 .palette-item:hover {
-  background: var(--wl-blue-soft);
+  background: var(--cc-accent-soft);
   color: var(--wl-ink);
 }
 
@@ -514,13 +514,13 @@ kbd {
 .template-filter-btn:hover {
   background: var(--wl-surface-hover);
   color: var(--wl-ink);
-  border-color: var(--wl-blue-soft);
+  border-color: var(--cc-accent-soft);
 }
 
 .template-filter-btn.is-active {
-  background: var(--wl-blue-soft);
-  color: var(--wl-blue);
-  border-color: var(--wl-blue);
+  background: var(--cc-accent-soft);
+  color: var(--cc-accent);
+  border-color: var(--cc-accent);
   font-weight: 600;
 }
 
@@ -547,7 +547,7 @@ kbd {
 
 .template-card:hover {
   transform: translateY(-2px);
-  border-color: var(--wl-blue);
+  border-color: var(--cc-accent);
   box-shadow: var(--wl-shadow-elevated);
 }
 
@@ -605,8 +605,8 @@ kbd {
   font-weight: 600;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
-  background: var(--wl-blue-soft);
-  color: var(--wl-blue);
+  background: var(--cc-accent-soft);
+  color: var(--cc-accent);
 }
 
 .template-tag-meta {
@@ -694,8 +694,8 @@ kbd {
   font-weight: 700;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  background: var(--wl-blue-soft);
-  color: var(--wl-blue);
+  background: var(--cc-accent-soft);
+  color: var(--cc-accent);
   letter-spacing: 0.05em;
 }
 
@@ -737,8 +737,8 @@ kbd {
 
 .share-link-input:focus {
   outline: none;
-  border-color: var(--wl-blue);
-  box-shadow: 0 0 0 2px var(--wl-blue-soft);
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 2px var(--cc-accent-soft);
 }
 
 .share-link-options {
@@ -823,8 +823,8 @@ kbd {
 
 .export-png-select:focus {
   outline: none;
-  border-color: var(--wl-blue);
-  box-shadow: 0 0 0 2px var(--wl-blue-soft);
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 2px var(--cc-accent-soft);
 }
 
 .export-alt-text {
@@ -864,8 +864,8 @@ kbd {
 
 .hud-search-card:focus-within {
   min-inline-size: 15rem;
-  border-color: var(--wl-blue);
-  box-shadow: 0 0 0 2px var(--wl-blue-soft);
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 2px var(--cc-accent-soft);
 }
 
 .hud-search-icon {
@@ -1131,11 +1131,11 @@ kbd {
 }
 .context-menu-item:hover,
 .context-menu-item:focus-visible {
-  background: var(--wl-blue-soft);
+  background: var(--cc-accent-soft);
   outline: none;
 }
 .context-menu-item:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--wl-blue);
+  box-shadow: inset 0 0 0 2px var(--cc-accent);
 }
 .context-menu-item kbd {
   padding: 0;
@@ -1230,8 +1230,8 @@ kbd {
   color: var(--wl-ink);
 }
 .rail-tool-btn[aria-pressed="true"] {
-  background: var(--wl-blue-soft);
-  border-color: var(--wl-blue);
+  background: var(--cc-accent-soft);
+  border-color: var(--cc-accent);
   color: var(--wl-ink);
 }
 
@@ -1262,11 +1262,11 @@ kbd {
 }
 .context-toolbar-btn:hover,
 .context-toolbar-btn:focus-visible {
-  background: var(--wl-blue-soft);
+  background: var(--cc-accent-soft);
   outline: none;
 }
 .context-toolbar-btn:focus-visible {
-  box-shadow: inset 0 0 0 2px var(--wl-blue);
+  box-shadow: inset 0 0 0 2px var(--cc-accent);
 }
 
 /* Colour, kind and shape pickers opened from the contextual toolbar */
@@ -1295,12 +1295,12 @@ kbd {
 }
 .appearance-choice:hover,
 .appearance-choice:focus-visible {
-  background: var(--wl-blue-soft);
+  background: var(--cc-accent-soft);
   outline: none;
 }
 .appearance-choice[aria-checked="true"] {
   font-weight: 700;
-  color: var(--wl-blue);
+  color: var(--cc-accent);
 }
 
 /* Inspector pin: keeps the panel open when nothing is selected */
@@ -1309,7 +1309,7 @@ kbd {
   margin-inline-start: auto;
 }
 .inspector-pin-btn[aria-pressed="true"] {
-  background: var(--wl-blue-soft);
+  background: var(--cc-accent-soft);
   color: var(--wl-ink);
 }
 
@@ -1369,7 +1369,7 @@ kbd {
   white-space: nowrap;
 }
 .run-bar [aria-pressed="true"] {
-  color: var(--wl-blue);
+  color: var(--cc-accent);
 }
 /* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
 .legend-card {
@@ -1611,7 +1611,7 @@ kbd {
 .node-level-badge:hover,
 .node-level-badge:focus-visible {
   color: var(--wl-ink);
-  border-color: var(--wl-blue);
+  border-color: var(--cc-accent);
   transform: scale(1.08);
 }
 .workspace[data-lens='present'] .node-level-badge:not([data-has-child='true']) {
@@ -1686,7 +1686,7 @@ kbd {
 .level-port:hover,
 .level-port:focus-visible {
   color: var(--wl-ink);
-  border-color: var(--wl-blue);
+  border-color: var(--cc-accent);
 }
 /* The component on the other end of this wire has failed: struck through as well as rose, so colour is not the only cue. */
 .level-port[data-cut-off='true'] {
@@ -1763,7 +1763,7 @@ kbd {
   text-transform: none;
   letter-spacing: 0;
 }
-.help-btn:hover, .help-btn[aria-expanded="true"] { color: var(--wl-ink); border-color: var(--wl-blue); }
+.help-btn:hover, .help-btn[aria-expanded="true"] { color: var(--wl-ink); border-color: var(--cc-accent); }
 .help-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
 .prop-section-wrap { position: relative; }
 .prop-section-wrap > .help-btn { position: absolute; inset-inline-end: 2.2rem; inset-block-start: 0.55rem; margin: 0; z-index: 1; }
@@ -1781,7 +1781,7 @@ kbd {
 .help-popover:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
 .help-popover-title { margin: 0 0 0.35rem; font-size: 0.9rem; }
 .help-popover-body { margin: 0 0 0.6rem; font-size: 0.82rem; line-height: 1.45; }
-.help-popover-link { font-size: 0.8rem; color: var(--wl-blue-ink, var(--wl-blue)); }
+.help-popover-link { font-size: 0.8rem; color: var(--cc-accent); }
 
 /* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
 @media (pointer: coarse) {
@@ -1887,8 +1887,8 @@ kbd {
   cursor: pointer;
 }
 .page-tab:hover { color: var(--wl-ink); background: var(--wl-hover, rgba(127, 127, 127, 0.1)); }
-.page-tab[aria-selected="true"] { color: var(--wl-ink); font-weight: 600; border-block-start-color: var(--wl-blue); background: var(--wl-panel, transparent); }
-.page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--wl-blue); }
+.page-tab[aria-selected="true"] { color: var(--wl-ink); font-weight: 600; border-block-start-color: var(--cc-accent); background: var(--wl-panel, transparent); }
+.page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--cc-accent); }
 .page-tab-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .page-add {
   flex: 0 0 auto;

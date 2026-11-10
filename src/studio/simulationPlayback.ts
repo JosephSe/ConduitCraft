@@ -402,7 +402,7 @@ export class SimulationPlaybackController {
     const queue = app.doc.nodes.find((n) => n.id === queueId);
     if (queue && simPacket && simPacketLabel) {
       const [cx, cy] = getNodeCenter(queue);
-      simPacketLabel.textContent = outcome === 'held' ? 'HELD' : outcome === 'dead-lettered' ? 'DLQ' : 'DROPPED';
+      simPacketLabel.textContent = outcome === 'held' ? 'Held' : outcome === 'dead-lettered' ? 'DLQ' : 'Dropped';
       simPacket.style.setProperty('--px', String(cx));
       simPacket.style.setProperty('--py', String(cy));
       if (outcome !== 'held' && simPacketDot) simPacketDot.style.background = TONE_CSS.rose[0];
@@ -569,7 +569,7 @@ export function populateTraceRows(scenario: SimulationScenario): void {
 
     const s1 = document.createElement('span');
     s1.className = 'trace-step';
-    s1.textContent = `STEP 0${i + 1} · ${scenario.name.toUpperCase()}`;
+    s1.textContent = `Step ${i + 1} · ${scenario.name}`;
 
     const s2 = document.createElement('span');
     s2.className = 'trace-time';

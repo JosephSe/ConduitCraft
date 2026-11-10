@@ -105,7 +105,7 @@ const nodePosition = (page: Page, id: string) =>
   }, id);
 
 const wireCount = async (page: Page) =>
-  Number(/(\d+)\s*WIRES?/.exec((await page.locator('#canvas-stats-pill').textContent()) ?? '')?.[1]);
+  Number(/(\d+)\s*WIRES?/i.exec((await page.locator('#canvas-stats-pill').textContent()) ?? '')?.[1]);
 const currentTool = (page: Page) => page.locator('#workspace').getAttribute('data-tool');
 const enterConnectMode = (page: Page) =>
   page.locator('[data-rail-tool="connect"]').first().evaluate((el: HTMLElement) => el.click());
@@ -204,7 +204,7 @@ test('Data View inspector shows the real diagram title, not the HTML placeholder
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
   await expect(page.locator('#data-inspector-pane')).toBeVisible();
   await page.locator('#canvas-viewport').click({ position: { x: 6, y: 6 } });
-  await expect(page.locator('#insp-badge, .inspector-badge').first()).toContainText('SYSTEM OVERVIEW');
+  await expect(page.locator('#insp-badge, .inspector-badge').first()).toContainText(/system overview/i);
   await expect(page.locator('#insp-title')).toHaveText(title!);
 });
 

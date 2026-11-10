@@ -62,7 +62,7 @@ export function mountBulkFields(host: HTMLElement, nodeIds: string[], edgeIds: s
 
   const heading = document.createElement('span');
   heading.className = 'section-heading';
-  heading.textContent = 'EDIT SHARED FIELDS';
+  heading.textContent = 'Edit shared fields';
   host.appendChild(heading);
 
   if (nodeIds.length > 0) {
