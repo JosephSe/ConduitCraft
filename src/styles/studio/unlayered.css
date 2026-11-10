@@ -1960,3 +1960,10 @@ body[data-presenting="true"] .page-strip { display: none; }
 .prop-tab:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
 .prop-tabpanel[hidden] { display: none; }
 .prop-tabpanel { display: grid; gap: 0.75rem; }
+
+/* Create by wiring (7.4): four cut-outs above the new component. */
+.kind-strip { position: fixed; z-index: 40; display: flex; gap: 0.2rem; padding: 0.3rem; transform: translate(-50%, -100%); background: var(--cc-island); border: 1px solid var(--cc-hair); border-radius: 0.9rem; box-shadow: var(--wl-shadow-card); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); }
+.kind-strip-item { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.25rem; border: 0; border-radius: 0.6rem; background: none; color: inherit; cursor: pointer; }
+.kind-strip-item:hover { background: var(--cc-well); }
+.kind-strip-item.is-on { background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 26%, transparent); box-shadow: inset 0 0 0 1.5px var(--t, var(--cc-ink)); }
+.kind-strip-item .cutout { inline-size: 30px; block-size: 24px; }

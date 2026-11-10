@@ -135,6 +135,7 @@ import {
   createBlankDocument,
   createNodeFromStencil,
   findStencil,
+  likelyNext,
   createTextCard,
   nextUid,
 } from '../templates/presets';
@@ -174,7 +175,7 @@ import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
-import { renameNodeInline, renameNotesInline } from './inlineRename';
+import { renameNotesInline } from './inlineRename';
 import { serializeClip, type Clip } from '../core/clipboard';
 import { frameAndDescendantIds, notesInFrames } from '../core/frameOps';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
@@ -476,7 +477,10 @@ export function beginPortWireDrag(
       // Dropping a wire on empty canvas creates a connected component there, ready to be named.
       const [wx, wy] = screenToWorld(upEv.clientX, upEv.clientY);
       const created = createNodeFromWireDrop(draft.sourceNodeId, draft.sourcePort, wx, wy);
-      if (created) window.setTimeout(() => renameNodeInline(created.id), 0);
+      if (created) {
+        const sourceKind = app.doc.nodes.find((n) => n.id === draft.sourceNodeId)?.kind ?? 'service';
+        void import('./kindStrip').then((m) => m.showKindStrip(created.id, sourceKind));
+      }
     }
   };
 
@@ -547,10 +551,12 @@ export function createNodeFromWireDrop(
   worldX: number,
   worldY: number,
 ): DiagramNode | null {
-  if (!app.doc.nodes.some((n) => n.id === sourceId)) return null;
+  const source = app.doc.nodes.find((n) => n.id === sourceId);
+  if (!source) return null;
   let created: DiagramNode | null = null;
   mutateWithHistory(() => {
-    const node = createNodeFromStencil('service', 0, 0, app.doc.nodes.length);
+    // The kind most likely to follow the source (7.4); the strip lets the person pick another.
+    const node = createNodeFromStencil(likelyNext(source.kind)[0]?.id ?? 'service', 0, 0, app.doc.nodes.length);
     const snap = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
     node.x = Math.max(24, snap(worldX - node.width / 2));
     node.y = Math.max(32, snap(worldY - node.height / 2));

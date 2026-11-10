@@ -77,7 +77,7 @@ Checked on 2026-11-09 by reading the source and running the app at 1440 × 900 a
 | Renderer | Keyed DOM for components, SVG for wires | `src/studio/keyedStage.ts` |
 | Styles | `studio.css` is 5,686 lines in nine `@layer`s; `shared.css` and `viewer.css` also feed the HTML export | `src/styles/` |
 | Tokens | 142 `--wl-*` tokens with a thin `--cc-*` layer on top | `src/styles/shared.css` |
-| Entry CSS / JS | 110.0 of 115 kB / 530.7 of 540 kB | `tools/checkBundleSize.mjs` |
+| Entry CSS / JS | 110.0 of 115 kB / 530.7 of 550 kB | `tools/checkBundleSize.mjs` |
 | Font | The stack names `Inter` but no font ships, so the app differs by machine | `--wl-font-sans` |
 | Component boxes | Fixed per kind and **saved in every file** | `getNodeDimensions`, `src/core/layout.ts:13` |
 | Shape outlines | Already computed as geometry | `nodeShapePlate`, `src/core/nodeStyle.ts` |
@@ -780,10 +780,16 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - **Not here:** the 92 px label column and the 30 px control wells, steppers and switches (rows still stack label over control). Wire and document forms keep their current layout.
   - Specs that reach a field now open its tab first (`showInspectorTab`).
 
-#### [ ] S7. Create by wiring · S
+#### [x] S7. Create by wiring · S
 - **Read:** `interactions.ts` around line 521.
 - **Do:** 7.4, with the "likely next" kinds in `STENCIL_CATALOG` and a unit test in `tests/stencils.test.ts`.
 - **Needs:** S3.
+
+- **S7 result.**
+  - Each catalog stencil has a `next` list of four stencil ids (`likelyNext(kind)` in `presets.ts`; unknown kinds fall back to service, store, queue, cache). A wire dropped on empty sheet now makes the first of the source's list instead of always a Service.
+  - The new component carries a strip of four cut-outs (`kindStrip.ts`, loaded on first use, 2.6 kB). ← → or a click changes the kind in place: same id, centre and wires, and still one undo step with the creation. Typing opens the name with that first letter; Enter opens the name; any other key, a press elsewhere, or a scroll dismisses it.
+  - The name is no longer opened straight away; the old test now asserts the strip and typing.
+  - **Size:** entry JS is 540.7 kB with the catalog data, so the cap moves 540 to 550 KiB, as you allowed. Tests: `tests/stencils.test.ts` (936 unit tests), `e2e/interactions.spec.ts`.
 
 #### [ ] S8. Menus, command palette, contextual toolbar, dialogs, toasts · M
 - **Needs:** T3, T4.

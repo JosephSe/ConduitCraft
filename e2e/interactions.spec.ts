@@ -244,7 +244,7 @@ async function emptyCanvasPoint(page: Page, from: { x: number; y: number }, minG
 
 const nodeCount = (page: Page) => page.locator('.arch-node').count();
 
-test('dropping a wire on empty canvas creates a connected component with its name ready to edit', async ({ page }) => {
+test('dropping a wire on empty canvas creates a connected component with a kind strip, and typing names it', async ({ page }) => {
   await loadShowcase(page);
   const [a] = await unconnectedPair(page);
   const from = (await clickableCentre(page, a))!;
@@ -260,9 +260,14 @@ test('dropping a wire on empty canvas creates a connected component with its nam
 
   await expect.poll(() => nodeCount(page)).toBe(nodesBefore + 1);
   expect(await wireCount(page)).toBe(wiresBefore + 1);
-  // The new component's name is open for editing straight away.
+  // The new component carries a strip of four kinds; typing starts naming it (7.4).
+  await expect(page.locator('.kind-strip .kind-strip-item')).toHaveCount(4);
+  await expect(page.locator('.kind-strip-item[aria-checked="true"]')).toHaveCount(1);
+  await page.keyboard.type('D');
+  await expect(page.locator('.kind-strip')).toHaveCount(0);
   await expect(page.locator('.inline-edit-input')).toBeVisible();
   await expect(page.locator('.inline-edit-input')).toHaveAttribute('aria-label', 'Component name');
+  await expect(page.locator('.inline-edit-input')).toHaveValue('D');
   await page.locator('.inline-edit-input').fill('Dropped Service');
   await page.locator('.inline-edit-input').press('Enter');
   await expect(page.locator('.arch-node .node-title', { hasText: 'Dropped Service' })).toHaveCount(1);
@@ -495,4 +500,46 @@ test('the wire inspector can re-attach either end without a mouse', async ({ pag
 
   await undo(page);
   await expect(group).toHaveAttribute('data-to', wire.to);
+});
+
+test('the kind strip changes the kind in place with the arrow keys, and anything else dismisses it', async ({ page }) => {
+  await loadShowcase(page);
+  const [a] = await unconnectedPair(page);
+  const from = (await clickableCentre(page, a))!;
+  const to = await emptyCanvasPoint(page, from);
+  const nodesBefore = await nodeCount(page);
+  const wiresBefore = await wireCount(page);
+
+  await enterConnectMode(page);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.locator('.kind-strip')).toBeVisible();
+
+  const kind = () => page.locator('.arch-node').last().getAttribute('data-kind');
+  const checked = () => page.locator('.kind-strip-item[aria-checked="true"]').getAttribute('data-stencil-id');
+  const first = await checked();
+  await page.keyboard.press('ArrowRight');
+  const second = await checked();
+  expect(second).not.toBe(first);
+  await expect.poll(kind).toBeTruthy();
+  const secondKind = await kind();
+  await page.keyboard.press('ArrowLeft');
+  expect(await checked()).toBe(first);
+  // The component and its wire stay: only the kind changed.
+  expect(await nodeCount(page)).toBe(nodesBefore + 1);
+  expect(await wireCount(page)).toBe(wiresBefore + 1);
+  expect(secondKind).toBeTruthy();
+
+  // Clicking a cut-out picks it; a press on the sheet dismisses the strip.
+  await page.locator('.kind-strip-item').nth(2).click();
+  await expect(page.locator('.kind-strip-item[aria-checked="true"]')).toHaveAttribute('data-stencil-id', /.+/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.kind-strip')).toHaveCount(0);
+
+  // The kind change belongs to the creation: one undo removes the component and its wire.
+  await undo(page);
+  await expect.poll(() => nodeCount(page)).toBe(nodesBefore);
+  expect(await wireCount(page)).toBe(wiresBefore);
 });
