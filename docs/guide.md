@@ -87,6 +87,8 @@ Tones are shared by nodes, wires, and simulation steps:
 | `rose` | Exception |
 | `violet` | Control |
 | `amber` | Async |
+| `cyan` | Data |
+| `fuchsia` | Security |
 
 In the Blueprint file's Mermaid block, a Primary wire is `-->`, a Success wire is `==>`, and an Exception wire is `-.->`.
 

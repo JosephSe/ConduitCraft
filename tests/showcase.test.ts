@@ -23,7 +23,10 @@ const ICONS: NodeIconName[] = [
   'cpu',
   'globe',
 ];
+/** The five tones a showcase must use; `cyan` and `fuchsia` are valid but optional (T5). */
 const TONES: StreamTone[] = ['blue', 'emerald', 'rose', 'violet', 'amber'];
+const OPTIONAL_TONES: StreamTone[] = ['cyan', 'fuchsia'];
+const usesTones = (used: Iterable<StreamTone>) => new Set([...used].filter((t) => !OPTIONAL_TONES.includes(t)));
 const ROUTES: EdgeRouteMode[] = [
   'auto',
   'straight',
@@ -61,12 +64,12 @@ describe('lumen relay showcase', () => {
     assert.deepEqual(new Set(doc.nodes.map((node) => node.kind)), new Set(KINDS));
     assert.deepEqual(new Set(doc.nodes.map((node) => normalizeNodeShape(node.shape))), new Set(SHAPES));
     assert.deepEqual(new Set(doc.nodes.map((node) => node.icon)), new Set(ICONS));
-    assert.deepEqual(new Set(doc.nodes.map((node) => node.accent)), new Set(TONES));
+    assert.deepEqual(usesTones(doc.nodes.map((node) => node.accent)), new Set(TONES));
     assert.equal(doc.nodes.filter((node) => node.iconImage).length, 1);
     assert.ok(doc.nodes.every((node) => node.metrics.length > 0 && node.code && node.summary));
 
     assert.deepEqual(new Set(doc.edges.map((edge) => edge.route)), new Set(ROUTES));
-    assert.deepEqual(new Set(doc.edges.map((edge) => edge.tone)), new Set(TONES));
+    assert.deepEqual(usesTones(doc.edges.map((edge) => edge.tone)), new Set(TONES));
     assert.deepEqual(
       new Set(doc.edges.flatMap((edge) => [edge.sourcePort, edge.targetPort])),
       new Set(PORTS),
@@ -76,7 +79,7 @@ describe('lumen relay showcase', () => {
     assert.ok(doc.edges.every((edge) => ids.has(edge.from) && ids.has(edge.to)));
 
     const stepTones = new Set(doc.simulations.flatMap((scenario) => scenario.steps.map((step) => step.tone)));
-    assert.deepEqual(stepTones, new Set(TONES));
+    assert.deepEqual(usesTones(stepTones), new Set(TONES));
     for (const scenario of doc.simulations) {
       assert.ok(scenario.steps.length > 1);
       for (const step of scenario.steps) {

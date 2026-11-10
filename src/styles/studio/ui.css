@@ -75,7 +75,7 @@
     box-sizing: border-box;
     padding: 0.45rem 0.6rem;
     border-radius: 0.55rem;
-    border: 1px solid var(--wl-border-ui);
+    border: 1px solid var(--cc-field-edge);
     background: var(--wl-surface);
     color: var(--wl-ink);
     font-size: 0.8125rem;

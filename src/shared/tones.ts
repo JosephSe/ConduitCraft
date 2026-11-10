@@ -14,6 +14,8 @@ export const TONE_META: Record<
   rose: { shortLabel: 'Exception', cssVar: 'var(--wl-rose)', softVar: 'var(--wl-rose-soft)' },
   violet: { shortLabel: 'Control', cssVar: 'var(--wl-violet)', softVar: 'var(--wl-violet-soft)' },
   amber: { shortLabel: 'Async', cssVar: 'var(--wl-amber)', softVar: 'var(--wl-amber-soft)' },
+  cyan: { shortLabel: 'Data', cssVar: 'var(--wl-cyan)', softVar: 'var(--wl-cyan-soft)' },
+  fuchsia: { shortLabel: 'Security', cssVar: 'var(--wl-fuchsia)', softVar: 'var(--wl-fuchsia-soft)' },
 };
 
 export const TONE_CSS: Record<StreamTone, [string, string]> = {
@@ -22,4 +24,6 @@ export const TONE_CSS: Record<StreamTone, [string, string]> = {
   rose: [TONE_META.rose.cssVar, TONE_META.rose.softVar],
   violet: [TONE_META.violet.cssVar, TONE_META.violet.softVar],
   amber: [TONE_META.amber.cssVar, TONE_META.amber.softVar],
+  cyan: [TONE_META.cyan.cssVar, TONE_META.cyan.softVar],
+  fuchsia: [TONE_META.fuchsia.cssVar, TONE_META.fuchsia.softVar],
 };

@@ -31,7 +31,7 @@ const PALETTES: Record<SvgScheme, Palette> = {
     muted: '#5C626A',
     border: '#D0D1D2',
     subtle: '#E5E6E6',
-    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309' },
+    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
   },
   dark: {
     canvas: '#1D1F21',
@@ -42,7 +42,7 @@ const PALETTES: Record<SvgScheme, Palette> = {
     muted: '#92979C',
     border: '#555659',
     subtle: '#3F4144',
-    tone: { blue: '#60a5fa', emerald: '#34d399', rose: '#fb7185', violet: '#a78bfa', amber: '#fbbf24' },
+    tone: { blue: '#60a5fa', emerald: '#34d399', rose: '#fb7185', violet: '#a78bfa', amber: '#fbbf24', cyan: '#22d3ee', fuchsia: '#f0abfc' },
   },
 };
 

@@ -217,6 +217,8 @@ function normalizeTone(raw: string | undefined, fallback: StreamTone = 'blue'): 
   if (t === 'rose' || t === 'red' || t === 'rejection' || t === 'error' || t === 'exception') return 'rose';
   if (t === 'violet' || t === 'purple' || t === 'governance' || t === 'control') return 'violet';
   if (t === 'amber' || t === 'yellow' || t === 'orange' || t === 'async' || t === 'warn') return 'amber';
+  if (t === 'cyan' || t === 'teal' || t === 'aqua' || t === 'data') return 'cyan';
+  if (t === 'fuchsia' || t === 'magenta' || t === 'security' || t === 'auth') return 'fuchsia';
   if (t === 'blue' || t === 'ingestion' || t === 'primary') return 'blue';
   return fallback;
 }
@@ -269,15 +271,17 @@ const STREAM_TONE_RGB: Record<StreamTone, [number, number, number]> = {
   rose: [244, 63, 94],
   violet: [139, 92, 246],
   amber: [245, 158, 11],
+  cyan: [6, 182, 212],
+  fuchsia: [217, 70, 239],
 };
 
 const COLOR_NAME_MAP: Record<string, StreamTone> = {
   blue: 'blue',
   sky: 'blue',
-  cyan: 'blue',
+  cyan: 'cyan',
   navy: 'blue',
-  teal: 'blue',
-  aqua: 'blue',
+  teal: 'cyan',
+  aqua: 'cyan',
   dodgerblue: 'blue',
   cornflowerblue: 'blue',
   green: 'emerald',
@@ -292,12 +296,12 @@ const COLOR_NAME_MAP: Record<string, StreamTone> = {
   pink: 'rose',
   crimson: 'rose',
   salmon: 'rose',
-  magenta: 'rose',
+  magenta: 'fuchsia',
   deeppink: 'rose',
   purple: 'violet',
   violet: 'violet',
   indigo: 'violet',
-  fuchsia: 'violet',
+  fuchsia: 'fuchsia',
   plum: 'violet',
   yellow: 'amber',
   amber: 'amber',
@@ -998,7 +1002,7 @@ function importPages(raw: unknown[], doc: DiagramDocument, issues: ImportIssue[]
   if (pages.length) doc.pages = pages;
 }
 
-const FRAME_TONES: StreamTone[] = ['blue', 'emerald', 'violet', 'amber', 'rose'];
+const FRAME_TONES: StreamTone[] = ['blue', 'emerald', 'violet', 'amber', 'rose', 'cyan', 'fuchsia'];
 
 /**
  * "Subgraphs as: Frames" (D1b): each subgraph becomes a frame around its components, and a subgraph inside another

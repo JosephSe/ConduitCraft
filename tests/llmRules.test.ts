@@ -21,7 +21,7 @@ const FILES = [...RULES.matchAll(/```markdown\n([\s\S]*?)\n```/g)].map((m) => m[
 const EXAMPLE = FILES[FILES.length - 1];
 
 const KINDS = ['actor', 'core', 'service', 'bus', 'gate', 'store', 'client', 'queue', 'balancer', 'cache', 'limiter', 'scheduler'];
-const TONES = ['blue', 'emerald', 'rose', 'violet', 'amber'];
+const TONES = ['blue', 'emerald', 'rose', 'violet', 'amber', 'cyan', 'fuchsia'];
 const ROUTES = ['auto', 'straight', 'bezier', 'arc', 'orthogonal', 'step', 'under', 'over', 'fanout'];
 
 /** True when the rules mention the value as code, `like-this`. */

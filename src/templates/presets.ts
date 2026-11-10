@@ -260,6 +260,8 @@ export const STREAM_TONE_OPTIONS: Array<{
   { id: 'rose', label: 'Exception / Return (Rose)', cssVar: 'var(--wl-rose)' },
   { id: 'violet', label: 'Control / Policy (Violet)', cssVar: 'var(--wl-violet)' },
   { id: 'amber', label: 'Async / Event (Amber)', cssVar: 'var(--wl-amber)' },
+  { id: 'cyan', label: 'Data (Cyan)', cssVar: 'var(--wl-cyan)' },
+  { id: 'fuchsia', label: 'Security (Fuchsia)', cssVar: 'var(--wl-fuchsia)' },
 ];
 
 export function createBlankDocument(): DiagramDocument {
