@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 
 class MockElement {
   tagName: string;
@@ -216,8 +217,7 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies responsive stylesheet rules for compact toolbar and rails', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('.doc-history-controls'), 'CSS defines doc history controls next to title');
     assert.ok(css.includes('workspace[data-palette-collapsed="true"]'), 'CSS defines palette collapsed rail layout');
@@ -262,8 +262,7 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies grid specificity cascade fix in studio.css (item 7)', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     // Verify fragile :not() chain that broke cascade was removed
     assert.ok(
@@ -322,8 +321,7 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies 44px minimum tap targets inside @media (pointer: coarse) (item 8)', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('@media (pointer: coarse)'), 'CSS must include coarse pointer block');
     assert.ok(
@@ -333,8 +331,7 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies low-zoom port interactivity and hit target expansion (item 9)', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     // Verify .node-port is NOT in the pointer-events: none rule for low zoom
     const lowLodSection = css.slice(css.indexOf('Level-of-Detail (LoD) rendering for low zoom'));

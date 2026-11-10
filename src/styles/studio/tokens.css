@@ -1,0 +1,23 @@
+@layer tokens {
+  :root {
+    --in-oklch: ;
+
+    --wl-panel-light: rgba(255, 255, 255, 0.9);
+    --wl-panel-dark: rgba(13, 19, 34, 0.88);
+
+    --wl-font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+    --wl-font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  @supports (background: linear-gradient(in oklab, white, black)) {
+    :root {
+      --in-oklch: in oklch;
+    }
+  }
+
+  ::selection {
+    background-color: var(--wl-blue-soft);
+    color: var(--wl-ink);
+  }
+}
+

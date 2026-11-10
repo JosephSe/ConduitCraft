@@ -1,8 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { placeTooltip, preferredPlacement } from '../src/studio/tooltips.ts';
+import { readStudioCss } from './studioCss.ts';
 
 const VIEWPORT = { width: 1000, height: 700 };
 const TIP = { width: 200, height: 30 };
@@ -86,7 +85,7 @@ describe('preferred tooltip placement', () => {
 });
 
 describe('tooltip styles', () => {
-  const css = readFileSync(resolve(process.cwd(), 'src/styles/studio.css'), 'utf8');
+  const css = readStudioCss();
 
   it('styles one shared layer above everything and drops the per-element pseudo-element tooltips', () => {
     assert.ok(css.includes('.tooltip-layer {'), 'defines the shared tooltip layer');

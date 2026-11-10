@@ -1,0 +1,300 @@
+@layer dialogs {
+  dialog {
+    margin: auto;
+    border: 1px solid var(--wl-border-ui);
+    border-radius: 1rem;
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    box-shadow: var(--wl-shadow-elevated);
+    max-inline-size: min(62rem, calc(100vw - 2rem));
+    max-block-size: calc(100dvh - 3rem);
+    padding: 0;
+    opacity: 0;
+    transform: scale(0.95);
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+
+    @media (prefers-reduced-motion: reduce) {
+      transform: none;
+      transition-duration: 0.1s;
+    }
+  }
+
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  :is(dialog[open]):where(:not([data-closing])) {
+    opacity: 1;
+    transform: scale(1);
+
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      @starting-style {
+        transform: none;
+      }
+    }
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background-color: rgba(2, 6, 23, 0);
+    backdrop-filter: blur(4px);
+    transition-property: background-color, display, overlay;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  :is(dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgba(2, 6, 23, 0.58);
+
+    @starting-style {
+      background-color: rgba(2, 6, 23, 0);
+    }
+  }
+
+  .dialog-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-block-size: calc(100dvh - 3rem);
+  }
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-block-end: 1px solid var(--wl-border-subtle);
+    flex-wrap: wrap;
+  }
+
+  .dialog-header h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .dialog-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .dialog-body {
+    padding: 1.25rem;
+    overflow: auto;
+  }
+
+  .code-dialog-body {
+    display: grid;
+    gap: 0.65rem;
+    inline-size: min(56rem, calc(100vw - 4rem));
+  }
+
+  .blueprint-editor {
+    inline-size: 100%;
+    min-block-size: 18rem;
+    resize: vertical;
+    border-radius: 0.7rem;
+    border: 1px solid var(--wl-border-ui);
+    background: var(--wl-surface-code);
+    color: #e2e8f0;
+    padding: 0.85rem 0.95rem;
+    font-family: var(--wl-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    tab-size: 2;
+
+    @media (pointer: coarse) {
+      font-size: 1rem;
+    }
+  }
+
+  .blueprint-editor:focus-visible {
+    outline: 2px solid var(--wl-blue);
+    outline-offset: 2px;
+  }
+
+  .editor-diagnostics {
+    font-family: var(--wl-font-mono);
+    font-size: 0.75rem;
+    color: var(--wl-ink-muted);
+    min-block-size: 1.15rem;
+  }
+
+  .editor-diagnostics[data-tone="warn"] {
+    color: var(--wl-amber);
+  }
+
+  .subgraph-mode {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .dialog-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .guide-lead {
+    font-size: 0.875rem;
+    color: var(--wl-ink-secondary);
+    margin-block-end: 0.5rem;
+    line-height: 1.55;
+  }
+
+  .guide-lead code,
+  .matrix-table code {
+    font-family: var(--wl-font-mono);
+    font-size: 0.78rem;
+    padding-inline: 0.35rem;
+    padding-block: 0.1rem;
+    border-radius: 0.35rem;
+    background: var(--wl-surface-elevated);
+  }
+
+  .export-cards {
+    display: grid;
+    gap: 0.65rem;
+    inline-size: min(38rem, calc(100vw - 4rem));
+  }
+
+  .export-cards[hidden] {
+    display: none;
+  }
+
+  .gif-export-panel {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .gif-export-panel[hidden] {
+    display: none;
+  }
+
+  .gif-export-panel .guide-lead,
+  .gif-export-panel .section-heading {
+    margin: 0;
+  }
+
+  .export-option-card {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.95rem 1.1rem;
+    border-radius: 0.8rem;
+    border: 1px solid var(--wl-border-ui);
+    background: var(--wl-surface);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .export-option-card:hover {
+    border-color: var(--wl-blue);
+    background: var(--wl-surface-elevated);
+    transform: translateY(-1px);
+  }
+
+  .export-option-card:focus-visible {
+    outline: 2px solid var(--wl-blue);
+    outline-offset: 2px;
+  }
+
+  .export-option-card.is-recommended {
+    border-color: var(--wl-blue);
+    background: var(--wl-blue-soft);
+    box-shadow: 0 0 0 3px var(--wl-blue-soft);
+  }
+
+  .export-option-card strong {
+    font-size: 0.9375rem;
+    color: var(--wl-ink);
+  }
+
+  .export-option-card span {
+    font-size: 0.8125rem;
+    color: var(--wl-ink-secondary);
+    line-height: 1.45;
+  }
+
+  .export-option-card .export-option-kicker {
+    font-family: var(--wl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--wl-blue);
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .matrix-table caption {
+    text-align: left;
+    font-size: 0.8125rem;
+    color: var(--wl-ink-secondary);
+    margin-block-end: 0.75rem;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    padding: 0.6rem 0.75rem;
+    border-block-end: 1px solid var(--wl-border-subtle);
+    vertical-align: top;
+  }
+
+  .matrix-table thead th {
+    font-family: var(--wl-font-mono);
+    font-size: 0.75rem;
+    color: var(--wl-ink-muted);
+    background: var(--wl-surface-elevated);
+  }
+
+  .theme-fieldset {
+    border: 1px solid var(--wl-border-subtle);
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .theme-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--wl-border-subtle);
+    cursor: pointer;
+  }
+
+  .theme-option:has(input:checked) {
+    border-color: var(--wl-blue);
+    background: var(--wl-blue-soft);
+  }
+
+  .theme-option-sub {
+    font-size: 0.78rem;
+    color: var(--wl-ink-secondary);
+    display: block;
+  }
+}

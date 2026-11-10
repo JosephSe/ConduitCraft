@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 import { describeSelection } from '../src/studio/a11y';
 import { createBlankDocument } from '../src/templates/presets';
 import type { DiagramDocument, DiagramNode, DiagramEdge, DiagramZone, DiagramNotesCard } from '../src/types';
@@ -116,21 +117,21 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
   });
 
   it('verifies Level-of-Detail (LoD) CSS rules for low zoom', () => {
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+    const studioCss = readStudioCss();
     assert.ok(studioCss.includes('#stage-world[data-lod="low"] .node-footer'), 'must hide node footer at low zoom');
     assert.ok(studioCss.includes('#stage-world[data-lod="low"] .node-eyebrow'), 'must hide node eyebrow at low zoom');
     assert.ok(studioCss.includes('#stage-world[data-lod="low"] .node-title'), 'must keep node title prominent at low zoom');
   });
 
   it('verifies consistent focus-visible outline in studio.css', () => {
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+    const studioCss = readStudioCss();
     assert.ok(studioCss.includes(':focus-visible {'), 'must declare universal focus-visible outline');
     assert.ok(studioCss.includes('.stencil-card:focus-visible'), 'must declare stencil-card focus ring');
   });
 
   it('verifies global [hidden] rule inside earliest @layer reset in shared.css and studio.css', () => {
     const sharedCss = fs.readFileSync(path.resolve('src/styles/shared.css'), 'utf8');
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+    const studioCss = readStudioCss();
 
     // Both files must declare [hidden] { display: none !important; } in @layer reset
     assert.match(

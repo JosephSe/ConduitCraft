@@ -2,9 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 
 const shared = readFileSync(resolve(process.cwd(), 'src/styles/shared.css'), 'utf8');
-const studio = readFileSync(resolve(process.cwd(), 'src/styles/studio.css'), 'utf8');
+const studio = readStudioCss();
 
 function luminance(hex: string): number {
   const h = hex.replace('#', '');
