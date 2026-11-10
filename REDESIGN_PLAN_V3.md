@@ -594,6 +594,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Instrument Sans has working tabular figures (`tnum`), confirmed in the browser: six proportional "1"s are narrower than the tabular run. Changing numbers stay in Instrument Sans. Geist Mono is not used for them. Putting `tabular-nums` on the changing readouts is T2.
 - The studio stacks and the stage-picture fallback name the new families. The font bytes are not embedded in SVG or HTML exports; that is C6 (Q3). `viewer.css` still names Inter and JetBrains Mono. The sheet stays at normal width. The 88% diagram width, the type scale, and removing uppercase are T2.
 - Entry CSS is 112.0 kB of 115 (`index-BT42V7Ec.css`). Entry JS is 530.8 kB of 540 (`index-ja32lMh9.js`). Unit tests 894 passed. Browser tests 344 passed, including the offline test and the view 1 jump check. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views were re-recorded on macOS. The 20% pixel slack stays until a Linux run shows the real gap. The view spec passed twice with no diff.
+- Pull request #98.
 
 ### Milestone T: Foundations
 
