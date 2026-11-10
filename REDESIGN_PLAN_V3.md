@@ -686,8 +686,8 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - `e2e/layout.spec.ts` is replaced by `e2e/slots.spec.ts` (D12): at 800 × 600, 1280 × 800 and 1440 × 900, in Design, Traffic (with a failed component and its list open) and Review, with a selection and a toast, no two islands overlap; and the find popover opens and closes. `topbar.spec.ts` counts the zoom island and the find box as their own regions. Pictures 01 to 06 were re-recorded for the new bottom edge. Entry CSS is 112.0 kB of 112, so there is no room left: the next CSS-heavy step must delete first.
 
 
-#### [ ] S2. Top and corner islands · M, split in two
-- **S2a · top islands (done):** 6.2. **S2b · corner islands:** 6.3, including the legend and view popovers (below).
+#### [x] S2. Top and corner islands · M, split in two
+- **S2a · top islands (done):** 6.2. **S2b · corner islands (done):** 6.3, including the legend and view popovers (below).
 - **Do:** 6.2 and 6.3, including the legend and view popovers.
 - **Done:** `e2e/topbar.spec.ts` rewritten to count controls per island (8 at most); `tagsLinks.spec.ts` passes. **Needs:** S1.
 
@@ -700,6 +700,14 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - Tests: `e2e/topbar.spec.ts` counts controls per island (each at most 8, and exactly what 6.2 lists) and has a Run test. `undo`, `redo` and `undoDepth` live in `e2e/helpers.ts` and go through the menu; eight specs use them. Menu item names include their shortcut, so match them with a prefix.
   - Known wart: while something is selected, its floating toolbar can sit over the mark on a short or small window (D9 says the toolbar follows the selection). The specs reach the menu by keyboard for that reason.
   - Entry CSS stays at 112.0 kB of 112; dead rules (`layout-animating`, three removed button ids) were deleted to pay for it.
+
+- **S2b result.**
+  - SW is the pages island with a **Key** button at its end. The legend card is a popover over SW that the Key opens; the button shows only when there is something to explain (the document's legend, or the colours under "Colour by status" or "tag"), and the old "show legend" preference still turns it off.
+  - SE is `−`, the zoom readout, `+` and Fit. The readout is now a button that opens the **view options** popover over SE: the minimap (moved out of SW, painted when the popover opens), "Colour by" and "Show only tag". The Fit selection button is gone (the palette action `fit-selection` stays). The run bar lost its View group; its help button moved into the Playback group.
+  - `src/studio/slotPopovers.ts` handles both (toggle, one open at a time, Escape and a press elsewhere close, focus returns to the button). The find box is now a `.slot-popover` too and closes the view options when it opens. One `.slot-popover` rule places all three; the minimap card, the legend's absolute position and the code-pane legend offsets are deleted.
+  - **Not built:** 6.3 also lists "Always show wire labels" and "the diagram style" in the view popover. Neither setting exists in the app (wire labels are always drawn), so there is nothing to put there yet.
+  - Tests: `slots.spec.ts` gains the view popover (opens above SE, minimap painted, Escape and outside click close it, no Fit selection) and one-popover-at-a-time; `tagsLinks.spec.ts` drives Colour by and the tag filter through the popover and the legend through the Key. The island count dropped the minimap card.
+  - Entry CSS is still 112.0 kB of 112.
 
 #### [ ] S3. Dock, Design face · M
 - **Read:** `toolRail.ts`, `pointerTool.ts`, the stencil wiring in `interactions.ts`.

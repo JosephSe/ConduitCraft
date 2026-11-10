@@ -103,7 +103,6 @@ export const zoomReadout = document.getElementById('zoom-readout') as HTMLElemen
 export const btnZoomIn = document.getElementById('btn-zoom-in') as HTMLButtonElement;
 export const btnZoomOut = document.getElementById('btn-zoom-out') as HTMLButtonElement;
 export const btnZoomFit = document.getElementById('btn-zoom-fit') as HTMLButtonElement;
-export const btnZoomFitSelection = document.getElementById('btn-zoom-fit-selection') as HTMLButtonElement;
 export const minimapCanvas = document.getElementById('minimap') as HTMLCanvasElement | null;
 
 // Right Panel: Design vs Data View

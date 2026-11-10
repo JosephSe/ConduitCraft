@@ -1348,20 +1348,9 @@ kbd {
 }
 /* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
 .legend-card {
-  position: absolute;
-  inset-block-start: 0.75rem;
-  inset-inline-end: 0.75rem;
-  z-index: 5;
-  max-inline-size: 18rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  background: var(--wl-panel);
-  border: 1px solid var(--wl-border-subtle);
-  box-shadow: var(--wl-shadow-card);
-  font-size: 0.78rem;
-  pointer-events: none;
+  display: block;
+  max-inline-size: min(18rem, 80cqi);
 }
-.legend-card[hidden] { display: none; }
 .legend-card-title {
   margin: 0 0 0.25rem;
   font: var(--cc-font-meta);
