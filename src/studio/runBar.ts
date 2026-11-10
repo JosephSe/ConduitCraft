@@ -7,6 +7,7 @@ import { getEffectiveSimulations } from '../core/layout';
 import { app } from './state';
 import { onBacklogChange, totalHeld } from './queueBacklog';
 import { onPlaybackChange, simulationPlayback, type SimulationPlaybackState } from './simulationPlayback';
+import { renderUiIconMarkup } from '../ui/icons';
 
 const PLACEHOLDER = '';
 
@@ -57,12 +58,7 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
         : 'no run';
     playBtn.setAttribute('aria-label', state.isPlaying ? 'Pause' : 'Play');
     playBtn.setAttribute('aria-pressed', String(state.isPlaying));
-    const icon = playBtn.querySelector('svg');
-    if (icon) {
-      icon.innerHTML = state.isPlaying
-        ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
-        : '<polygon points="6 4 20 12 6 20 6 4"/>';
-    }
+    playBtn.innerHTML = renderUiIconMarkup(state.isPlaying ? 'pause' : 'play', 13);
     speedBtn.textContent = `${state.speed}×`;
     // The name must contain the visible text (WCAG 2.5.3).
     speedBtn.setAttribute('aria-label', `Playback speed ${state.speed}×`);

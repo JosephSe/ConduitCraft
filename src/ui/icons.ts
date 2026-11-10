@@ -2,6 +2,18 @@ import type { NodeIconName } from '../types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/** 5.4. One box, one stroke, round caps and joins, no fills. */
+export const ICON_BOX = 24;
+export const ICON_STROKE = 1.6;
+
+/** The actor drawn on the sheet. The cut-out uses this same figure. */
+export const ACTOR_FIGURE = {
+  width: 70,
+  height: 82,
+  head: { cx: 35, cy: 18, r: 12.5 },
+  body: 'M 14 74 C 14 53 22.5 38 35 38 C 47.5 38 56 53 56 74 C 56 77.5 53 79.5 49 79.5 H 21 C 17 79.5 14 77.5 14 74 Z',
+} as const;
+
 interface SvgPrimitive {
   tag: 'path' | 'rect' | 'circle' | 'ellipse' | 'polyline';
   attrs: Record<string, string>;
@@ -144,7 +156,7 @@ export function createNodeIconSvg(icon: NodeIconName, size = 18): SVGSVGElement 
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none');
   svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-width', String(ICON_STROKE));
   svg.setAttribute('stroke-linecap', 'round');
   svg.setAttribute('stroke-linejoin', 'round');
   svg.setAttribute('aria-hidden', 'true');
@@ -164,22 +176,19 @@ export function createHumanOutlineSvg(compact = false): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('width', compact ? '30' : '66');
   svg.setAttribute('height', compact ? '34' : '78');
-  svg.setAttribute('viewBox', '0 0 70 82');
+  svg.setAttribute('viewBox', `0 0 ${ACTOR_FIGURE.width} ${ACTOR_FIGURE.height}`);
   svg.setAttribute('fill', 'none');
   svg.setAttribute('aria-hidden', 'true');
 
   const head = document.createElementNS(SVG_NS, 'circle');
   head.setAttribute('class', 'actor-shape');
-  head.setAttribute('cx', '35');
-  head.setAttribute('cy', '18');
-  head.setAttribute('r', '12.5');
+  head.setAttribute('cx', String(ACTOR_FIGURE.head.cx));
+  head.setAttribute('cy', String(ACTOR_FIGURE.head.cy));
+  head.setAttribute('r', String(ACTOR_FIGURE.head.r));
 
   const body = document.createElementNS(SVG_NS, 'path');
   body.setAttribute('class', 'actor-shape');
-  body.setAttribute(
-    'd',
-    'M 14 74 C 14 53 22.5 38 35 38 C 47.5 38 56 53 56 74 C 56 77.5 53 79.5 49 79.5 H 21 C 17 79.5 14 77.5 14 74 Z',
-  );
+  body.setAttribute('d', ACTOR_FIGURE.body);
 
   svg.append(head, body);
   return svg;
@@ -195,11 +204,12 @@ export function renderIconMarkup(icon: NodeIconName, size = 18): string {
       return `<${p.tag} ${attrs}/>`;
     })
     .join('');
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${ICON_BOX} ${ICON_BOX}" fill="none" stroke="currentColor" stroke-width="${ICON_STROKE}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 }
 
 export function renderHumanOutlineMarkup(): string {
-  return `<svg width="66" height="78" viewBox="0 0 70 82" fill="none" aria-hidden="true"><circle class="actor-shape" cx="35" cy="18" r="12.5"/><path class="actor-shape" d="M 14 74 C 14 53 22.5 38 35 38 C 47.5 38 56 53 56 74 C 56 77.5 53 79.5 49 79.5 H 21 C 17 79.5 14 77.5 14 74 Z"/></svg>`;
+  const { width, height, head, body } = ACTOR_FIGURE;
+  return `<svg width="66" height="78" viewBox="0 0 ${width} ${height}" fill="none" aria-hidden="true"><circle class="actor-shape" cx="${head.cx}" cy="${head.cy}" r="${head.r}"/><path class="actor-shape" d="${body}"/></svg>`;
 }
 
 export type UiIconName =
@@ -324,7 +334,7 @@ export function renderUiIconMarkup(icon: UiIconName, size = 16): string {
       return `<${p.tag} ${attrs}/>`;
     })
     .join('');
-  return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  return `<svg class="ui-icon" width="${size}" height="${size}" viewBox="0 0 ${ICON_BOX} ${ICON_BOX}" fill="none" stroke="currentColor" stroke-width="${ICON_STROKE}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 }
 
 export function createUiIconSvg(icon: UiIconName, size = 16): SVGSVGElement {
@@ -335,7 +345,7 @@ export function createUiIconSvg(icon: UiIconName, size = 16): SVGSVGElement {
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none');
   svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-width', String(ICON_STROKE));
   svg.setAttribute('stroke-linecap', 'round');
   svg.setAttribute('stroke-linejoin', 'round');
   svg.setAttribute('aria-hidden', 'true');

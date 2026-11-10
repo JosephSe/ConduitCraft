@@ -3,6 +3,7 @@ import { type WorldRect, nodeRect, contentWorldBounds, frameRectInViewport } fro
 import { app, applyTransform, setSelection, fitToViewport } from './state';
 import { workspace, viewport } from './dom';
 import { TONE_META } from '../shared/tones';
+import { renderUiIconMarkup } from '../ui/icons';
 
 export interface TourStep {
   id: string;
@@ -311,21 +312,21 @@ export class PresentationManager {
         el.className = 'presentation-bar';
         el.innerHTML = `
           <button type="button" class="btn btn-icon-only" id="btn-pres-prev" aria-label="Previous step (Left Arrow)" data-tip="Previous (←)">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
           </button>
           <div class="presentation-pill-info" id="pres-pill-info">Overview</div>
           <button type="button" class="btn btn-icon-only" id="btn-pres-next" aria-label="Next step (Right Arrow / Space)" data-tip="Next (→)">
-            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
           </button>
           <div class="presentation-bar-divider" aria-hidden="true"></div>
           <button type="button" class="btn btn-icon-only" id="btn-pres-play" aria-label="Play / Pause tour" data-tip="Auto-play">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+            ${renderUiIconMarkup('play', 13)}
           </button>
           <button type="button" class="btn btn-icon-only" id="btn-pres-fullscreen" aria-label="Toggle Fullscreen" data-tip="Fullscreen">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
           </button>
           <button type="button" class="btn btn-pres-exit" id="btn-pres-exit" aria-label="Exit presentation (Esc or P)" data-tip="Exit (Esc)">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             <span>Exit</span>
           </button>
         `;
@@ -430,11 +431,11 @@ export class PresentationManager {
     const playBtn = this.barEl.querySelector ? this.barEl.querySelector('#btn-pres-play') : null;
     if (!playBtn) return;
     if (this.isAutoPlaying) {
-      playBtn.innerHTML = `<svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+      playBtn.innerHTML = renderUiIconMarkup('pause', 13);
       playBtn.setAttribute('data-tip', 'Pause auto-play');
       playBtn.setAttribute('aria-label', 'Pause auto-play');
     } else {
-      playBtn.innerHTML = `<svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6 4 20 12 6 20 6 4"/></svg>`;
+      playBtn.innerHTML = renderUiIconMarkup('play', 13);
       playBtn.setAttribute('data-tip', 'Start auto-play');
       playBtn.setAttribute('aria-label', 'Start auto-play');
     }

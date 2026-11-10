@@ -4,7 +4,7 @@ import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { queueCardText, streamLanes } from '../core/queues';
 import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsBucket, storeDrawsCylinder } from '../core/nodeStyle';
-import { nodeIconShapes } from '../ui/icons';
+import { ICON_STROKE, nodeIconShapes } from '../ui/icons';
 
 export type SvgScheme = 'light' | 'dark';
 
@@ -188,7 +188,7 @@ function iconMarkup(node: DiagramNode, x: number, y: number, size: number, pal: 
   const color = pal.tone[node.accent] || pal.tone.blue;
   const glyph = Math.round(size * 0.6);
   const offset = (size - glyph) / 2;
-  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${mix(color, pal.surface, 0.14)}"/><g transform="translate(${x + offset} ${y + offset}) scale(${glyph / 24})" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${nodeIconShapes(node.icon)}</g>`;
+  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${mix(color, pal.surface, 0.14)}"/><g transform="translate(${x + offset} ${y + offset}) scale(${glyph / 24})" fill="none" stroke="${color}" stroke-width="${ICON_STROKE}" stroke-linecap="round" stroke-linejoin="round">${nodeIconShapes(node.icon)}</g>`;
 }
 
 const CENTERED = new Set(['circle', 'diamond', 'hexagon', 'trapezoid']);

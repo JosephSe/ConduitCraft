@@ -184,8 +184,7 @@ import { restoreDiagram } from './library';
 import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey } from '../core/meta';
-import { createHumanOutlineSvg,
-  createNodeIconSvg } from '../ui/icons';
+import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
@@ -266,10 +265,22 @@ export function attachStencilDragAndDrop(
     if (!btn.hasPointerCapture(e.pointerId)) return;
     if (!dragged && Math.hypot(e.clientX - startClientX, e.clientY - startClientY) > 6) {
       dragged = true;
+      const stencil = findStencil(kind);
+      const host = btn.classList.contains('cut') ? btn : btn.querySelector<HTMLElement>('.cut');
+      host?.classList.add('is-empty');
       ghostEl = document.createElement('div');
-      ghostEl.className = 'stencil-drag-ghost';
-      ghostEl.textContent = `+ ${title}`;
+      ghostEl.className = 'stencil-drag-ghost cutout-carry';
+      if (stencil) {
+        const drawing = cutoutDrawing(stencil);
+        ghostEl.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
+        ghostEl.style.setProperty('--carry-w', `${drawing.width}px`);
+        ghostEl.style.setProperty('--carry-h', `${drawing.height}px`);
+        ghostEl.innerHTML = renderCutoutMarkup(stencil, { carried: true });
+      } else {
+        ghostEl.textContent = `+ ${title}`;
+      }
       document.body.appendChild(ghostEl);
+      requestAnimationFrame(() => ghostEl?.classList.add('is-full'));
     }
     if (ghostEl) {
       ghostEl.style.setProperty('--gx', String(e.clientX));
@@ -278,6 +289,8 @@ export function attachStencilDragAndDrop(
   });
 
   const finishStencilPointer = (e: PointerEvent, commit: boolean) => {
+    btn.classList.remove('is-empty');
+    btn.querySelector('.cut')?.classList.remove('is-empty');
     if (ghostEl) {
       ghostEl.remove();
       ghostEl = null;
@@ -343,12 +356,9 @@ export function initStencilPalette(): void {
     btn.style.setProperty('--stencil-soft', soft);
 
     const preview = document.createElement('span');
-    preview.className = 'stencil-preview';
-    if (stencil.kind === 'actor') {
-      preview.appendChild(createHumanOutlineSvg(true));
-    } else {
-      preview.appendChild(createNodeIconSvg(stencil.icon, 20));
-    }
+    preview.className = 'stencil-preview cut';
+    preview.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
+    preview.innerHTML = renderCutoutMarkup(stencil);
 
     const title = document.createElement('span');
     title.className = 'stencil-title';
@@ -374,6 +384,11 @@ export function initStencilPalette(): void {
     const id = railBtn.getAttribute('data-stencil-id') ?? railBtn.getAttribute('data-stencil-kind');
     if (id && id !== 'zone' && id !== 'notes') {
       const stencil = findStencil(id);
+      if (stencil) {
+        railBtn.classList.add('cut');
+        railBtn.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
+        railBtn.innerHTML = renderCutoutMarkup(stencil);
+      }
       attachStencilDragAndDrop(railBtn, stencil?.id ?? id, stencil?.paletteTitle ?? id);
     }
   });

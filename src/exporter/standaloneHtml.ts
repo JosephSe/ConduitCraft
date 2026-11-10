@@ -81,7 +81,7 @@ function renderNodeBadges(node: DiagramNode, options?: StandaloneHtmlOptions): s
     html += `<span class="node-status-badge" data-status="${escapeHtml(node.status)}"><span class="status-dot"></span><span class="status-text">${escapeHtml(label)}</span></span>`;
   }
   if (node.comment) {
-    html += `<span class="node-comment-badge" title="${escapeHtml(node.comment)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>`;
+    html += `<span class="node-comment-badge" title="${escapeHtml(node.comment)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>`;
   }
   return html;
 }
@@ -419,7 +419,7 @@ ${doc.frames?.length ? framesCss : ''}
   const brandMark = brand.logo
     ? `<div class="brand-mark" aria-hidden="true"><img class="brand-logo" alt="" src="${escapeHtml(brand.logo)}"></div>`
     : `<div class="brand-mark" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/><path d="M3 12h6m6 0h6M12 3v6m0 6v6"/>
         </svg>
       </div>`;
