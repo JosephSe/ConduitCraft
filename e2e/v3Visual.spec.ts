@@ -191,13 +191,9 @@ for (const theme of THEMES) {
 
       await fit(page);
       await page.locator('#btn-all-components').click();
-      await expect(page.locator('#workspace')).not.toHaveAttribute('data-palette-collapsed', 'true');
-      const queue = page.locator('.stencil-card[data-stencil-id="queue"]');
+      await expect(page.locator('#tray')).toBeVisible();
+      const queue = page.locator('#tray .tray-item[data-stencil-id="queue"]');
       await expect(queue).toBeVisible();
-      // The panel animates open and scrolls itself while it does. Put every scroller back to the top.
-      await queue.evaluate((el) => {
-        for (let n: HTMLElement | null = el; n; n = n.parentElement) n.scrollTop = 0;
-      });
       let last = -1;
       await expect
         .poll(
@@ -211,9 +207,9 @@ for (const theme of THEMES) {
         )
         .toBe(true);
       await queue.hover();
-      await shoot(page, `03-component-panel-${theme}.png`);
-      await page.locator('#btn-collapse-palette').click();
-      await expect(page.locator('#workspace')).toHaveAttribute('data-palette-collapsed', 'true');
+      await shoot(page, `03-component-tray-${theme}.png`);
+      await page.keyboard.press('Escape');
+      await expect(page.locator('#tray')).toBeHidden();
 
       await pauseMidScenario(page);
       await shoot(page, `04-traffic-paused-${theme}.png`);

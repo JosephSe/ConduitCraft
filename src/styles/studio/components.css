@@ -12,8 +12,6 @@
   }
 
   .btn:focus-visible,
-  .stencil-card:focus-visible,
-  .stencil-aux-btn:focus-visible,
   .tab-btn:focus-visible,
   .dialog-close:focus-visible {
     outline: 2px solid var(--cc-ink);

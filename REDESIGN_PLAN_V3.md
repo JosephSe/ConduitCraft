@@ -725,10 +725,21 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - Entry CSS is 110.7 kB of 112; entry JS is 538.2 kB of 540 (1.8 kB left).
 
 #### [ ] S4. Component tray · L, split
-- **S4a · M:** shelf, keyboard grid, place with `↵`, drag out, drag to the dock, close and focus return (7.3).
+- **S4a · M [x]:** shelf, keyboard grid, place with `↵`, drag out, drag to the dock, close and focus return (7.3).
 - **S4b · S:** search with the word table and "named X" (7.3).
 - **S4c · M:** the demo pane and its seven loops, lazy (7.3).
 - **Done:** a spec for each of: open with `C`, arrow to a component, place it; type `kafka`, place it, the component is a stream named "Kafka"; reduced motion shows stills. **Needs:** S3.
+
+- **S4a result.**
+  - `src/studio/tray.ts` is the tray, and it loads the first time it opens (its own 4.4 kB chunk). `C`, `[`, "All components" and the palette action all open it; it sits above the dock in slot S, up to 880 px wide, 22 px radius, not modal. The hint line steps aside while it is open.
+  - Six groups: Entry points (Actor, External Client, Scheduler), Traffic control (Load Balancer, Control Gate, Rate Limiter), Compute (Service / API, Core System, Cache), Messaging (Message Queue, Stream / Log, Event Broker), Data (Data Store, Object Storage), Structure (Swimlane, Frame, Note, Text). Names are the catalogue's own.
+  - Keys: it opens on the first item; arrows move through the shelf as one grid by position (`nearestInDirection`), Home and End jump, one tab stop. `↵` places the item at the centre of the view and closes the tray. Esc closes it and focus goes back to the button that opened it. A press on the sheet, or leaving Design, closes it.
+  - A click carries the component to the sheet (as a dock favourite does) with the tray out of the way. A drag places it where it is dropped; a drop on a dock slot replaces that favourite (`setFavourite`, kept per browser) and places nothing. Structure items run their own action: Swimlane and Note add one, Frame and Text pick the tool.
+  - **Gone:** the left component drawer, with its Stage containers, File import card, node and wire count, collapse button and `data-palette-collapsed`. Import and Paste code stay in the menu and the command palette. The count moved into the view popover (`#canvas-stats-pill`). `responsiveToolbar.ts` no longer knows about a palette; the inspector is all it manages.
+  - **Q10 done:** card cut-outs (Service, Core System, Cache, Scheduler, Event Broker, Rate Limiter, Control Gate, External Client) carry a 12 px kind icon, centred, in `--ink-3`; it takes the tone on reach. A carried copy has none, because the node it grows into draws its own.
+  - Tests: `e2e/tray.spec.ts` (open, six groups and 18 items, arrow grid, Enter, Esc and focus return, press on the sheet, click to carry, drag out, drag to the dock and kept after reload, Structure items, Design lens only, axe in both themes, short window); the touch and tool specs moved to the tray; `placeComponent` goes through the tray with Enter. `cutout.test.ts` covers the icons. View 03 is now the tray (`03-component-tray`), and all eight baselines were deleted and re-recorded, because `--update-snapshots` only rewrites an image that differs beyond the 20% slack and the tiny icons do not. The S3 baselines were stale in the same way.
+  - Entry CSS is 108.1 kB of 112; entry JS is 535.0 kB of 540.
+  - Not here: search (S4b), the demo pane (S4c), the narrow-screen bottom sheet (M4).
 
 #### [ ] S5. Dock, Traffic and Review faces · M
 - **Read:** `runBar.ts`, `simulationPlayback.ts`, `chaos.ts`, `studio/insights.ts`.

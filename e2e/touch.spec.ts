@@ -149,22 +149,26 @@ test('tap places a component from the command palette', async ({ page }) => {
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
-test('tap places a component from the palette drawer', async ({ page }) => {
+test('tap a component in the tray, then tap the sheet to place it', async ({ page }) => {
   await open(page);
   const before = await page.locator('.arch-node').count();
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
+  await expect(page.locator('#tray')).toHaveCount(0);
   await page.locator('#btn-all-components').tap();
-  await expect(page.locator('#palette-sidebar')).toBeVisible();
-  await page.locator('#palette-sidebar .stencil-card').first().tap();
+  await expect(page.locator('#tray')).toBeVisible();
+  await page.locator('#tray .tray-item[data-stencil-id="service"]').tap();
+  await expect(page.locator('#tray')).toBeHidden();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', 'service');
+  const box = (await page.locator('#canvas-viewport').boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + 120);
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
-test('a tool in the palette drawer closes the drawer so the canvas can be used', async ({ page }) => {
+test('Frame in the tray picks the Frame tool and puts the tray away', async ({ page }) => {
   await open(page);
   await page.locator('#btn-all-components').tap();
-  await page.locator('#palette-sidebar [data-palette-tool="frame"]').tap();
+  await page.locator('#tray .tray-item[data-structure="frame"]').tap();
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
+  await expect(page.locator('#tray')).toBeHidden();
 });
 
 test('tap a favourite on the dock to carry it, then tap the sheet to place it', async ({ page }) => {

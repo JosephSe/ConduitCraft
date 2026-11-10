@@ -2,9 +2,7 @@
 import { startFirstRunIfNew, type FirstRunDeps } from './firstRun';
 import { initStorage, reportStorageFailure, setStorageFailureHandler } from './storage';
 import {
-  btnAddNotes,
   btnAddSimulation,
-  btnAddZone,
   btnApplyCode,
   btnClearTrace,
   btnCopyCode,
@@ -26,8 +24,6 @@ import {
   btnGifView,
   btnGifWhole,
   snapshotsDialog,
-  btnPaletteCode,
-  btnPaletteImport,
   btnPropLock,
   btnPropGroup,
   btnPropDelete,
@@ -76,7 +72,6 @@ import {
   settingsDialog,
   shortcutsDialog,
   shortcutsDialogBody,
-  stencilGrid,
   tabInspector,
   tabSimulations,
   tabTrace,
@@ -137,13 +132,10 @@ import type {
   StreamTone,
 } from '../types';
 import {
-  STENCIL_CATALOG,
   createBlankDocument,
   createNodeFromStencil,
   findStencil,
-  createNotesCard,
   createTextCard,
-  createSwimlaneZone,
   nextUid,
 } from '../templates/presets';
 import {
@@ -239,7 +231,14 @@ export function attachStencilDragAndDrop(
   btn: HTMLElement,
   stencilId: string,
   title: string,
-  options: { onTap?: (e: PointerEvent) => void } = {},
+  options: {
+    /** A click or tap that was not a drag. Without it the component goes to the centre of the view. */
+    onTap?: (e: PointerEvent) => void;
+    /** A drag that ended. Return true when it was handled (a drop on the dock), so nothing is placed on the sheet. */
+    onDrop?: (e: PointerEvent) => boolean;
+    /** Something was placed on the sheet by a drag or by Enter. */
+    onPlaced?: () => void;
+  } = {},
 ): void {
   // Pointer drag onto canvas OR simple click to add at viewport center
   const kind = stencilId;
@@ -292,6 +291,7 @@ export function attachStencilDragAndDrop(
     }
     if (!commit) return;
 
+    if (dragged && options.onDrop?.(e)) return;
     if (dragged) {
       const vpRect = viewport.getBoundingClientRect();
       if (
@@ -312,13 +312,7 @@ export function attachStencilDragAndDrop(
       const cascade = (app.doc.nodes.length % 5) * 24;
       addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
     }
-
-    if (
-      e.pointerType === 'touch' ||
-      (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches)
-    ) {
-      responsiveToolbar.togglePalette(true);
-    }
+    options.onPlaced?.();
   };
 
   btn.addEventListener('pointerup', (e) => finishStencilPointer(e, true));
@@ -331,49 +325,9 @@ export function attachStencilDragAndDrop(
       const [cx, cy] = getViewportWorldCenter();
       const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
       addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2);
-      if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-        responsiveToolbar.togglePalette(true);
-      }
+      options.onPlaced?.();
     }
   });
-}
-
-export function initStencilPalette(): void {
-  stencilGrid.replaceChildren();
-
-  for (const stencil of STENCIL_CATALOG) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'stencil-card';
-    btn.dataset.kind = stencil.kind;
-    btn.dataset.stencilId = stencil.id;
-    btn.setAttribute('role', 'listitem');
-    const [accent, soft] = TONE_CSS[stencil.accent];
-    btn.style.setProperty('--stencil-accent', accent);
-    btn.style.setProperty('--stencil-soft', soft);
-
-    const preview = document.createElement('span');
-    preview.className = 'stencil-preview cut';
-    preview.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
-    preview.innerHTML = renderCutoutMarkup(stencil);
-
-    const title = document.createElement('span');
-    title.className = 'stencil-title';
-    title.textContent = stencil.paletteTitle;
-
-    const sub = document.createElement('span');
-    sub.className = 'stencil-sub';
-    sub.textContent = stencil.paletteSub;
-
-    btn.setAttribute('data-tip', `${stencil.paletteTitle} — ${stencil.paletteSub}`);
-    btn.setAttribute('data-tip-pos', 'top');
-
-    btn.append(preview, title, sub);
-
-    attachStencilDragAndDrop(btn, stencil.id, stencil.paletteTitle);
-
-    stencilGrid.appendChild(btn);
-  }
 }
 
 export function tagEnteringNodes(ids: string[]): void {
@@ -1599,40 +1553,6 @@ export function initEvents(): void {
     else applyUngroup();
   });
 
-  // Add Swimlane & Notes Card
-  btnAddZone.setAttribute('data-tip', 'Create a swimlane stage banner');
-  btnAddZone.setAttribute('data-tip-pos', 'top');
-  btnAddZone.addEventListener('click', () => {
-    pushHistory();
-    const nextX =
-      app.doc.zones.length > 0
-        ? Math.max(...app.doc.zones.map((z) => z.x + z.width)) + 24
-        : 48;
-    const zone = createSwimlaneZone(app.doc.zones.length, nextX);
-    app.doc.zones.push(zone);
-    expandStageToFit(app.doc);
-    setSelection({ type: 'zone', id: zone.id });
-    renderAll(true);
-    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-      responsiveToolbar.togglePalette(true);
-    }
-  });
-
-  btnAddNotes.setAttribute('data-tip', 'Add a checklist specification card');
-  btnAddNotes.setAttribute('data-tip-pos', 'top');
-  btnAddNotes.addEventListener('click', () => {
-    pushHistory();
-    const [cx, cy] = getViewportWorldCenter();
-    const notes = createNotesCard(cx - 200, cy + 120);
-    app.doc.notesCards.push(notes);
-    expandStageToFit(app.doc);
-    setSelection({ type: 'notes', id: notes.id });
-    renderAll(true);
-    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-      responsiveToolbar.togglePalette(true);
-    }
-  });
-
   let currentGalleryCategory: TemplateCategory = 'all';
 
   const renderGalleryGrid = (): void => {
@@ -1898,7 +1818,6 @@ export function initEvents(): void {
 
   // File Import Triggers
   const triggerFilePicker = () => fileUploadInput.click();
-  btnPaletteImport.addEventListener('click', triggerFilePicker);
 
   fileUploadInput.addEventListener('change', () => {
     const file = fileUploadInput.files?.[0];
@@ -1934,7 +1853,6 @@ export function initEvents(): void {
   });
 
   // Blueprint file dialog (shows the Blueprint file; Apply imports Mermaid or Blueprint)
-  btnPaletteCode.addEventListener('click', openCodeDialog);
 
   btnCopyCode.addEventListener('click', async () => {
     try {
@@ -2692,7 +2610,7 @@ export function initEvents(): void {
     if (!inEditable) {
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
         e.preventDefault();
-        responsiveToolbar.togglePalette();
+        void import('./tray').then((m) => m.toggleTray());
         return;
       }
     }
@@ -2712,7 +2630,7 @@ export function initEvents(): void {
         if (app.selection.type !== 'none') {
           applyZOrder('back');
         } else {
-          responsiveToolbar.togglePalette();
+          void import('./tray').then((m) => m.toggleTray());
         }
         return;
       }
@@ -2741,15 +2659,7 @@ let firstRunDeps: FirstRunDeps | null = null;
 export function bootStudio(): void {
   localizeStaticShortcuts();
   initTooltips();
-  initStencilPalette();
-  responsiveToolbar.init(undefined, {
-    onAddZone: () => {
-      btnAddZone.click();
-    },
-    onAddNotes: () => {
-      btnAddNotes.click();
-    },
-  });
+  responsiveToolbar.init();
   initEvents();
 
   // Saved work is read from storage first; the offer to restore it and first run both wait for that.

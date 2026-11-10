@@ -522,13 +522,13 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     },
     {
       id: 'toggle-palette',
-      title: 'Toggle Component Palette',
-      subtitle: 'Collapse or expand left stencil sidebar',
+      title: 'Toggle Component Tray',
+      subtitle: 'Open or close the list of all components',
       category: 'Mode & View',
       shortcut: '[',
-      keywords: ['sidebar', 'palette', 'stencils', 'left', 'hide', 'show', 'collapse'],
+      keywords: ['tray', 'palette', 'stencils', 'components', 'hide', 'show'],
       run: () => {
-        responsiveToolbar.togglePalette();
+        void import('./tray').then((m) => m.toggleTray());
       },
     },
     {
@@ -1096,8 +1096,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       shortcut: 'C',
       keywords: ['insert', 'add', 'component', 'stencil'],
       run: () => {
-        responsiveToolbar.togglePalette(false);
-        document.querySelector<HTMLElement>('#stencil-grid button')?.focus();
+        void import('./tray').then((m) => m.openTray());
       },
     },
     {

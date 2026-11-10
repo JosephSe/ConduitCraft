@@ -170,7 +170,7 @@ export async function undoDepth(page: Page): Promise<number> {
 
 /**
  * Put one component on the sheet by its stencil id, the way a person without a pointer would. A favourite on the dock
- * takes Enter (the centre of the view); anything else is picked from the list "All components" opens.
+ * takes Enter (the centre of the view); anything else is picked from the tray "All components" opens.
  */
 export async function placeComponent(page: Page, id: string): Promise<void> {
   const favourite = page.locator(`.dock-fav[data-stencil-id="${id}"]`);
@@ -179,9 +179,9 @@ export async function placeComponent(page: Page, id: string): Promise<void> {
     await page.keyboard.press('Enter');
     return;
   }
-  const all = page.locator('#btn-all-components');
-  await all.click();
-  await page.locator(`#stencil-grid .stencil-card[data-stencil-id="${id}"]`).click();
-  await all.click();
-  await expect(page.locator('#workspace')).toHaveAttribute('data-palette-collapsed', 'true');
+  await page.locator('#btn-all-components').click();
+  const item = page.locator(`#tray .tray-item[data-stencil-id="${id}"]`);
+  await item.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#tray')).toBeHidden();
 }

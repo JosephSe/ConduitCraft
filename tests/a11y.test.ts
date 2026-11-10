@@ -126,7 +126,7 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
   it('verifies consistent focus-visible outline in studio.css', () => {
     const studioCss = readStudioCss();
     assert.ok(studioCss.includes(':focus-visible {'), 'must declare universal focus-visible outline');
-    assert.ok(studioCss.includes('.stencil-card:focus-visible'), 'must declare stencil-card focus ring');
+    assert.ok(studioCss.includes('.tray-item:focus-visible'), 'must declare tray item focus ring');
   });
 
   it('verifies global [hidden] rule inside earliest @layer reset in shared.css and studio.css', () => {

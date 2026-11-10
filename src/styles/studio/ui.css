@@ -331,16 +331,16 @@
   .cut:hover,
   .cut:focus-visible,
   .cut.is-on,
-  .stencil-card:hover .cut,
-  .stencil-card:focus-visible .cut {
+  .tray-item:hover .cut,
+  .tray-item:focus-visible .cut {
     transform: translateY(-4px) scale(1.12);
   }
 
   .cut:hover .cutout :is(path, rect, ellipse, circle, polygon),
   .cut:focus-visible .cutout :is(path, rect, ellipse, circle, polygon),
   .cut.is-on .cutout :is(path, rect, ellipse, circle, polygon),
-  .stencil-card:hover .cut .cutout :is(path, rect, ellipse, circle, polygon),
-  .stencil-card:focus-visible .cut .cutout :is(path, rect, ellipse, circle, polygon),
+  .tray-item:hover .cut .cutout :is(path, rect, ellipse, circle, polygon),
+  .tray-item:focus-visible .cut .cutout :is(path, rect, ellipse, circle, polygon),
   .cutout.is-carried :is(path, rect, ellipse, circle, polygon) {
     fill: color-mix(in oklab, var(--t, var(--cc-blue)) 13%, var(--cc-sheet));
     stroke: var(--t, var(--cc-blue));
@@ -350,28 +350,21 @@
   .cut:hover .cutout .cutout-mark,
   .cut:focus-visible .cutout .cutout-mark,
   .cut.is-on .cutout .cutout-mark,
-  .stencil-card:hover .cut .cutout .cutout-mark,
+  .tray-item:hover .cut .cutout .cutout-mark,
   .cutout.is-carried .cutout-mark {
     fill: none;
   }
 
   /* The slot left behind while the filled copy is under the pointer. */
   .cut.is-empty,
-  .stencil-card:hover .cut.is-empty {
+  .tray-item:hover .cut.is-empty {
     transform: none;
   }
 
   .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon),
-  .stencil-card:hover .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon) {
+  .tray-item:hover .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon) {
     fill: transparent;
     stroke: var(--cc-ink-3);
-  }
-
-  .stencil-preview.cut {
-    background: none;
-    border-color: transparent;
-    inline-size: 38px;
-    block-size: 30px;
   }
 
   .stencil-drag-ghost.cutout-carry {
