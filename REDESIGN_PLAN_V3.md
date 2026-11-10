@@ -724,7 +724,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - Tests: `toolRail.spec.ts` rewritten (dock contents, defaults, a saved list, Tab order, Enter, click to arm, Shift, Esc, drag, Traffic hides it, the list drawer, axe); touch adds tap to arm and the phone dock; `helpers.ts` has `placeComponent` and the queue, balancer, cache, stream specs use it. `dockFavourites.test.ts` covers the list. The first-run view now presses Fit once the side column stops moving, because the first fit landed on 40% or 41%. The sheet is wider, so the view spec's near-100 zoom is 101%. All eight views were re-recorded on macOS.
   - Entry CSS is 110.7 kB of 112; entry JS is 538.2 kB of 540 (1.8 kB left).
 
-#### [ ] S4. Component tray · L, split
+#### [x] S4. Component tray · L, split
 - **S4a · M [x]:** shelf, keyboard grid, place with `↵`, drag out, drag to the dock, close and focus return (7.3).
 - **S4b · S [x]:** search with the word table and "named X" (7.3).
 - **S4c · M [x]:** the demo pane and its seven loops, lazy (7.3).
