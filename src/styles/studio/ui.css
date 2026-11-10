@@ -286,14 +286,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.25rem;
+    padding: 24px 24px 12px;
     border-block-end: 1px solid var(--wl-border-subtle);
     flex-wrap: wrap;
   }
 
   .dialog-header h2 {
-    font-size: 1.05rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
   }
 
   .dialog-header-actions {
@@ -304,7 +304,7 @@
   }
 
   .dialog-body {
-    padding: 1.25rem;
+    padding: 12px 24px 24px;
     overflow: auto;
   }
 
