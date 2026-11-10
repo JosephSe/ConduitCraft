@@ -578,8 +578,11 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Built entry CSS is byte-identical to the Z1 baseline: `index-CS3wg9RI.css`, 112663 bytes (110.0 kB). Unit tests 894 passed. The later names in 10.2 (`base.css`, `ui.css`, `slots.css`, and the rest) are not this split.
 - Pull request #96.
 
-#### [ ] Z3. Visual check for the eight views · S
+#### [x] Z3. Visual check for the eight views · S
 - **Done:** passes twice in a row with no diff. **Needs:** Z1.
+- `e2e/v3Visual.spec.ts` takes the eight views in 10.4, light and dark, 1440×900, reduced motion. View 2 is at 99%. View 3 is the current component panel with Message Queue highlighted. View 6 is a fresh Review load, so a failure from another view cannot leak into it. View 7 is the current first run, which shows the failed state at once under reduced motion. The Home card is dated 15 Jan 2020 so its label does not move.
+- Baselines are in `e2e/__screenshots__/v3Visual.spec.ts/`. The comparison uses the same slack as the export pictures (`maxDiffPixelRatio` 0.03), because text uses the system fonts.
+- The spec passed twice in a row with no diff.
 
 #### [ ] Z4. Fonts · S
 - **Do:** add Instrument Sans and Geist Mono as self-hosted `woff2`, Latin subset, with their licence files; `@font-face` with `swap` and a size-adjusted fallback; precache them; add the font budget line. Confirm tabular figures work in Instrument Sans; if they do not, use Geist Mono for changing numbers and say so here.
