@@ -28,7 +28,8 @@
   </section>
   <header class="topbar">
     <div class="brand-cluster slot-nw" id="doc-brand-cluster" data-island>
-      <div class="brand-mark" id="doc-brand-mark" aria-hidden="true">
+      <button type="button" class="brand-mark-btn" id="btn-app-menu" aria-label="Main menu" aria-haspopup="menu" aria-expanded="false" data-tip="Menu">
+        <span class="brand-mark" id="doc-brand-mark" aria-hidden="true">
         <svg id="doc-brand-glyph" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1.5"/>
           <rect x="14" y="3" width="7" height="7" rx="1.5"/>
@@ -36,22 +37,15 @@
           <path d="M10 6.5h4M17.5 10v4M6.5 10v5a2.5 2.5 0 0 0 2.5 2.5h5"/>
         </svg>
         <img id="doc-brand-logo" class="brand-logo" alt="" hidden>
-      </div>
+        </span>
+      </button>
       <div class="brand-titles">
         <div class="title-row">
           <button type="button" class="title-edit-trigger" id="btn-focus-doc-title">
             <h1 id="doc-title-heading">Untitled Architecture</h1>
             <span class="visually-hidden">, edit title and document properties</span>
           </button>
-          <span class="save-status-pill" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
-          <div class="doc-history-controls" role="group" aria-label="Undo and redo history">
-            <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" data-tip="Undo (⌘Z)" disabled>
-              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-            </button>
-            <button type="button" class="btn btn-icon-only" id="btn-redo" aria-label="Redo (Cmd/Ctrl+Shift+Z)" data-tip="Redo (⌘⇧Z)" disabled>
-              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
-            </button>
-          </div>
+          <span class="save-state" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
         </div>
       </div>
     </div>
@@ -80,17 +74,14 @@
     </div>
 
     <div class="toolbar-actions slot-ne" role="toolbar" aria-label="Document actions" data-island>
-      <!-- Share (shown by the redesigned top bar only) -->
-      <button type="button" class="btn" id="btn-share" data-tip="Copy a link to this diagram">Share</button>
-
       <button type="button" class="btn" id="btn-open-palette" aria-label="Search commands (Cmd/Ctrl+K)" data-tip="Commands (⌘K)">
         <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="btn-text-responsive">Search</span>
       </button>
 
-      <button type="button" class="btn btn-icon-only" id="btn-app-menu" aria-label="Main menu" aria-haspopup="menu" aria-expanded="false" data-tip="Menu">
-        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-      </button>
+      <button type="button" class="btn" id="btn-share" data-tip="Copy a link to this diagram">Share</button>
+
+      <button type="button" class="btn solid" id="btn-run" data-tip="Switch to Traffic and play the scenario">Run</button>
     </div>
   </header>
 

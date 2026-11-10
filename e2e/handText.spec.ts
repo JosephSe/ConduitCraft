@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay, runPaletteCommand } from './helpers';
+import { openLumenRelay, runPaletteCommand, undo } from './helpers';
 
 async function open(page: Page) {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -83,7 +83,7 @@ test('undo takes a new text label away again', async ({ page }) => {
 
   // Undo steps back through the rename, then the placement.
   for (let i = 0; i < 3 && (await page.locator('.blueprint-spec.is-text').count()) > 0; i++) {
-    await page.locator('#btn-undo').click();
+    await undo(page);
   }
   await expect(page.locator('.blueprint-spec.is-text')).toHaveCount(0);
 });

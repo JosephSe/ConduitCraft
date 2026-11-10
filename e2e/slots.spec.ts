@@ -55,8 +55,20 @@ function overlap(a: Box, b: Box): number {
   return w > 0.5 && h > 0.5 ? Math.round(w * h) : 0;
 }
 
+/** Islands, once nothing is moving: a toast slides in and the hint line can rewrap, so wait for two equal reads. */
+async function settledBoxes(page: Page): Promise<Box[]> {
+  let last = JSON.stringify(await islandBoxes(page));
+  for (let i = 0; i < 20; i += 1) {
+    await page.waitForTimeout(100);
+    const now = JSON.stringify(await islandBoxes(page));
+    if (now === last) return JSON.parse(now) as Box[];
+    last = now;
+  }
+  return JSON.parse(last) as Box[];
+}
+
 async function expectNoCollisions(page: Page, label: string): Promise<void> {
-  const boxes = await islandBoxes(page);
+  const boxes = await settledBoxes(page);
   expect(boxes.length, `${label}: islands found`).toBeGreaterThan(5);
   const collisions: string[] = [];
   for (let i = 0; i < boxes.length; i += 1) {

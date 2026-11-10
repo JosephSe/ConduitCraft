@@ -32,13 +32,11 @@ import {
   btnPropGroup,
   btnPropDelete,
   btnPropDuplicate,
-  btnRedo,
   btnResetSelection,
   btnRestoreOpen,
   btnRestoreDiscard,
   restoreSessionBanner,
   saveStatusPill,
-  btnUndo,
   btnZoomFit,
   btnZoomFitSelection,
   btnZoomIn,
@@ -106,7 +104,6 @@ import {
   openPageDocument,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
-  performRedo,
   performUndo,
   pushHistory,
   mutateWithHistory,
@@ -1598,8 +1595,6 @@ export function initEvents(): void {
   });
 
   // Undo / Redo / Delete / Duplicate
-  btnUndo.addEventListener('click', performUndo);
-  btnRedo.addEventListener('click', performRedo);
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);
 

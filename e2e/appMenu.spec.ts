@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 
 async function open(page: Page) {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -53,6 +53,8 @@ test('clicking the button again closes the menu instead of reopening it', async 
 test('every item can be reached on a short window', async ({ page }) => {
   await open(page);
   await page.setViewportSize({ width: 1024, height: 420 });
+  // The selection's toolbar floats over the top left on a window this short; let go of the selection first.
+  await clearSelection(page);
   await button(page).click();
   const last = menu(page).getByRole('menuitem').last();
   await last.scrollIntoViewIfNeeded();

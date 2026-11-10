@@ -219,7 +219,8 @@ describe('responsive and compact toolbar', () => {
   it('verifies responsive stylesheet rules for compact toolbar and rails', () => {
     const css = readStudioCss();
 
-    assert.ok(css.includes('.doc-history-controls'), 'CSS defines doc history controls next to title');
+    assert.ok(css.includes('.slot-nw'), 'CSS defines the NW slot');
+    assert.ok(!css.includes('.doc-history-controls'), 'undo and redo left the top bar (6.2)');
     assert.ok(css.includes('workspace[data-palette-collapsed="true"]'), 'CSS defines palette collapsed rail layout');
     assert.ok(css.includes('workspace[data-inspector-collapsed="true"]'), 'CSS defines inspector collapsed rail layout');
     assert.ok(css.includes('@media (max-width: 82rem)'), 'CSS defines 82rem breakpoint');

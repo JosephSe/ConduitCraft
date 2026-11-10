@@ -77,6 +77,18 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
   speedBtn.addEventListener('click', () => simulationPlayback.toggleSpeed());
   loopBtn.addEventListener('click', () => simulationPlayback.toggleLoop());
 
+  // The Run button in NE: go to Traffic, then play the chosen scenario (or the first one).
+  document.getElementById('btn-run')?.addEventListener('click', () => {
+    const radio = document.querySelector<HTMLInputElement>('input[name="workspace-mode"][value="data"]');
+    if (radio && !radio.checked) {
+      radio.checked = true;
+      radio.dispatchEvent(new Event('change'));
+    }
+    const state = simulationPlayback.getState();
+    if (state.scenario && !state.isPlaying) simulationPlayback.togglePlay();
+    else if (!state.scenario && select.options.length > 1) deps.run(select.options[1].value);
+  });
+
   onPlaybackChange((state) => {
     syncScenarios();
     syncTransport(state);
