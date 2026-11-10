@@ -818,7 +818,7 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 
 #### [ ] C2. Components · L, split
 - **Read:** `keyedStage.ts` lines 878 to 1560, `core/nodeStyle.ts`, `diagramSvg.ts`.
-- **C2a · M:** card kinds (8.2). **C2b · M:** shaped kinds, actor, small boxes, external.
+- **C2a · M:** card kinds (8.2). **Done (C2a):** cards have a 30 px tile, a 7 px status light (grey in Design, emerald with a halo in Traffic), title 15/600, subtitle 12, and the kind name on the left with the readout on the right in mono, no separator. The eyebrow now sits in the footer. Not yet: the status word beside the light (C3), badge row (C2b). **C2b · M:** shaped kinds, actor, small boxes, external.
 - **Done:** every kind and shape in the showcase fits its box with no clipped text at 100%. **Needs:** T2, T4.
 
 #### [ ] C3. States · M

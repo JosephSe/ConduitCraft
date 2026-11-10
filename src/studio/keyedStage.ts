@@ -920,7 +920,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     iconBox.className = 'node-icon';
     const eyebrow = document.createElement('span');
     eyebrow.className = 'node-eyebrow';
-    top.append(iconBox, eyebrow);
+    const light = document.createElement('span');
+    light.className = 'node-light';
+    top.append(iconBox, light);
     const mid = document.createElement('div');
     const titleSpan = document.createElement('span');
     titleSpan.className = 'node-title';
@@ -933,7 +935,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     fLeft.className = 'node-footer-label';
     const chip = document.createElement('span');
     chip.className = 'micro-chip';
-    footer.append(fLeft, chip);
+    footer.append(eyebrow, fLeft, chip);
     selectBtn.append(top, mid, footer);
   }
 
