@@ -88,6 +88,8 @@ test('view 1 does not jump when the webfonts swap in', async ({ page }) => {
 async function platformFonts(page: Page, selector: string): Promise<unknown> {
   try {
     const client = await page.context().newCDPSession(page);
+    await client.send('CSS.enable');
+    await client.send('DOM.enable');
     const doc = await client.send('DOM.getDocument');
     const found = await client.send('DOM.querySelector', { nodeId: doc.root.nodeId, selector });
     if (!found.nodeId) return [];

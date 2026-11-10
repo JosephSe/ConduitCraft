@@ -1,8 +1,8 @@
 /* Latin subsets, SIL Open Font License. The licence files sit beside the fonts.
-   Fallback faces are local() only, sized so the swap does not move the text.
-   One local() name per face: a missing name must not hide the next one.
-   Liberation is listed before Arial and Courier, and the outlines match.
-   Widths were measured in the browser. Vertical metrics follow the typo line. */
+   One local() name per face, so a missing name cannot hide the next one.
+   Bold and semibold try the bold face first. Where that face is not installed,
+   the regular face is scaled to the bold width. Widths were measured in the browser.
+   Vertical metrics follow the typo line. */
 
 @font-face {
   font-family: "Instrument Sans";
@@ -17,7 +17,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("LiberationSans");
-  font-style: normal;
   font-weight: 400;
   size-adjust: 102.46%;
   ascent-override: 94.67%;
@@ -28,18 +27,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Liberation Sans");
-  font-style: normal;
-  font-weight: 400;
-  size-adjust: 102.46%;
-  ascent-override: 94.67%;
-  descent-override: 24.40%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
-  src: local("ArialMT");
-  font-style: normal;
   font-weight: 400;
   size-adjust: 102.46%;
   ascent-override: 94.67%;
@@ -50,7 +37,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Arial");
-  font-style: normal;
   font-weight: 400;
   size-adjust: 102.46%;
   ascent-override: 94.67%;
@@ -61,7 +47,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("LiberationSans");
-  font-style: normal;
   font-weight: 500;
   size-adjust: 103.90%;
   ascent-override: 93.36%;
@@ -72,18 +57,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Liberation Sans");
-  font-style: normal;
-  font-weight: 500;
-  size-adjust: 103.90%;
-  ascent-override: 93.36%;
-  descent-override: 24.06%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
-  src: local("ArialMT");
-  font-style: normal;
   font-weight: 500;
   size-adjust: 103.90%;
   ascent-override: 93.36%;
@@ -94,7 +67,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Arial");
-  font-style: normal;
   font-weight: 500;
   size-adjust: 103.90%;
   ascent-override: 93.36%;
@@ -104,30 +76,7 @@
 
 @font-face {
   font-family: "Instrument Sans Fallback";
-  src: local("LiberationSans-Bold");
-  font-style: normal;
-  font-weight: 600;
-  size-adjust: 98.97%;
-  ascent-override: 98.01%;
-  descent-override: 25.26%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
-  src: local("Liberation Sans Bold");
-  font-style: normal;
-  font-weight: 600;
-  size-adjust: 98.97%;
-  ascent-override: 98.01%;
-  descent-override: 25.26%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Instrument Sans Fallback";
   src: local("Arial-BoldMT");
-  font-style: normal;
   font-weight: 600;
   size-adjust: 98.97%;
   ascent-override: 98.01%;
@@ -138,7 +87,6 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Arial Bold");
-  font-style: normal;
   font-weight: 600;
   size-adjust: 98.97%;
   ascent-override: 98.01%;
@@ -148,30 +96,37 @@
 
 @font-face {
   font-family: "Instrument Sans Fallback";
-  src: local("LiberationSans-Bold");
-  font-style: normal;
-  font-weight: 700;
-  size-adjust: 100.41%;
-  ascent-override: 96.60%;
-  descent-override: 24.90%;
+  src: local("LiberationSans");
+  font-weight: 600;
+  size-adjust: 106.18%;
+  ascent-override: 91.35%;
+  descent-override: 23.55%;
   line-gap-override: 0%;
 }
 
 @font-face {
   font-family: "Instrument Sans Fallback";
-  src: local("Liberation Sans Bold");
-  font-style: normal;
-  font-weight: 700;
-  size-adjust: 100.41%;
-  ascent-override: 96.60%;
-  descent-override: 24.90%;
+  src: local("Liberation Sans");
+  font-weight: 600;
+  size-adjust: 106.18%;
+  ascent-override: 91.35%;
+  descent-override: 23.55%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
+  src: local("Arial");
+  font-weight: 600;
+  size-adjust: 106.18%;
+  ascent-override: 91.35%;
+  descent-override: 23.55%;
   line-gap-override: 0%;
 }
 
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Arial-BoldMT");
-  font-style: normal;
   font-weight: 700;
   size-adjust: 100.41%;
   ascent-override: 96.60%;
@@ -182,13 +137,43 @@
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("Arial Bold");
-  font-style: normal;
   font-weight: 700;
   size-adjust: 100.41%;
   ascent-override: 96.60%;
   descent-override: 24.90%;
   line-gap-override: 0%;
 }
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
+  src: local("LiberationSans");
+  font-weight: 700;
+  size-adjust: 107.59%;
+  ascent-override: 90.16%;
+  descent-override: 23.24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
+  src: local("Liberation Sans");
+  font-weight: 700;
+  size-adjust: 107.59%;
+  ascent-override: 90.16%;
+  descent-override: 23.24%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: "Instrument Sans Fallback";
+  src: local("Arial");
+  font-weight: 700;
+  size-adjust: 107.59%;
+  ascent-override: 90.16%;
+  descent-override: 23.24%;
+  line-gap-override: 0%;
+}
+
 
 @font-face {
   font-family: "Geist Mono";
@@ -202,7 +187,6 @@
 @font-face {
   font-family: "Geist Mono Fallback";
   src: local("LiberationMono");
-  font-style: normal;
   font-weight: 400 700;
   size-adjust: 99.98%;
   ascent-override: 100.52%;
@@ -213,7 +197,6 @@
 @font-face {
   font-family: "Geist Mono Fallback";
   src: local("Liberation Mono");
-  font-style: normal;
   font-weight: 400 700;
   size-adjust: 99.98%;
   ascent-override: 100.52%;
@@ -224,7 +207,6 @@
 @font-face {
   font-family: "Geist Mono Fallback";
   src: local("CourierNewPSMT");
-  font-style: normal;
   font-weight: 400 700;
   size-adjust: 99.98%;
   ascent-override: 100.52%;
@@ -235,7 +217,6 @@
 @font-face {
   font-family: "Geist Mono Fallback";
   src: local("Courier New");
-  font-style: normal;
   font-weight: 400 700;
   size-adjust: 99.98%;
   ascent-override: 100.52%;
