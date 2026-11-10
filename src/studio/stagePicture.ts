@@ -92,6 +92,18 @@ export const WL_RESOLVED_TOKENS: Record<string, string> = {
   '--wl-violet-soft': 'rgba(91, 33, 182, 0.12)',
   '--wl-violet-soft-light': 'rgba(91, 33, 182, 0.12)',
   '--wl-violet-soft-dark': 'rgba(167, 139, 250, 0.2)',
+  '--wl-cyan': '#0b7c9e',
+  '--wl-cyan-light': '#0b7c9e',
+  '--wl-cyan-dark': '#22d3ee',
+  '--wl-cyan-soft': 'rgba(11, 124, 158, 0.12)',
+  '--wl-cyan-soft-light': 'rgba(11, 124, 158, 0.12)',
+  '--wl-cyan-soft-dark': 'rgba(34, 211, 238, 0.16)',
+  '--wl-fuchsia': '#b5179e',
+  '--wl-fuchsia-light': '#b5179e',
+  '--wl-fuchsia-dark': '#f0abfc',
+  '--wl-fuchsia-soft': 'rgba(181, 23, 158, 0.12)',
+  '--wl-fuchsia-soft-light': 'rgba(181, 23, 158, 0.12)',
+  '--wl-fuchsia-soft-dark': 'rgba(240, 171, 252, 0.18)',
   '--wl-font-sans': "'Instrument Sans', 'Instrument Sans Fallback', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
   '--wl-font-mono': "'Geist Mono', 'Geist Mono Fallback', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace",
 };
@@ -137,6 +149,10 @@ export function getResolvedWlVariables(): Record<string, string> {
     vars['--wl-amber-soft'] = vars['--wl-amber-soft-dark'];
     vars['--wl-violet'] = vars['--wl-violet-dark'];
     vars['--wl-violet-soft'] = vars['--wl-violet-soft-dark'];
+    vars['--wl-cyan'] = vars['--wl-cyan-dark'];
+    vars['--wl-cyan-soft'] = vars['--wl-cyan-soft-dark'];
+    vars['--wl-fuchsia'] = vars['--wl-fuchsia-dark'];
+    vars['--wl-fuchsia-soft'] = vars['--wl-fuchsia-soft-dark'];
   }
 
   if (typeof document !== 'undefined' && document.documentElement && typeof getComputedStyle === 'function') {

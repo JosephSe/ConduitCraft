@@ -154,10 +154,11 @@ Two themes. **Vellum** is the light one: a cool drafting-film grey, not white an
 | `--well` | `rgba(21,24,28,.055)` | `rgba(255,255,255,.07)` | Hover, pressed, inset fields |
 | `--ink` | `#15181C` | `#F2F3F1` | Text, selection, primary fill |
 | `--ink-2` | `#565C64` | `#B7BBBF` | Secondary text |
-| `--ink-3` | `#6C727A` | `#92979C` | Hints, cut-out outlines at rest |
+| `--ink-3` | `#5C626A` | `#92979C` | Hints, cut-out outlines at rest |
 | `--on-ink` | `#FFFFFF` | `#1D1F21` | Text on an ink fill |
 | `--hair` / `--hair-2` | ink at 11% / 20% | white at 10% / 20% | Island edges / component borders and dividers |
-| `--redline` | `#D4291C` | `#FF6B5E` | Review marks only |
+| `--redline` | `#C42316` | `#FF6B5E` | Review marks only |
+| `--field-edge` | `#7A7F85` | `#7F8184` | Text field edges (3:1 on the sheet and the canvas; `--hair-2` is only 1.5:1 and 1.9:1) |
 
 Rename to the `--cc-*` prefix when moving them into the app. T1 adds every text pair to `tests/contrast.test.ts` (4.5:1 for text, 3:1 for wires, rings and input edges) and adjusts a value if a pair fails.
 
@@ -660,11 +661,17 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Because nothing is selected now, the inspector is closed in views 1, 2 and 6, so the canvas is wider and the nearest step to 100% is 97%. All sixteen pictures were checked on macOS and the 13 that no longer matched were re-recorded (`07-first-run-dark` and both `08-home` pictures were unchanged). They differ from the T3, T4 and T4c pictures wherever those PRs changed the screen.
 - Eight repeats of the eight views (64 runs): 63 passed. One Review run differed by about 8,800 pixels. That is a known remaining flake in the test (view 6), not in the app; if it shows in CI, look for a second camera or panel move in the Review lens first. Unit tests 910 passed. Browser tests 344 passed.
 
-#### [ ] T5. Two more colours: cyan and fuchsia · M
+#### [x] T5. Two more colours: cyan and fuchsia · M
 - **Read:** `src/types.ts` (`StreamTone`), `src/shared/tones.ts`, `src/core/meta.ts`, `src/core/frames.ts`, `src/core/parser.ts` (`normalizeTone`, `COLOR_NAME_MAP`, `FRAME_TONES`), `src/importers/common.ts` (hue buckets), `src/templates/presets.ts` (the tone list), `src/exporter/blueprintJson.ts`, `diagramSvg.ts`, `standaloneHtml.ts`, `shared.css`.
 - **Do:** add `cyan` and `fuchsia` to `StreamTone` and to every list above, with the values in 5.1 and the names "Data" and "Security". In the parser, the words `cyan`, `teal`, `aqua`, `data` map to `cyan`, and `fuchsia`, `magenta`, `security`, `auth` map to `fuchsia`. In colour imports, hue 170 to 205 becomes `cyan` and 285 to 330 becomes `fuchsia`. Show seven dots in the colour pickers, the legend and the Traffic colour filter. No schema bump: nothing changes shape, and 2.x reads an unknown tone as blue (assert this in a test).
 - **Do not:** change any stencil's default colour (Q9), or recolour templates.
 - **Done:** both tones round-trip through Blueprint YAML and JSON, appear in SVG and HTML exports, and pass `tests/contrast.test.ts` in both themes; the `TONES` lists in `tests/showcase.test.ts`, `flashSaleShowcase.test.ts` and `llmRules.test.ts` and the tone list in `docs/guide.md` and `docs/llm-rules.md` are updated. Before adding tones, add two missing pairs to `tests/contrast.test.ts` (input edges `--hair-2` at 3:1; wires on `--canvas-run`) and update the 5.1 table to the shipped `--ink-3` (`#5C626A`) and `--redline` (`#C42316`). **Needs:** T1, T4b.
+- `cyan` (Data) and `fuchsia` (Security) are in `StreamTone` and every list: tones, presets (seven picker dots, which also feed the legend, bulk colour, Traffic filter and HTML export), meta, frames, `describe`, minimap, picture variables, SVG palettes and markers (studio and export), Blueprint JSON and the parser. The words `cyan teal aqua data` and `fuchsia magenta security auth` map to the new tones; `magenta` and `fuchsia` used to mean rose and violet. Imported hues now fall in six bands (emerald below 170, cyan 170 to 205, blue to 260, violet to 285, fuchsia to 330, rose beyond). Subgraph frames cycle through all seven.
+- Two contrast pairs added first, as asked. Wires on `--canvas-run` pass for all seven tones in both themes. The input-edge pair did not: `.field` used `--hair-2`, which is 1.53:1 on the sheet in Vellum and 1.91:1 in Graphite. A new `--cc-field-edge` (`#7A7F85`, `#7F8184`) is at least 3:1 on the sheet and canvas and `.field` uses it. This darkens every text field; `02-design-100-selected-light` and `03-component-panel-light` were re-recorded for it (the dark pictures stayed inside 0.1%). The 5.1 table now shows the shipped `--ink-3` and `--redline` and the new token.
+- Component colour (`data-accent`) now sets `--t` like wires do, so the four per-accent rules in `stage.css` and `viewer.css` are one. The `data-flow` dimming lines grew by two each. Entry CSS is 111.6 kB of 112.
+- Showcase tests still require the five tones those documents use and now also accept the two new ones; the LLM rules, guide and `llm-rules.md` list seven. `tests/cyanFuchsia.test.ts` covers the words, hue edges, Markdown and JSON round-trips, frames, SVG in both themes, HTML export, and unknown tones reading as blue. 2.x already reads any tone outside its five as blue, so there is no schema bump.
+- Unit tests 920 passed. Browser tests: 343 of 344 passed on the first run; the one that failed (`layout.spec.ts`, phone overlays) passes alone and looks load-dependent.
+
 
 ### Milestone S: Shell
 

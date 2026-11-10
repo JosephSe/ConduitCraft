@@ -55,6 +55,10 @@
     --cc-rose: #BE123C;
     --cc-violet: #5B21B6;
     --cc-amber: #B45309;
+    --cc-cyan: #0B7C9E;
+    --cc-fuchsia: #B5179E;
+    /* --cc-hair-2 is 1.5:1 on the sheet, so a text field's edge gets its own 3:1 value. */
+    --cc-field-edge: #7A7F85;
 
     --wl-canvas: var(--cc-canvas);
     --wl-panel: var(--cc-island);
@@ -79,6 +83,10 @@
     --wl-amber-soft: color-mix(in srgb, var(--cc-amber) 14%, transparent);
     --wl-violet: var(--cc-violet);
     --wl-violet-soft: color-mix(in srgb, var(--cc-violet) 14%, transparent);
+    --wl-cyan: var(--cc-cyan);
+    --wl-cyan-soft: color-mix(in srgb, var(--cc-cyan) 14%, transparent);
+    --wl-fuchsia: var(--cc-fuchsia);
+    --wl-fuchsia-soft: color-mix(in srgb, var(--cc-fuchsia) 14%, transparent);
     --wl-scroll-thumb: var(--cc-ink-3);
     --wl-scroll-track: var(--cc-well);
     --wl-shadow-card:
@@ -109,6 +117,9 @@
     --cc-rose: #FB7185;
     --cc-violet: #A78BFA;
     --cc-amber: #FBBF24;
+    --cc-cyan: #22D3EE;
+    --cc-fuchsia: #F0ABFC;
+    --cc-field-edge: #7F8184;
   }
 
   @supports (background: linear-gradient(in oklab, white, black)) {
@@ -118,11 +129,20 @@
   }
 
   /* One tone variable per element (5.1). Rules below read --t, never a tone name. */
+  [data-accent="blue"] { --t: var(--wl-blue); --t-soft: var(--wl-blue-soft); }
+  [data-accent="emerald"] { --t: var(--wl-emerald); --t-soft: var(--wl-emerald-soft); }
+  [data-accent="rose"] { --t: var(--wl-rose); --t-soft: var(--wl-rose-soft); }
+  [data-accent="violet"] { --t: var(--wl-violet); --t-soft: var(--wl-violet-soft); }
+  [data-accent="amber"] { --t: var(--wl-amber); --t-soft: var(--wl-amber-soft); }
+  [data-accent="cyan"] { --t: var(--wl-cyan); --t-soft: var(--wl-cyan-soft); }
+  [data-accent="fuchsia"] { --t: var(--wl-fuchsia); --t-soft: var(--wl-fuchsia-soft); }
   [data-tone="blue"] { --t: var(--wl-blue); --t-soft: var(--wl-blue-soft); }
   [data-tone="emerald"] { --t: var(--wl-emerald); --t-soft: var(--wl-emerald-soft); }
   [data-tone="rose"] { --t: var(--wl-rose); --t-soft: var(--wl-rose-soft); }
   [data-tone="violet"] { --t: var(--wl-violet); --t-soft: var(--wl-violet-soft); }
   [data-tone="amber"] { --t: var(--wl-amber); --t-soft: var(--wl-amber-soft); }
+  [data-tone="cyan"] { --t: var(--wl-cyan); --t-soft: var(--wl-cyan-soft); }
+  [data-tone="fuchsia"] { --t: var(--wl-fuchsia); --t-soft: var(--wl-fuchsia-soft); }
 }
 
 

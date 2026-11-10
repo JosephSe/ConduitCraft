@@ -12,7 +12,7 @@ export const FRAME_HEADER_HEIGHT = 28;
 /** Space left around the components when a group becomes a frame. */
 export const FRAME_PADDING = 24;
 
-const TONES = new Set<StreamTone>(['blue', 'emerald', 'rose', 'violet', 'amber']);
+const TONES = new Set<StreamTone>(['blue', 'emerald', 'rose', 'violet', 'amber', 'cyan', 'fuchsia']);
 /** A hostile file cannot make nesting deeper than this. */
 export const MAX_FRAME_DEPTH = 8;
 

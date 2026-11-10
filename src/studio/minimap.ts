@@ -59,6 +59,8 @@ export function renderMinimap(): void {
     rose: color('--wl-rose', '#be123c'),
     violet: color('--wl-violet', '#5b21b6'),
     amber: color('--wl-amber', '#b45309'),
+    cyan: color('--wl-cyan', '#0b7c9e'),
+    fuchsia: color('--wl-fuchsia', '#b5179e'),
   };
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

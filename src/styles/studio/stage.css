@@ -747,6 +747,12 @@
   .workspace[data-flow="amber"] .conduit-group:not([data-tone="amber"]) {
     opacity: 0.13;
   }
+  .workspace[data-flow="cyan"] .conduit-group:not([data-tone="cyan"]) {
+    opacity: 0.13;
+  }
+  .workspace[data-flow="fuchsia"] .conduit-group:not([data-tone="fuchsia"]) {
+    opacity: 0.13;
+  }
 
   .draft-wire {
     fill: none;
@@ -794,21 +800,9 @@
     transition: opacity 0.2s ease;
   }
 
-  .arch-node[data-accent="emerald"] {
-    --node-accent: var(--wl-emerald);
-    --node-accent-soft: var(--wl-emerald-soft);
-  }
-  .arch-node[data-accent="rose"] {
-    --node-accent: var(--wl-rose);
-    --node-accent-soft: var(--wl-rose-soft);
-  }
-  .arch-node[data-accent="violet"] {
-    --node-accent: var(--wl-violet);
-    --node-accent-soft: var(--wl-violet-soft);
-  }
-  .arch-node[data-accent="amber"] {
-    --node-accent: var(--wl-amber);
-    --node-accent-soft: var(--wl-amber-soft);
+  .arch-node[data-accent] {
+    --node-accent: var(--t);
+    --node-accent-soft: var(--t-soft);
   }
 
   .arch-node.is-dimmed {

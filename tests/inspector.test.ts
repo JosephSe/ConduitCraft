@@ -238,7 +238,7 @@ describe('inspector collapsible sections and tone picker', () => {
 
     assert.strictEqual(picker.tagName, 'FIELDSET');
     const options = picker.children.filter((c) => c.className.includes('swatch-option'));
-    assert.strictEqual(options.length, 5, 'renders all 5 stream tones');
+    assert.strictEqual(options.length, 7, 'renders all 7 stream tones');
 
     const first = options[0];
     assert.ok(first.className.includes('swatch-dot-only'));

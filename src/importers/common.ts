@@ -26,7 +26,7 @@ export function uniqueId(base: string, used: Set<string>): string {
   return id;
 }
 
-/** Nearest of the five wire colours for a `#rrggbb` colour, or undefined for none, default or greys. */
+/** Nearest of the seven wire colours for a `#rrggbb` colour, or undefined for none, default or greys. */
 export function colourToTone(raw: string | undefined): StreamTone | undefined {
   if (!raw) return undefined;
   const hex = /^#([0-9a-f]{6})$/i.exec(raw.trim());
@@ -46,9 +46,11 @@ export function colourToTone(raw: string | undefined): StreamTone | undefined {
   hue = (hue * 60 + 360) % 360;
   if (hue < 20 || hue >= 330) return 'rose';
   if (hue < 75) return 'amber';
-  if (hue < 190) return 'emerald';
+  if (hue < 170) return 'emerald';
+  if (hue < 205) return 'cyan';
   if (hue < 260) return 'blue';
-  return 'violet';
+  if (hue < 285) return 'violet';
+  return 'fuchsia';
 }
 
 function rectsOverlap(a: DiagramNode, b: DiagramNode, gap: number): boolean {

@@ -49,7 +49,7 @@ describe('5.1 colour pairs', () => {
   const themes = ['vellum', 'graphite'] as const;
   const text = ['ink', 'ink-2', 'ink-3', 'redline'] as const;
   const surfaces = ['canvas', 'canvas-run', 'sheet'] as const;
-  const tones = ['blue', 'emerald', 'rose', 'violet', 'amber'] as const;
+  const tones = ['blue', 'emerald', 'rose', 'violet', 'amber', 'cyan', 'fuchsia'] as const;
 
   it('keeps text at 4.5:1 on the sheet and both canvases', () => {
     for (const theme of themes) {
@@ -64,15 +64,25 @@ describe('5.1 colour pairs', () => {
     }
   });
 
-  it('keeps wires at 3:1 on the sheet and the canvas', () => {
+  it('keeps wires at 3:1 on the sheet, the canvas and the Traffic canvas', () => {
     for (const theme of themes) {
       for (const tone of tones) {
-        for (const bg of ['sheet', 'canvas'] as const) {
+        for (const bg of ['sheet', 'canvas', 'canvas-run'] as const) {
           const ratio = contrast(token(theme, tone), token(theme, bg));
           assert.ok(ratio >= 3, `${tone} on ${bg} (${theme}) is ${ratio.toFixed(2)}:1`);
         }
       }
     }
+  });
+
+  it('keeps a text field edge at 3:1 on the sheet and the canvas, and fields use it', () => {
+    for (const theme of themes) {
+      for (const bg of ['sheet', 'canvas'] as const) {
+        const ratio = contrast(token(theme, 'field-edge'), token(theme, bg));
+        assert.ok(ratio >= 3, `field edge on ${bg} (${theme}) is ${ratio.toFixed(2)}:1`);
+      }
+    }
+    assert.match(studio, /\.field \{[^}]*border:\s*1px solid var\(--cc-field-edge\)/);
   });
 
   it('keeps the ink ring at 3:1 on the sheet and the canvas', () => {
