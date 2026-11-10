@@ -616,6 +616,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Nine uppercase rules are gone, and the tracking that only served them. Stencil eyebrows are sentence case. Saved diagrams keep the eyebrows they stored, including the flash-sale showcase, so view 1 still shows those in capitals. Chips stay as authored.
 - Kind-specific title sizes stay, with `line-height: 1.2`, because the title token's 19px line clipped those larger sizes. The page title is unchanged, so the Z4 jump measurement still holds. The display and control tokens are there for the primitives that come later.
 - Entry CSS is 109.3 kB of 115 (`index-Da7uZNr1.css`). Entry JS is 531.0 kB of 540 (`index-CettnLcZ.js`). Fonts stay 78.6 kB. Unit tests 898 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views and the six export pictures were re-recorded on macOS. The 20% pixel slack stays. The view spec passed twice with no diff.
+- Pull request #100.
 
 #### [ ] T3. Primitives · M
 - **Do:** `ui.css` per 10.2, converting existing markup and deleting old button and field variants.
