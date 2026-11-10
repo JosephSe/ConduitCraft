@@ -633,11 +633,28 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Entry CSS is 111.1 kB of 112 (`index-Dva6H7Yc.css`). Entry JS is 533.5 kB of 540 (`index-73fo8ixY.js`). Fonts stay 78.6 kB. The HTML export chunk is 91.5 kB. Unit tests 907 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. Views 1 to 3 were re-recorded on macOS. The other five views were not. The export pictures stayed inside the 3% slack, so they were not re-recorded. The 20% pixel slack stays. The view spec passed again with no diff.
 - Pull request #102.
 
+#### [ ] T4b. Collapse the per-tone rules · M
+- **Why:** T1 left the `--t` recipe (5.1) for later. About 50 per-tone blocks remain (`stage.css` 24, `viewer.css` 18, `inspector.css` 4, `frames.css` 4). T5 would add two more variants to each, and entry CSS has 0.9 kB of room under its 112 kB cap.
+- **Do:** each element sets `--t` once from its tone; tint and edge derive from it (5.1). Delete the per-tone rule blocks. Keep every visible colour the same.
+- **Done:** the style files hold one set of seven `--t` assignments and no other `data-tone=` blocks; no visual diff in the eight views beyond the existing slack; entry CSS is lower than before. **Needs:** T4.
+
+#### [ ] T4c. Finish T1's and T2's leftovers · S
+- **Uppercase text:** the CSS rule is gone but capitals are typed into the text: about 14 labels in `index.html` and 17 in TypeScript (`COMPONENT PROPERTIES`, `WIRE PROPERTIES`, `ALIGN & DISTRIBUTE`, `STAGE CONTAINERS`, `EXECUTION TRACE`, `kind.toUpperCase()` in `palette.ts`). The Live Trace steps and the "Saved" pill are still uppercase or mono. Make them sentence case; specs that match the old text are updated in the same PR.
+- **Blue chrome (D4, P5):** about 110 uses of `var(--wl-blue)` remain for selection, focus, the active tool, context-menu and toolbar focus, the active page tab and route-style options. Chrome becomes ink. Component and wire states stay for C3.
+- **Export fonts:** `viewer.css` still names Inter and JetBrains Mono. Name the new families (the bytes stay C6, Q3).
+- **Reduced transparency (D15):** islands and popovers go solid under `prefers-reduced-transparency` and where `backdrop-filter` is unsupported. Add a spec.
+- **Done:** a unit test fails on any typed all-caps label of four letters or more outside code and ids; `--wl-blue` appears only in stage and wire rules. **Needs:** T4b.
+
+#### [ ] T4d. Make the view check sharper · S
+- **Why:** the eight-view check allows 20% of pixels to differ, so T3 and T4 passed without re-recording views they visibly change.
+- **Do:** one baseline set per platform with a tolerance of 1% or less on macOS; keep a looser value only for Linux until a Linux run measures the real gap. Re-record all sixteen images and attach before and after in the PR.
+- **Done:** changing a button's fill colour on a test branch fails the check.
+
 #### [ ] T5. Two more colours: cyan and fuchsia · M
 - **Read:** `src/types.ts` (`StreamTone`), `src/shared/tones.ts`, `src/core/meta.ts`, `src/core/frames.ts`, `src/core/parser.ts` (`normalizeTone`, `COLOR_NAME_MAP`, `FRAME_TONES`), `src/importers/common.ts` (hue buckets), `src/templates/presets.ts` (the tone list), `src/exporter/blueprintJson.ts`, `diagramSvg.ts`, `standaloneHtml.ts`, `shared.css`.
 - **Do:** add `cyan` and `fuchsia` to `StreamTone` and to every list above, with the values in 5.1 and the names "Data" and "Security". In the parser, the words `cyan`, `teal`, `aqua`, `data` map to `cyan`, and `fuchsia`, `magenta`, `security`, `auth` map to `fuchsia`. In colour imports, hue 170 to 205 becomes `cyan` and 285 to 330 becomes `fuchsia`. Show seven dots in the colour pickers, the legend and the Traffic colour filter. No schema bump: nothing changes shape, and 2.x reads an unknown tone as blue (assert this in a test).
 - **Do not:** change any stencil's default colour (Q9), or recolour templates.
-- **Done:** both tones round-trip through Blueprint YAML and JSON, appear in SVG and HTML exports, and pass `tests/contrast.test.ts` in both themes; the `TONES` lists in `tests/showcase.test.ts`, `flashSaleShowcase.test.ts` and `llmRules.test.ts` and the tone list in `docs/guide.md` and `docs/llm-rules.md` are updated. **Needs:** T1.
+- **Done:** both tones round-trip through Blueprint YAML and JSON, appear in SVG and HTML exports, and pass `tests/contrast.test.ts` in both themes; the `TONES` lists in `tests/showcase.test.ts`, `flashSaleShowcase.test.ts` and `llmRules.test.ts` and the tone list in `docs/guide.md` and `docs/llm-rules.md` are updated. Before adding tones, add two missing pairs to `tests/contrast.test.ts` (input edges `--hair-2` at 3:1; wires on `--canvas-run`) and update the 5.1 table to the shipped `--ink-3` (`#5C626A`) and `--redline` (`#C42316`). **Needs:** T1, T4b.
 
 ### Milestone S: Shell
 
@@ -792,4 +809,5 @@ Use the default if the question is open when its item comes up, and say so in th
 | Q6 | Is greyscale in Review too strong for people who review while editing? | C5 | Keep it, with "Keep colour in Review" in the view popover |
 | Q7 | Is the title block on by default in exports? | C6 | Yes |
 | Q8 | One release, or shell first and diagram second? | R3 | One release from `v3` |
+| Q10 | T4 drew card kinds (Service, Core system, Cache, Rate limiter, Scheduler, Event broker, Control gate) as the same plain rectangle, so the old panel's per-kind icons were lost. Put a small kind mark inside card cut-outs, as the 7.3 sketch shows? | S3 | Yes: a 12 px kind icon centred in the card outline, in `--ink-3`, taking the tone on reach |
 | Q9 | Should new data stores and object storage default to `cyan` ("Data") instead of emerald? | T5 | No. Defaults stay; the new colours are there to be chosen |
