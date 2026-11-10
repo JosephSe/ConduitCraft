@@ -168,7 +168,8 @@ import {
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
-import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import { setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey } from '../core/meta';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
@@ -1385,6 +1386,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
           tone: step.tone,
           packetLabel: step.label,
           preserveSelection: false,
+          titleBlock: titleBlockEnabled(),
         });
         frames.push(await rasterizeSvg(svg, size.width, size.height));
       }
@@ -1425,6 +1427,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) };
       const options: StagePictureOptions | undefined = {
         preserveSelection: app.selection.type === 'multi',
+        titleBlock: titleBlockEnabled(),
         ...(view ? { currentView: true } : {}),
         ...dash,
       };
@@ -2044,6 +2047,9 @@ export function initEvents(): void {
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
+  document.getElementById('chk-export-title-block')?.addEventListener('change', (event) => {
+    setTitleBlockEnabled((event.target as HTMLInputElement).checked);
+  });
   btnExportSvg.addEventListener('click', () => {
     expandStageToFit(app.doc);
     renderAll(false);
@@ -2054,6 +2060,7 @@ export function initEvents(): void {
         undefined,
         app.selection.type === 'multi' ? app.selection : undefined,
         currentScheme(),
+        titleBlockEnabled() ? titleBlockFor(app.doc, pageInfo()) : null,
       ),
       filename,
       'image/svg+xml;charset=utf-8',
@@ -2073,7 +2080,7 @@ export function initEvents(): void {
     renderAll(false);
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(
-      renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi' }),
+      renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi', titleBlock: titleBlockEnabled() }),
       filename,
       'image/svg+xml;charset=utf-8',
     );
@@ -2089,7 +2096,7 @@ export function initEvents(): void {
     hudStatusTip.textContent = 'Rendering the canvas…';
     const filename = `${getSafeFilenameSlug()}.png`;
     downloadDiagramPng(
-      renderStagePictureSvg(width, height, { preserveSelection: app.selection.type === 'multi' }),
+      renderStagePictureSvg(width, height, { preserveSelection: app.selection.type === 'multi', titleBlock: titleBlockEnabled() }),
       width,
       height,
       filename,

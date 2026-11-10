@@ -3,6 +3,8 @@ import type { StreamTone } from '../types';
 import { TONE_CSS } from '../shared/tones';
 import { describeDiagram } from '../core/describe';
 import { renderDiagramSvg } from '../exporter/diagramSvg';
+import { titleBlockFor, titleBlockSvg } from '../exporter/titleBlock';
+import { pageCount } from '../core/pages';
 import { app } from './state';
 import { stageWorld, viewport, workspace } from './dom';
 
@@ -21,6 +23,13 @@ export interface StagePictureOptions {
   packetLabel?: string;
   /** Keep highlighted/selected states (defaults to true when multi-selection is active). */
   preserveSelection?: boolean;
+  /** Add the title block strip (8.7). Exports pass `titleBlockOn()`; thumbnails leave it off. */
+  titleBlock?: boolean;
+}
+
+/** Which page of how many is open, for the title block. */
+export function pageInfo(): { index: number; count: number } {
+  return { index: app.pageIndex, count: pageCount(app.pageRoot ?? app.doc) };
 }
 
 /**
@@ -327,7 +336,7 @@ export function renderStagePictureSvg(
   const liveStage = stageWorld ?? (typeof document !== 'undefined' ? (document.getElementById('stage-world') as HTMLElement) : null);
   if (!liveStage) {
     // If called outside DOM environment or before stage is mounted, fallback to vector SVG
-    return renderDiagramSvg(app.doc, undefined, undefined, currentScheme());
+    return renderDiagramSvg(app.doc, undefined, undefined, currentScheme(), frame?.titleBlock ? titleBlockFor(app.doc, pageInfo()) : null);
   }
 
   const liveViewport = viewport ?? (typeof document !== 'undefined' ? (document.getElementById('viewport') as HTMLElement) : null);
@@ -516,5 +525,6 @@ export function renderStagePictureSvg(
   <title>${escapeXmlText(app.doc.title.trim() || 'Untitled diagram')}</title>
   <desc>${escapeXmlText(describeDiagram(app.doc))}</desc>
   <foreignObject x="0" y="0" width="${outWidth}" height="${outHeight}" style="width:${outWidth}px;height:${outHeight}px;overflow:visible;">${serialized}</foreignObject>
+  ${frame?.titleBlock ? titleBlockSvg(titleBlockFor(app.doc, pageInfo()), outWidth, outHeight, currentScheme()) : ''}
 </svg>`;
 }

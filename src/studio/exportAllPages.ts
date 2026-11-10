@@ -6,6 +6,7 @@ import { createZip, uniqueZipNames } from '../core/zip';
 import { pageList, viewOfPage } from '../core/pages';
 import { expandStageToFit } from '../core/layout';
 import { renderDiagramSvg } from '../exporter/diagramSvg';
+import { titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { currentScheme } from './stagePicture';
 import { fullDocument } from './state';
 
@@ -24,7 +25,7 @@ export function buildPagesZip(slug: string): { bytes: Uint8Array; filename: stri
     delete view.pageId;
     view.pageTitle = page.title;
     expandStageToFit(view);
-    return { name: names[i], data: encoder.encode(renderDiagramSvg(view, undefined, undefined, scheme)) };
+    return { name: names[i], data: encoder.encode(renderDiagramSvg(view, undefined, undefined, scheme, titleBlockEnabled() ? titleBlockFor(view, { index: page.index, count: pageList(whole).length }) : null)) };
   });
   return { bytes: createZip(entries), filename: `${slug}-pages.zip` };
 }

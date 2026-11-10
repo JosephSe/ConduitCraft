@@ -2,6 +2,7 @@
 import { invalidateChaos } from './chaos';
 import { paintDlqLinks } from './queueBacklog';
 import { paintRedline } from './redline';
+import { paintTitleBlockStrip } from './titleBlockStrip';
 import { invalidateInsights } from './insights';
 import { paintGroupOutlines } from './groupOutlines';
 import {
@@ -160,6 +161,7 @@ export function renderAll(rebuildInspector = true): void {
   renderNodes();
   paintDlqLinks();
   paintRedline();
+  paintTitleBlockStrip();
   renderSimButtons();
   renderMatrixTable();
   updateVisualSelectionHighlights();

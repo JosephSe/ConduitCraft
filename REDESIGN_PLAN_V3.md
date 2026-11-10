@@ -843,9 +843,10 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Done:** views 4 and 6 match the mockup's Traffic and Review. **Needs:** C3, C4.
 - **Done (C5, with C4):** Traffic dims the sheet to `--canvas-run` over 320 ms, thins the line to 1 px at 55% and fades in a 10 px tube; Review greys components and wires at 62% and hides labels. `core/roughen.ts` (seeded, unit-tested) draws the redline ellipses in `studio/redline.ts`: solid and self-drawing for errors, dashed for warnings and notes, numbered like the issue list. The insight badges and wire restyling are gone. Not yet: "Keep colour in Review", wire ellipses at the true label position.
 
-#### [ ] C6. The map, the title block, export audit · M
+#### [x] C6. The map, the title block, export audit · M
 - **Do:** 8.6 and 8.7; compare canvas with SVG, PNG, HTML and GIF exports in both themes and fix every difference; re-record README media.
 - **Done:** a test at Fit on the showcase asserts every title renders at 11 px or more; every picture export carries the title block. **Needs:** C1 to C5.
+- **Done (C6):** `--cam-scale` is set on the stage. Below 55% a component shows its tile and a title sized `clamp(15px, 12px / scale, 34px)` over two lines; wires and lane titles counter-scale; subtitle, status light, badges and shadows are dropped. At 55 to 80% the footer goes. `e2e/map.spec.ts` asserts every title at Fit on the showcase is 11 px or more on screen. `exporter/titleBlock.ts` draws the strip (mark, title, tag, status, page "n of m", date; 28 px, hairline cells) on the SVG, DOM-clone SVG, PNG, GIF frames and the all-pages zip, and `#title-block` shows it in Present. The export dialog has a Title block switch (on, Q7). The strip overlays the bottom 28 px of the picture; it does not grow the picture. Not yet: the card-kind tile enlarged at low zoom, the standalone HTML export's title block, README media re-recorded, a canvas-versus-export difference pass beyond the re-recorded baselines.
 
 ### Milestone M: Motion
 

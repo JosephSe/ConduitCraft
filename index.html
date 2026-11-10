@@ -97,6 +97,7 @@
 
     <!-- Center Interactive Canvas -->
     <section class="canvas-shell" aria-label="Interactive architecture canvas">
+      <div class="title-block" id="title-block" aria-hidden="true" hidden></div>
       <!-- Drag-and-Drop Overlay -->
       <div class="window-drop-veil" id="window-drop-veil" hidden>
         <div class="drop-veil-card">
@@ -569,6 +570,7 @@
             </select>
             <span class="export-png-hint">Scales output resolution when downloading Image (.png) below</span>
           </div>
+          <label class="switch-row"><input type="checkbox" id="chk-export-title-block" checked /> <span><strong>Title block</strong> <span class="export-png-hint">A strip along the bottom edge of pictures: title, tag, status, page and date</span></span></label>
           <label for="export-alt-text"><strong>Alt text</strong></label>
           <textarea id="export-alt-text" class="export-png-select export-alt-text" rows="3" readonly></textarea>
           <div class="export-png-controls-row">

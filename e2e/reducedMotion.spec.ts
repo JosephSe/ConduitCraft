@@ -36,7 +36,7 @@ test('reduced motion: a component marked live does not pulse', async ({ page }) 
   await page.locator('.arch-node').first().click();
   await showInspectorTab(page, 'behaviour');
   await page.locator('#prop-node-status').selectOption('live');
-  await expect(page.locator('.node-status-badge[data-status="live"]').first()).toBeVisible();
+  await expect(page.locator('.node-status-badge[data-status="live"]').first()).toBeAttached(); // hidden at low zoom (8.6)
   await clearSelection(page);
   expect(await running(page)).toEqual([]);
 });

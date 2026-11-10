@@ -4,6 +4,7 @@ import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { queueCardText, streamLanes } from '../core/queues';
 import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsBucket, storeDrawsCylinder } from '../core/nodeStyle';
+import { titleBlockSvg, type TitleBlock } from './titleBlock';
 import { ICON_STROKE, nodeIconShapes } from '../ui/icons';
 
 export type SvgScheme = 'light' | 'dark';
@@ -325,6 +326,7 @@ export function renderDiagramSvg(
   frame?: { dashOffset: number },
   selection?: SelectionTarget,
   scheme: SvgScheme = 'light',
+  block?: TitleBlock | null,
 ): string {
   const pal = PALETTES[scheme];
   const width = Math.max(1, doc.stageWidth);
@@ -466,6 +468,7 @@ export function renderDiagramSvg(
   ${wires}
   ${nodes}
   ${legend}
+  ${block ? titleBlockSvg(block, width, height, scheme) : ''}
 </svg>`;
 }
 
