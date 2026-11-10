@@ -813,8 +813,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 
 Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in the same PR (8.9).
 
-#### [ ] C1. Sheet, swimlanes, frames, notes · M
+#### [x] C1. Sheet, swimlanes, frames, notes · M
 - **Read:** `keyedStage.ts` lines 100 to 440, `frameStage.ts`, `frames.css`. **Do:** 8.1. **Needs:** T2.
+
+- **C1 result.**
+  - Swimlanes are columns: a 34% sheet wash between two hairlines, the number in `--ink-3` mono and the title at 15/600 in the top of the column. The banner stays header-sized so empty sheet inside a lane still pans; the wash is its `::before`, sized by `--stage-h` (now set on `#stage-world`).
+  - Frames: a 1 px solid outline, 40% tint, radius 10, and the title on a tab that breaks the top-left corner. Notes are a sheet with a folded top-right corner (cut by the background, not `clip-path`, which the HTML-export test forbids), sans throughout.
+  - The dot grid keeps its 24 px pitch, fades out below 50% zoom (`data-faint` on the viewport) and drops to 45% in Traffic and Review.
+  - `diagramSvg.ts` draws the same lanes, frames and notes; `viewer.css` and `frames.css` carry them into the HTML export. Entry CSS 114.4 of 116 kB, JS 542.4 of 550 kB.
+  - Baselines re-recorded: views 01 to 07 and the studio SVG export.
 
 #### [ ] C2. Components · L, split
 - **Read:** `keyedStage.ts` lines 878 to 1560, `core/nodeStyle.ts`, `diagramSvg.ts`.

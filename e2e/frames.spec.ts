@@ -91,9 +91,9 @@ test('a component dragged into a frame moves with it afterwards', async ({ page 
   // Clear the selection first, so the selection toolbar is not over the title strip.
   await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
   const bar = (await page.locator('.frame-title-bar').first().boundingBox())!;
-  await page.mouse.move(bar.x + 40, bar.y + bar.height / 2);
+  await page.mouse.move(bar.x + 12, bar.y + bar.height / 2);
   await page.mouse.down();
-  await page.mouse.move(bar.x + 40, bar.y + bar.height / 2 + 48, { steps: 6 });
+  await page.mouse.move(bar.x + 12, bar.y + bar.height / 2 + 48, { steps: 6 });
   await page.mouse.up();
   const moved = await nodePos(page, 0);
   expect(moved[1]).toBeGreaterThan(placed[1]);
