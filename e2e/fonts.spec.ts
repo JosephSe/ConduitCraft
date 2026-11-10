@@ -118,6 +118,7 @@ async function measureTitle(page: Page) {
     probe.style.fontWeight = cs.fontWeight;
     probe.style.letterSpacing = cs.letterSpacing;
     probe.style.lineHeight = cs.lineHeight;
+    probe.style.textRendering = cs.textRendering;
     document.body.appendChild(probe);
     const rect = probe.getBoundingClientRect();
     const box = heading.getBoundingClientRect();

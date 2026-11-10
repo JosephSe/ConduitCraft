@@ -125,14 +125,15 @@
   line-gap-override: 0%;
 }
 
-/* 105.30% is the chord between the Linux widths: 233 px at 103.48% and 252 px at 107.32%. */
+/* Linux hinting snaps this face from 233 px to 252 px. The title turns hinting
+   off, and 107.32% is the unhinted scale. */
 @font-face {
   font-family: "Instrument Sans Fallback";
   src: local("LiberationSans");
   font-weight: 700;
-  size-adjust: 105.30%;
-  ascent-override: 92.12%;
-  descent-override: 23.74%;
+  size-adjust: 107.32%;
+  ascent-override: 90.38%;
+  descent-override: 23.30%;
   line-gap-override: 0%;
 }
 
@@ -140,9 +141,9 @@
   font-family: "Instrument Sans Fallback";
   src: local("Liberation Sans");
   font-weight: 700;
-  size-adjust: 105.30%;
-  ascent-override: 92.12%;
-  descent-override: 23.74%;
+  size-adjust: 107.32%;
+  ascent-override: 90.38%;
+  descent-override: 23.30%;
   line-gap-override: 0%;
 }
 
@@ -150,9 +151,9 @@
   font-family: "Instrument Sans Fallback";
   src: local("Arial");
   font-weight: 700;
-  size-adjust: 105.30%;
-  ascent-override: 92.12%;
-  descent-override: 23.74%;
+  size-adjust: 107.32%;
+  ascent-override: 90.38%;
+  descent-override: 23.30%;
   line-gap-override: 0%;
 }
 

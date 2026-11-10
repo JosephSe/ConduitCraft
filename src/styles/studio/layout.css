@@ -89,6 +89,8 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.2;
+    /* Hinting snaps the Linux fallback width. Precision keeps the scale linear. */
+    text-rendering: geometricPrecision;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
