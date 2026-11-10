@@ -356,17 +356,20 @@ export function renderDiagramSvg(
     .sort((a, b) => b.width * b.height - a.width * a.height)
     .map((f) => {
       const color = pal.tone[f.tone];
-      return `<g><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}" rx="14" fill="${color}" fill-opacity="0.07" stroke="${color}" stroke-width="1.5" stroke-dasharray="6 5"/><text x="${f.x + 12}" y="${f.y + 19}" font-family="${SANS}" font-size="12" font-weight="700" fill="${color}">${escapeXml(f.title)}</text></g>`;
+      // A 1 px outline, a light tint, and the title on a tab that breaks the top-left corner (8.1).
+      const tabWidth = Math.min(f.width - 24, Math.round(f.title.length * 7 + 20));
+      return `<g><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}" rx="10" fill="${color}" fill-opacity="0.06" stroke="${color}" stroke-width="1"/><rect x="${f.x + 12}" y="${f.y - 12}" width="${tabWidth}" height="24" rx="8" fill="${pal.surface}" stroke="${color}" stroke-width="1"/><text x="${f.x + 22}" y="${f.y + 4}" font-family="${SANS}" font-size="12" font-weight="700" fill="${color}">${escapeXml(f.title)}</text></g>`;
     })
     .join('');
 
   const zones = doc.zones
     .map((zone) => {
       const isSel = isMulti && selectedZones.has(zone.id);
-      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : '';
-      const fillOpacity = isSel ? '0.14' : '0.05';
-      const numColor = isSel ? pal.tone.blue : pal.muted;
-      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="${pal.tone.blue}" fill-opacity="${fillOpacity}"${stroke}/><text x="${zone.x + 16}" y="32" font-family="${SANS}" font-size="13" font-weight="700" fill="${numColor}">${escapeXml(zone.number)} ${escapeXml(zone.title)}</text></g>`;
+      // A column: a wash between two hairlines, with the number in muted grey and the title at 15/600 (8.1).
+      const x2 = zone.x + zone.width;
+      const edge = isSel ? pal.tone.blue : pal.border;
+      const edgeWidth = isSel ? 2 : 1;
+      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="${pal.surface}" fill-opacity="0.34"/><path d="M${zone.x} 0V${height}M${x2} 0V${height}" stroke="${edge}" stroke-width="${edgeWidth}" fill="none"/><text x="${zone.x + 16}" y="30" font-family="${SANS}" font-size="15" font-weight="600" fill="${pal.ink}"><tspan font-family="${MONO}" fill="${pal.muted}">${escapeXml(zone.number)}</tspan> ${escapeXml(zone.title)}</text></g>`;
     })
     .join('');
 
@@ -376,7 +379,7 @@ export function renderDiagramSvg(
       if (card.variant === 'text') {
         return `<text x="${card.x + 8}" y="${card.y + 22}" font-family="${SANS}" font-size="16" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>`;
       }
-      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}" stroke-dasharray="5 4"`;
+      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}"`;
       const boxHeight = notesHeight(card.items.length);
       const items = (card.items || [])
         .map((item, idx) => {
@@ -389,7 +392,11 @@ export function renderDiagramSvg(
           return `<text x="${card.x + 18}" y="${card.y + 54 + idx * 24}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">• ${escapeXml(itemText)}</text>`;
         })
         .join('');
-      return `<g><rect x="${card.x}" y="${card.y}" width="404" height="${boxHeight}" rx="16" fill="${pal.surface}"${stroke}/><text x="${card.x + 18}" y="${card.y + 28}" font-family="${MONO}" font-size="12" font-weight="700" fill="${pal.tone.blue}">${escapeXml(card.title)}</text>${items}</g>`;
+      // A sheet with a folded top-right corner (8.1), sans throughout.
+      const { x, y } = card;
+      const outline = `M${x} ${y}H${x + 386}L${x + 404} ${y + 18}V${y + boxHeight}H${x}Z`;
+      const fold = `<path d="M${x + 386} ${y}V${y + 18}H${x + 404}" fill="${pal.border}" fill-opacity="0.35" stroke="${pal.border}"/>`;
+      return `<g><path d="${outline}" fill="${pal.surface}"${stroke}/>${fold}<text x="${x + 18}" y="${y + 28}" font-family="${SANS}" font-size="13" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>${items}</g>`;
     })
     .join('');
 

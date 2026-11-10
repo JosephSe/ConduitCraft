@@ -13,22 +13,28 @@
   width: calc(var(--fw) * 1px);
   height: calc(var(--fh) * 1px);
   box-sizing: border-box;
-  border: 1.5px dashed var(--ft);
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--fs) 55%, transparent);
+  border: 1px solid var(--ft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fs) 40%, transparent);
   pointer-events: none;
 }
 .frame-box[data-tone] { --ft: var(--t); --fs: var(--t-soft); }
-.frame-box.is-selected { border-style: solid; box-shadow: 0 0 0 3px var(--fs); }
+.frame-box.is-selected { box-shadow: 0 0 0 3px var(--fs); }
 .frame-title-bar {
   display: flex;
   align-items: center;
-  height: 28px;
-  padding: 0 0.7rem;
-  border-radius: 0.8rem 0.8rem 0 0;
+  /* The title is a tab that breaks the top-left corner (8.1). */
+  box-sizing: border-box;
+  inline-size: max-content;
+  max-inline-size: calc(100% - 24px);
+  height: 24px;
+  margin: -12px 0 0 12px;
+  padding: 0 0.6rem;
+  background: var(--cc-sheet);
+  border: 1px solid var(--ft);
+  border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
   color: var(--ft);
   white-space: nowrap;
   overflow: hidden;
