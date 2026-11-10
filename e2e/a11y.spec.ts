@@ -50,10 +50,10 @@ test('a visible tooltip has no axe violations', async ({ page }) => {
 
 for (const [scheme, expected] of [
   ['light', 'rgb(255, 255, 255)'],
-  ['dark', 'rgb(11, 18, 32)'],
+  ['dark', 'rgb(29, 31, 33)'],
 ] as const) {
   test(`primary button text colour follows the theme (${scheme})`, async ({ page }) => {
-    // Axe can't evaluate text on a gradient, so assert the computed colour directly.
+    // The primary button is an ink fill. Its text is --cc-on-ink.
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/');
     const color = await page.locator('#btn-apply-code').evaluate((el) => getComputedStyle(el).color);

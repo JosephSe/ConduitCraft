@@ -29,39 +29,39 @@ export interface StagePictureOptions {
  * render accurate colors and styling without relying on unresolved CSS variables.
  */
 export const WL_RESOLVED_TOKENS: Record<string, string> = {
-  '--wl-canvas': '#f4f7fb',
-  '--wl-canvas-light': '#f4f7fb',
-  '--wl-canvas-dark': '#070b14',
-  '--wl-panel': '#ffffff',
-  '--wl-panel-light': 'rgba(255, 255, 255, 0.9)',
-  '--wl-panel-dark': 'rgba(13, 19, 34, 0.88)',
-  '--wl-surface': '#ffffff',
-  '--wl-surface-light': '#ffffff',
-  '--wl-surface-dark': '#101829',
-  '--wl-surface-elevated': '#eef3fa',
-  '--wl-surface-elevated-light': '#eef3fa',
-  '--wl-surface-elevated-dark': '#17223a',
-  '--wl-surface-code': '#0f172a',
-  '--wl-surface-code-light': '#0f172a',
-  '--wl-surface-code-dark': '#060912',
-  '--wl-ink': '#0b1324',
-  '--wl-ink-light': '#0b1324',
-  '--wl-ink-dark': '#f1f5f9',
-  '--wl-ink-secondary': '#334155',
-  '--wl-ink-secondary-light': '#334155',
-  '--wl-ink-secondary-dark': '#cbd5e1',
-  '--wl-ink-muted': '#485973',
-  '--wl-ink-muted-light': '#485973',
-  '--wl-ink-muted-dark': '#9bb0d0',
-  '--wl-border-ui': '#b6c5db',
-  '--wl-border-ui-light': '#b6c5db',
-  '--wl-border-ui-dark': '#2a3b5c',
-  '--wl-border-subtle': '#dce5f2',
-  '--wl-border-subtle-light': '#dce5f2',
-  '--wl-border-subtle-dark': '#1b2842',
-  '--wl-grid-dot': 'rgba(51, 78, 122, 0.18)',
-  '--wl-grid-dot-light': 'rgba(51, 78, 122, 0.18)',
-  '--wl-grid-dot-dark': 'rgba(125, 158, 214, 0.16)',
+  '--wl-canvas': '#ECEFEE',
+  '--wl-canvas-light': '#ECEFEE',
+  '--wl-canvas-dark': '#1D1F21',
+  '--wl-panel': 'rgba(255, 255, 255, 0.84)',
+  '--wl-panel-light': 'rgba(255, 255, 255, 0.84)',
+  '--wl-panel-dark': 'rgba(46, 48, 51, 0.84)',
+  '--wl-surface': '#FFFFFF',
+  '--wl-surface-light': '#FFFFFF',
+  '--wl-surface-dark': '#2A2C2F',
+  '--wl-surface-elevated': 'rgba(21, 24, 28, 0.055)',
+  '--wl-surface-elevated-light': 'rgba(21, 24, 28, 0.055)',
+  '--wl-surface-elevated-dark': 'rgba(255, 255, 255, 0.07)',
+  '--wl-surface-code': '#15181C',
+  '--wl-surface-code-light': '#15181C',
+  '--wl-surface-code-dark': '#15181C',
+  '--wl-ink': '#15181C',
+  '--wl-ink-light': '#15181C',
+  '--wl-ink-dark': '#F2F3F1',
+  '--wl-ink-secondary': '#565C64',
+  '--wl-ink-secondary-light': '#565C64',
+  '--wl-ink-secondary-dark': '#B7BBBF',
+  '--wl-ink-muted': '#5C626A',
+  '--wl-ink-muted-light': '#5C626A',
+  '--wl-ink-muted-dark': '#92979C',
+  '--wl-border-ui': 'rgba(21, 24, 28, 0.2)',
+  '--wl-border-ui-light': 'rgba(21, 24, 28, 0.2)',
+  '--wl-border-ui-dark': 'rgba(255, 255, 255, 0.2)',
+  '--wl-border-subtle': 'rgba(21, 24, 28, 0.11)',
+  '--wl-border-subtle-light': 'rgba(21, 24, 28, 0.11)',
+  '--wl-border-subtle-dark': 'rgba(255, 255, 255, 0.1)',
+  '--wl-grid-dot': '#8CC4D8',
+  '--wl-grid-dot-light': '#8CC4D8',
+  '--wl-grid-dot-dark': 'rgba(140, 196, 216, 0.3)',
   '--wl-blue': '#1d4ed8',
   '--wl-blue-light': '#1d4ed8',
   '--wl-blue-dark': '#60a5fa',
@@ -101,12 +101,13 @@ export const WL_RESOLVED_TOKENS: Record<string, string> = {
  * taking into account current computed document styles and active color-scheme.
  */
 export function currentScheme(): 'light' | 'dark' {
-  const dark =
-    typeof document !== 'undefined' &&
-    document.documentElement &&
-    (document.documentElement.getAttribute('data-theme') === 'dark' ||
-      document.documentElement.classList.contains('dark') ||
-      (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches));
+  if (typeof document !== 'undefined' && document.documentElement) {
+    const theme = document.documentElement.getAttribute('data-theme');
+    if (theme === 'graphite' || theme === 'dark') return 'dark';
+    if (theme === 'vellum' || theme === 'light') return 'light';
+    if (document.documentElement.classList.contains('dark')) return 'dark';
+  }
+  const dark = typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches;
   return dark ? 'dark' : 'light';
 }
 
@@ -446,7 +447,7 @@ export function renderStagePictureSvg(
     `max-inline-size:none !important`,
     `overflow:visible !important`,
     `margin:0`,
-    `color:${bodyStyle?.color || '#0b1324'}`,
+    `color:${bodyStyle?.color || '#15181C'}`,
     `font-family:${bodyStyle?.fontFamily || "'Instrument Sans', 'Instrument Sans Fallback', system-ui, sans-serif"}`,
     `font-size:${bodyStyle?.fontSize || '16px'}`,
     `line-height:${bodyStyle?.lineHeight || '1.5'}`,

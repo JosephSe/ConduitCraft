@@ -26,10 +26,8 @@
     border-radius: 0.625rem;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg var(--in-oklab), var(--wl-blue), var(--wl-emerald));
-    /* White on the light dark-mode accents is ~2:1, so the text colour follows the theme. */
-    color: var(--wl-on-blue);
-    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.32);
+    background: var(--cc-ink);
+    color: var(--cc-on-ink);
     flex-shrink: 0;
   }
 
@@ -80,7 +78,7 @@
   }
 
   .title-edit-trigger:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
   }
 

@@ -359,7 +359,7 @@ function rasterThumbnail(svg: string): Promise<string | null> {
       canvas.height = THUMBNAIL_HEIGHT;
       const ctx = canvas.getContext('2d');
       if (!ctx) return resolve(null);
-      ctx.fillStyle = '#f4f7fb';
+      ctx.fillStyle = '#ECEFEE';
       ctx.fillRect(0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
       const scale = Math.min(THUMBNAIL_WIDTH / image.naturalWidth, THUMBNAIL_HEIGHT / image.naturalHeight);
       const width = image.naturalWidth * scale;

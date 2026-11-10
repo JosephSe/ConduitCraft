@@ -29,188 +29,86 @@
 @layer tokens {
   :root {
     --in-oklab: ;
-
-    --wl-canvas-light: #f4f7fb;
-    --wl-canvas-dark: #070b14;
-
-    --wl-surface-light: #ffffff;
-    --wl-surface-dark: #101829;
-
-    --wl-surface-elevated-light: #eef3fa;
-    --wl-surface-elevated-dark: #17223a;
-
-    --wl-surface-code-light: #0f172a;
-    --wl-surface-code-dark: #060912;
-
-    --wl-ink-light: #0b1324;
-    --wl-ink-dark: #f1f5f9;
-
-    --wl-ink-secondary-light: #334155;
-    --wl-ink-secondary-dark: #cbd5e1;
-
-    --wl-ink-muted-light: #485973;
-    --wl-ink-muted-dark: #9bb0d0;
-
-    --wl-border-ui-light: #b6c5db;
-    --wl-border-ui-dark: #2a3b5c;
-
-    --wl-border-subtle-light: #dce5f2;
-    --wl-border-subtle-dark: #1b2842;
-
-    --wl-grid-dot-light: rgba(51, 78, 122, 0.18);
-    --wl-grid-dot-dark: rgba(125, 158, 214, 0.16);
-
-    --wl-blue-light: #1d4ed8;
-    --wl-blue-dark: #60a5fa;
-    --wl-blue-soft-light: rgba(29, 78, 216, 0.12);
-    --wl-blue-soft-dark: rgba(96, 165, 250, 0.16);
-
-    --wl-emerald-light: #047857;
-    --wl-emerald-dark: #34d399;
-    --wl-emerald-soft-light: rgba(4, 120, 87, 0.12);
-    --wl-emerald-soft-dark: rgba(52, 211, 153, 0.16);
-
-    --wl-rose-light: #be123c;
-    --wl-rose-dark: #fb7185;
-    --wl-rose-soft-light: rgba(190, 18, 60, 0.11);
-    --wl-rose-soft-dark: rgba(251, 113, 133, 0.16);
-
-    --wl-amber-light: #b45309;
-    --wl-amber-dark: #fbbf24;
-    --wl-amber-soft-light: rgba(180, 83, 9, 0.12);
-    --wl-amber-soft-dark: rgba(251, 191, 36, 0.16);
-
-    --wl-violet-light: #5b21b6;
-    --wl-violet-dark: #a78bfa;
-    --wl-violet-soft-light: rgba(91, 33, 182, 0.12);
-    --wl-violet-soft-dark: rgba(167, 139, 250, 0.2);
-
-    --wl-scroll-thumb-light: #7c8fa9;
-    --wl-scroll-thumb-dark: #4c6185;
-    --wl-scroll-track-light: #e2e8f2;
-    --wl-scroll-track-dark: #0a101f;
-
-    --wl-canvas: var(--wl-canvas-light);
-    --wl-panel: var(--wl-panel-light);
-    --wl-surface: var(--wl-surface-light);
-    --wl-surface-elevated: var(--wl-surface-elevated-light);
-    --wl-surface-code: var(--wl-surface-code-light);
-    --wl-ink: var(--wl-ink-light);
-    --wl-ink-secondary: var(--wl-ink-secondary-light);
-    --wl-ink-muted: var(--wl-ink-muted-light);
-    --wl-border-ui: var(--wl-border-ui-light);
-    --wl-border-subtle: var(--wl-border-subtle-light);
-    --wl-grid-dot: var(--wl-grid-dot-light);
-    --wl-blue: var(--wl-blue-light);
-    --wl-on-blue: #ffffff;
-    --wl-blue-soft: var(--wl-blue-soft-light);
-    --wl-emerald: var(--wl-emerald-light);
-    --wl-emerald-soft: var(--wl-emerald-soft-light);
-    --wl-rose: var(--wl-rose-light);
-    --wl-rose-soft: var(--wl-rose-soft-light);
-    --wl-amber: var(--wl-amber-light);
-    --wl-amber-soft: var(--wl-amber-soft-light);
-    --wl-violet: var(--wl-violet-light);
-    --wl-violet-soft: var(--wl-violet-soft-light);
-    --wl-scroll-thumb: var(--wl-scroll-thumb-light);
-    --wl-scroll-track: var(--wl-scroll-track-light);
-
-    --wl-shadow-card:
-      0 1px 2px rgba(2, 6, 23, 0.12),
-      0 10px 28px -6px rgba(2, 6, 23, 0.22),
-      inset 0 1px 0 rgba(255, 255, 255, 0.12);
-    --wl-shadow-elevated:
-      0 4px 12px rgba(2, 6, 23, 0.2),
-      0 24px 48px -12px rgba(2, 6, 23, 0.42),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
-
-    color-scheme: light dark;
-    accent-color: var(--wl-blue);
+    color-scheme: light;
+    accent-color: var(--cc-ink);
     scrollbar-width: thin;
-    scrollbar-color: var(--wl-scroll-thumb) var(--wl-scroll-track);
+    scrollbar-color: var(--cc-ink-3) var(--cc-well);
 
-    @media (prefers-color-scheme: dark) {
-      --wl-canvas: var(--wl-canvas-dark);
-      --wl-panel: var(--wl-panel-dark);
-      --wl-surface: var(--wl-surface-dark);
-      --wl-surface-elevated: var(--wl-surface-elevated-dark);
-      --wl-surface-code: var(--wl-surface-code-dark);
-      --wl-ink: var(--wl-ink-dark);
-      --wl-ink-secondary: var(--wl-ink-secondary-dark);
-      --wl-ink-muted: var(--wl-ink-muted-dark);
-      --wl-border-ui: var(--wl-border-ui-dark);
-      --wl-border-subtle: var(--wl-border-subtle-dark);
-      --wl-grid-dot: var(--wl-grid-dot-dark);
-      --wl-blue: var(--wl-blue-dark);
-      --wl-on-blue: #0b1220;
-      --wl-blue-soft: var(--wl-blue-soft-dark);
-      --wl-emerald: var(--wl-emerald-dark);
-      --wl-emerald-soft: var(--wl-emerald-soft-dark);
-      --wl-rose: var(--wl-rose-dark);
-      --wl-rose-soft: var(--wl-rose-soft-dark);
-      --wl-amber: var(--wl-amber-dark);
-      --wl-amber-soft: var(--wl-amber-soft-dark);
-      --wl-violet: var(--wl-violet-dark);
-      --wl-violet-soft: var(--wl-violet-soft-dark);
-      --wl-scroll-thumb: var(--wl-scroll-thumb-dark);
-      --wl-scroll-track: var(--wl-scroll-track-dark);
-    }
+    /* Vellum. Graphite overrides these names. The boot script sets data-theme. */
+    --cc-canvas: #ECEFEE;
+    --cc-canvas-run: #E0E5E4;
+    --cc-dot: #8CC4D8;
+    --cc-sheet: #FFFFFF;
+    --cc-island: rgba(255, 255, 255, 0.84);
+    --cc-well: rgba(21, 24, 28, 0.055);
+    --cc-ink: #15181C;
+    --cc-ink-2: #565C64;
+    /* #6C727A was 3.81:1 on the dimmed sheet. #5C626A clears 4.5:1 on every surface. */
+    --cc-ink-3: #5C626A;
+    --cc-on-ink: #FFFFFF;
+    --cc-hair: rgba(21, 24, 28, 0.11);
+    --cc-hair-2: rgba(21, 24, 28, 0.2);
+    /* #D4291C was 3.99:1 on the dimmed sheet. #C42316 clears 4.5:1 there. */
+    --cc-redline: #C42316;
+    --cc-blue: #1D4ED8;
+    --cc-emerald: #047857;
+    --cc-rose: #BE123C;
+    --cc-violet: #5B21B6;
+    --cc-amber: #B45309;
 
-    &:has(> head > meta[name="color-scheme"][content="dark"]) {
-      color-scheme: dark;
-      --wl-canvas: var(--wl-canvas-dark);
-      --wl-panel: var(--wl-panel-dark);
-      --wl-surface: var(--wl-surface-dark);
-      --wl-surface-elevated: var(--wl-surface-elevated-dark);
-      --wl-surface-code: var(--wl-surface-code-dark);
-      --wl-ink: var(--wl-ink-dark);
-      --wl-ink-secondary: var(--wl-ink-secondary-dark);
-      --wl-ink-muted: var(--wl-ink-muted-dark);
-      --wl-border-ui: var(--wl-border-ui-dark);
-      --wl-border-subtle: var(--wl-border-subtle-dark);
-      --wl-grid-dot: var(--wl-grid-dot-dark);
-      --wl-blue: var(--wl-blue-dark);
-      --wl-on-blue: #0b1220;
-      --wl-blue-soft: var(--wl-blue-soft-dark);
-      --wl-emerald: var(--wl-emerald-dark);
-      --wl-emerald-soft: var(--wl-emerald-soft-dark);
-      --wl-rose: var(--wl-rose-dark);
-      --wl-rose-soft: var(--wl-rose-soft-dark);
-      --wl-amber: var(--wl-amber-dark);
-      --wl-amber-soft: var(--wl-amber-soft-dark);
-      --wl-violet: var(--wl-violet-dark);
-      --wl-violet-soft: var(--wl-violet-soft-dark);
-      --wl-scroll-thumb: var(--wl-scroll-thumb-dark);
-      --wl-scroll-track: var(--wl-scroll-track-dark);
-    }
+    --wl-canvas: var(--cc-canvas);
+    --wl-panel: var(--cc-island);
+    --wl-surface: var(--cc-sheet);
+    --wl-surface-elevated: var(--cc-well);
+    --wl-surface-code: #15181C;
+    --wl-ink: var(--cc-ink);
+    --wl-ink-secondary: var(--cc-ink-2);
+    --wl-ink-muted: var(--cc-ink-3);
+    --wl-on-ink: var(--cc-on-ink);
+    --wl-on-blue: var(--cc-on-ink);
+    --wl-border-ui: var(--cc-hair-2);
+    --wl-border-subtle: var(--cc-hair);
+    --wl-grid-dot: var(--cc-dot);
+    --wl-blue: var(--cc-blue);
+    --wl-blue-soft: color-mix(in srgb, var(--cc-blue) 14%, transparent);
+    --wl-emerald: var(--cc-emerald);
+    --wl-emerald-soft: color-mix(in srgb, var(--cc-emerald) 14%, transparent);
+    --wl-rose: var(--cc-rose);
+    --wl-rose-soft: color-mix(in srgb, var(--cc-rose) 14%, transparent);
+    --wl-amber: var(--cc-amber);
+    --wl-amber-soft: color-mix(in srgb, var(--cc-amber) 14%, transparent);
+    --wl-violet: var(--cc-violet);
+    --wl-violet-soft: color-mix(in srgb, var(--cc-violet) 14%, transparent);
+    --wl-scroll-thumb: var(--cc-ink-3);
+    --wl-scroll-track: var(--cc-well);
+    --wl-shadow-card:
+      0 1px 2px rgba(21, 24, 28, 0.12),
+      0 10px 28px -6px rgba(21, 24, 28, 0.22);
+    --wl-shadow-elevated:
+      0 4px 12px rgba(21, 24, 28, 0.2),
+      0 24px 48px -12px rgba(21, 24, 28, 0.42);
+  }
 
-    &:has(> head > meta[name="color-scheme"][content="light"]) {
-      color-scheme: light;
-      --wl-canvas: var(--wl-canvas-light);
-      --wl-panel: var(--wl-panel-light);
-      --wl-surface: var(--wl-surface-light);
-      --wl-surface-elevated: var(--wl-surface-elevated-light);
-      --wl-surface-code: var(--wl-surface-code-light);
-      --wl-ink: var(--wl-ink-light);
-      --wl-ink-secondary: var(--wl-ink-secondary-light);
-      --wl-ink-muted: var(--wl-ink-muted-light);
-      --wl-border-ui: var(--wl-border-ui-light);
-      --wl-border-subtle: var(--wl-border-subtle-light);
-      --wl-grid-dot: var(--wl-grid-dot-light);
-      --wl-blue: var(--wl-blue-light);
-      --wl-on-blue: #ffffff;
-      --wl-blue-soft: var(--wl-blue-soft-light);
-      --wl-emerald: var(--wl-emerald-light);
-      --wl-emerald-soft: var(--wl-emerald-soft-light);
-      --wl-rose: var(--wl-rose-light);
-      --wl-rose-soft: var(--wl-rose-soft-light);
-      --wl-amber: var(--wl-amber-light);
-      --wl-amber-soft: var(--wl-amber-soft-light);
-      --wl-violet: var(--wl-violet-light);
-      --wl-violet-soft: var(--wl-violet-soft-light);
-      --wl-scroll-thumb: var(--wl-scroll-thumb-light);
-      --wl-scroll-track: var(--wl-scroll-track-light);
-    }
+  :root[data-theme="graphite"] {
+    color-scheme: dark;
+    --cc-canvas: #1D1F21;
+    --cc-canvas-run: #151617;
+    --cc-dot: rgba(140, 196, 216, 0.3);
+    --cc-sheet: #2A2C2F;
+    --cc-island: rgba(46, 48, 51, 0.84);
+    --cc-well: rgba(255, 255, 255, 0.07);
+    --cc-ink: #F2F3F1;
+    --cc-ink-2: #B7BBBF;
+    --cc-ink-3: #92979C;
+    --cc-on-ink: #1D1F21;
+    --cc-hair: rgba(255, 255, 255, 0.1);
+    --cc-hair-2: rgba(255, 255, 255, 0.2);
+    --cc-redline: #FF6B5E;
+    --cc-blue: #60A5FA;
+    --cc-emerald: #34D399;
+    --cc-rose: #FB7185;
+    --cc-violet: #A78BFA;
+    --cc-amber: #FBBF24;
   }
 
   @supports (background: linear-gradient(in oklab, white, black)) {
@@ -220,22 +118,21 @@
   }
 }
 
-/* ConduitCraft 2.0 design tokens (REDESIGN_PLAN.md 6.1). A thin layer over --wl-*: theme switching still happens
-   there, so every --cc-* value follows the light/dark/exported-colour-scheme rules without being repeated. */
+
+/* Older surface names stay as aliases. Theme switching happens once, in the two data-theme blocks above. */
 @layer tokens {
   :root {
-    --cc-surface-0: var(--wl-canvas);
-    --cc-surface-1: var(--wl-surface);
-    --cc-surface-2: var(--wl-surface-elevated);
-    --cc-surface-3: color-mix(in srgb, var(--wl-surface-elevated) 94%, var(--wl-ink));
-    --cc-surface-4: color-mix(in srgb, var(--wl-surface-elevated) 88%, var(--wl-ink));
+    --cc-surface-0: var(--cc-canvas);
+    --cc-surface-1: var(--cc-sheet);
+    --cc-surface-2: var(--cc-well);
+    --cc-surface-3: color-mix(in srgb, var(--cc-sheet) 94%, var(--cc-ink));
+    --cc-surface-4: color-mix(in srgb, var(--cc-sheet) 88%, var(--cc-ink));
 
-    --cc-ink: var(--wl-ink);
-    --cc-ink-muted: var(--wl-ink-secondary);
-    --cc-ink-faint: var(--wl-ink-muted);
+    --cc-ink-muted: var(--cc-ink-2);
+    --cc-ink-faint: var(--cc-ink-3);
 
-    --cc-accent: var(--wl-blue);
-    --cc-on-accent: var(--wl-on-blue);
+    --cc-accent: var(--cc-ink);
+    --cc-on-accent: var(--cc-on-ink);
 
     --cc-shadow-1: 0 1px 2px rgba(2, 6, 23, 0.12);
     --cc-shadow-2: 0 2px 6px rgba(2, 6, 23, 0.16), 0 8px 20px -6px rgba(2, 6, 23, 0.24);

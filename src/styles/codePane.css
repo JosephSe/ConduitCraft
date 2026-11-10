@@ -69,7 +69,7 @@
   overflow: auto;
   tab-size: 2;
 }
-.code-area:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.code-area:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 
 .code-status { margin: 0; padding: 0.35rem 0.6rem; font-size: 0.74rem; color: var(--wl-ink); border-block-start: 1px solid var(--wl-border-subtle); }
 .code-status[data-tone="warn"] { font-weight: 600; border-inline-start: 3px solid var(--wl-amber); }
@@ -78,7 +78,7 @@
 .code-diagnostic { display: block; inline-size: 100%; padding: 0.2rem 0.3rem; border: 0; background: none; color: var(--wl-ink); font: inherit; font-size: 0.74rem; text-align: start; cursor: pointer; border-radius: 0.3rem; }
 .code-diagnostic:hover { background: var(--wl-hover, rgba(127, 127, 127, 0.1)); }
 .code-diagnostic[data-level="error"] { font-weight: 600; }
-.code-diagnostic:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.code-diagnostic:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 
 /* Narrow screens: the pane sits below the canvas instead of beside it. */
 @media (max-width: 66rem) {

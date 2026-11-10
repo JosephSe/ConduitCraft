@@ -94,7 +94,7 @@
   }
 
   .stencil-card:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
     z-index: 100;
   }
@@ -161,7 +161,7 @@
   }
 
   .stencil-aux-btn:focus-visible {
-    outline: 2px solid var(--wl-blue);
+    outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
     z-index: 100;
   }

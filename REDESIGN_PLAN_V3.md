@@ -598,10 +598,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 
 ### Milestone T: Foundations
 
-#### [ ] T1. Tokens and the two themes · M
+#### [x] T1. Tokens and the two themes · M
 - **Read:** `shared.css`, `tests/contrast.test.ts`, `src/shared/colorSchemeBoot.js`, the mockup's `:root`.
 - **Do:** 5.1. One `[data-theme]` mechanism in place of the three copied blocks. Remove glows, gradients and inset highlights.
 - **Done:** every pair in 5.1 is asserted in the contrast test; the squint test passes on view 1. **Needs:** Z2, Z3.
+- `:root` is Vellum. `:root[data-theme="graphite"]` overrides only the `--cc-*` names. Surviving `--wl-*` names are aliases of those, so one theme block replaces the three copies. The boot script sets `data-theme` to `vellum` or `graphite`, including when the choice is system. The radios stay `light`, `dark`, and `system`.
+- Two Vellum values moved so the text pairs clear 4.5:1. `--cc-ink-3` is `#5C626A` (the spec `#6C727A` was 3.81:1 on the dimmed sheet). `--cc-redline` is `#C42316` (the spec `#D4291C` was 3.99:1 there). Graphite already cleared. Hair stays at the mockup alpha. Cyan and fuchsia are T5. The `--t` tint recipe and collapsing the per-tone rules are later.
+- Glows, painted gradients, and inset highlights are gone. The mark is ink, and a document's own brand colour still recolours it. The primary button is an ink fill. Focus outlines are ink. Island blur stays; that is the mockup's glass. The sheet width, the type scale, uppercase, and `tabular-nums` stay for T2.
+- Entry CSS is 109.4 kB of 115 (`index-CxI8Rhej.css`). Entry JS is 531.0 kB of 540 (`index-BdrgouoB.js`). Fonts stay 78.6 kB. Unit tests 895 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. The eight views and the six export pictures were re-recorded on macOS. The 20% pixel slack stays. The view spec passed twice with no diff.
+- Pull request #99.
 
 #### [ ] T2. Type · M
 - **Do:** 5.2. The scale as tokens; 88% width on the sheet; mono only for literal things; no uppercase.

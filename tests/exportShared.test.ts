@@ -8,7 +8,7 @@ import { createBlankDocument } from '../src/templates/presets.ts';
 describe('shared export stylesheet and tone metadata', () => {
   it('inlines shared rules once and keeps the viewer layout', () => {
     const html = generateStandaloneHtml(createBlankDocument());
-    assert.equal(html.split('--wl-blue-light: #1d4ed8').length - 1, 1);
+    assert.equal(html.split('--cc-blue: #1D4ED8').length - 1, 1);
     assert.equal(html.split('box-sizing: border-box').length - 1, 1);
     assert.match(html, /--wl-panel-light: rgba\(255, 255, 255, 0\.88\)/);
     assert.equal(html.includes('rgba(255, 255, 255, 0.9)'), false);

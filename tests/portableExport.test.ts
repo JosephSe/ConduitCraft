@@ -453,11 +453,11 @@ describe('portable export', () => {
     const resolved = resolveCssVariables(sampleCss, WL_RESOLVED_TOKENS);
 
     // Verified that CSS variables are substituted with concrete values
-    assert.ok(resolved.includes('background: #f4f7fb'));
-    assert.ok(resolved.includes('color: #0b1324'));
+    assert.ok(resolved.includes('background: #ECEFEE'));
+    assert.ok(resolved.includes('color: #15181C'));
     assert.ok(resolved.includes('stroke: #1d4ed8'));
     assert.ok(resolved.includes('fill: #047857'));
-    assert.ok(resolved.includes('border: 1px solid #b6c5db'));
+    assert.ok(resolved.includes('border: 1px solid rgba(21, 24, 28, 0.2)'));
     assert.ok(resolved.includes('color: #123456'));
 
     // Verified no leftover --wl- variables for known keys

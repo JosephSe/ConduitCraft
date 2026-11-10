@@ -4,8 +4,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readStudioCss } from './studioCss.ts';
 
-const shared = readFileSync(resolve(process.cwd(), 'src/styles/shared.css'), 'utf8');
+const root = process.cwd();
+const shared = readFileSync(resolve(root, 'src/styles/shared.css'), 'utf8');
 const studio = readStudioCss();
+const layout = readFileSync(resolve(root, 'src/styles/studio/layout.css'), 'utf8');
+const stage = readFileSync(resolve(root, 'src/styles/studio/stage.css'), 'utf8');
+const components = readFileSync(resolve(root, 'src/styles/studio/components.css'), 'utf8');
 
 function luminance(hex: string): number {
   const h = hex.replace('#', '');
@@ -19,35 +23,83 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-function token(name: string): string {
-  const match = new RegExp(`--wl-${name}:\\s*(#[0-9a-fA-F]{6})`).exec(shared);
-  assert.ok(match, `--wl-${name} must be a 6-digit hex colour`);
+function themeBlock(selector: string): string {
+  const start = shared.indexOf(selector);
+  assert.ok(start >= 0, selector);
+  const open = shared.indexOf('{', start);
+  let depth = 0;
+  for (let i = open; i < shared.length; i++) {
+    if (shared[i] === '{') depth += 1;
+    else if (shared[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return shared.slice(open + 1, i);
+    }
+  }
+  assert.fail(`unclosed ${selector}`);
+}
+
+function token(theme: 'vellum' | 'graphite', name: string): string {
+  const block = theme === 'vellum' ? themeBlock(':root {') : themeBlock(':root[data-theme="graphite"]');
+  const match = new RegExp(`--cc-${name}:\\s*(#[0-9A-Fa-f]{6})`).exec(block);
+  assert.ok(match, `${theme} --cc-${name} must be a 6-digit hex colour`);
   return match[1];
 }
 
-describe('text on accent backgrounds', () => {
-  // Each place the theme picks --wl-blue also declares --wl-on-blue, the text colour that goes on top of it.
-  const pairs = [...shared.matchAll(/--wl-blue: var\(--wl-blue-(light|dark)\);\s*--wl-on-blue: (#[0-9a-fA-F]{6});/g)];
+describe('5.1 colour pairs', () => {
+  const themes = ['vellum', 'graphite'] as const;
+  const text = ['ink', 'ink-2', 'ink-3', 'redline'] as const;
+  const surfaces = ['canvas', 'canvas-run', 'sheet'] as const;
+  const tones = ['blue', 'emerald', 'rose', 'violet', 'amber'] as const;
 
-  it('declares --wl-on-blue alongside every --wl-blue theme definition', () => {
-    const blueDefinitions = [...shared.matchAll(/--wl-blue: var\(--wl-blue-(?:light|dark)\);/g)];
-    assert.ok(pairs.length >= 2, 'at least a light and a dark pair');
-    assert.equal(pairs.length, blueDefinitions.length, 'no --wl-blue definition may lack its --wl-on-blue');
+  it('keeps text at 4.5:1 on the sheet and both canvases', () => {
+    for (const theme of themes) {
+      for (const fg of text) {
+        for (const bg of surfaces) {
+          const ratio = contrast(token(theme, fg), token(theme, bg));
+          assert.ok(ratio >= 4.5, `${fg} on ${bg} (${theme}) is ${ratio.toFixed(2)}:1`);
+        }
+      }
+      const onInk = contrast(token(theme, 'on-ink'), token(theme, 'ink'));
+      assert.ok(onInk >= 4.5, `on-ink on ink (${theme}) is ${onInk.toFixed(2)}:1`);
+    }
   });
 
-  it('meets 4.5:1 against both ends of the blue-to-emerald gradient in each theme', () => {
-    for (const [, theme, onBlue] of pairs) {
-      for (const accent of ['blue', 'emerald']) {
-        const ratio = contrast(onBlue, token(`${accent}-${theme}`));
-        assert.ok(ratio >= 4.5, `${onBlue} on ${accent} (${theme}) is ${ratio.toFixed(2)}:1, needs 4.5:1`);
+  it('keeps wires at 3:1 on the sheet and the canvas', () => {
+    for (const theme of themes) {
+      for (const tone of tones) {
+        for (const bg of ['sheet', 'canvas'] as const) {
+          const ratio = contrast(token(theme, tone), token(theme, bg));
+          assert.ok(ratio >= 3, `${tone} on ${bg} (${theme}) is ${ratio.toFixed(2)}:1`);
+        }
       }
     }
   });
 
-  it('uses that token for the primary export button instead of fixed white', () => {
+  it('keeps the ink ring at 3:1 on the sheet and the canvas', () => {
+    for (const theme of themes) {
+      for (const bg of ['sheet', 'canvas'] as const) {
+        const ratio = contrast(token(theme, 'ink'), token(theme, bg));
+        assert.ok(ratio >= 3, `ink ring on ${bg} (${theme}) is ${ratio.toFixed(2)}:1`);
+      }
+    }
+  });
+
+  it('fills the primary button with ink instead of a gradient', () => {
     const rule = /\.btn-primary-export \{[^}]*\}/.exec(studio)?.[0] ?? '';
-    assert.match(rule, /color:\s*var\(--wl-on-blue\)/);
-    assert.doesNotMatch(rule, /color:\s*#fff/i);
+    assert.match(rule, /background:\s*var\(--cc-ink\)/);
+    assert.match(rule, /color:\s*var\(--cc-on-ink\)/);
+    assert.doesNotMatch(rule, /linear-gradient/);
+  });
+});
+
+describe('view 1 squint', () => {
+  it('has no gradient, wire glow, or inset highlight', () => {
+    assert.doesNotMatch(layout, /linear-gradient\(/);
+    assert.match(layout, /\.brand-mark \{[^}]*background:\s*var\(--cc-ink\)/);
+    assert.doesNotMatch(stage, /radial-gradient\(circle at/);
+    assert.match(stage, /\.conduit-glow \{[^}]*display:\s*none/);
+    assert.doesNotMatch(components, /linear-gradient\(/);
+    assert.doesNotMatch(shared, /inset\s+0\s+1px/);
   });
 });
 
@@ -77,19 +129,5 @@ describe('ConduitCraft design tokens (--cc-*)', () => {
   it('drops every duration to 0 ms under prefers-reduced-motion', () => {
     const reduced = /--cc-dur-slow: 320ms;\s*@media \(prefers-reduced-motion: reduce\) \{([^}]*)\}/.exec(shared)?.[1] ?? '';
     for (const d of ['fast', 'base', 'slow']) assert.match(reduced, new RegExp(`--cc-dur-${d}: 0ms;`));
-  });
-
-  it('keeps ink, muted ink and faint ink readable (4.5:1) on the first three surfaces in both themes', () => {
-    const pairs: Array<[string, string]> = [
-      ['ink', 'canvas'], ['ink', 'surface'], ['ink', 'surface-elevated'],
-      ['ink-secondary', 'canvas'], ['ink-secondary', 'surface'], ['ink-secondary', 'surface-elevated'],
-      ['ink-muted', 'canvas'], ['ink-muted', 'surface'], ['ink-muted', 'surface-elevated'],
-    ];
-    for (const theme of ['light', 'dark']) {
-      for (const [fg, bg] of pairs) {
-        const ratio = contrast(token(`${fg}-${theme}`), token(`${bg}-${theme}`));
-        assert.ok(ratio >= 4.5, `${fg} on ${bg} (${theme}) is ${ratio.toFixed(2)}:1`);
-      }
-    }
   });
 });
