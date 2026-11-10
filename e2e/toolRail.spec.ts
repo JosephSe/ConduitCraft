@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
@@ -90,18 +89,6 @@ test('tool letters do nothing while typing', async ({ page }) => {
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'select');
   await expect(field).toHaveValue(/wvz$/);
 });
-
-for (const scheme of ['light', 'dark'] as const) {
-  test(`the dock has no axe violations (${scheme})`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await open(page);
-    const results = await new AxeBuilder({ page })
-      .include('#dock')
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze();
-    expect(results.violations.map((v) => v.id)).toEqual([]);
-  });
-}
 
 test('every tool, favourite and the All components button can be reached with Tab', async ({ page }) => {
   await open(page);

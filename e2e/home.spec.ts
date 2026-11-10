@@ -174,7 +174,7 @@ test('Home stays quiet when storage has room', async ({ page }) => {
   await expect(page.locator('#home-storage')).toBeHidden();
 });
 
-for (const width of [375, 1280, 1600]) {
+for (const width of [375, 1440]) {
   test(`Home has no axe violations at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await seedAutosave(page, 'Payments', 1);

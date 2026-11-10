@@ -129,26 +129,27 @@ for (const vp of VIEWPORTS) {
       });
     }
 
-    test('the find box is a popover: closed until Cmd/Ctrl+F, closed again by Escape', async ({ page }) => {
-      await page.setViewportSize(vp);
-      await page.goto('/');
-      await openLumenRelay(page);
-      await expect(page.locator('#hud-search-card')).toBeHidden();
-      await page.keyboard.press('ControlOrMeta+f');
-      await expect(page.locator('#hud-search-card')).toBeVisible();
-      await expect(page.locator('#hud-search-input')).toBeFocused();
-      // It sits above the SE island, inside the sheet.
-      const [card, zoom] = await Promise.all([
-        page.locator('#hud-search-card').boundingBox(),
-        page.locator('.hud-zoom-card').boundingBox(),
-      ]);
-      expect(card!.y + card!.height).toBeLessThanOrEqual(zoom!.y);
-      expect(card!.x + card!.width).toBeLessThanOrEqual(vp.width);
-      await page.keyboard.press('Escape');
-      await expect(page.locator('#hud-search-card')).toBeHidden();
-    });
   });
 }
+
+test('the find box is a popover: closed until Cmd/Ctrl+F, closed again by Escape', async ({ page }) => {
+  // Once, at the narrow width: that is where the popover would leave the sheet.
+  await page.setViewportSize({ width: 800, height: 600 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await expect(page.locator('#hud-search-card')).toBeHidden();
+  await page.keyboard.press('ControlOrMeta+f');
+  await expect(page.locator('#hud-search-card')).toBeVisible();
+  await expect(page.locator('#hud-search-input')).toBeFocused();
+  const [card, zoom] = await Promise.all([
+    page.locator('#hud-search-card').boundingBox(),
+    page.locator('.hud-zoom-card').boundingBox(),
+  ]);
+  expect(card!.y + card!.height).toBeLessThanOrEqual(zoom!.y);
+  expect(card!.x + card!.width).toBeLessThanOrEqual(800);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#hud-search-card')).toBeHidden();
+});
 
 test('the top bar is three slots and the bottom has one hint line', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
