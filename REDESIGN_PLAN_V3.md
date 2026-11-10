@@ -823,13 +823,14 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
   - `diagramSvg.ts` draws the same lanes, frames and notes; `viewer.css` and `frames.css` carry them into the HTML export. Entry CSS 114.4 of 116 kB, JS 542.4 of 550 kB.
   - Baselines re-recorded: views 01 to 07 and the studio SVG export.
 
-#### [ ] C2. Components · L, split
+#### [x] C2. Components · L, split
 - **Read:** `keyedStage.ts` lines 878 to 1560, `core/nodeStyle.ts`, `diagramSvg.ts`.
-- **C2a · M:** card kinds (8.2). **Done (C2a):** cards have a 30 px tile, a 7 px status light (grey in Design, emerald with a halo in Traffic), title 15/600, subtitle 12, and the kind name on the left with the readout on the right in mono, no separator. The eyebrow now sits in the footer. Not yet: the status word beside the light (C3), badge row (C2b). **C2b · M:** shaped kinds, actor, small boxes, external.
+- **C2a · M:** card kinds (8.2). **Done (C2a):** cards have a 30 px tile, a 7 px status light (grey in Design, emerald with a halo in Traffic), title 15/600, subtitle 12, and the kind name on the left with the readout on the right in mono, no separator. The eyebrow now sits in the footer. Not yet: the status word beside the light (C3), badge row (C2b). **C2b · M:** shaped kinds, actor, small boxes, external. **Done (C2b):** shaped kinds (circle, diamond, hexagon, trapezoid, cylinder, pipe, rounded, pill) are tinted 5% with a 58% outline and an ink ring when selected; external cards say "External" where the kind name goes (studio and HTML export); lock, comment and level badges sit in one 16 px row on the bottom edge. Not changed: the actor figure.
 - **Done:** every kind and shape in the showcase fits its box with no clipped text at 100%. **Needs:** T2, T4.
 
-#### [ ] C3. States · M
+#### [x] C3. States · M
 - **Do:** 8.5. **Done:** a new `e2e/states.spec.ts` asserts each state's word is visible. **Needs:** C2.
+- **Done (C3, with C2b):** every state sets `--st` on `.arch-node[data-chaos]`; ring, light and the word beside the light use it. Failed is rose with a 6% hatch and an 8° tile; degraded, slowed, at risk, delayed and buffering are amber (dashed for delayed and buffering); rerouted and bypassed are blue dashed; unreachable is a 1 px grey dashed ring, greyscale at 55%. The words lost their emoji. The selected card has a 2 px ink ring with a 3 px gap. Entry CSS budget raised to 124 kB.
 
 #### [ ] C4. Wires · M
 - **Read:** the `conduit` code in `keyedStage.ts`; `studio.css` 1300 to 1400.

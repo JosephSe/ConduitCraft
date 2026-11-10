@@ -1356,13 +1356,13 @@ const paintedNodeContent = new WeakMap<HTMLElement, { sig: string; image: string
 const CHAOS_BADGES: Record<string, string> = {
   failed: 'Failed',
   degraded: 'Degraded',
-  unreachable: '⛓ Unreachable',
-  rerouted: '↪ Rerouted',
-  'at-risk': '⚠ Potential disruption',
-  buffering: '⏸ Buffering',
-  delayed: '⏳ Delayed',
-  slowed: '🐢 Slowed',
-  bypassed: '↷ Bypassed',
+  unreachable: 'Unreachable',
+  rerouted: 'Rerouted',
+  'at-risk': 'Potential disruption',
+  buffering: 'Buffering',
+  delayed: 'Delayed',
+  slowed: 'Slowed',
+  bypassed: 'Bypassed',
 };
 
 /** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */
@@ -1450,6 +1450,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     node.chip,
     node.icon,
     node.eyebrow,
+    node.external,
     node.footerLeft,
     node.queue,
     node.balancer,
@@ -1580,7 +1581,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   }
   if (node.kind !== 'client') {
     const eyebrow = wrapper.querySelector('.node-eyebrow');
-    if (eyebrow) eyebrow.textContent = node.eyebrow;
+    if (eyebrow) eyebrow.textContent = node.external ? 'External' : node.eyebrow;
     const footer = wrapper.querySelector('.node-footer-label');
     if (footer) footer.textContent = cardText.footer;
   }
