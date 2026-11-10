@@ -533,34 +533,8 @@
     }
   }
 
-  .conduit-group[data-tone="blue"] .conduit-stream,
-  .conduit-group[data-tone="blue"] .conduit-stream-reverse,
-  .conduit-group[data-tone="blue"] .conduit-glow {
-    stroke: var(--wl-blue);
-  }
-
-  .conduit-group[data-tone="emerald"] .conduit-stream,
-  .conduit-group[data-tone="emerald"] .conduit-stream-reverse,
-  .conduit-group[data-tone="emerald"] .conduit-glow {
-    stroke: var(--wl-emerald);
-  }
-
-  .conduit-group[data-tone="rose"] .conduit-stream,
-  .conduit-group[data-tone="rose"] .conduit-stream-reverse,
-  .conduit-group[data-tone="rose"] .conduit-glow {
-    stroke: var(--wl-rose);
-  }
-
-  .conduit-group[data-tone="violet"] .conduit-stream,
-  .conduit-group[data-tone="violet"] .conduit-stream-reverse,
-  .conduit-group[data-tone="violet"] .conduit-glow {
-    stroke: var(--wl-violet);
-  }
-
-  .conduit-group[data-tone="amber"] .conduit-stream,
-  .conduit-group[data-tone="amber"] .conduit-stream-reverse,
-  .conduit-group[data-tone="amber"] .conduit-glow {
-    stroke: var(--wl-amber);
+  .conduit-group[data-tone] :is(.conduit-stream, .conduit-stream-reverse, .conduit-glow) {
+    stroke: var(--t);
   }
 
   .conduit-group {
@@ -1673,10 +1647,7 @@
     display: none;
   }
 
-  .sim-packet[data-tone="rose"] { border-color: var(--wl-rose); }
-  .sim-packet[data-tone="blue"] { border-color: var(--wl-blue); }
-  .sim-packet[data-tone="violet"] { border-color: var(--wl-violet); }
-  .sim-packet[data-tone="amber"] { border-color: var(--wl-amber); }
+  .sim-packet[data-tone] { border-color: var(--t); }
 
   .canvas-hud {
     position: absolute;

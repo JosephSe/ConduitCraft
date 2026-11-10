@@ -18,10 +18,7 @@
   background: color-mix(in srgb, var(--fs) 55%, transparent);
   pointer-events: none;
 }
-.frame-box[data-tone="emerald"] { --ft: var(--wl-emerald); --fs: var(--wl-emerald-soft); }
-.frame-box[data-tone="rose"] { --ft: var(--wl-rose); --fs: var(--wl-rose-soft); }
-.frame-box[data-tone="violet"] { --ft: var(--wl-violet); --fs: var(--wl-violet-soft); }
-.frame-box[data-tone="amber"] { --ft: var(--wl-amber); --fs: var(--wl-amber-soft); }
+.frame-box[data-tone] { --ft: var(--t); --fs: var(--t-soft); }
 .frame-box.is-selected { border-style: solid; box-shadow: 0 0 0 3px var(--fs); }
 .frame-title-bar {
   display: flex;

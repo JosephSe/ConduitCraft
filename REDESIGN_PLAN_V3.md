@@ -633,10 +633,12 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - Entry CSS is 111.1 kB of 112 (`index-Dva6H7Yc.css`). Entry JS is 533.5 kB of 540 (`index-73fo8ixY.js`). Fonts stay 78.6 kB. The HTML export chunk is 91.5 kB. Unit tests 907 passed. Browser tests 344 passed. That count includes the untracked `e2e/zz_debug.spec.ts`, which is not part of this change. Views 1 to 3 were re-recorded on macOS. The other five views were not. The export pictures stayed inside the 3% slack, so they were not re-recorded. The 20% pixel slack stays. The view spec passed again with no diff.
 - Pull request #102.
 
-#### [ ] T4b. Collapse the per-tone rules · M
+#### [x] T4b. Collapse the per-tone rules · M
 - **Why:** T1 left the `--t` recipe (5.1) for later. About 50 per-tone blocks remain (`stage.css` 24, `viewer.css` 18, `inspector.css` 4, `frames.css` 4). T5 would add two more variants to each, and entry CSS has 0.9 kB of room under its 112 kB cap.
 - **Do:** each element sets `--t` once from its tone; tint and edge derive from it (5.1). Delete the per-tone rule blocks. Keep every visible colour the same.
 - **Done:** the style files hold one set of seven `--t` assignments and no other `data-tone=` blocks; no visual diff in the eight views beyond the existing slack; entry CSS is lower than before. **Needs:** T4.
+- `shared.css` sets `--t` and `--t-soft` once for each of the five tones. Wires, Live Trace items, packets and frames read `--t`; the 24 per-tone blocks in `stage.css`, `viewer.css`, `inspector.css` and `frames.css` are now six rules. Every default colour was checked against its old rule, so nothing changes on screen. The `data-flow` dimming rules (`.workspace[data-flow="x"] .conduit-group:not([data-tone="x"])`) stay: CSS cannot compare two attributes, so T5 adds two lines there. The component tile and edge recipe (5.1) is C2.
+- Entry CSS is 110.3 kB of 112 (`index-CdyBjmIv.css`), down from 111.1. Entry JS is 533.5 kB of 540. Unit tests 907 passed. Browser tests 344 passed, including the untracked `e2e/zz_debug.spec.ts`. No picture was re-recorded: the eight views and the export pictures matched.
 
 #### [ ] T4c. Finish T1's and T2's leftovers · S
 - **Uppercase text:** the CSS rule is gone but capitals are typed into the text: about 14 labels in `index.html` and 17 in TypeScript (`COMPONENT PROPERTIES`, `WIRE PROPERTIES`, `ALIGN & DISTRIBUTE`, `STAGE CONTAINERS`, `EXECUTION TRACE`, `kind.toUpperCase()` in `palette.ts`). The Live Trace steps and the "Saved" pill are still uppercase or mono. Make them sentence case; specs that match the old text are updated in the same PR.

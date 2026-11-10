@@ -116,6 +116,13 @@
       --in-oklab: in oklab;
     }
   }
+
+  /* One tone variable per element (5.1). Rules below read --t, never a tone name. */
+  [data-tone="blue"] { --t: var(--wl-blue); --t-soft: var(--wl-blue-soft); }
+  [data-tone="emerald"] { --t: var(--wl-emerald); --t-soft: var(--wl-emerald-soft); }
+  [data-tone="rose"] { --t: var(--wl-rose); --t-soft: var(--wl-rose-soft); }
+  [data-tone="violet"] { --t: var(--wl-violet); --t-soft: var(--wl-violet-soft); }
+  [data-tone="amber"] { --t: var(--wl-amber); --t-soft: var(--wl-amber-soft); }
 }
 
 
