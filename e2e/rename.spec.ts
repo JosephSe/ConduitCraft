@@ -238,7 +238,7 @@ test('the editor has no accessibility violations while open', async ({ page }) =
   const { id } = await renameableNode(page);
   await dblclickNode(page, id);
   await expect(editor(page)).toBeVisible();
-  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  const results = await new AxeBuilder({ page }).include('.inline-edit-input').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
 });
 

@@ -1,6 +1,7 @@
 /**
  * Touch pass (A12). Runs only on the tablet projects (768 x 1024 and 1024 x 768, touch, coarse pointer).
  * Gestures are real touch events sent through the DevTools protocol, so the app sees pointerType "touch".
+ * Tests tagged `@layout` also run in landscape. The gesture flows run in portrait only.
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type CDPSession, type Page } from '@playwright/test';
@@ -121,7 +122,7 @@ async function emptyPoint(page: Page, spread = 0): Promise<Pt> {
   return p!;
 }
 
-test('everything you tap is at least 44 px', async ({ page }) => {
+test('everything you tap is at least 44 px', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   const [first] = await freePair(page);
   const c = await nodeCentre(page, first);
@@ -189,7 +190,7 @@ test('the dock keeps three favourites and scrolls sideways on a phone', async ({
   expect(await page.locator('#dock').evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
 });
 
-test('the drawer tabs are full-size targets that never overlap the top bar', async ({ page }) => {
+test('the drawer tabs are full-size targets that never overlap the top bar', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   for (const id of ['#btn-drawer-inspector']) {
     const box = await page.locator(id).boundingBox();
@@ -200,7 +201,7 @@ test('the drawer tabs are full-size targets that never overlap the top bar', asy
   await expect(page.locator('.topbar .panel-rail-toggles')).toHaveCount(0);
 });
 
-test('the top bar keeps the lens switch, the menu mark and Run', async ({ page }) => {
+test('the top bar keeps the lens switch, the menu mark and Run', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   await expect(page.locator('.topbar .mode-switcher')).toBeVisible();
   await expect(page.locator('#btn-app-menu')).toBeVisible();
@@ -213,7 +214,7 @@ test('the top bar keeps the lens switch, the menu mark and Run', async ({ page }
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('canvas hit areas are 44 px at 100% zoom', async ({ page }) => {
+test('canvas hit areas are 44 px at 100% zoom', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   const [a] = await freePair(page);
   await page.touchscreen.tap((await nodeCentre(page, a)).x, (await nodeCentre(page, a)).y);

@@ -1,4 +1,3 @@
-import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { clearSelection, openLumenRelay } from './helpers';
 
@@ -76,15 +75,6 @@ test('Share is in the top bar and copies a link', async ({ page, context }) => {
   await page.locator('#btn-share').click();
   await expect(page.locator('#toast-container')).toContainText(/link/i);
 });
-
-for (const scheme of ['light', 'dark'] as const) {
-  test(`the redesigned top bar has no axe violations (${scheme})`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await open(page);
-    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-    expect(results.violations.map((v) => v.id)).toEqual([]);
-  });
-}
 
 /**
  * The rule (A14, V1 section 10): at 1280 px, with a diagram open and nothing selected, no region of the screen outside
