@@ -9,22 +9,38 @@ async function open(page: Page, query = '') {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
-const visibleControls = (page: Page) =>
-  page.evaluate(() => {
-    const header = document.querySelector('.topbar')!;
-    const hit = header.querySelectorAll<HTMLElement>('button, input:not([type="file"]), a[href], select');
+const visibleControls = (page: Page, slot: string) =>
+  page.evaluate((selector) => {
+    const island = document.querySelector(selector)!;
+    const hit = island.querySelectorAll<HTMLElement>('button, input:not([type="file"]), a[href], select');
     return Array.from(hit)
       .filter((el) => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden')
       .filter((el) => !el.classList.contains('visually-hidden') || el instanceof HTMLInputElement)
       .map((el) => el.id || el.getAttribute('name') || el.tagName);
-  });
+  }, slot);
 
-test('the top bar shows at most 9 controls', async ({ page }) => {
+test('each top island shows at most 8 controls, and holds what 6.2 says', async ({ page }) => {
   await open(page);
-  const controls = await visibleControls(page);
-  expect(controls.length, controls.join(', ')).toBeLessThanOrEqual(9);
-  for (const id of ['btn-open-palette', 'btn-share', 'btn-focus-doc-title', 'btn-app-menu']) expect(controls).toContain(id);
+  const nw = await visibleControls(page, '.slot-nw');
+  const n = await visibleControls(page, '.slot-n');
+  const ne = await visibleControls(page, '.slot-ne');
+  for (const [name, list] of [['NW', nw], ['N', n], ['NE', ne]] as const) expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(8);
+  expect(nw).toEqual(['btn-app-menu', 'btn-focus-doc-title']);
+  expect(n).toEqual(['workspace-mode', 'workspace-mode', 'workspace-mode']);
+  expect(ne).toEqual(['btn-open-palette', 'btn-share', 'btn-run']);
   await expect(page.locator('#btn-open-export')).toHaveCount(0);
+  // Run is the only filled button on the screen's top edge, and undo and redo are not buttons.
+  await expect(page.locator('.topbar .btn.solid')).toHaveCount(1);
+  await expect(page.locator('#btn-undo, #btn-redo')).toHaveCount(0);
+});
+
+test('Run switches to Traffic and plays the first scenario', async ({ page }) => {
+  await open(page);
+  await clearSelection(page);
+  await page.locator('#btn-run').click();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-mode', 'data');
+  await expect(page.locator('#run-bar-play')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('#run-bar-scenario')).not.toHaveValue('');
 });
 
 test('controls removed from the top bar are still one palette search away', async ({ page }) => {
@@ -83,7 +99,9 @@ for (const scheme of ['light', 'dark'] as const) {
  * slip past the count.
  */
 const REGIONS: Array<[name: string, selector: string]> = [
-  ['top bar', '.topbar'],
+  ['top bar: document', '.slot-nw'],
+  ['top bar: lens', '.slot-n'],
+  ['top bar: actions', '.slot-ne'],
   ['tool rail', '#palette-sidebar'],
   ['zoom (SE)', '.hud-zoom-card'],
   ['find box', '#hud-search-card'],
@@ -130,8 +148,7 @@ for (const [lens, key] of [['Design', '1'], ['Traffic', '2'], ['Review', '3']] a
     const total = Object.values(counts).reduce((sum, list) => sum + list.length, 0);
     console.log(`${lens}: ${total} counted controls`, JSON.stringify(Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, v.length]))));
     for (const [name, list] of Object.entries(counts)) {
-      // The top bar is allowed one more: its menu holds every action that has no button of its own.
-      expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(name === 'top bar' ? 9 : 8);
+      expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(8);
     }
   });
 }

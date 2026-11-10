@@ -179,10 +179,11 @@ test('the drawer tabs are full-size targets that never overlap the top bar', asy
   await expect(page.locator('.topbar .panel-rail-toggles')).toHaveCount(0);
 });
 
-test('the top bar keeps the lens switch and undo/redo', async ({ page }) => {
+test('the top bar keeps the lens switch, the menu mark and Run', async ({ page }) => {
   await open(page);
   await expect(page.locator('.topbar .mode-switcher')).toBeVisible();
-  await expect(page.locator('.topbar .doc-history-controls')).toBeVisible();
+  await expect(page.locator('#btn-app-menu')).toBeVisible();
+  await expect(page.locator('#btn-run')).toBeVisible();
   // Nothing in the bar is cut off: it fits the viewport width.
   const overflow = await page.evaluate(() => {
     const bar = document.querySelector('.topbar') as HTMLElement;

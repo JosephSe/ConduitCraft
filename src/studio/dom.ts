@@ -56,8 +56,6 @@ export const restoreBannerText = document.getElementById('restore-banner-text') 
 export const btnRestoreOpen = document.getElementById('btn-restore-open') as HTMLButtonElement | null;
 export const btnRestoreDiscard = document.getElementById('btn-restore-discard') as HTMLButtonElement | null;
 
-export const btnUndo = document.getElementById('btn-undo') as HTMLButtonElement;
-export const btnRedo = document.getElementById('btn-redo') as HTMLButtonElement;
 
 export const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement;
 export const paletteSidebar = document.getElementById('palette-sidebar') as HTMLElement | null;

@@ -5,12 +5,19 @@
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 0.65rem;
-    padding-inline: 1rem;
-    padding-block: 0.55rem;
-    background: var(--wl-panel);
-    backdrop-filter: blur(18px);
-    border-block-end: 1px solid var(--wl-border-subtle);
+    padding: 0.875rem 0.875rem 0.5rem;
     z-index: 20;
+  }
+
+  /* An island (6.1): the translucent fill, a hair edge, a lift shadow and a 5 px padding. */
+  .slot-nw, .slot-n, .slot-ne {
+    padding: 5px;
+    background: var(--cc-island);
+    border: 1px solid var(--cc-hair);
+    border-radius: 0.9rem;
+    box-shadow: var(--wl-shadow-card);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
   }
 
   .slot-nw { justify-self: start; max-inline-size: 100%; min-inline-size: 0; overflow: hidden; }
@@ -85,6 +92,16 @@
     align-items: center;
     gap: 0.7rem;
     min-inline-size: 0;
+  }
+
+  .brand-mark-btn {
+    display: grid;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    flex-shrink: 0;
   }
 
   .brand-mark {
@@ -166,47 +183,16 @@
     min-inline-size: 0;
   }
 
-  .save-status-pill {
+  /* The save state is plain text in --ink-3, with a colour only when something is wrong. */
+  .save-state {
     font: var(--cc-font-meta);
     font-weight: 500;
-    padding: 0.15rem 0.5rem;
-    border-radius: 9999px;
-    background: var(--wl-surface-elevated);
-    color: var(--wl-ink-muted);
-    border: 1px solid var(--wl-border-subtle);
-    transition: all 0.2s ease;
+    color: var(--cc-ink-3);
     white-space: nowrap;
     cursor: pointer;
   }
 
-  .save-status-pill[data-status="saving"] {
-    color: var(--cc-accent);
-    border-color: var(--cc-accent);
-  }
-
-  .save-status-pill[data-status="saved"] {
-    color: var(--wl-emerald);
-    border-color: color-mix(in srgb, var(--wl-emerald) 35%, transparent);
-  }
-
-  .save-status-pill[data-status="error"] {
-    color: var(--wl-rose);
-    border-color: var(--wl-rose);
-    background: color-mix(in srgb, var(--wl-rose) 12%, transparent);
-  }
-
-  .doc-history-controls {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.15rem;
-  }
-
-  .doc-history-controls .btn-icon-only {
-    inline-size: 1.65rem;
-    block-size: 1.65rem;
-    padding: 0;
-    border-radius: 0.35rem;
-  }
+  .save-state[data-status="error"] { color: var(--cc-redline); }
 
   .toolbar-center {
     display: flex;
@@ -452,18 +438,11 @@
       font-size: 0.8rem;
     }
 
-    .doc-history-controls {
-      display: none;
-    }
-
     .toolbar-center {
       display: none;
     }
 
-    #btn-open-palette,
-    #btn-enter-presentation,
-    #btn-open-shortcuts,
-    #btn-open-settings {
+    #btn-open-palette {
       display: none;
     }
   }

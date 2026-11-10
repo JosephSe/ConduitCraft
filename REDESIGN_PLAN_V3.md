@@ -686,9 +686,20 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 - `e2e/layout.spec.ts` is replaced by `e2e/slots.spec.ts` (D12): at 800 × 600, 1280 × 800 and 1440 × 900, in Design, Traffic (with a failed component and its list open) and Review, with a selection and a toast, no two islands overlap; and the find popover opens and closes. `topbar.spec.ts` counts the zoom island and the find box as their own regions. Pictures 01 to 06 were re-recorded for the new bottom edge. Entry CSS is 112.0 kB of 112, so there is no room left: the next CSS-heavy step must delete first.
 
 
-#### [ ] S2. Top and corner islands · M
+#### [ ] S2. Top and corner islands · M, split in two
+- **S2a · top islands (done):** 6.2. **S2b · corner islands:** 6.3, including the legend and view popovers (below).
 - **Do:** 6.2 and 6.3, including the legend and view popovers.
 - **Done:** `e2e/topbar.spec.ts` rewritten to count controls per island (8 at most); `tagsLinks.spec.ts` passes. **Needs:** S1.
+
+- **S2a result.**
+  - NW holds the mark, which is the menu button (`#btn-app-menu` moved onto it; the hamburger is gone), the title, and the save state as plain `--ink-3` text (red only on an error). Undo and redo are not buttons any more: they are the first two items of the main menu, which lists each only when it applies (`canUndo` and `canRedo` in the action context). `btnUndo` and `btnRedo`, `syncHistoryButtons` and the `.doc-history-controls` CSS are deleted.
+  - N is the lens switch with one ink thumb that springs to the chosen segment (equal-width segments, `translateX` by `:has()`); the Review count is redline.
+  - NE is Search, Share and **Run**, the only filled button. Run goes to Traffic and plays the chosen scenario, or the first one (`#btn-run`, in `runBar.ts`).
+  - The three are islands: `--island` fill, 1 px `--hair`, lift shadow, 5 px padding, 18 px blur. The top bar row itself is plain.
+  - On a touch device the mark is 44 px.
+  - Tests: `e2e/topbar.spec.ts` counts controls per island (each at most 8, and exactly what 6.2 lists) and has a Run test. `undo`, `redo` and `undoDepth` live in `e2e/helpers.ts` and go through the menu; eight specs use them. Menu item names include their shortcut, so match them with a prefix.
+  - Known wart: while something is selected, its floating toolbar can sit over the mark on a short or small window (D9 says the toolbar follows the selection). The specs reach the menu by keyboard for that reason.
+  - Entry CSS stays at 112.0 kB of 112; dead rules (`layout-animating`, three removed button ids) were deleted to pay for it.
 
 #### [ ] S3. Dock, Design face · M
 - **Read:** `toolRail.ts`, `pointerTool.ts`, the stencil wiring in `interactions.ts`.

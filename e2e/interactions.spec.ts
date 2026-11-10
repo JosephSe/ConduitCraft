@@ -1,23 +1,10 @@
-import { clearSelection, openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, undo, redo, undoDepth } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 async function loadShowcase(page: Page): Promise<void> {
   await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
-}
-
-/** Number of undo steps, measured by walking back to the start and replaying forward (state is restored). */
-async function undoDepth(page: Page): Promise<number> {
-  const undo = page.locator('#btn-undo');
-  const redo = page.locator('#btn-redo');
-  let depth = 0;
-  while (await undo.isEnabled()) {
-    await undo.click();
-    depth += 1;
-  }
-  for (let i = 0; i < depth; i += 1) await redo.click();
-  return depth;
 }
 
 /** Centre of a node's hit area in viewport coordinates, only if nothing else covers it. */
@@ -288,12 +275,12 @@ test('dropping a wire on empty canvas creates a connected component with its nam
   await expect(page.locator(`.conduit-group[data-from="${a}"][data-to="${created}"]`)).toHaveCount(1);
 
   // Component + wire + rename: the creation is one undo step (the rename is its own), so two undos remove it all.
-  await page.locator('#btn-undo').click();
-  await page.locator('#btn-undo').click();
+  await undo(page);
+  await undo(page);
   await expect.poll(() => nodeCount(page)).toBe(nodesBefore);
   expect(await wireCount(page)).toBe(wiresBefore);
-  await page.locator('#btn-redo').click();
-  await page.locator('#btn-redo').click();
+  await redo(page);
+  await redo(page);
   await expect.poll(() => nodeCount(page)).toBe(nodesBefore + 1);
 });
 
@@ -401,9 +388,9 @@ test('dragging a wire end onto another component re-attaches it, as one undo ste
   expect(await wireCount(page), 'no wire is added or removed').toBe(wiresBefore);
   await expect(page.locator('#toast-container')).toContainText('Wire reconnected');
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect(group).toHaveAttribute('data-to', wire.to);
-  await page.locator('#btn-redo').click();
+  await redo(page);
   await expect(group).toHaveAttribute('data-to', newTarget);
 });
 
@@ -506,6 +493,6 @@ test('the wire inspector can re-attach either end without a mouse', async ({ pag
   await expect(group).toHaveAttribute('data-to', newTarget);
   await expect(page.locator('#prop-edge-to')).toHaveValue(newTarget);
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect(group).toHaveAttribute('data-to', wire.to);
 });

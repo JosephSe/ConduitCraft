@@ -6,18 +6,6 @@
     flex-shrink: 0;
   }
 
-  /* Smooth node position animation during Auto-Layout */
-  #stage-world.layout-animating .arch-node,
-  #stage-world.layout-animating .notes-card {
-    transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.3, 1),
-                left 0.42s cubic-bezier(0.2, 0.9, 0.3, 1),
-                top 0.42s cubic-bezier(0.2, 0.9, 0.3, 1) !important;
-  }
-
-  #stage-world.layout-animating .conduit-group {
-    transition: opacity 0.25s ease;
-  }
-
   :focus-visible {
     outline: 2px solid var(--cc-ink);
     outline-offset: 2px;

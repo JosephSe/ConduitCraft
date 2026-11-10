@@ -29,7 +29,6 @@ import {
   onAutosaved,
   scheduleAutosave,
   setSelection,
-  syncHistoryButtons,
   usableStoredDoc,
 } from './state';
 import { libraryDialog, libraryDialogBody, restoreSessionBanner, traceList } from './dom';
@@ -82,7 +81,6 @@ export function openDiagram(
   expandStageToFit(app.doc);
   setSelection(selection);
   traceList.replaceChildren();
-  syncHistoryButtons();
   renderAll(true);
   fitToViewport();
   return true;
@@ -187,7 +185,6 @@ export function deleteById(id: string): void {
       app.doc = createBlankDocument();
       setSelection({ type: 'none' });
       traceList.replaceChildren();
-      syncHistoryButtons();
       renderAll(true);
     }
   }

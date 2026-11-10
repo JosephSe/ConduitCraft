@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { captureExports, nextExport, openLumenRelay, runPaletteCommand, seedStorage } from './helpers';
+import { captureExports, nextExport, openLumenRelay, runPaletteCommand, seedStorage, undo } from './helpers';
 
 const node = (i: number) => ({
   id: `n${i}`,
@@ -100,7 +100,7 @@ test('never loses a diagram when you switch to another and back', async ({ page 
   await expect(page.locator('.arch-node')).toHaveCount(3);
 
   // Switching does not carry undo across: it can't put one diagram's steps into another.
-  await expect(page.locator('#btn-undo')).toBeDisabled();
+  expect(await undo(page), 'nothing to undo').toBe(false);
 
   // Both are still there after a reload, and the one that was open is offered back.
   await expect(page.locator('#save-status-pill')).toHaveAttribute('data-status', 'saved');

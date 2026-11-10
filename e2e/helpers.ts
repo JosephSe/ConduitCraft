@@ -137,3 +137,33 @@ export async function seedAutosave(page: Page, doc: object): Promise<void> {
   const title = (doc as { title?: string }).title ?? 'Untitled';
   await seedStorage(page, { diagrams: [{ id: 'autosave', title, updatedAt: Date.now(), doc }] });
 }
+
+/**
+ * Undo and redo have no buttons (6.2): they are items in the main menu, which lists one only when it applies.
+ * `step` clicks the item and returns true, or closes the menu and returns false when there is nothing to do.
+ */
+async function menuStep(page: Page, name: 'Undo' | 'Redo'): Promise<boolean> {
+  // Keyboard, not a click: the selection's toolbar can float over the mark while something is selected.
+  await page.locator('#btn-app-menu').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('menu', { name: 'Main menu' })).toBeVisible();
+  const item = page.getByRole('menu', { name: 'Main menu' }).getByRole('menuitem', { name: new RegExp(`^${name}`) });
+  if ((await item.count()) === 0) {
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu', { name: 'Main menu' })).toHaveCount(0);
+    return false;
+  }
+  await item.click();
+  return true;
+}
+
+export const undo = (page: Page) => menuStep(page, 'Undo');
+export const redo = (page: Page) => menuStep(page, 'Redo');
+
+/** Number of undo steps, measured by walking back to the start and replaying forward (state is restored). */
+export async function undoDepth(page: Page): Promise<number> {
+  let depth = 0;
+  while (await undo(page)) depth += 1;
+  for (let i = 0; i < depth; i += 1) await redo(page);
+  return depth;
+}

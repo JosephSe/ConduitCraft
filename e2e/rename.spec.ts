@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { clearSelection, openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, undo, redo, undoDepth } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const editor = (page: Page) => page.locator('.inline-edit-input');
@@ -9,19 +9,6 @@ async function loadShowcase(page: Page): Promise<void> {
   await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
-}
-
-/** Number of undo steps, measured by walking back and replaying forward (state is restored afterwards). */
-async function undoDepth(page: Page): Promise<number> {
-  const undo = page.locator('#btn-undo');
-  const redo = page.locator('#btn-redo');
-  let depth = 0;
-  while (await undo.isEnabled()) {
-    await undo.click();
-    depth += 1;
-  }
-  for (let i = 0; i < depth; i += 1) await redo.click();
-  return depth;
 }
 
 /** A node whose title is visible and not covered by anything else, so a real double-click reaches it. */
@@ -89,9 +76,9 @@ test('rename is one undo step, and undo and redo restore the name', async ({ pag
   await editor(page).press('Enter');
   await expect(nodeTitle(page, id)).toHaveText('Undo Me');
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect(nodeTitle(page, id)).toHaveText(title);
-  await page.locator('#btn-redo').click();
+  await redo(page);
   await expect(nodeTitle(page, id)).toHaveText('Undo Me');
   expect(await undoDepth(page)).toBe(before + 1);
 });

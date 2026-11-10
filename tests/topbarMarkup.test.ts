@@ -7,11 +7,13 @@ const header = html.slice(html.indexOf('<header class="topbar">'), html.indexOf(
 const ids = [...header.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
 
 describe('B1b: the header holds only what the top bar shows', () => {
-  it('keeps the title, undo/redo, lens switch, Share and search', () => {
-    for (const id of ['btn-focus-doc-title', 'btn-undo', 'btn-redo', 'btn-share', 'btn-open-palette', 'save-status-pill']) {
+  it('keeps the menu mark, title, save state, lens switch, Search, Share and Run (6.2)', () => {
+    for (const id of ['btn-app-menu', 'btn-focus-doc-title', 'btn-share', 'btn-open-palette', 'btn-run', 'save-status-pill']) {
       assert.ok(ids.includes(id), `#${id} is in the header`);
     }
     assert.equal((header.match(/name="workspace-mode"/g) ?? []).length, 3, 'three lenses');
+    for (const id of ['btn-undo', 'btn-redo']) assert.ok(!ids.includes(id), `#${id} lives in the menu and on its shortcut`);
+    assert.equal((header.match(/class="btn solid"/g) ?? []).length, 1, 'Run is the only filled button');
   });
 
   it('has none of the old hidden click targets', () => {

@@ -1,4 +1,4 @@
-import { captureExports, nextExport, openExportDialog, openLumenRelay } from './helpers';
+import { captureExports, nextExport, openExportDialog, openLumenRelay, undo } from './helpers';
 import { expect, test as base, type Page } from '@playwright/test';
 
 /** Every test fails on uncaught page errors or console errors, so silent breakage is caught too. */
@@ -80,7 +80,7 @@ test('dragging a node moves it and undo puts it back', async ({ page }) => {
 
   expect(await position()).not.toEqual(before);
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect.poll(position).toEqual(before);
 });
 

@@ -1,7 +1,5 @@
 /** Document, selection, history, autosave, and viewport state. */
 import {
-  btnRedo,
-  btnUndo,
   saveStatusPill,
   stageWorld,
   viewport,
@@ -436,7 +434,6 @@ function commitHistorySnapshot(snapshot: DiagramDocument = takeSnapshot()): void
   for (const listener of historyCommitListeners) listener();
   if (app.undoStack.length > MAX_HISTORY) app.undoStack.shift();
   app.redoStack.length = 0;
-  syncHistoryButtons();
   scheduleAutosave();
 }
 
@@ -480,11 +477,6 @@ export function pushHistoryNudge(): void {
   commitHistorySnapshot();
 }
 
-export function syncHistoryButtons(): void {
-  btnUndo.disabled = app.undoStack.length === 0;
-  btnRedo.disabled = app.redoStack.length === 0;
-}
-
 function restoreSnapshot(snapshot: DiagramDocument): void {
   const before = `${currentPageId()}|${app.levelPath.join('/')}`;
   const place = snapshotPlaces.get(snapshot);
@@ -518,7 +510,6 @@ export function performUndo(): void {
   app.redoStack.push(takeSnapshot(snapshotPlaces.get(prev)));
   restoreSnapshot(prev);
   validateSelection();
-  syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
   pagesChanged();
@@ -531,7 +522,6 @@ export function performRedo(): void {
   app.undoStack.push(takeSnapshot(snapshotPlaces.get(next)));
   restoreSnapshot(next);
   validateSelection();
-  syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
   pagesChanged();
