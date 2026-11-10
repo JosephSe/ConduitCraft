@@ -13,6 +13,8 @@ async function open(page: Page) {
 const tray = (page: Page) => page.locator('#tray');
 const item = (page: Page, id: string) => page.locator(`#tray .tray-item[data-stencil-id="${id}"]`);
 const nodes = (page: Page) => page.locator('.arch-node');
+const search = (page: Page) => page.locator('#tray .tray-search');
+const visibleItems = (page: Page) => page.locator('#tray .tray-item:visible');
 const focusedId = (page: Page) => page.evaluate(() => (document.activeElement as HTMLElement).dataset.stencilId);
 
 async function emptySpot(page: Page): Promise<{ x: number; y: number }> {
@@ -44,10 +46,12 @@ test('All components and C open the tray; it holds six groups and every componen
   await expect(tray(page)).toBeVisible();
 });
 
-test('it opens on the first component, and arrow keys move through the shelf as one grid', async ({ page }) => {
+test('it opens on the search box, and arrow keys move through the shelf as one grid', async ({ page }) => {
   await open(page);
   await page.locator('#btn-all-components').click();
   await expect(tray(page)).toBeVisible();
+  await expect(search(page)).toBeFocused();
+  await page.keyboard.press('ArrowDown');
   expect(await focusedId(page)).toBe('actor');
   await page.keyboard.press('ArrowDown');
   expect(await focusedId(page)).toBe('client');
@@ -73,6 +77,7 @@ test('Enter places the highlighted component at the centre and closes the tray, 
   const before = await nodes(page).count();
   await page.locator('#btn-all-components').click();
   await expect(tray(page)).toBeVisible();
+  await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   expect(await focusedId(page)).toBe('scheduler');
@@ -175,7 +180,9 @@ test('the tray goes away with the Design lens', async ({ page }) => {
   await open(page);
   await page.locator('#btn-all-components').click();
   await expect(tray(page)).toBeVisible();
-  await page.keyboard.press('2');
+  // The search box has focus, so a lens key would be typed into it; use the switch.
+  await page.locator('.slot-n').getByText('Traffic', { exact: true }).click();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-mode', 'data');
   await expect(tray(page)).toBeHidden();
 });
 
@@ -201,4 +208,83 @@ test('the tray fits above the dock on a short window, and scrolls inside itself'
   const [box, dock] = await Promise.all([tray(page).boundingBox(), page.locator('#dock').boundingBox()]);
   expect(box!.y).toBeGreaterThanOrEqual(0);
   expect(box!.y + box!.height).toBeLessThanOrEqual(dock!.y);
+});
+
+test('typing kafka leaves one row, Stream, with "named Kafka" under it, and groups with no match go', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('kafka');
+  await expect(visibleItems(page)).toHaveCount(1);
+  await expect(visibleItems(page).first()).toContainText('Stream / Log');
+  await expect(visibleItems(page).first()).toContainText('named Kafka');
+  await expect(page.locator('#tray .tray-group:visible')).toHaveCount(1);
+  await expect(page.locator('#tray .tray-label:visible')).toHaveText('Messaging');
+});
+
+test('Enter in the search box places the first match, and a match by word names the component', async ({ page }) => {
+  await open(page);
+  const before = await nodes(page).count();
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('kafka');
+  await page.keyboard.press('Enter');
+  await expect(nodes(page)).toHaveCount(before + 1);
+  await expect(tray(page)).toBeHidden();
+  const placed = page.locator('.arch-node[data-kind="queue"]', { has: page.locator('.node-title', { hasText: 'Kafka' }) });
+  await expect(placed).toHaveCount(1);
+  await expect(placed).toHaveAttribute('data-shape', 'pipe');
+});
+
+test('a component found by word is also named when it is carried to the sheet and clicked down', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('redis');
+  await expect(visibleItems(page)).toHaveCount(1);
+  await visibleItems(page).first().click();
+  const spot = await emptySpot(page);
+  await page.mouse.click(spot.x, spot.y);
+  await expect(page.locator('.arch-node .node-title', { hasText: 'Redis' })).toHaveCount(1);
+});
+
+test('a match by its own name is not renamed', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('cache');
+  await expect(visibleItems(page)).toHaveCount(1);
+  await expect(visibleItems(page).first()).not.toContainText('named');
+});
+
+test('with no match a note says so, and clearing the box brings everything back', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('zzzzz');
+  await expect(visibleItems(page)).toHaveCount(0);
+  await expect(page.locator('#tray .tray-empty')).toBeVisible();
+  await search(page).fill('');
+  await expect(visibleItems(page)).toHaveCount(18);
+  await expect(page.locator('#tray .tray-empty')).toBeHidden();
+});
+
+test('arrows go from the box into the matches and back up to it, and the query is cleared when the tray closes', async ({ page }) => {
+  await open(page);
+  await page.locator('#btn-all-components').click();
+  await search(page).fill('queue');
+  await page.keyboard.press('ArrowDown');
+  expect(await focusedId(page)).toBe('queue');
+  await page.keyboard.press('ArrowUp');
+  await expect(search(page)).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(tray(page)).toBeHidden();
+  await page.locator('#btn-all-components').click();
+  await expect(search(page)).toHaveValue('');
+  await expect(visibleItems(page)).toHaveCount(18);
+});
+
+test('the selection toolbar steps aside while the tray is open, so it never covers the search box', async ({ page }) => {
+  await open(page);
+  await page.locator('.arch-node .node-select-hit').first().click({ force: true });
+  await expect(page.locator('.context-toolbar')).toBeVisible();
+  await page.locator('#btn-all-components').focus();
+  await page.keyboard.press('Enter');
+  await expect(tray(page)).toBeVisible();
+  await expect(page.locator('.context-toolbar')).toBeHidden();
 });

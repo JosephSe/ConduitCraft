@@ -726,7 +726,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 
 #### [ ] S4. Component tray · L, split
 - **S4a · M [x]:** shelf, keyboard grid, place with `↵`, drag out, drag to the dock, close and focus return (7.3).
-- **S4b · S:** search with the word table and "named X" (7.3).
+- **S4b · S [x]:** search with the word table and "named X" (7.3).
 - **S4c · M:** the demo pane and its seven loops, lazy (7.3).
 - **Done:** a spec for each of: open with `C`, arrow to a component, place it; type `kafka`, place it, the component is a stream named "Kafka"; reduced motion shows stills. **Needs:** S3.
 
@@ -739,7 +739,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - **Q10 done:** card cut-outs (Service, Core System, Cache, Scheduler, Event Broker, Rate Limiter, Control Gate, External Client) carry a 12 px kind icon, centred, in `--ink-3`; it takes the tone on reach. A carried copy has none, because the node it grows into draws its own.
   - Tests: `e2e/tray.spec.ts` (open, six groups and 18 items, arrow grid, Enter, Esc and focus return, press on the sheet, click to carry, drag out, drag to the dock and kept after reload, Structure items, Design lens only, axe in both themes, short window); the touch and tool specs moved to the tray; `placeComponent` goes through the tray with Enter. `cutout.test.ts` covers the icons. View 03 is now the tray (`03-component-tray`), and all eight baselines were deleted and re-recorded, because `--update-snapshots` only rewrites an image that differs beyond the 20% slack and the tiny icons do not. The S3 baselines were stale in the same way.
   - Entry CSS is 108.1 kB of 112; entry JS is 535.0 kB of 540.
-  - Not here: search (S4b), the demo pane (S4c), the narrow-screen bottom sheet (M4).
+  - Not here: the demo pane (S4c), the narrow-screen bottom sheet (M4). Search is S4b, below.
+
+- **S4b result.**
+  - The tray opens on a search box (`Search, or type what you run: redis, kafka, nginx`); `↓` goes into the shelf and `↑` from its first row comes back. Matching is by name, then by word. `src/studio/trayWords.ts` holds the word table: every image word the importers know (`IMAGE_WORDS`, now exported from `importers/common.ts`, mapped through `stencilForImage`) plus a short list of common names (`s3`, `lambda`, `cron`, `sqs`, `cdn`, `alb`, and a few more). A partial word counts (`kaf`), and the full word names the component.
+  - Typing `kafka` leaves one row, Stream / Log, with "named Kafka" under it, and only its group. `redis` is a Data store named Redis. A match by the component's own name (`cache`) is not renamed. With no match the tray says so; clearing the box brings everything back, and closing the tray clears it.
+  - Placing a match by word names the new component: Enter in the box places the first match, and a click or a drag names it too (`addNodeAt` takes a title). Dock favourites are unchanged.
+  - The selection's toolbar waits while the tray is open; it floated over the search box.
+  - Tests: `trayWords.test.ts` (8) and six more in `tray.spec.ts`. The old tray tests start from the box. View 03 re-recorded.
+  - Entry CSS 108.4 kB of 112; entry JS 535.3 kB of 540; the tray chunk is 6.9 kB.
 
 #### [ ] S5. Dock, Traffic and Review faces · M
 - **Read:** `runBar.ts`, `simulationPlayback.ts`, `chaos.ts`, `studio/insights.ts`.

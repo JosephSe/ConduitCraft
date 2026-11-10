@@ -1223,13 +1223,20 @@ kbd {
   z-index: 3;
 }
 #slot-s { position: relative; }
+.tray-search { grid-column: 1 / -1; inline-size: 100%; }
+.tray-empty { grid-column: 1 / -1; margin: 0; padding: 0.5rem; font: var(--cc-font-small); color: var(--cc-ink-3); }
+.tray-note { display: block; font: var(--cc-font-small); color: var(--cc-ink-3); }
+.tray [hidden] { display: none; }
 .tray-label { margin: 0 0 0.25rem; padding-inline: 0.5rem; font: var(--cc-font-small); color: var(--cc-ink-3); }
 .tray-list { display: flex; flex-direction: column; }
 .tray-item { display: flex; align-items: center; gap: 0.75rem; min-block-size: 2.75rem; padding: 0.25rem 0.5rem; border: 0; border-radius: 0.65rem; background: none; color: var(--cc-ink); font: var(--cc-font-body, inherit); text-align: start; cursor: pointer; touch-action: manipulation; }
 .tray-item:hover, .tray-item:focus-visible { background: var(--cc-well); }
 .tray-item:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.tray-name { display: flex; flex-direction: column; }
 .tray-item .cut { flex: none; display: grid; inline-size: 38px; block-size: 30px; }
 .workspace[data-tray] .hint-line, .workspace[data-mode="data"] .tray { display: none; }
+/* The selection's toolbar floats over the tray's search box, so it waits while the tray is open. */
+body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 @media (max-width: 56rem) { .dock-fav:nth-of-type(n+4) { display: none; } }
 /* Click to arm (7.1): the ghost follows the pointer until the next click on the sheet. */
 .workspace[data-armed] .canvas-viewport { cursor: copy; }

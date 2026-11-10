@@ -3,7 +3,8 @@
  * stays live behind it. Six groups by role, each a quiet label and a list of cut-out plus name. Arrow keys move through
  * the shelf as one grid; Enter places the highlighted component at the centre of the view and closes the tray; a click
  * carries it to the sheet (as a dock favourite does); a drag takes it there, or onto a dock slot to replace it. Esc or a
- * press on the sheet closes it. This file loads the first time the tray opens.
+ * press on the sheet closes it. The search box on top matches names and the words people type for what they run
+ * (`kafka`, `redis`), and a match by word names the new component. This file loads the first time the tray opens.
  */
 import { nearestInDirection, type Direction } from '../core/spatial';
 import { TONE_CSS } from '../shared/tones';
@@ -14,6 +15,7 @@ import { FAVOURITE_COUNT } from './dockFavourites';
 import { viewport } from './dom';
 import { attachStencilDragAndDrop } from './interactions';
 import { findPaletteCommand } from './palette';
+import { searchTray } from './trayWords';
 
 /** A stencil id, or one of the four structure items. */
 interface Item {
@@ -40,10 +42,12 @@ const GROUPS: Array<{ label: string; items: Item[] }> = [
 ];
 
 let tray: HTMLElement | null = null;
+let search: HTMLInputElement | null = null;
 let opener: HTMLElement | null = null;
 
 const isOpen = (): boolean => !!tray && !tray.hidden;
-const items = (): HTMLButtonElement[] => (tray ? Array.from(tray.querySelectorAll<HTMLButtonElement>('.tray-item')) : []);
+const items = (): HTMLButtonElement[] =>
+  tray ? Array.from(tray.querySelectorAll<HTMLButtonElement>('.tray-item')).filter((b) => !b.hidden) : [];
 
 function structureCutout(draw: string): string {
   return `<svg class="cutout" viewBox="0 0 ${CUTOUT_WIDTH} ${CUTOUT_HEIGHT}" width="${CUTOUT_WIDTH}" height="${CUTOUT_HEIGHT}" fill="none" stroke="var(--cc-ink-3)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${draw}</svg>`;
@@ -57,6 +61,10 @@ function sync(open: boolean): void {
 export function closeTray(returnFocus = false): void {
   if (!isOpen()) return;
   tray!.hidden = true;
+  if (search && search.value) {
+    search.value = '';
+    applyFilter();
+  }
   sync(false);
   if (returnFocus) (opener ?? document.getElementById('btn-all-components'))?.focus();
 }
@@ -82,6 +90,17 @@ function onKeydown(e: KeyboardEvent): void {
     focusItem(e.key === 'Home' ? all[0] : all[all.length - 1]);
     return;
   }
+  if (current === search) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      focusItem(all[0]);
+    } else if (e.key === 'Enter' && search?.value.trim() && all[0]) {
+      // Place the first match: type `kafka`, press Enter.
+      e.preventDefault();
+      placeFromKeyboard(all[0]);
+    }
+    return;
+  }
   if (!dir || !current || !all.includes(current)) return;
   e.preventDefault();
   const point = (b: HTMLButtonElement, i: number) => {
@@ -91,6 +110,42 @@ function onKeydown(e: KeyboardEvent): void {
   const from = point(current, all.indexOf(current));
   const next = nearestInDirection(from, all.map(point), dir);
   if (next !== null) focusItem(all[Number(next)]);
+  else if (dir === 'up') search?.focus();
+}
+
+function placeFromKeyboard(btn: HTMLButtonElement): void {
+  btn.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+}
+
+/** Show the items that match, the groups that still have one, and "named X" under a match by word. */
+function applyFilter(): void {
+  if (!tray || !search) return;
+  const buttons = Array.from(tray.querySelectorAll<HTMLButtonElement>('.tray-item'));
+  const entries = buttons.map((b) => ({ id: b.dataset.stencilId ?? '', title: b.dataset.title ?? '' }));
+  const hits = new Map(searchTray(search.value, entries).map((m) => [m.id, m.named]));
+  for (const b of buttons) {
+    const id = b.dataset.stencilId ?? '';
+    b.hidden = !hits.has(id);
+    const named = hits.get(id);
+    if (named) b.dataset.named = named;
+    else delete b.dataset.named;
+    let note = b.querySelector('.tray-note');
+    if (named && !note) {
+      note = document.createElement('span');
+      note.className = 'tray-note';
+      b.querySelector('.tray-name')?.append(note);
+    }
+    if (note) {
+      note.textContent = named ? `named ${named}` : '';
+      if (!named) note.remove();
+    }
+  }
+  for (const group of tray.querySelectorAll<HTMLElement>('.tray-group')) group.hidden = !group.querySelector('.tray-item:not([hidden])');
+  const empty = tray.querySelector<HTMLElement>('.tray-empty');
+  if (empty) empty.hidden = buttons.some((b) => !b.hidden);
+  for (const b of buttons) b.tabIndex = -1;
+  const first = items()[0];
+  if (first) first.tabIndex = 0;
 }
 
 function build(): HTMLElement {
@@ -100,6 +155,21 @@ function build(): HTMLElement {
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-label', 'All components');
   el.hidden = true;
+  search = document.createElement('input');
+  search.type = 'search';
+  search.className = 'field tray-search';
+  search.placeholder = 'Search, or type what you run: redis, kafka, nginx';
+  search.setAttribute('aria-label', 'Search components');
+  search.autocomplete = 'off';
+  search.spellcheck = false;
+  search.addEventListener('input', applyFilter);
+  el.appendChild(search);
+  const empty = document.createElement('p');
+  empty.className = 'tray-empty';
+  empty.setAttribute('role', 'status');
+  empty.textContent = 'Nothing matches. Try the name of what you run, like redis or nginx.';
+  empty.hidden = true;
+  el.appendChild(empty);
   for (const group of GROUPS) {
     const section = document.createElement('section');
     section.className = 'tray-group';
@@ -140,6 +210,7 @@ function makeItem(item: Item): HTMLButtonElement {
   if (item.structure) {
     const { command, draw } = item.structure;
     name.textContent = item.title ?? item.id;
+    btn.dataset.title = name.textContent;
     cut.innerHTML = structureCutout(draw);
     btn.dataset.structure = item.id;
     btn.setAttribute('aria-label', name.textContent);
@@ -153,6 +224,7 @@ function makeItem(item: Item): HTMLButtonElement {
     const stencil = findStencil(item.id);
     if (!stencil) return btn;
     name.textContent = stencil.paletteTitle;
+    btn.dataset.title = stencil.paletteTitle;
     btn.setAttribute('aria-label', `${stencil.paletteTitle}: ${stencil.paletteSub}`);
     btn.setAttribute('data-tip', stencil.paletteSub);
     btn.setAttribute('data-tip-pos', 'top');
@@ -161,8 +233,9 @@ function makeItem(item: Item): HTMLButtonElement {
     attachStencilDragAndDrop(btn, stencil.id, stencil.paletteTitle, {
       // A click carries it to the sheet, with the tray out of the way.
       onTap: (e) => {
+        const named = btn.dataset.named;
         closeTray();
-        arm(stencil.id, e.clientX, e.clientY);
+        arm(stencil.id, e.clientX, e.clientY, named);
       },
       // Dropped on a dock slot, it replaces that favourite instead of going on the sheet.
       onDrop: (e) => {
@@ -172,6 +245,8 @@ function makeItem(item: Item): HTMLButtonElement {
         if (index >= 0 && index < FAVOURITE_COUNT) setFavourite(index, stencil.id);
         return true;
       },
+      // A match by word names the new component: kafka gives a Stream called Kafka.
+      name: () => btn.dataset.named,
       // Placed by drag or Enter: the tray has done its job.
       onPlaced: () => closeTray(true),
     });
@@ -187,7 +262,7 @@ export function openTray(opener_?: HTMLElement | null): void {
   disarm();
   tray.hidden = false;
   sync(true);
-  focusItem(items()[0]);
+  search?.focus();
 }
 
 export function toggleTray(opener_?: HTMLElement | null): void {
