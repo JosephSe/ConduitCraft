@@ -1,0 +1,429 @@
+@layer layout {
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding-inline: 1rem;
+    padding-block: 0.55rem;
+    background: var(--wl-panel);
+    backdrop-filter: blur(18px);
+    border-block-end: 1px solid var(--wl-border-subtle);
+    z-index: 20;
+    flex-wrap: wrap;
+  }
+
+  .brand-cluster {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-inline-size: 0;
+  }
+
+  .brand-mark {
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    border-radius: 0.625rem;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg var(--in-oklab), var(--wl-blue), var(--wl-emerald));
+    /* White on the light dark-mode accents is ~2:1, so the text colour follows the theme. */
+    color: var(--wl-on-blue);
+    box-shadow: 0 6px 18px rgba(37, 99, 235, 0.32);
+    flex-shrink: 0;
+  }
+
+  .brand-cluster[data-brand] .brand-mark {
+    background: var(--brand-accent);
+    /* A document-chosen colour can't be assumed light or dark, so keep the original white glyph there. */
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .brand-logo {
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+    object-fit: contain;
+  }
+
+  .brand-name {
+    font-family: var(--wl-font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--brand-accent, var(--wl-ink-muted));
+  }
+
+  /* A document-chosen accent can't be guaranteed readable on both themes, so blend it toward the text colour. */
+  .brand-cluster[data-brand] .brand-name {
+    color: color-mix(in srgb, var(--brand-accent) 55%, var(--wl-ink));
+  }
+
+  .brand-titles {
+    min-inline-size: 0;
+  }
+
+  .title-edit-trigger {
+    background: transparent;
+    border: none;
+    padding: 0.1rem 0.35rem;
+    margin-inline-start: -0.35rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    text-align: left;
+    max-inline-size: 18rem;
+    transition: background-color 0.15s ease;
+  }
+
+  .title-edit-trigger:hover {
+    background: var(--wl-surface-elevated);
+  }
+
+  .title-edit-trigger:focus-visible {
+    outline: 2px solid var(--wl-blue);
+    outline-offset: 2px;
+  }
+
+  h1 {
+    font-size: clamp(0.95rem, 1.2vw, 1.125rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .save-status-pill {
+    font-family: var(--wl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    background: var(--wl-surface-elevated);
+    color: var(--wl-ink-muted);
+    border: 1px solid var(--wl-border-subtle);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .save-status-pill[data-status="saving"] {
+    color: var(--wl-blue);
+    border-color: var(--wl-blue);
+  }
+
+  .save-status-pill[data-status="saved"] {
+    color: var(--wl-emerald);
+    border-color: color-mix(in srgb, var(--wl-emerald) 35%, transparent);
+  }
+
+  .save-status-pill[data-status="error"] {
+    color: var(--wl-rose);
+    border-color: var(--wl-rose);
+    background: color-mix(in srgb, var(--wl-rose) 12%, transparent);
+  }
+
+  .doc-history-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+  }
+
+  .doc-history-controls .btn-icon-only {
+    inline-size: 1.65rem;
+    block-size: 1.65rem;
+    padding: 0;
+    border-radius: 0.35rem;
+  }
+
+  .toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-action-compact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: 16.5rem minmax(0, 1fr) 22.5rem;
+    min-block-size: 0;
+    min-inline-size: 0;
+    max-inline-size: 100vw;
+    overflow: hidden;
+    position: relative;
+    transition: grid-template-columns 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .workspace[data-palette-collapsed="true"] {
+    grid-template-columns: 3.25rem minmax(0, 1fr) 22.5rem;
+  }
+
+  .workspace[data-inspector-collapsed="true"] {
+    grid-template-columns: 16.5rem minmax(0, 1fr) 3.25rem;
+  }
+
+  .workspace[data-palette-collapsed="true"][data-inspector-collapsed="true"] {
+    grid-template-columns: 3.25rem minmax(0, 1fr) 3.25rem;
+  }
+
+  .workspace[data-mode="data"] {
+    grid-template-columns: minmax(0, 1fr) 23.5rem;
+  }
+
+  .workspace[data-mode="data"][data-inspector-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr) 3.25rem;
+  }
+
+  .palette-rail-content,
+  .inspector-rail-content {
+    display: none;
+  }
+
+  .workspace[data-palette-collapsed="true"] .palette-sidebar {
+    overflow: visible;
+  }
+
+  .workspace[data-palette-collapsed="true"] .palette-header,
+  .workspace[data-palette-collapsed="true"] .palette-scroll {
+    display: none !important;
+  }
+
+  .workspace[data-palette-collapsed="true"] .palette-rail-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+    padding-block: 0.65rem;
+    padding-inline: 0.25rem;
+  }
+
+  .rail-divider {
+    inline-size: 1.5rem;
+    block-size: 1px;
+    background: var(--wl-border-subtle);
+    margin-block: 0.2rem;
+  }
+
+  .rail-stencil-btn {
+    position: relative;
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.45rem;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--wl-ink-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .rail-stencil-btn:hover {
+    background: var(--wl-surface-elevated);
+    border-color: var(--wl-border-subtle);
+    color: var(--wl-ink);
+    z-index: 100;
+  }
+
+  .rail-stencil-btn:focus-visible {
+    z-index: 100;
+  }
+
+  .workspace[data-inspector-collapsed="true"] .inspector {
+    overflow: visible;
+  }
+
+  .workspace[data-inspector-collapsed="true"] .inspector-mode-pane {
+    display: none !important;
+  }
+
+  .workspace[data-inspector-collapsed="true"] .inspector-rail-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.65rem;
+    padding-inline: 0.25rem;
+    cursor: pointer;
+    block-size: 100%;
+  }
+
+  .rail-vertical-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-family: var(--wl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--wl-ink-muted);
+    user-select: none;
+    margin-block-start: 0.5rem;
+  }
+
+  @media (max-width: 82rem) {
+    .btn-text-responsive {
+      display: none;
+    }
+
+    .title-edit-trigger {
+      max-inline-size: 13rem;
+    }
+
+    .workspace {
+      grid-template-columns: 14.5rem minmax(0, 1fr) 21.5rem;
+    }
+
+    .workspace[data-palette-collapsed="true"] {
+      grid-template-columns: 3.25rem minmax(0, 1fr) 21.5rem;
+    }
+
+    .workspace[data-inspector-collapsed="true"] {
+      grid-template-columns: 14.5rem minmax(0, 1fr) 3.25rem;
+    }
+
+    .workspace[data-palette-collapsed="true"][data-inspector-collapsed="true"] {
+      grid-template-columns: 3.25rem minmax(0, 1fr) 3.25rem;
+    }
+
+    .workspace[data-mode="data"] {
+      grid-template-columns: minmax(0, 1fr) 21.5rem;
+    }
+
+    .workspace[data-mode="data"][data-inspector-collapsed="true"] {
+      grid-template-columns: minmax(0, 1fr) 3.25rem;
+    }
+  }
+
+  @media (max-width: 66rem) {
+    .topbar {
+      gap: 0.45rem;
+      padding-inline: 0.75rem;
+    }
+
+    .title-edit-trigger {
+      max-inline-size: 10rem;
+    }
+
+    .workspace,
+    .workspace[data-mode="design"],
+    .workspace[data-mode="data"],
+    .workspace[data-palette-collapsed="true"],
+    .workspace[data-inspector-collapsed="true"],
+    .workspace[data-palette-collapsed="true"][data-inspector-collapsed="true"],
+    .workspace[data-mode="data"][data-inspector-collapsed="true"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .palette-sidebar {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      inline-size: 16.5rem;
+      max-inline-size: min(16.5rem, 85vw);
+      z-index: 40;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .workspace[data-palette-collapsed="true"] .palette-sidebar {
+      display: none !important;
+    }
+
+    .inspector {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-end: 0;
+      inline-size: 21.5rem;
+      max-inline-size: min(21.5rem, 90vw);
+      z-index: 42;
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .workspace[data-inspector-collapsed="true"] .inspector {
+      display: none !important;
+    }
+  }
+
+  /* Phone layout. A 768px tablet in portrait keeps the full top bar (A12c), so this stops just below it. */
+  @media (max-width: 47.9rem) {
+    .topbar {
+      flex-wrap: nowrap;
+      gap: 0.35rem;
+      padding-inline: 0.5rem;
+      min-block-size: 3rem;
+      max-block-size: 3.5rem;
+      overflow: visible;
+    }
+
+    .brand-mark {
+      inline-size: 1.85rem;
+      block-size: 1.85rem;
+    }
+
+    .brand-titles .brand-name {
+      display: none;
+    }
+
+    .title-edit-trigger {
+      max-inline-size: 7.5rem;
+      font-size: 0.8rem;
+    }
+
+    .doc-history-controls {
+      display: none;
+    }
+
+    .toolbar-center {
+      display: none;
+    }
+
+    #btn-open-palette,
+    #btn-enter-presentation,
+    #btn-open-shortcuts,
+    #btn-open-settings {
+      display: none;
+    }
+  }
+
+  .drawer-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 35;
+    transition: opacity 0.2s ease;
+  }
+
+  .drawer-scrim[hidden] {
+    display: none !important;
+  }
+
+  @media (min-width: 66.01rem) {
+    .drawer-scrim {
+      display: none !important;
+    }
+  }
+}
+

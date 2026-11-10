@@ -11,6 +11,7 @@ import {
 } from '../src/core/nodeStyle.ts';
 import { generateStandaloneHtml } from '../src/exporter/standaloneHtml.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
+import { readStudioCss } from './studioCss.ts';
 
 const TINY_PNG =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
@@ -96,8 +97,9 @@ flowchart LR
     tightenLegacyStoreCylinder(rounded);
     assert.equal(rounded.width, 248);
     assert.equal(rounded.height, 172);
-    for (const sheet of ['studio.css', 'viewer.css']) {
-      const css = fs.readFileSync(new URL(`../src/styles/${sheet}`, import.meta.url), 'utf8');
+    const studioSheet = readStudioCss();
+    const viewerCssEarly = fs.readFileSync(new URL('../src/styles/viewer.css', import.meta.url), 'utf8');
+    for (const css of [studioSheet, viewerCssEarly]) {
       assert.match(css, /\.arch-node\[data-shape="cylinder"\] \.node-eyebrow \{ display: none; \}/);
     }
     assert.match(nodeShapeContentPadding('store', 'diamond', 248, 172), /px /);
@@ -150,7 +152,7 @@ flowchart LR
     assert.match(html, /class="node-title">DVA-D<\/span>/);
     assert.match(html, /class="node-sub">Data Validation[\s\S]*Application: Digital<\/span>/);
 
-    const studioCss = fs.readFileSync(new URL('../src/styles/studio.css', import.meta.url), 'utf8');
+    const studioCss = readStudioCss();
     const viewerCss = fs.readFileSync(new URL('../src/styles/viewer.css', import.meta.url), 'utf8');
 
     assert.match(studioCss, /\.arch-node\[data-kind="client"\]\s*\.node-sub\s*\{[^}]*-webkit-line-clamp:\s*3/);

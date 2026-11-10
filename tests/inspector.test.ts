@@ -250,7 +250,8 @@ describe('inspector collapsible sections and tone picker', () => {
     const { readFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
 
-    const studioCss = readFileSync(resolve(process.cwd(), 'src/styles/studio.css'), 'utf8');
+    const { readStudioCss } = await import('./studioCss.ts');
+    const studioCss = readStudioCss();
     const sharedCss = readFileSync(resolve(process.cwd(), 'src/styles/shared.css'), 'utf8');
 
     // Body bounds preventing horizontal blowout

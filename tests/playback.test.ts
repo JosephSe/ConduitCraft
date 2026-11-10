@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 
 // Set up minimal document mock before loading studio DOM modules
 if (typeof (globalThis as any).document === 'undefined') {
@@ -194,8 +193,7 @@ describe('simulation playback controls (step, scrub, speed, loop)', () => {
   });
 
   it('defines the active step style in studio.css', () => {
-    const cssPath = path.resolve('src/styles/studio.css');
-    const css = fs.readFileSync(cssPath, 'utf-8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('.trace-item.is-active-step'), 'defines active step trace highlight');
   });
