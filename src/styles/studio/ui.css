@@ -172,7 +172,6 @@
     position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 0;
     padding: 0;
     border: 0;
     background: none;
@@ -182,8 +181,7 @@
     content: "";
     position: absolute;
     inset-block: 0;
-    inset-inline-start: 0;
-    inline-size: calc(100% / 3);
+    inline-size: 33.34%;
     border-radius: 0.45rem;
     background: var(--cc-ink);
     transition: transform var(--cc-dur-slow) cubic-bezier(0.34, 1.56, 0.64, 1);

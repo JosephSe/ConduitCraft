@@ -1485,7 +1485,6 @@ kbd {
   color: var(--cc-on-ink);
 }
 .mode-switcher label:has(input:checked) .insight-count { background: var(--cc-on-ink); color: var(--cc-redline); }
-.insight-count[hidden] { display: none; }
 .insights-panel {
   position: absolute;
   inset-inline-start: 1rem;
