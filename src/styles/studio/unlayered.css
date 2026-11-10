@@ -185,27 +185,6 @@ kbd {
   line-height: 1.2;
 }
 
-/* Coach card dismiss button */
-.coach-dismiss-btn {
-  background: transparent;
-  border: none;
-  color: var(--wl-ink-muted);
-  cursor: pointer;
-  padding: 0 0.25rem;
-  line-height: 1;
-  font-size: 1.1rem;
-  border-radius: 3px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 0.25rem;
-  transition: color 0.15s;
-}
-
-.coach-dismiss-btn:hover {
-  color: var(--wl-ink);
-}
-
 /* Collapsible Inspector Sections */
 .prop-section-details {
   border: 1px solid var(--wl-border-subtle);
@@ -1329,15 +1308,11 @@ kbd {
 
 /* Run bar: scenario picker and transport for the Traffic lens (redesigned interface only). */
 .run-bar {
-  position: absolute;
-  inset-inline-start: 50%;
-  inset-block-end: calc(7.25rem + var(--page-strip-h));
-  transform: translateX(-50%);
-  z-index: 11;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.4rem;
-  inline-size: min(40rem, calc(100% - 1.75rem));
+  inline-size: min(40rem, 100%);
   padding: 0.4rem 0.6rem;
   background: var(--wl-surface);
   border: 1px solid var(--wl-border);
@@ -1352,7 +1327,7 @@ kbd {
   display: contents;
 }
 .run-bar-scenario {
-  min-inline-size: 0;
+  min-inline-size: 6rem;
   max-inline-size: 11rem;
   flex: 0 1 11rem;
 }
@@ -1486,11 +1461,7 @@ kbd {
 }
 
 .chaos-panel {
-  position: absolute;
-  inset-inline-start: 50%;
-  inset-block-end: calc(11.5rem + var(--page-strip-h));
-  transform: translateX(-50%);
-  z-index: 11;
+  max-inline-size: 100%;
   display: grid;
   gap: 0.35rem;
   padding: 0.4rem 0.6rem;
@@ -1501,7 +1472,7 @@ kbd {
 }
 .chaos-panel[hidden], .chaos-list[hidden] { display: none; }
 .chaos-panel-head { display: flex; gap: 0.4rem; align-items: center; }
-.chaos-list { list-style: none; margin: 0; padding: 0; max-block-size: 10rem; overflow: auto; display: grid; gap: 0.15rem; }
+.chaos-list { list-style: none; margin: 0; padding: 0; max-block-size: min(10rem, 18vh); overflow: auto; display: grid; gap: 0.15rem; }
 .chaos-item { all: unset; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: 0.4rem; font-size: 0.78rem; color: var(--wl-ink); }
 .chaos-item:hover, .chaos-item:focus-visible { background: var(--wl-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 .chaos-item[data-status="failed"] { color: var(--wl-rose); font-weight: 600; }
@@ -1851,20 +1822,19 @@ kbd {
 .bulk-tag-row .field { flex: 1; min-inline-size: 0; }
 .bulk-tag-buttons { display: inline-flex; gap: 0.25rem; }
 
-/* Page tabs (D10): along the bottom edge of the canvas, always shown. The HUD, run bar and failure summary sit above it. */
-.canvas-shell { --page-strip-h: 2.25rem; }
+/* Page tabs (D10): the SW island, under the minimap. It scrolls sideways when the pages outgrow its slot. */
 .page-strip {
-  position: absolute;
-  inset-inline: 0;
-  inset-block-end: 0;
-  z-index: 12;
-  block-size: var(--page-strip-h);
   display: flex;
   align-items: stretch;
   gap: 0.25rem;
-  padding-inline: 0.5rem;
-  background: var(--wl-surface);
-  border-block-start: 1px solid var(--wl-border);
+  max-inline-size: 100%;
+  padding: 0.2rem 0.35rem;
+  background: var(--wl-panel);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--wl-border-subtle);
+  border-radius: 0.75rem;
+  box-shadow: var(--wl-shadow-card);
 }
 .page-tabs {
   display: flex;
@@ -1877,9 +1847,10 @@ kbd {
 .page-tab {
   flex: 0 0 auto;
   max-inline-size: 14rem;
-  padding: 0 0.85rem;
+  padding: 0 0.75rem;
   border: 0;
-  border-block-start: 2px solid transparent;
+  border-radius: 0.5rem;
+  border-block-start: 0;
   background: none;
   color: var(--wl-ink-muted);
   font: inherit;
@@ -1887,7 +1858,7 @@ kbd {
   cursor: pointer;
 }
 .page-tab:hover { color: var(--wl-ink); background: var(--wl-hover, rgba(127, 127, 127, 0.1)); }
-.page-tab[aria-selected="true"] { color: var(--wl-ink); font-weight: 600; border-block-start-color: var(--cc-accent); background: var(--wl-panel, transparent); }
+.page-tab[aria-selected="true"] { color: var(--wl-ink); font-weight: 600; background: var(--cc-well); }
 .page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--cc-accent); }
 .page-tab-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .page-add {
@@ -1906,9 +1877,8 @@ kbd {
 .page-add:hover { color: var(--wl-ink); border-color: var(--wl-border); }
 .page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 body[data-presenting="true"] .page-strip { display: none; }
-/* Touch (A12): the strip's tabs and + button are full-size targets, and the HUD above them makes room. */
+/* Touch (A12): the strip's tabs and + button are full-size targets. */
 @media (pointer: coarse) {
-  .canvas-shell { --page-strip-h: 2.75rem; }
   .page-tab, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
 }
 

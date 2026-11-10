@@ -16,11 +16,10 @@
 }
 .code-pane[hidden] { display: none; }
 
-/* The canvas, its HUD, the page strip and the run bar give way to the pane. */
+/* The canvas and the slots give way to the pane. */
 .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: calc(100% - var(--code-pane-w)); }
-.canvas-shell[data-code-pane="open"] :is(.canvas-hud, .page-strip, .legend-card) { inset-inline-end: calc(var(--code-pane-w) + 0.875rem); }
-.canvas-shell[data-code-pane="open"] .page-strip { inset-inline-end: var(--code-pane-w); }
-.canvas-shell[data-code-pane="open"] :is(.run-bar, .chaos-panel) { inset-inline-start: calc(50% - var(--code-pane-w) / 2); }
+.canvas-shell[data-code-pane="open"] .slots { inset-inline-end: var(--code-pane-w); }
+.canvas-shell[data-code-pane="open"] .legend-card { inset-inline-end: calc(var(--code-pane-w) + 0.875rem); }
 
 .code-pane-resize {
   position: absolute;
@@ -85,10 +84,8 @@
   .code-pane { inset-block: auto 0; inset-inline: 0; inline-size: auto; max-inline-size: none; block-size: var(--code-pane-h); border-inline-start: 0; border-block-start: 1px solid var(--wl-border); }
   .code-pane-resize { inset-block: -4px auto; inset-inline: 0; block-size: 8px; inline-size: auto; cursor: row-resize; }
   .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: 100%; block-size: calc(100% - var(--code-pane-h)); }
-  .canvas-shell[data-code-pane="open"] :is(.canvas-hud, .legend-card, .page-strip) { inset-inline-end: 0.875rem; }
-  .canvas-shell[data-code-pane="open"] .page-strip { inset-inline-end: 0; inset-block-end: var(--code-pane-h); }
-  .canvas-shell[data-code-pane="open"] .canvas-hud { inset-block-end: calc(var(--code-pane-h) + var(--page-strip-h) + 0.5rem); }
-  .canvas-shell[data-code-pane="open"] :is(.run-bar, .chaos-panel) { inset-inline-start: 50%; inset-block-end: calc(var(--code-pane-h) + var(--page-strip-h) + 5rem); }
+  .canvas-shell[data-code-pane="open"] .legend-card { inset-inline-end: 0.875rem; }
+  .canvas-shell[data-code-pane="open"] .slots { inset-inline-end: 0; inset-block-end: var(--code-pane-h); }
 }
 
 @media (pointer: coarse) {

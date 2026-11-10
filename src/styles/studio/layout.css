@@ -1,8 +1,9 @@
 @layer layout {
+  /* The three top slots (6.1): NW the document, N the lens, NE the actions. */
   .topbar {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
     gap: 0.65rem;
     padding-inline: 1rem;
     padding-block: 0.55rem;
@@ -10,7 +11,73 @@
     backdrop-filter: blur(18px);
     border-block-end: 1px solid var(--wl-border-subtle);
     z-index: 20;
-    flex-wrap: wrap;
+  }
+
+  .slot-nw { justify-self: start; max-inline-size: 100%; min-inline-size: 0; overflow: hidden; }
+  .slot-n { justify-self: center; }
+  .slot-ne { justify-self: end; max-inline-size: 100%; }
+
+  /* The bottom slots (6.1): one grid over the sheet. Islands are the [data-island] children. S grows upward. */
+  .slots {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    container-type: inline-size;
+  }
+
+  .slots-grid {
+    position: absolute;
+    inset: 0.875rem;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+    grid-template-rows: 1fr auto auto;
+    grid-template-areas: ". . ." "s s s" "sw . se";
+    column-gap: 0.625rem;
+  }
+
+  .slot {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.625rem;
+    min-inline-size: 0;
+    pointer-events: none;
+  }
+
+  .slot > * { pointer-events: auto; }
+  .slot-sw { grid-area: sw; align-items: flex-start; max-inline-size: min(24rem, 46cqi); }
+  .slot-s { grid-area: s; align-items: center; margin-block-end: 0.625rem; }
+  .slot-se { grid-area: se; align-items: flex-end; position: relative; }
+
+  /* Wide enough for the run bar to sit between the corners; otherwise it takes its own row above them. */
+  @container (min-width: 74rem) {
+    .slots-grid { grid-template-areas: ". . ." ". . ." "sw s se"; }
+    .slot-s { margin-block-end: 0; }
+  }
+
+  /* A short window has no room for the minimap above the pages; it comes back with height. */
+  @media (max-height: 44rem) {
+    .hud-minimap-card { display: none; }
+  }
+
+  /* The hint line: plain text, no container; it is also the status line for screen readers. */
+  .hint-line {
+    margin: 0;
+    max-inline-size: 100%;
+    font: var(--cc-font-small);
+    color: var(--wl-ink-muted);
+    text-align: center;
+    text-wrap: balance;
+    pointer-events: none;
+  }
+
+  /* The find box is a popover over SE, not an island. */
+  .slot-se > .hud-search-card {
+    position: absolute;
+    inset-block-end: calc(100% + 0.625rem);
+    inset-inline-end: 0;
+    z-index: 2;
   }
 
   .brand-cluster {
@@ -96,6 +163,7 @@
     display: flex;
     align-items: center;
     gap: 0.45rem;
+    min-inline-size: 0;
   }
 
   .save-status-pill {
@@ -144,14 +212,12 @@
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    flex-wrap: wrap;
   }
 
   .toolbar-actions {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    flex-wrap: wrap;
   }
 
   .workspace {
@@ -306,6 +372,13 @@
     }
   }
 
+  /* Narrow: NW takes what N and NE leave, so the title gives way before undo and redo do. */
+  @media (max-width: 56rem) {
+    .topbar {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+  }
+
   @media (max-width: 66rem) {
     .topbar {
       gap: 0.45rem;
@@ -358,7 +431,6 @@
   /* Phone layout. A 768px tablet in portrait keeps the full top bar (A12c), so this stops just below it. */
   @media (max-width: 47.9rem) {
     .topbar {
-      flex-wrap: nowrap;
       gap: 0.35rem;
       padding-inline: 0.5rem;
       min-block-size: 3rem;

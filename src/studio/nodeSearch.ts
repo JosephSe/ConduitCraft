@@ -13,6 +13,8 @@ export interface NodeSearchOptions {
   searchInput: HTMLInputElement;
   searchCount: HTMLElement;
   clearButton: HTMLButtonElement;
+  /** The box the input sits in. When given, it stays closed until Cmd/Ctrl+F opens it and closes again on Escape or when the field is left empty. */
+  popover?: HTMLElement;
   getDoc: () => DiagramDocument;
   /** `path` is the level the node lives in when it is not the open one (F-03). */
   onFocusNode: (node: DiagramNode, shouldZoomFrame?: boolean, path?: string[]) => void;
@@ -117,7 +119,10 @@ export function clearSearchHighlightsFromStage(): void {
  * Initializes the HUD search controller and binds event listeners.
  */
 export function initNodeSearch(options: NodeSearchOptions): NodeSearchController {
-  const { searchInput, searchCount, clearButton, getDoc, onFocusNode, onClearSearch, getOtherLevels } = options;
+  const { searchInput, searchCount, clearButton, popover, getDoc, onFocusNode, onClearSearch, getOtherLevels } = options;
+  const closePopover = () => {
+    if (popover) popover.hidden = true;
+  };
 
   let currentMatches: DiagramNode[] = [];
   let currentIndex = -1;
@@ -244,7 +249,16 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
       e.preventDefault();
       clear();
       searchInput.blur();
+      closePopover();
     }
+  });
+
+  // Leaving the field with nothing typed puts the popover away; a query keeps it open.
+  searchInput.addEventListener('blur', () => {
+    if (searchInput.value.trim()) return;
+    setTimeout(() => {
+      if (!popover?.contains(document.activeElement)) closePopover();
+    }, 0);
   });
 
   // Clear button click
@@ -265,6 +279,7 @@ export function initNodeSearch(options: NodeSearchOptions): NodeSearchController
           return;
         }
         e.preventDefault();
+        if (popover) popover.hidden = false;
         searchInput.focus();
         searchInput.select();
       }

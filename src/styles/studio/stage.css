@@ -1078,7 +1078,6 @@
     .btn-panel-collapse,
     .btn-rail-expand,
     .rail-stencil-btn,
-    .coach-dismiss-btn,
     .tab-btn,
     .prop-header-btn {
       min-inline-size: 2.75rem;
@@ -1643,19 +1642,6 @@
 
   .sim-packet[data-tone] { border-color: var(--t); }
 
-  .canvas-hud {
-    position: absolute;
-    inset-block-end: calc(0.875rem + var(--page-strip-h));
-    inset-inline: 0.875rem;
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.65rem;
-    pointer-events: none;
-    z-index: 10;
-    flex-wrap: wrap;
-  }
-
   .hud-card {
     pointer-events: auto;
     display: inline-flex;
@@ -1670,11 +1656,6 @@
     box-shadow: var(--wl-shadow-card);
     font-size: 0.78rem;
     color: var(--wl-ink-secondary);
-  }
-
-  .hud-tip {
-    font: var(--cc-font-small);
-    color: var(--wl-ink-muted);
   }
 
   .zoom-readout {
@@ -1704,7 +1685,7 @@
     cursor: grabbing;
   }
 
-  .canvas-hud .btn {
+  .hud-zoom-card .btn {
     white-space: nowrap;
   }
 }

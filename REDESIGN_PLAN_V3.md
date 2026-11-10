@@ -675,10 +675,16 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 
 ### Milestone S: Shell
 
-#### [ ] S1. Seven slots · M
+#### [x] S1. Seven slots · M
 - **Read:** the `layout` layer; `index.html` lines 20 to 460; `responsiveToolbar.ts`.
 - **Do:** 6.1. Move the existing top-bar controls into NW, N and NE as they are; move pages to SW and zoom to SE; remove the status, coach and search cards in favour of the hint line and `⌘F` opening the existing find in a popover.
 - **Done:** a new Playwright test asserts no two islands' boxes intersect at 800 × 600, 1280 × 800 and 1440 × 900 in every lens, with a selection and with the tray open. **Needs:** T3.
+- The top bar is a three-column grid with NW (`.slot-nw`, the title block), N (`.slot-n`, the lens) and NE (`.slot-ne`, the actions), controls unchanged. Under 56 rem the columns become `1fr auto auto` so the title gives way before undo and redo. The bottom is one `.slots` grid over the sheet (`pointer-events: none`, islands `auto`) with SW (minimap, then the pages island), S (failure summary, hint line, run bar) and SE (zoom). In a canvas under 74 rem wide, S takes its own row above SW and SE (a container query on the grid); wider, it sits between them. Islands are the `[data-island]` elements.
+- The status card, coach card (and its dismiss button, localStorage key and CSS) and the always-open find card are gone. `#hud-status-tip` is now the plain `<p class="hint-line" role="status">` in S. `⌘F` opens `#hud-search-card` as a popover above SE (`initNodeSearch` takes a `popover`); Escape closes it, and leaving the field empty closes it. Popovers are not islands.
+- The page strip is no longer a full-width bar: it is the SW island under the minimap. `--page-strip-h` and the offset rules for the run bar, failure summary and code pane are removed; the code pane now moves the whole `.slots` grid. Toasts still float above the bottom slots: `toast.ts` measures the top of SW, S and SE instead of `.canvas-hud`.
+- Not done here, on purpose: the sheet does not yet run edge to edge under the top islands, and the left palette and right inspector columns are still there, because they leave in S3 and S4. The minimap stays a card in SW until S2 turns it into a popover; below 44 rem of window height it is hidden to make room. The failure list is capped at 18 vh for the same reason.
+- `e2e/layout.spec.ts` is replaced by `e2e/slots.spec.ts` (D12): at 800 × 600, 1280 × 800 and 1440 × 900, in Design, Traffic (with a failed component and its list open) and Review, with a selection and a toast, no two islands overlap; and the find popover opens and closes. `topbar.spec.ts` counts the zoom island and the find box as their own regions. Pictures 01 to 06 were re-recorded for the new bottom edge. Entry CSS is 112.0 kB of 112, so there is no room left: the next CSS-heavy step must delete first.
+
 
 #### [ ] S2. Top and corner islands · M
 - **Do:** 6.2 and 6.3, including the legend and view popovers.
