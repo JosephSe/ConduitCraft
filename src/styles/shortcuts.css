@@ -12,11 +12,9 @@
 }
 
 .shortcuts-category-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+  font: var(--cc-font-meta);
+  font-weight: 600;
   color: var(--wl-ink-muted);
-  text-transform: uppercase;
   border-bottom: 1px solid var(--wl-border-subtle);
   padding-bottom: 0.35rem;
   margin: 0;

@@ -208,9 +208,8 @@
   gap: 0.6rem;
 }
 .diff-ledger-title {
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font: var(--cc-font-small);
+  font-weight: 600;
   color: var(--wl-ink-muted);
   margin: 0;
 }

@@ -222,12 +222,9 @@ kbd {
 
 .prop-section-summary {
   padding: 0.6rem 0.75rem;
-  font-family: var(--wl-font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font: var(--cc-font-meta);
+  font-weight: 600;
   color: var(--wl-ink-secondary);
-  text-transform: uppercase;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
@@ -451,11 +448,9 @@ kbd {
 }
 
 .palette-item-badge {
-  font-family: var(--wl-font-mono);
-  font-size: 0.68rem;
-  font-weight: 700;
+  font: var(--cc-font-meta);
+  font-weight: 600;
   color: var(--wl-ink-muted);
-  text-transform: uppercase;
   padding: 0.15rem 0.35rem;
   border-radius: 4px;
   background: var(--wl-surface-code);
@@ -619,10 +614,8 @@ kbd {
 }
 
 .template-category-badge {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font: var(--cc-font-meta);
+  font-weight: 600;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   background: var(--wl-blue-soft);
@@ -1036,11 +1029,8 @@ kbd {
   padding-inline: 0.45rem;
   padding-block: 0.1rem;
   border-radius: 999px;
-  font-family: var(--wl-font-mono);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font: var(--cc-font-meta);
+  font-weight: 600;
   border: 1px solid var(--wl-border-subtle);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   z-index: 10;
@@ -1393,7 +1383,8 @@ kbd {
 }
 .run-bar-step {
   flex: 0 0 auto;
-  font-family: var(--wl-font-mono);
+  font-family: var(--wl-font-sans);
+  font-variant-numeric: tabular-nums;
   font-size: 0.72rem;
   color: var(--wl-ink-muted);
   white-space: nowrap;
@@ -1419,10 +1410,8 @@ kbd {
 .legend-card[hidden] { display: none; }
 .legend-card-title {
   margin: 0 0 0.25rem;
-  font-family: var(--wl-font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font: var(--cc-font-meta);
+  font-weight: 600;
   color: var(--wl-ink-muted);
 }
 .legend-card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }

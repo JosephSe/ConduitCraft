@@ -194,6 +194,8 @@
     width: 1680px;
     height: 920px;
     transform-origin: 0 0;
+    /* The sheet is the condensed width. Chrome stays at 100%. */
+    font-stretch: 88%;
   }
 
   /* Smart guides, drawn on the wire-handles overlay while a component is dragged */
@@ -667,10 +669,8 @@
   }
 
   .selection-subheading {
-    font-size: 0.68rem;
+    font: var(--cc-font-meta);
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
     color: var(--wl-text-secondary);
     margin-top: 0.25rem;
   }
@@ -1396,18 +1396,16 @@
   }
 
   .node-eyebrow {
-    font-family: var(--wl-font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
+    font: var(--cc-font-meta);
+    font-stretch: 88%;
     color: var(--wl-ink-muted);
   }
 
   .node-title {
     display: block;
-    font-size: 1.125rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.2;
+    font: var(--cc-font-title);
+    font-stretch: 88%;
+    letter-spacing: -0.005em;
     color: var(--wl-ink);
   }
 
@@ -1415,6 +1413,8 @@
   .arch-node[data-kind="gate"] .node-title,
   .arch-node[data-kind="store"] .node-title {
     font-size: 1.22rem;
+    /* The title token's line-height is 19px. These sizes are larger, so the line grows with them. */
+    line-height: 1.2;
   }
 
   .arch-node[data-kind="client"] .node-title {
@@ -1638,6 +1638,7 @@
   #stage-world[data-lod="low"] .node-title {
     font-size: 1.25rem;
     font-weight: 800;
+    line-height: 1.2;
   }
 
   #stage-world[data-lod="low"] .node-sub {
@@ -1714,13 +1715,13 @@
   }
 
   .hud-tip {
-    font-family: var(--wl-font-mono);
-    font-size: 0.75rem;
+    font: var(--cc-font-small);
     color: var(--wl-ink-muted);
   }
 
   .zoom-readout {
-    font-family: var(--wl-font-mono);
+    font-family: var(--wl-font-sans);
+    font-variant-numeric: tabular-nums;
     font-size: 0.78rem;
     min-inline-size: 3.1rem;
     text-align: center;
