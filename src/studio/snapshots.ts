@@ -71,7 +71,7 @@ export function renderSnapshotsDialogHtml(
         <form class="snapshot-create-row" id="snapshot-create-form" onsubmit="return false;">
           <input
             type="text"
-            class="prop-input snapshot-name-input"
+            class="field snapshot-name-input"
             id="input-snapshot-name"
             placeholder="e.g. Baseline v1, Pre-migration…"
             maxlength="48"

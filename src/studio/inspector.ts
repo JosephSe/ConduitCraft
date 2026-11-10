@@ -165,7 +165,7 @@ export function makeTextInput(
 ): HTMLInputElement {
   const input = document.createElement('input');
   input.type = 'text';
-  input.className = 'prop-input';
+  input.className = 'field';
   input.value = value;
   if (opts?.identifier) {
     input.setAttribute('autocorrect', 'off');
@@ -191,7 +191,7 @@ export function makeTextarea(
   isCode = false,
 ): HTMLTextAreaElement {
   const ta = document.createElement('textarea');
-  ta.className = isCode ? 'prop-textarea prop-textarea-code' : 'prop-textarea';
+  ta.className = isCode ? 'field field-code' : 'field';
   ta.value = value;
   if (isCode) {
     ta.spellcheck = false;
@@ -235,7 +235,7 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
   replicas.min = '1';
   replicas.max = '99';
   replicas.step = '1';
-  replicas.className = 'prop-input';
+  replicas.className = 'field';
   replicas.value = String(replicaCount(node));
   replicas.addEventListener('change', () => {
     const n = Math.max(1, Math.min(99, Math.floor(Number(replicas.value)) || 1));
@@ -244,7 +244,7 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
   });
 
   const fallback = document.createElement('select');
-  fallback.className = 'prop-select';
+  fallback.className = 'field';
   fallback.appendChild(makeOption('', 'None'));
   for (const other of app.doc.nodes) {
     if (other.id !== node.id) fallback.appendChild(makeOption(other.id, other.title || other.id));
@@ -276,13 +276,13 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   };
 
   const ordering = document.createElement('select');
-  ordering.className = 'prop-select';
+  ordering.className = 'field';
   for (const o of QUEUE_ORDERINGS) ordering.appendChild(makeOption(o, o === 'fifo' ? 'FIFO' : o[0].toUpperCase() + o.slice(1)));
   ordering.value = node.queue?.ordering ?? 'standard';
   ordering.addEventListener('change', () => commit({ ordering: ordering.value }));
 
   const delivery = document.createElement('select');
-  delivery.className = 'prop-select';
+  delivery.className = 'field';
   delivery.appendChild(makeOption('competing', 'One reader gets each message'));
   delivery.appendChild(makeOption('fanout', 'Every reader gets every message (stream)'));
   delivery.value = node.queue?.delivery ?? 'competing';
@@ -301,7 +301,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   depth.min = '1';
   depth.max = String(MAX_QUEUE_DEPTH);
   depth.step = '1';
-  depth.className = 'prop-input';
+  depth.className = 'field';
   depth.placeholder = 'Unbounded';
   depth.value = node.queue?.maxDepth ? String(node.queue.maxDepth) : '';
   depth.addEventListener('change', () => {
@@ -312,7 +312,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   });
 
   const dead = document.createElement('select');
-  dead.className = 'prop-select';
+  dead.className = 'field';
   dead.appendChild(makeOption('', 'None'));
   const others = app.doc.nodes.filter((n) => n.id !== node.id);
   // Queues first: a dead-letter target is nearly always another queue.
@@ -350,7 +350,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
 /** How a load balancer spreads traffic (K2). The strategy is recorded for the reader; playback does not use it. */
 function makeBalancerFields(node: DiagramNode): HTMLElement[] {
   const strategy = document.createElement('select');
-  strategy.className = 'prop-select';
+  strategy.className = 'field';
   for (const s of BALANCER_STRATEGIES) strategy.appendChild(makeOption(s, BALANCER_STRATEGY_LABELS[s]));
   strategy.value = node.balancer?.strategy ?? 'round-robin';
   strategy.addEventListener('change', () => {
@@ -401,7 +401,7 @@ function wholeNumberInput(value: number | undefined, min: number, max: number, p
   input.min = String(min);
   input.max = String(max);
   input.step = '1';
-  input.className = 'prop-input';
+  input.className = 'field';
   input.placeholder = placeholder;
   input.value = value === undefined ? '' : String(value);
   return input;
@@ -425,7 +425,7 @@ function makeCacheFields(node: DiagramNode): HTMLElement[] {
   });
 
   const backing = document.createElement('select');
-  backing.className = 'prop-select';
+  backing.className = 'field';
   const inferred = node.cache?.backingId ? null : backingStoreOf(app.doc, node.id);
   const inferredTitle = inferred ? app.doc.nodes.find((n) => n.id === inferred)?.title || inferred : '';
   backing.appendChild(makeOption('', inferred ? `${inferredTitle} (inferred)` : 'None'));
@@ -531,7 +531,7 @@ function makeLinksEditor(node: DiagramNode): HTMLElement {
       const line = document.createElement('div');
       line.className = 'prop-link-row';
       const kind = document.createElement('select');
-      kind.className = 'prop-select';
+      kind.className = 'field';
       kind.setAttribute('aria-label', 'Link type');
       kind.appendChild(makeOption('', 'Link'));
       for (const k of LINK_KINDS) kind.appendChild(makeOption(k, LINK_KIND_NAMES[k]));
@@ -666,7 +666,7 @@ function makeIconPicker(selected: NodeIconName, onChange: (next: NodeIconName) =
 
   const trigger = document.createElement('button');
   trigger.type = 'button';
-  trigger.className = 'prop-select icon-picker-trigger';
+  trigger.className = 'field icon-picker-trigger';
   trigger.setAttribute('aria-haspopup', 'listbox');
   trigger.setAttribute('aria-expanded', 'false');
 
@@ -900,7 +900,7 @@ export function renderPropertyEditor(): void {
     const appearanceElements: HTMLElement[] = [];
 
     const kindSelect = document.createElement('select');
-    kindSelect.className = 'prop-select';
+    kindSelect.className = 'field';
     for (const st of kindStencils()) {
       const opt = document.createElement('option');
       opt.value = st.kind;
@@ -935,7 +935,7 @@ export function renderPropertyEditor(): void {
     }
 
     const shapeSelect = document.createElement('select');
-    shapeSelect.className = 'prop-select';
+    shapeSelect.className = 'field';
     for (const shape of NODE_SHAPES) {
       // A load balancer's default outline already is the trapezoid, so it lists one entry for it.
       if (shape === 'trapezoid' && node.kind === 'balancer') continue;
@@ -1246,7 +1246,7 @@ export function renderPropertyEditor(): void {
     // --- 5. Review & Status Section ---
     const reviewElements: HTMLElement[] = [];
     const statusSelect = document.createElement('select');
-    statusSelect.className = 'prop-select';
+    statusSelect.className = 'field';
     statusSelect.id = 'prop-node-status';
     const statusOptions: Array<{ value: string; label: string }> = [
       { value: '', label: 'None / Unspecified' },
@@ -1347,7 +1347,7 @@ export function renderPropertyEditor(): void {
 
     // Protocol, call style and latency (F-17). Empty means "not set" and is left out of the saved file.
     const protocolSelect = document.createElement('select');
-    protocolSelect.className = 'prop-select';
+    protocolSelect.className = 'field';
     protocolSelect.append(makeOption('', 'Not set'));
     for (const p of WIRE_PROTOCOLS) protocolSelect.append(makeOption(p, WIRE_PROTOCOL_NAMES[p]));
     protocolSelect.value = edge.protocol ?? '';
@@ -1360,7 +1360,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(makeField('prop-edge-protocol', 'Protocol', protocolSelect));
 
     const syncSelect = document.createElement('select');
-    syncSelect.className = 'prop-select';
+    syncSelect.className = 'field';
     syncSelect.append(makeOption('sync', 'Waits for a reply (sync)'), makeOption('async', "Doesn't wait (async, dashed)"));
     syncSelect.value = edge.sync === 'async' ? 'async' : 'sync';
     syncSelect.addEventListener('change', () => {
@@ -1375,7 +1375,7 @@ export function renderPropertyEditor(): void {
     latencyInput.type = 'number';
     latencyInput.min = '0';
     latencyInput.step = '1';
-    latencyInput.className = 'prop-input';
+    latencyInput.className = 'field';
     latencyInput.placeholder = 'e.g. 120';
     latencyInput.value = edge.latencyMs === undefined ? '' : String(edge.latencyMs);
     latencyInput.addEventListener('focus', () => beginHistoryGesture());
@@ -1400,7 +1400,7 @@ export function renderPropertyEditor(): void {
     for (const n of app.doc.nodes) titleCounts.set(n.title, (titleCounts.get(n.title) ?? 0) + 1);
     const makeEndSelect = (end: 'from' | 'to'): HTMLSelectElement => {
       const select = document.createElement('select');
-      select.className = 'prop-select';
+      select.className = 'field';
       for (const n of app.doc.nodes) {
         const option = document.createElement('option');
         option.value = n.id;
@@ -1547,7 +1547,7 @@ export function renderPropertyEditor(): void {
     // Source & Target Port Overrides
     const makePortSelect = (current: PortSide, onChange: (p: PortSide) => void) => {
       const sel = document.createElement('select');
-      sel.className = 'prop-select';
+      sel.className = 'field';
       for (const side of ['auto', 'top', 'right', 'bottom', 'left'] as PortSide[]) {
         const opt = document.createElement('option');
         opt.value = side;
@@ -2237,7 +2237,7 @@ export function renderPropertyEditor(): void {
       topBar.className = 'notes-item-topbar';
 
       const iconSelect = document.createElement('select');
-      iconSelect.className = 'prop-select notes-item-icon-select';
+      iconSelect.className = 'field notes-item-icon-select';
       iconSelect.setAttribute('aria-label', `Item ${idx + 1} icon`);
       const currentIcon = normalizeNotesItemIcon(item.icon);
       for (const opt of NOTES_ITEM_ICONS) {
@@ -2332,7 +2332,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(rowTags);
 
     const dirSelect = document.createElement('select');
-    dirSelect.className = 'prop-select';
+    dirSelect.className = 'field';
     for (const d of [
       { value: 'LR', label: 'Left → Right (LR)' },
       { value: 'TD', label: 'Top → Down (TD)' },

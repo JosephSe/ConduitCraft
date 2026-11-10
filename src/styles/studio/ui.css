@@ -1,0 +1,278 @@
+/* Primitives (T3). The layer sits after stage so layout and stage keep losing
+   to these rules, and before inspector so the inspector can still override them. */
+@layer ui {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding-inline: 0.68rem;
+    padding-block: 0.36rem;
+    min-block-size: 2.15rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--wl-border-ui);
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: var(--wl-surface-elevated);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .btn:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
+  .btn.solid {
+    background: var(--cc-ink);
+    color: var(--cc-on-ink);
+    border-color: transparent;
+  }
+
+  .btn.solid:hover:not(:disabled) {
+    background: var(--cc-ink);
+    filter: brightness(1.07);
+  }
+
+  .btn-compact {
+    min-block-size: 1.9rem;
+    padding-inline: 0.55rem;
+    padding-block: 0.22rem;
+    font-size: 0.75rem;
+    flex: 1 1 auto;
+  }
+
+  .btn-approve {
+    border-color: var(--wl-emerald);
+    background: var(--wl-emerald-soft);
+  }
+
+  .btn-reject {
+    border-color: var(--wl-rose);
+    background: var(--wl-rose-soft);
+  }
+
+  .btn-icon-only {
+    padding-inline: 0.5rem;
+    min-inline-size: 2.15rem;
+  }
+
+  .field {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--wl-border-ui);
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+
+    @media (pointer: coarse) {
+      font-size: 1rem;
+      min-block-size: 2.75rem;
+    }
+  }
+
+  textarea.field {
+    resize: vertical;
+    min-block-size: 4.5rem;
+  }
+
+  .field-code {
+    font-family: var(--wl-font-mono);
+    font-size: 0.75rem;
+    background: var(--wl-surface-code);
+    color: #e2e8f0;
+    min-block-size: 6rem;
+  }
+
+  .field.is-inferred {
+    color: var(--text-muted, #64748b);
+  }
+
+  .field:focus-visible {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  .switch {
+    appearance: none;
+    inline-size: 2.25rem;
+    block-size: 1.25rem;
+    margin: 0;
+    border: 1px solid var(--wl-border-ui);
+    border-radius: 999px;
+    background: var(--cc-well);
+    cursor: pointer;
+  }
+
+  .switch:checked {
+    background: var(--cc-ink);
+    border-color: transparent;
+  }
+
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.15rem;
+    border: 1px solid var(--wl-border-ui);
+    border-radius: 0.6rem;
+    background: var(--cc-well);
+  }
+
+  .segmented-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--wl-surface-elevated);
+    padding: 0.1875rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--wl-border-subtle);
+    gap: 0.125rem;
+  }
+
+  .segmented-label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-inline: 0.6rem;
+    padding-block: 0.28rem;
+    border-radius: 0.45rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--wl-ink-secondary);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background-color 0.18s ease, color 0.18s ease;
+  }
+
+  .segmented-label:has(input:checked) {
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    box-shadow: 0 1px 3px rgba(2, 6, 23, 0.14);
+  }
+
+  .segmented-label:has(input:focus-visible) {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  .popover {
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    border: 1px solid var(--wl-border-ui);
+    border-radius: var(--cc-radius-m);
+    box-shadow: var(--cc-shadow-2);
+  }
+
+  dialog {
+    margin: auto;
+    border: 1px solid var(--wl-border-ui);
+    border-radius: 1rem;
+    background: var(--wl-surface);
+    color: var(--wl-ink);
+    box-shadow: var(--wl-shadow-elevated);
+    max-inline-size: min(62rem, calc(100vw - 2rem));
+    max-block-size: calc(100dvh - 3rem);
+    padding: 0;
+    opacity: 0;
+    transform: scale(0.95);
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+
+    @media (prefers-reduced-motion: reduce) {
+      transform: none;
+      transition-duration: 0.1s;
+    }
+  }
+
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  :is(dialog[open]):where(:not([data-closing])) {
+    opacity: 1;
+    transform: scale(1);
+
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      @starting-style {
+        transform: none;
+      }
+    }
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background-color: rgba(2, 6, 23, 0);
+    backdrop-filter: blur(4px);
+    transition-property: background-color, display, overlay;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  :is(dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgba(2, 6, 23, 0.58);
+
+    @starting-style {
+      background-color: rgba(2, 6, 23, 0);
+    }
+  }
+
+  .dialog-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-block-size: calc(100dvh - 3rem);
+    min-inline-size: 0;
+  }
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-block-end: 1px solid var(--wl-border-subtle);
+    flex-wrap: wrap;
+  }
+
+  .dialog-header h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .dialog-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .dialog-body {
+    padding: 1.25rem;
+    overflow: auto;
+  }
+}

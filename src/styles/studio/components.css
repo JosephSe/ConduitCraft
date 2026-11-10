@@ -1,42 +1,4 @@
 @layer components {
-  .segmented-group {
-    display: inline-flex;
-    align-items: center;
-    background: var(--wl-surface-elevated);
-    padding: 0.1875rem;
-    border-radius: 0.625rem;
-    border: 1px solid var(--wl-border-subtle);
-    gap: 0.125rem;
-  }
-
-  .segmented-label {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding-inline: 0.6rem;
-    padding-block: 0.28rem;
-    border-radius: 0.45rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--wl-ink-secondary);
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    transition: background-color 0.18s ease, color 0.18s ease;
-  }
-
-  .segmented-label:has(input:checked) {
-    background: var(--wl-surface);
-    color: var(--wl-ink);
-    box-shadow: 0 1px 3px rgba(2, 6, 23, 0.14);
-  }
-
-  .segmented-label:has(input:focus-visible) {
-    outline: 2px solid var(--cc-ink);
-    outline-offset: 2px;
-  }
-
   .pill-swatch {
     inline-size: 0.5rem;
     block-size: 0.5rem;
@@ -56,39 +18,6 @@
     transition: opacity 0.25s ease;
   }
 
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    padding-inline: 0.68rem;
-    padding-block: 0.36rem;
-    min-block-size: 2.15rem;
-    border-radius: 0.6rem;
-    border: 1px solid var(--wl-border-ui);
-    background: var(--wl-surface);
-    color: var(--wl-ink);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
-  }
-
-  .btn:hover:not(:disabled) {
-    background: var(--wl-surface-elevated);
-  }
-
-  .btn:active:not(:disabled) {
-    transform: scale(0.98);
-  }
-
-  .btn:disabled {
-    opacity: 0.42;
-    cursor: not-allowed;
-  }
-
   :focus-visible {
     outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
@@ -101,40 +30,6 @@
   .dialog-close:focus-visible {
     outline: 2px solid var(--cc-ink);
     outline-offset: 2px;
-  }
-
-  .btn-compact {
-    min-block-size: 1.9rem;
-    padding-inline: 0.55rem;
-    padding-block: 0.22rem;
-    font-size: 0.75rem;
-    flex: 1 1 auto;
-  }
-
-  .btn-approve {
-    border-color: var(--wl-emerald);
-    background: var(--wl-emerald-soft);
-  }
-
-  .btn-reject {
-    border-color: var(--wl-rose);
-    background: var(--wl-rose-soft);
-  }
-
-  .btn-primary-export {
-    background: var(--cc-ink);
-    color: var(--cc-on-ink);
-    border-color: transparent;
-  }
-
-  .btn-primary-export:hover:not(:disabled) {
-    background: var(--cc-ink);
-    filter: brightness(1.07);
-  }
-
-  .btn-icon-only {
-    padding-inline: 0.5rem;
-    min-inline-size: 2.15rem;
   }
 
   .section-heading {

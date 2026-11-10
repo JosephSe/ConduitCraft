@@ -156,12 +156,6 @@
     flex-wrap: wrap;
   }
 
-  .btn-action-compact {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
   .workspace {
     display: grid;
     grid-template-columns: 16.5rem minmax(0, 1fr) 22.5rem;

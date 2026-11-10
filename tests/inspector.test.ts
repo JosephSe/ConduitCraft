@@ -266,7 +266,7 @@ describe('inspector collapsible sections and tone picker', () => {
 
     // Form inputs and triggers contained within bounds
     assert.ok(studioCss.includes('.prop-row-2 {') && studioCss.includes('repeat(auto-fit'), 'prop-row-2 uses responsive auto-fit columns');
-    assert.ok(studioCss.includes('.prop-input,') && studioCss.includes('box-sizing: border-box;'), 'prop inputs use border-box sizing');
+    assert.ok(studioCss.includes('.field {') && studioCss.includes('box-sizing: border-box;'), 'fields use border-box sizing');
     assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
 
     // Collapsible scenarios and drag-and-drop

@@ -40,7 +40,7 @@ function row(label: string, control: HTMLElement): HTMLElement {
 /** A select that starts on "Change…" and applies the choice when it is picked, then returns to "Change…". */
 function chooser(label: string, options: Array<[string, string]>, apply: (value: string) => boolean): HTMLElement {
   const select = document.createElement('select');
-  select.className = 'prop-input';
+  select.className = 'field';
   select.setAttribute('aria-label', label);
   const first = new Option('Change…', '');
   first.disabled = true;
@@ -78,7 +78,7 @@ export function mountBulkFields(host: HTMLElement, nodeIds: string[], edgeIds: s
       depth.min = '1';
       depth.max = '9999';
       depth.step = '1';
-      depth.className = 'prop-input';
+      depth.className = 'field';
       depth.placeholder = 'Unbounded';
       depth.setAttribute('aria-label', 'Max depth for the selected queues');
       depth.addEventListener('change', () => {
@@ -99,7 +99,7 @@ export function mountBulkFields(host: HTMLElement, nodeIds: string[], edgeIds: s
 
   const tagInput = document.createElement('input');
   tagInput.type = 'text';
-  tagInput.className = 'prop-input';
+  tagInput.className = 'field';
   tagInput.placeholder = 'tag';
   tagInput.setAttribute('aria-label', 'Tag to add or remove');
   const tagButtons = document.createElement('span');

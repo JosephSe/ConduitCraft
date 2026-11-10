@@ -242,7 +242,7 @@ export function renderTemplateCardHtml(template: TemplateDefinition, previewSvg 
           <span class="template-stat-chip"><strong>${template.simulationsCount}</strong> scenario${template.simulationsCount === 1 ? '' : 's'}</span>
         </div>
         <div class="template-card-actions">
-          <button type="button" class="btn btn-primary-export btn-use-template" data-template-id="${template.id}">
+          <button type="button" class="btn solid btn-use-template" data-template-id="${template.id}">
             Use Template
           </button>
         </div>

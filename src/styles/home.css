@@ -4,10 +4,6 @@
   max-inline-size: calc(100vw - 2rem);
   overflow-x: hidden;
 }
-.home-dialog-shell {
-  inline-size: 100%;
-  min-inline-size: 0;
-}
 .home-dialog-body {
   min-inline-size: 0;
   overflow-x: hidden;
