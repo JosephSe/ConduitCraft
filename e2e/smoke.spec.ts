@@ -31,8 +31,8 @@ test('boots to an empty canvas with no errors', async ({ page, errors }) => {
 test('loads the showcase diagram with nodes and wires', async ({ page }) => {
   await loadShowcase(page);
   expect(await page.locator('.arch-node').count()).toBeGreaterThan(3);
-  await expect(page.locator('#canvas-stats-pill')).toContainText(/NODES?/);
-  await expect(page.locator('#canvas-stats-pill')).toContainText(/WIRES?/);
+  await expect(page.locator('#canvas-stats-pill')).toContainText(/nodes?/);
+  await expect(page.locator('#canvas-stats-pill')).toContainText(/wires?/);
 });
 
 test('dragging a node moves it and undo puts it back', async ({ page }) => {

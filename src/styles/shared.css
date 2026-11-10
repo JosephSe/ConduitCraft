@@ -139,6 +139,7 @@
     --cc-ink-faint: var(--cc-ink-3);
 
     --cc-accent: var(--cc-ink);
+    --cc-accent-soft: color-mix(in srgb, var(--cc-ink) 9%, transparent);
     --cc-on-accent: var(--cc-on-ink);
 
     --cc-shadow-1: 0 1px 2px rgba(2, 6, 23, 0.12);
@@ -219,5 +220,26 @@
     ::view-transition-new(*) {
       animation: none !important;
     }
+  }
+}
+
+/* D15: translucency is optional. Islands and popovers go solid, and nothing blurs the sheet behind it. */
+@media (prefers-reduced-transparency: reduce) {
+  :root,
+  :root[data-theme] {
+    --cc-island: var(--cc-sheet);
+  }
+  *,
+  *::before,
+  *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root,
+  :root[data-theme] {
+    --cc-island: var(--cc-sheet);
   }
 }

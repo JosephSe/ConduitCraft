@@ -189,7 +189,7 @@
   .icon-picker-trigger svg,
   .icon-picker-option svg {
     flex-shrink: 0;
-    color: var(--wl-blue);
+    color: var(--cc-accent);
   }
 
   .icon-picker-trigger::after {
@@ -233,7 +233,7 @@
 
   .icon-picker-option[aria-selected="true"],
   .icon-picker-option:hover {
-    background: var(--wl-blue-soft);
+    background: var(--cc-accent-soft);
   }
 
   .icon-picker-option:focus-visible,
@@ -265,8 +265,8 @@
   }
 
   .swatch-option:has(input:checked) {
-    border-color: var(--wl-blue);
-    background: var(--wl-blue-soft);
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
   }
 
   .swatch-option:has(input:focus-visible) {
@@ -308,14 +308,14 @@
   }
 
   .route-style-option:hover {
-    border-color: var(--wl-blue);
+    border-color: var(--cc-accent);
     background: var(--wl-surface-elevated);
   }
 
   .route-style-option:has(input:checked) {
-    border-color: var(--wl-blue);
-    background: var(--wl-blue-soft);
-    box-shadow: inset 0 0 0 1px var(--wl-blue);
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
+    box-shadow: inset 0 0 0 1px var(--cc-accent);
   }
 
   .route-style-option:has(input:focus-visible) {
@@ -325,7 +325,7 @@
 
   .route-style-icon {
     flex-shrink: 0;
-    color: var(--wl-blue);
+    color: var(--cc-accent);
   }
 
   .prop-divider {
@@ -406,8 +406,8 @@
     font-family: var(--wl-font-mono);
     font-size: 0.75rem;
     font-weight: 600;
-    background: var(--wl-blue-soft);
-    color: var(--wl-blue);
+    background: var(--cc-accent-soft);
+    color: var(--cc-accent);
     border: 1px solid var(--wl-border-subtle);
   }
 
@@ -487,8 +487,8 @@
   }
 
   .lineage-chip:hover {
-    border-color: var(--wl-blue);
-    background: var(--wl-blue-soft);
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
   }
 
   .sim-editor-card {
@@ -514,16 +514,16 @@
   .sim-editor-card.is-dragging-sim {
     opacity: 0.45;
     border-style: dashed;
-    border-color: var(--wl-blue);
+    border-color: var(--cc-accent);
   }
 
   .sim-editor-card.is-drop-target-above {
-    border-block-start: 2px solid var(--wl-blue);
+    border-block-start: 2px solid var(--cc-accent);
     box-shadow: 0 -2px 6px rgba(59, 130, 246, 0.25);
   }
 
   .sim-editor-card.is-drop-target-below {
-    border-block-end: 2px solid var(--wl-blue);
+    border-block-end: 2px solid var(--cc-accent);
     box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
   }
 
@@ -593,7 +593,7 @@
 
   .sim-card-toggle:hover {
     background: var(--wl-surface);
-    color: var(--wl-blue);
+    color: var(--cc-accent);
   }
 
   .sim-card-toggle:focus-visible {
@@ -669,8 +669,8 @@
   }
 
   .sim-node-chip[aria-pressed="true"] {
-    border-color: var(--wl-blue);
-    background: var(--wl-blue-soft);
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
   }
 
   .code-card {

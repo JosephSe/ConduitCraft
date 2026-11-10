@@ -866,7 +866,7 @@ ${colorSchemeBoot}
         for (const btn of nodeButtons) { btn.setAttribute('aria-pressed', 'false'); btn.classList.remove('is-dimmed'); }
         for (const g of conduitGroups) g.classList.remove('is-highlighted', 'is-dimmed');
         withInspectorTransition(() => {
-          inspBadge.textContent = 'SYSTEM OVERVIEW';
+          inspBadge.textContent = 'System overview';
           inspId.textContent = 'ALL';
           inspTitle.textContent = ${serializeScriptJson(doc.title)};
           inspSummary.textContent = DATA.overviewSummary;
@@ -927,7 +927,7 @@ ${colorSchemeBoot}
         }
 
         withInspectorTransition(() => {
-          inspBadge.textContent = 'MULTI SELECTION';
+          inspBadge.textContent = 'Multi selection';
           inspId.textContent = selectedNodes.size + ' SELECTED';
           inspTitle.textContent = selectedNodes.size + ' Components Selected';
           const selTitles = Array.from(selectedNodes).map(id => DATA.nodeShortLabels[id] || id);
@@ -1076,7 +1076,7 @@ ${colorSchemeBoot}
         presCaption.hidden = false;
         if (presIndex === 0) {
           presPill.textContent = 'Overview (' + tourNodes.length + ' nodes)';
-          presBadge.textContent = 'ARCHITECTURE';
+          presBadge.textContent = 'Architecture';
           presStep.textContent = 'System Overview';
           presTitle.textContent = ${serializeScriptJson(doc.title || 'Architecture Overview')};
           presSubtitle.textContent = 'System Architecture';
@@ -1088,7 +1088,7 @@ ${colorSchemeBoot}
           const nId = entry[0];
           const n = entry[1];
           presPill.textContent = presIndex + ' of ' + tourNodes.length;
-          presBadge.textContent = 'COMPONENT';
+          presBadge.textContent = 'Component';
           presStep.textContent = 'Step ' + presIndex + ' of ' + tourNodes.length;
           presTitle.textContent = n.title || nId;
           presSubtitle.textContent = n.subtitle || ('Component 0' + presIndex);

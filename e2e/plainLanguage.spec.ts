@@ -28,5 +28,5 @@ test('a wire is called a wire in its inspector', async ({ page }) => {
   // The showcase opens with a component selected; in the redesign its toolbar floats over nearby wires.
   await clearSelection(page);
   await page.locator('.conduit-hit').first().click({ force: true });
-  await expect(page.locator('#prop-panel-heading')).toHaveText('WIRE PROPERTIES');
+  await expect(page.locator('#prop-panel-heading')).toHaveText('Wire properties');
 });

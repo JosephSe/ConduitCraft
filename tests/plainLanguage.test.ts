@@ -22,6 +22,28 @@ describe('plain language and the type scale', () => {
     }
   });
 
+  it('types no label in capitals (HTML text and assigned display text)', () => {
+    const ACRONYMS = new Set(['PNG', 'SVG', 'JSON', 'YAML', 'HTML', 'GIF', 'URL', 'PDF', 'CSV', 'API', 'DLQ', 'FIFO', 'LIFO', 'HTTP', 'HTTPS', 'ELK']);
+    const caps = /^[A-Z][A-Z0-9 &/+.-]{3,}$/;
+    const bad: string[] = [];
+    const html = readFileSync(resolve('index.html'), 'utf8');
+    for (const m of html.matchAll(/>([A-Z][A-Z0-9 &/+.-]{3,})</g)) {
+      if (!ACRONYMS.has(m[1])) bad.push(`index.html: ${m[1]}`);
+    }
+    const walk = (dir: string): string[] =>
+      readdirSync(dir).flatMap((n) => {
+        const p2 = join(dir, n);
+        return statSync(p2).isDirectory() ? walk(p2) : p2.endsWith('.ts') ? [p2] : [];
+      });
+    for (const file of walk(resolve('src/studio'))) {
+      const text = readFileSync(file, 'utf8');
+      for (const m of text.matchAll(/(?:textContent|label|title|placeholder)\s*(?:=|:)\s*'([A-Z][A-Z0-9 &/+.-]{3,})'/g)) {
+        if (caps.test(m[1]) && !ACRONYMS.has(m[1])) bad.push(`${file}: ${m[1]}`);
+      }
+    }
+    assert.deepEqual(bad, []);
+  });
+
   it('defines the 5.2 scale and keeps chrome at full width', () => {
     const shared = readFileSync(resolve('src/styles/shared.css'), 'utf8');
     const scale: Record<string, string> = {

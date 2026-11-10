@@ -109,7 +109,7 @@
   }
 
   .export-option-card:hover {
-    border-color: var(--wl-blue);
+    border-color: var(--cc-accent);
     background: var(--wl-surface-elevated);
     transform: translateY(-1px);
   }
@@ -120,9 +120,9 @@
   }
 
   .export-option-card.is-recommended {
-    border-color: var(--wl-blue);
-    background: var(--wl-blue-soft);
-    box-shadow: 0 0 0 3px var(--wl-blue-soft);
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
+    box-shadow: 0 0 0 3px var(--cc-accent-soft);
   }
 
   .export-option-card strong {
@@ -139,7 +139,7 @@
   .export-option-card .export-option-kicker {
     font: var(--cc-font-meta);
     font-weight: 600;
-    color: var(--wl-blue);
+    color: var(--cc-accent);
   }
 
   .matrix-table {
@@ -190,8 +190,8 @@
   }
 
   .theme-option:has(input:checked) {
-    border-color: var(--wl-blue);
-    background: var(--wl-blue-soft);
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
   }
 
   .theme-option-sub {

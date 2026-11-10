@@ -1287,7 +1287,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     commands.push({
       id: `jump-node-${node.id}`,
       title: `Jump to: ${node.title}`,
-      subtitle: node.subtitle ? `${node.kind.toUpperCase()} · ${node.subtitle}` : node.kind.toUpperCase(),
+      subtitle: node.subtitle ? `${node.kind.charAt(0).toUpperCase() + node.kind.slice(1)} · ${node.subtitle}` : node.kind.charAt(0).toUpperCase() + node.kind.slice(1),
       category: 'Nodes',
       keywords: [node.title, node.subtitle, node.kind, node.eyebrow, node.id],
       run: () => {

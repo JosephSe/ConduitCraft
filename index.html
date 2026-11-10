@@ -183,7 +183,7 @@
 
       <!-- Expanded Palette Header & Content -->
       <div class="palette-header">
-        <h2 class="section-heading">COMPONENTS</h2>
+        <h2 class="section-heading">Components</h2>
         <div class="palette-header-right" style="display: flex; align-items: center; gap: 0.4rem;">
           <span class="compile-pill" id="canvas-stats-pill">0 NODES</span>
           <button type="button" class="btn btn-icon-only btn-panel-collapse" id="btn-collapse-palette" aria-label="Collapse component palette ([)" data-tip="Collapse palette ([)">
@@ -197,7 +197,7 @@
         <div class="stencil-grid" id="stencil-grid" role="list"></div>
 
         <div class="palette-section">
-          <h3 class="section-heading">STAGE CONTAINERS</h3>
+          <h3 class="section-heading">Stage containers</h3>
           <div class="palette-stack">
             <button type="button" class="stencil-aux-btn" id="btn-add-zone">
               <span class="stencil-aux-icon" aria-hidden="true">
@@ -239,7 +239,7 @@
         </div>
 
         <div class="palette-section">
-          <h3 class="section-heading">FILE IMPORT</h3>
+          <h3 class="section-heading">File import</h3>
           <div class="upload-card" id="palette-dropzone">
             <p class="upload-card-text">Drop a <code>.mmd</code>, <code>.md</code>, or <code>.blueprint.json</code> file anywhere, or browse from disk.</p>
             <div class="palette-import-actions">
@@ -320,7 +320,7 @@
 
           <div class="sim-packet" id="sim-packet" hidden aria-hidden="true">
             <span class="pill-swatch" id="sim-packet-dot" style="background: var(--wl-emerald);"></span>
-            <span id="sim-packet-label">PACKET</span>
+            <span id="sim-packet-label">Packet</span>
           </div>
 
           <div id="nodes-layer"></div>
@@ -466,7 +466,7 @@
           <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
         </button>
         <div class="rail-vertical-label" aria-hidden="true">
-          <span>PROPERTIES</span>
+          <span>Properties</span>
         </div>
       </div>
 
@@ -477,7 +477,7 @@
             <button type="button" class="btn btn-icon-only btn-panel-collapse" id="btn-collapse-inspector" aria-label="Collapse properties inspector (])" data-tip="Collapse inspector (])">
               <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
             </button>
-            <span class="section-heading" id="prop-panel-heading" style="margin-block-end: 0;">DOCUMENT PROPERTIES</span>
+            <span class="section-heading" id="prop-panel-heading" style="margin-block-end: 0;">Document properties</span>
             <button type="button" class="btn btn-icon-only inspector-pin-btn" id="btn-pin-inspector" aria-pressed="false" aria-label="Keep inspector open" data-tip="Keep open">
               <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 7 3 3v2H7v-2l3-3-1-7z"/></svg>
             </button>
@@ -506,31 +506,31 @@
         <div class="inspector-scroll" id="inspector-scope">
           <div id="panel-inspector" role="tabpanel" aria-labelledby="tab-inspector">
             <div class="inspector-badge-row">
-              <span class="tier-badge" id="insp-badge">SYSTEM OVERVIEW</span>
+              <span class="tier-badge" id="insp-badge">System overview</span>
               <span id="insp-id" style="font-family: var(--wl-font-mono); font-size: 0.75rem; color: var(--wl-ink-muted);">ALL</span>
             </div>
             <h2 class="inspector-title" id="insp-title">Untitled Architecture</h2>
             <p class="inspector-summary" id="insp-summary"></p>
 
             <div class="inspector-section">
-              <h3 class="section-heading">METRICS</h3>
+              <h3 class="section-heading">Metrics</h3>
               <div class="metrics-grid" id="insp-metrics"></div>
             </div>
 
             <div class="inspector-section">
-              <h3 class="section-heading">CONNECTED LINEAGE</h3>
+              <h3 class="section-heading">Connected lineage</h3>
               <div class="lineage-group" id="insp-lineage"></div>
             </div>
 
             <div class="inspector-section">
-              <h3 class="section-heading">INTERFACE PAYLOAD</h3>
+              <h3 class="section-heading">Interface payload</h3>
               <pre class="code-card" tabindex="0"><code id="insp-code">{}</code></pre>
             </div>
           </div>
 
           <div id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" hidden>
             <div class="inspector-badge-row">
-              <span class="tier-badge">EXECUTION TRACE</span>
+              <span class="tier-badge">Execution trace</span>
               <button type="button" class="btn btn-compact" id="btn-clear-trace" style="flex: 0 0 auto;">Clear</button>
             </div>
 
@@ -542,7 +542,7 @@
 
           <div id="panel-simulations" role="tabpanel" aria-labelledby="tab-simulations" hidden>
             <div class="inspector-badge-row">
-              <span class="tier-badge">PACKET SCENARIOS</span>
+              <span class="tier-badge">Packet scenarios</span>
               <button type="button" class="btn btn-compact" id="btn-add-simulation" style="flex: 0 0 auto;">Add scenario</button>
             </div>
             <p class="inspector-summary" id="sim-editor-hint"></p>
@@ -622,7 +622,7 @@
         <div class="share-link-box" id="share-link-box">
           <div class="share-link-header">
             <div class="share-link-title-group">
-              <span class="share-link-badge">SHAREABLE LINK</span>
+              <span class="share-link-badge">Shareable link</span>
               <strong>Direct URL (zero backend)</strong>
             </div>
             <span class="share-link-size" id="share-link-size"></span>
@@ -660,7 +660,7 @@
         <div class="export-png-options" id="export-png-options">
           <div class="export-png-header">
             <div class="export-png-title-group">
-              <span class="export-png-badge">PNG RESOLUTION</span>
+              <span class="export-png-badge">PNG resolution</span>
               <label for="export-png-scale"><strong>Scale Factor</strong></label>
             </div>
             <span class="export-png-estimate" id="export-png-estimate" aria-live="polite">~1.2 MB (3360 × 1840 px)</span>

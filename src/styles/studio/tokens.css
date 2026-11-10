@@ -16,7 +16,7 @@
   }
 
   ::selection {
-    background-color: var(--wl-blue-soft);
+    background-color: var(--cc-accent-soft);
     color: var(--wl-ink);
   }
 }

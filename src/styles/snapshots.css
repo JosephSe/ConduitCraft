@@ -68,8 +68,8 @@
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 .snapshot-card.is-selected {
-  border-color: var(--wl-blue);
-  background: var(--wl-blue-soft);
+  border-color: var(--cc-accent);
+  background: var(--cc-accent-soft);
 }
 .snapshot-card-top {
   display: flex;
