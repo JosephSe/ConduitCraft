@@ -57,7 +57,7 @@ import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
 import { paintBacklog, paintDlqLinks } from './queueBacklog';
-import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
+import { chaosDistance, chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { scheduleMinimapPaint } from './minimap';
 import { clearGuides, paintGuides } from './guideOverlay';
 import { distancesTo, snapToGuides } from './guides';
@@ -1368,6 +1368,11 @@ function paintChaos(wrapper: HTMLElement, nodeId: string): void {
   const before = wrapper.dataset.chaos;
   if (status) wrapper.dataset.chaos = status;
   else delete wrapper.dataset.chaos;
+  if (status && before !== status && status !== 'failed') wrapper.style.setProperty('--cc-lag', `${Math.min(chaosDistance(nodeId), 12) * 40}ms`);
+  if (before === 'failed' && !status) {
+    wrapper.classList.add('is-restored');
+    setTimeout(() => wrapper.classList.remove('is-restored'), 700);
+  }
   if (status && isPreview()) wrapper.dataset.chaosPreview = 'true';
   else delete wrapper.dataset.chaosPreview;
   let badge = wrapper.querySelector<HTMLElement>(':scope > .chaos-badge');

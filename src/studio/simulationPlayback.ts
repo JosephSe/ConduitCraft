@@ -301,9 +301,31 @@ export class SimulationPlaybackController {
         if (this.arrive(0, [], delayMs)) return;
         this.scheduleNextStep();
       } else {
+        this.lightRoute();
         this.pause();
       }
     }, delayMs);
+  }
+
+  /** The scenario finished: the tubes it used brighten once, in order from start to end (9.2). */
+  private lightRoute(): void {
+    const steps = this.scenario?.steps;
+    if (!steps || !wiresGroup || !app?.doc?.edges) return;
+    const lit: SVGGElement[] = [];
+    let order = 0;
+    for (let i = 0; i + 1 < steps.length; i++) {
+      for (const edge of app.doc.edges) {
+        if (!steps[i].nodes.includes(edge.from) || !steps[i + 1].nodes.includes(edge.to)) continue;
+        const g = Array.from(wiresGroup.querySelectorAll<SVGGElement>('.conduit-group')).find((x) => x.dataset.edgeId === edge.id);
+        if (!g || lit.includes(g)) continue;
+        g.style.setProperty('--cc-route-delay', `${order * 120}ms`);
+        g.classList.add('is-route-lit');
+        lit.push(g);
+        order++;
+      }
+    }
+    if (!lit.length) return;
+    setTimeout(() => lit.forEach((g) => g.classList.remove('is-route-lit')), order * 120 + 900);
   }
 
   /** The message stays in the queue: show where it went, then carry on from the top when looping, else pause. */
