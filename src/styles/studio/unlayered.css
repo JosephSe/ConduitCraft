@@ -2072,3 +2072,20 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
   .dock-face:not([hidden]) { animation: cc-face-in var(--cc-dur-base, 200ms) var(--cc-ease-out) 1; }
   .tray:not([hidden]), .slot-popover:not([hidden]) { animation: cc-rise var(--cc-dur-base, 200ms) var(--cc-spring) 1 both; }
 }
+
+/* S10 (6.6): below 56rem SW and SE collapse to one button each. SW shows the open page (tap for the next); SE shows the zoom readout, and Fit moves into the view popover. */
+.view-fit { display: none; }
+@media (max-width: 56rem) {
+  .page-tab[aria-selected="false"] { display: none; }
+  .page-strip:has(.page-tab:nth-child(2)) .page-add { display: none; }
+  .hud-zoom-card #btn-zoom-out, .hud-zoom-card #btn-zoom-in, .hud-zoom-card #btn-zoom-fit { display: none; }
+  .view-fit { display: inline-flex; justify-content: center; }
+}
+
+/* S10 (375 px pass): the tray stops short of the top bar, and the Review face keeps its buttons on one line (the sentence is in the issue list). */
+@media (max-width: 56rem) {
+  .tray { max-block-size: calc(100dvh - 15.5rem); }
+  #review-face { overflow-x: auto; scrollbar-width: none; }
+  #review-face .btn { white-space: nowrap; flex-shrink: 0; }
+  #review-face .review-sentence { display: none; }
+}
