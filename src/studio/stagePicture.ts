@@ -2,7 +2,7 @@
 import type { StreamTone } from '../types';
 import { TONE_CSS } from '../shared/tones';
 import { describeDiagram } from '../core/describe';
-import { renderDiagramSvg } from '../exporter/diagramSvg';
+import { renderDiagramSvg, ROUGH_FILTER } from '../exporter/diagramSvg';
 import { titleBlockFor, titleBlockSvg } from '../exporter/titleBlock';
 import { pageCount } from '../core/pages';
 import { app } from './state';
@@ -166,7 +166,9 @@ export function getResolvedWlVariables(): Record<string, string> {
 
   if (typeof document !== 'undefined' && document.documentElement && typeof getComputedStyle === 'function') {
     try {
-      const rootStyle = getComputedStyle(document.documentElement);
+      // A diagram style re-sets the tokens on the sheet, so read them there; otherwise the page root.
+      const source = app.doc.style ? document.getElementById('stage-world') ?? document.documentElement : document.documentElement;
+      const rootStyle = getComputedStyle(source);
       for (const key of Object.keys(vars)) {
         const val = rootStyle.getPropertyValue(key)?.trim();
         if (val && !val.startsWith('var(--')) {
@@ -517,6 +519,11 @@ export function renderStagePictureSvg(
   const style = document.createElement('style');
   style.textContent = resolveCssVariables(documentCss(), resolvedVars) + '\n' + exportStyleOverrides;
   root.append(style, shell);
+  // Sketch's wobble filter lives in the page head, not in the stage, so the picture carries its own copy.
+  if (app.doc.style === 'sketch') {
+    const defs = new DOMParser().parseFromString(`<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute">${ROUGH_FILTER}</svg>`, 'image/svg+xml').documentElement;
+    root.append(document.importNode(defs, true));
+  }
 
   const rawSerialized = new XMLSerializer().serializeToString(root);
   const serialized = resolveCssVariables(rawSerialized, resolvedVars);

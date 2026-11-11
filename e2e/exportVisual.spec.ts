@@ -158,6 +158,7 @@ for (const style of ['blueprint', 'print', 'sketch'] as const) {
     const svg = Buffer.from(await exportAs(page, '#btn-export-svg'), 'base64').toString('utf8');
     const html = Buffer.from(await exportAs(page, '#btn-export-html'), 'base64').toString('utf8');
     expect(html).toContain(`data-style="${style}"`);
+    const gif = await exportAs(page, '#btn-export-gif', () => page.locator('#btn-gif-whole').click());
 
     const view = await context.newPage();
     await view.setViewportSize({ width: 1280, height: 800 });
@@ -166,6 +167,18 @@ for (const style of ['blueprint', 'print', 'sketch'] as const) {
     await view.setContent(html);
     await view.evaluate(() => document.fonts.ready.then(() => undefined));
     await expect(view).toHaveScreenshot(`${style}-light-html.png`, { animations: 'disabled', ...TOLERANCE });
+
+    // The picture exports are drawn from the live stage, so they must carry the style too.
+    await view.setContent('<!doctype html><body style="margin:0;background:#fff"><canvas id="frame"></canvas></body>');
+    await view.evaluate(async (base64) => {
+      const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+      const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/gif' }));
+      const canvas = document.getElementById('frame') as HTMLCanvasElement;
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      canvas.getContext('2d')!.drawImage(bitmap, 0, 0);
+    }, gif);
+    await expect(view.locator('#frame')).toHaveScreenshot(`${style}-light-gif-first-frame.png`, { ...TOLERANCE });
     await context.close();
   });
 }
