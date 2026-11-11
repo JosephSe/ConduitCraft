@@ -2062,3 +2062,9 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .title-block[hidden] { display: none; }
 .title-block > span { padding-inline: 12px; border-inline-start: 1px solid var(--cc-hair-2); white-space: nowrap; }
 .title-block > span:first-child { flex: 1; border-inline-start: 0; color: var(--cc-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+
+/* S9 (6.6): hovering a template card draws its wires once. */
+@keyframes cc-wire-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .template-card:hover .tpl-wire { stroke-dasharray: 100; animation: cc-wire-draw 700ms var(--cc-ease-out) 1 both; }
+}

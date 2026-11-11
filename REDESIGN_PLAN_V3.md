@@ -804,7 +804,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 #### [x] S9. Templates, Home, first run · M
 - **Read:** `templatesGallery.ts`, `homeScreen.ts`, `firstRun.ts`.
 - **Done:** every template shows its title; thumbnails follow the theme. **Needs:** T3, C6.
-- **S9 result.** Template and Home cards are unboxed: a hairline thumbnail, the title and one line. Template thumbnails are drawn in the page's theme (`renderTemplatePreviewSvg(source, scheme)`). First run sits above the dock. Not done: Home's saved-diagram thumbnails are stored images and stay as they were saved; the wires-run-on-hover effect.
+- **S9 result.** Template and Home cards are unboxed: a hairline thumbnail, the title and one line. Template thumbnails are drawn in the page's theme (`renderTemplatePreviewSvg(source, scheme)`). First run sits above the dock. Hovering a template card draws its one-way wires once (`.tpl-wire`, 700 ms, fine-pointer and no-reduced-motion only). Not done: Home's saved-diagram thumbnails are stored images and stay as they were saved, so they do not run on hover.
 
 #### [x] S10. Narrow and touch · M
 - **Do:** 6.6.

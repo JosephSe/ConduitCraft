@@ -100,6 +100,11 @@ describe('starter architecture templates gallery', () => {
     assert.notEqual(renderTemplatePreviewSvg(raw, 'dark'), renderTemplatePreviewSvg(raw, 'light'));
   });
 
+  it('marks one-way wires so a hovered card can draw them (S9)', async () => {
+    const svg = renderTemplatePreviewSvg(await loadTemplateRaw(getStarterTemplateById('three-tier-web')!));
+    assert.match(svg, /<path class="tpl-wire" pathLength="100" [^>]*marker-end=/);
+  });
+
   it('generates structured HTML markup for cards, blank canvas, and empty stage shelf', () => {
     const cardHtml = renderTemplateCardHtml(getStarterTemplateById('three-tier-web')!);
     assert.ok(cardHtml.includes('class="template-card"'));
