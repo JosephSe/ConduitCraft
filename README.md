@@ -2,7 +2,7 @@
 
 **ConduitCraft** is an open-source architecture diagramming studio with animated traffic and scenarios. The idea is three steps: **draw it, run it, ship it.** Draw a system on a blank canvas, or import a Mermaid flowchart. Run it, by watching requests travel and failing a component to see what breaks. Ship it as a self-contained page, a picture or a GIF.
 
-![Failing a component in the Traffic lens: the failed component, what becomes unreachable and what reroutes](docs/images/traffic-failure.png)
+![The Traffic lens on the Marquee showcase: a degraded component, with the summary of what is unreachable or rerouted](docs/images/traffic-failure.png)
 
 ## Draw it, run it, ship it
 
