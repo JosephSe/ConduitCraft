@@ -2065,6 +2065,14 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .title-block > span { padding-inline: 12px; border-inline-start: 1px solid var(--cc-hair-2); white-space: nowrap; }
 .title-block > span:first-child { flex: 1; border-inline-start: 0; color: var(--cc-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 
+/* M3 (9.2): the dock changes face with a cross-fade, and the tray and popovers rise 14 px on the spring when they open. */
+@keyframes cc-face-in { from { opacity: 0; } }
+@keyframes cc-rise { from { opacity: 0; transform: translateY(14px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .dock-face:not([hidden]) { animation: cc-face-in var(--cc-dur-base, 200ms) var(--cc-ease-out) 1; }
+  .tray:not([hidden]), .slot-popover:not([hidden]) { animation: cc-rise var(--cc-dur-base, 200ms) var(--cc-spring) 1 both; }
+}
+
 /* S9 (6.6): hovering a template card draws its wires once. */
 @keyframes cc-wire-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
