@@ -1982,6 +1982,10 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .workspace[data-lens="traffic"] .conduit-rail { stroke-width: 1; opacity: 0.55; }
 /* M1 (9.2): in Traffic the flow is capsules, 14 x 7 (a 7 px dash with round caps), in the wire's tone. A component that a run reaches springs 1 -> 1.14 -> 1. */
 .workspace[data-lens="traffic"] .conduit-stream { stroke-width: 7; stroke-dasharray: 7 29; }
+/* One capsule per wire: it leaves the source and runs to the target, at a steady speed (about 120 px a second, scaled by the wire's latency). */
+.workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { stroke-dasharray: 7 calc(var(--cc-len, 400) * 1px + 40px); stroke-dashoffset: 8; animation: cc-capsule max(0.9s, calc(var(--cc-len, 400) * 1s / 120 * var(--flow-scale, 1))) linear infinite; }
+@keyframes cc-capsule { from { stroke-dashoffset: 8; } to { stroke-dashoffset: calc(var(--cc-len, 400) * -1); } }
+@media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { animation: none; stroke-dasharray: none; } }
 .workspace[data-lens="traffic"] .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 7 37; }
 .workspace[data-lens="traffic"] .conduit-stream-reverse { stroke-width: 7; stroke-dasharray: 7 37; }
 .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: cc-arrive 320ms var(--cc-spring) 1; transform-origin: center; transform-box: fill-box; }
@@ -2009,11 +2013,14 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .arch-node .node-icon, .arch-node .node-shape-plate { transition: transform var(--cc-dur-base, 200ms) var(--cc-spring); }
 .arch-node[data-chaos="failed"] .node-select-hit { animation: chaos-shake 320ms ease-in-out 1, cc-hatch-in 400ms var(--cc-ease-out) 1; }
 @keyframes cc-hatch-in { from { --cc-hatch: 0%; } }
-.arch-node.is-restored .node-select-hit { animation: cc-restore 600ms var(--cc-ease-out) 1; }
-@keyframes cc-restore { from { box-shadow: 0 0 0 0 var(--cc-emerald); } to { box-shadow: 0 0 0 16px transparent; } }
+/* A restored component: one emerald arc runs once round the tile's edge (a masked conic gradient), then is gone. */
+@property --cc-ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.arch-node.is-restored .node-select-hit { position: relative; }
+.arch-node.is-restored .node-select-hit::after { content: ""; position: absolute; inset: -2px; border-radius: inherit; padding: 2px; pointer-events: none; background: conic-gradient(from var(--cc-ang), transparent 0deg, var(--cc-emerald) 70deg, transparent 90deg); -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: cc-restore 600ms var(--cc-ease-out) 1 both; }
+@keyframes cc-restore { from { --cc-ang: 0deg; opacity: 1; } to { --cc-ang: 360deg; opacity: 0.2; } }
 .conduit-group.is-route-lit .conduit-glow { animation: cc-route 900ms var(--cc-ease-out) var(--cc-route-delay, 0ms) 1; }
 @keyframes cc-route { 40% { opacity: 0.9; } }
-@media (prefers-reduced-motion: reduce) { .arch-node[data-chaos] .node-select-hit, .arch-node.is-restored .node-select-hit, .conduit-group.is-route-lit .conduit-glow { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .arch-node[data-chaos] .node-select-hit, .arch-node.is-restored .node-select-hit::after, .conduit-group.is-route-lit .conduit-glow { animation: none; } }
 
 
 /* M3 (9.2): a dropped component scales from 0.94 on the spring; a connected wire rings the target's ports once; a deleted component fades and scales to 0.96 in 120 ms. */
