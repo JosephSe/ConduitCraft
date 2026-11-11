@@ -1037,7 +1037,14 @@ Section 8 lists every label change. Rules behind them, for anything not listed:
 
 ## 11. Tests
 
-Run `pnpm test` and `pnpm test:e2e` after every step in section 12. A step is not done while a test fails. Never delete or skip a test to make a step pass; change the test to match the new card as described here.
+After every step in section 12, run `pnpm test`, then the quick browser tier and the specs that touch the card:
+
+```
+pnpm test:e2e:quick
+pnpm exec playwright test --project=chromium e2e/a11y.spec.ts e2e/appearancePickers.spec.ts e2e/balancer.spec.ts e2e/cache-limiter-scheduler.spec.ts e2e/camera.spec.ts e2e/chaos.spec.ts e2e/findReplace.spec.ts e2e/fitWithInspector.spec.ts e2e/frames.spec.ts e2e/help.spec.ts e2e/inspectorAutoShow.spec.ts e2e/interactions.spec.ts e2e/plainLanguage.spec.ts e2e/queue.spec.ts e2e/reducedMotion.spec.ts e2e/stream-external-bucket.spec.ts e2e/tagsLinks.spec.ts e2e/tooltips.spec.ts e2e/topbar.spec.ts e2e/wireProtocol.spec.ts
+```
+
+Add `e2e/propertiesCard.spec.ts` to that list once it exists. Run the full suite (`pnpm test:e2e`, about four minutes) once before each pull request, not after every step. Keep the default worker count: more workers made the run slower and flaky on the owner's machine. A step is not done while a test fails. Never delete or skip a test to make a step pass; change the test to match the new card as described here.
 
 ### 11.1 Existing tests that must change
 
@@ -1081,7 +1088,7 @@ If a pair is already tested, do not add it twice.
 
 ## 12. Work order
 
-Five steps. One commit per step at least; steps 1 and 2 may share a PR, as may 3 and 4. After each step: `pnpm build && pnpm test && pnpm test:e2e && pnpm check:size`, then look at the app at 1440 × 900 and 390 × 844 in both themes.
+Five steps. One commit per step at least; steps 1 and 2 may share a PR, as may 3 and 4. After each step: `pnpm build && pnpm test && pnpm check:size`, the two browser-test commands at the top of section 11, then look at the app at 1440 × 900 and 390 × 844 in both themes.
 
 #### [ ] Step 1. Tokens, container, popover (sections 3, 5)
 Add missing tokens. Replace the `<aside>` markup. Float the card. Remove the rail. Move Lock / Group / Duplicate / Delete / pin into the popover. Add a **temporary** More and Close button at the top of `#prop-form-container` (the real header comes in step 2). Fit inset.
@@ -1125,7 +1132,7 @@ Behaviour
 - [ ] Traffic lens: the Traffic pane shows inside the same floating card and still works.
 
 Quality bars
-- [ ] `pnpm build`, `pnpm test`, `pnpm test:e2e` pass. Counts are in the PR description next to the baseline from section 3.
+- [ ] `pnpm build`, `pnpm test` and the full `pnpm test:e2e` pass. Counts are in the PR description next to the baseline from section 3.
 - [ ] `pnpm check:size` passes. Entry CSS is not larger than before this work (old rules were deleted, per R6).
 - [ ] Axe: no violations in the card, both themes, all three tabs.
 - [ ] Keyboard only: Tab reaches every control in visual order; arrow keys move within the tabs, the colour dots and the shapes; focus is always visible.
