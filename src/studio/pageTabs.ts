@@ -70,7 +70,14 @@ export function initPageTabs(): void {
 
   tabs.addEventListener('click', (e) => {
     const tab = tabOf(e.target);
-    if (tab) goToPage(indexOf(tab));
+    if (!tab) return;
+    // Narrow: only the open page's tab shows (6.6), so tapping it moves on to the next page.
+    const count = pageCount(pagesSource());
+    if (count > 1 && tab.getAttribute('aria-selected') === 'true' && window.matchMedia('(max-width: 56rem)').matches) {
+      goToPage((indexOf(tab) + 1) % count);
+      return;
+    }
+    goToPage(indexOf(tab));
   });
   addBtn.addEventListener('click', () => void pageMenuModule().then((m) => m.runPageAction('add')));
 

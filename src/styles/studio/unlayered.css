@@ -2062,3 +2062,12 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .title-block[hidden] { display: none; }
 .title-block > span { padding-inline: 12px; border-inline-start: 1px solid var(--cc-hair-2); white-space: nowrap; }
 .title-block > span:first-child { flex: 1; border-inline-start: 0; color: var(--cc-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+
+/* S10 (6.6): below 56rem SW and SE collapse to one button each. SW shows the open page (tap for the next); SE shows the zoom readout, and Fit moves into the view popover. */
+.view-fit { display: none; }
+@media (max-width: 56rem) {
+  .page-tab[aria-selected="false"] { display: none; }
+  .page-strip:has(.page-tab:nth-child(2)) .page-add { display: none; }
+  .hud-zoom-card #btn-zoom-out, .hud-zoom-card #btn-zoom-in, .hud-zoom-card #btn-zoom-fit { display: none; }
+  .view-fit { display: inline-flex; justify-content: center; }
+}

@@ -2631,6 +2631,7 @@ export function initEvents(): void {
     zoomAround(app.scale / 1.16, rect.width / 2, rect.height / 2);
   });
   btnZoomFit.addEventListener('click', fitToViewport);
+  document.getElementById('view-fit')?.addEventListener('click', fitToViewport);
   trackViewportResize();
 
   // Global Keyboard Shortcuts (Undo, Redo, Duplicate, Delete, Escape)
