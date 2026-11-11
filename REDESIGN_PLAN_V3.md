@@ -885,7 +885,7 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Result (R2, partly):** the eight views, light and dark, are in `docs/v3/after/` with the same names as `docs/v3/before/`; `node tools/captureV3Views.mjs` re-records them (build first). Read against the three tests on the Marquee showcase at 1440 × 900:
   - **Squint:** passes. The diagram is the coloured region. The only colour in the chrome is the app mark and the red issue count on Review.
   - **Zoom-out:** passes. Fit lands at 41% and every component name can be read, though a few long ones are cut with an ellipsis (`Bot & Fraud…`). Wire labels at that zoom are too small to read.
-  - **Screenshot:** passes for Design, Traffic and Review. Fit with the properties panel already open clips the diagram's left edge (the Fans lane), so Fit does not account for the panel's width.
+  - **Screenshot:** passes for Design, Traffic and Review. Fit with the properties panel open clipped the diagram's left edge (the Fans lane) because the zoom floor was 35%. Fixed in #133: the floor is 25%, low-zoom text grows up to 48 px, and `e2e/fitWithInspector.spec.ts` guards it.
   - **Award checklist (V1 section 10):** not walked item by item. The packet-and-ripple, keyboard, offline and "live" items are covered by e2e specs; the touch, export-quality and text-description items have not been re-audited for 3.0. Left open.
 
 #### [ ] R3. Ship 3.0.0 · S
