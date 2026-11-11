@@ -63,6 +63,11 @@ const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
 /** Sketch (Y2): a fixed-seed displacement filter wobbles every stroke the same way each time. */
 const ROUGH_FILTER = '<filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>';
 
+/** Blueprint (Y1) has one ink, so wires are told apart by dash pattern, the same patterns the canvas uses. */
+const BLUEPRINT_DASH: Partial<Record<StreamTone, string>> = {
+  emerald: '10 5', rose: '2 5', violet: '12 4 2 4', amber: '18 6', cyan: '6 3 1 3 1 3', fuchsia: '3 3',
+};
+
 const SANS = 'ui-sans-serif, system-ui, sans-serif';
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 
@@ -459,9 +464,11 @@ export function renderDiagramSvg(
       const dash =
         frame && edge.animated !== false
           ? ` stroke-dasharray="8 10" stroke-dashoffset="${frame.dashOffset}"`
-          : edge.sync === 'async'
-            ? ' stroke-dasharray="7 6"'
-            : '';
+          : doc.style === 'blueprint' && BLUEPRINT_DASH[edge.tone]
+            ? ` stroke-dasharray="${BLUEPRINT_DASH[edge.tone]}"`
+            : edge.sync === 'async'
+              ? ' stroke-dasharray="7 6"'
+              : '';
       return `<g${wireOpacity}>${glow}<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}</g>`;
     })
     .join('');
