@@ -116,7 +116,13 @@ for (const vp of VIEWPORTS) {
           // Fail the selected component so the failure summary is on screen too.
           // The selection's toolbar would cover the node, so let go of it first.
           await page.keyboard.press('Escape');
-          await page.locator('#btn-zoom-fit').click();
+          // Fit is in the view popover below 56rem (S10), so ask for it directly.
+          const fit = page.locator('#btn-zoom-fit');
+          if (await fit.isVisible()) await fit.click();
+          else {
+            await fit.evaluate((el) => (el as HTMLElement).click());
+            await page.waitForTimeout(600);
+          }
           await expect(page.locator('#zoom-readout')).not.toHaveText('');
           await selectFirstNode(page);
           await page.keyboard.press('x');
