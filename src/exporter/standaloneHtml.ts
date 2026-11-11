@@ -26,6 +26,7 @@ import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
 import diagramStylesCss from '../styles/studio/diagramStyles.css?raw';
 import { ROUGH_FILTER } from './diagramSvg';
+import { titleBlockFor } from './titleBlock';
 import framesCss from '../styles/frames.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
 
@@ -566,6 +567,7 @@ ${colorSchemeBoot}
     </aside>
   </main>
 
+  <div class="title-block" id="title-block" aria-hidden="true">${[titleBlockFor(doc, undefined, new Date(0))].map((b) => [b.title, b.systemTag, b.statusLabel].filter(Boolean).map((t) => `<span>${escapeHtml(String(t))}</span>`).join('')).join('')}</div>
   <div class="presentation-bar" id="presentation-bar" hidden>
     <button type="button" class="btn btn-icon-only" id="btn-pres-prev" aria-label="Previous step">←</button>
     <div class="presentation-pill-info" id="pres-pill-info">Overview</div>
