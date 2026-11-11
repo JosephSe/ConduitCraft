@@ -852,8 +852,9 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 
 ### Milestone M: Motion
 
-#### [ ] M1. Capsules · M
+#### [x] M1. Capsules · M
 - **Read:** `simulationPlayback.ts`, `queueBacklog.ts`, `exporter/gif.ts`. **Do:** the capsule rows of 9.2. **Needs:** C5.
+- **Done (M1):** in Traffic the wire's flow is drawn as 14 × 7 capsules (a 7 px dash with round caps, stroke 7) in the wire's tone, turning with the path because they are dashes on it, and paced by the existing `--flow-scale` from `latencyMs`. A component a run reaches springs 1 → 1.14 → 1 (`cc-arrive`, 320 ms, off under reduced motion). Cache turn-round, the rose 429 and queue stacking were already built (K1, K3, K4) and are unchanged. `e2e/capsules.spec.ts` checks the shape in Traffic. Not yet: capsule starts at entry points and spreads, one capsule per step instead of a dash train, a GIF frame check.
 
 #### [ ] M2. Failure, recovery, finish · S
 - **Needs:** C3, M1.
