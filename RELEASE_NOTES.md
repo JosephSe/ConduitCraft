@@ -1,5 +1,23 @@
 # Release notes
 
+## 3.0.0
+
+ConduitCraft is redrawn. The diagram is the interface; everything else is paper around it.
+
+- **A new look.** Vellum (light) and Graphite (dark): ink chrome, one accent per diagram, sentence-case labels, a type scale, one dialog shell, and each component drawn as its own cut-out. Cyan (Data) and fuchsia (Security) join the wire colours.
+- **Seven slots, one dock.** The top bar is three islands (title and menu, the lens switch, search, Share and Run). The bottom edge is pages and legend, the dock, and zoom. The dock changes face with the lens: tools and favourites in Design, run controls in Traffic, issue stepping in Review. A component tray with a demo pane, search and seven small loops replaces the old palette.
+- **Create by wiring.** Drag from a port into empty space and a strip of likely kinds appears. The inspector has Look, Behaviour and Notes tabs; selections get an icon toolbar.
+- **Three lenses that look different.** Design is still; Traffic dims the sheet, thins the line and sends one capsule down each wire; Review greys the sheet and circles each issue with a hand-drawn redline.
+- **One card, many shapes.** Every component has a tile, a status light and a kind line. Zoom out and the diagram reads like a transit map: bigger tiles, bigger titles, and the detail drops away.
+- **Motion that explains.** Capsules arrive with a spring, failures shake and hatch, recovery runs a ring round the tile, blast radius spreads 40 ms a hop, drops, wires and deletes give feedback, the dock cross-fades and the tray rises. Nothing loops in Design, and reduced motion turns all of it off.
+- **Diagram styles.** Studio, Blueprint (navy sheet, outlined nodes, wires told apart by dash), Print (black and white with sub-labels) and Sketch (warm paper, hand-wobbled strokes). The style is saved in the file (format version 13), in share links, and in SVG, PNG, GIF and standalone HTML exports.
+- **Title block.** Every picture export carries a title strip (mark, title, tag, status, page, date), and the standalone HTML shows it in Present. It is on by default and the export dialog can turn it off.
+- **Templates and Home.** Template and Home cards are unboxed sheets with a themed thumbnail; hovering a template draws its wires once.
+- **Narrow screens.** Below 56 rem the inspector is a bottom sheet, the tray is a sheet without the demo pane, the page strip shows the open page (tap for the next) and the zoom island is one button with Fit in its popover.
+- **Under the hood.** The old `--wl-` tokens are gone, `toolRail.ts` is folded into the dock, and entry CSS is 126 kB (cap 128).
+
+Files from earlier versions open unchanged. Files saved by 3.0 use format version 13, which an older app will refuse rather than drop the style.
+
 ## 2.2.1
 
 - **Paste across tabs now works for swimlanes, frames and notes.** Copying one of these on its own did nothing, so pasting in another tab said the clipboard held no components. Cmd+C now copies whatever is selected.
