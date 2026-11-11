@@ -905,7 +905,7 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 #### [ ] R3. Ship 3.0.0 · S
 - **Do:** release notes, guide screenshots, version, merge `v3` into `main`.
 - **Needs:** the owner's go-ahead. Do not merge to `main` without it.
-- **Prepared (R3):** `package.json` is 3.0.0 and `RELEASE_NOTES.md` has the 3.0.0 notes. Not done: guide screenshots (`docs/guide.md` still shows 2.x pictures; the eight 3.0 views are in `docs/v3/after/`), README media, and the merge of `v3` into `main`, which waits for the owner.
+- **Prepared (R3):** `package.json` is 3.0.0 and `RELEASE_NOTES.md` has the 3.0.0 notes. Guide and README pictures are now the 3.0 views (`docs/images/`, from `docs/v3/after/`). Not done: the merge of `v3` into `main`, which waits for the owner.
 
 ### Baseline (filled in by Z1)
 
