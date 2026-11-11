@@ -2037,3 +2037,34 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes redline-draw { to { stroke-dashoffset: 0; } }
 @keyframes redline-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .redline-mark path { animation: none; stroke-dashoffset: 0; } }
+
+/* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
+#stage-world[data-lod="low"] .node-title {
+  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 34px);
+  line-height: 1.15;
+  text-align: center;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#stage-world[data-lod="low"] .node-sub,
+#stage-world[data-lod="low"] .node-light,
+#stage-world[data-lod="low"] .node-status-badge,
+#stage-world[data-lod="low"] .node-comment-badge,
+#stage-world[data-lod="low"] .node-lock-badge { display: none; }
+#stage-world[data-lod="low"] .arch-node { box-shadow: none; }
+#stage-world[data-lod="low"] .zone-title,
+#stage-world[data-lod="low"] .frame-title-bar { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 34px); }
+#stage-world[data-lod="low"] .conduit-rail { stroke-width: min(5px, calc(1.75px / var(--cam-scale, 1))); }
+#stage-world[data-lod="low"] .conduit-casing { stroke-width: min(9px, calc(6px / var(--cam-scale, 1))); }
+/* Medium: tile, title, subtitle and the status light; the rest waits for high. */
+#stage-world[data-lod="medium"] .node-footer,
+#stage-world[data-lod="medium"] .node-eyebrow { display: none; }
+
+/* C6 (8.7): the title block along the bottom of the sheet in Present. */
+.title-block { position: absolute; inset-inline: 0; inset-block-end: 0; z-index: 5; display: flex; block-size: 28px; border-block-start: 1px solid var(--cc-hair-2); background: var(--cc-sheet); font-size: 11px; line-height: 28px; color: var(--cc-ink-2); pointer-events: none; }
+.title-block[hidden] { display: none; }
+.title-block > span { padding-inline: 12px; border-inline-start: 1px solid var(--cc-hair-2); white-space: nowrap; }
+.title-block > span:first-child { flex: 1; border-inline-start: 0; color: var(--cc-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
