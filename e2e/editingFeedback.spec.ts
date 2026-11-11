@@ -24,3 +24,14 @@ test('the leaving copy cannot be reached by pointer or keyboard', async ({ page 
   });
   if (seen) expect(seen).toEqual({ hidden: 'true', events: 'none' });
 });
+
+test('deleting several components leaves a copy of each that is gone within a moment (M3)', async ({ page }) => {
+  await page.goto('/');
+  await openLumenRelay(page);
+  await page.locator('#stage-world').click({ position: { x: 5, y: 5 }, force: true });
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.press('Delete');
+  const seen = await page.evaluate(() => document.querySelectorAll('.arch-node.is-leaving').length);
+  expect(seen).toBeGreaterThan(1);
+  await expect(page.locator('.arch-node')).toHaveCount(0, { timeout: 2000 });
+});

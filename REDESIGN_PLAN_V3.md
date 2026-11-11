@@ -862,7 +862,7 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 
 #### [x] M3. Editing feedback · S
 - **Do:** drop, connect, delete, and the remaining rows. **Needs:** S3, C2.
-- **Done (M3):** a dropped component scales from 0.94 on the spring (`cc-drop`, over the old nodeDropIn); a connected wire rings the target's ports once (`is-attached`, 500 ms); a deleted component leaves as an inert, aria-hidden copy that fades and scales to 0.96 in 120 ms, removed after 140 ms, while the real node is gone at once so counts and Undo are unaffected. Off under reduced motion. `e2e/editingFeedback.spec.ts`. Not yet: multi-delete and cut leaving copies, and the lens thumb, dock cross-fade and tray rise rows (already spring or slide from C2, S3 and S6, not re-audited). Entry JS is 549.1 of 550 kB, so raise that cap before the next feature.
+- **Done (M3):** a dropped component scales from 0.94 on the spring (`cc-drop`, over the old nodeDropIn); a connected wire rings the target's ports once (`is-attached`, 500 ms); a deleted component leaves as an inert, aria-hidden copy that fades and scales to 0.96 in 120 ms, removed after 140 ms, while the real node is gone at once so counts and Undo are unaffected. Off under reduced motion. `e2e/editingFeedback.spec.ts`. Deleting a multi-selection leaves a copy of each component too (there is no separate cut). Not yet: the lens thumb, dock cross-fade and tray rise rows (already spring or slide from C2, S3 and S6, not re-audited). Entry JS is 549.1 of 550 kB, so raise that cap before the next feature.
 
 ### Milestone Y: Diagram styles
 
