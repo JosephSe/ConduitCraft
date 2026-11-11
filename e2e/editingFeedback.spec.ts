@@ -17,9 +17,10 @@ test('the leaving copy cannot be reached by pointer or keyboard', async ({ page 
   await openLumenRelay(page);
   await page.locator('.arch-node').nth(2).click();
   await page.keyboard.press('Delete');
-  const copy = page.locator('.arch-node.is-leaving');
-  if (await copy.count()) {
-    await expect(copy.first()).toHaveAttribute('aria-hidden', 'true');
-    expect(await copy.first().evaluate((el) => getComputedStyle(el).pointerEvents)).toBe('none');
-  }
+  // The copy lives 140 ms, so read it in one step instead of across awaits.
+  const seen = await page.evaluate(() => {
+    const el = document.querySelector('.arch-node.is-leaving');
+    return el ? { hidden: el.getAttribute('aria-hidden'), events: getComputedStyle(el).pointerEvents } : null;
+  });
+  if (seen) expect(seen).toEqual({ hidden: 'true', events: 'none' });
 });

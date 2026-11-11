@@ -2,7 +2,7 @@
  * Tags, ownership, links and the custom legend (F-26, F-27): what they mean and how they are read from a file.
  * Pure and DOM-free. Every link URL goes through `safeLinkUrl`, on input, on import and again on export.
  */
-import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeBalancer, NodeCache, NodeLimiter, NodeSchedule, NodeLinkKind, NodeQueue, NodeResilience, NodeSource, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramStyle, LegendEntry, NodeLink, NodeBalancer, NodeCache, NodeLimiter, NodeSchedule, NodeLinkKind, NodeQueue, NodeResilience, NodeSource, StreamTone } from '../types';
 import { normalizeBalancer } from './balancers';
 import { normalizeCache, normalizeLimiter, normalizeSchedule } from './components';
 import { normalizeQueue } from './queues';
@@ -90,6 +90,11 @@ export function normalizeOwner(raw: unknown): string | undefined {
 }
 
 /** One entry per tone, with a non-empty label. Anything else is dropped. */
+/** The diagram style a file declares, or undefined for Studio and anything unknown (Y1). */
+export function normalizeStyle(value: unknown): DiagramStyle | undefined {
+  return value === 'blueprint' || value === 'print' ? value : undefined;
+}
+
 export function normalizeLegend(raw: unknown): LegendEntry[] {
   if (!Array.isArray(raw)) return [];
   const seen = new Set<StreamTone>();

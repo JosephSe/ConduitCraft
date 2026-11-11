@@ -171,7 +171,7 @@ import { restoreDiagram } from './library';
 import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
-import { allTags, colourKey } from '../core/meta';
+import { allTags, colourKey, normalizeStyle } from '../core/meta';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
@@ -733,10 +733,21 @@ function syncTagFilter(): void {
     select.value = app.tagFilter;
   }
   for (const select of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) select.value = app.colourBy;
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-diagram-style')) select.value = (app.levelRoot ?? app.doc).style ?? '';
 }
 
 /** "Colour by" and "tag" controls: the view popover. */
 export function bindViewFilters(): void {
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-diagram-style')) {
+    select.addEventListener('change', () => {
+      pushHistory();
+      const root = app.levelRoot ?? app.doc;
+      const style = normalizeStyle(select.value);
+      if (style) root.style = style;
+      else delete root.style;
+      renderAll(false);
+    });
+  }
   for (const colour of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) {
     colour.addEventListener('change', () => {
       app.colourBy = colour.value === 'status' || colour.value === 'tag' ? colour.value : 'tone';
