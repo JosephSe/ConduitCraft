@@ -1,6 +1,6 @@
 /** Standalone SVG picture of a diagram. No studio CSS or external assets. */
 import { describeDiagram } from '../core/describe';
-import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramStyle, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { queueCardText, streamLanes } from '../core/queues';
 import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsBucket, storeDrawsCylinder } from '../core/nodeStyle';
@@ -22,7 +22,7 @@ interface Palette {
   tone: Record<StreamTone, string>;
 }
 
-const PALETTES: Record<SvgScheme, Palette> = {
+const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
   light: {
     canvas: '#ECEFEE',
     surface: '#FFFFFF',
@@ -32,6 +32,15 @@ const PALETTES: Record<SvgScheme, Palette> = {
     muted: '#5C626A',
     border: '#D0D1D2',
     subtle: '#E5E6E6',
+    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
+  },
+  // Diagram styles (Y1, 8.8). Blueprint is one ink on a cyanotype sheet; Print is black on white with colour on wires.
+  blueprint: {
+    canvas: '#0b3a6b', surface: '#0b3a6b', elevated: '#134a82', ink: '#f4f8ff', secondary: '#d3e2f6', muted: '#b3cbea', border: '#f4f8ff', subtle: '#2a5a92',
+    tone: { blue: '#f4f8ff', emerald: '#f4f8ff', rose: '#f4f8ff', violet: '#f4f8ff', amber: '#f4f8ff', cyan: '#f4f8ff', fuchsia: '#f4f8ff' },
+  },
+  print: {
+    canvas: '#ffffff', surface: '#ffffff', elevated: '#f3f3f3', ink: '#000000', secondary: '#222222', muted: '#444444', border: '#555555', subtle: '#dddddd',
     tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
   },
   dark: {
@@ -328,7 +337,7 @@ export function renderDiagramSvg(
   scheme: SvgScheme = 'light',
   block?: TitleBlock | null,
 ): string {
-  const pal = PALETTES[scheme];
+  const pal = PALETTES[doc.style ?? scheme];
   const width = Math.max(1, doc.stageWidth);
   const height = Math.max(1, doc.stageHeight);
   const routed = routeDiagramEdges(doc);
@@ -468,7 +477,7 @@ export function renderDiagramSvg(
   ${wires}
   ${nodes}
   ${legend}
-  ${block ? titleBlockSvg(block, width, height, scheme) : ''}
+  ${block ? titleBlockSvg(block, width, height, doc.style === 'blueprint' ? 'dark' : doc.style === 'print' ? 'light' : scheme) : ''}
 </svg>`;
 }
 

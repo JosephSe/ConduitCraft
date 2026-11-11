@@ -109,6 +109,14 @@ function paintFrames(): void {
 }
 
 export function renderAll(rebuildInspector = true): void {
+  const workspaceEl = document.getElementById('workspace');
+  const style = (app.levelRoot ?? app.doc).style;
+  if (workspaceEl) {
+    if (style) workspaceEl.dataset.style = style;
+    else delete workspaceEl.dataset.style;
+  }
+  const styleSelect = document.getElementById('view-style') as HTMLSelectElement | null;
+  if (styleSelect) styleSelect.value = style ?? '';
   invalidateChaos();
   invalidateInsights();
   const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;

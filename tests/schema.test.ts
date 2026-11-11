@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CURRENT_SCHEMA_VERSION, MIGRATIONS, migrate, readSchemaVersion } from '../src/core/schema.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
+import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
+import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
 import { createBlankDocument } from '../src/templates/presets.ts';
 
 describe('schema versioning (T-03)', () => {
@@ -50,6 +52,31 @@ describe('schema versioning (T-03)', () => {
     const back = parseBlueprintJson(text);
     assert.ok(back.ok);
     assert.equal(back.ok && back.doc.title, 'Round trip');
+  });
+
+  it('keeps the diagram style through JSON and the Blueprint file, and drops an unknown one (Y1)', () => {
+    const doc = createBlankDocument();
+    doc.style = 'blueprint';
+    const json = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(json.ok && json.doc.style === 'blueprint');
+    const md = importMermaidOrBlueprint(serializeToBlueprintMarkdown(doc));
+    assert.equal(md.doc?.style, 'blueprint');
+    const odd = parseBlueprintJson(JSON.stringify({ kind: 'conduitcraft.blueprint', version: 13, document: { ...doc, style: 'neon' } }));
+    assert.ok(odd.ok && odd.doc.style === undefined);
+    const studio = createBlankDocument();
+    assert.equal('style' in JSON.parse(serializeBlueprintJson(studio)).document, false);
+  });
+
+  it('draws each style differently in the vector export (Y1)', () => {
+    const doc = createBlankDocument();
+    const studio = renderDiagramSvg(doc);
+    doc.style = 'blueprint';
+    const blueprint = renderDiagramSvg(doc);
+    doc.style = 'print';
+    const print = renderDiagramSvg(doc);
+    assert.notEqual(studio, blueprint);
+    assert.notEqual(blueprint, print);
+    assert.match(blueprint, /#0b3a6b/);
   });
 
   it('opens a version-11 file unchanged and stamps 12 (queues, K1)', () => {
