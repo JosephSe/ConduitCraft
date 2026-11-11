@@ -1,28 +1,60 @@
 @layer inspector {
   .inspector {
+    position: absolute;
+    /* .workspace starts 69px down the window, under the top bar, and the NE island ends 8px above that: 0 clears it by 8px. */
+    inset-block-start: 0;
+    inset-inline-end: 14px;       /* the slot inset used by every island */
+    inline-size: 304px;
+    max-block-size: calc(100% - 113px);  /* the SE island (85px) + its 14px inset + 14px of air */
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
     background: var(--cc-island);
-    backdrop-filter: blur(20px);
-    border-inline-start: 1px solid var(--cc-hair);
-    display: grid;
-    min-block-size: 0;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-    overflow: hidden;
+    border: 1px solid var(--cc-hair);
+    box-shadow: var(--cc-lift);
+    backdrop-filter: blur(18px) saturate(1.4);
     z-index: 12;
+    animation: prop-card-in 300ms var(--cc-spring);
   }
+  .workspace[data-mode="data"] .inspector { inline-size: 360px; }
+  .workspace[data-inspector-collapsed="true"] .inspector { display: none; }
+  @keyframes prop-card-in { from { opacity: 0; transform: translateX(14px); } }
 
-  .inspector-mode-pane {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-block-size: 0;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-    overflow: hidden;
-  }
+  .inspector-mode-pane { display: flex; flex-direction: column; min-block-size: 0; }
+  .inspector-mode-pane[hidden] { display: none; }
 
-  .inspector-mode-pane[hidden] {
-    display: none;
+  @media (prefers-reduced-motion: reduce) { .inspector { animation: none; } }
+  @media (prefers-reduced-transparency: reduce) { .inspector { background: var(--cc-sheet); backdrop-filter: none; } }
+  @supports not (backdrop-filter: blur(1px)) { .inspector { background: var(--cc-sheet); } }
+
+  /* More popover */
+  .prop-more {
+    position: fixed; inset: auto; margin: 0;
+    min-inline-size: 190px; padding: 4px;
+    border: 1px solid var(--cc-hair); border-radius: 12px;
+    background: var(--cc-sheet); color: var(--cc-ink); box-shadow: var(--cc-lift);
   }
+  .prop-more:popover-open { display: grid; }
+  .prop-more-actions { display: grid; }
+  .prop-more-actions[hidden] { display: none; }
+  .prop-more-item {
+    display: flex; align-items: center; gap: 10px;
+    block-size: 32px; padding-inline: 10px;
+    border: 0; border-radius: 8px; background: none;
+    font: var(--cc-font-control); color: var(--cc-ink); text-align: start; cursor: pointer;
+  }
+  .prop-more-item:hover, .prop-more-item:focus-visible { background: var(--cc-well); outline: none; }
+  .prop-more-item[aria-pressed="true"] { font-weight: 600; }
+  .prop-more-item[hidden] { display: none; }
+  .prop-more-danger { color: var(--cc-redline); }
+  .prop-more hr { border: 0; border-block-start: 1px solid var(--cc-hair); margin: 4px 6px; }
+
+  /* Header buttons (step 1 puts them in a temporary bar; step 2 moves them into the header) */
+  .prop-head-buttons { display: flex; align-self: start; }
+  .prop-temp-buttons { justify-content: flex-end; flex: none; }
+  .prop-icon-btn { inline-size: 28px; block-size: 28px; border: 0; border-radius: 8px; background: none; color: var(--cc-ink-2); display: grid; place-items: center; cursor: pointer; }
+  .prop-icon-btn:hover, .prop-icon-btn[aria-expanded="true"] { background: var(--cc-well); color: var(--cc-ink); }
+  @media (pointer: coarse) { .prop-icon-btn { inline-size: 44px; block-size: 44px; } }
 
   .inspector-tabs {
     display: flex;
@@ -35,36 +67,6 @@
     flex-wrap: wrap;
     min-inline-size: 0;
     max-inline-size: 100%;
-  }
-
-  .inspector-tabs-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-inline-size: 0;
-    flex: 1 0 auto;
-  }
-
-  .prop-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    flex-wrap: wrap;
-    min-inline-size: 0;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-  }
-
-  .prop-header-actions[hidden] {
-    display: none;
-  }
-
-  .prop-header-actions .btn-compact {
-    flex: 1 1 auto;
-    text-align: center;
-    padding-inline: 0.45rem;
-    white-space: nowrap;
-    min-inline-size: 0;
   }
 
   .tablist {

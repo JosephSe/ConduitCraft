@@ -241,7 +241,8 @@ export type UiIconName =
   | 'colour'
   | 'kind'
   | 'shape'
-  | 'more';
+  | 'more'
+  | 'close';
 
 const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
   sidebarLeft: [
@@ -354,6 +355,7 @@ const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
   shape: [
     { tag: 'path', attrs: { d: 'M12 3 21 19H3z' } },
   ],
+  close: [{ tag: 'path', attrs: { d: 'M6 6l12 12M18 6 6 18' } }],
   more: [
     { tag: 'circle', attrs: { cx: '5', cy: '12', r: '1' } },
     { tag: 'circle', attrs: { cx: '12', cy: '12', r: '1' } },

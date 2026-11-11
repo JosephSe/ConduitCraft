@@ -80,11 +80,10 @@ export function placeTooltip(
   };
 }
 
-/** The side a tooltip prefers: an explicit `data-tip-pos`, or the side of a collapsed rail that faces the canvas. */
+/** The side a tooltip prefers: an explicit `data-tip-pos`, else below. */
 export function preferredPlacement(el: Element): TipPlacement {
   const explicit = el.getAttribute('data-tip-pos');
   if (explicit === 'top' || explicit === 'bottom' || explicit === 'left' || explicit === 'right') return explicit;
-  if (el.closest('.inspector-rail-content')) return 'left';
   return 'bottom';
 }
 

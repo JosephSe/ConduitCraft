@@ -41,7 +41,6 @@ export function initInspectorAutoShow(): void {
   pin?.addEventListener('click', () => {
     pinned = !pinned;
     pin.setAttribute('aria-pressed', String(pinned));
-    pin.setAttribute('aria-label', pinned ? 'Unpin inspector' : 'Keep inspector open');
     try {
       if (pinned) localStorage.setItem(PIN_KEY, '1');
       else localStorage.removeItem(PIN_KEY);

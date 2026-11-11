@@ -1312,16 +1312,6 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   color: var(--cc-accent);
 }
 
-/* Inspector pin: keeps the panel open when nothing is selected */
-.inspector-pin-btn {
-  display: inline-flex;
-  margin-inline-start: auto;
-}
-.inspector-pin-btn[aria-pressed="true"] {
-  background: var(--cc-accent-soft);
-  color: var(--cc-ink);
-}
-
 /* Lens switcher: the key that selects each lens. */
 .mode-switcher .lens-key {
   display: inline;

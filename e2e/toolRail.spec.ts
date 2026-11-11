@@ -16,7 +16,9 @@ const nodes = (page: Page) => page.locator('.arch-node');
 /** A spot on the sheet with nothing on it. */
 async function emptySpot(page: Page): Promise<{ x: number; y: number }> {
   const box = (await page.locator('#canvas-viewport').boundingBox())!;
-  return { x: box.x + box.width - 160, y: box.y + 140 };
+  // The properties card floats over the right of the sheet (and Fit keeps the diagram left of it), so aim just left of the card.
+  const card = await page.locator('#inspector-panel').boundingBox();
+  return { x: card ? card.x - 70 : box.x + box.width - 160, y: box.y + 300 };
 }
 
 test('the dock holds five tools, six favourites and All components, and the old rail is gone', { tag: '@quick' }, async ({ page }) => {

@@ -136,7 +136,7 @@ These four are the only places a literal colour may be written, and only in the 
 | `src/studio/inspector.ts` | `makeField`, new control helpers, header, field order, labels. `renderPropertyEditor` starts at line 922. |
 | `src/studio/frameStage.ts` | The frame's fields (it builds `#prop-frame-title`). Same row rules. |
 | `src/studio/responsiveToolbar.ts` | Remove the rail handlers (lines 58 to 61 and 77 to 84). |
-| `src/studio/inspectorAutoShow.ts` | No logic change. The pin button moves, its id stays. |
+| `src/studio/inspectorAutoShow.ts` | One line removed: the `pin.setAttribute('aria-label', pinned ? 'Unpin inspector' : 'Keep inspector open')` call (line 44). The button's name is now its visible text, "Keep open", and `aria-pressed` says whether it is on. A changing `aria-label` that does not contain the visible text fails the axe check. Nothing else in the file changes. |
 | `src/studio/dom.ts` (lines 106 to 109) | The four `btn-prop-*` lookups stay; the elements move into the popover. |
 | `src/studio/tooltips.ts` (line 87) | Remove the `.inspector-rail-content` case. |
 | `src/studio/state.ts` (`fitToViewport`, line 721, and `fitSelection`, line 735) | Fit leaves room for the card. Section 5.5. |
@@ -169,7 +169,7 @@ Replace everything from `<aside class="inspector" id="inspector-panel" …>` dow
 
     <!-- More actions. A plain group of buttons in a popover, not an ARIA menu. -->
     <div class="prop-more" id="prop-more-popover" popover role="group" aria-label="More actions">
-      <button type="button" class="prop-more-item" id="btn-pin-inspector" aria-pressed="false" aria-label="Keep inspector open">
+      <button type="button" class="prop-more-item" id="btn-pin-inspector" aria-pressed="false">
         <!-- pin icon: copy the <svg> from the old #btn-pin-inspector, width and height 16 -->
         <span>Keep open</span>
       </button>
@@ -215,10 +215,10 @@ In `inspector.css`, replace the `.inspector`, `.inspector-mode-pane`, `.inspecto
 ```css
 .inspector {
   position: absolute;
-  inset-block-start: 70px;      /* clears the NE island */
+  inset-block-start: 0;         /* .workspace already starts below the top bar, 8px under the NE island */
   inset-inline-end: 14px;       /* the slot inset used by every island */
   inline-size: 304px;
-  max-block-size: calc(100% - 70px - 86px);  /* 86px keeps the SE island visible */
+  max-block-size: calc(100% - 113px);  /* the SE island is 85px tall: 85 + its 14px inset + a 14px gap */
   display: flex;
   flex-direction: column;
   border-radius: 16px;
@@ -1090,7 +1090,8 @@ If a pair is already tested, do not add it twice.
 
 Five steps. One commit per step at least; steps 1 and 2 may share a PR, as may 3 and 4. After each step: `pnpm build && pnpm test && pnpm check:size`, the two browser-test commands at the top of section 11, then look at the app at 1440 × 900 and 390 × 844 in both themes.
 
-#### [ ] Step 1. Tokens, container, popover (sections 3, 5)
+#### [x] Step 1. Tokens, container, popover (sections 3, 5)
+**Notes from the build, 2026-11-11 (all accepted):** the offsets in 5.3 are now the measured ones. `.inspector-tabs` and `.inspector-scroll` rules stay, because the Traffic pane uses them; `overflow: hidden` on `.inspector-scroll` waits for Step 2, when `.prop-body` exists. The popover wiring in 5.4 uses optional chaining (`morePopover?.addEventListener`), because unit tests import `inspector.ts` against a stub document. The pin button has no `aria-label` (see the `inspectorAutoShow.ts` row in section 4).
 Add missing tokens. Replace the `<aside>` markup. Float the card. Remove the rail. Move Lock / Group / Duplicate / Delete / pin into the popover. Add a **temporary** More and Close button at the top of `#prop-form-container` (the real header comes in step 2). Fit inset.
 **Done when:** the card floats and closes to nothing; the diagram does not move when it opens; `]` toggles it; the popover opens, closes on Esc, and its buttons work; Fit keeps the diagram left of the card; tests in 11.1 for the popover and rail are updated and pass.
 

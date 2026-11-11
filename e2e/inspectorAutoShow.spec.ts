@@ -28,6 +28,7 @@ test('pinning keeps the inspector open with nothing selected, and the pin is rem
   await expect(workspace(page)).toHaveAttribute('data-inspector-collapsed', 'true');
   // Pin lives in the inspector header, so open it first (as a user would with ]).
   await page.locator('.arch-node[data-node-id="night-desk"] .node-select-hit').click();
+  await page.locator('#btn-prop-more').click();
   await page.locator('#btn-pin-inspector').click();
   await expect(page.locator('#btn-pin-inspector')).toHaveAttribute('aria-pressed', 'true');
   await clearSelection(page);

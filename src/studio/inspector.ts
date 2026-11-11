@@ -804,6 +804,21 @@ export function makeCollapsibleSection(
   return details;
 }
 
+// Optional-chained: the unit tests load this module against a document stub where the element is null.
+const morePopover = document.getElementById('prop-more-popover') as HTMLElement | null;
+morePopover?.addEventListener('toggle', () => {
+  const trigger = document.getElementById('btn-prop-more');
+  const open = morePopover.matches(':popover-open');
+  trigger?.setAttribute('aria-expanded', String(open));
+  if (!open || !trigger) return;
+  const r = trigger.getBoundingClientRect();
+  morePopover.style.top = `${r.bottom + 4}px`;
+  morePopover.style.left = `${Math.max(8, r.right - morePopover.offsetWidth)}px`;
+});
+morePopover?.addEventListener('click', (e) => {
+  if ((e.target as HTMLElement).closest('button')) morePopover.hidePopover();
+});
+
 function updateSelectionActionButtons(sel: SelectionTarget): void {
   if (sel.type === 'none') {
     propSelectionActions.hidden = true;
@@ -919,9 +934,33 @@ function makeInspectorTabs(tabs: Array<{ id: string; label: string; help: string
   return wrap;
 }
 
+/** Step 1 only: a stand-in for the card header's More and Close buttons. Step 2 replaces it with makeCardHeader. */
+function makeTemporaryCardButtons(): HTMLElement {
+  const bar = document.createElement('div');
+  bar.className = 'prop-head-buttons prop-temp-buttons';
+  const more = document.createElement('button');
+  more.type = 'button';
+  more.className = 'prop-icon-btn';
+  more.id = 'btn-prop-more';
+  more.setAttribute('popovertarget', 'prop-more-popover');
+  more.setAttribute('aria-label', 'More actions');
+  more.setAttribute('aria-expanded', 'false');
+  more.setAttribute('data-tip', 'More');
+  more.appendChild(createUiIconSvg('more'));
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'prop-icon-btn';
+  close.id = 'btn-collapse-inspector';
+  close.setAttribute('aria-label', 'Close properties (])');
+  close.setAttribute('data-tip', 'Close (])');
+  close.appendChild(createUiIconSvg('close'));
+  bar.append(more, close);
+  return bar;
+}
+
 export function renderPropertyEditor(): void {
   closeIconMenus();
-  propFormContainer.replaceChildren();
+  propFormContainer.replaceChildren(makeTemporaryCardButtons());
   const form = document.createElement('div');
   form.className = 'prop-form';
   const sel = app.selection;
