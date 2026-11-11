@@ -1988,8 +1988,9 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-arrive { 50% { transform: scale(1.14); } }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }
 .workspace[data-lens="traffic"] .canvas-shell { background-color: var(--cc-canvas-run); transition: background-color 320ms; }
-.workspace[data-lens="traffic"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit,
-.workspace[data-lens="review"] .conduit-badge-hit { display: none; }
+/* Print keeps wire labels on in every lens (Y1: labels always shown). */
+.workspace:not([data-style="print"])[data-lens="traffic"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit,
+.workspace:not([data-style="print"])[data-lens="review"] .conduit-badge-hit { display: none; }
 .workspace[data-lens="review"] :is(.arch-node, .conduit-group) { filter: grayscale(1); opacity: 0.62; }
 /* The redline: hand-drawn ellipses and numbers, drawn once in 700 ms when the lens opens. */
 #redline-layer { pointer-events: none; }

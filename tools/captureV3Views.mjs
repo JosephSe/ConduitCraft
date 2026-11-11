@@ -54,7 +54,7 @@ try {
     await page.goto(base);
     await page.waitForTimeout(1500);
     await palette('Load Showcase');
-    await page.locator('.conduit-stream').first().waitFor({ state: 'attached', timeout: 30000 }).catch(async (e) => { await page.screenshot({ path: '/private/tmp/claude-502/-Users-josephwork-Documents-antigravity-blueprint-studio/bc20bdee-daf9-4e98-98e0-e1bc2f85bfdb/scratchpad/fail.png' }); throw e; });
+    await page.locator('.conduit-stream').first().waitFor({ state: 'attached', timeout: 30000 });
     await page.keyboard.press('1');
     await clear();
     await page.getByRole('button', { name: 'Fit', exact: true }).click();
@@ -74,7 +74,7 @@ try {
 
     await page.locator('.arch-node').nth(2).click({ button: 'right' });
     await page.getByRole('menuitem', { name: /Fail this component/ }).click();
-    await page.locator('.arch-node[data-chaos="degraded"], .arch-node[data-chaos="failed"]').first().waitFor({ state: 'attached', timeout: 6000 }).catch(async (e) => { await page.screenshot({ path: '/private/tmp/claude-502/-Users-josephwork-Documents-antigravity-blueprint-studio/bc20bdee-daf9-4e98-98e0-e1bc2f85bfdb/scratchpad/fail2.png' }); console.log(await page.evaluate(() => [...document.querySelectorAll('.arch-node')].map((n) => n.dataset.chaos).join(','))); throw e; });
+    await page.locator('.arch-node[data-chaos="degraded"], .arch-node[data-chaos="failed"]').first().waitFor({ state: 'attached', timeout: 6000 });
     await clear();
     await shot('05-traffic-failed');
 
