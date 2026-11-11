@@ -1956,7 +1956,8 @@ body[data-presenting="true"] .page-strip { display: none; }
 .arch-node[data-chaos="delayed"] .node-select-hit, .arch-node[data-chaos="buffering"] .node-select-hit, .arch-node[data-chaos="rerouted"] .node-select-hit, .arch-node[data-chaos="bypassed"] .node-select-hit { outline-style: dashed; }
 .arch-node[data-chaos="slowed"] .node-select-hit { outline-style: solid; }
 .arch-node[data-chaos="unreachable"] .node-select-hit { outline-width: 1px; outline-style: dashed; filter: grayscale(1); opacity: 0.55; }
-.arch-node[data-chaos="failed"] .node-select-hit:not(:has(.node-shape-plate)) { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--cc-rose) 6%, transparent) 0 2px, transparent 2px 7px); }
+@property --cc-hatch { syntax: "<percentage>"; inherits: false; initial-value: 6%; }
+.arch-node[data-chaos="failed"] .node-select-hit:not(:has(.node-shape-plate)) { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--cc-rose) var(--cc-hatch), transparent) 0 2px, transparent 2px 7px); }
 .arch-node[data-chaos="failed"] .node-icon { transform: rotate(8deg); }
 .arch-node[data-chaos] .node-light { background: var(--st); opacity: 1; box-shadow: none; }
 .arch-node[data-shape][data-chaos] .node-shape-geom { stroke: var(--st); stroke-width: 2; }
@@ -2005,6 +2006,8 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-state-in { from { outline-color: transparent; box-shadow: none; } }
 .arch-node[data-chaos="failed"] .node-shape-plate { transform: rotate(4deg); }
 .arch-node .node-icon, .arch-node .node-shape-plate { transition: transform var(--cc-dur-base, 200ms) var(--cc-spring); }
+.arch-node[data-chaos="failed"] .node-select-hit { animation: chaos-shake 320ms ease-in-out 1, cc-hatch-in 400ms var(--cc-ease-out) 1; }
+@keyframes cc-hatch-in { from { --cc-hatch: 0%; } }
 .arch-node.is-restored .node-select-hit { animation: cc-restore 600ms var(--cc-ease-out) 1; }
 @keyframes cc-restore { from { box-shadow: 0 0 0 0 var(--cc-emerald); } to { box-shadow: 0 0 0 16px transparent; } }
 .conduit-group.is-route-lit .conduit-glow { animation: cc-route 900ms var(--cc-ease-out) var(--cc-route-delay, 0ms) 1; }
