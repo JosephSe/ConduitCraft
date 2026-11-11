@@ -2073,3 +2073,11 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
   .hud-zoom-card #btn-zoom-out, .hud-zoom-card #btn-zoom-in, .hud-zoom-card #btn-zoom-fit { display: none; }
   .view-fit { display: inline-flex; justify-content: center; }
 }
+
+/* S10 (375 px pass): the tray stops short of the top bar, and the Review face keeps its buttons on one line (the sentence is in the issue list). */
+@media (max-width: 56rem) {
+  .tray { max-block-size: calc(100dvh - 15.5rem); }
+  #review-face { overflow-x: auto; scrollbar-width: none; }
+  #review-face .btn { white-space: nowrap; flex-shrink: 0; }
+  #review-face .review-sentence { display: none; }
+}
