@@ -26,7 +26,7 @@ test('the strip is always there, with one page called Page 1', async ({ page }) 
   await expect(tabs(page).first()).toHaveAttribute('aria-selected', 'true');
 });
 
-test('adding a page opens a blank one, and each page keeps its own components', async ({ page }) => {
+test('adding a page opens a blank one, and each page keeps its own components', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

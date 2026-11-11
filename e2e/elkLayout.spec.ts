@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 });
 
-test('the layered layout loads on first use, moves components, and is one undo step', async ({ page }) => {
+test('the layered layout loads on first use, moves components, and is one undo step', { tag: '@quick' }, async ({ page }) => {
   const elkRequests: string[] = [];
   page.on('request', (r) => {
     if (/elkArrange/.test(r.url())) elkRequests.push(r.url());

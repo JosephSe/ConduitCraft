@@ -19,7 +19,7 @@ async function emptySpot(page: Page): Promise<{ x: number; y: number }> {
   return { x: box.x + box.width - 160, y: box.y + 140 };
 }
 
-test('the dock holds five tools, six favourites and All components, and the old rail is gone', async ({ page }) => {
+test('the dock holds five tools, six favourites and All components, and the old rail is gone', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await expect(page.locator('#dock')).toBeVisible();
   await expect(page.locator('#dock [data-rail-tool]')).toHaveCount(5);
@@ -111,7 +111,7 @@ test('Enter on a favourite places exactly one at the centre of the view', async 
   await expect(nodes(page)).toHaveCount(before + 1);
 });
 
-test('click arms a favourite, and the next click on the sheet places it there', async ({ page }) => {
+test('click arms a favourite, and the next click on the sheet places it there', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   const before = await nodes(page).count();
   await favourite(page, 'queue').click();

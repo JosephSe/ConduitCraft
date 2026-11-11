@@ -26,7 +26,7 @@ test('the canvas has one component tab stop, plus the wires of that component', 
     .toBe(true);
 });
 
-test('arrow keys move focus between components and Escape returns to the canvas', async ({ page }) => {
+test('arrow keys move focus between components and Escape returns to the canvas', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   await page.locator('.node-select-hit[tabindex="0"]').focus();
   const startId = await focusedNodeId(page);

@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { clearSelection, openLumenRelay, showInspectorTab } from './helpers';
 
-test('Traffic lens: failing a component shows the blast radius, announces it, and restores', async ({ page }) => {
+test('Traffic lens: failing a component shows the blast radius, announces it, and restores', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

@@ -15,7 +15,7 @@ const toolbar = (page: Page) => page.locator('.context-toolbar');
 // A component that is fully on screen at the default zoom (the first one in the DOM sits half behind the rail).
 const firstNode = (page: Page) => page.locator('.arch-node[data-node-id="night-desk"]');
 
-test('selecting a component shows a toolbar just above it; clearing the selection hides it', async ({ page }) => {
+test('selecting a component shows a toolbar just above it; clearing the selection hides it', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } }); // the showcase opens with a selection
   await expect(toolbar(page)).toBeHidden();

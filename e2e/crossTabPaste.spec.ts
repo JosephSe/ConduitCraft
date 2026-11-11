@@ -60,7 +60,7 @@ test('pasting broken component text changes nothing and says why', async ({ page
   expect(await nodeCount(page)).toBe(before);
 });
 
-test('copy and paste still work in one tab when the system clipboard is unavailable', async ({ page }) => {
+test('copy and paste still work in one tab when the system clipboard is unavailable', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'clipboard', { value: undefined, configurable: true });

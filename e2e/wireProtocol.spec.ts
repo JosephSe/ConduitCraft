@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
-test('a wire takes a protocol and a call style from the inspector, and shows them on the canvas', async ({ page }) => {
+test('a wire takes a protocol and a call style from the inspector, and shows them on the canvas', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

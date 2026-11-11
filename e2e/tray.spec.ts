@@ -22,7 +22,7 @@ async function emptySpot(page: Page): Promise<{ x: number; y: number }> {
   return { x: box.x + box.width - 160, y: box.y + 140 };
 }
 
-test('All components and C open the tray; it holds six groups and every component', async ({ page }) => {
+test('All components and C open the tray; it holds six groups and every component', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await expect(tray(page)).toHaveCount(0);
   await page.locator('#btn-all-components').click();
@@ -72,7 +72,7 @@ test('it opens on the search box, and arrow keys move through the shelf as one g
   expect(stops).toBe(1);
 });
 
-test('Enter places the highlighted component at the centre and closes the tray, focus returning to the dock', async ({ page }) => {
+test('Enter places the highlighted component at the centre and closes the tray, focus returning to the dock', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   const before = await nodes(page).count();
   await page.locator('#btn-all-components').click();

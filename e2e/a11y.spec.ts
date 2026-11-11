@@ -74,7 +74,7 @@ for (const scheme of ['light', 'dark'] as Scheme[]) {
   });
 }
 
-test('a selected wire, with its handles and inspector, has no axe violations', async ({ page }) => {
+test('a selected wire, with its handles and inspector, has no axe violations', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

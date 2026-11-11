@@ -56,7 +56,7 @@ const openShare = async (page: Page) => {
   await expect(page.locator('#share-link-box')).toBeVisible();
 };
 
-test('the Share dialog says who can see the link and that nothing is uploaded', async ({ page }) => {
+test('the Share dialog says who can see the link and that nothing is uploaded', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
