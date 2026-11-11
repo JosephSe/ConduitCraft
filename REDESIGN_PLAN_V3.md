@@ -880,13 +880,27 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Done:** `grep -c -- '--wl-' src` is 0; entry CSS ≤ 100 kB; `toolRail.ts` and the old panel markup are gone.
 - **Result (R1, partly):** every `--wl-*` name is renamed to its `--cc-*` equivalent across `src` and `tests` (`grep -rc -- '--wl-' src` is 0): `panel` → `island`, `surface` → `sheet`, `surface-elevated` → `well`, `ink-secondary` and `ink-muted` → `ink-2` and `ink-3`, `border-ui` and `border-subtle` → `hair-2` and `hair`, `grid-dot` → `dot`; the tone, soft, shadow, font and `-dark` and `-light` export names keep their names under `--cc-`. The alias lines and the Y1 re-resolve line are gone. `toolRail.ts` is folded into `dock.ts` (`initDockTools`), and the old panel markup was already gone. **Not met:** entry CSS is 124 kB, not 100 kB. The unused-class scan finds nothing to delete (what it flags is built from template strings), so the gap is duplicated rules between the layered files and `unlayered.css`, which needs a consolidation pass with visual checks. Left open.
 
-#### [~] R2. Final review · S
+#### [x] R2. Final review · S
 - **Do:** the three tests in section 2 and V1's award checklist; save the eight views to `docs/v3/after/`.
-- **Result (R2, partly):** the eight views, light and dark, are in `docs/v3/after/` with the same names as `docs/v3/before/`; `node tools/captureV3Views.mjs` re-records them (build first). Read against the three tests on the Marquee showcase at 1440 × 900:
+- **Result (R2):** the eight views, light and dark, are in `docs/v3/after/` with the same names as `docs/v3/before/`; `node tools/captureV3Views.mjs` re-records them (build first). Read against the three tests on the Marquee showcase at 1440 × 900:
   - **Squint:** passes. The diagram is the coloured region. The only colour in the chrome is the app mark and the red issue count on Review.
   - **Zoom-out:** passes. Fit lands at 41% and every component name can be read, though a few long ones are cut with an ellipsis (`Bot & Fraud…`). Wire labels at that zoom are too small to read.
   - **Screenshot:** passes for Design, Traffic and Review. Fit with the properties panel open clipped the diagram's left edge (the Fans lane) because the zoom floor was 35%. Fixed in #133: the floor is 25%, low-zoom text grows up to 48 px, and `e2e/fitWithInspector.spec.ts` guards it.
-  - **Award checklist (V1 section 10):** not walked item by item. The packet-and-ripple, keyboard, offline and "live" items are covered by e2e specs; the touch, export-quality and text-description items have not been re-audited for 3.0. Left open.
+  - **Award checklist (V1 section 10), walked for 3.0:**
+
+    | Line | Result | Evidence |
+    |---|---|---|
+    | A visitor sees a packet travel and a failure ripple out within 10 seconds | Pass | `e2e/firstRun.spec.ts` (capsule moves, failed state at once, reduced motion shows it unplayed); `v3Visual.spec.ts` |
+    | Every action works by keyboard and is announced | Pass | `roving.spec.ts`, `lensKeys.spec.ts`, `announcer.spec.ts`, `outline.spec.ts`; the tray (`tray.spec.ts`) and the page tabs (`pages.spec.ts`) have arrow-key specs |
+    | Every action works by touch | Pass | `touch.spec.ts` at 768 and 1024 (44 px targets, place, select, move, wire, pan, pinch, long press, export; SW and SE collapse on a phone) and a 375 px look at six views (S10) |
+    | Works fully offline after the first visit | Pass | `offline.spec.ts` (template, simulation, PNG and GIF export, save) |
+    | No region has more than 8 always-visible controls | Pass | `topbar.spec.ts`, per lens at 1280 px |
+    | Every animation explains something | Pass | Each row of 9.2 has a build: capsules, arrive, failure and restore, blast radius, drop, connect, delete, lens thumb, dock cross-fade, lights down, redline, route lit, tray and popover rise. Design loops nothing. Reduced motion is covered by `reducedMotion.spec.ts`. Not built: the 120 ms leave for popovers and the tray |
+    | Exports, embeds and shared links look as good as the studio | Pass | `exportVisual.spec.ts` baselines for SVG, HTML and GIF first frame in all three styles; the title block on every export; the standalone HTML carries the style and the title block |
+    | Every export carries a text description | Pass | `describeDiagram.spec.ts`: SVG `<desc>`, standalone HTML note, export dialog alt text |
+    | Anything called "live" really is | Pass | The status light is steady and means the system is on in Traffic (emerald) or shows a component's state; nothing pulses without a cause. The "Saved" pill reports the real save state |
+
+    Gaps that stay: wire labels are too small to read at Fit on the Marquee showcase, and Fit stops at 25% on a phone, so a wide diagram does not fit it.
 
 #### [ ] R3. Ship 3.0.0 · S
 - **Do:** release notes, guide screenshots, version, merge `v3` into `main`.
