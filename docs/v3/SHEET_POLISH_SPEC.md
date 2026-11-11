@@ -106,7 +106,7 @@ Open `src/styles/studio/unlayered.css`. Find the comment that starts `/* C6 (8.6
 #stage-world[data-lod="low"] .arch-node:not([data-kind="actor"]) .node-top { display: none; }
 #stage-world[data-lod="low"] .arch-node .node-select-hit { justify-content: center; }
 /* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. */
-#stage-world[data-lod="low"] .arch-node .node-select-hit:not(:has(> svg)) {
+#stage-world[data-lod="low"] .arch-node:not([data-chaos="failed"], [data-chaos="at-risk"]) .node-select-hit:not(:has(> svg)) {
   padding: 6px 10px;
   background: color-mix(in oklab, var(--t) 6%, var(--cc-sheet));
   border-color: color-mix(in oklab, var(--t) 50%, var(--cc-sheet));

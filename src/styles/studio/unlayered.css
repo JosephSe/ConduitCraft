@@ -2050,8 +2050,8 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 /* Zoomed out there is no room for the tile and a name, so the name gets the whole box. The actor keeps its figure. */
 #stage-world[data-lod="low"] .arch-node:not([data-kind="actor"]) .node-top { display: none; }
 #stage-world[data-lod="low"] .arch-node .node-select-hit { justify-content: center; }
-/* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. */
-#stage-world[data-lod="low"] .arch-node .node-select-hit:not(:has(> svg)) {
+/* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. Failed and at-risk cards keep their state colours. */
+#stage-world[data-lod="low"] .arch-node:not([data-chaos="failed"], [data-chaos="at-risk"]) .node-select-hit:not(:has(> svg)) {
   padding: 6px 10px;
   background: color-mix(in oklab, var(--t) 6%, var(--cc-sheet));
   border-color: color-mix(in oklab, var(--t) 50%, var(--cc-sheet));
