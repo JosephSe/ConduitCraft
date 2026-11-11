@@ -2000,6 +2000,17 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes redline-fade { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .redline-mark path { animation: none; stroke-dashoffset: 0; } }
 
+/* M2 (9.2): a failure tilts the tile and spreads outward 40 ms a hop; a restored component takes one emerald ring and rights itself; a finished run brightens its tubes in order. */
+.arch-node[data-chaos]:not([data-chaos="failed"], [data-chaos="at-risk"]) .node-select-hit { animation: cc-state-in var(--cc-dur-base, 200ms) var(--cc-ease-out) var(--cc-lag, 0ms) both; }
+@keyframes cc-state-in { from { outline-color: transparent; box-shadow: none; } }
+.arch-node[data-chaos="failed"] .node-shape-plate { transform: rotate(4deg); }
+.arch-node .node-icon, .arch-node .node-shape-plate { transition: transform var(--cc-dur-base, 200ms) var(--cc-spring); }
+.arch-node.is-restored .node-select-hit { animation: cc-restore 600ms var(--cc-ease-out) 1; }
+@keyframes cc-restore { from { box-shadow: 0 0 0 0 var(--wl-emerald); } to { box-shadow: 0 0 0 16px transparent; } }
+.conduit-group.is-route-lit .conduit-glow { animation: cc-route 900ms var(--cc-ease-out) var(--cc-route-delay, 0ms) 1; }
+@keyframes cc-route { 40% { opacity: 0.9; } }
+@media (prefers-reduced-motion: reduce) { .arch-node[data-chaos] .node-select-hit, .arch-node.is-restored .node-select-hit, .conduit-group.is-route-lit .conduit-glow { animation: none; } }
+
 /* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
 #stage-world[data-lod="low"] .node-title {
   font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 34px);

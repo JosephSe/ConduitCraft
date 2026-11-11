@@ -856,8 +856,9 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Read:** `simulationPlayback.ts`, `queueBacklog.ts`, `exporter/gif.ts`. **Do:** the capsule rows of 9.2. **Needs:** C5.
 - **Done (M1):** in Traffic the wire's flow is drawn as 14 × 7 capsules (a 7 px dash with round caps, stroke 7) in the wire's tone, turning with the path because they are dashes on it, and paced by the existing `--flow-scale` from `latencyMs`. A component a run reaches springs 1 → 1.14 → 1 (`cc-arrive`, 320 ms, off under reduced motion). Cache turn-round, the rose 429 and queue stacking were already built (K1, K3, K4) and are unchanged. `e2e/capsules.spec.ts` checks the shape in Traffic. Not yet: capsule starts at entry points and spreads, one capsule per step instead of a dash train, a GIF frame check.
 
-#### [ ] M2. Failure, recovery, finish · S
+#### [x] M2. Failure, recovery, finish · S
 - **Needs:** C3, M1.
+- **Done (M2):** a failed component keeps its shake and its plate tilts 4°; other states fade their ring in 40 ms per hop from the nearest failure (`chaosDistance`, `--cc-lag`; at-risk keeps its own pulse); a restored component takes one emerald ring for 600 ms and its tile rights itself on the spring (`is-restored`); a scenario that ends brightens the glow of the wires it used in order, 120 ms apart (`is-route-lit`). All off under reduced motion. Entry CSS cap raised 124 to 128 kB (now 123.1). Not yet: the hatch fading in (a background-image cannot animate) and a ring that travels round the tile rather than expanding from it.
 
 #### [ ] M3. Editing feedback · S
 - **Do:** drop, connect, delete, and the remaining rows. **Needs:** S3, C2.
