@@ -360,6 +360,13 @@ export function renderStagePictureSvg(
     const computed = getComputedStyle(live);
     const dashed = computed.strokeDasharray !== 'none' && computed.strokeDasharray !== '';
     stream.style.animation = 'none';
+    // The live wire runs one capsule end to end; a picture shows the capsule train, which also keeps a GIF loop seamless.
+    const single = computed.animationName.includes('cc-capsule');
+    if (single) {
+      stream.style.strokeDasharray = '7 29';
+      stream.style.strokeDashoffset = frame?.dashOffset !== undefined ? `${frame.dashOffset}px` : '0px';
+      return;
+    }
     if (frame?.dashOffset !== undefined && dashed) {
       stream.style.strokeDasharray = computed.strokeDasharray;
       stream.style.strokeDashoffset = `${frame.dashOffset}px`;
@@ -375,6 +382,13 @@ export function renderStagePictureSvg(
     const computed = getComputedStyle(live);
     const dashed = computed.strokeDasharray !== 'none' && computed.strokeDasharray !== '';
     stream.style.animation = 'none';
+    // The live wire runs one capsule end to end; a picture shows the capsule train, which also keeps a GIF loop seamless.
+    const single = computed.animationName.includes('cc-capsule');
+    if (single) {
+      stream.style.strokeDasharray = '7 29';
+      stream.style.strokeDashoffset = frame?.dashOffset !== undefined ? `${frame.dashOffset}px` : '0px';
+      return;
+    }
     if (frame?.dashOffset !== undefined && dashed) {
       stream.style.strokeDasharray = computed.strokeDasharray;
       stream.style.strokeDashoffset = `${-frame.dashOffset}px`;

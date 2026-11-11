@@ -836,6 +836,9 @@ function createWireGroup(edgeId: string): SVGGElement {
       if (laneTx) path.setAttribute('transform', laneTx);
       else path.removeAttribute('transform');
     }
+    // M1: Traffic sends one capsule down the wire from its source, so it needs the wire's length.
+    const stream = g.querySelector<SVGPathElement>('.conduit-stream');
+    if (stream) stream.style.setProperty('--cc-len', String(Math.round(stream.getTotalLength?.() ?? 0)));
     // The arrowhead sits on the rail, which is always drawn, so it survives the still Design lens (D8). Sync is a
     // filled head, async an open chevron, and a two-way wire has none.
     const rail = g.querySelector('.conduit-rail');

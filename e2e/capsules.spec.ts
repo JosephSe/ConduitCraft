@@ -12,7 +12,12 @@ test('Traffic draws the flow as 14 x 7 capsules and Design does not', async ({ p
   await page.keyboard.press('2');
   await expect(page.locator('#workspace')).toHaveAttribute('data-lens', 'traffic');
   await expect.poll(width).toBe('7px');
-  expect(await stream.evaluate((el) => getComputedStyle(el).strokeDasharray)).toMatch(/^7(px)?[, ]+29/);
+  // One capsule per wire: a 7 px dash followed by a gap longer than the wire itself, running at the wire's own length.
+  const dash = await stream.evaluate((el) => ({ array: getComputedStyle(el).strokeDasharray, len: Number((el as SVGElement).style.getPropertyValue('--cc-len')), name: getComputedStyle(el).animationName }));
+  expect(dash.name).toContain('cc-capsule');
+  expect(dash.len).toBeGreaterThan(20);
+  const gap = Number(dash.array.split(/[, ]+/)[1].replace('px', ''));
+  expect(gap).toBeGreaterThan(dash.len);
 });
 
 test('a failure spreads outward in order and a restore gives one emerald ring', async ({ page }) => {
@@ -29,5 +34,6 @@ test('a failure spreads outward in order and a restore gives one emerald ring', 
   await failed.click({ button: 'right' });
   await page.getByRole('menuitem', { name: /Restore/ }).click();
   await expect(page.locator('.arch-node.is-restored')).toHaveCount(1);
+  expect(await page.locator('.arch-node.is-restored .node-select-hit').first().evaluate((el) => getComputedStyle(el, '::after').animationName)).toBe('cc-restore');
   await expect(page.locator('.arch-node.is-restored')).toHaveCount(0, { timeout: 3000 });
 });
