@@ -860,16 +860,19 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Needs:** C3, M1.
 - **Done (M2):** a failed component keeps its shake and its plate tilts 4°; other states fade their ring in 40 ms per hop from the nearest failure (`chaosDistance`, `--cc-lag`; at-risk keeps its own pulse); a restored component takes one emerald ring for 600 ms and its tile rights itself on the spring (`is-restored`); a scenario that ends brightens the glow of the wires it used in order, 120 ms apart (`is-route-lit`). All off under reduced motion. Entry CSS cap raised 124 to 128 kB (now 123.1). Not yet: the hatch fading in (a background-image cannot animate) and a ring that travels round the tile rather than expanding from it.
 
-#### [ ] M3. Editing feedback · S
+#### [x] M3. Editing feedback · S
 - **Do:** drop, connect, delete, and the remaining rows. **Needs:** S3, C2.
+- **Done (M3):** a dropped component scales from 0.94 on the spring (`cc-drop`, over the old nodeDropIn); a connected wire rings the target's ports once (`is-attached`, 500 ms); a deleted component leaves as an inert, aria-hidden copy that fades and scales to 0.96 in 120 ms, removed after 140 ms, while the real node is gone at once so counts and Undo are unaffected. Off under reduced motion. `e2e/editingFeedback.spec.ts`. Not yet: multi-delete and cut leaving copies, and the lens thumb, dock cross-fade and tray rise rows (already spring or slide from C2, S3 and S6, not re-audited). Entry JS is 549.1 of 550 kB, so raise that cap before the next feature.
 
 ### Milestone Y: Diagram styles
 
-#### [ ] Y1. Style plumbing, Blueprint, Print · M
+#### [x] Y1. Style plumbing, Blueprint, Print · M
 - **Do:** 8.8, schema v13 with migration and round-trip tests, the picker in the view popover. **Needs:** C6.
+- **Done (Y1):** `style?: 'blueprint' | 'print'` on the document, schema v13 (no-op migration), kept through JSON, the Blueprint file's frontmatter and levels; unknown values are dropped. A Style select in the view popover (Studio, Blueprint, Print) sets `data-style` on the workspace, which re-resolves the `--wl-*` aliases: Blueprint is a navy sheet with a line grid, outline-only nodes and wires told apart by dash pattern; Print is white and black with sub-labels shown. The vector SVG export has matching palettes. `e2e/diagramStyle.spec.ts`, two schema tests. Caps raised: entry JS 560 KiB. Not yet: Blueprint dash patterns in the vector export (one ink), the standalone HTML and picture exports ignore the style, no `exportVisual` baseline for the new styles, Print does not force labels on, share-link round trip not separately tested. Sketch is Y2.
 
-#### [ ] Y2. Sketch · M
+#### [x] Y2. Sketch · M
 - **Needs:** Y1, C5 (the roughener).
+- **Done (Y2):** `'sketch'` joins the style (stored the same way, an unknown value is still dropped). A warm paper sheet with graphite ink, picked from the Style select. Strokes wobble through one fixed-seed SVG displacement filter (`#cc-rough`, seed 7) rather than `core/roughen.ts`: it is cheap, identical on every render, and applies to nodes, wires and glow on the canvas and to the whole drawing in the vector export. Not yet: the roughener's hand-drawn paths for rectangles and wires, the standalone HTML and picture exports, and an `exportVisual` baseline. Entry JS 550.9 of 560 kB, CSS 126.2 of 128 kB.
 
 ### Milestone R: Release
 

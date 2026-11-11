@@ -171,7 +171,7 @@ import { restoreDiagram } from './library';
 import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
-import { allTags, colourKey } from '../core/meta';
+import { allTags, colourKey, normalizeStyle } from '../core/meta';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
@@ -333,6 +333,31 @@ export function attachStencilDragAndDrop(
       options.onPlaced?.();
     }
   });
+}
+
+/** A deleted component fades out as a non-interactive copy for 120 ms (9.2). Call before the delete, then `showLeaving`. */
+export function copyLeavingNodes(ids: string[]): HTMLElement[] {
+  if (typeof document === 'undefined') return [];
+  const copies: HTMLElement[] = [];
+  for (const id of ids) {
+    const el = document.getElementById(`node-${id}`);
+    if (!el) continue;
+    const copy = el.cloneNode(true) as HTMLElement;
+    for (const attr of ['id', 'data-node', 'data-node-id', 'data-structure']) copy.removeAttribute(attr);
+    copy.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+    copy.classList.add('is-leaving');
+    copy.setAttribute('aria-hidden', 'true');
+    copy.setAttribute('inert', '');
+    copies.push(copy);
+  }
+  return copies;
+}
+
+export function showLeaving(copies: HTMLElement[]): void {
+  for (const copy of copies) {
+    document.getElementById('nodes-layer')?.appendChild(copy);
+    setTimeout(() => copy.remove(), 140);
+  }
 }
 
 export function tagEnteringNodes(ids: string[]): void {
@@ -611,6 +636,11 @@ export function createEdgeConnection(
   setSelection({ type: 'edge', id: newEdge.id });
   app.connectSourceNodeId = null;
   renderAll(true);
+  const target = typeof document === 'undefined' ? null : document.getElementById(`node-${toId}`);
+  if (target) {
+    target.classList.add('is-attached');
+    setTimeout(() => target.classList.remove('is-attached'), 600);
+  }
 }
 
 const SHOW_LEGEND_KEY = 'conduitcraft:show-legend';
@@ -703,10 +733,21 @@ function syncTagFilter(): void {
     select.value = app.tagFilter;
   }
   for (const select of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) select.value = app.colourBy;
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-diagram-style')) select.value = (app.levelRoot ?? app.doc).style ?? '';
 }
 
 /** "Colour by" and "tag" controls: the view popover. */
 export function bindViewFilters(): void {
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-diagram-style')) {
+    select.addEventListener('change', () => {
+      pushHistory();
+      const root = app.levelRoot ?? app.doc;
+      const style = normalizeStyle(select.value);
+      if (style) root.style = style;
+      else delete root.style;
+      renderAll(false);
+    });
+  }
   for (const colour of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) {
     colour.addEventListener('change', () => {
       app.colourBy = colour.value === 'status' || colour.value === 'tag' ? colour.value : 'tone';
@@ -813,12 +854,14 @@ export function deleteSelected(): void {
       return;
     }
     pushHistory();
+    const leaving = copyLeavingNodes([targetId]);
     const desc = node ? `"${node.title}"` : 'component';
     app.doc.nodes = app.doc.nodes.filter((n) => n.id !== targetId);
     app.doc.edges = app.doc.edges.filter((e) => e.from !== targetId && e.to !== targetId);
     dropNodesFromSimulations(new Set([targetId]));
     setSelection({ type: 'none' });
     renderAll(true);
+    showLeaving(leaving);
     notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
     return;
   }

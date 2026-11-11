@@ -23,7 +23,7 @@ import { normalizeNotesItemIcon } from '../types';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
-import { normalizeLegend, normalizeNodeMeta, normalizeTags } from './meta';
+import { normalizeLegend, normalizeNodeMeta, normalizeStyle, normalizeTags } from './meta';
 import { pruneDanglingChaos } from './reachability';
 import { normalizeBudgetMs, normalizeInsights } from './insights';
 import { normalizeWireFields } from './wire';
@@ -117,6 +117,7 @@ interface RawBlueprintMeta {
   pages?: unknown;
   pageTitle?: unknown;
   pageId?: unknown;
+  style?: unknown;
   zones?: Array<{
     id?: string;
     number?: string | number;
@@ -1620,6 +1621,9 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
   });
   doc.notesCards = notesCards;
 
+  const style = normalizeStyle(meta.style);
+  if (style) doc.style = style;
+
   // Pages (D10): the second page onwards. The first page is this document's own content.
   if (typeof meta.pageTitle === 'string' && meta.pageTitle.trim()) doc.pageTitle = meta.pageTitle.trim();
   if (typeof meta.pageId === 'string' && meta.pageId.trim()) doc.pageId = meta.pageId.trim();
@@ -2035,6 +2039,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
   }
 
   if (shell) {
+    if (doc.style) frontmatterObj.style = doc.style;
     if (doc.pageTitle) frontmatterObj.pageTitle = doc.pageTitle;
     if (doc.pageId) frontmatterObj.pageId = doc.pageId;
     if (doc.pages?.length) {

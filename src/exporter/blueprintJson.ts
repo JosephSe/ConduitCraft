@@ -17,7 +17,7 @@ import { normalizeNotesItemIcon } from '../types';
 import { normalizeWireFields } from '../core/wire';
 import { pruneDanglingChaos } from '../core/reachability';
 import { normalizeBudgetMs, normalizeInsights } from '../core/insights';
-import { normalizeLegend, normalizeNodeMeta, normalizeTags } from '../core/meta';
+import { normalizeLegend, normalizeNodeMeta, normalizeStyle, normalizeTags } from '../core/meta';
 import { normalizeBrand } from '../core/brand';
 import { coerceFrames, dropDanglingFrameIds } from '../core/frames';
 import { CURRENT_SCHEMA_VERSION, migrate } from '../core/schema';
@@ -262,6 +262,8 @@ export function parseBlueprintJson(text: string): BlueprintJsonResult {
   if (legend.length) doc.legend = legend;
   const insights = normalizeInsights(source.insights);
   if (insights) doc.insights = insights;
+  const style = normalizeStyle(source.style);
+  if (style) doc.style = style;
   for (const sim of doc.simulations) {
     const budget = normalizeBudgetMs(sim.budgetMs);
     if (budget === undefined) delete sim.budgetMs;
