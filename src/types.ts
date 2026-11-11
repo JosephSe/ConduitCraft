@@ -385,7 +385,7 @@ export interface DiagramPage extends LevelContent {
 }
 
 /** The look of the sheet and every export (8.8). Absent means Studio. */
-export type DiagramStyle = 'blueprint' | 'print';
+export type DiagramStyle = 'blueprint' | 'print' | 'sketch';
 
 export interface DiagramDocument {
   title: string;

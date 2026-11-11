@@ -92,7 +92,7 @@ export function normalizeOwner(raw: unknown): string | undefined {
 /** One entry per tone, with a non-empty label. Anything else is dropped. */
 /** The diagram style a file declares, or undefined for Studio and anything unknown (Y1). */
 export function normalizeStyle(value: unknown): DiagramStyle | undefined {
-  return value === 'blueprint' || value === 'print' ? value : undefined;
+  return value === 'blueprint' || value === 'print' || value === 'sketch' ? value : undefined;
 }
 
 export function normalizeLegend(raw: unknown): LegendEntry[] {

@@ -19,6 +19,11 @@ test('the view popover picks a diagram style; the sheet follows (Y1)', async ({ 
   await expect(page.locator('#workspace')).toHaveAttribute('data-style', 'print');
   expect(await sheet()).toBe('#fff');
 
+  await style.selectOption('sketch');
+  await expect(page.locator('#workspace')).toHaveAttribute('data-style', 'sketch');
+  expect(await sheet()).toBe('#fffdf8');
+  expect(await page.locator('#stage-world .node-select-hit').first().evaluate((el) => getComputedStyle(el).filter)).toContain('cc-rough');
+
   await style.selectOption('');
   await expect(page.locator('#workspace')).not.toHaveAttribute('data-style', /.+/);
 });
