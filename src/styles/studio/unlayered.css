@@ -1979,6 +1979,13 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .conduit-glow { display: inline; fill: none; stroke: var(--t, var(--wl-border-ui)); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity 320ms; }
 .workspace[data-lens="traffic"] .conduit-glow { opacity: 0.2; }
 .workspace[data-lens="traffic"] .conduit-rail { stroke-width: 1; opacity: 0.55; }
+/* M1 (9.2): in Traffic the flow is capsules, 14 x 7 (a 7 px dash with round caps), in the wire's tone. A component that a run reaches springs 1 -> 1.14 -> 1. */
+.workspace[data-lens="traffic"] .conduit-stream { stroke-width: 7; stroke-dasharray: 7 29; }
+.workspace[data-lens="traffic"] .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 7 37; }
+.workspace[data-lens="traffic"] .conduit-stream-reverse { stroke-width: 7; stroke-dasharray: 7 37; }
+.workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: cc-arrive 320ms var(--cc-spring) 1; transform-origin: center; transform-box: fill-box; }
+@keyframes cc-arrive { 50% { transform: scale(1.14); } }
+@media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }
 .workspace[data-lens="traffic"] .canvas-shell { background-color: var(--cc-canvas-run); transition: background-color 320ms; }
 .workspace[data-lens="traffic"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit,
 .workspace[data-lens="review"] .conduit-badge-hit { display: none; }
