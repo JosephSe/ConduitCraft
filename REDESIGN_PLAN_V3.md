@@ -858,7 +858,7 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 
 #### [x] M2. Failure, recovery, finish · S
 - **Needs:** C3, M1.
-- **Done (M2):** a failed component keeps its shake and its plate tilts 4°; other states fade their ring in 40 ms per hop from the nearest failure (`chaosDistance`, `--cc-lag`; at-risk keeps its own pulse); a restored component takes one emerald ring for 600 ms and its tile rights itself on the spring (`is-restored`); a scenario that ends brightens the glow of the wires it used in order, 120 ms apart (`is-route-lit`). All off under reduced motion. Entry CSS cap raised 124 to 128 kB (now 123.1). Not yet: the hatch fading in (a background-image cannot animate) and a ring that travels round the tile rather than expanding from it.
+- **Done (M2):** a failed component keeps its shake and its plate tilts 4°; other states fade their ring in 40 ms per hop from the nearest failure (`chaosDistance`, `--cc-lag`; at-risk keeps its own pulse); a restored component takes one emerald ring for 600 ms and its tile rights itself on the spring (`is-restored`); a scenario that ends brightens the glow of the wires it used in order, 120 ms apart (`is-route-lit`). All off under reduced motion. Entry CSS cap raised 124 to 128 kB (now 123.1). The hatch now fades in over 400 ms (a registered `--cc-hatch` property carries its alpha). Not yet: a ring that travels round the tile rather than expanding from it.
 
 #### [x] M3. Editing feedback · S
 - **Do:** drop, connect, delete, and the remaining rows. **Needs:** S3, C2.
