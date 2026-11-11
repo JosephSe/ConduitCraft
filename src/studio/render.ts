@@ -149,7 +149,7 @@ export function renderAll(rebuildInspector = true): void {
   paintDocumentBrand();
   setText(
     canvasStatsPill,
-    `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'node' : 'nodes'} · ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'wire' : 'wires'}`,
+    `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'component' : 'components'}, ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'wire' : 'wires'}`,
   );
 
   stageWorld.style.width = `${app.doc.stageWidth}px`;

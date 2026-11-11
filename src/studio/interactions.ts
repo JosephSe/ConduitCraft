@@ -182,7 +182,7 @@ import { serializeClip, type Clip } from '../core/clipboard';
 import { frameAndDescendantIds, notesInFrames } from '../core/frameOps';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
-import { setPointerTool } from './pointerTool';
+import { setPointerTool, TOOL_TIPS } from './pointerTool';
 import { matchBinding } from '../core/keymap';
 import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
@@ -1602,10 +1602,10 @@ export function initEvents(): void {
 
         hudStatusTip.textContent =
           app.workspaceMode === 'design'
-            ? 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire'
+            ? TOOL_TIPS[app.pointerTool]
             : app.lens === 'review'
-              ? 'Review · Insights flag single points of failure, cycles, orphans and latency overruns · Click an issue to jump to it'
-              : 'Traffic · Select a component and press X (or right-click) to fail it · Alt-hover previews the blast radius';
+              ? 'Click an issue to jump to it.'
+              : 'Select a component and press X to fail it.';
 
         if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
           const live = new Set(app.doc.nodes.map((node) => node.id));

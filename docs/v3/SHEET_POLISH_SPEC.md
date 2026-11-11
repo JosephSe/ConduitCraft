@@ -464,7 +464,7 @@ Three steps, one commit each, one pull request for all three. After each step ru
 #### [x] Step 2. Part B (section 5)
 **Done when:** every button in the table in 5.2 is unboxed in both themes; everything in the "must not have changed" list is unchanged; the new test passes.
 
-#### [ ] Step 3. Part C (section 6)
+#### [x] Step 3. Part C (section 6)
 **Done when:** the hint line shows the new sentences for all five tools and all three lenses; the view popover's count reads "N components, N wires" as plain text; the new test passes; the full `pnpm test:e2e` passes.
 
 ---

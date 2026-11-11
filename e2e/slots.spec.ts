@@ -232,3 +232,19 @@ test('island buttons are not boxed, and Run is the one filled button', async ({ 
   }
   expect((await style('#btn-run')).fill).not.toMatch(clear);
 });
+
+test('the hint line speaks in plain sentences, per lens and per tool', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#stage-world').waitFor({ state: 'attached' });
+  const hint = page.locator('#hud-status-tip');
+  await page.keyboard.press('w');
+  await expect(hint).toHaveText('Drag from one component to another to connect them.');
+  await page.keyboard.press('2');
+  await expect(hint).toHaveText('Select a component and press X to fail it.');
+  await page.keyboard.press('3');
+  await expect(hint).toHaveText('Click an issue to jump to it.');
+  await page.keyboard.press('1');
+  await expect(hint).toHaveText('Drag from one component to another to connect them.');
+  await page.keyboard.press('v');
+  await expect(hint).toHaveText('Drag a shape onto the sheet, or drag from a port to connect.');
+});

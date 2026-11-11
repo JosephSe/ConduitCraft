@@ -31,7 +31,7 @@ test('boots to an empty canvas with no errors', { tag: '@quick' }, async ({ page
 test('loads the showcase diagram with nodes and wires', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   expect(await page.locator('.arch-node').count()).toBeGreaterThan(3);
-  await expect(page.locator('#canvas-stats-pill')).toContainText(/nodes?/);
+  await expect(page.locator('#canvas-stats-pill')).toContainText(/components?/);
   await expect(page.locator('#canvas-stats-pill')).toContainText(/wires?/);
 });
 
