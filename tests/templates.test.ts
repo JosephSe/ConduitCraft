@@ -95,6 +95,11 @@ describe('starter architecture templates gallery', () => {
     }
   });
 
+  it('draws thumbnails in the scheme it is given', async () => {
+    const raw = await loadTemplateRaw(getStarterTemplateById('three-tier-web')!);
+    assert.notEqual(renderTemplatePreviewSvg(raw, 'dark'), renderTemplatePreviewSvg(raw, 'light'));
+  });
+
   it('generates structured HTML markup for cards, blank canvas, and empty stage shelf', () => {
     const cardHtml = renderTemplateCardHtml(getStarterTemplateById('three-tier-web')!);
     assert.ok(cardHtml.includes('class="template-card"'));

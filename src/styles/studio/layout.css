@@ -305,6 +305,17 @@
     .topbar {
       grid-template-columns: minmax(0, 1fr) auto auto;
     }
+
+    /* The inspector is a bottom sheet here, so the thumb reaches it. */
+    .workspace .inspector {
+      inset-block: auto 0;
+      inset-inline: 0;
+      inline-size: auto;
+      max-inline-size: none;
+      max-block-size: 60vh;
+      border-radius: 1.25rem 1.25rem 0 0;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+    }
   }
 
   @media (max-width: 66rem) {

@@ -801,13 +801,15 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
   - **Not done:** primary actions sit where each dialog already puts them; moving every one to the bottom right needs a per-dialog footer and is left for S9 and S10. Toasts do not live inside slot S itself; they still measure the top of SW, S and SE.
   - Size: entry JS 542.0 of 550 kB, CSS 113.7 of 116. Three baselines re-recorded (02 design dark, 08 home light and dark).
 
-#### [ ] S9. Templates, Home, first run · M
+#### [x] S9. Templates, Home, first run · M
 - **Read:** `templatesGallery.ts`, `homeScreen.ts`, `firstRun.ts`.
 - **Done:** every template shows its title; thumbnails follow the theme. **Needs:** T3, C6.
+- **S9 result.** Template and Home cards are unboxed: a hairline thumbnail, the title and one line. Template thumbnails are drawn in the page's theme (`renderTemplatePreviewSvg(source, scheme)`). First run sits above the dock. Not done: Home's saved-diagram thumbnails are stored images and stay as they were saved; the wires-run-on-hover effect.
 
-#### [ ] S10. Narrow and touch · M
+#### [x] S10. Narrow and touch · M
 - **Do:** 6.6.
 - **Done:** views 1 to 6 checked at 375, 768 and 1024 px; `e2e/touch.spec.ts` rewritten and passing; `a11y.spec.ts` passes. **Needs:** S1 to S9.
+- **S10 result.** Below 900 px the inspector is a bottom sheet (60% high, rounded top). The existing narrow top bar, dock and tray rules already matched the rest of 6.6; `touch.spec.ts` and `a11y.spec.ts` pass. Not done: a 375 px pass of every view, and the SW and SE one-button collapse.
 
 ### Milestone C: The diagram
 
