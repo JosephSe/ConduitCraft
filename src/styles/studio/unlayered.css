@@ -2049,6 +2049,8 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .node-comment-badge,
 #stage-world[data-lod="low"] .node-lock-badge { display: none; }
 #stage-world[data-lod="low"] .arch-node { box-shadow: none; }
+/* C6: the card-kind tile grows as the camera pulls back, so the kind still reads at Fit. `scale` leaves layout alone and does not fight the failed-state rotate. */
+#stage-world[data-lod="low"] .arch-node .node-icon { scale: clamp(1, calc(0.55 / var(--cam-scale, 1)), 1.9); transform-origin: center; }
 #stage-world[data-lod="low"] .zone-title,
 #stage-world[data-lod="low"] .frame-title-bar { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px); }
 #stage-world[data-lod="low"] .conduit-rail { stroke-width: min(5px, calc(1.75px / var(--cam-scale, 1))); }
