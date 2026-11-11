@@ -1,0 +1,30 @@
+/* Diagram styles (Y1, Y2). Shared by the studio (data-style on #workspace) and the standalone HTML export (on <html>). */
+/* Y1 (8.8): a diagram style is a token set on the sheet, apart from the app theme. */
+[data-style] :is(.canvas-shell, #stage-world) {
+  --cc-shadow-card: none; --cc-shadow-elevated: none; --cc-shadow-1: none;
+}
+[data-style="blueprint"] :is(.canvas-shell, #stage-world) {
+  --cc-canvas: #0b3a6b; --cc-canvas-run: #082c52; --cc-sheet: #0b3a6b; --cc-ink: #f4f8ff; --cc-ink-2: #d3e2f6; --cc-ink-3: #b3cbea; --cc-on-ink: #0b3a6b;
+  --cc-hair: rgba(255, 255, 255, 0.3); --cc-hair-2: rgba(255, 255, 255, 0.65); --cc-dot: rgba(255, 255, 255, 0.18);
+}
+[data-style="blueprint"] .canvas-shell { background-image: linear-gradient(var(--cc-dot) 1px, transparent 1px), linear-gradient(90deg, var(--cc-dot) 1px, transparent 1px); background-size: 24px 24px; }
+[data-style="blueprint"] #stage-world .arch-node .node-select-hit { background: transparent; border-color: var(--cc-ink); }
+/* Wires are told apart by dash pattern, not colour. */
+[data-style="blueprint"] #stage-world .conduit-group { --t: #f4f8ff; }
+[data-style="blueprint"] #stage-world .conduit-group[data-tone="emerald"] .conduit-rail { stroke-dasharray: 10 5; }
+[data-style="blueprint"] #stage-world .conduit-group[data-tone="rose"] .conduit-rail { stroke-dasharray: 2 5; }
+[data-style="blueprint"] #stage-world .conduit-group[data-tone="violet"] .conduit-rail { stroke-dasharray: 12 4 2 4; }
+[data-style="blueprint"] #stage-world .conduit-group[data-tone="amber"] .conduit-rail { stroke-dasharray: 18 6; }
+[data-style="blueprint"] #stage-world .conduit-group[data-tone="cyan"] .conduit-rail { stroke-dasharray: 6 3 1 3 1 3; }
+[data-style="blueprint"] #stage-world .conduit-group[data-tone="fuchsia"] .conduit-rail { stroke-dasharray: 3 3; }
+[data-style="print"] :is(.canvas-shell, #stage-world) {
+  --cc-canvas: #fff; --cc-canvas-run: #fff; --cc-sheet: #fff; --cc-ink: #000; --cc-ink-2: #222; --cc-ink-3: #444; --cc-on-ink: #fff;
+  --cc-hair: rgba(0, 0, 0, 0.45); --cc-hair-2: rgba(0, 0, 0, 0.8); --cc-dot: transparent;
+}
+[data-style="print"] #stage-world .node-sub { display: block; }
+[data-style="sketch"] :is(.canvas-shell, #stage-world) {
+  --cc-canvas: #fbf8f1; --cc-canvas-run: #f1ecde; --cc-sheet: #fffdf8; --cc-ink: #2b2a28; --cc-ink-2: #4a4843; --cc-ink-3: #625f58; --cc-on-ink: #fffdf8;
+  --cc-hair: rgba(43, 42, 40, 0.3); --cc-hair-2: rgba(43, 42, 40, 0.7); --cc-dot: transparent;
+}
+/* Every stroke goes through one fixed-seed displacement filter (#cc-rough), so it wobbles the same way every time. */
+[data-style="sketch"] #stage-world :is(.node-select-hit, .node-shape-plate, .conduit-rail, .conduit-glow) { filter: url(#cc-rough); }

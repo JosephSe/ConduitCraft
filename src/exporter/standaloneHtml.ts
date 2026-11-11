@@ -24,6 +24,8 @@ import { normalizeLinks, toneName } from '../core/meta';
 import { flowScale } from '../core/wire';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
+import diagramStylesCss from '../styles/studio/diagramStyles.css?raw';
+import { ROUGH_FILTER } from './diagramSvg';
 import framesCss from '../styles/frames.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
 
@@ -409,6 +411,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
 ${sharedCss}
 ${viewerCss}
 ${doc.frames?.length ? framesCss : ''}
+${doc.style ? diagramStylesCss : ''}
 </style>`;
 
   const brand = normalizeBrand(doc.brand);
@@ -425,7 +428,7 @@ ${doc.frames?.length ? framesCss : ''}
       </div>`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${doc.style ? ` data-style="${doc.style}"` : ''}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -472,7 +475,7 @@ ${colorSchemeBoot}
           ${zonesMarkup}
           ${notesMarkup}
           <svg class="wires-layer" viewBox="0 0 ${doc.stageWidth} ${doc.stageHeight}" width="${doc.stageWidth}" height="${doc.stageHeight}" aria-hidden="true">
-            <defs>
+            <defs>${doc.style === 'sketch' ? ROUGH_FILTER : ''}
               ${(Object.keys(TONE_META) as StreamTone[])
                 .map(
                   (tone) =>

@@ -124,3 +124,48 @@ for (const style of STYLES) {
     });
   }
 }
+
+// Diagram styles (Y1, Y2): the SVG and the standalone HTML carry the style the diagram was drawn in.
+for (const style of ['blueprint', 'print', 'sketch'] as const) {
+  test(`export look: ${style}: SVG and standalone HTML`, async ({ browser }) => {
+    const context = await browser.newContext({
+      colorScheme: 'light',
+      reducedMotion: 'reduce',
+      viewport: { width: 1600, height: 900 },
+      storageState: {
+        cookies: [],
+        origins: [
+          {
+            origin: 'http://localhost:4281',
+            localStorage: [
+              { name: 'conduitcraft-ui', value: '2' },
+              { name: 'conduitcraft-first-run-seen', value: '1' },
+            ],
+          },
+        ],
+      },
+      acceptDownloads: true,
+    });
+    const page = await context.newPage();
+    exported = 0;
+    await captureExports(page);
+    await page.goto('http://localhost:4281/');
+    await openLumenRelay(page);
+    await page.locator('#zoom-readout').click();
+    await page.locator('#view-style').selectOption(style);
+    await page.keyboard.press('Escape');
+
+    const svg = Buffer.from(await exportAs(page, '#btn-export-svg'), 'base64').toString('utf8');
+    const html = Buffer.from(await exportAs(page, '#btn-export-html'), 'base64').toString('utf8');
+    expect(html).toContain(`data-style="${style}"`);
+
+    const view = await context.newPage();
+    await view.setViewportSize({ width: 1280, height: 800 });
+    await view.setContent(`<!doctype html><style>svg{display:block;width:1280px;height:auto}</style><body style="margin:0;background:#fff">${svg.replace(/^<\?xml[^>]*\?>\s*/, '')}</body>`);
+    await expect(view.locator('svg').first()).toHaveScreenshot(`${style}-light-svg.png`, { animations: 'disabled', ...TOLERANCE });
+    await view.setContent(html);
+    await view.evaluate(() => document.fonts.ready.then(() => undefined));
+    await expect(view).toHaveScreenshot(`${style}-light-html.png`, { animations: 'disabled', ...TOLERANCE });
+    await context.close();
+  });
+}
