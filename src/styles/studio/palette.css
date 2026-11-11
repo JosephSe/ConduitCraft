@@ -1,14 +1,13 @@
 @layer palette {
   .compile-pill {
-    font-family: var(--cc-font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding-inline: 0.5rem;
-    padding-block: 0.15rem;
-    border-radius: 999px;
-    background: var(--cc-accent-soft);
-    color: var(--cc-accent);
-    border: 1px solid var(--cc-hair);
+    font: var(--cc-font-small);
+    color: var(--cc-ink-3);
+    background: none;
+    border: 0;
+    padding: 0;
+    border-radius: 0;
+    text-transform: none;
+    letter-spacing: 0;
   }
 
   .stencil-drag-ghost {

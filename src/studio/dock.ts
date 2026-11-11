@@ -85,7 +85,7 @@ export function arm(id: string, x?: number, y?: number, name?: string): void {
   document.body.appendChild(ghost);
   moveGhost(x ?? window.innerWidth / 2, y ?? window.innerHeight / 2);
   syncArmed();
-  hudStatusTip.textContent = `Click the sheet to place ${stencil.paletteTitle} · Shift keeps placing · Esc puts it back`;
+  hudStatusTip.textContent = `Click the sheet to place ${stencil.paletteTitle}. Shift keeps placing, Esc puts it back.`;
 }
 
 function placeArmed(clientX: number, clientY: number): void {

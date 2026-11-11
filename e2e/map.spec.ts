@@ -34,6 +34,66 @@ test('at Fit every component and lane title renders at 11 px or more', async ({ 
   for (const s of sizes) expect(s.px, s.text ?? '').toBeGreaterThanOrEqual(10.95);
 });
 
+for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 1024, height: 700 }]) {
+  test(`at Fit no component name or frame title is cut off at ${size.width} x ${size.height}`, async ({ page }) => {
+    await page.setViewportSize(size);
+    await page.goto('/');
+    await runPaletteCommand(page, 'Load Showcase');
+    await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 20_000 });
+    await runPaletteCommand(page, 'Fit');
+    const cut = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('#stage-world .node-title, #stage-world .frame-title-bar')]
+        .filter((el) => el.getClientRects().length > 0)
+        .filter((el) => el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1)
+        .map((el) => el.textContent),
+    );
+    expect(cut).toEqual([]);
+  });
+}
+
+test('zoomed out, a wire label shows only on the wire you point at, at 10 px or more', async ({ page }) => {
+  await page.goto('/');
+  await runPaletteCommand(page, 'Load Showcase');
+  await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 20_000 });
+  await runPaletteCommand(page, 'Fit');
+  await expect(page.locator('#stage-world')).toHaveAttribute('data-lod', 'low');
+  await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
+  await expect(page.locator('.conduit-badge-hit:visible')).toHaveCount(0);
+  // Click the middle of a labelled wire that nothing covers (the way selectWire does in e2e/interactions.spec.ts).
+  const hit = await page.evaluate(() => {
+    for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
+      if (!group.querySelector('.conduit-badge-hit')) continue;
+      const path = group.querySelector<SVGPathElement>('.conduit-hit');
+      const ctm = path?.getScreenCTM();
+      if (!path || !ctm) continue;
+      const mid = path.getPointAtLength(path.getTotalLength() / 2);
+      const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
+      if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
+        return { id: group.dataset.edgeId!, x: pt.x, y: pt.y };
+      }
+    }
+    return null;
+  });
+  expect(hit, 'a labelled wire with a clear midpoint').not.toBeNull();
+  await page.mouse.click(hit!.x, hit!.y);
+  const label = page.locator(`.conduit-group[data-edge-id="${hit!.id}"] .route-pill-text`);
+  await expect(label).toBeVisible();
+  const height = await label.evaluate((el) => el.getBoundingClientRect().height);
+  expect(height).toBeGreaterThanOrEqual(10);
+});
+
+test('the "Always show wire labels" preference turns every label back on', async ({ page }) => {
+  await page.goto('/');
+  await runPaletteCommand(page, 'Load Showcase');
+  await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 20_000 });
+  await runPaletteCommand(page, 'Fit');
+  await expect(page.locator('#stage-world')).toHaveAttribute('data-lod', 'low');
+  await runPaletteCommand(page, 'Studio Preferences');
+  await page.locator('#chk-always-wire-labels').check();
+  await page.keyboard.press('Escape');
+  expect(await page.locator('.conduit-badge-hit:visible').count()).toBeGreaterThan(10);
+});
+
 test('the SVG export carries the title block, and the dialog can turn it off', async ({ page }) => {
   await captureExports(page);
   await page.goto('/');

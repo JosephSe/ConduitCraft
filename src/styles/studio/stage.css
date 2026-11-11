@@ -1623,17 +1623,6 @@
     transition: opacity 0.2s ease;
   }
 
-  #stage-world[data-lod="low"] .node-title {
-    font-size: 1.25rem;
-    font-weight: 800;
-    line-height: 1.2;
-  }
-
-  #stage-world[data-lod="low"] .node-sub {
-    font-size: 0.95rem;
-    font-weight: 600;
-  }
-
   /* Traveling Simulation Packet */
   .sim-packet {
     position: absolute;

@@ -9,11 +9,11 @@ import { app } from './state';
 export type PointerTool = 'select' | 'connect' | 'hand' | 'text' | 'frame';
 
 export const TOOL_TIPS: Record<PointerTool, string> = {
-  select: 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire',
-  connect: 'Connect Mode · Drag from any component or port to another component to draw an animated wire',
-  hand: 'Hand tool · Drag anywhere to move around the canvas',
-  text: 'Text tool · Click the canvas to add a text label',
-  frame: 'Frame tool · Drag on the canvas to draw a frame around components',
+  select: 'Drag a shape onto the sheet, or drag from a port to connect.',
+  connect: 'Drag from one component to another to connect them.',
+  hand: 'Drag anywhere to move around the sheet.',
+  text: 'Click the sheet to add a label.',
+  frame: 'Drag on the sheet to draw a frame around components.',
 };
 
 export function setPointerTool(tool: PointerTool): void {
