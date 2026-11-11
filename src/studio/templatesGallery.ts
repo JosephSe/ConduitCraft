@@ -226,6 +226,8 @@ export function renderTemplatePreviewSvg(source: string | DiagramDocument, schem
   return rawSvg
     .replace(/<\?xml[^>]*\?>/g, '')
     .replace(/width="\d+"\s+height="\d+"/, 'width="100%" height="100%" preserveAspectRatio="xMidYMid meet"')
+    // One-way wires get a hook for the hover effect (S9): the line draws itself once.
+    .replace(/<path ([^>]*?)marker-end=/g, '<path class="tpl-wire" pathLength="100" $1marker-end=')
     .trim();
 }
 
