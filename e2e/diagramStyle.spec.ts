@@ -27,3 +27,15 @@ test('the view popover picks a diagram style; the sheet follows (Y1)', async ({ 
   await style.selectOption('');
   await expect(page.locator('#workspace')).not.toHaveAttribute('data-style', /.+/);
 });
+
+test('Print keeps wire labels on in Review; the other styles hide them (Y1)', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  const badge = page.locator('#stage-world .conduit-badge-hit').first();
+  await page.locator('#workspace').evaluate((el) => el.setAttribute('data-lens', 'review'));
+  await page.locator('#workspace').evaluate((el) => el.setAttribute('data-style', 'print'));
+  expect(await badge.evaluate((el) => getComputedStyle(el).display)).not.toBe('none');
+  await page.locator('#workspace').evaluate((el) => el.setAttribute('data-style', 'blueprint'));
+  expect(await badge.evaluate((el) => getComputedStyle(el).display)).toBe('none');
+});
