@@ -53,6 +53,7 @@ import {
   frameDocumentInViewport,
   viewportWorldRect,
   panToCenterWorld,
+  FIT_SCALE_MIN,
 } from './viewportFrame';
 import {
   beginGesture,
@@ -787,7 +788,7 @@ export function trackViewportResize(): void {
 }
 
 export function zoomAround(nextScale: number, cx: number, cy: number): void {
-  const clamped = Math.min(1.9, Math.max(0.35, nextScale));
+  const clamped = Math.min(1.9, Math.max(FIT_SCALE_MIN, nextScale));
   const worldX = (cx - app.panX) / app.scale;
   const worldY = (cy - app.panY) / app.scale;
   app.scale = clamped;

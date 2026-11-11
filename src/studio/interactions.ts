@@ -156,6 +156,7 @@ import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pageCount } from '../core/pages';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
+import { FIT_SCALE_MIN } from './viewportFrame';
 import { selectionOfStage } from './selection';
 import {
   deleteActiveDiagram,
@@ -2547,7 +2548,7 @@ export function initEvents(): void {
     if (!pinch) return;
     const pts = [...contacts.values()];
     if (pts.length < 2) return;
-    const next = pinchTransform(pinch, pts[0], pts[1], 0.35, 1.9);
+    const next = pinchTransform(pinch, pts[0], pts[1], FIT_SCALE_MIN, 1.9);
     app.scale = next.scale;
     app.panX = next.panX;
     app.panY = next.panY;

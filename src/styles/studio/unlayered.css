@@ -2052,7 +2052,7 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 
 /* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
 #stage-world[data-lod="low"] .node-title {
-  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 34px);
+  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px);
   line-height: 1.15;
   text-align: center;
   white-space: normal;
@@ -2068,7 +2068,7 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .node-lock-badge { display: none; }
 #stage-world[data-lod="low"] .arch-node { box-shadow: none; }
 #stage-world[data-lod="low"] .zone-title,
-#stage-world[data-lod="low"] .frame-title-bar { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 34px); }
+#stage-world[data-lod="low"] .frame-title-bar { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px); }
 #stage-world[data-lod="low"] .conduit-rail { stroke-width: min(5px, calc(1.75px / var(--cam-scale, 1))); }
 #stage-world[data-lod="low"] .conduit-casing { stroke-width: min(9px, calc(6px / var(--cam-scale, 1))); }
 /* Medium: tile, title, subtitle and the status light; the rest waits for high. */
