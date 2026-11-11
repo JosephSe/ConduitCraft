@@ -80,7 +80,7 @@ Line numbers below are for `be066f0`. If they have moved, find the code by the t
 
 Below 55% zoom the stage has `data-lod="low"`. A rule there sizes every title at `12px / zoom`, so it is always 12 px on screen. At 41% zoom that is a 29 px font inside a box that is still 222 px wide, so a word like "Notifications" does not fit and is clipped.
 
-The fix is three small things: use the typeface's condensed width (Instrument Sans ships widths from 75% to 100%, plan decision D3), allow a third line, and get the icon tile out of the way on shaped components where there is no room for it.
+The fix is four small things. Use the typeface's condensed width (Instrument Sans ships widths from 75% to 100%, plan decision D3). Allow a third line. Stop the font growing past 36 px in the diagram's own units, so the longest ordinary word still fits a box: at Fit on a 1440 × 900 window names are 11.5 to 12 px on screen (the existing 11 px test still passes, with or without the properties panel open), and on a 1280 × 720 window they are about 10 px but whole. And take the icon tile away while zoomed out, so the name has the whole box; the card takes a tint and an edge in its colour instead, the way shaped components already do, so each component still shows its colour.
 
 ### 4.2 Replace the zoomed-out block
 
@@ -89,10 +89,10 @@ Open `src/styles/studio/unlayered.css`. Find the comment that starts `/* C6 (8.6
 ```css
 /* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
 #stage-world[data-lod="low"] .node-title {
-  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px);
+  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 36px);   /* 36px cap: the longest ordinary word still fits a 222px box */
   font-stretch: 75%;            /* the condensed width: about a fifth more letters per line */
   font-weight: 800;             /* was set by the stale stage.css rule deleted in 4.3 */
-  line-height: 1.12;
+  line-height: 1.2;             /* 1.12 clipped descenders by 2px */
   text-align: center;
   white-space: normal;
   text-wrap: balance;
@@ -102,10 +102,15 @@ Open `src/styles/studio/unlayered.css`. Find the comment that starts `/* C6 (8.6
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* A shaped component (hexagon, diamond, pill, circle…) and a client have no room for the tile and a name. The outline already says what it is. */
-#stage-world[data-lod="low"] .arch-node[data-shape] .node-top,
-#stage-world[data-lod="low"] .arch-node[data-kind="client"] .node-top { display: none; }
-#stage-world[data-lod="low"] .arch-node[data-shape] .node-select-hit { justify-content: center; }
+/* Zoomed out there is no room for the tile and a name, so the name gets the whole box. The actor keeps its figure. */
+#stage-world[data-lod="low"] .arch-node:not([data-kind="actor"]) .node-top { display: none; }
+#stage-world[data-lod="low"] .arch-node .node-select-hit { justify-content: center; }
+/* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. */
+#stage-world[data-lod="low"] .arch-node .node-select-hit:not(:has(> svg)) {
+  padding: 6px 10px;
+  background: color-mix(in oklab, var(--t) 6%, var(--cc-sheet));
+  border-color: color-mix(in oklab, var(--t) 50%, var(--cc-sheet));
+}
 #stage-world[data-lod="low"] .node-sub,
 #stage-world[data-lod="low"] .node-light,
 #stage-world[data-lod="low"] .node-status-badge,
@@ -127,7 +132,8 @@ Open `src/styles/studio/unlayered.css`. Find the comment that starts `/* C6 (8.6
   font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px);
   font-stretch: 75%;
   height: auto;
-  line-height: 1.25;
+  max-inline-size: none;        /* a narrow frame's title may run past the frame's right edge rather than be cut */
+  line-height: 1.3;
   padding-block: 0.1em;
   margin-top: -0.7em;
   border-width: calc(1px / var(--cam-scale, 1));
@@ -146,11 +152,11 @@ body[data-wire-labels="always"] #stage-world[data-lod="low"] .conduit-group .con
 
 What differs from the block you replaced, so you can check your paste:
 
-- `.node-title`: added `font-stretch: 75%`, `font-weight: 800`, `text-wrap: balance`, `overflow-wrap: break-word`; `line-height` 1.15 → 1.12; `-webkit-line-clamp` 2 → 3.
-- New: the three `.node-top` / `.node-select-hit` rules for shaped components and clients.
+- `.node-title`: the font-size cap 48px → 36px; added `font-stretch: 75%`, `font-weight: 800`, `text-wrap: balance`, `overflow-wrap: break-word`; `line-height` 1.15 → 1.2; `-webkit-line-clamp` 2 → 3.
+- New: `.node-top` hidden for every kind except the actor, the name centred, and the tint and edge on plain cards.
 - `.zone-title` and `.frame-title-bar` used to share one rule; they now have their own.
 - New: `.zone-num`, `.zone-sub`, `.zone-banner` rules.
-- New: the `.frame-title-bar` sizing properties.
+- New: the `.frame-title-bar` sizing properties, including `max-inline-size: none`.
 - New: the four wire-label rules.
 - Unchanged: `.node-sub…` hide list, `.arch-node` shadow, `.node-icon` scale, `.conduit-rail`, `.conduit-casing`.
 
@@ -232,6 +238,7 @@ Add these to `e2e/map.spec.ts`, after the existing `at Fit every component and l
      expect(cut).toEqual([]);
    });
    ```
+   Run this test at three window sizes by wrapping it in `for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 1024, height: 700 }])`, with `await page.setViewportSize(size)` as its first line and the size in the test's title. All three must pass.
 2. **Wire labels wait for the pointer when zoomed out.**
    ```ts
    test('zoomed out, a wire label shows only on the wire you point at, at 10 px or more', async ({ page }) => {
@@ -242,15 +249,30 @@ Add these to `e2e/map.spec.ts`, after the existing `at Fit every component and l
      await expect(page.locator('#stage-world')).toHaveAttribute('data-lod', 'low');
      await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
      await expect(page.locator('.conduit-badge-hit:visible')).toHaveCount(0);
-     const wire = page.locator('.conduit-group').filter({ has: page.locator('.conduit-badge-hit') }).first();
-     await wire.dispatchEvent('click');
-     const label = wire.locator('.route-pill-text');
+     // Click the middle of a labelled wire that nothing covers (the way selectWire does in e2e/interactions.spec.ts).
+     const hit = await page.evaluate(() => {
+       for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
+         if (!group.querySelector('.conduit-badge-hit')) continue;
+         const path = group.querySelector<SVGPathElement>('.conduit-hit');
+         const ctm = path?.getScreenCTM();
+         if (!path || !ctm) continue;
+         const mid = path.getPointAtLength(path.getTotalLength() / 2);
+         const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
+         if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
+           return { id: group.dataset.edgeId!, x: pt.x, y: pt.y };
+         }
+       }
+       return null;
+     });
+     expect(hit, 'a labelled wire with a clear midpoint').not.toBeNull();
+     await page.mouse.click(hit!.x, hit!.y);
+     const label = page.locator(`.conduit-group[data-edge-id="${hit!.id}"] .route-pill-text`);
      await expect(label).toBeVisible();
      const height = await label.evaluate((el) => el.getBoundingClientRect().height);
      expect(height).toBeGreaterThanOrEqual(10);
    });
    ```
-   If `dispatchEvent('click')` does not select the wire (check how `e2e/wireProtocol.spec.ts` or `e2e/interactions.spec.ts` select one, and do it their way), use their way.
+   The label sits at the wire's midpoint, so once it shows it may be under the pointer; that is fine.
 3. **The preference turns them all back on.** Open the settings dialog the way an existing test does (`grep -rn "chk-animate-wires\|open-settings\|Preferences" e2e`), check `#chk-always-wire-labels`, close the dialog, and expect `page.locator('.conduit-badge-hit:visible')` to have a count greater than 10.
 
 Existing tests that may fail, and what to do:
@@ -432,10 +454,14 @@ If the page opens on Home or the first-run card and the keys do not reach the ca
 
 Three steps, one commit each, one pull request for all three. After each step run the commands in section 3, item 3, then look at the showcase at Fit and at 100%, in light and dark, in all three lenses.
 
-#### [ ] Step 1. Part A (section 4)
+#### [x] Step 1. Part A (section 4)
 **Done when:** on the showcase at Fit, every component name and both frame titles read in full; no wire label is visible until you point at or select a wire, and then it is readable; lane 01's header is on one line; the preference switch turns all labels back on and is remembered after a reload; at 100% zoom the diagram looks exactly as it did before; the three new tests pass; `v3Visual` baselines are updated and checked.
 
-#### [ ] Step 2. Part B (section 5)
+**Unblocked 2026-11-11.** The first version of 4.2 failed its own test: `line-height: 1.12` clipped names by 2 px, a narrow frame's title was cut sideways, and below about 37% zoom names spilled out of their boxes. Section 4.2 now has a font cap (36 px after the second fix below), `line-height: 1.2`, no tile while zoomed out (plain cards take a tint and an edge instead), and `max-inline-size: none` on the frame title. With these, no name or frame title is cut off at Fit at 1440 × 900, 1280 × 720 or 1024 × 700 (measured in the running app). Test 2 in 4.5 now selects the wire by clicking its midpoint. Re-paste the block in 4.2 over the one already applied, replace test 2, add the size loop to test 1, and continue.
+
+**Unblocked again 2026-11-11.** The 32 px cap made names 10.2 px at Fit on a 1440 × 900 window with the properties panel open, which fails the existing `at Fit every component and lane title renders at 11 px or more` test. That test is right and stays as it is. The cap in 4.2 is now **36 px**: measured in the running app, names are 11.5 px in that test's setup, and no name or frame title is cut off at 1440 × 900 (panel open and closed), 1280 × 720 or 1024 × 700. Change the one value `32px` to `36px` in the `.node-title` rule you pasted, re-run the Part A tests, update the `v3Visual` baselines, and continue. Do not change `e2e/map.spec.ts`'s existing test.
+
+#### [x] Step 2. Part B (section 5)
 **Done when:** every button in the table in 5.2 is unboxed in both themes; everything in the "must not have changed" list is unchanged; the new test passes.
 
 #### [ ] Step 3. Part C (section 6)
