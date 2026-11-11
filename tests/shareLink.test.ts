@@ -293,4 +293,13 @@ describe('shareable link (diagram in URL hash)', () => {
     assert.equal(light.preferFile, false);
     assert.equal(light.size, '3.0 KB');
   });
+
+  it('keeps the diagram style through a share link (Y1)', async () => {
+    for (const style of ['blueprint', 'print', 'sketch'] as const) {
+      const doc = createBlankDocument();
+      doc.style = style;
+      const { hash } = await createShareUrl(doc);
+      assert.equal((await decodeSharedDiagramFromHash(hash))?.style, style);
+    }
+  });
 });

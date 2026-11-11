@@ -4,7 +4,7 @@ import { CURRENT_SCHEMA_VERSION, MIGRATIONS, migrate, readSchemaVersion } from '
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
-import { createBlankDocument } from '../src/templates/presets.ts';
+import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 
 describe('schema versioning (T-03)', () => {
   it('treats a missing or odd version as 1', () => {
@@ -77,6 +77,18 @@ describe('schema versioning (T-03)', () => {
     assert.notEqual(studio, blueprint);
     assert.notEqual(blueprint, print);
     assert.match(blueprint, /#0b3a6b/);
+  });
+
+  it('Blueprint tells wires apart by dash pattern in the vector export (Y1)', () => {
+    const doc = createBlankDocument();
+    const a = createNodeFromStencil('service', 100, 100, 0);
+    const b = createNodeFromStencil('service', 500, 100, 1);
+    doc.nodes = [a, b];
+    doc.edges = [{ id: 'e1', from: a.id, to: b.id, sourcePort: 'right', targetPort: 'left', tone: 'emerald', route: 'auto', label: '', animated: false }];
+    doc.style = 'blueprint';
+    assert.match(renderDiagramSvg(doc), /stroke-dasharray="10 5"/);
+    doc.style = 'print';
+    assert.doesNotMatch(renderDiagramSvg(doc), /stroke-dasharray="10 5"/);
   });
 
   it('Sketch round-trips and wobbles every stroke through one fixed-seed filter (Y2)', () => {
