@@ -275,7 +275,7 @@ export function renderBlankCanvasCardHtml(): string {
       </div>
       <div class="template-card-body">
         <div class="template-card-header">
-          <span class="template-category-badge" style="background: var(--wl-surface-elevated); color: var(--wl-ink-secondary);">Starter</span>
+          <span class="template-category-badge" style="background: var(--cc-well); color: var(--cc-ink-2);">Starter</span>
           <span class="template-tag-meta">Clean slate</span>
         </div>
         <h3 class="template-card-title">Blank Canvas</h3>

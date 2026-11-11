@@ -49,18 +49,18 @@ export function renderMinimap(): void {
 
   const styles = getComputedStyle(document.documentElement);
   const color = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
-  const ink = color('--wl-ink-muted', '#596b87');
-  const border = color('--wl-border-ui', '#b6c5db');
-  const blue = color('--wl-blue', '#1d4ed8');
-  const canvasTone = color('--wl-canvas', '#f8fafc');
+  const ink = color('--cc-ink-3', '#596b87');
+  const border = color('--cc-hair-2', '#b6c5db');
+  const blue = color('--cc-blue', '#1d4ed8');
+  const canvasTone = color('--cc-canvas', '#f8fafc');
   const tones: Record<StreamTone, string> = {
     blue,
-    emerald: color('--wl-emerald', '#047857'),
-    rose: color('--wl-rose', '#be123c'),
-    violet: color('--wl-violet', '#5b21b6'),
-    amber: color('--wl-amber', '#b45309'),
-    cyan: color('--wl-cyan', '#0b7c9e'),
-    fuchsia: color('--wl-fuchsia', '#b5179e'),
+    emerald: color('--cc-emerald', '#047857'),
+    rose: color('--cc-rose', '#be123c'),
+    violet: color('--cc-violet', '#5b21b6'),
+    amber: color('--cc-amber', '#b45309'),
+    cyan: color('--cc-cyan', '#0b7c9e'),
+    fuchsia: color('--cc-fuchsia', '#b5179e'),
   };
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

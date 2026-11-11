@@ -335,7 +335,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
           : sim.tone === 'emerald'
             ? 'btn btn-approve'
             : 'btn';
-      const dotColor = TONE_META[sim.tone]?.cssVar || 'var(--wl-blue)';
+      const dotColor = TONE_META[sim.tone]?.cssVar || 'var(--cc-blue)';
       return `<button type="button" class="${cls}" data-sim-id="${escapeHtml(sim.id)}">
         <span class="pill-swatch" style="background: ${dotColor};"></span>
         <span>${escapeHtml(sim.name)}</span>
@@ -349,7 +349,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       const upStr = adj.upstream.length > 0 ? adj.upstream.map((u) => u.title).join(', ') : 'Entry Point';
       const downStr = adj.downstream.length > 0 ? adj.downstream.map((d) => d.title).join(', ') : 'Terminal Sink';
       return `<tr>
-        <td><strong>${escapeHtml(n.title)}</strong><br><span style="color: var(--wl-ink-muted); font-size: 0.78rem;">${escapeHtml(n.subtitle)}</span></td>
+        <td><strong>${escapeHtml(n.title)}</strong><br><span style="color: var(--cc-ink-3); font-size: 0.78rem;">${escapeHtml(n.subtitle)}</span></td>
         <td><code>${escapeHtml(n.kind.toUpperCase())}</code></td>
         <td>${escapeHtml(upStr)}</td>
         <td>${escapeHtml(downStr)}</td>
@@ -483,7 +483,7 @@ ${colorSchemeBoot}
             ${edgesMarkup}
           </svg>
           <div class="sim-packet" id="sim-packet" hidden aria-hidden="true">
-            <span class="pill-swatch" id="sim-packet-dot" style="background: var(--wl-emerald);"></span>
+            <span class="pill-swatch" id="sim-packet-dot" style="background: var(--cc-emerald);"></span>
             <span id="sim-packet-label">PACKET</span>
           </div>
           ${nodesMarkup}
@@ -514,7 +514,7 @@ ${colorSchemeBoot}
         <div id="panel-inspector" role="tabpanel" aria-labelledby="tab-inspector">
           <div class="inspector-badge-row">
             <span class="tier-badge" id="insp-badge">OVERVIEW</span>
-            <span id="insp-id" style="font-family: var(--wl-font-mono); font-size: 0.75rem; color: var(--wl-ink-muted);">SYS</span>
+            <span id="insp-id" style="font-family: var(--cc-font-mono); font-size: 0.75rem; color: var(--cc-ink-3);">SYS</span>
           </div>
           <h2 class="inspector-title" id="insp-title">${escapeHtml(doc.title)}</h2>
           <p class="inspector-summary" id="insp-summary">${escapeHtml(doc.overviewSummary)}</p>
@@ -799,7 +799,7 @@ ${colorSchemeBoot}
           wrap.appendChild(lbl);
           const row = document.createElement('div'); row.className = 'lineage-chips';
           if (!ids.length) {
-            const none = document.createElement('span'); none.style.fontSize = '0.8rem'; none.style.color = 'var(--wl-ink-muted)'; none.textContent = 'None';
+            const none = document.createElement('span'); none.style.fontSize = '0.8rem'; none.style.color = 'var(--cc-ink-3)'; none.textContent = 'None';
             row.appendChild(none);
           } else {
             for (const id of ids) {

@@ -1,5 +1,5 @@
 /**
- * The dock's other two faces (6.4). The Design face is dock.ts and toolRail.ts; the Traffic face is the run bar
+ * The dock's other two faces (6.4). The Design face is dock.ts; the Traffic face is the run bar
  * (runBar.ts) plus "Fail a component" here; the Review face steps through the issues the Review panel lists. This
  * module shows the face the lens asks for, arms the fail action, and drives the Review face.
  */

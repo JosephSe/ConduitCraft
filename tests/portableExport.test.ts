@@ -282,7 +282,7 @@ describe('portable export', () => {
     if (!missing.ok) assert.match(missing.error, /nodes/);
   });
 
-  it('verifies default SVG from renderDiagramSvg is portable, foreignObject-free, and contains NO var(--wl-)', () => {
+  it('verifies default SVG from renderDiagramSvg is portable, foreignObject-free, and contains NO var(--cc-)', () => {
     const doc: DiagramDocument = createBlankDocument();
     doc.title = 'Cloud Architecture';
     doc.stageWidth = 1680;
@@ -370,8 +370,8 @@ describe('portable export', () => {
     // 1. Must be completely free of foreignObject
     assert.doesNotMatch(svg, /foreignObject/i, 'Default SVG must contain NO foreignObject');
 
-    // 2. Must contain NO unresolved var(--wl- tokens
-    assert.doesNotMatch(svg, /var\(--wl-/i, 'Default SVG must contain NO CSS variables var(--wl-');
+    // 2. Must contain NO unresolved var(--cc- tokens
+    assert.doesNotMatch(svg, /var\(--cc-/i, 'Default SVG must contain NO CSS variables var(--cc-');
 
     // 3. Must be standalone standard vector XML
     assert.match(svg, /^<\?xml version="1.0" encoding="UTF-8"\?>/, 'SVG has XML declaration');
@@ -438,16 +438,16 @@ describe('portable export', () => {
     assert.equal(fallback.height, 920);
   });
 
-  it('inlines and resolves --wl-* CSS variables to concrete static values', () => {
-    assert.ok(WL_RESOLVED_TOKENS['--wl-blue']);
-    assert.ok(WL_RESOLVED_TOKENS['--wl-canvas']);
-    assert.ok(WL_RESOLVED_TOKENS['--wl-ink']);
+  it('inlines and resolves --cc-* CSS variables to concrete static values', () => {
+    assert.ok(WL_RESOLVED_TOKENS['--cc-blue']);
+    assert.ok(WL_RESOLVED_TOKENS['--cc-canvas']);
+    assert.ok(WL_RESOLVED_TOKENS['--cc-ink']);
 
     const sampleCss = `
-      .canvas { background: var(--wl-canvas); color: var(--wl-ink); }
-      .accent { stroke: var(--wl-blue); fill: var(--wl-emerald); }
-      .fallback { border: 1px solid var(--wl-border-ui, #b6c5db); }
-      .custom-fallback { color: var(--wl-unknown-token, #123456); }
+      .canvas { background: var(--cc-canvas); color: var(--cc-ink); }
+      .accent { stroke: var(--cc-blue); fill: var(--cc-emerald); }
+      .fallback { border: 1px solid var(--cc-hair-2, #b6c5db); }
+      .custom-fallback { color: var(--cc-unknown-token, #123456); }
     `;
 
     const resolved = resolveCssVariables(sampleCss, WL_RESOLVED_TOKENS);
@@ -460,11 +460,11 @@ describe('portable export', () => {
     assert.ok(resolved.includes('border: 1px solid rgba(21, 24, 28, 0.2)'));
     assert.ok(resolved.includes('color: #123456'));
 
-    // Verified no leftover --wl- variables for known keys
-    assert.doesNotMatch(resolved, /var\(--wl-canvas\)/);
-    assert.doesNotMatch(resolved, /var\(--wl-ink\)/);
-    assert.doesNotMatch(resolved, /var\(--wl-blue\)/);
-    assert.doesNotMatch(resolved, /var\(--wl-emerald\)/);
+    // Verified no leftover --cc- variables for known keys
+    assert.doesNotMatch(resolved, /var\(--cc-canvas\)/);
+    assert.doesNotMatch(resolved, /var\(--cc-ink\)/);
+    assert.doesNotMatch(resolved, /var\(--cc-blue\)/);
+    assert.doesNotMatch(resolved, /var\(--cc-emerald\)/);
   });
 
   it('strips selection, dimming, drag handles, ports, and waypoint handles from cloned stage', () => {

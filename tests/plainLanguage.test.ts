@@ -56,7 +56,7 @@ describe('plain language and the type scale', () => {
       display: '600 24px/30px',
     };
     for (const [name, value] of Object.entries(scale)) {
-      assert.match(shared, new RegExp(`--cc-font-${name}: ${value} var\\(--wl-font-sans\\);`));
+      assert.match(shared, new RegExp(`--cc-font-${name}: ${value} var\\(--cc-font-sans\\);`));
     }
     assert.match(shared, /font: var\(--cc-font-body\);\s*font-stretch: 100%;/);
   });
@@ -66,9 +66,9 @@ describe('plain language and the type scale', () => {
     assert.match(stage, /\.stage-world \{[^}]*font-stretch: 88%;/);
     assert.match(stage, /\.node-title \{[^}]*font: var\(--cc-font-title\);[^}]*font-stretch: 88%;/);
     assert.match(stage, /\.node-eyebrow \{[^}]*font: var\(--cc-font-meta\);/);
-    assert.doesNotMatch(stage, /\.node-eyebrow \{[^}]*--wl-font-mono/);
+    assert.doesNotMatch(stage, /\.node-eyebrow \{[^}]*--cc-font-mono/);
     assert.match(stage, /\.zoom-readout \{[^}]*font-variant-numeric: tabular-nums;/);
-    assert.match(stage, /\.zoom-readout \{[^}]*--wl-font-sans/);
+    assert.match(stage, /\.zoom-readout \{[^}]*--cc-font-sans/);
     const run = readFileSync(resolve('src/styles/studio/unlayered.css'), 'utf8');
     assert.match(run, /\.run-bar-step \{[^}]*font-variant-numeric: tabular-nums;/);
   });

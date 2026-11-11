@@ -60,39 +60,18 @@
     /* --cc-hair-2 is 1.5:1 on the sheet, so a text field's edge gets its own 3:1 value. */
     --cc-field-edge: #7A7F85;
 
-    --wl-canvas: var(--cc-canvas);
-    --wl-panel: var(--cc-island);
-    --wl-surface: var(--cc-sheet);
-    --wl-surface-elevated: var(--cc-well);
-    --wl-surface-code: #15181C;
-    --wl-ink: var(--cc-ink);
-    --wl-ink-secondary: var(--cc-ink-2);
-    --wl-ink-muted: var(--cc-ink-3);
-    --wl-on-ink: var(--cc-on-ink);
-    --wl-on-blue: var(--cc-on-ink);
-    --wl-border-ui: var(--cc-hair-2);
-    --wl-border-subtle: var(--cc-hair);
-    --wl-grid-dot: var(--cc-dot);
-    --wl-blue: var(--cc-blue);
-    --wl-blue-soft: color-mix(in srgb, var(--cc-blue) 14%, transparent);
-    --wl-emerald: var(--cc-emerald);
-    --wl-emerald-soft: color-mix(in srgb, var(--cc-emerald) 14%, transparent);
-    --wl-rose: var(--cc-rose);
-    --wl-rose-soft: color-mix(in srgb, var(--cc-rose) 14%, transparent);
-    --wl-amber: var(--cc-amber);
-    --wl-amber-soft: color-mix(in srgb, var(--cc-amber) 14%, transparent);
-    --wl-violet: var(--cc-violet);
-    --wl-violet-soft: color-mix(in srgb, var(--cc-violet) 14%, transparent);
-    --wl-cyan: var(--cc-cyan);
-    --wl-cyan-soft: color-mix(in srgb, var(--cc-cyan) 14%, transparent);
-    --wl-fuchsia: var(--cc-fuchsia);
-    --wl-fuchsia-soft: color-mix(in srgb, var(--cc-fuchsia) 14%, transparent);
-    --wl-scroll-thumb: var(--cc-ink-3);
-    --wl-scroll-track: var(--cc-well);
-    --wl-shadow-card:
+    --cc-surface-code: #15181C;
+    --cc-blue-soft: color-mix(in srgb, var(--cc-blue) 14%, transparent);
+    --cc-emerald-soft: color-mix(in srgb, var(--cc-emerald) 14%, transparent);
+    --cc-rose-soft: color-mix(in srgb, var(--cc-rose) 14%, transparent);
+    --cc-amber-soft: color-mix(in srgb, var(--cc-amber) 14%, transparent);
+    --cc-violet-soft: color-mix(in srgb, var(--cc-violet) 14%, transparent);
+    --cc-cyan-soft: color-mix(in srgb, var(--cc-cyan) 14%, transparent);
+    --cc-fuchsia-soft: color-mix(in srgb, var(--cc-fuchsia) 14%, transparent);
+    --cc-shadow-card:
       0 1px 2px rgba(21, 24, 28, 0.12),
       0 10px 28px -6px rgba(21, 24, 28, 0.22);
-    --wl-shadow-elevated:
+    --cc-shadow-elevated:
       0 4px 12px rgba(21, 24, 28, 0.2),
       0 24px 48px -12px rgba(21, 24, 28, 0.42);
   }
@@ -129,20 +108,20 @@
   }
 
   /* One tone variable per element (5.1). Rules below read --t, never a tone name. */
-  [data-accent="blue"] { --t: var(--wl-blue); --t-soft: var(--wl-blue-soft); }
-  [data-accent="emerald"] { --t: var(--wl-emerald); --t-soft: var(--wl-emerald-soft); }
-  [data-accent="rose"] { --t: var(--wl-rose); --t-soft: var(--wl-rose-soft); }
-  [data-accent="violet"] { --t: var(--wl-violet); --t-soft: var(--wl-violet-soft); }
-  [data-accent="amber"] { --t: var(--wl-amber); --t-soft: var(--wl-amber-soft); }
-  [data-accent="cyan"] { --t: var(--wl-cyan); --t-soft: var(--wl-cyan-soft); }
-  [data-accent="fuchsia"] { --t: var(--wl-fuchsia); --t-soft: var(--wl-fuchsia-soft); }
-  [data-tone="blue"] { --t: var(--wl-blue); --t-soft: var(--wl-blue-soft); }
-  [data-tone="emerald"] { --t: var(--wl-emerald); --t-soft: var(--wl-emerald-soft); }
-  [data-tone="rose"] { --t: var(--wl-rose); --t-soft: var(--wl-rose-soft); }
-  [data-tone="violet"] { --t: var(--wl-violet); --t-soft: var(--wl-violet-soft); }
-  [data-tone="amber"] { --t: var(--wl-amber); --t-soft: var(--wl-amber-soft); }
-  [data-tone="cyan"] { --t: var(--wl-cyan); --t-soft: var(--wl-cyan-soft); }
-  [data-tone="fuchsia"] { --t: var(--wl-fuchsia); --t-soft: var(--wl-fuchsia-soft); }
+  [data-accent="blue"] { --t: var(--cc-blue); --t-soft: var(--cc-blue-soft); }
+  [data-accent="emerald"] { --t: var(--cc-emerald); --t-soft: var(--cc-emerald-soft); }
+  [data-accent="rose"] { --t: var(--cc-rose); --t-soft: var(--cc-rose-soft); }
+  [data-accent="violet"] { --t: var(--cc-violet); --t-soft: var(--cc-violet-soft); }
+  [data-accent="amber"] { --t: var(--cc-amber); --t-soft: var(--cc-amber-soft); }
+  [data-accent="cyan"] { --t: var(--cc-cyan); --t-soft: var(--cc-cyan-soft); }
+  [data-accent="fuchsia"] { --t: var(--cc-fuchsia); --t-soft: var(--cc-fuchsia-soft); }
+  [data-tone="blue"] { --t: var(--cc-blue); --t-soft: var(--cc-blue-soft); }
+  [data-tone="emerald"] { --t: var(--cc-emerald); --t-soft: var(--cc-emerald-soft); }
+  [data-tone="rose"] { --t: var(--cc-rose); --t-soft: var(--cc-rose-soft); }
+  [data-tone="violet"] { --t: var(--cc-violet); --t-soft: var(--cc-violet-soft); }
+  [data-tone="amber"] { --t: var(--cc-amber); --t-soft: var(--cc-amber-soft); }
+  [data-tone="cyan"] { --t: var(--cc-cyan); --t-soft: var(--cc-cyan-soft); }
+  [data-tone="fuchsia"] { --t: var(--cc-fuchsia); --t-soft: var(--cc-fuchsia-soft); }
 }
 
 
@@ -180,13 +159,13 @@
     --cc-space-8: 32px;
 
     /* 5.2. Chrome stays at 100% width. The sheet sets 88% on .stage-world. */
-    --cc-font-meta: 400 11px/14px var(--wl-font-sans);
-    --cc-font-small: 400 12px/16px var(--wl-font-sans);
-    --cc-font-body: 400 13px/20px var(--wl-font-sans);
-    --cc-font-control: 500 13px/20px var(--wl-font-sans);
-    --cc-font-title: 600 15px/19px var(--wl-font-sans);
-    --cc-font-panel: 600 16px/20px var(--wl-font-sans);
-    --cc-font-display: 600 24px/30px var(--wl-font-sans);
+    --cc-font-meta: 400 11px/14px var(--cc-font-sans);
+    --cc-font-small: 400 12px/16px var(--cc-font-sans);
+    --cc-font-body: 400 13px/20px var(--cc-font-sans);
+    --cc-font-control: 500 13px/20px var(--cc-font-sans);
+    --cc-font-title: 600 15px/19px var(--cc-font-sans);
+    --cc-font-panel: 600 16px/20px var(--cc-font-sans);
+    --cc-font-display: 600 24px/30px var(--cc-font-sans);
 
     --cc-ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
     --cc-spring: linear(0, 0.36 9%, 0.89 22%, 1.08 32%, 1.02 46%, 0.99 60%, 1);
@@ -208,8 +187,8 @@
     font-stretch: 100%;
     /* The bold fallback is a scaled regular face. Faux bold would add its own width. */
     font-synthesis-weight: none;
-    background-color: var(--wl-canvas);
-    color: var(--wl-ink);
+    background-color: var(--cc-canvas);
+    color: var(--cc-ink);
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
     grid-template-columns: minmax(0, 1fr);

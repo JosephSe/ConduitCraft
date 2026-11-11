@@ -30,10 +30,10 @@ body[data-presenting="true"] .hud-search-card {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  background: var(--wl-panel);
+  background: var(--cc-island);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--wl-border);
+  border: 1px solid var(--cc-border);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
   border-radius: 999px;
   padding: 0.35rem 0.6rem;
@@ -50,10 +50,10 @@ body[data-presenting="true"] .hud-search-card {
   align-items: center;
   justify-content: center;
   padding-inline: 0.6rem;
-  font-family: var(--wl-font-mono, monospace);
+  font-family: var(--cc-font-mono, monospace);
   font-size: 0.775rem;
   font-weight: 600;
-  color: var(--wl-ink);
+  color: var(--cc-ink);
   min-width: 8rem;
   white-space: nowrap;
   letter-spacing: 0.02em;
@@ -62,13 +62,13 @@ body[data-presenting="true"] .hud-search-card {
 .presentation-bar-divider {
   width: 1px;
   height: 1.25rem;
-  background: var(--wl-border-subtle);
+  background: var(--cc-hair);
   margin-inline: 0.15rem;
 }
 
 .btn-pres-exit {
-  background: var(--wl-surface-elevated);
-  color: var(--wl-ink);
+  background: var(--cc-well);
+  color: var(--cc-ink);
   border-radius: 999px;
   padding-inline: 0.75rem;
   font-weight: 600;
@@ -79,8 +79,8 @@ body[data-presenting="true"] .hud-search-card {
 }
 
 .btn-pres-exit:hover {
-  background: var(--wl-rose-soft);
-  color: var(--wl-rose);
+  background: var(--cc-rose-soft);
+  color: var(--cc-rose);
 }
 
 /* Presentation Tour Caption Card */
@@ -91,10 +91,10 @@ body[data-presenting="true"] .hud-search-card {
   transform: translateX(-50%);
   max-width: min(46rem, calc(100vw - 3rem));
   width: 100%;
-  background: var(--wl-panel);
+  background: var(--cc-island);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--wl-border);
+  border: 1px solid var(--cc-border);
   box-shadow: 0 16px 44px rgba(0, 0, 0, 0.38);
   border-radius: 1.125rem;
   padding: 1.15rem 1.4rem;
@@ -123,43 +123,43 @@ body[data-presenting="true"] .hud-search-card {
 }
 
 .presentation-caption-badge {
-  font-family: var(--wl-font-mono, monospace);
+  font-family: var(--cc-font-mono, monospace);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   padding-inline: 0.45rem;
   padding-block: 0.15rem;
   border-radius: 999px;
-  background: var(--badge-accent, var(--wl-emerald));
+  background: var(--badge-accent, var(--cc-emerald));
   color: #ffffff;
 }
 
 .presentation-caption-step {
-  font-family: var(--wl-font-mono, monospace);
+  font-family: var(--cc-font-mono, monospace);
   font-size: 0.75rem;
-  color: var(--wl-ink-secondary);
+  color: var(--cc-ink-2);
 }
 
 .presentation-caption-title {
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--wl-ink);
+  color: var(--cc-ink);
   line-height: 1.2;
 }
 
 .presentation-caption-subtitle {
   font-size: 0.825rem;
   font-weight: 500;
-  color: var(--wl-ink-secondary);
+  color: var(--cc-ink-2);
 }
 
 .presentation-caption-body {
   font-size: 0.8875rem;
   line-height: 1.55;
-  color: var(--wl-ink);
+  color: var(--cc-ink);
   margin-block-start: 0.25rem;
-  border-block-start: 1px solid var(--wl-border-subtle);
+  border-block-start: 1px solid var(--cc-hair);
   padding-block-start: 0.5rem;
 }
 

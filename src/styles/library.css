@@ -25,24 +25,24 @@
   gap: 0.5rem 0.75rem;
   align-items: center;
   padding: 0.5rem;
-  border: 1px solid var(--wl-border-subtle);
+  border: 1px solid var(--cc-hair);
   border-radius: 0.5rem;
-  background: var(--wl-surface);
+  background: var(--cc-sheet);
 }
 .library-row[aria-current='true'] {
-  border-color: var(--wl-border-ui);
-  background: var(--wl-surface-elevated);
+  border-color: var(--cc-hair-2);
+  background: var(--cc-well);
 }
 .library-thumb {
   inline-size: 5rem;
   block-size: 3.125rem;
   object-fit: contain;
   border-radius: 0.25rem;
-  background: var(--wl-canvas);
+  background: var(--cc-canvas);
 }
 .library-thumb-empty {
   display: block;
-  border: 1px dashed var(--wl-border-subtle);
+  border: 1px dashed var(--cc-hair);
 }
 .library-meta {
   display: flex;
@@ -55,7 +55,7 @@
 }
 .library-when {
   font-size: 0.8rem;
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-3);
 }
 .library-rename-input {
   inline-size: 100%;
@@ -69,7 +69,7 @@
   gap: 0.375rem;
 }
 .library-empty {
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-3);
   margin: 0;
 }
 .library-undo {

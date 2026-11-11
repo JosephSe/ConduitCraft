@@ -10,17 +10,17 @@ describe('shared export stylesheet and tone metadata', () => {
     const html = generateStandaloneHtml(createBlankDocument());
     assert.equal(html.split('--cc-blue: #1D4ED8').length - 1, 1);
     assert.equal(html.split('box-sizing: border-box').length - 1, 1);
-    assert.match(html, /--wl-panel-light: rgba\(255, 255, 255, 0\.88\)/);
+    assert.match(html, /--cc-panel-light: rgba\(255, 255, 255, 0\.88\)/);
     assert.equal(html.includes('rgba(255, 255, 255, 0.9)'), false);
     assert.match(html, /grid-template-columns: minmax\(0, 1fr\) 24rem/);
     assert.equal(html.includes('16.5rem minmax(0, 1fr) 22.5rem'), false);
     assert.match(html, /--stage-w: 1680px; --stage-h: 920px/);
     assert.match(html, /width: var\(--stage-w\); height: var\(--stage-h\)/);
     assert.match(html, /id="arrow-blue"/);
-    assert.match(html, /fill="var\(--wl-blue\)"/);
+    assert.match(html, /fill="var\(--cc-blue\)"/);
     assert.match(html, /window\.conduitBindColorScheme/);
     assert.match(html, /e\.pointerType !== 'touch' && e\.pointerType !== 'pen'/);
-    assert.match(html, /"blue":\["var\(--wl-blue\)","var\(--wl-blue-soft\)"\]/);
+    assert.match(html, /"blue":\["var\(--cc-blue\)","var\(--cc-blue-soft\)"\]/);
     assert.equal(html.includes('${'), false);
   });
 
