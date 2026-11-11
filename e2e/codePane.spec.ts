@@ -50,7 +50,7 @@ test('Cmd/Ctrl+/ shows the Blueprint file beside the canvas and hides it again',
   await expect(pane(page)).toBeVisible();
 });
 
-test('typing updates the canvas after a pause, as one undo step', async ({ page }) => {
+test('typing updates the canvas after a pause, as one undo step', { tag: '@quick' }, async ({ page }) => {
   await openSmall(page);
   const text = await area(page).inputValue();
   await area(page).fill(retitle(text, 'Renamed Architecture'));

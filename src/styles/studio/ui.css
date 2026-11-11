@@ -45,6 +45,30 @@
     filter: brightness(1.07);
   }
 
+  /* On an island a button is not a box in a box (6.2, 6.4): it is text or an icon on the island, with a well on hover. Run (.solid) stays filled. */
+  [data-island] .btn:not(.solid),
+  .slot .btn:not(.solid) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-island] .btn:not(.solid):hover:not(:disabled),
+  .slot .btn:not(.solid):hover:not(:disabled) {
+    background: var(--cc-well);
+  }
+  [data-island] .btn:not(.solid)[aria-pressed="true"],
+  .slot .btn:not(.solid)[aria-pressed="true"],
+  [data-island] .btn:not(.solid)[aria-expanded="true"],
+  .slot .btn:not(.solid)[aria-expanded="true"] {
+    background: var(--cc-well);
+    color: var(--cc-ink);
+  }
+  /* The first-run card's second and third actions keep their outline: they sit beside a filled button and must still read as buttons. */
+  .first-run .btn:not(.solid) {
+    border-color: var(--cc-hair-2);
+    background: var(--cc-sheet);
+  }
+
   .btn-compact {
     min-block-size: 1.9rem;
     padding-inline: 0.55rem;

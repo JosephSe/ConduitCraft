@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openLumenRelay, showInspectorTab } from './helpers';
 
-test('a component takes an owner, tags and links, and the legend renames a colour', async ({ page }) => {
+test('a component takes an owner, tags and links, and the legend renames a colour', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

@@ -12,7 +12,7 @@ async function open(page: Page, query = '') {
 const workspace = (page: Page) => page.locator('#workspace');
 const clearSelection = (page: Page) => page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
 
-test('the inspector opens with a selection and folds away without one', async ({ page }) => {
+test('the inspector opens with a selection and folds away without one', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true'); // showcase opens selected
   await clearSelection(page);

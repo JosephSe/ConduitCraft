@@ -97,7 +97,7 @@ const currentTool = (page: Page) => page.locator('#workspace').getAttribute('dat
 const enterConnectMode = (page: Page) =>
   page.locator('[data-rail-tool="connect"]').first().evaluate((el: HTMLElement) => el.click());
 
-test('dragging between two nodes in Connect mode creates a wire (control)', async ({ page }) => {
+test('dragging between two nodes in Connect mode creates a wire (control)', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   const [a, b] = await unconnectedPair(page);
   const from = (await clickableCentre(page, a))!;
@@ -244,7 +244,7 @@ async function emptyCanvasPoint(page: Page, from: { x: number; y: number }, minG
 
 const nodeCount = (page: Page) => page.locator('.arch-node').count();
 
-test('dropping a wire on empty canvas creates a connected component with a kind strip, and typing names it', async ({ page }) => {
+test('dropping a wire on empty canvas creates a connected component with a kind strip, and typing names it', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   const [a] = await unconnectedPair(page);
   const from = (await clickableCentre(page, a))!;

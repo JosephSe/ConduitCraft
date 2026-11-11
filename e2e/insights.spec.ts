@@ -42,7 +42,7 @@ test('Review lens lists insights, selects the target on click, and mutes a rule'
   await expect(page.locator('.redline-mark')).toHaveCount(0);
 });
 
-test('the dock shows the Review face: step through issues, fix one, ignore a rule', async ({ page }) => {
+test('the dock shows the Review face: step through issues, fix one, ignore a rule', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

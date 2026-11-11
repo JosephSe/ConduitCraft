@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { runPaletteCommand } from './helpers';
 
-test('Fit with the properties panel open keeps the whole showcase inside the viewport', async ({ page }) => {
+test('Fit with the properties panel open keeps the whole showcase inside the viewport', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.addInitScript(() => sessionStorage.setItem('conduitcraft-home-shown', '1'));
   await page.goto('/');

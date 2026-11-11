@@ -86,6 +86,8 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
+While you work, `pnpm test:e2e:quick` runs one core test per feature (the ones tagged `@quick`) in under a minute. Run the full suite before opening a pull request.
+
 ## License
 
 Released under the [MIT License](./LICENSE).

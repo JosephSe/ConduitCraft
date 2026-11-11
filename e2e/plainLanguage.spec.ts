@@ -1,7 +1,7 @@
 import { clearSelection, openLumenRelay } from './helpers';
 import { expect, test } from '@playwright/test';
 
-test('a component form has a header and three tabs, and each field is in exactly one', async ({ page }) => {
+test('a component form has a header and three tabs, and each field is in exactly one', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

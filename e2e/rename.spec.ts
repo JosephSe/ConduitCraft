@@ -50,7 +50,7 @@ async function dblclickNode(page: Page, id: string): Promise<void> {
   await nodeTitle(page, id).dblclick();
 }
 
-test('double-clicking a component edits its name in place', async ({ page }) => {
+test('double-clicking a component edits its name in place', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   const { id, title } = await renameableNode(page);
   await dblclickNode(page, id);

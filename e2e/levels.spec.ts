@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openExportDialog, openLumenRelay, runPaletteCommand } from './helpers';
 
-test('a component opens as a level, edits stay inside it, and undo returns to it', async ({ page }) => {
+test('a component opens as a level, edits stay inside it, and undo returns to it', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);

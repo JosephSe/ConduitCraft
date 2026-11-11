@@ -157,7 +157,7 @@ test('the find box is a popover: closed until Cmd/Ctrl+F, closed again by Escape
   await expect(page.locator('#hud-search-card')).toBeHidden();
 });
 
-test('the top bar is three slots and the bottom has one hint line', async ({ page }) => {
+test('the top bar is three slots and the bottom has one hint line', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -205,7 +205,7 @@ test('the zoom readout opens the view options above SE: minimap, Colour by and t
   await expect(popover).toBeHidden();
 });
 
-test('only one corner popover is open at a time', async ({ page }) => {
+test('only one corner popover is open at a time', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -214,4 +214,37 @@ test('only one corner popover is open at a time', async ({ page }) => {
   await page.keyboard.press('ControlOrMeta+f');
   await expect(page.locator('#hud-search-card')).toBeVisible();
   await expect(page.locator('#view-popover')).toBeHidden();
+});
+
+test('island buttons are not boxed, and Run is the one filled button', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#stage-world').waitFor({ state: 'attached' });
+  const style = (id: string) =>
+    page.locator(id).evaluate((el) => {
+      const c = getComputedStyle(el);
+      return { border: c.borderTopColor, fill: c.backgroundColor };
+    });
+  const clear = /rgba\(0, 0, 0, 0\)|transparent/;
+  for (const id of ['#btn-share', '#btn-open-palette']) {
+    const s = await style(id);
+    expect(s.border, id).toMatch(clear);
+    expect(s.fill, id).toMatch(clear);
+  }
+  expect((await style('#btn-run')).fill).not.toMatch(clear);
+});
+
+test('the hint line speaks in plain sentences, per lens and per tool', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#stage-world').waitFor({ state: 'attached' });
+  const hint = page.locator('#hud-status-tip');
+  await page.keyboard.press('w');
+  await expect(hint).toHaveText('Drag from one component to another to connect them.');
+  await page.keyboard.press('2');
+  await expect(hint).toHaveText('Select a component and press X to fail it.');
+  await page.keyboard.press('3');
+  await expect(hint).toHaveText('Click an issue to jump to it.');
+  await page.keyboard.press('1');
+  await expect(hint).toHaveText('Drag from one component to another to connect them.');
+  await page.keyboard.press('v');
+  await expect(hint).toHaveText('Drag a shape onto the sheet, or drag from a port to connect.');
 });

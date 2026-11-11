@@ -46,7 +46,7 @@ test('the Frame tool is on the rail with F, and in the command palette', async (
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
 });
 
-test('dragging with the Frame tool draws a frame around components, selects it and goes back to Select', async ({ page }) => {
+test('dragging with the Frame tool draws a frame around components, selects it and goes back to Select', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await frameAroundFirstNode(page);
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'select');
