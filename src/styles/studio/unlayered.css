@@ -2011,35 +2011,6 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-route { 40% { opacity: 0.9; } }
 @media (prefers-reduced-motion: reduce) { .arch-node[data-chaos] .node-select-hit, .arch-node.is-restored .node-select-hit, .conduit-group.is-route-lit .conduit-glow { animation: none; } }
 
-/* Y1 (8.8): a diagram style is a token set on the sheet, apart from the app theme. */
-#workspace[data-style] :is(.canvas-shell, #stage-world) {
-  --cc-shadow-card: none; --cc-shadow-elevated: none; --cc-shadow-1: none;
-}
-#workspace[data-style="blueprint"] :is(.canvas-shell, #stage-world) {
-  --cc-canvas: #0b3a6b; --cc-canvas-run: #082c52; --cc-sheet: #0b3a6b; --cc-ink: #f4f8ff; --cc-ink-2: #d3e2f6; --cc-ink-3: #b3cbea; --cc-on-ink: #0b3a6b;
-  --cc-hair: rgba(255, 255, 255, 0.3); --cc-hair-2: rgba(255, 255, 255, 0.65); --cc-dot: rgba(255, 255, 255, 0.18);
-}
-#workspace[data-style="blueprint"] .canvas-shell { background-image: linear-gradient(var(--cc-dot) 1px, transparent 1px), linear-gradient(90deg, var(--cc-dot) 1px, transparent 1px); background-size: 24px 24px; }
-#workspace[data-style="blueprint"] #stage-world .arch-node .node-select-hit { background: transparent; border-color: var(--cc-ink); }
-/* Wires are told apart by dash pattern, not colour. */
-#workspace[data-style="blueprint"] #stage-world .conduit-group { --t: #f4f8ff; }
-#workspace[data-style="blueprint"] #stage-world .conduit-group[data-tone="emerald"] .conduit-rail { stroke-dasharray: 10 5; }
-#workspace[data-style="blueprint"] #stage-world .conduit-group[data-tone="rose"] .conduit-rail { stroke-dasharray: 2 5; }
-#workspace[data-style="blueprint"] #stage-world .conduit-group[data-tone="violet"] .conduit-rail { stroke-dasharray: 12 4 2 4; }
-#workspace[data-style="blueprint"] #stage-world .conduit-group[data-tone="amber"] .conduit-rail { stroke-dasharray: 18 6; }
-#workspace[data-style="blueprint"] #stage-world .conduit-group[data-tone="cyan"] .conduit-rail { stroke-dasharray: 6 3 1 3 1 3; }
-#workspace[data-style="blueprint"] #stage-world .conduit-group[data-tone="fuchsia"] .conduit-rail { stroke-dasharray: 3 3; }
-#workspace[data-style="print"] :is(.canvas-shell, #stage-world) {
-  --cc-canvas: #fff; --cc-canvas-run: #fff; --cc-sheet: #fff; --cc-ink: #000; --cc-ink-2: #222; --cc-ink-3: #444; --cc-on-ink: #fff;
-  --cc-hair: rgba(0, 0, 0, 0.45); --cc-hair-2: rgba(0, 0, 0, 0.8); --cc-dot: transparent;
-}
-#workspace[data-style="print"] #stage-world .node-sub { display: block; }
-#workspace[data-style="sketch"] :is(.canvas-shell, #stage-world) {
-  --cc-canvas: #fbf8f1; --cc-canvas-run: #f1ecde; --cc-sheet: #fffdf8; --cc-ink: #2b2a28; --cc-ink-2: #4a4843; --cc-ink-3: #625f58; --cc-on-ink: #fffdf8;
-  --cc-hair: rgba(43, 42, 40, 0.3); --cc-hair-2: rgba(43, 42, 40, 0.7); --cc-dot: transparent;
-}
-/* Every stroke goes through one fixed-seed displacement filter (#cc-rough), so it wobbles the same way every time. */
-#workspace[data-style="sketch"] #stage-world :is(.node-select-hit, .node-shape-plate, .conduit-rail, .conduit-glow) { filter: url(#cc-rough); }
 
 /* M3 (9.2): a dropped component scales from 0.94 on the spring; a connected wire rings the target's ports once; a deleted component fades and scales to 0.96 in 120 ms. */
 .arch-node.is-entering { animation: cc-drop 260ms var(--cc-spring) both; }

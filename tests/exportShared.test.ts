@@ -32,4 +32,16 @@ describe('shared export stylesheet and tone metadata', () => {
     assert.match(boot, /blueprint-studio-color-scheme/);
     assert.match(boot, /window\.conduitBindColorScheme/);
   });
+
+  it('the standalone HTML carries the diagram style (Y1, Y2)', () => {
+    const doc = createBlankDocument();
+    assert.doesNotMatch(generateStandaloneHtml(doc), /data-style=/);
+    doc.style = 'blueprint';
+    const blueprint = generateStandaloneHtml(doc);
+    assert.match(blueprint, /<html lang="en" data-style="blueprint">/);
+    assert.match(blueprint, /\[data-style="blueprint"\]/);
+    assert.doesNotMatch(blueprint, /id="cc-rough"/);
+    doc.style = 'sketch';
+    assert.match(generateStandaloneHtml(doc), /id="cc-rough"/);
+  });
 });

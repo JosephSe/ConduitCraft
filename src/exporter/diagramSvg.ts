@@ -61,7 +61,7 @@ const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
 };
 
 /** Sketch (Y2): a fixed-seed displacement filter wobbles every stroke the same way each time. */
-const ROUGH_FILTER = '<filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>';
+export const ROUGH_FILTER = '<filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>';
 
 /** Blueprint (Y1) has one ink, so wires are told apart by dash pattern, the same patterns the canvas uses. */
 const BLUEPRINT_DASH: Partial<Record<StreamTone, string>> = {

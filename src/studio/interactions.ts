@@ -918,6 +918,7 @@ export function deleteSelected(): void {
     const zoneIds = new Set(unlockedZoneIds);
     const notesIds = new Set(unlockedNoteIds);
     const edgeIds = new Set(unlockedEdgeIds);
+    const leaving = copyLeavingNodes(unlockedNodeIds);
     app.doc.nodes = app.doc.nodes.filter((n) => !idSet.has(n.id));
     app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to) && !edgeIds.has(e.id));
     if (zoneIds.size > 0) app.doc.zones = app.doc.zones.filter((zone) => !zoneIds.has(zone.id));
@@ -925,6 +926,7 @@ export function deleteSelected(): void {
     dropNodesFromSimulations(idSet);
     setSelection({ type: 'none' });
     renderAll(true);
+    showLeaving(leaving);
     notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
     return;
   }
