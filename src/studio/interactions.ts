@@ -718,6 +718,30 @@ export function bindAnimateWiresPreference(): void {
   });
 }
 
+/** "Always show wire labels" (8.3): off by default; zoomed out, labels wait for hover or selection. */
+export function bindAlwaysWireLabelsPreference(): void {
+  const box = document.getElementById('chk-always-wire-labels') as HTMLInputElement | null;
+  if (!box) return;
+  const apply = () => {
+    if (box.checked) document.body.setAttribute('data-wire-labels', 'always');
+    else document.body.removeAttribute('data-wire-labels');
+  };
+  try {
+    box.checked = localStorage.getItem('cc-always-wire-labels') === 'true';
+  } catch {
+    // Storage unavailable: the preference lasts until the page reloads.
+  }
+  apply();
+  box.addEventListener('change', () => {
+    apply();
+    try {
+      localStorage.setItem('cc-always-wire-labels', String(box.checked));
+    } catch {
+      // Ignore storage errors.
+    }
+  });
+}
+
 /** Keeps every tag filter's options in step with the tags in the document. */
 function syncTagFilter(): void {
   const tags = allTags(app.doc);
