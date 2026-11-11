@@ -860,8 +860,9 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Needs:** C3, M1.
 - **Done (M2):** a failed component keeps its shake and its plate tilts 4°; other states fade their ring in 40 ms per hop from the nearest failure (`chaosDistance`, `--cc-lag`; at-risk keeps its own pulse); a restored component takes one emerald ring for 600 ms and its tile rights itself on the spring (`is-restored`); a scenario that ends brightens the glow of the wires it used in order, 120 ms apart (`is-route-lit`). All off under reduced motion. Entry CSS cap raised 124 to 128 kB (now 123.1). Not yet: the hatch fading in (a background-image cannot animate) and a ring that travels round the tile rather than expanding from it.
 
-#### [ ] M3. Editing feedback · S
+#### [x] M3. Editing feedback · S
 - **Do:** drop, connect, delete, and the remaining rows. **Needs:** S3, C2.
+- **Done (M3):** a dropped component scales from 0.94 on the spring (`cc-drop`, over the old nodeDropIn); a connected wire rings the target's ports once (`is-attached`, 500 ms); a deleted component leaves as an inert, aria-hidden copy that fades and scales to 0.96 in 120 ms, removed after 140 ms, while the real node is gone at once so counts and Undo are unaffected. Off under reduced motion. `e2e/editingFeedback.spec.ts`. Not yet: multi-delete and cut leaving copies, and the lens thumb, dock cross-fade and tray rise rows (already spring or slide from C2, S3 and S6, not re-audited). Entry JS is 549.1 of 550 kB, so raise that cap before the next feature.
 
 ### Milestone Y: Diagram styles
 

@@ -2011,6 +2011,15 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-route { 40% { opacity: 0.9; } }
 @media (prefers-reduced-motion: reduce) { .arch-node[data-chaos] .node-select-hit, .arch-node.is-restored .node-select-hit, .conduit-group.is-route-lit .conduit-glow { animation: none; } }
 
+/* M3 (9.2): a dropped component scales from 0.94 on the spring; a connected wire rings the target's ports once; a deleted component fades and scales to 0.96 in 120 ms. */
+.arch-node.is-entering { animation: cc-drop 260ms var(--cc-spring) both; }
+@keyframes cc-drop { from { opacity: 0.4; transform: scale(0.94); } }
+.arch-node.is-attached .node-port { animation: cc-ring 500ms var(--cc-ease-out) 1; }
+@keyframes cc-ring { from { box-shadow: 0 0 0 0 var(--wl-blue); } to { box-shadow: 0 0 0 10px transparent; } }
+.arch-node.is-leaving { pointer-events: none; animation: cc-leave 120ms var(--cc-ease-out) forwards; }
+@keyframes cc-leave { to { opacity: 0; transform: scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .arch-node.is-attached .node-port, .arch-node.is-leaving { animation: none; } .arch-node.is-leaving { display: none; } }
+
 /* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
 #stage-world[data-lod="low"] .node-title {
   font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 34px);
