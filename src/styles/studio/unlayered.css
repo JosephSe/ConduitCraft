@@ -2036,6 +2036,12 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
   --cc-hair: rgba(0, 0, 0, 0.45); --cc-hair-2: rgba(0, 0, 0, 0.8); --cc-dot: transparent;
 }
 #workspace[data-style="print"] #stage-world .node-sub { display: block; }
+#workspace[data-style="sketch"] :is(.canvas-shell, #stage-world) {
+  --cc-canvas: #fbf8f1; --cc-canvas-run: #f1ecde; --cc-sheet: #fffdf8; --cc-ink: #2b2a28; --cc-ink-2: #4a4843; --cc-ink-3: #625f58; --cc-on-ink: #fffdf8;
+  --cc-hair: rgba(43, 42, 40, 0.3); --cc-hair-2: rgba(43, 42, 40, 0.7); --cc-dot: transparent;
+}
+/* Every stroke goes through one fixed-seed displacement filter (#cc-rough), so it wobbles the same way every time. */
+#workspace[data-style="sketch"] #stage-world :is(.node-select-hit, .node-shape-plate, .conduit-rail, .conduit-glow) { filter: url(#cc-rough); }
 
 /* M3 (9.2): a dropped component scales from 0.94 on the spring; a connected wire rings the target's ports once; a deleted component fades and scales to 0.96 in 120 ms. */
 .arch-node.is-entering { animation: cc-drop 260ms var(--cc-spring) both; }

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="/src/styles/studio.css">
 </head>
 <body>
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter></svg>
   <!-- First run (new visitors only): first in the tab order so its three actions are within reach at once. -->
   <section class="first-run" id="first-run" aria-labelledby="first-run-line" hidden>
     <p class="first-run-line" id="first-run-line">Watch a request travel through a real system.</p>
@@ -322,6 +323,7 @@
             <option value="">Studio</option>
             <option value="blueprint">Blueprint</option>
             <option value="print">Print</option>
+            <option value="sketch">Sketch</option>
           </select>
           <label class="field-label" for="view-tag-filter">Show only tag</label>
           <select class="field js-tag-filter" id="view-tag-filter">

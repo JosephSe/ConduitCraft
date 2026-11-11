@@ -43,6 +43,10 @@ const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
     canvas: '#ffffff', surface: '#ffffff', elevated: '#f3f3f3', ink: '#000000', secondary: '#222222', muted: '#444444', border: '#555555', subtle: '#dddddd',
     tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
   },
+  sketch: {
+    canvas: '#fbf8f1', surface: '#fffdf8', elevated: '#f3efe4', ink: '#2b2a28', secondary: '#4a4843', muted: '#625f58', border: '#3d3b37', subtle: '#d9d4c6',
+    tone: { blue: '#2f5fb3', emerald: '#2c7a58', rose: '#b23a4a', violet: '#6a4aa8', amber: '#a8651a', cyan: '#237f96', fuchsia: '#a4338f' },
+  },
   dark: {
     canvas: '#1D1F21',
     surface: '#2A2C2F',
@@ -55,6 +59,9 @@ const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
     tone: { blue: '#60a5fa', emerald: '#34d399', rose: '#fb7185', violet: '#a78bfa', amber: '#fbbf24', cyan: '#22d3ee', fuchsia: '#f0abfc' },
   },
 };
+
+/** Sketch (Y2): a fixed-seed displacement filter wobbles every stroke the same way each time. */
+const ROUGH_FILTER = '<filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>';
 
 const SANS = 'ui-sans-serif, system-ui, sans-serif';
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -465,19 +472,21 @@ export function renderDiagramSvg(
 
   const legend = legendMarkup(doc, height, pal);
 
+  const rough = (body: string): string => (doc.style === 'sketch' ? `<g filter="url(#cc-rough)">${body}</g>` : body);
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-stretch="88%" role="img" aria-labelledby="diagram-title diagram-desc">
   <title id="diagram-title">${escapeXml(doc.title.trim() || 'Untitled diagram')}</title>
   <desc id="diagram-desc">${escapeXml(describeDiagram(doc))}</desc>
-  <defs>${markers}</defs>
+  <defs>${markers}${doc.style === 'sketch' ? ROUGH_FILTER : ''}</defs>
   <rect width="100%" height="100%" fill="${pal.canvas}"/>
-  ${frames}
+  ${rough(`${frames}
   ${zones}
   ${notes}
   ${wires}
-  ${nodes}
+  ${nodes}`)}
   ${legend}
-  ${block ? titleBlockSvg(block, width, height, doc.style === 'blueprint' ? 'dark' : doc.style === 'print' ? 'light' : scheme) : ''}
+  ${block ? titleBlockSvg(block, width, height, doc.style === 'blueprint' ? 'dark' : doc.style === 'print' || doc.style === 'sketch' ? 'light' : scheme) : ''}
 </svg>`;
 }
 

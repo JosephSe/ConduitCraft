@@ -79,6 +79,20 @@ describe('schema versioning (T-03)', () => {
     assert.match(blueprint, /#0b3a6b/);
   });
 
+  it('Sketch round-trips and wobbles every stroke through one fixed-seed filter (Y2)', () => {
+    const doc = createBlankDocument();
+    doc.style = 'sketch';
+    const back = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(back.ok && back.doc.style === 'sketch');
+    assert.equal(importMermaidOrBlueprint(serializeToBlueprintMarkdown(doc)).doc?.style, 'sketch');
+    const svg = renderDiagramSvg(doc);
+    assert.match(svg, /<filter id="cc-rough"[^>]*>.*seed="7"/);
+    assert.match(svg, /filter="url\(#cc-rough\)"/);
+    assert.equal(svg, renderDiagramSvg(doc));
+    doc.style = undefined;
+    assert.doesNotMatch(renderDiagramSvg(doc), /cc-rough/);
+  });
+
   it('opens a version-11 file unchanged and stamps 12 (queues, K1)', () => {
     assert.equal(CURRENT_SCHEMA_VERSION >= 12, true);
     const doc = createBlankDocument();

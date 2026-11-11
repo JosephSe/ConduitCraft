@@ -870,8 +870,9 @@ Every item updates `diagramSvg.ts`, `standaloneHtml.ts` and the shared styles in
 - **Do:** 8.8, schema v13 with migration and round-trip tests, the picker in the view popover. **Needs:** C6.
 - **Done (Y1):** `style?: 'blueprint' | 'print'` on the document, schema v13 (no-op migration), kept through JSON, the Blueprint file's frontmatter and levels; unknown values are dropped. A Style select in the view popover (Studio, Blueprint, Print) sets `data-style` on the workspace, which re-resolves the `--wl-*` aliases: Blueprint is a navy sheet with a line grid, outline-only nodes and wires told apart by dash pattern; Print is white and black with sub-labels shown. The vector SVG export has matching palettes. `e2e/diagramStyle.spec.ts`, two schema tests. Caps raised: entry JS 560 KiB. Not yet: Blueprint dash patterns in the vector export (one ink), the standalone HTML and picture exports ignore the style, no `exportVisual` baseline for the new styles, Print does not force labels on, share-link round trip not separately tested. Sketch is Y2.
 
-#### [ ] Y2. Sketch · M
+#### [x] Y2. Sketch · M
 - **Needs:** Y1, C5 (the roughener).
+- **Done (Y2):** `'sketch'` joins the style (stored the same way, an unknown value is still dropped). A warm paper sheet with graphite ink, picked from the Style select. Strokes wobble through one fixed-seed SVG displacement filter (`#cc-rough`, seed 7) rather than `core/roughen.ts`: it is cheap, identical on every render, and applies to nodes, wires and glow on the canvas and to the whole drawing in the vector export. Not yet: the roughener's hand-drawn paths for rectangles and wires, the standalone HTML and picture exports, and an `exportVisual` baseline. Entry JS 550.9 of 560 kB, CSS 126.2 of 128 kB.
 
 ### Milestone R: Release
 
