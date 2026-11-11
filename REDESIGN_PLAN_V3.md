@@ -809,7 +809,7 @@ All of V1 section 10 applies. What this redesign can break: zero axe violations 
 #### [x] S10. Narrow and touch · M
 - **Do:** 6.6.
 - **Done:** views 1 to 6 checked at 375, 768 and 1024 px; `e2e/touch.spec.ts` rewritten and passing; `a11y.spec.ts` passes. **Needs:** S1 to S9.
-- **S10 result.** Below 900 px the inspector is a bottom sheet (60% high, rounded top). The existing narrow top bar, dock and tray rules already matched the rest of 6.6; `touch.spec.ts` and `a11y.spec.ts` pass. Below 56 rem SW shows only the open page's tab (tap it for the next page) and SE shows only the zoom readout; Fit moves into the view popover (`e2e/touch.spec.ts`). Not done: a 375 px pass of every view.
+- **S10 result.** Below 900 px the inspector is a bottom sheet (60% high, rounded top). The existing narrow top bar, dock and tray rules already matched the rest of 6.6; `touch.spec.ts` and `a11y.spec.ts` pass. Below 56 rem SW shows only the open page's tab (tap it for the next page) and SE shows only the zoom readout; Fit moves into the view popover (`e2e/touch.spec.ts`). 375 px pass (iPhone-size, touch) of first run, Design, a selected component, Traffic, Review and the tray: the tray no longer reaches under the top bar and the Review dock keeps its buttons on one line (the sentence is in the issue list). Known: Fit stops at the 25% floor, so the Marquee showcase does not fit the width of a phone.
 
 ### Milestone C: The diagram
 
