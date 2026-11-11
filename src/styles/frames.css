@@ -5,8 +5,8 @@
   pointer-events: none;
 }
 .frame-box {
-  --ft: var(--wl-blue);
-  --fs: var(--wl-blue-soft);
+  --ft: var(--cc-blue);
+  --fs: var(--cc-blue-soft);
   position: absolute;
   left: calc(var(--fx) * 1px);
   top: calc(var(--fy) * 1px);
@@ -65,9 +65,9 @@
   top: calc(var(--fy) * 1px);
   width: calc(var(--fw) * 1px);
   height: calc(var(--fh) * 1px);
-  border: 1.5px dashed var(--wl-blue);
+  border: 1.5px dashed var(--cc-blue);
   border-radius: 0.9rem;
-  background: var(--wl-blue-soft);
+  background: var(--cc-blue-soft);
   pointer-events: none;
 }
 .workspace[data-tool="frame"] #canvas-viewport { cursor: crosshair; }

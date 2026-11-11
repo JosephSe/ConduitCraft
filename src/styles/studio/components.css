@@ -21,7 +21,7 @@
   .section-heading {
     font: var(--cc-font-meta);
     font-weight: 600;
-    color: var(--wl-ink-muted);
+    color: var(--cc-ink-3);
     margin-block-end: 0.55rem;
   }
 
@@ -29,7 +29,7 @@
     display: block;
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--wl-ink);
+    color: var(--cc-ink);
     margin-block-end: 0.28rem;
   }
 }

@@ -197,7 +197,7 @@ export function renderMatrixTable(): void {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.colSpan = 5;
-    td.style.color = 'var(--wl-ink-muted)';
+    td.style.color = 'var(--cc-ink-3)';
     td.textContent = 'No components placed on the canvas yet.';
     tr.appendChild(td);
     matrixTbody.appendChild(tr);
@@ -239,7 +239,7 @@ export function renderMatrixTable(): void {
         cells[0].appendChild(document.createElement('br'));
         const sub = document.createElement('span');
         sub.style.fontSize = '0.78rem';
-        sub.style.color = 'var(--wl-ink-muted)';
+        sub.style.color = 'var(--cc-ink-3)';
         sub.textContent = node.subtitle;
         cells[0].appendChild(sub);
       }

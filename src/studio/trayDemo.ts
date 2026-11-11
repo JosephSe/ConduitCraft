@@ -14,7 +14,7 @@ interface Cap {
   end: [left: string, top?: string, opacity?: number, colour?: string];
 }
 
-const ROSE = 'var(--wl-rose)';
+const ROSE = 'var(--cc-rose)';
 
 const BEHAVIOURS: Record<string, { over?: boolean; caps: Cap[] }> = {
   // Leave on a beat.

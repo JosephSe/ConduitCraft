@@ -48,7 +48,7 @@ describe('cyan and fuchsia (T5)', () => {
     assert.equal(STREAM_TONE_OPTIONS.length, 7);
     for (const t of NEW) {
       assert.ok(STREAM_TONE_OPTIONS.some((o) => o.id === t));
-      assert.deepEqual(TONE_CSS[t], [`var(--wl-${t})`, `var(--wl-${t}-soft)`]);
+      assert.deepEqual(TONE_CSS[t], [`var(--cc-${t})`, `var(--cc-${t}-soft)`]);
     }
   });
 
@@ -113,7 +113,7 @@ describe('cyan and fuchsia (T5)', () => {
     const html = generateStandaloneHtml(sample());
     for (const t of NEW) {
       assert.ok(html.includes(`id="arrow-${t}"`), `${t} marker`);
-      assert.ok(html.includes(`var(--wl-${t})`), `${t} swatch`);
+      assert.ok(html.includes(`var(--cc-${t})`), `${t} swatch`);
       assert.ok(html.includes(`[data-tone="${t}"]`), `${t} tone rule`);
       assert.ok(html.includes(`[data-flow="${t}"]`), `${t} dimming rule`);
     }

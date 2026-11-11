@@ -10,9 +10,9 @@
     padding-block: 0.36rem;
     min-block-size: 2.15rem;
     border-radius: 0.6rem;
-    border: 1px solid var(--wl-border-ui);
-    background: var(--wl-surface);
-    color: var(--wl-ink);
+    border: 1px solid var(--cc-hair-2);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
     font-size: 0.8125rem;
     font-weight: 600;
     cursor: pointer;
@@ -22,7 +22,7 @@
   }
 
   .btn:hover:not(:disabled) {
-    background: var(--wl-surface-elevated);
+    background: var(--cc-well);
   }
 
   .btn:active:not(:disabled) {
@@ -54,13 +54,13 @@
   }
 
   .btn-approve {
-    border-color: var(--wl-emerald);
-    background: var(--wl-emerald-soft);
+    border-color: var(--cc-emerald);
+    background: var(--cc-emerald-soft);
   }
 
   .btn-reject {
-    border-color: var(--wl-rose);
-    background: var(--wl-rose-soft);
+    border-color: var(--cc-rose);
+    background: var(--cc-rose-soft);
   }
 
   .btn-icon-only {
@@ -76,8 +76,8 @@
     padding: 0.45rem 0.6rem;
     border-radius: 0.55rem;
     border: 1px solid var(--cc-field-edge);
-    background: var(--wl-surface);
-    color: var(--wl-ink);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
     font-size: 0.8125rem;
     line-height: 1.4;
 
@@ -93,9 +93,9 @@
   }
 
   .field-code {
-    font-family: var(--wl-font-mono);
+    font-family: var(--cc-font-mono);
     font-size: 0.75rem;
-    background: var(--wl-surface-code);
+    background: var(--cc-surface-code);
     color: #e2e8f0;
     min-block-size: 6rem;
   }
@@ -114,7 +114,7 @@
     inline-size: 2.25rem;
     block-size: 1.25rem;
     margin: 0;
-    border: 1px solid var(--wl-border-ui);
+    border: 1px solid var(--cc-hair-2);
     border-radius: 999px;
     background: var(--cc-well);
     cursor: pointer;
@@ -129,7 +129,7 @@
     display: inline-flex;
     align-items: center;
     min-block-size: 2.15rem;
-    border: 1px solid var(--wl-border-ui);
+    border: 1px solid var(--cc-hair-2);
     border-radius: 0.6rem;
     background: var(--cc-well);
   }
@@ -137,10 +137,10 @@
   .segmented-group {
     display: inline-flex;
     align-items: center;
-    background: var(--wl-surface-elevated);
+    background: var(--cc-well);
     padding: 0.1875rem;
     border-radius: 0.625rem;
-    border: 1px solid var(--wl-border-subtle);
+    border: 1px solid var(--cc-hair);
     gap: 0.125rem;
   }
 
@@ -154,7 +154,7 @@
     border-radius: 0.45rem;
     font-size: 0.8125rem;
     font-weight: 600;
-    color: var(--wl-ink-secondary);
+    color: var(--cc-ink-2);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
@@ -162,8 +162,8 @@
   }
 
   .segmented-label:has(input:checked) {
-    background: var(--wl-surface);
-    color: var(--wl-ink);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
     box-shadow: 0 1px 3px rgba(2, 6, 23, 0.14);
   }
 
@@ -205,20 +205,20 @@
   }
 
   .popover {
-    background: var(--wl-surface);
-    color: var(--wl-ink);
-    border: 1px solid var(--wl-border-ui);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    border: 1px solid var(--cc-hair-2);
     border-radius: var(--cc-radius-m);
     box-shadow: var(--cc-shadow-2);
   }
 
   dialog {
     margin: auto;
-    border: 1px solid var(--wl-border-ui);
+    border: 1px solid var(--cc-hair-2);
     border-radius: 1rem;
-    background: var(--wl-surface);
-    color: var(--wl-ink);
-    box-shadow: var(--wl-shadow-elevated);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    box-shadow: var(--cc-shadow-elevated);
     max-inline-size: min(62rem, calc(100vw - 2rem));
     max-block-size: calc(100dvh - 3rem);
     padding: 0;
@@ -287,7 +287,7 @@
     justify-content: space-between;
     gap: 1rem;
     padding: 24px 24px 12px;
-    border-block-end: 1px solid var(--wl-border-subtle);
+    border-block-end: 1px solid var(--cc-hair);
     flex-wrap: wrap;
   }
 

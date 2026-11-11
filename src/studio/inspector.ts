@@ -2569,7 +2569,7 @@ export function renderPropertyEditor(): void {
     tipDiv.className = 'prop-divider';
     const tipText = document.createElement('p');
     tipText.style.fontSize = '0.78rem';
-    tipText.style.color = 'var(--wl-ink-muted)';
+    tipText.style.color = 'var(--cc-ink-3)';
     tipText.style.lineHeight = '1.5';
     tipText.textContent =
       'Tip: Select any component, wire, swimlane, or note on the canvas to customise its metrics, wire colour, routing style, and JSON payload.';
@@ -2615,7 +2615,7 @@ export function renderLineageRows(upstream: DiagramNode[], downstream: DiagramNo
     if (list.length === 0) {
       const empty = document.createElement('span');
       empty.style.fontSize = '0.8rem';
-      empty.style.color = 'var(--wl-ink-muted)';
+      empty.style.color = 'var(--cc-ink-3)';
       empty.textContent = 'None';
       row.appendChild(empty);
     } else {

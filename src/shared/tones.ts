@@ -5,17 +5,17 @@ export const TONE_META: Record<
   StreamTone,
   { shortLabel: string; cssVar: string; softVar: string }
 > = {
-  blue: { shortLabel: 'Primary', cssVar: 'var(--wl-blue)', softVar: 'var(--wl-blue-soft)' },
+  blue: { shortLabel: 'Primary', cssVar: 'var(--cc-blue)', softVar: 'var(--cc-blue-soft)' },
   emerald: {
     shortLabel: 'Success',
-    cssVar: 'var(--wl-emerald)',
-    softVar: 'var(--wl-emerald-soft)',
+    cssVar: 'var(--cc-emerald)',
+    softVar: 'var(--cc-emerald-soft)',
   },
-  rose: { shortLabel: 'Exception', cssVar: 'var(--wl-rose)', softVar: 'var(--wl-rose-soft)' },
-  violet: { shortLabel: 'Control', cssVar: 'var(--wl-violet)', softVar: 'var(--wl-violet-soft)' },
-  amber: { shortLabel: 'Async', cssVar: 'var(--wl-amber)', softVar: 'var(--wl-amber-soft)' },
-  cyan: { shortLabel: 'Data', cssVar: 'var(--wl-cyan)', softVar: 'var(--wl-cyan-soft)' },
-  fuchsia: { shortLabel: 'Security', cssVar: 'var(--wl-fuchsia)', softVar: 'var(--wl-fuchsia-soft)' },
+  rose: { shortLabel: 'Exception', cssVar: 'var(--cc-rose)', softVar: 'var(--cc-rose-soft)' },
+  violet: { shortLabel: 'Control', cssVar: 'var(--cc-violet)', softVar: 'var(--cc-violet-soft)' },
+  amber: { shortLabel: 'Async', cssVar: 'var(--cc-amber)', softVar: 'var(--cc-amber-soft)' },
+  cyan: { shortLabel: 'Data', cssVar: 'var(--cc-cyan)', softVar: 'var(--cc-cyan-soft)' },
+  fuchsia: { shortLabel: 'Security', cssVar: 'var(--cc-fuchsia)', softVar: 'var(--cc-fuchsia-soft)' },
 };
 
 export const TONE_CSS: Record<StreamTone, [string, string]> = {

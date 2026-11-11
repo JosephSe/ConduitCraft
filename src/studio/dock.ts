@@ -1,6 +1,6 @@
 /**
  * The dock's component half (6.4, 7.1, 7.2): six favourite cut-outs, click to arm, and the "All components" button.
- * The tool buttons are handled by toolRail.ts. A favourite can be dragged onto the sheet, or clicked: the pointer then
+ * The tool buttons (Select, Wire, Hand, Text, Frame) are wired at the end of this file. A favourite can be dragged onto the sheet, or clicked: the pointer then
  * carries a ghost of the component and the next click on the sheet places it (Shift keeps placing, Esc puts it back).
  * From the keyboard, Enter places it at the centre of the view, as the old palette did.
  */
@@ -10,6 +10,7 @@ import { TONE_CSS } from '../shared/tones';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { FAVOURITE_COUNT, normaliseFavourites } from './dockFavourites';
 import { hudStatusTip, viewport } from './dom';
+import { findPaletteCommand } from './palette';
 import { addNodeAt, attachStencilDragAndDrop } from './interactions';
 import { TOOL_TIPS } from './pointerTool';
 import { app, screenToWorld } from './state';
@@ -121,7 +122,41 @@ function renderFavourites(): void {
   syncArmed();
 }
 
+const TOOL_ACTION: Record<string, string> = {
+  select: 'tool-select',
+  connect: 'tool-connect',
+  hand: 'tool-hand',
+  text: 'tool-text',
+  frame: 'tool-frame',
+};
+
+/**
+ * The tool buttons are another surface for the same actions the palette and shortcuts run: clicking Select or Wire
+ * runs `tool-select` / `tool-connect`, and the pressed state follows `data-tool` on the workspace, so it stays right
+ * however the tool was changed.
+ */
+function initDockTools(): void {
+  const workspace = document.getElementById('workspace');
+  if (!workspace) return;
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-rail-tool]'));
+  const sync = () => {
+    const tool = workspace.dataset.tool || 'select';
+    for (const btn of buttons) btn.setAttribute('aria-pressed', String(btn.dataset.railTool === tool));
+  };
+  for (const btn of buttons) {
+    btn.addEventListener('click', () => {
+      const id = TOOL_ACTION[btn.dataset.railTool ?? ''];
+      if (id) findPaletteCommand(id)?.run();
+      // The tray is not over the sheet the tool is about to be used on.
+      void import('./tray').then((m) => m.closeTray());
+    });
+  }
+  new MutationObserver(sync).observe(workspace, { attributes: true, attributeFilter: ['data-tool'] });
+  sync();
+}
+
 export function initDock(): void {
+  initDockTools();
   renderFavourites();
 
   document.addEventListener('pointermove', (e) => {

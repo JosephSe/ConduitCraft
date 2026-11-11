@@ -38,87 +38,87 @@ export function pageInfo(): { index: number; count: number } {
  * render accurate colors and styling without relying on unresolved CSS variables.
  */
 export const WL_RESOLVED_TOKENS: Record<string, string> = {
-  '--wl-canvas': '#ECEFEE',
-  '--wl-canvas-light': '#ECEFEE',
-  '--wl-canvas-dark': '#1D1F21',
-  '--wl-panel': 'rgba(255, 255, 255, 0.84)',
-  '--wl-panel-light': 'rgba(255, 255, 255, 0.84)',
-  '--wl-panel-dark': 'rgba(46, 48, 51, 0.84)',
-  '--wl-surface': '#FFFFFF',
-  '--wl-surface-light': '#FFFFFF',
-  '--wl-surface-dark': '#2A2C2F',
-  '--wl-surface-elevated': 'rgba(21, 24, 28, 0.055)',
-  '--wl-surface-elevated-light': 'rgba(21, 24, 28, 0.055)',
-  '--wl-surface-elevated-dark': 'rgba(255, 255, 255, 0.07)',
-  '--wl-surface-code': '#15181C',
-  '--wl-surface-code-light': '#15181C',
-  '--wl-surface-code-dark': '#15181C',
-  '--wl-ink': '#15181C',
-  '--wl-ink-light': '#15181C',
-  '--wl-ink-dark': '#F2F3F1',
-  '--wl-ink-secondary': '#565C64',
-  '--wl-ink-secondary-light': '#565C64',
-  '--wl-ink-secondary-dark': '#B7BBBF',
-  '--wl-ink-muted': '#5C626A',
-  '--wl-ink-muted-light': '#5C626A',
-  '--wl-ink-muted-dark': '#92979C',
-  '--wl-border-ui': 'rgba(21, 24, 28, 0.2)',
-  '--wl-border-ui-light': 'rgba(21, 24, 28, 0.2)',
-  '--wl-border-ui-dark': 'rgba(255, 255, 255, 0.2)',
-  '--wl-border-subtle': 'rgba(21, 24, 28, 0.11)',
-  '--wl-border-subtle-light': 'rgba(21, 24, 28, 0.11)',
-  '--wl-border-subtle-dark': 'rgba(255, 255, 255, 0.1)',
-  '--wl-grid-dot': '#8CC4D8',
-  '--wl-grid-dot-light': '#8CC4D8',
-  '--wl-grid-dot-dark': 'rgba(140, 196, 216, 0.3)',
-  '--wl-blue': '#1d4ed8',
-  '--wl-blue-light': '#1d4ed8',
-  '--wl-blue-dark': '#60a5fa',
-  '--wl-blue-soft': 'rgba(29, 78, 216, 0.12)',
-  '--wl-blue-soft-light': 'rgba(29, 78, 216, 0.12)',
-  '--wl-blue-soft-dark': 'rgba(96, 165, 250, 0.16)',
-  '--wl-emerald': '#047857',
-  '--wl-emerald-light': '#047857',
-  '--wl-emerald-dark': '#34d399',
-  '--wl-emerald-soft': 'rgba(4, 120, 87, 0.12)',
-  '--wl-emerald-soft-light': 'rgba(4, 120, 87, 0.12)',
-  '--wl-emerald-soft-dark': 'rgba(52, 211, 153, 0.16)',
-  '--wl-rose': '#be123c',
-  '--wl-rose-light': '#be123c',
-  '--wl-rose-dark': '#fb7185',
-  '--wl-rose-soft': 'rgba(190, 18, 60, 0.11)',
-  '--wl-rose-soft-light': 'rgba(190, 18, 60, 0.11)',
-  '--wl-rose-soft-dark': 'rgba(251, 113, 133, 0.16)',
-  '--wl-amber': '#b45309',
-  '--wl-amber-light': '#b45309',
-  '--wl-amber-dark': '#fbbf24',
-  '--wl-amber-soft': 'rgba(180, 83, 9, 0.12)',
-  '--wl-amber-soft-light': 'rgba(180, 83, 9, 0.12)',
-  '--wl-amber-soft-dark': 'rgba(251, 191, 36, 0.16)',
-  '--wl-violet': '#5b21b6',
-  '--wl-violet-light': '#5b21b6',
-  '--wl-violet-dark': '#a78bfa',
-  '--wl-violet-soft': 'rgba(91, 33, 182, 0.12)',
-  '--wl-violet-soft-light': 'rgba(91, 33, 182, 0.12)',
-  '--wl-violet-soft-dark': 'rgba(167, 139, 250, 0.2)',
-  '--wl-cyan': '#0b7c9e',
-  '--wl-cyan-light': '#0b7c9e',
-  '--wl-cyan-dark': '#22d3ee',
-  '--wl-cyan-soft': 'rgba(11, 124, 158, 0.12)',
-  '--wl-cyan-soft-light': 'rgba(11, 124, 158, 0.12)',
-  '--wl-cyan-soft-dark': 'rgba(34, 211, 238, 0.16)',
-  '--wl-fuchsia': '#b5179e',
-  '--wl-fuchsia-light': '#b5179e',
-  '--wl-fuchsia-dark': '#f0abfc',
-  '--wl-fuchsia-soft': 'rgba(181, 23, 158, 0.12)',
-  '--wl-fuchsia-soft-light': 'rgba(181, 23, 158, 0.12)',
-  '--wl-fuchsia-soft-dark': 'rgba(240, 171, 252, 0.18)',
-  '--wl-font-sans': "'Instrument Sans', 'Instrument Sans Fallback', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
-  '--wl-font-mono': "'Geist Mono', 'Geist Mono Fallback', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace",
+  '--cc-canvas': '#ECEFEE',
+  '--cc-canvas-light': '#ECEFEE',
+  '--cc-canvas-dark': '#1D1F21',
+  '--cc-island': 'rgba(255, 255, 255, 0.84)',
+  '--cc-panel-light': 'rgba(255, 255, 255, 0.84)',
+  '--cc-panel-dark': 'rgba(46, 48, 51, 0.84)',
+  '--cc-sheet': '#FFFFFF',
+  '--cc-surface-light': '#FFFFFF',
+  '--cc-surface-dark': '#2A2C2F',
+  '--cc-well': 'rgba(21, 24, 28, 0.055)',
+  '--cc-surface-elevated-light': 'rgba(21, 24, 28, 0.055)',
+  '--cc-surface-elevated-dark': 'rgba(255, 255, 255, 0.07)',
+  '--cc-surface-code': '#15181C',
+  '--cc-surface-code-light': '#15181C',
+  '--cc-surface-code-dark': '#15181C',
+  '--cc-ink': '#15181C',
+  '--cc-ink-light': '#15181C',
+  '--cc-ink-dark': '#F2F3F1',
+  '--cc-ink-2': '#565C64',
+  '--cc-ink-secondary-light': '#565C64',
+  '--cc-ink-secondary-dark': '#B7BBBF',
+  '--cc-ink-3': '#5C626A',
+  '--cc-ink-muted-light': '#5C626A',
+  '--cc-ink-muted-dark': '#92979C',
+  '--cc-hair-2': 'rgba(21, 24, 28, 0.2)',
+  '--cc-border-ui-light': 'rgba(21, 24, 28, 0.2)',
+  '--cc-border-ui-dark': 'rgba(255, 255, 255, 0.2)',
+  '--cc-hair': 'rgba(21, 24, 28, 0.11)',
+  '--cc-border-subtle-light': 'rgba(21, 24, 28, 0.11)',
+  '--cc-border-subtle-dark': 'rgba(255, 255, 255, 0.1)',
+  '--cc-dot': '#8CC4D8',
+  '--cc-grid-dot-light': '#8CC4D8',
+  '--cc-grid-dot-dark': 'rgba(140, 196, 216, 0.3)',
+  '--cc-blue': '#1d4ed8',
+  '--cc-blue-light': '#1d4ed8',
+  '--cc-blue-dark': '#60a5fa',
+  '--cc-blue-soft': 'rgba(29, 78, 216, 0.12)',
+  '--cc-blue-soft-light': 'rgba(29, 78, 216, 0.12)',
+  '--cc-blue-soft-dark': 'rgba(96, 165, 250, 0.16)',
+  '--cc-emerald': '#047857',
+  '--cc-emerald-light': '#047857',
+  '--cc-emerald-dark': '#34d399',
+  '--cc-emerald-soft': 'rgba(4, 120, 87, 0.12)',
+  '--cc-emerald-soft-light': 'rgba(4, 120, 87, 0.12)',
+  '--cc-emerald-soft-dark': 'rgba(52, 211, 153, 0.16)',
+  '--cc-rose': '#be123c',
+  '--cc-rose-light': '#be123c',
+  '--cc-rose-dark': '#fb7185',
+  '--cc-rose-soft': 'rgba(190, 18, 60, 0.11)',
+  '--cc-rose-soft-light': 'rgba(190, 18, 60, 0.11)',
+  '--cc-rose-soft-dark': 'rgba(251, 113, 133, 0.16)',
+  '--cc-amber': '#b45309',
+  '--cc-amber-light': '#b45309',
+  '--cc-amber-dark': '#fbbf24',
+  '--cc-amber-soft': 'rgba(180, 83, 9, 0.12)',
+  '--cc-amber-soft-light': 'rgba(180, 83, 9, 0.12)',
+  '--cc-amber-soft-dark': 'rgba(251, 191, 36, 0.16)',
+  '--cc-violet': '#5b21b6',
+  '--cc-violet-light': '#5b21b6',
+  '--cc-violet-dark': '#a78bfa',
+  '--cc-violet-soft': 'rgba(91, 33, 182, 0.12)',
+  '--cc-violet-soft-light': 'rgba(91, 33, 182, 0.12)',
+  '--cc-violet-soft-dark': 'rgba(167, 139, 250, 0.2)',
+  '--cc-cyan': '#0b7c9e',
+  '--cc-cyan-light': '#0b7c9e',
+  '--cc-cyan-dark': '#22d3ee',
+  '--cc-cyan-soft': 'rgba(11, 124, 158, 0.12)',
+  '--cc-cyan-soft-light': 'rgba(11, 124, 158, 0.12)',
+  '--cc-cyan-soft-dark': 'rgba(34, 211, 238, 0.16)',
+  '--cc-fuchsia': '#b5179e',
+  '--cc-fuchsia-light': '#b5179e',
+  '--cc-fuchsia-dark': '#f0abfc',
+  '--cc-fuchsia-soft': 'rgba(181, 23, 158, 0.12)',
+  '--cc-fuchsia-soft-light': 'rgba(181, 23, 158, 0.12)',
+  '--cc-fuchsia-soft-dark': 'rgba(240, 171, 252, 0.18)',
+  '--cc-font-sans': "'Instrument Sans', 'Instrument Sans Fallback', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
+  '--cc-font-mono': "'Geist Mono', 'Geist Mono Fallback', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace",
 };
 
 /**
- * Returns a complete map of resolved `--wl-*` CSS custom properties,
+ * Returns a complete map of resolved `--cc-*` CSS custom properties,
  * taking into account current computed document styles and active color-scheme.
  */
 export function currentScheme(): 'light' | 'dark' {
@@ -137,31 +137,31 @@ export function getResolvedWlVariables(): Record<string, string> {
 
   const vars: Record<string, string> = { ...WL_RESOLVED_TOKENS };
   if (isDark) {
-    vars['--wl-canvas'] = vars['--wl-canvas-dark'];
-    vars['--wl-panel'] = vars['--wl-panel-dark'];
-    vars['--wl-surface'] = vars['--wl-surface-dark'];
-    vars['--wl-surface-elevated'] = vars['--wl-surface-elevated-dark'];
-    vars['--wl-surface-code'] = vars['--wl-surface-code-dark'];
-    vars['--wl-ink'] = vars['--wl-ink-dark'];
-    vars['--wl-ink-secondary'] = vars['--wl-ink-secondary-dark'];
-    vars['--wl-ink-muted'] = vars['--wl-ink-muted-dark'];
-    vars['--wl-border-ui'] = vars['--wl-border-ui-dark'];
-    vars['--wl-border-subtle'] = vars['--wl-border-subtle-dark'];
-    vars['--wl-grid-dot'] = vars['--wl-grid-dot-dark'];
-    vars['--wl-blue'] = vars['--wl-blue-dark'];
-    vars['--wl-blue-soft'] = vars['--wl-blue-soft-dark'];
-    vars['--wl-emerald'] = vars['--wl-emerald-dark'];
-    vars['--wl-emerald-soft'] = vars['--wl-emerald-soft-dark'];
-    vars['--wl-rose'] = vars['--wl-rose-dark'];
-    vars['--wl-rose-soft'] = vars['--wl-rose-soft-dark'];
-    vars['--wl-amber'] = vars['--wl-amber-dark'];
-    vars['--wl-amber-soft'] = vars['--wl-amber-soft-dark'];
-    vars['--wl-violet'] = vars['--wl-violet-dark'];
-    vars['--wl-violet-soft'] = vars['--wl-violet-soft-dark'];
-    vars['--wl-cyan'] = vars['--wl-cyan-dark'];
-    vars['--wl-cyan-soft'] = vars['--wl-cyan-soft-dark'];
-    vars['--wl-fuchsia'] = vars['--wl-fuchsia-dark'];
-    vars['--wl-fuchsia-soft'] = vars['--wl-fuchsia-soft-dark'];
+    vars['--cc-canvas'] = vars['--cc-canvas-dark'];
+    vars['--cc-island'] = vars['--cc-panel-dark'];
+    vars['--cc-sheet'] = vars['--cc-surface-dark'];
+    vars['--cc-well'] = vars['--cc-surface-elevated-dark'];
+    vars['--cc-surface-code'] = vars['--cc-surface-code-dark'];
+    vars['--cc-ink'] = vars['--cc-ink-dark'];
+    vars['--cc-ink-2'] = vars['--cc-ink-secondary-dark'];
+    vars['--cc-ink-3'] = vars['--cc-ink-muted-dark'];
+    vars['--cc-hair-2'] = vars['--cc-border-ui-dark'];
+    vars['--cc-hair'] = vars['--cc-border-subtle-dark'];
+    vars['--cc-dot'] = vars['--cc-grid-dot-dark'];
+    vars['--cc-blue'] = vars['--cc-blue-dark'];
+    vars['--cc-blue-soft'] = vars['--cc-blue-soft-dark'];
+    vars['--cc-emerald'] = vars['--cc-emerald-dark'];
+    vars['--cc-emerald-soft'] = vars['--cc-emerald-soft-dark'];
+    vars['--cc-rose'] = vars['--cc-rose-dark'];
+    vars['--cc-rose-soft'] = vars['--cc-rose-soft-dark'];
+    vars['--cc-amber'] = vars['--cc-amber-dark'];
+    vars['--cc-amber-soft'] = vars['--cc-amber-soft-dark'];
+    vars['--cc-violet'] = vars['--cc-violet-dark'];
+    vars['--cc-violet-soft'] = vars['--cc-violet-soft-dark'];
+    vars['--cc-cyan'] = vars['--cc-cyan-dark'];
+    vars['--cc-cyan-soft'] = vars['--cc-cyan-soft-dark'];
+    vars['--cc-fuchsia'] = vars['--cc-fuchsia-dark'];
+    vars['--cc-fuchsia-soft'] = vars['--cc-fuchsia-soft-dark'];
   }
 
   if (typeof document !== 'undefined' && document.documentElement && typeof getComputedStyle === 'function') {
@@ -182,14 +182,14 @@ export function getResolvedWlVariables(): Record<string, string> {
 }
 
 /**
- * Resolves references to `var(--wl-*)` in CSS or SVG content into concrete, standalone color/font values.
+ * Resolves references to `var(--cc-*)` in CSS or SVG content into concrete, standalone color/font values.
  */
 export function resolveCssVariables(
   content: string,
   vars: Record<string, string> = getResolvedWlVariables()
 ): string {
   const replacePass = (text: string): string =>
-    text.replace(/var\((--wl-[a-zA-Z0-9_-]+)(?:,\s*([^)]+))?\)/g, (fullMatch, varName, fallback) => {
+    text.replace(/var\((--cc-[a-zA-Z0-9_-]+)(?:,\s*([^)]+))?\)/g, (fullMatch, varName, fallback) => {
       const val = vars[varName];
       if (val && !val.startsWith('var(--')) return val;
       return fallback?.trim() || val || fullMatch;
@@ -448,14 +448,14 @@ export function renderStagePictureSvg(
     ? getComputedStyle(document.documentElement)
     : null;
 
-  // Set explicit resolved --wl-* properties on root style
+  // Set explicit resolved --cc-* properties on root style
   const customParts: string[] = [];
   for (const [k, v] of Object.entries(resolvedVars)) {
     customParts.push(`${k}:${v}`);
   }
   if (rootStyle && typeof rootStyle[Symbol.iterator] === 'function') {
     for (const prop of rootStyle) {
-      if (prop.startsWith('--') && !prop.startsWith('--wl-')) {
+      if (prop.startsWith('--') && !(prop in resolvedVars)) {
         customParts.push(`${prop}:${rootStyle.getPropertyValue(prop)}`);
       }
     }

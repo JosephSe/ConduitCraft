@@ -1,6 +1,6 @@
 /**
  * The pointer tool: Select moves things, Connect draws wires. The tool rail, the palette and Esc all call
- * `setPointerTool`; the rail's pressed state follows `data-tool` on the workspace (see toolRail.ts).
+ * `setPointerTool`; the rail's pressed state follows `data-tool` on the workspace (see dock.ts).
  */
 import { announceToolChange } from './a11y';
 import { hudStatusTip, workspace } from './dom';

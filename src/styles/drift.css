@@ -8,16 +8,16 @@
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
   gap: 0.5rem;
-  border: 1px solid var(--wl-border-subtle);
-  border-inline-start: 4px solid var(--drift-tone, var(--wl-border-subtle));
+  border: 1px solid var(--cc-hair);
+  border-inline-start: 4px solid var(--drift-tone, var(--cc-hair));
   border-radius: 0.5rem;
   padding: 0.35rem 0.5rem;
 }
-.drift-row[data-type="added"] { --drift-tone: var(--wl-emerald); }
-.drift-row[data-type="removed"] { --drift-tone: var(--wl-rose); }
-.drift-row[data-type="changed"] { --drift-tone: var(--wl-amber); }
-.drift-badge { font-size: 0.7rem; font-weight: 700; color: var(--wl-ink); white-space: nowrap; }
-.drift-text { display: grid; min-inline-size: 0; font-size: 0.82rem; color: var(--wl-ink); }
+.drift-row[data-type="added"] { --drift-tone: var(--cc-emerald); }
+.drift-row[data-type="removed"] { --drift-tone: var(--cc-rose); }
+.drift-row[data-type="changed"] { --drift-tone: var(--cc-amber); }
+.drift-badge { font-size: 0.7rem; font-weight: 700; color: var(--cc-ink); white-space: nowrap; }
+.drift-text { display: grid; min-inline-size: 0; font-size: 0.82rem; color: var(--cc-ink); }
 .drift-text > span { overflow-wrap: anywhere; }
 .drift-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
 @media (max-width: 36rem) {
@@ -27,5 +27,5 @@
 
 /* Components the check says changed or are gone, outlined on the canvas while the dialog is open. */
 .arch-node[data-drift] { outline: 3px solid var(--drift-tone); outline-offset: 3px; border-radius: 0.75rem; }
-.arch-node[data-drift="removed"] { --drift-tone: var(--wl-rose); }
-.arch-node[data-drift="changed"] { --drift-tone: var(--wl-amber); }
+.arch-node[data-drift="removed"] { --drift-tone: var(--cc-rose); }
+.arch-node[data-drift="changed"] { --drift-tone: var(--cc-amber); }

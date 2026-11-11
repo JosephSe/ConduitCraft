@@ -1,6 +1,6 @@
 @layer palette {
   .compile-pill {
-    font-family: var(--wl-font-mono);
+    font-family: var(--cc-font-mono);
     font-size: 0.75rem;
     font-weight: 600;
     padding-inline: 0.5rem;
@@ -8,7 +8,7 @@
     border-radius: 999px;
     background: var(--cc-accent-soft);
     color: var(--cc-accent);
-    border: 1px solid var(--wl-border-subtle);
+    border: 1px solid var(--cc-hair);
   }
 
   .stencil-drag-ghost {
@@ -19,12 +19,12 @@
     pointer-events: none;
     padding: 0.45rem 0.75rem;
     border-radius: 0.65rem;
-    background: var(--wl-surface);
+    background: var(--cc-sheet);
     border: 1.5px solid var(--cc-accent);
-    box-shadow: var(--wl-shadow-elevated);
+    box-shadow: var(--cc-shadow-elevated);
     font-size: 0.8125rem;
     font-weight: 700;
-    color: var(--wl-ink);
+    color: var(--cc-ink);
     translate: calc(var(--gx, 0) * 1px - 50%) calc(var(--gy, 0) * 1px - 50%);
   }
 }

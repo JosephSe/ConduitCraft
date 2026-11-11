@@ -15,7 +15,7 @@
     background: var(--cc-island);
     border: 1px solid var(--cc-hair);
     border-radius: 0.9rem;
-    box-shadow: var(--wl-shadow-card);
+    box-shadow: var(--cc-shadow-card);
     -webkit-backdrop-filter: blur(18px) saturate(1.4);
     backdrop-filter: blur(18px) saturate(1.4);
   }
@@ -68,7 +68,7 @@
     margin: 0;
     max-inline-size: 100%;
     font: var(--cc-font-small);
-    color: var(--wl-ink-muted);
+    color: var(--cc-ink-3);
     text-align: center;
     text-wrap: balance;
     pointer-events: none;
@@ -136,12 +136,12 @@
   .brand-name {
     font: var(--cc-font-small);
     font-weight: 600;
-    color: var(--brand-accent, var(--wl-ink-muted));
+    color: var(--brand-accent, var(--cc-ink-3));
   }
 
   /* A document-chosen accent can't be guaranteed readable on both themes, so blend it toward the text colour. */
   .brand-cluster[data-brand] .brand-name {
-    color: color-mix(in srgb, var(--brand-accent) 55%, var(--wl-ink));
+    color: color-mix(in srgb, var(--brand-accent) 55%, var(--cc-ink));
   }
 
   .brand-titles {
@@ -161,7 +161,7 @@
   }
 
   .title-edit-trigger:hover {
-    background: var(--wl-surface-elevated);
+    background: var(--cc-well);
   }
 
   .title-edit-trigger:focus-visible {
@@ -263,11 +263,11 @@
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
-    font-family: var(--wl-font-mono);
+    font-family: var(--cc-font-mono);
     font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.12em;
-    color: var(--wl-ink-muted);
+    color: var(--cc-ink-3);
     user-select: none;
     margin-block-start: 0.5rem;
   }
