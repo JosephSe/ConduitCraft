@@ -2049,6 +2049,8 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .node-comment-badge,
 #stage-world[data-lod="low"] .node-lock-badge { display: none; }
 #stage-world[data-lod="low"] .arch-node { box-shadow: none; }
+/* C6: the card-kind tile grows as the camera pulls back, so the kind still reads at Fit. `scale` leaves layout alone and does not fight the failed-state rotate. */
+#stage-world[data-lod="low"] .arch-node .node-icon { scale: clamp(1, calc(0.55 / var(--cam-scale, 1)), 1.9); transform-origin: center; }
 #stage-world[data-lod="low"] .zone-title,
 #stage-world[data-lod="low"] .frame-title-bar { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px); }
 #stage-world[data-lod="low"] .conduit-rail { stroke-width: min(5px, calc(1.75px / var(--cam-scale, 1))); }
@@ -2067,4 +2069,21 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-wire-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .template-card:hover .tpl-wire { stroke-dasharray: 100; animation: cc-wire-draw 700ms var(--cc-ease-out) 1 both; }
+}
+
+/* S10 (6.6): below 56rem SW and SE collapse to one button each. SW shows the open page (tap for the next); SE shows the zoom readout, and Fit moves into the view popover. */
+.view-fit { display: none; }
+@media (max-width: 56rem) {
+  .page-tab[aria-selected="false"] { display: none; }
+  .page-strip:has(.page-tab:nth-child(2)) .page-add { display: none; }
+  .hud-zoom-card #btn-zoom-out, .hud-zoom-card #btn-zoom-in, .hud-zoom-card #btn-zoom-fit { display: none; }
+  .view-fit { display: inline-flex; justify-content: center; }
+}
+
+/* S10 (375 px pass): the tray stops short of the top bar, and the Review face keeps its buttons on one line (the sentence is in the issue list). */
+@media (max-width: 56rem) {
+  .tray { max-block-size: calc(100dvh - 15.5rem); }
+  #review-face { overflow-x: auto; scrollbar-width: none; }
+  #review-face .btn { white-space: nowrap; flex-shrink: 0; }
+  #review-face .review-sentence { display: none; }
 }

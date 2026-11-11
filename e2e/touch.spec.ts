@@ -190,6 +190,20 @@ test('the dock keeps three favourites and scrolls sideways on a phone', async ({
   expect(await page.locator('#dock').evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
 });
 
+test('on a phone SW and SE are one button each, and Fit moves into the view popover (S10)', async ({ page }) => {
+  await open(page);
+  await page.setViewportSize({ width: 480, height: 800 });
+  await expect(page.locator('#btn-zoom-out')).toBeHidden();
+  await expect(page.locator('#btn-zoom-in')).toBeHidden();
+  await expect(page.locator('#btn-zoom-fit')).toBeHidden();
+  await expect(page.locator('#zoom-readout')).toBeVisible();
+  await expect(page.locator('.page-tab:visible')).toHaveCount(1);
+  await page.locator('#zoom-readout').tap();
+  await expect(page.locator('#view-fit')).toBeVisible();
+  await page.locator('#view-fit').tap();
+  await expect(page.locator('#zoom-readout')).toBeVisible();
+});
+
 test('the drawer tabs are full-size targets that never overlap the top bar', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   for (const id of ['#btn-drawer-inspector']) {
