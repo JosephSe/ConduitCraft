@@ -63,6 +63,12 @@ export function insightsFor(type: 'node' | 'edge', id: string): InsightIssue[] {
   );
 }
 
+/** The visible issues in the order the panel lists them: by rule, then as found. The dock's Review face steps through this. */
+export function orderedInsights(): InsightIssue[] {
+  const issues = currentInsights();
+  return INSIGHT_RULES.flatMap((rule) => issues.filter((i) => i.code === rule.code));
+}
+
 const LEVEL_RANK = { error: 0, warning: 1, info: 2 } as const;
 
 /** The most severe level among issues, for the badge colour. */
@@ -106,7 +112,7 @@ export function repaintInsightsForLens(): void {
   renderAll(false);
 }
 
-function toggleMute(code: string): void {
+export function toggleMute(code: string): void {
   pushHistory();
   const muted = mutedRules(app.doc);
   if (!muted.delete(code)) muted.add(code);
@@ -117,7 +123,7 @@ function toggleMute(code: string): void {
   announce(`${insightRule(code)?.title ?? code} ${muted.has(code) ? 'muted' : 'shown again'}.`);
 }
 
-function select(issue: InsightIssue): void {
+export function selectIssue(issue: InsightIssue): void {
   if (issue.path.join('/') !== app.levelPath.join('/') && !goToLevel(issue.path)) return;
   if (issue.target.type === 'node') {
     const node = app.doc.nodes.find((n) => n.id === issue.target.id);
@@ -173,7 +179,7 @@ export function initInsightsPanel(): void {
       mute.dataset.rule = rule.code;
       const verb = isMuted ? 'Show' : 'Mute';
       const svg = (paths: string) =>
-        `<svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+        `<svg class="ui-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
       // Bell with a slash to mute; an eye to show a muted rule again.
       mute.innerHTML = isMuted
         ? svg('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>')
@@ -194,7 +200,7 @@ export function initInsightsPanel(): void {
           button.dataset.target = issue.target.id;
           button.dataset.type = issue.target.type;
           button.textContent = issue.trail.length ? `${issue.trail.join(' ▸ ')}: ${issue.message}` : issue.message;
-          button.addEventListener('click', () => select(issue));
+          button.addEventListener('click', () => selectIssue(issue));
           item.appendChild(button);
           list.appendChild(item);
         });

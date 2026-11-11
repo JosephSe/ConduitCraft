@@ -18,6 +18,9 @@ export interface ActionContext {
   grouped: boolean;
   /** The one selected component is a message queue (K1). */
   queueSelected?: boolean;
+  /** There is something to undo or redo. Left out (as in a test) means yes. */
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 export function buildActionContext(
@@ -88,6 +91,8 @@ const RULES: Record<string, (c: ActionContext) => boolean> = {
   'wire-from-selection': (c) => design(c) && c.selection === 'node',
   'level-open': (c) => c.selection === 'node',
   'queue-add-dlq': (c) => design(c) && c.selection === 'node' && Boolean(c.queueSelected),
+  'edit-undo': (c) => c.canUndo !== false,
+  'edit-redo': (c) => c.canRedo !== false,
   'chaos-fail': (c) => c.mode === 'data' && c.selection === 'node',
   'fit-selection': hasSelection,
   'auto-layout-selection': (c) => design(c) && c.selectedNodeCount >= 2,

@@ -109,7 +109,7 @@ function renderShell(): void {
         <span class="home-search-label">Search diagrams</span>
         <input type="search" id="home-search" placeholder="Search diagrams" autocomplete="off" value="${escapeHtml(query)}">
       </label>
-      <button type="button" class="btn btn-primary" data-home-new>New diagram</button>
+      <button type="button" class="btn solid" data-home-new>New diagram</button>
     </div>
     <p class="home-warning" id="home-storage" role="status" hidden></p>
     <section class="home-section" aria-labelledby="home-recent-title">

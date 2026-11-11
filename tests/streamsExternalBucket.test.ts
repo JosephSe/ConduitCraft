@@ -56,7 +56,7 @@ describe('K6 stream (spec 6.1)', () => {
     assert.equal(s.kind, 'queue');
     assert.equal(s.icon, 'stream');
     assert.equal(s.chip, 'STREAM');
-    assert.equal(s.eyebrow, 'LOG');
+    assert.equal(s.eyebrow, 'Log');
     const node = createNodeFromStencil('stream', 0, 0, 0);
     assert.equal(node.kind, 'queue');
     assert.equal(node.queue?.delivery, 'fanout');
@@ -196,9 +196,9 @@ describe('K7 external (spec 6.2)', () => {
     const d = build({ q: 'queue', db: 'store' }, [['q', 'db']], { q: { external: true }, db: { external: true } });
     const svg = renderDiagramSvg(d);
     assert.match(svg, /stroke-dasharray="6 4"/);
-    assert.equal((svg.match(/>EXTERNAL</g) ?? []).length, 2);
+    assert.equal((svg.match(/>External</g) ?? []).length, 2);
     assert.match(generateStandaloneHtml(d), /data-external="true"/);
-    assert.doesNotMatch(renderDiagramSvg(build({ a: 'service' }, [])), />EXTERNAL</);
+    assert.doesNotMatch(renderDiagramSvg(build({ a: 'service' }, [])), />External</);
   });
 
   it('external-unprotected fires for a sync call on a scenario path with no breaker or fallback', () => {

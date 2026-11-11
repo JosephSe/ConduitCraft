@@ -1,0 +1,2135 @@
+/* Unlayered on purpose: these rules override every @layer above. */
+/* Toast Notification Stack */
+.toast-container {
+  position: fixed;
+  /* Kept just above the canvas HUD by trackHudClearance() in toast.ts; 4.75rem when it can't be measured. */
+  bottom: var(--toast-bottom, 4.75rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 90vw;
+}
+
+.toast-item {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  background: var(--cc-sheet);
+  color: var(--cc-ink);
+  border: 1px solid var(--cc-hair-2);
+  border-radius: 14px;
+  box-shadow: var(--cc-shadow-elevated);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  animation: toast-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.toast-item.toast-error {
+  border-color: var(--cc-rose);
+  color: var(--cc-rose);
+}
+
+.toast-item.toast-success {
+  border-color: var(--cc-emerald);
+}
+
+.toast-item.is-dismissing {
+  animation: toast-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.toast-message {
+  line-height: 1.3;
+}
+
+.toast-action-btn {
+  background: var(--cc-accent);
+  color: var(--cc-on-ink);
+  border: none;
+  border-radius: 9999px;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.toast-action-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.03);
+}
+
+.toast-action-btn:active {
+  transform: scale(0.97);
+}
+
+.toast-dismiss-btn {
+  background: transparent;
+  color: var(--cc-ink-3);
+  border: none;
+  cursor: pointer;
+  padding: 0 0.15rem;
+  line-height: 1;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.toast-dismiss-btn:hover {
+  color: var(--cc-ink);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-item,
+  .toast-item.is-dismissing {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* Tooltips: one shared, viewport-clamped layer driven by src/studio/tooltips.ts */
+[data-tip] {
+  position: relative;
+}
+
+.tooltip-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  inline-size: max-content;
+  max-inline-size: min(22rem, calc(100vw - 16px));
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--cc-hair-2);
+  border-radius: 6px;
+  background: var(--cc-well);
+  color: var(--cc-ink);
+  box-shadow: var(--cc-shadow-card);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.tooltip-layer[data-visible="true"] {
+  opacity: 1;
+}
+
+/* Inline rename field, laid over the element being renamed (src/studio/inlineEdit.ts) */
+.inline-edit-input {
+  position: fixed;
+  z-index: 10001;
+  box-sizing: border-box;
+  padding: 0 0.6rem;
+  border: 2px solid var(--cc-accent);
+  border-radius: 6px;
+  background: var(--cc-well);
+  color: var(--cc-ink);
+  box-shadow: var(--cc-shadow-card);
+  text-align: center;
+  outline: none;
+}
+
+.inline-edit-input::placeholder {
+  color: var(--cc-ink-3);
+}
+
+/* Key caps, shared by the shortcuts dialog, the palette and tooltips */
+kbd {
+  display: inline-block;
+  padding: 0.15rem 0.4rem;
+  font-family: var(--cc-font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  /* The code surface is dark in both themes, so the text on it is light in both (as in .code-card). */
+  color: #e2e8f0;
+  background: var(--cc-surface-code);
+  border: 1px solid var(--cc-hair-2);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  line-height: 1.2;
+}
+
+/* Collapsible Inspector Sections */
+.prop-section-details {
+  border: 1px solid var(--cc-hair);
+  border-radius: 0.65rem;
+  background: var(--cc-sheet);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+  margin-bottom: 0.75rem;
+}
+
+.prop-section-details[open] {
+  border-color: var(--cc-hair-2);
+}
+
+.prop-section-summary {
+  padding: 0.6rem 0.75rem;
+  font: var(--cc-font-meta);
+  font-weight: 600;
+  color: var(--cc-ink-2);
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  background: var(--cc-sheet);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.prop-section-summary::-webkit-details-marker {
+  display: none;
+}
+
+.prop-section-summary::after {
+  content: '▸';
+  font-size: 0.75rem;
+  transition: transform 0.2s ease;
+  color: var(--cc-ink-3);
+}
+
+.prop-section-details[open] > .prop-section-summary::after {
+  transform: rotate(90deg);
+}
+
+.prop-section-summary:hover {
+  color: var(--cc-ink);
+  background: var(--cc-well);
+}
+
+.prop-section-content {
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+  border-top: 1px solid var(--cc-hair);
+}
+
+/* Swatch dot-only buttons */
+.swatch-option.swatch-dot-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1.5px solid var(--cc-hair-2);
+  background: var(--cc-sheet);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.swatch-option.swatch-dot-only:hover {
+  transform: scale(1.1);
+  border-color: var(--cc-ink-2);
+}
+
+.swatch-option.swatch-dot-only:has(input:checked) {
+  border-color: var(--cc-ink);
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--cc-sheet), 0 0 0 3.5px var(--cc-accent);
+}
+
+.swatch-option.swatch-dot-only .pill-swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+}
+
+/* Custom Icon Upload Zone */
+.custom-icon-upload-zone {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px dashed var(--cc-hair-2);
+  border-radius: 0.5rem;
+  background: var(--cc-well);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  box-sizing: border-box;
+}
+
+.custom-icon-upload-zone:hover,
+.custom-icon-upload-zone.is-dragover {
+  border-color: var(--cc-accent);
+  background: var(--cc-accent-soft);
+}
+
+.custom-icon-thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--cc-hair-2);
+  background: var(--cc-sheet);
+  flex-shrink: 0;
+}
+
+.custom-icon-upload-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.75rem;
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.custom-icon-upload-title,
+.custom-icon-upload-sub {
+  word-break: break-word;
+}
+
+.custom-icon-upload-title {
+  font-weight: 600;
+  color: var(--cc-ink);
+}
+
+.custom-icon-upload-sub {
+  font-size: 0.7rem;
+  color: var(--cc-ink-2);
+}
+
+/* Command Palette Dialog */
+.command-palette-dialog {
+  border-radius: 14px;
+  margin: 12vh auto auto auto;
+  max-inline-size: 38rem;
+  inline-size: 90vw;
+  overflow: hidden;
+}
+
+.command-palette-dialog .dialog-shell {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.palette-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--cc-hair);
+  background: var(--cc-well);
+}
+
+.palette-search-row .ui-icon {
+  color: var(--cc-ink-3);
+}
+
+.palette-search-input {
+  flex: 1 1 auto;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--cc-ink);
+  outline: none;
+}
+
+.palette-search-input::placeholder {
+  color: var(--cc-ink-3);
+}
+
+.palette-hint-kbd {
+  font-size: 0.65rem;
+  color: var(--cc-ink-3);
+  border-color: var(--cc-hair);
+}
+
+.palette-results {
+  max-height: 22rem;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-block-size: 32px;
+  padding: 0 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  font-size: 0.84rem;
+  color: var(--cc-ink);
+  transition: background-color 0.12s ease;
+}
+
+.palette-item.is-active,
+.palette-item:hover {
+  background: var(--cc-accent-soft);
+  color: var(--cc-ink);
+}
+
+.palette-item-main {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  overflow: hidden;
+}
+
+.palette-item-badge {
+  font: var(--cc-font-meta);
+  font-weight: 600;
+  color: var(--cc-ink-3);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--cc-surface-code);
+  border: 1px solid var(--cc-hair);
+  flex-shrink: 0;
+}
+
+.palette-item-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.palette-item-subtitle {
+  font-size: 0.75rem;
+  color: var(--cc-ink-3);
+  margin-left: 0.5rem;
+}
+
+.palette-item-shortcut {
+  flex-shrink: 0;
+  font-family: var(--cc-font-mono);
+  font-size: 0.75rem;
+  color: var(--cc-ink-3);
+}
+
+.palette-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-top: 1px solid var(--cc-hair);
+  background: var(--cc-sheet);
+  font-size: 0.7rem;
+  color: var(--cc-ink-3);
+}
+
+.palette-empty-msg {
+  padding: 2rem;
+  text-align: center;
+  color: var(--cc-ink-3);
+  font-size: 0.85rem;
+}
+
+/* Template Gallery Dialog */
+.template-gallery-controls {
+  padding: 0.75rem 1.25rem 0;
+  border-bottom: 1px solid var(--cc-hair);
+  background: var(--cc-island);
+}
+
+.template-category-filters {
+  display: flex;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+}
+
+.template-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid var(--cc-hair-2);
+  background: var(--cc-sheet);
+  color: var(--cc-ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.template-filter-btn:hover {
+  background: var(--cc-surface-hover);
+  color: var(--cc-ink);
+  border-color: var(--cc-accent-soft);
+}
+
+.template-filter-btn.is-active {
+  background: var(--cc-accent-soft);
+  color: var(--cc-accent);
+  border-color: var(--cc-accent);
+  font-weight: 600;
+}
+
+.template-gallery-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1.25rem;
+  padding: 1.25rem;
+  max-block-size: 72vh;
+  overflow-y: auto;
+  background: var(--cc-bg);
+}
+
+.template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: none;
+  border: 0;
+}
+
+.template-preview-frame {
+  flex: none;
+  aspect-ratio: 16 / 9;
+  background: var(--cc-canvas);
+  border: 1px solid var(--cc-hair);
+  border-radius: 0.6rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: border-color 0.2s ease;
+}
+
+.template-card:hover .template-preview-frame {
+  border-color: var(--cc-ink-3);
+}
+
+.template-preview-frame svg {
+  width: 100%;
+  height: 100%;
+}
+
+.template-preview-blank {
+  border-style: dashed;
+}
+
+.blank-preview-canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--cc-ink-3);
+  font: 0.8rem var(--cc-font-mono);
+}
+
+.template-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.2rem;
+}
+
+.template-card-header,
+.template-stats-row {
+  display: none;
+}
+
+.template-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cc-ink);
+  margin: 0;
+}
+
+.template-card-desc {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--cc-ink-2);
+  flex: 1;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.template-card-actions {
+  padding-block-start: 0.4rem;
+}
+
+.template-card-actions .btn {
+  width: 100%;
+}
+
+/* Shareable Link Box in Export Dialog */
+.share-link-box {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.15rem;
+  border-radius: 0.85rem;
+  background: var(--cc-sheet);
+  border: 1px solid var(--cc-hair-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.share-link-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.share-link-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.share-link-badge {
+  font-size: 0.65rem;
+  font-family: var(--cc-font-mono);
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--cc-accent-soft);
+  color: var(--cc-accent);
+  letter-spacing: 0.05em;
+}
+
+.share-link-size {
+  font-size: 0.72rem;
+  font-family: var(--cc-font-mono);
+  color: var(--cc-ink-3);
+}
+
+.share-link-size.is-warning {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.share-link-desc {
+  font-size: 0.8rem;
+  color: var(--cc-ink-2);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.share-link-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.share-link-input {
+  flex: 1;
+  font-family: var(--cc-font-mono);
+  font-size: 0.78rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--cc-bg);
+  border: 1px solid var(--cc-hair-2);
+  border-radius: 0.45rem;
+  color: var(--cc-ink);
+  text-overflow: ellipsis;
+}
+
+.share-link-input:focus {
+  outline: none;
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 2px var(--cc-accent-soft);
+}
+
+.share-link-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--cc-ink-3);
+}
+
+.share-link-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* PNG Export Scale & Size Estimation Box */
+.export-png-options {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1.15rem;
+  border-radius: 0.85rem;
+  background: var(--cc-sheet);
+  border: 1px solid var(--cc-hair-2);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.export-png-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.export-png-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.export-png-badge {
+  font-size: 0.65rem;
+  font-family: var(--cc-font-mono);
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--cc-emerald-soft);
+  color: var(--cc-emerald);
+  letter-spacing: 0.05em;
+}
+
+.export-png-estimate {
+  font-size: 0.78rem;
+  font-family: var(--cc-font-mono);
+  font-weight: 600;
+  color: var(--cc-ink);
+}
+
+.export-png-controls-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.export-png-select {
+  font-family: var(--cc-font-mono);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.65rem;
+  background: var(--cc-well);
+  border: 1px solid var(--cc-hair-2);
+  border-radius: 0.45rem;
+  color: var(--cc-ink);
+  cursor: pointer;
+}
+
+.export-png-select:focus {
+  outline: none;
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 2px var(--cc-accent-soft);
+}
+
+.export-alt-text {
+  width: 100%;
+  cursor: text;
+  resize: vertical;
+}
+
+.export-png-hint {
+  font-size: 0.78rem;
+  color: var(--cc-ink-3);
+}
+
+/* Node Search Highlights & HUD Card (Cmd/Ctrl+F) */
+.arch-node.is-search-match {
+  opacity: 1 !important;
+  filter: none !important;
+  outline: 2px solid var(--cc-ink) !important;
+  outline-offset: 3px !important;
+  z-index: 5;
+}
+
+.arch-node.is-active-match {
+  outline: 3px solid #d97706 !important;
+  outline-offset: 4px !important;
+  z-index: 6;
+}
+
+.hud-search-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  min-inline-size: 11rem;
+  transition: min-inline-size 0.2s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hud-search-card:focus-within {
+  min-inline-size: 15rem;
+  border-color: var(--cc-accent);
+  box-shadow: 0 0 0 2px var(--cc-accent-soft);
+}
+
+.hud-search-icon {
+  display: flex;
+  align-items: center;
+  color: var(--cc-ink-3);
+  flex-shrink: 0;
+}
+
+.hud-search-input {
+  border: none;
+  background: transparent;
+  color: var(--cc-ink);
+  font-family: inherit;
+  font-size: 0.78rem;
+  inline-size: 100%;
+  outline: none;
+  padding: 0;
+}
+
+.hud-search-input::placeholder {
+  color: var(--cc-ink-3);
+  font-size: 0.75rem;
+}
+
+.hud-search-count {
+  font-size: 0.7rem;
+  font-family: var(--cc-font-mono);
+  color: var(--cc-ink-3);
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.3rem;
+  background: var(--cc-well);
+}
+
+.hud-search-clear {
+  border: none;
+  background: transparent;
+  color: var(--cc-ink-3);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  inline-size: 1.1rem;
+  block-size: 1.1rem;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.hud-search-clear:hover {
+  color: var(--cc-ink);
+  background: var(--cc-well);
+}
+
+/* View Transitions for Mode Switching (Design <-> Data View) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.18s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  .arch-node.is-entering {
+    animation: none !important;
+  }
+
+  .workspace[data-wiring="true"] .arch-node:not(.is-wiring-source) .node-port {
+    animation: none !important;
+  }
+
+  .node-select-hit {
+    transition: none !important;
+  }
+
+  .node-port {
+    transition: none !important;
+  }
+}
+
+/* ==========================================================================
+   Active Wire Glow & Trace Highlight
+   ========================================================================== */
+
+/* Trace item interactive styles & active step highlight */
+.trace-item {
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.trace-item:hover {
+  background: var(--cc-well);
+}
+
+.trace-item.is-active-step {
+  background: var(--cc-well);
+  border-inline-start: 3px solid var(--sim-accent, var(--cc-blue));
+  padding-inline-start: calc(0.75rem - 3px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ==========================================================================
+   Locked Elements & Padlock Badge (Suggestion 12)
+   ========================================================================== */
+.arch-node[data-locked="true"] {
+  outline: 1px dashed var(--cc-border);
+}
+
+.node-lock-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--cc-well);
+  border: 1px solid var(--cc-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cc-ink-2);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Status Badges & Review Comments (Suggestion 15)
+   ========================================================================== */
+.node-status-badge {
+  position: absolute;
+  top: -8px;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding-inline: 0.45rem;
+  padding-block: 0.1rem;
+  border-radius: 999px;
+  font: var(--cc-font-meta);
+  font-weight: 600;
+  border: 1px solid var(--cc-hair);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  user-select: none;
+}
+
+.node-status-badge[data-status="live"] {
+  background: var(--cc-emerald-soft);
+  color: var(--cc-emerald);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.node-status-badge[data-status="planned"] {
+  background: var(--cc-blue-soft);
+  color: var(--cc-blue);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.node-status-badge[data-status="at-risk"] {
+  background: var(--cc-rose-soft);
+  color: var(--cc-rose);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.node-status-badge[data-status="deprecated"] {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--cc-ink-3);
+  border-color: rgba(100, 116, 139, 0.35);
+}
+
+.node-status-badge .status-dot {
+  width: 0.38rem;
+  height: 0.38rem;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.node-status-badge[data-status="live"] .status-dot {
+  /* A15: a still ring. The status is a label the user sets, so nothing here may move and suggest live data. */
+  box-shadow: 0 0 0 2px var(--cc-emerald-soft);
+}
+
+.node-comment-badge {
+  position: absolute;
+  top: -8px;
+  right: 18px;
+  width: 19px;
+  height: 19px;
+  border-radius: 999px;
+  background: var(--cc-well);
+  color: var(--cc-blue);
+  border: 1px solid var(--cc-hair);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.node-comment-badge:hover {
+  transform: scale(1.18);
+  color: var(--cc-ink);
+  border-color: var(--cc-blue);
+}
+
+.conduit-comment-badge {
+  cursor: pointer;
+}
+
+.conduit-comment-bg {
+  fill: var(--cc-well, #1a2234);
+  stroke: var(--cc-blue);
+  stroke-width: 1.2;
+}
+
+.conduit-comment-icon {
+  fill: var(--cc-blue);
+}
+
+/* Context menu (right-click, Shift+F10) */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 13rem;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--cc-sheet);
+  border: 1px solid var(--cc-hair-2);
+  box-shadow: var(--cc-shadow-3);
+  color: var(--cc-ink);
+  max-block-size: calc(100dvh - 8px);
+  overflow-y: auto;
+}
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  width: 100%;
+  min-block-size: 32px;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  cursor: pointer;
+}
+.context-menu-item:hover,
+.context-menu-item:focus-visible {
+  background: var(--cc-accent-soft);
+  outline: none;
+}
+.context-menu-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--cc-accent);
+}
+.context-menu-item kbd {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--cc-font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--cc-ink-3);
+}
+.context-menu-sep {
+  height: 1px;
+  margin: 0.25rem 0.2rem;
+  background: var(--cc-hair-2);
+}
+
+/* Group outlines: dashed, shown on hover or when a member is selected */
+#group-outlines-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.group-outline {
+  position: absolute;
+  border: 1px dashed var(--cc-blue);
+  border-radius: 1.4rem;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+.group-outline.is-visible {
+  opacity: 0.85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .group-outline {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
+   live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
+   --------------------------------------------------------------------------------------------- */
+/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Three faces: Design, Traffic (the run bar) and Review. */
+.dock {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-inline-size: 100%;
+  padding: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: var(--cc-island);
+  border: 1px solid var(--cc-hair);
+  border-radius: 1.125rem;
+  box-shadow: var(--cc-shadow-card);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+}
+/* One island, three faces (6.4): the lens picks which one shows. */
+.dock-face { display: flex; align-items: center; gap: 0.25rem; min-inline-size: 0; }
+.dock-face[hidden] { display: none; }
+.dock-fail { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2rem; padding-inline: 0.7rem; border: 1px solid transparent; border-radius: 0.6rem; background: none; color: var(--cc-rose); font: var(--cc-font-small); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.dock-fail:hover { background: var(--cc-well); }
+.dock-fail kbd { font: 0.7rem var(--cc-font-mono); opacity: 0.7; }
+.dock-fail[aria-pressed="true"] { background: var(--cc-rose); color: var(--cc-sheet); }
+.workspace[data-fail-armed] .arch-node { cursor: crosshair; }
+.review-count { flex: none; font: var(--cc-font-small); font-variant-numeric: tabular-nums; color: var(--cc-ink-2); white-space: nowrap; }
+.review-sentence { flex: 1 1 14rem; min-inline-size: 8rem; max-inline-size: 28rem; font: var(--cc-font-small); color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-fixes { display: contents; }
+.dock-btn, .dock-fav {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0.7rem;
+  background: none;
+  color: var(--cc-ink-2);
+  font: inherit;
+  cursor: pointer;
+}
+.dock-btn:hover, .dock-fav:hover { background: var(--cc-well); color: var(--cc-ink); }
+.dock-btn:focus-visible, .dock-fav:focus-visible, .dock-all:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.dock-btn[aria-pressed="true"] { background: var(--cc-ink); color: var(--cc-sheet); }
+.dock-fav[aria-pressed="true"] { background: var(--cc-well); }
+.dock-fav .cutout { inline-size: 30px; block-size: 24px; }
+.dock-sep { flex: none; inline-size: 1px; block-size: 1.5rem; margin-inline: 0.25rem; background: var(--cc-hair); }
+.dock-all { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2.75rem; padding-inline: 0.75rem; border: 0; border-radius: 0.7rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); cursor: pointer; white-space: nowrap; }
+.dock-all:hover, .dock-all[aria-expanded="true"] { background: var(--cc-well); color: var(--cc-ink); }
+.dock-all kbd { font: 0.7rem var(--cc-font-mono); color: var(--cc-ink-3); }
+/* The tray (7.3): opens above the dock. Six groups, each a quiet label over a list of cut-outs. Not modal. */
+.tray {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: calc(100% + 0.625rem);
+  translate: -50% 0;
+  inline-size: min(55rem, 100cqi);
+  max-block-size: calc(100vh - 11.5rem);
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem 1rem;
+  background: var(--cc-island);
+  border: 1px solid var(--cc-hair);
+  border-radius: 1.375rem;
+  box-shadow: var(--cc-shadow-elevated);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  backdrop-filter: blur(18px) saturate(1.4);
+  pointer-events: auto;
+  z-index: 3;
+}
+.tray-shelf { grid-column: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: 1rem 1.25rem; align-content: start; min-inline-size: 0; }
+/* The demo (7.3): the highlighted component on a panel tinted with its colour. Capsules run a three-second loop. */
+.tray-demo { grid-column: 2; grid-row: 2; align-self: start; position: sticky; inset-block-start: 0; padding: 0.75rem; border-radius: 1rem; background: color-mix(in oklab, var(--t, var(--cc-ink-3)) 9%, var(--cc-sheet)); }
+.tray-stage { position: relative; block-size: 6.5rem; margin-block-end: 0.75rem; }
+.demo-lead { position: absolute; inset-inline: 0; inset-block-start: 50%; block-size: 1px; background: color-mix(in oklab, var(--t) 30%, transparent); }
+.demo-cut { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; }
+.demo-cut .cutout { inline-size: 5.5rem; block-size: auto; stroke: var(--t); }
+.demo-cut .cutout :is(path, rect, ellipse, circle, polygon) { fill: color-mix(in oklab, var(--t) 13%, var(--cc-sheet)); stroke: var(--t); }
+.demo-cut .cutout .cutout-mark { fill: none; }
+.tray-stage.is-over .demo-cut { z-index: 0; }
+.cap { position: absolute; inset-block-start: 50%; inset-inline-start: 0; inline-size: 0.9rem; block-size: 0.5rem; margin-block-start: -0.25rem; border-radius: 99px; background: var(--t); translate: -50% 0; opacity: 0; z-index: 2; animation: var(--a) 3s linear infinite; animation-delay: var(--d, 0s); }
+.tray-demo-name { margin: 0; font: var(--cc-font-panel); color: var(--cc-ink); }
+.tray-demo-text { margin: 0.25rem 0 0; font: var(--cc-font-small); color: var(--cc-ink-2); }
+/* Still pictures of each loop's end state, for reduced motion. */
+.tray-demo.is-still .cap { animation: none; inset-inline-start: var(--el); top: calc(50% + var(--et)); opacity: var(--eo); background: var(--ec, var(--t)); }
+@keyframes k-lead { 0% { left: 50%; opacity: 0; } 8% { opacity: 1; } 55% { left: 100%; opacity: 1; } 60%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-through { 0% { left: 0; opacity: 1; } 55% { left: 100%; opacity: 1; } 60%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-in { 0% { left: 0; opacity: 1; } 30% { left: 45%; opacity: 1; } 34%, 100% { left: 45%; opacity: 0; } }
+@keyframes k-fan { 0%, 30% { left: 50%; top: 50%; opacity: 0; } 34% { left: 50%; top: 50%; opacity: 1; } 80% { left: 100%; top: calc(50% + var(--dy)); opacity: 1; } 85%, 100% { left: 100%; top: calc(50% + var(--dy)); opacity: 0; } }
+@keyframes k-turn { 0% { left: 0; top: 50%; opacity: 1; } 35% { left: 44%; top: 50%; opacity: 1; background: var(--t); } 38% { background: var(--c); } 75% { left: 10%; top: calc(50% + 1.5rem); opacity: 0; background: var(--c); } 100% { left: 10%; top: calc(50% + 1.5rem); opacity: 0; } }
+@keyframes k-hold-0 { 0% { left: 0; opacity: 1; } 12% { left: 40%; } 40% { left: 40%; } 70% { left: 100%; opacity: 1; } 75%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-hold-1 { 0% { left: 0; opacity: 1; } 12% { left: 46%; } 58% { left: 46%; } 88% { left: 100%; opacity: 1; } 92%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-hold-2 { 0% { left: 0; opacity: 1; } 12% { left: 52%; } 70% { left: 52%; } 94% { left: 100%; opacity: 1; } 97%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-keep { 0% { left: 0; opacity: 1; } 25% { left: var(--x); opacity: 1; } 90% { left: var(--x); opacity: 1; } 100% { left: var(--x); opacity: 0; } }
+#slot-s { position: relative; }
+.tray-search { grid-column: 1 / -1; inline-size: 100%; }
+.tray-empty { grid-column: 1 / -1; margin: 0; padding: 0.5rem; font: var(--cc-font-small); color: var(--cc-ink-3); }
+.tray-note { display: block; font: var(--cc-font-small); color: var(--cc-ink-3); }
+.tray [hidden] { display: none; }
+.tray-label { margin: 0 0 0.25rem; padding-inline: 0.5rem; font: var(--cc-font-small); color: var(--cc-ink-3); }
+.tray-list { display: flex; flex-direction: column; }
+.tray-item { display: flex; align-items: center; gap: 0.75rem; min-block-size: 2.75rem; padding: 0.25rem 0.5rem; border: 0; border-radius: 0.65rem; background: none; color: var(--cc-ink); font: var(--cc-font-body, inherit); text-align: start; cursor: pointer; touch-action: manipulation; }
+.tray-item:hover, .tray-item:focus-visible { background: var(--cc-well); }
+.tray-item:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.tray-name { display: flex; flex-direction: column; }
+.tray-item .cut { flex: none; display: grid; inline-size: 38px; block-size: 30px; }
+.workspace[data-tray] .hint-line, .workspace[data-mode="data"] .tray { display: none; }
+/* The selection's toolbar floats over the tray's search box, so it waits while the tray is open. */
+body:has(.workspace[data-tray]) .context-toolbar { display: none; }
+@media (max-width: 56rem) { .dock-fav:nth-of-type(n+4) { display: none; } .tray { grid-template-columns: minmax(0, 1fr); } .tray-demo { display: none; } }
+/* Click to arm (7.1): the ghost follows the pointer until the next click on the sheet. */
+.workspace[data-armed] .canvas-viewport { cursor: copy; }
+.dock-fav, .dock-btn { touch-action: manipulation; }
+.dock-fav[data-tip] { overflow: visible; }
+
+/* Contextual toolbar: actions floating beside the selection */
+.context-toolbar {
+  position: fixed;
+  z-index: 900;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--cc-sheet);
+  border: 1px solid var(--cc-hair-2);
+  box-shadow: var(--cc-shadow-2);
+}
+.context-toolbar[hidden] {
+  display: none;
+}
+/* Icon buttons (6.6): 32 px squares; the name is the tooltip. */
+.context-toolbar-btn {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cc-ink-2);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.context-toolbar-btn:hover,
+.context-toolbar-btn:focus-visible {
+  background: var(--cc-well);
+  color: var(--cc-ink);
+  outline: none;
+}
+.context-toolbar-btn:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--cc-accent);
+}
+
+/* Colour, kind and shape pickers opened from the contextual toolbar */
+.appearance-popover {
+  position: fixed;
+  z-index: 910;
+  display: grid;
+  min-width: 11rem;
+  max-height: 60vh;
+  overflow: auto;
+  padding: var(--cc-space-1);
+}
+.appearance-choice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--cc-ink);
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  cursor: pointer;
+}
+.appearance-choice:hover,
+.appearance-choice:focus-visible {
+  background: var(--cc-accent-soft);
+  outline: none;
+}
+.appearance-choice[aria-checked="true"] {
+  font-weight: 700;
+  color: var(--cc-accent);
+}
+
+/* Inspector pin: keeps the panel open when nothing is selected */
+.inspector-pin-btn {
+  display: inline-flex;
+  margin-inline-start: auto;
+}
+.inspector-pin-btn[aria-pressed="true"] {
+  background: var(--cc-accent-soft);
+  color: var(--cc-ink);
+}
+
+/* Lens switcher: the key that selects each lens. */
+.mode-switcher .lens-key {
+  display: inline;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.72em;
+  opacity: 0.55;
+}
+
+/* Run bar: scenario picker and transport for the Traffic lens (redesigned interface only). */
+.run-bar {
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  inline-size: min(42rem, 100%);
+}
+.run-bar[hidden] {
+  display: none;
+}
+/* A14: the groups name the bar's two regions for the control count and for assistive tech; they add no box. */
+.run-bar-group {
+  display: contents;
+}
+.run-bar-scenario {
+  min-inline-size: 6rem;
+  max-inline-size: 11rem;
+  flex: 0 1 11rem;
+}
+.run-bar-scrubber {
+  flex: 1 1 5rem;
+  min-inline-size: 3rem;
+}
+.run-bar-step {
+  flex: 0 0 auto;
+  font-family: var(--cc-font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  color: var(--cc-ink-3);
+  white-space: nowrap;
+}
+.run-bar [aria-pressed="true"] {
+  color: var(--cc-accent);
+}
+/* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
+.legend-card {
+  display: block;
+  max-inline-size: min(18rem, 80cqi);
+}
+.legend-card-title {
+  margin: 0 0 0.25rem;
+  font: var(--cc-font-meta);
+  font-weight: 600;
+  color: var(--cc-ink-3);
+}
+.legend-card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+.legend-card-list li { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Tag filter (F-26): what does not carry the chosen tag steps back. */
+.arch-node.is-tag-dimmed,
+.conduit-group.is-tag-dimmed {
+  opacity: 0.18;
+}
+
+.run-bar .js-colour-by { min-inline-size: 9.5rem; }
+.run-bar .js-tag-filter { min-inline-size: 7rem; }
+
+/* Chaos simulation (F-01): failed components turn rose and shake once; what they cut off dims. */
+.arch-node[data-chaos="failed"] .node-select-hit {
+  border-color: var(--cc-rose);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-rose) 40%, transparent);
+  animation: chaos-shake 320ms ease-in-out 1;
+}
+.arch-node[data-chaos="degraded"] .node-select-hit {
+  border-color: var(--cc-amber, #d97706);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-amber, #d97706) 40%, transparent);
+}
+.arch-node[data-chaos="unreachable"] .node-select-hit {
+  outline: 2px dashed color-mix(in srgb, var(--cc-rose) 55%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="rerouted"] .node-select-hit {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-blue) 35%, transparent);
+}
+/* Callers of a failed component: still up, but their requests may fail. A slow orange pulse. */
+.arch-node[data-chaos="at-risk"] .node-select-hit {
+  border-color: #f97316;
+  animation: chaos-pulse 2.4s ease-in-out infinite;
+}
+@keyframes chaos-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgb(249 115 22 / 0.35); }
+  50% { box-shadow: 0 0 0 2px rgb(249 115 22 / 0.55); }
+}
+.arch-node[data-chaos="at-risk"] .chaos-badge { background: #f97316; color: #fff; border-color: #f97316; }
+.chaos-item[data-status="at-risk"] { color: #c2410c; }
+/* Queues (K1): a queue that holds work is up, so it gets a violet ring; what waits behind it gets a dotted one. */
+.arch-node[data-chaos="buffering"] .node-select-hit {
+  border-color: var(--cc-violet);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-violet) 40%, transparent);
+}
+.arch-node[data-chaos="delayed"] .node-select-hit {
+  outline: 2px dotted color-mix(in srgb, var(--cc-violet) 65%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="buffering"] .chaos-badge,
+.arch-node[data-chaos="delayed"] .chaos-badge { border-color: var(--cc-violet); }
+.arch-node[data-shape="pipe"][data-chaos="failed"] .node-shape-plate { color: var(--cc-rose); }
+.arch-node[data-shape="pipe"][data-chaos="buffering"] .node-shape-plate { color: var(--cc-violet); }
+/* Caches and limiters (K3, K4): slowed callers get an amber dashed ring; a bypassed limiter keeps a violet dashed one. */
+.arch-node[data-chaos="slowed"] .node-select-hit {
+  outline: 2px dashed color-mix(in srgb, var(--cc-amber) 75%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="bypassed"] .node-select-hit {
+  outline: 2px dashed color-mix(in srgb, var(--cc-violet) 75%, transparent);
+  outline-offset: 3px;
+}
+.arch-node[data-chaos="slowed"] .chaos-badge { border-color: var(--cc-amber); }
+.arch-node[data-chaos="bypassed"] .chaos-badge { border-color: var(--cc-violet); }
+.chaos-item[data-status="buffering"], .chaos-item[data-status="delayed"], .chaos-item[data-status="slowed"], .chaos-item[data-status="bypassed"] { font-weight: 600; }
+.chaos-badge {
+  position: absolute;
+  inset-block-start: -0.7rem;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font: 600 0.65rem/1.3 var(--cc-font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--cc-sheet);
+  color: var(--cc-ink);
+  border: 1px solid var(--cc-border);
+}
+.arch-node[data-chaos="failed"] .chaos-badge { background: var(--cc-rose); color: #fff; border-color: var(--cc-rose); }
+@keyframes chaos-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arch-node[data-chaos="failed"] .node-select-hit { animation: none; }
+  .arch-node[data-chaos="at-risk"] .node-select-hit { animation: none; box-shadow: 0 0 0 2px rgb(249 115 22 / 0.5); }
+}
+
+.chaos-panel {
+  max-inline-size: 100%;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--cc-sheet);
+  border: 1px solid var(--cc-rose);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.14);
+}
+.chaos-panel[hidden], .chaos-list[hidden] { display: none; }
+.chaos-panel-head { display: flex; gap: 0.4rem; align-items: center; }
+.chaos-list { list-style: none; margin: 0; padding: 0; max-block-size: min(10rem, 18vh); overflow: auto; display: grid; gap: 0.15rem; }
+.chaos-item { all: unset; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: 0.4rem; font-size: 0.78rem; color: var(--cc-ink); }
+.chaos-item:hover, .chaos-item:focus-visible { background: var(--cc-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.chaos-item[data-status="failed"] { color: var(--cc-rose); font-weight: 600; }
+
+/* A failed component carries nothing: the flowing dashes on its own wires (not those of components it cuts off) stop. */
+.conduit-group.is-chaos-cut .conduit-stream,
+.conduit-group.is-chaos-cut .conduit-stream-reverse {
+  animation: none;
+  stroke-dasharray: none;
+  opacity: 0;
+}
+
+/* Insights (F-02): the Review lens lists what the rules found; badges sit on the components they are about. */
+.insight-count {
+  margin-inline-start: 0.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 700;
+  background: var(--cc-redline);
+  color: var(--cc-on-ink);
+}
+.mode-switcher label:has(input:checked) .insight-count { background: var(--cc-on-ink); color: var(--cc-redline); }
+.insights-panel {
+  position: absolute;
+  inset-inline-start: 1rem;
+  inset-block-start: 4.5rem;
+  z-index: 11;
+  inline-size: min(22rem, calc(100% - 2rem));
+  max-block-size: min(32rem, calc(100% - 7rem));
+  overflow: auto;
+  padding: 0.6rem 0.7rem;
+  background: var(--cc-sheet);
+  color: var(--cc-ink);
+  border: 1px solid var(--cc-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.14);
+}
+.insights-panel[hidden] { display: none; }
+.insights-heading { margin: 0 0 0.4rem; font-size: 0.9rem; }
+.insights-body { display: grid; gap: 0.6rem; }
+.insight-group-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.insight-mute { margin-inline-start: auto; flex: none; padding-inline: 0.5rem; display: inline-grid; place-items: center; }
+.insight-group-head h3 { margin: 0; font-size: 0.78rem; font-weight: 700; }
+.insight-group[data-level="error"] .insight-group-head h3 { color: var(--cc-rose); }
+.insight-group[data-level="warning"] .insight-group-head h3 { color: var(--cc-amber-ink, #92400e); }
+.insight-list { list-style: none; margin: 0.2rem 0 0; padding: 0; display: grid; gap: 0.1rem; }
+.insight-item {
+  all: unset;
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  border-radius: 0.4rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--cc-ink);
+}
+.insight-item:hover, .insight-item:focus-visible { background: var(--cc-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.insight-empty { margin: 0; font-size: 0.8rem; color: var(--cc-muted, var(--cc-ink)); }
+/* Nested levels (F-03) */
+.node-level-badge {
+  position: absolute;
+  bottom: -9px;
+  right: 10px;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--cc-well);
+  color: var(--cc-ink-3);
+  border: 1px solid var(--cc-hair);
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease, color 0.15s ease;
+}
+.node-level-badge[data-has-child='true'],
+.arch-node:hover .node-level-badge,
+.arch-node:focus-within .node-level-badge,
+.arch-node.is-selected .node-level-badge {
+  opacity: 1;
+}
+.node-level-badge:hover,
+.node-level-badge:focus-visible {
+  color: var(--cc-ink);
+  border-color: var(--cc-accent);
+  transform: scale(1.08);
+}
+.workspace[data-lens='present'] .node-level-badge:not([data-has-child='true']) {
+  display: none;
+}
+
+.level-breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+  font-size: 0.78rem;
+}
+.level-breadcrumb[hidden] {
+  display: none;
+}
+.level-crumb {
+  background: none;
+  border: 0;
+  padding: 1px 4px;
+  border-radius: 4px;
+  color: var(--cc-ink-3);
+  font: inherit;
+  cursor: pointer;
+}
+.level-crumb:hover,
+.level-crumb:focus-visible {
+  color: var(--cc-ink);
+  background: var(--cc-well);
+}
+.level-crumb[aria-current='page'] {
+  color: var(--cc-ink);
+  font-weight: 600;
+  cursor: default;
+}
+.level-crumb-sep {
+  color: var(--cc-ink-3);
+}
+
+.level-ports {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 6;
+}
+.level-ports[hidden] {
+  display: none;
+}
+.level-port {
+  position: absolute;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px dashed var(--cc-hair);
+  background: var(--cc-well);
+  color: var(--cc-ink-3);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.level-port[data-direction='in'] {
+  left: 8px;
+}
+.level-port[data-direction='out'] {
+  right: 8px;
+}
+.level-port:hover,
+.level-port:focus-visible {
+  color: var(--cc-ink);
+  border-color: var(--cc-accent);
+}
+/* The component on the other end of this wire has failed: struck through as well as rose, so colour is not the only cue. */
+.level-port[data-cut-off='true'] {
+  color: var(--cc-rose);
+  border-color: var(--cc-rose);
+  text-decoration: line-through;
+}
+
+@keyframes level-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.stage-world.level-enter {
+  animation: level-fade-in 0.24s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-world.level-enter {
+    animation: none;
+  }
+}
+
+/* Text outline (F-28) */
+.outline-panel {
+  position: absolute;
+  inset-inline-end: 1rem;
+  inset-block-start: 4.5rem;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  inline-size: min(22rem, calc(100% - 2rem));
+  max-block-size: min(32rem, calc(100% - 11rem));
+  padding: 0.6rem 0.7rem;
+  background: var(--cc-sheet);
+  color: var(--cc-ink);
+  border: 1px solid var(--cc-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(2, 6, 23, 0.14);
+}
+.outline-panel[hidden] { display: none; }
+.outline-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-block-end: 0.4rem; }
+.outline-heading { margin: 0; font-size: 0.9rem; }
+.outline-head .btn { flex: none; inline-size: auto; }
+.outline-tree { overflow: auto; display: grid; gap: 0.05rem; }
+.outline-row { display: flex; gap: 0.35rem; padding-block: 0.2rem; padding-inline-end: 0.4rem; border-radius: 0.4rem; font-size: 0.8rem; cursor: pointer; }
+.outline-row:hover { background: var(--cc-hover, rgba(100, 116, 139, 0.12)); }
+.outline-row:focus-visible { outline: 2px solid var(--cc-focus, #2563eb); outline-offset: -2px; }
+.outline-row[aria-selected="true"] { background: rgba(37, 99, 235, 0.14); font-weight: 600; }
+.outline-row[data-kind="zone"] { font-weight: 700; }
+.outline-row[data-kind="wire"] { color: var(--cc-muted, #475569); }
+.outline-twisty { inline-size: 0.8rem; flex: none; }
+.outline-empty { margin: 0; font-size: 0.8rem; }
+
+/* Contextual help (R-10): the ? button and its popover. */
+.help-btn {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin-inline-start: 0.4rem;
+  border: 1px solid var(--cc-border);
+  border-radius: 50%;
+  background: var(--cc-sheet);
+  color: var(--cc-ink-3);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.help-btn:hover, .help-btn[aria-expanded="true"] { color: var(--cc-ink); border-color: var(--cc-accent); }
+.help-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
+.prop-section-wrap { position: relative; }
+.prop-section-wrap > .help-btn { position: absolute; inset-inline-end: 2.2rem; inset-block-start: 0.55rem; margin: 0; z-index: 1; }
+.insights-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-block-end: 0.4rem; }
+.insights-head .insights-heading { margin: 0; }
+.help-popover {
+  position: fixed;
+  z-index: 60;
+  inline-size: min(20rem, calc(100vw - 1rem));
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 28px rgba(2, 6, 23, 0.22);
+}
+.help-popover[hidden] { display: none; }
+.help-popover:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
+.help-popover-title { margin: 0 0 0.35rem; font-size: 0.9rem; }
+.help-popover-body { margin: 0 0 0.6rem; font-size: 0.82rem; line-height: 1.45; }
+.help-popover-link { font-size: 0.8rem; color: var(--cc-accent); }
+
+/* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
+@media (pointer: coarse) {
+  .btn, .btn-icon-only, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
+  .title-edit-trigger, .context-menu-item, .help-popover-link {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+  }
+  .hud-search-input { min-block-size: 2.75rem; font-size: 1rem; }
+  .context-toolbar-btn, .toast-action-btn { display: inline-flex; align-items: center; justify-content: center; }
+}
+
+/* Edge tabs (A12b): open the palette and inspector drawers by touch. Not shown on a mouse, or when the panels sit beside the canvas. */
+.drawer-tab { display: none; }
+@media (pointer: coarse) and (max-width: 66rem) {
+  .drawer-tab {
+    position: absolute;
+    inset-block-start: 50%;
+    z-index: 30;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    margin-block-start: -1.375rem;
+    padding: 0;
+    color: var(--cc-ink);
+    background: var(--cc-island);
+    border: 1px solid var(--cc-hair);
+    cursor: pointer;
+  }
+  .drawer-tab-end { inset-inline-end: 0; border-start-start-radius: 0.75rem; border-end-start-radius: 0.75rem; border-inline-end: 0; }
+  .drawer-tab[aria-expanded="true"] { display: none; }
+}
+
+/* Canvas hit areas (A12b): the drag handle and level badge look small but take a 44px touch area at 100% zoom.
+   Only while they are shown, so an invisible one never steals a tap meant for the component. */
+@media (pointer: coarse) {
+  .arch-node .node-select-hit[aria-pressed="true"] ~ .node-drag-handle::after,
+  .arch-node .node-select-hit[aria-pressed="true"] ~ .node-level-badge::after,
+  .node-level-badge[data-has-child='true']::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+  }
+}
+
+/* Find and replace (F-29) */
+.find-replace-dialog .dialog-shell { inline-size: min(40rem, 92vw); }
+.find-replace-body { display: grid; gap: 0.5rem; }
+.find-replace-options { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; font-size: 0.85rem; }
+.find-replace-options label { display: inline-flex; align-items: center; gap: 0.35rem; }
+.find-replace-results { list-style: none; margin: 0; padding: 0; max-block-size: 40vh; overflow: auto; display: grid; gap: 0.25rem; }
+.find-replace-row { display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--cc-hair); border-radius: 0.5rem; padding: 0.25rem 0.5rem; }
+.find-replace-go { flex: 1; min-inline-size: 0; display: grid; text-align: start; background: none; border: 0; color: inherit; cursor: pointer; font: inherit; padding: 0.25rem 0; }
+.find-replace-go > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.find-replace-where { font-size: 0.72rem; opacity: 0.75; }
+.find-replace-actions { display: flex; justify-content: flex-end; gap: 0.5rem; }
+
+.bulk-row { display: grid; gap: 0.25rem; margin-block-start: 0.5rem; }
+.bulk-tag-row { display: flex; gap: 0.4rem; align-items: center; }
+.bulk-tag-row .field { flex: 1; min-inline-size: 0; }
+.bulk-tag-buttons { display: inline-flex; gap: 0.25rem; }
+
+/* Page tabs (D10): the SW island, under the minimap. It scrolls sideways when the pages outgrow its slot. */
+.page-strip {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+  max-inline-size: 100%;
+  padding: 0.2rem 0.35rem;
+  background: var(--cc-island);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--cc-hair);
+  border-radius: 0.75rem;
+  box-shadow: var(--cc-shadow-card);
+}
+.page-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0.125rem;
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.page-tab {
+  flex: 0 0 auto;
+  max-inline-size: 14rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-radius: 0.5rem;
+  border-block-start: 0;
+  background: none;
+  color: var(--cc-ink-3);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.page-tab:hover { color: var(--cc-ink); background: var(--cc-hover, rgba(127, 127, 127, 0.1)); }
+.page-tab[aria-selected="true"] { color: var(--cc-ink); font-weight: 600; background: var(--cc-well); }
+.page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--cc-accent); }
+.page-tab-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.page-add {
+  flex: 0 0 auto;
+  align-self: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 0.4rem;
+  background: none;
+  color: var(--cc-ink-3);
+  cursor: pointer;
+}
+.page-add:hover { color: var(--cc-ink); border-color: var(--cc-border); }
+.page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+body[data-presenting="true"] .page-strip { display: none; }
+/* Touch (A12): the strip's tabs and + button are full-size targets. */
+@media (pointer: coarse) {
+  .page-tab, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+}
+
+/* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */
+.arch-node[data-kind="cache"] .node-sub,
+.arch-node[data-kind="scheduler"] .node-sub { display: none; }
+
+/* Streams draw their partitions as thin lanes inside the pipe (K6). */
+.node-shape-lanes { fill: none; stroke: currentColor; stroke-width: 1; opacity: 0.35; pointer-events: none; }
+
+/* Something someone else runs (K7): a dashed outline and a small ribbon. */
+.arch-node[data-external="true"] .node-select-hit { border-style: dashed; }
+.arch-node[data-external="true"] .node-shape-geom { stroke-dasharray: 6 4; }
+.arch-node[data-external="true"]::after {
+  content: "EXTERNAL";
+  position: absolute;
+  inset-block-start: -0.55rem;
+  inset-inline-end: 0.6rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font: 600 0.6rem/1.2 var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
+  background: var(--surface, #fff);
+  color: var(--text-muted, #475569);
+  border: 1px dashed currentColor;
+  pointer-events: none;
+}
+
+/* The inspector (6.5): a header with the selection's cut-out, then Look, Behaviour and Notes in a well. */
+.prop-selection-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.25rem 0 0.75rem; }
+.prop-selection-art { flex: none; display: grid; place-items: center; inline-size: 3rem; block-size: 2.25rem; border-radius: 0.6rem; background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 22%, transparent); }
+.prop-selection-art .cutout { inline-size: 2.25rem; block-size: auto; }
+.prop-selection-text { display: grid; min-inline-size: 0; }
+.prop-selection-name { font-size: 1rem; font-weight: 600; color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prop-selection-kind { font: var(--cc-font-small); color: var(--cc-ink-3); }
+.prop-tablist { display: flex; gap: 0.2rem; padding: 0.2rem; margin-block-end: 0.75rem; background: var(--cc-well); border-radius: 0.7rem; }
+.prop-tab { flex: 1; block-size: 1.9rem; border: 0; border-radius: 0.5rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); font-weight: 600; cursor: pointer; }
+.prop-tab:hover { color: var(--cc-ink); }
+.prop-tab[aria-selected="true"] { background: var(--cc-sheet); color: var(--cc-ink); box-shadow: 0 1px 2px rgba(2, 6, 23, 0.12); }
+.prop-tab:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
+.prop-tabpanel[hidden] { display: none; }
+.prop-tabpanel { display: grid; gap: 0.75rem; }
+
+/* Create by wiring (7.4): four cut-outs above the new component. */
+.kind-strip { position: fixed; z-index: 40; display: flex; gap: 0.2rem; padding: 0.3rem; transform: translate(-50%, -100%); background: var(--cc-island); border: 1px solid var(--cc-hair); border-radius: 0.9rem; box-shadow: var(--cc-shadow-card); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); }
+.kind-strip-item { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.25rem; border: 0; border-radius: 0.6rem; background: none; color: inherit; cursor: pointer; }
+.kind-strip-item:hover { background: var(--cc-well); }
+.kind-strip-item.is-on { background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 26%, transparent); box-shadow: inset 0 0 0 1.5px var(--t, var(--cc-ink)); }
+.kind-strip-item .cutout { inline-size: 30px; block-size: 24px; }
+
+/* Components (8.2): one card anatomy. Tile, title, subtitle, then kind on the left and readout on the right. */
+.arch-node:not([data-shape],[data-kind="actor"]) .node-select-hit { padding: 0.8rem 0.9rem; border: 1px solid var(--cc-hair-2); border-radius: 10px; background: var(--cc-sheet); box-shadow: var(--cc-shadow-1); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-icon { inline-size: 30px; block-size: 30px; border-radius: 8px; border: 1px solid color-mix(in oklab, var(--node-accent) 35%, var(--cc-sheet)); background: color-mix(in oklab, var(--node-accent) 12%, var(--cc-sheet)); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-title { font: var(--cc-font-title); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-sub { font: var(--cc-font-small); color: var(--cc-ink-2); }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-footer { gap: 0.5rem; border: 0; padding: 0; font: 400 11px/14px var(--cc-font-mono); }
+.arch-node:not([data-shape],[data-kind="actor"]) .micro-chip { margin-inline-start: auto; padding: 0; border: 0; background: none; font: inherit; color: var(--cc-ink-2); }
+.arch-node:not([data-shape]) .node-eyebrow { color: var(--cc-ink-3); font: inherit; }
+.arch-node:not([data-shape],[data-kind="actor"]) .node-footer-label:empty { display: none; }
+.arch-node[data-shape] .node-light { display: none; }
+.node-light { inline-size: 7px; block-size: 7px; margin: 3px; border-radius: 50%; background: var(--cc-ink-3); opacity: 0.55; }
+#workspace[data-lens="traffic"] .node-light { background: var(--cc-emerald); opacity: 1; box-shadow: 0 0 0 3px color-mix(in srgb, var(--cc-emerald) 22%, transparent); }
+
+/* Shaped kinds (8.2): the outline is the plate and carries the colour. The title and subtitle are centred and there is no tile. */
+.arch-node[data-shape] .node-shape-geom { fill: color-mix(in oklab, var(--node-accent) 5%, var(--cc-sheet)); stroke: color-mix(in oklab, var(--node-accent) 58%, var(--cc-sheet)); stroke-width: 1.25; }
+.arch-node[data-shape] .node-select-hit:hover .node-shape-geom,
+.arch-node[data-shape].is-related .node-shape-geom { stroke: var(--node-accent); }
+.arch-node[data-shape] .node-select-hit[aria-pressed="true"] .node-shape-geom { stroke: var(--cc-ink); stroke-width: 2; }
+.arch-node[data-shape] .node-select-hit { padding-inline: 1rem; }
+
+/* Selected (8.5): a 2 px ink ring with a 3 px gap. */
+.arch-node:not([data-shape]) .node-select-hit[aria-pressed="true"] { border-color: var(--cc-ink); outline: 2px solid var(--cc-ink); outline-offset: 3px; box-shadow: var(--cc-shadow-1); }
+
+/* Badges (8.2): lock, comment and level share one row on the bottom edge. */
+.arch-node .node-lock-badge, .arch-node .node-comment-badge, .arch-node .node-level-badge { inset: auto auto -8px auto; inline-size: 16px; min-inline-size: 16px; block-size: 16px; padding: 0; box-shadow: none; background: var(--cc-sheet); border: 1px solid var(--cc-hair-2); color: var(--cc-ink-3); font-size: 10px; }
+.arch-node .node-lock-badge { inset-inline-end: 8px; }
+.arch-node .node-comment-badge { inset-inline-end: 28px; }
+.arch-node .node-level-badge { inset-inline-end: 48px; }
+.arch-node .node-lock-badge svg, .arch-node .node-comment-badge svg { inline-size: 10px; block-size: 10px; }
+
+/* States (8.5): a ring, the light, and a word. Colour never stands alone. */
+.arch-node[data-chaos] { --st: var(--cc-ink-3); }
+.arch-node[data-chaos="failed"] { --st: var(--cc-rose); }
+.arch-node[data-chaos="degraded"], .arch-node[data-chaos="slowed"], .arch-node[data-chaos="at-risk"], .arch-node[data-chaos="delayed"], .arch-node[data-chaos="buffering"] { --st: var(--cc-amber, #d97706); }
+.arch-node[data-chaos="rerouted"], .arch-node[data-chaos="bypassed"] { --st: var(--cc-blue); }
+.arch-node[data-chaos] .node-select-hit { border-color: var(--st); box-shadow: var(--cc-shadow-1); outline: 2px solid var(--st); outline-offset: 0; }
+.arch-node[data-chaos="delayed"] .node-select-hit, .arch-node[data-chaos="buffering"] .node-select-hit, .arch-node[data-chaos="rerouted"] .node-select-hit, .arch-node[data-chaos="bypassed"] .node-select-hit { outline-style: dashed; }
+.arch-node[data-chaos="slowed"] .node-select-hit { outline-style: solid; }
+.arch-node[data-chaos="unreachable"] .node-select-hit { outline-width: 1px; outline-style: dashed; filter: grayscale(1); opacity: 0.55; }
+@property --cc-hatch { syntax: "<percentage>"; inherits: false; initial-value: 6%; }
+.arch-node[data-chaos="failed"] .node-select-hit:not(:has(.node-shape-plate)) { background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--cc-rose) var(--cc-hatch), transparent) 0 2px, transparent 2px 7px); }
+.arch-node[data-chaos="failed"] .node-icon { transform: rotate(8deg); }
+.arch-node[data-chaos] .node-light { background: var(--st); opacity: 1; box-shadow: none; }
+.arch-node[data-shape][data-chaos] .node-shape-geom { stroke: var(--st); stroke-width: 2; }
+.arch-node[data-chaos] .chaos-badge { background: var(--cc-sheet); color: var(--st); border: 1px solid var(--st); font: 600 11px/1.3 var(--cc-font-sans, inherit); }
+.arch-node[data-chaos="unreachable"] .chaos-badge { color: var(--cc-ink-2); }
+.arch-node:not([data-shape],[data-kind="actor"])[data-chaos] .chaos-badge { inset-block-start: 0.7rem; inset-inline-start: auto; inset-inline-end: 1.8rem; transform: none; padding: 0; background: none; border: 0; }
+.arch-node[data-shape="rounded"]:not([data-chaos]) .node-select-hit, .arch-node[data-shape="pill"]:not([data-chaos]) .node-select-hit { background: color-mix(in oklab, var(--node-accent) 5%, var(--cc-sheet)); border: 1.25px solid color-mix(in oklab, var(--node-accent) 58%, var(--cc-sheet)); box-shadow: var(--cc-shadow-1); }
+.arch-node[data-shape="rounded"] .node-select-hit[aria-pressed="true"], .arch-node[data-shape="pill"] .node-select-hit[aria-pressed="true"] { border-color: var(--cc-ink); outline: 2px solid var(--cc-ink); outline-offset: 3px; box-shadow: var(--cc-shadow-1); }
+
+/* C4 wires (8.3). The casing makes a crossing read as over and under; the line is thin in the wire's colour. */
+.conduit-casing { fill: none; stroke: var(--cc-canvas); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; transition: stroke 320ms; }
+.workspace[data-lens="traffic"] .conduit-casing, .workspace[data-lens="review"] .conduit-casing { stroke: var(--cc-canvas-run); }
+.conduit-group .conduit-rail { stroke: var(--t, var(--cc-hair-2)); stroke-width: 1.75; opacity: 1; transition: stroke-width 320ms, opacity 320ms; }
+.conduit-group[data-sync="async"] .conduit-rail { stroke-dasharray: 6 5; }
+.conduit-group:focus-visible .conduit-rail, .conduit-group.is-selected .conduit-rail { stroke-width: 2.5; }
+.route-pill-bg { fill: var(--cc-sheet); rx: 5px; stroke: var(--cc-hair-2); stroke-width: 1; }
+/* D8: Design is still. The flow only moves on hover, selection or a highlighted path, or with the preference on. */
+body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not(:hover, .is-selected, .is-highlighted) :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
+/* C5 lens lighting (8.4). Traffic dims the sheet, thins the line and fades in a 10 px tube; Review greys everything. */
+.conduit-glow { display: inline; fill: none; stroke: var(--t, var(--cc-hair-2)); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity 320ms; }
+.workspace[data-lens="traffic"] .conduit-glow { opacity: 0.2; }
+.workspace[data-lens="traffic"] .conduit-rail { stroke-width: 1; opacity: 0.55; }
+/* M1 (9.2): in Traffic the flow is capsules, 14 x 7 (a 7 px dash with round caps), in the wire's tone. A component that a run reaches springs 1 -> 1.14 -> 1. */
+.workspace[data-lens="traffic"] .conduit-stream { stroke-width: 7; stroke-dasharray: 7 29; }
+/* One capsule per wire: it leaves the source and runs to the target, at a steady speed (about 120 px a second, scaled by the wire's latency). */
+.workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { stroke-dasharray: 7 calc(var(--cc-len, 400) * 1px + 40px); stroke-dashoffset: 8; animation: cc-capsule max(0.9s, calc(var(--cc-len, 400) * 1s / 120 * var(--flow-scale, 1))) linear infinite; }
+@keyframes cc-capsule { from { stroke-dashoffset: 8; } to { stroke-dashoffset: calc(var(--cc-len, 400) * -1); } }
+@media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { animation: none; stroke-dasharray: none; } }
+.workspace[data-lens="traffic"] .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 7 37; }
+.workspace[data-lens="traffic"] .conduit-stream-reverse { stroke-width: 7; stroke-dasharray: 7 37; }
+.workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: cc-arrive 320ms var(--cc-spring) 1; transform-origin: center; transform-box: fill-box; }
+@keyframes cc-arrive { 50% { transform: scale(1.14); } }
+@media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }
+.workspace[data-lens="traffic"] .canvas-shell { background-color: var(--cc-canvas-run); transition: background-color 320ms; }
+/* Print keeps wire labels on in every lens (Y1: labels always shown). */
+.workspace:not([data-style="print"])[data-lens="traffic"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit,
+.workspace:not([data-style="print"])[data-lens="review"] .conduit-badge-hit { display: none; }
+.workspace[data-lens="review"] :is(.arch-node, .conduit-group) { filter: grayscale(1); opacity: 0.62; }
+/* The redline: hand-drawn ellipses and numbers, drawn once in 700 ms when the lens opens. */
+#redline-layer { pointer-events: none; }
+.redline-mark path { fill: none; stroke: var(--cc-redline); stroke-width: 2; stroke-linecap: round; }
+.redline-mark[data-level="error"] path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: redline-draw 700ms ease-out forwards; }
+.redline-mark:not([data-level="error"]) path { stroke-dasharray: 0.04 0.02; animation: redline-fade 700ms ease-out; }
+.redline-mark text { fill: var(--cc-redline); font: 700 13px var(--cc-font-mono, monospace); }
+@keyframes redline-draw { to { stroke-dashoffset: 0; } }
+@keyframes redline-fade { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .redline-mark path { animation: none; stroke-dashoffset: 0; } }
+
+/* M2 (9.2): a failure tilts the tile and spreads outward 40 ms a hop; a restored component takes one emerald ring and rights itself; a finished run brightens its tubes in order. */
+.arch-node[data-chaos]:not([data-chaos="failed"], [data-chaos="at-risk"]) .node-select-hit { animation: cc-state-in var(--cc-dur-base, 200ms) var(--cc-ease-out) var(--cc-lag, 0ms) both; }
+@keyframes cc-state-in { from { outline-color: transparent; box-shadow: none; } }
+.arch-node[data-chaos="failed"] .node-shape-plate { transform: rotate(4deg); }
+.arch-node .node-icon, .arch-node .node-shape-plate { transition: transform var(--cc-dur-base, 200ms) var(--cc-spring); }
+.arch-node[data-chaos="failed"] .node-select-hit { animation: chaos-shake 320ms ease-in-out 1, cc-hatch-in 400ms var(--cc-ease-out) 1; }
+@keyframes cc-hatch-in { from { --cc-hatch: 0%; } }
+/* A restored component: one emerald arc runs once round the tile's edge (a masked conic gradient), then is gone. */
+@property --cc-ang { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.arch-node.is-restored .node-select-hit { position: relative; }
+.arch-node.is-restored .node-select-hit::after { content: ""; position: absolute; inset: -2px; border-radius: inherit; padding: 2px; pointer-events: none; background: conic-gradient(from var(--cc-ang), transparent 0deg, var(--cc-emerald) 70deg, transparent 90deg); -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: cc-restore 600ms var(--cc-ease-out) 1 both; }
+@keyframes cc-restore { from { --cc-ang: 0deg; opacity: 1; } to { --cc-ang: 360deg; opacity: 0.2; } }
+.conduit-group.is-route-lit .conduit-glow { animation: cc-route 900ms var(--cc-ease-out) var(--cc-route-delay, 0ms) 1; }
+@keyframes cc-route { 40% { opacity: 0.9; } }
+@media (prefers-reduced-motion: reduce) { .arch-node[data-chaos] .node-select-hit, .arch-node.is-restored .node-select-hit::after, .conduit-group.is-route-lit .conduit-glow { animation: none; } }
+
+
+/* M3 (9.2): a dropped component scales from 0.94 on the spring; a connected wire rings the target's ports once; a deleted component fades and scales to 0.96 in 120 ms. */
+.arch-node.is-entering { animation: cc-drop 260ms var(--cc-spring) both; }
+@keyframes cc-drop { from { opacity: 0.4; transform: scale(0.94); } }
+.arch-node.is-attached .node-port { animation: cc-ring 500ms var(--cc-ease-out) 1; }
+@keyframes cc-ring { from { box-shadow: 0 0 0 0 var(--cc-blue); } to { box-shadow: 0 0 0 10px transparent; } }
+.arch-node.is-leaving { pointer-events: none; animation: cc-leave 120ms var(--cc-ease-out) forwards; }
+@keyframes cc-leave { to { opacity: 0; transform: scale(0.96); } }
+@media (prefers-reduced-motion: reduce) { .arch-node.is-attached .node-port, .arch-node.is-leaving { animation: none; } .arch-node.is-leaving { display: none; } }
+
+/* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
+#stage-world[data-lod="low"] .node-title {
+  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 36px);   /* 36px cap: the longest ordinary word still fits a 222px box */
+  font-stretch: 75%;            /* the condensed width: about a fifth more letters per line */
+  font-weight: 800;             /* was set by the stale stage.css rule deleted in 4.3 */
+  line-height: 1.2;             /* 1.12 clipped descenders by 2px */
+  text-align: center;
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Zoomed out there is no room for the tile and a name, so the name gets the whole box. The actor keeps its figure. */
+#stage-world[data-lod="low"] .arch-node:not([data-kind="actor"]) .node-top { display: none; }
+#stage-world[data-lod="low"] .arch-node .node-select-hit { justify-content: center; }
+/* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. Cards in any failure state keep their own colours. */
+#stage-world[data-lod="low"] .arch-node:not([data-chaos]) .node-select-hit:not(:has(> svg)) {
+  padding: 6px 10px;
+  background: color-mix(in oklab, var(--t) 6%, var(--cc-sheet));
+  border-color: color-mix(in oklab, var(--t) 50%, var(--cc-sheet));
+}
+#stage-world[data-lod="low"] .node-sub,
+#stage-world[data-lod="low"] .node-light,
+#stage-world[data-lod="low"] .node-status-badge,
+#stage-world[data-lod="low"] .node-comment-badge,
+#stage-world[data-lod="low"] .node-lock-badge { display: none; }
+#stage-world[data-lod="low"] .arch-node { box-shadow: none; }
+/* C6: the card-kind tile grows as the camera pulls back, so the kind still reads at Fit. `scale` leaves layout alone and does not fight the failed-state rotate. */
+#stage-world[data-lod="low"] .arch-node .node-icon { scale: clamp(1, calc(0.55 / var(--cam-scale, 1)), 1.9); transform-origin: center; }
+
+/* Lane headers: the number and title stay on one line; the subtitle gives way with an ellipsis in a narrow lane. */
+#stage-world[data-lod="low"] .zone-title { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px); }
+#stage-world[data-lod="low"] .zone-num,
+#stage-world[data-lod="low"] .zone-sub { font-size: clamp(12px, calc(10.5px / var(--cam-scale, 1)), 40px); }
+#stage-world[data-lod="low"] .zone-banner > span:first-child { white-space: nowrap; flex: none; }
+#stage-world[data-lod="low"] .zone-sub { min-width: 0; flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Frame titles: the tab grows with its text instead of clipping it at 24px. */
+#stage-world[data-lod="low"] .frame-title-bar {
+  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px);
+  font-stretch: 75%;
+  height: auto;
+  max-inline-size: none;        /* a narrow frame's title may run past the frame's right edge rather than be cut */
+  line-height: 1.3;
+  padding-block: 0.1em;
+  margin-top: -0.7em;
+  border-width: calc(1px / var(--cam-scale, 1));
+  border-radius: calc(5px / var(--cam-scale, 1));
+}
+
+/* Wire labels (plan 8.3): zoomed out they are noise, so they wait for the wire you point at, select, or that a run lights up, and then show at a readable size. */
+#stage-world[data-lod="low"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit { display: none; }
+#stage-world[data-lod="low"] .conduit-badge-hit { scale: calc(0.92 / var(--cam-scale, 1)); transform-box: fill-box; transform-origin: center; }
+body[data-wire-labels="always"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit,
+.workspace[data-style="print"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit { display: revert; }
+
+#stage-world[data-lod="low"] .conduit-rail { stroke-width: min(5px, calc(1.75px / var(--cam-scale, 1))); }
+#stage-world[data-lod="low"] .conduit-casing { stroke-width: min(9px, calc(6px / var(--cam-scale, 1))); }
+/* Medium: tile, title, subtitle and the status light; the rest waits for high. */
+#stage-world[data-lod="medium"] .node-footer,
+#stage-world[data-lod="medium"] .node-eyebrow { display: none; }
+
+/* C6 (8.7): the title block along the bottom of the sheet in Present. */
+.title-block { position: absolute; inset-inline: 0; inset-block-end: 0; z-index: 5; display: flex; block-size: 28px; border-block-start: 1px solid var(--cc-hair-2); background: var(--cc-sheet); font-size: 11px; line-height: 28px; color: var(--cc-ink-2); pointer-events: none; }
+.title-block[hidden] { display: none; }
+.title-block > span { padding-inline: 12px; border-inline-start: 1px solid var(--cc-hair-2); white-space: nowrap; }
+.title-block > span:first-child { flex: 1; border-inline-start: 0; color: var(--cc-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+
+/* M3 (9.2): the dock changes face with a cross-fade, and the tray and popovers rise 14 px on the spring when they open. */
+@keyframes cc-face-in { from { opacity: 0; } }
+@keyframes cc-rise { from { opacity: 0; transform: translateY(14px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .dock-face:not([hidden]) { animation: cc-face-in var(--cc-dur-base, 200ms) var(--cc-ease-out) 1; }
+  .tray:not([hidden]), .slot-popover:not([hidden]) { animation: cc-rise var(--cc-dur-base, 200ms) var(--cc-spring) 1 both; }
+}
+
+/* S9 (6.6): hovering a template card draws its wires once. */
+@keyframes cc-wire-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .template-card:hover .tpl-wire { stroke-dasharray: 100; animation: cc-wire-draw 700ms var(--cc-ease-out) 1 both; }
+}
+
+/* S10 (6.6): below 56rem SW and SE collapse to one button each. SW shows the open page (tap for the next); SE shows the zoom readout, and Fit moves into the view popover. */
+.view-fit { display: none; }
+@media (max-width: 56rem) {
+  .page-tab[aria-selected="false"] { display: none; }
+  .page-strip:has(.page-tab:nth-child(2)) .page-add { display: none; }
+  .hud-zoom-card #btn-zoom-out, .hud-zoom-card #btn-zoom-in, .hud-zoom-card #btn-zoom-fit { display: none; }
+  .view-fit { display: inline-flex; justify-content: center; }
+}
+
+/* S10 (375 px pass): the tray stops short of the top bar, and the Review face keeps its buttons on one line (the sentence is in the issue list). */
+@media (max-width: 56rem) {
+  .tray { max-block-size: calc(100dvh - 15.5rem); }
+  #review-face { overflow-x: auto; scrollbar-width: none; }
+  #review-face .btn { white-space: nowrap; flex-shrink: 0; }
+  #review-face .review-sentence { display: none; }
+}

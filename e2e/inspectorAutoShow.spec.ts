@@ -12,7 +12,7 @@ async function open(page: Page, query = '') {
 const workspace = (page: Page) => page.locator('#workspace');
 const clearSelection = (page: Page) => page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
 
-test('the inspector opens with a selection and folds away without one', async ({ page }) => {
+test('the inspector opens with a selection and folds away without one', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true'); // showcase opens selected
   await clearSelection(page);
@@ -54,13 +54,12 @@ test('the inspector does not auto-hide in Data View', async ({ page }) => {
   await expect(workspace(page)).not.toHaveAttribute('data-inspector-collapsed', 'true');
 });
 
-for (const scheme of ['light', 'dark'] as const) {
-  test(`the inspector with its pin has no axe violations (${scheme})`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await open(page);
-    await clearSelection(page);
-    await page.locator('.arch-node[data-node-id="night-desk"] .node-select-hit').click();
-    const results = await new AxeBuilder({ page }).include('#inspector-panel').analyze();
-    expect(results.violations.map((v) => v.id)).toEqual([]);
-  });
-}
+test('the open inspector has no axe violations', async ({ page }) => {
+  // The loaded-diagram scan already covers this panel in both themes. Dark is the tighter contrast.
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await open(page);
+  await clearSelection(page);
+  await page.locator('.arch-node[data-node-id="night-desk"] .node-select-hit').click();
+  const results = await new AxeBuilder({ page }).include('#inspector-panel').analyze();
+  expect(results.violations.map((v) => v.id)).toEqual([]);
+});

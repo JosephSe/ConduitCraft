@@ -1,15 +1,16 @@
 /** Studio entry. Runtime lives in `src/studio/*`. */
 import { app, onSelectionChange, setHistoryApplied } from './studio/state';
 import { renderAll, renderWiresOnly, requestInspectorRefresh, updateVisualSelectionHighlights } from './studio/render';
-import { bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
+import { bindAlwaysWireLabelsPreference, bindAnimateWiresPreference, bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
+import { initSlotPopovers } from './studio/slotPopovers';
 import { announceSelectionChange } from './studio/a11y';
 import { initRovingFocus } from './studio/rovingFocus';
 import { initContextMenu } from './studio/contextMenu';
 import { initPageTabs } from './studio/pageTabs';
 import { initGroupOutlines } from './studio/groupOutlines';
 import { findPaletteCommand } from './studio/palette';
-import { initToolRail } from './studio/toolRail';
+import { initDock } from './studio/dock';
 import { initAppMenu } from './studio/appMenu';
 import { initInspectorAutoShow } from './studio/inspectorAutoShow';
 import { initContextToolbar } from './studio/contextToolbar';
@@ -46,9 +47,11 @@ try {
   // Storage unavailable: nothing was stored that we could read.
 }
 bindLegendPreference();
+bindAnimateWiresPreference();
+bindAlwaysWireLabelsPreference();
 bindViewFilters();
 bootStudio();
-initToolRail();
+initDock();
 initAppMenu();
 initPageTabs();
 initInspectorAutoShow();
@@ -58,3 +61,4 @@ initContextMenu();
 initGroupOutlines();
 document.getElementById('btn-share')?.addEventListener('click', () => findPaletteCommand('copy-share-link')?.run());
 bindMinimap();
+initSlotPopovers();

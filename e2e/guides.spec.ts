@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { openLumenRelay, undo } from './helpers';
 
 async function load(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -54,7 +54,7 @@ const nodeX = (page: Page, id: string) =>
 
 const guideLines = (page: Page) => page.locator('#guides-g line.guide-line');
 
-test('dragging a component near another snaps its edge to it and draws a guide', async ({ page }) => {
+test('dragging a component near another snaps its edge to it and draws a guide', { tag: '@quick' }, async ({ page }) => {
   await load(page);
   const { a, bX, dx, from } = await pick(page);
 
@@ -108,6 +108,6 @@ test('a snapped drag is still one undo step', async ({ page }) => {
   await page.mouse.up();
   expect(await nodeX(page, a)).not.toBe(before);
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect.poll(() => nodeX(page, a)).toBe(before);
 });

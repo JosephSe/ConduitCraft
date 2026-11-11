@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { clearSelection, openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, showInspectorTab } from './helpers';
 
 // A15. With "reduce motion" on, nothing on screen may animate. The states below are the ones that animate by
 // default: a component marked live, a failure with at-risk callers, wiring targets, and a scenario that is playing.
@@ -34,8 +34,9 @@ test.beforeEach(async ({ page }) => {
 
 test('reduced motion: a component marked live does not pulse', async ({ page }) => {
   await page.locator('.arch-node').first().click();
+  await showInspectorTab(page, 'behaviour');
   await page.locator('#prop-node-status').selectOption('live');
-  await expect(page.locator('.node-status-badge[data-status="live"]').first()).toBeVisible();
+  await expect(page.locator('.node-status-badge[data-status="live"]').first()).toBeAttached(); // hidden at low zoom (8.6)
   await clearSelection(page);
   expect(await running(page)).toEqual([]);
 });
@@ -64,6 +65,7 @@ test('reduced motion: failures, wiring targets and a playing scenario do not ani
 test('the live status dot never animates, even when motion is allowed', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.locator('.arch-node').first().click();
+  await showInspectorTab(page, 'behaviour');
   await page.locator('#prop-node-status').selectOption('live');
   const dot = page.locator('.node-status-badge[data-status="live"] .status-dot').first();
   await expect(dot).toBeAttached();

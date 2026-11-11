@@ -17,52 +17,47 @@
   <link rel="stylesheet" href="/src/styles/studio.css">
 </head>
 <body>
+    <svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter></svg>
   <!-- First run (new visitors only): first in the tab order so its three actions are within reach at once. -->
   <section class="first-run" id="first-run" aria-labelledby="first-run-line" hidden>
     <p class="first-run-line" id="first-run-line">Watch a request travel through a real system.</p>
     <div class="first-run-actions">
-      <button type="button" class="btn btn-primary-export btn-sm" id="first-run-blank">Start blank</button>
-      <button type="button" class="btn btn-sm" id="first-run-template">Pick a template</button>
-      <button type="button" class="btn btn-sm" id="first-run-mermaid">Paste Mermaid</button>
+      <button type="button" class="btn solid" id="first-run-blank">Start blank</button>
+      <button type="button" class="btn" id="first-run-template">Pick a template</button>
+      <button type="button" class="btn" id="first-run-mermaid">Paste Mermaid</button>
     </div>
   </section>
   <header class="topbar">
-    <div class="brand-cluster" id="doc-brand-cluster">
-      <div class="brand-mark" id="doc-brand-mark" aria-hidden="true">
-        <svg id="doc-brand-glyph" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="brand-cluster slot-nw" id="doc-brand-cluster" data-island>
+      <button type="button" class="brand-mark-btn" id="btn-app-menu" aria-label="Main menu" aria-haspopup="menu" aria-expanded="false" data-tip="Menu">
+        <span class="brand-mark" id="doc-brand-mark" aria-hidden="true">
+        <svg id="doc-brand-glyph" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="7" height="7" rx="1.5"/>
           <rect x="14" y="3" width="7" height="7" rx="1.5"/>
           <rect x="14" y="14" width="7" height="7" rx="1.5"/>
           <path d="M10 6.5h4M17.5 10v4M6.5 10v5a2.5 2.5 0 0 0 2.5 2.5h5"/>
         </svg>
         <img id="doc-brand-logo" class="brand-logo" alt="" hidden>
-      </div>
+        </span>
+      </button>
       <div class="brand-titles">
         <div class="title-row">
           <button type="button" class="title-edit-trigger" id="btn-focus-doc-title">
             <h1 id="doc-title-heading">Untitled Architecture</h1>
             <span class="visually-hidden">, edit title and document properties</span>
           </button>
-          <span class="save-status-pill" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
-          <div class="doc-history-controls" role="group" aria-label="Undo and redo history">
-            <button type="button" class="btn btn-icon-only" id="btn-undo" aria-label="Undo (Cmd/Ctrl+Z)" data-tip="Undo (⌘Z)" disabled>
-              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-            </button>
-            <button type="button" class="btn btn-icon-only" id="btn-redo" aria-label="Redo (Cmd/Ctrl+Shift+Z)" data-tip="Redo (⌘⇧Z)" disabled>
-              <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
-            </button>
-          </div>
+          <span class="save-state" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
         </div>
       </div>
     </div>
 
-    <div class="toolbar-center">
+    <div class="toolbar-center slot-n" data-island>
       <!-- Mode Switcher: Design vs Animated Data View -->
       <fieldset class="segmented-group mode-switcher" aria-label="Lens">
         <legend class="visually-hidden">Lens</legend>
         <label class="segmented-label">
           <input type="radio" name="workspace-mode" value="design" class="visually-hidden" checked>
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
           <span>Design</span><kbd class="lens-key" aria-hidden="true">1</kbd>
         </label>
         <label class="segmented-label">
@@ -72,25 +67,22 @@
         </label>
         <label class="segmented-label lens-review">
           <input type="radio" name="workspace-mode" value="review" class="visually-hidden">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
           <span>Review</span><kbd class="lens-key" aria-hidden="true">3</kbd><span class="insight-count" id="insight-count" hidden></span>
         </label>
       </fieldset>
 
     </div>
 
-    <div class="toolbar-actions" role="toolbar" aria-label="Document actions">
-      <!-- Share (shown by the redesigned top bar only) -->
-      <button type="button" class="btn btn-share-v2" id="btn-share" data-tip="Copy a link to this diagram">Share</button>
-
-      <button type="button" class="btn btn-action-compact" id="btn-open-palette" aria-label="Search commands (Cmd/Ctrl+K)" data-tip="Commands (⌘K)">
-        <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <div class="toolbar-actions slot-ne" role="toolbar" aria-label="Document actions" data-island>
+      <button type="button" class="btn" id="btn-open-palette" aria-label="Search commands (Cmd/Ctrl+K)" data-tip="Commands (⌘K)">
+        <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="btn-text-responsive">Search</span>
       </button>
 
-      <button type="button" class="btn btn-icon-only" id="btn-app-menu" aria-label="Main menu" aria-haspopup="menu" aria-expanded="false" data-tip="Menu">
-        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-      </button>
+      <button type="button" class="btn" id="btn-share" data-tip="Copy a link to this diagram">Share</button>
+
+      <button type="button" class="btn solid" id="btn-run" data-tip="Switch to Traffic and play the scenario">Run</button>
     </div>
   </header>
 
@@ -99,165 +91,19 @@
     <!-- Tap-to-Dismiss Scrim for Overlay Drawers on Narrow Screens -->
     <div class="drawer-scrim" id="drawer-scrim" hidden></div>
 
-    <!-- Edge tabs that open the side drawers by touch (shown for a coarse pointer, below 66rem) -->
-    <button type="button" class="drawer-tab drawer-tab-start" id="btn-drawer-palette" aria-label="Open component palette" aria-controls="palette-sidebar" aria-expanded="false">
-      <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
-    </button>
+    <!-- Edge tab that opens the inspector by touch (shown for a coarse pointer, below 66rem) -->
     <button type="button" class="drawer-tab drawer-tab-end" id="btn-drawer-inspector" aria-label="Open properties inspector" aria-controls="inspector-panel" aria-expanded="false">
-      <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
+      <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/></svg>
     </button>
-
-    <!-- Left Stencil Palette (Design Mode) -->
-    <aside class="palette-sidebar" id="palette-sidebar" aria-label="Component stencil palette">
-      <!-- Collapsed Icon Rail View -->
-      <div class="palette-rail-content" id="palette-rail-content" aria-label="Quick component stencils">
-        <button type="button" class="btn btn-icon-only btn-rail-expand" id="btn-rail-expand-palette" aria-label="Expand component palette ([)" data-tip="Expand palette ([)" data-tip-pos="right">
-          <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-        </button>
-        <div class="rail-divider rail-tool-only"></div>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" aria-label="Select tool (V)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="connect" aria-pressed="false" data-tip="Wire (W)" aria-label="Wire tool (W)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="hand" aria-pressed="false" data-tip="Hand (H)" aria-label="Hand tool (H)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.4L3.4 16a2 2 0 0 1 3.2-2.4L8 15"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="text" aria-pressed="false" data-tip="Text (T)" aria-label="Text tool (T)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-        </button>
-        <button type="button" class="rail-tool-btn rail-tool-only" data-rail-tool="frame" aria-pressed="false" data-tip="Frame (F)" aria-label="Frame tool (F)">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
-        </button>
-        <div class="rail-divider"></div>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="actor" data-stencil-kind="actor" data-tip="Add Actor component" data-tip-pos="right" aria-label="Add Actor component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM6 21v-2a6 6 0 0 1 12 0v2"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="core" data-stencil-kind="core" data-tip="Add Core System component" data-tip-pos="right" aria-label="Add Core System component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="service" data-stencil-kind="service" data-tip="Add Service / API component" data-tip-pos="right" aria-label="Add Service / API component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="stream" data-stencil-kind="queue" data-tip="Add Stream / Log component" data-tip-pos="right" aria-label="Add Stream / Log component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h18M17 4l4 3-4 3M17 14l4 3-4 3"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="object-store" data-stencil-kind="store" data-tip="Add Object Storage component" data-tip-pos="right" aria-label="Add Object Storage component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6l2.5 13a2 2 0 0 0 2 1.5h7a2 2 0 0 0 2-1.5L20 6"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="bus" data-stencil-kind="bus" data-tip="Add Event Broker component" data-tip-pos="right" aria-label="Add Event Broker component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19h16M4 15h16M8 15V9a4 4 0 0 1 8 0v6M12 9v6"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="balancer" data-stencil-kind="balancer" data-tip="Add Load Balancer component" data-tip-pos="right" aria-label="Add Load Balancer component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12h6M8 12l8-7M8 12h8M8 12l8 7"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="19" cy="19" r="2"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="cache" data-stencil-kind="cache" data-tip="Add Cache component" data-tip-pos="right" aria-label="Add Cache component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="limiter" data-stencil-kind="limiter" data-tip="Add Rate Limiter component" data-tip-pos="right" aria-label="Add Rate Limiter component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17a9 9 0 1 1 16 0M12 17l4-6"/><circle cx="12" cy="17" r="1.5"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="scheduler" data-stencil-kind="scheduler" data-tip="Add Scheduler component" data-tip-pos="right" aria-label="Add Scheduler component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="queue" data-stencil-kind="queue" data-tip="Add Message Queue component" data-tip-pos="right" aria-label="Add Message Queue component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="10" height="4" rx="1"/><rect x="2" y="10" width="10" height="4" rx="1"/><rect x="2" y="16" width="10" height="4" rx="1"/><path d="M15 12h7M19 8l3 4-3 4"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="store" data-stencil-kind="store" data-tip="Add Data Store component" data-tip-pos="right" aria-label="Add Data Store component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="gate" data-stencil-kind="gate" data-tip="Add Control Gate component" data-tip-pos="right" aria-label="Add Control Gate component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-id="client" data-stencil-kind="client" data-tip="Add Client Device component" data-tip-pos="right" aria-label="Add Client Device component">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="zone" data-tip="Add Swimlane Stage" data-tip-pos="right" aria-label="Add Swimlane Stage">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
-        </button>
-        <button type="button" class="rail-stencil-btn" data-stencil-kind="notes" data-tip="Add Note" data-tip-pos="right" aria-label="Add Note">
-          <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-        </button>
-      </div>
-
-      <!-- Expanded Palette Header & Content -->
-      <div class="palette-header">
-        <h2 class="section-heading">COMPONENTS</h2>
-        <div class="palette-header-right" style="display: flex; align-items: center; gap: 0.4rem;">
-          <span class="compile-pill" id="canvas-stats-pill">0 NODES</span>
-          <button type="button" class="btn btn-icon-only btn-panel-collapse" id="btn-collapse-palette" aria-label="Collapse component palette ([)" data-tip="Collapse palette ([)">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="palette-scroll">
-        <p class="palette-hint">Click to add or drag directly onto the canvas.</p>
-        <div class="stencil-grid" id="stencil-grid" role="list"></div>
-
-        <div class="palette-section">
-          <h3 class="section-heading">STAGE CONTAINERS</h3>
-          <div class="palette-stack">
-            <button type="button" class="stencil-aux-btn" id="btn-add-zone">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/></svg>
-              </span>
-              <span>
-                <strong>Swimlane Stage</strong>
-                <small>Column header banner</small>
-              </span>
-            </button>
-            <button type="button" class="stencil-aux-btn" id="btn-add-frame" data-palette-tool="frame" aria-pressed="false" data-tip="Drag on the canvas to draw a frame (F)" data-tip-pos="top">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
-              </span>
-              <span>
-                <strong>Frame</strong>
-                <small>Box that holds components</small>
-              </span>
-            </button>
-            <button type="button" class="stencil-aux-btn" id="btn-add-notes">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
-              </span>
-              <span>
-                <strong>Note</strong>
-                <small>Checklist annotation box</small>
-              </span>
-            </button>
-            <button type="button" class="stencil-aux-btn" id="btn-add-text" data-palette-tool="text" aria-pressed="false" data-tip="Click the canvas to add a label (T)" data-tip-pos="top">
-              <span class="stencil-aux-icon" aria-hidden="true">
-                <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
-              </span>
-              <span>
-                <strong>Text</strong>
-                <small>Free label on the canvas</small>
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <div class="palette-section">
-          <h3 class="section-heading">FILE IMPORT</h3>
-          <div class="upload-card" id="palette-dropzone">
-            <p class="upload-card-text">Drop a <code>.mmd</code>, <code>.md</code>, or <code>.blueprint.json</code> file anywhere, or browse from disk.</p>
-            <div class="palette-import-actions">
-              <button type="button" class="btn btn-compact" id="btn-palette-import">Choose File…</button>
-              <button type="button" class="btn btn-compact" id="btn-palette-code">Paste Code</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
 
     <!-- Center Interactive Canvas -->
     <section class="canvas-shell" aria-label="Interactive architecture canvas">
+      <div class="title-block" id="title-block" aria-hidden="true" hidden></div>
       <!-- Drag-and-Drop Overlay -->
       <div class="window-drop-veil" id="window-drop-veil" hidden>
         <div class="drop-veil-card">
           <span class="drop-veil-icon" aria-hidden="true">
-            <svg class="ui-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            <svg class="ui-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
           </span>
           <strong>Drop Mermaid (.mmd), Blueprint (.md), or .blueprint.json</strong>
           <span>Components, swimlanes and animated wires will be built automatically</span>
@@ -271,8 +117,8 @@
           <span class="restore-banner-text" id="restore-banner-text">Previous session found</span>
         </div>
         <div class="restore-banner-actions">
-          <button type="button" class="btn btn-primary-export btn-sm" id="btn-restore-open">Open</button>
-          <button type="button" class="btn btn-ghost btn-sm" id="btn-restore-discard">Discard</button>
+          <button type="button" class="btn solid" id="btn-restore-open">Open</button>
+          <button type="button" class="btn" id="btn-restore-discard">Discard</button>
         </div>
       </div>
 
@@ -312,6 +158,19 @@
               <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
                 <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="var(--wl-amber)"/>
               </marker>
+              <marker id="arrow-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="var(--wl-cyan)"/>
+              </marker>
+              <marker id="arrow-fuchsia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+                <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="var(--wl-fuchsia)"/>
+              </marker>
+              <marker id="chevron-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-blue)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-emerald" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-emerald)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-rose" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-rose)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-violet" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-violet)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-amber)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-cyan" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-cyan)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
+              <marker id="chevron-fuchsia" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M 1 1.5 L 8 5 L 1 8.5" fill="none" stroke="var(--wl-fuchsia)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker>
             </defs>
             <g id="wires-group"></g>
             <g id="dlq-links"></g>
@@ -320,7 +179,7 @@
 
           <div class="sim-packet" id="sim-packet" hidden aria-hidden="true">
             <span class="pill-swatch" id="sim-packet-dot" style="background: var(--wl-emerald);"></span>
-            <span id="sim-packet-label">PACKET</span>
+            <span id="sim-packet-label">Packet</span>
           </div>
 
           <div id="nodes-layer"></div>
@@ -329,49 +188,6 @@
           <svg class="wires-layer wire-handles-layer" id="wire-handles-svg" viewBox="0 0 1680 920" width="1680" height="920" aria-hidden="true"></svg>
         </div>
       </div>
-
-      <!-- Run bar (redesigned interface, Traffic lens): scenario picker and transport controls -->
-      <div class="run-bar" id="run-bar" role="region" aria-label="Run bar" hidden>
-        <div class="run-bar-group" role="group" aria-label="Playback">
-          <select class="run-bar-scenario" id="run-bar-scenario" aria-label="Scenario"></select>
-          <button type="button" class="btn btn-icon-only btn-compact" data-run-step="-1" aria-label="Previous step" data-tip="Previous step" data-tip-pos="top">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
-          </button>
-          <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-play" aria-label="Play" aria-pressed="false" data-tip="Play or pause" data-tip-pos="top">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><polygon points="6 4 20 12 6 20 6 4"/></svg>
-          </button>
-          <button type="button" class="btn btn-icon-only btn-compact" data-run-step="1" aria-label="Next step" data-tip="Next step" data-tip-pos="top">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-          </button>
-          <input type="range" class="run-bar-scrubber" id="run-bar-scrubber" min="0" max="0" value="0" step="1" aria-label="Scenario step">
-          <span class="run-bar-step" id="run-bar-step" aria-live="off">no run</span>
-          <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed 1×" data-tip="Playback speed" data-tip-pos="top">1×</button>
-          <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
-          </button>
-        </div>
-        <div class="run-bar-group" role="group" aria-label="View">
-          <select class="run-bar-scenario js-colour-by" aria-label="Colour components by">
-            <option value="tone">Colour: tone</option>
-            <option value="status">Colour: status</option>
-            <option value="tag">Colour: tag</option>
-          </select>
-          <select class="run-bar-scenario js-tag-filter" aria-label="Show only components with tag">
-            <option value="">All tags</option>
-          </select>
-          <button type="button" class="help-btn" data-help="traffic" aria-label="Help: Traffic and scenarios" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
-        </div>
-      </div>
-
-      <!-- Chaos summary (Traffic lens): what the current failures break -->
-      <section class="chaos-panel" id="chaos-panel" aria-label="Failure summary" hidden>
-        <div class="chaos-panel-head">
-          <button type="button" class="btn btn-compact" id="chaos-summary" aria-expanded="false" aria-controls="chaos-list"></button>
-          <button type="button" class="btn btn-compact" id="chaos-reset">Restore all</button>
-          <button type="button" class="help-btn" data-help="failing" aria-label="Help: Failing components" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
-        </div>
-        <ul class="chaos-list" id="chaos-list" hidden></ul>
-      </section>
 
       <!-- Insights (Review lens): issues grouped by rule; a click selects the target -->
       <aside class="insights-panel" id="insights-panel" aria-label="Insights" hidden>
@@ -391,45 +207,134 @@
         <div class="outline-tree" id="outline-tree" role="tree" aria-labelledby="outline-heading"></div>
       </aside>
 
-      <!-- Colour legend card: shown only when the document names its colours -->
-      <aside class="legend-card" id="legend-card" aria-label="Colour legend" hidden>
-        <h2 class="legend-card-title">Legend</h2>
-        <ul class="legend-card-list" id="legend-card-list"></ul>
-      </aside>
-
+      <!-- The seven slots (6.1): one grid over the sheet. SW, S and SE are here; the top three are in the top bar. Islands are the
+           [data-island] children; popovers (legend, view options, find box) anchor to a slot and are not islands. S grows upward. -->
+      <div class="slots" id="slots">
+        <div class="slots-grid">
+          <div class="slot slot-sw" id="slot-sw">
       <!-- Page tabs (D10): one tab per diagram in the file -->
-      <div class="page-strip" id="page-strip">
+      <div class="page-strip" id="page-strip" data-island>
         <div class="page-tabs" id="page-tabs" role="tablist" aria-label="Pages"></div>
         <button type="button" class="page-add" id="page-add" aria-label="Add page" data-tip="Add page" data-tip-pos="top">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
+        <button type="button" class="page-tab" id="btn-legend-key" aria-haspopup="dialog" aria-expanded="false" aria-controls="legend-card" data-tip="What the colours mean" data-tip-pos="top" hidden>Key</button>
+      </div>
+            <!-- The legend: a popover over SW, opened by the Key button. -->
+            <aside class="hud-card slot-popover legend-card" id="legend-card" aria-label="Colour legend" hidden>
+              <h2 class="legend-card-title">Legend</h2>
+              <ul class="legend-card-list" id="legend-card-list"></ul>
+            </aside>
+          </div>
+          <div class="slot slot-s" id="slot-s">
+            <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</p>
+
+          <div class="dock" id="dock" data-island role="toolbar" aria-label="Tools and components">
+          <div class="dock-face" data-face="design" role="group" aria-label="Tools and components">
+          <button type="button" class="dock-btn" data-rail-tool="select" aria-pressed="true" data-tip="Select (V)" data-tip-pos="top" aria-label="Select tool (V)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="connect" aria-pressed="false" data-tip="Wire (W)" data-tip-pos="top" aria-label="Wire tool (W)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v2a4 4 0 0 1-4 4H9"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="hand" aria-pressed="false" data-tip="Hand (H)" data-tip-pos="top" aria-label="Hand tool (H)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-5.9-2.4L3.4 16a2 2 0 0 1 3.2-2.4L8 15"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="text" aria-pressed="false" data-tip="Text (T)" data-tip-pos="top" aria-label="Text tool (T)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" x2="15" y1="20" y2="20"/><line x1="12" x2="12" y1="4" y2="20"/></svg>
+          </button>
+          <button type="button" class="dock-btn" data-rail-tool="frame" aria-pressed="false" data-tip="Frame (F)" data-tip-pos="top" aria-label="Frame tool (F)">
+            <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" stroke-dasharray="3 3"/><line x1="3" x2="21" y1="9" y2="9"/></svg>
+          </button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <span class="dock-favs" id="dock-favs" role="group" aria-label="Favourite components" style="display: contents"></span>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button type="button" class="dock-all" id="btn-all-components" aria-haspopup="dialog" aria-expanded="false" aria-controls="tray" aria-keyshortcuts="C">All components <kbd>C</kbd></button>
+          </div>
+      <!-- Traffic face of the dock (6.4): scenario picker, transport, and Fail a component -->
+      <div class="dock-face run-bar" id="run-bar" data-face="traffic" role="group" aria-label="Run bar" hidden>
+        <div class="run-bar-group" role="group" aria-label="Playback">
+          <select class="run-bar-scenario" id="run-bar-scenario" aria-label="Scenario"></select>
+          <button type="button" class="btn btn-icon-only btn-compact" data-run-step="-1" aria-label="Previous step" data-tip="Previous step" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-play" aria-label="Play" aria-pressed="false" data-tip="Play or pause" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 3 14 9-14 9V3z"/></svg>
+          </button>
+          <button type="button" class="btn btn-icon-only btn-compact" data-run-step="1" aria-label="Next step" data-tip="Next step" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+          <input type="range" class="run-bar-scrubber" id="run-bar-scrubber" min="0" max="0" value="0" step="1" aria-label="Scenario step">
+          <span class="run-bar-step" id="run-bar-step" aria-live="off">no run</span>
+          <button type="button" class="btn btn-compact" id="run-bar-speed" aria-label="Playback speed 1×" data-tip="Playback speed" data-tip-pos="top">1×</button>
+          <button type="button" class="btn btn-icon-only btn-compact" id="run-bar-loop" aria-label="Loop" aria-pressed="false" data-tip="Loop" data-tip-pos="top">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+          </button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button type="button" class="dock-fail" id="run-bar-fail" aria-pressed="false" aria-keyshortcuts="X" data-tip="Fail a component, then click the one to fail" data-tip-pos="top">Fail a component <kbd>X</kbd></button>
+        </div>
       </div>
 
-      <!-- Floating Bottom HUD -->
-      <div class="canvas-hud">
-        <div class="hud-card hud-minimap-card">
+      <!-- Review face of the dock (6.4): step through the issues, with the fixes each offers -->
+      <div class="dock-face" id="review-face" data-face="review" role="group" aria-label="Review" hidden>
+        <button type="button" class="btn btn-icon-only btn-compact" id="review-prev" aria-label="Previous issue" data-tip="Previous issue" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="review-count" id="review-count" role="status" aria-live="polite"></span>
+        <button type="button" class="btn btn-icon-only btn-compact" id="review-next" aria-label="Next issue" data-tip="Next issue" data-tip-pos="top">
+          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+        <span class="review-sentence" id="review-sentence"></span>
+        <span class="review-fixes" id="review-fixes"></span>
+        <button type="button" class="btn btn-compact" id="review-ignore" data-tip="Stop flagging this kind of issue" data-tip-pos="top">Ignore this rule</button>
+      </div>
+          </div>
+      <!-- Chaos summary (Traffic lens): what the current failures break -->
+      <section class="chaos-panel" id="chaos-panel" data-island aria-label="Failure summary" hidden>
+        <div class="chaos-panel-head">
+          <button type="button" class="btn btn-compact" id="chaos-summary" aria-expanded="false" aria-controls="chaos-list"></button>
+          <button type="button" class="btn btn-compact" id="chaos-reset">Restore all</button>
+          <button type="button" class="help-btn" data-help="failing" aria-label="Help: Failing components" aria-haspopup="dialog" aria-expanded="false" data-tip="Help" data-tip-pos="top">?</button>
+        </div>
+        <ul class="chaos-list" id="chaos-list" hidden></ul>
+      </section>
+
+
+          </div>
+          <div class="slot slot-se" id="slot-se">
+        <!-- Find a component (Cmd/Ctrl+F): a popover over SE, closed until asked for -->
+        <!-- View options: a popover over SE, opened by the zoom readout. -->
+        <div class="hud-card slot-popover view-popover" id="view-popover" role="group" aria-label="View options" hidden>
           <canvas
-            id="minimap"
-            class="minimap"
-            width="168"
-            height="96"
-            aria-label="Diagram minimap. Click or drag to pan the canvas."
+          id="minimap"
+          class="minimap"
+          width="168"
+          height="96"
+          aria-label="Diagram minimap. Click or drag to pan the canvas."
           ></canvas>
+          <label class="field-label" for="view-colour-by">Colour by</label>
+          <select class="field js-colour-by" id="view-colour-by">
+            <option value="tone">Tone</option>
+            <option value="status">Status</option>
+            <option value="tag">Tag</option>
+          </select>
+          <label class="field-label" for="view-style">Diagram style</label>
+          <select class="field js-diagram-style" id="view-style">
+            <option value="">Studio</option>
+            <option value="blueprint">Blueprint</option>
+            <option value="print">Print</option>
+            <option value="sketch">Sketch</option>
+          </select>
+          <label class="field-label" for="view-tag-filter">Show only tag</label>
+          <select class="field js-tag-filter" id="view-tag-filter">
+            <option value="">All tags</option>
+          </select>
+          <button type="button" class="btn view-fit" id="view-fit">Fit diagram to view</button>
+          <span class="compile-pill" id="canvas-stats-pill" role="status">0 NODES</span>
         </div>
-
-        <div class="hud-card hud-status-card" id="hud-status-card">
-          <span class="hud-tip" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</span>
-        </div>
-
-        <div class="hud-card hud-coach-card" id="hud-coach-card">
-          <span class="hud-tip" id="hud-coach-tip">Tip: Press <kbd>?</kbd> for shortcuts · Drag stencils onto grid</span>
-          <button type="button" class="coach-dismiss-btn" id="btn-dismiss-hud-coach" aria-label="Dismiss hint" data-tip="Dismiss hint" data-tip-pos="top">&times;</button>
-        </div>
-
-        <!-- Node Search & Focus in HUD (Cmd/Ctrl+F) -->
-        <div class="hud-card hud-search-card" id="hud-search-card" role="search">
+        <div class="hud-card slot-popover hud-search-card" id="hud-search-card" role="search" hidden>
           <span class="hud-search-icon" aria-hidden="true">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           </span>
           <input
             type="search"
@@ -444,16 +349,17 @@
           <button type="button" class="hud-search-clear" id="btn-clear-search" hidden aria-label="Clear search" data-tip="Clear (Esc)">&times;</button>
         </div>
 
-        <div class="hud-card" role="group" aria-label="Zoom controls">
+        <div class="hud-card hud-zoom-card" data-island role="group" aria-label="Zoom controls">
           <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <span class="zoom-readout" id="zoom-readout" aria-live="polite">100%</span>
+          <button type="button" class="zoom-readout" id="zoom-readout" aria-haspopup="dialog" aria-expanded="false" aria-controls="view-popover" data-tip="View options" data-tip-pos="top">100%</button>
           <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in" data-tip="Zoom in (+)" data-tip-pos="top">
-            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
           <button type="button" class="btn" id="btn-zoom-fit" data-tip="Fit diagram to viewport" data-tip-pos="top">Fit</button>
-          <button type="button" class="btn" id="btn-zoom-fit-selection" data-tip="Fit selection to view" data-tip-pos="top">Fit selection</button>
+        </div>
+          </div>
         </div>
       </div>
     </section>
@@ -463,10 +369,10 @@
       <!-- Collapsed Icon Rail View -->
       <div class="inspector-rail-content" id="inspector-rail-content" aria-label="Properties dock">
         <button type="button" class="btn btn-icon-only btn-rail-expand" id="btn-rail-expand-inspector" aria-label="Expand properties inspector (])" data-tip="Expand inspector (])" data-tip-pos="left">
-          <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
+          <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>
         </button>
         <div class="rail-vertical-label" aria-hidden="true">
-          <span>PROPERTIES</span>
+          <span>Properties</span>
         </div>
       </div>
 
@@ -475,11 +381,11 @@
         <div class="inspector-tabs">
           <div class="inspector-tabs-heading">
             <button type="button" class="btn btn-icon-only btn-panel-collapse" id="btn-collapse-inspector" aria-label="Collapse properties inspector (])" data-tip="Collapse inspector (])">
-              <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+              <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
             </button>
-            <span class="section-heading" id="prop-panel-heading" style="margin-block-end: 0;">DOCUMENT PROPERTIES</span>
+            <span class="section-heading" id="prop-panel-heading" style="margin-block-end: 0;">Document properties</span>
             <button type="button" class="btn btn-icon-only inspector-pin-btn" id="btn-pin-inspector" aria-pressed="false" aria-label="Keep inspector open" data-tip="Keep open">
-              <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 7 3 3v2H7v-2l3-3-1-7z"/></svg>
+              <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 7 3 3v2H7v-2l3-3-1-7z"/></svg>
             </button>
           </div>
           <div class="prop-header-actions" id="prop-selection-actions" hidden>
@@ -506,31 +412,31 @@
         <div class="inspector-scroll" id="inspector-scope">
           <div id="panel-inspector" role="tabpanel" aria-labelledby="tab-inspector">
             <div class="inspector-badge-row">
-              <span class="tier-badge" id="insp-badge">SYSTEM OVERVIEW</span>
+              <span class="tier-badge" id="insp-badge">System overview</span>
               <span id="insp-id" style="font-family: var(--wl-font-mono); font-size: 0.75rem; color: var(--wl-ink-muted);">ALL</span>
             </div>
             <h2 class="inspector-title" id="insp-title">Untitled Architecture</h2>
             <p class="inspector-summary" id="insp-summary"></p>
 
             <div class="inspector-section">
-              <h3 class="section-heading">METRICS</h3>
+              <h3 class="section-heading">Metrics</h3>
               <div class="metrics-grid" id="insp-metrics"></div>
             </div>
 
             <div class="inspector-section">
-              <h3 class="section-heading">CONNECTED LINEAGE</h3>
+              <h3 class="section-heading">Connected lineage</h3>
               <div class="lineage-group" id="insp-lineage"></div>
             </div>
 
             <div class="inspector-section">
-              <h3 class="section-heading">INTERFACE PAYLOAD</h3>
+              <h3 class="section-heading">Interface payload</h3>
               <pre class="code-card" tabindex="0"><code id="insp-code">{}</code></pre>
             </div>
           </div>
 
           <div id="panel-trace" role="tabpanel" aria-labelledby="tab-trace" hidden>
             <div class="inspector-badge-row">
-              <span class="tier-badge">EXECUTION TRACE</span>
+              <span class="tier-badge">Execution trace</span>
               <button type="button" class="btn btn-compact" id="btn-clear-trace" style="flex: 0 0 auto;">Clear</button>
             </div>
 
@@ -542,7 +448,7 @@
 
           <div id="panel-simulations" role="tabpanel" aria-labelledby="tab-simulations" hidden>
             <div class="inspector-badge-row">
-              <span class="tier-badge">PACKET SCENARIOS</span>
+              <span class="tier-badge">Packet scenarios</span>
               <button type="button" class="btn btn-compact" id="btn-add-simulation" style="flex: 0 0 auto;">Add scenario</button>
             </div>
             <p class="inspector-summary" id="sim-editor-hint"></p>
@@ -601,7 +507,7 @@
         <div class="dialog-footer-row">
           <button type="button" class="btn" id="btn-copy-code">Copy to Clipboard</button>
           <div class="dialog-header-actions">
-            <button type="button" class="btn btn-primary-export" id="btn-apply-code">Apply to Canvas</button>
+            <button type="button" class="btn solid" id="btn-apply-code">Apply to Canvas</button>
           </div>
         </div>
       </div>
@@ -622,7 +528,7 @@
         <div class="share-link-box" id="share-link-box">
           <div class="share-link-header">
             <div class="share-link-title-group">
-              <span class="share-link-badge">SHAREABLE LINK</span>
+              <span class="share-link-badge">Shareable link</span>
               <strong>Direct URL (zero backend)</strong>
             </div>
             <span class="share-link-size" id="share-link-size"></span>
@@ -639,8 +545,8 @@
               aria-label="Shareable diagram link"
               placeholder="Generating shareable link…"
             />
-            <button type="button" class="btn btn-primary-export" id="btn-copy-share-link" disabled>
-              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <button type="button" class="btn solid" id="btn-copy-share-link" disabled>
+              <svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
               <span>Copy Link</span>
             </button>
           </div>
@@ -660,7 +566,7 @@
         <div class="export-png-options" id="export-png-options">
           <div class="export-png-header">
             <div class="export-png-title-group">
-              <span class="export-png-badge">PNG RESOLUTION</span>
+              <span class="export-png-badge">PNG resolution</span>
               <label for="export-png-scale"><strong>Scale Factor</strong></label>
             </div>
             <span class="export-png-estimate" id="export-png-estimate" aria-live="polite">~1.2 MB (3360 × 1840 px)</span>
@@ -673,6 +579,7 @@
             </select>
             <span class="export-png-hint">Scales output resolution when downloading Image (.png) below</span>
           </div>
+          <label class="switch-row"><input type="checkbox" id="chk-export-title-block" checked /> <span><strong>Title block</strong> <span class="export-png-hint">A strip along the bottom edge of pictures: title, tag, status, page and date</span></span></label>
           <label for="export-alt-text"><strong>Alt text</strong></label>
           <textarea id="export-alt-text" class="export-png-select export-alt-text" rows="3" readonly></textarea>
           <div class="export-png-controls-row">
@@ -767,9 +674,9 @@
 
   <!-- Command Palette Modal (Cmd/Ctrl+K) -->
   <dialog id="command-palette-dialog" class="command-palette-dialog" closedby="any" aria-label="Command palette">
-    <div class="palette-modal-shell">
+    <div class="dialog-shell">
       <div class="palette-search-row">
-        <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <svg class="ui-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input
           type="text"
           id="cmd-palette-input"
@@ -821,7 +728,7 @@
       <div class="dialog-body">
         <p id="drawio-pages-text" style="margin: 0 0 1rem;"></p>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-          <button type="button" class="btn btn-primary" data-drawio-mode="tabs" autofocus>One diagram, pages as tabs</button>
+          <button type="button" class="btn solid" data-drawio-mode="tabs" autofocus>One diagram, pages as tabs</button>
           <button type="button" class="btn" data-drawio-mode="separate">One diagram per page</button>
           <button type="button" class="btn" data-drawio-mode="cancel">Cancel</button>
         </div>
@@ -838,7 +745,7 @@
       <div class="dialog-body">
         <p style="margin: 0 0 1rem;">Make a new diagram from these traces, or update the open diagram? Updating keeps your layout and names, matches components by title, and adds call counts, latency and errors to the wires.</p>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-          <button type="button" class="btn btn-primary" data-trace-mode="new" autofocus>New diagram</button>
+          <button type="button" class="btn solid" data-trace-mode="new" autofocus>New diagram</button>
           <button type="button" class="btn" data-trace-mode="update">Update this diagram</button>
           <button type="button" class="btn" data-trace-mode="cancel">Cancel</button>
         </div>
@@ -863,7 +770,7 @@
 
   <!-- Home: recent diagrams, templates and the ways in (open, paste, import) -->
   <dialog id="home-dialog" class="home-dialog" closedby="any" aria-labelledby="home-dialog-title">
-    <div class="dialog-shell home-dialog-shell">
+    <div class="dialog-shell">
       <div class="dialog-header">
         <h2 id="home-dialog-title">ConduitCraft</h2>
         <form method="dialog">
@@ -876,7 +783,7 @@
 
   <!-- Diagram library: every saved diagram, one open at a time -->
   <dialog id="library-dialog" closedby="any" aria-labelledby="library-dialog-title">
-    <div class="dialog-shell library-dialog-shell" style="max-inline-size: 46rem; inline-size: 92vw;">
+    <div class="dialog-shell" style="max-inline-size: 46rem; inline-size: 92vw;">
       <div class="dialog-header">
         <h2 id="library-dialog-title">Your diagrams</h2>
         <form method="dialog">
@@ -889,7 +796,7 @@
 
   <!-- Version Snapshots & Architecture Diff Dialog -->
   <dialog id="snapshots-dialog" closedby="any" aria-labelledby="snapshots-dialog-title">
-    <div class="dialog-shell snapshots-dialog-shell" style="max-inline-size: 58rem; inline-size: 92vw;">
+    <div class="dialog-shell" style="max-inline-size: 58rem; inline-size: 92vw;">
       <div class="dialog-header">
         <h2 id="snapshots-dialog-title">Version Snapshots &amp; Architecture Diff</h2>
         <form method="dialog">
@@ -956,6 +863,24 @@
               <span class="theme-option-sub">Keep components cleanly aligned while dragging</span>
             </span>
             <input type="checkbox" id="chk-snap-grid" name="snap-grid" checked>
+          </label>
+        </fieldset>
+
+        <fieldset class="theme-fieldset">
+          <legend style="font-weight: 700; padding-inline: 0.35rem; font-size: 0.85rem;">Wires</legend>
+          <label class="theme-option">
+            <span>
+              <strong>Animate wires while designing</strong>
+              <span class="theme-option-sub">Off by default: Design stays still and Traffic moves</span>
+            </span>
+            <input type="checkbox" id="chk-animate-wires" name="animate-wires">
+          </label>
+          <label class="theme-option">
+            <span>
+              <strong>Always show wire labels</strong>
+              <span class="theme-option-sub">Off by default: zoomed out, a label shows when you point at its wire</span>
+            </span>
+            <input type="checkbox" id="chk-always-wire-labels" name="always-wire-labels">
           </label>
         </fieldset>
 

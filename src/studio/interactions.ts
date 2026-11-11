@@ -2,9 +2,7 @@
 import { startFirstRunIfNew, type FirstRunDeps } from './firstRun';
 import { initStorage, reportStorageFailure, setStorageFailureHandler } from './storage';
 import {
-  btnAddNotes,
   btnAddSimulation,
-  btnAddZone,
   btnApplyCode,
   btnClearTrace,
   btnCopyCode,
@@ -26,21 +24,16 @@ import {
   btnGifView,
   btnGifWhole,
   snapshotsDialog,
-  btnPaletteCode,
-  btnPaletteImport,
   btnPropLock,
   btnPropGroup,
   btnPropDelete,
   btnPropDuplicate,
-  btnRedo,
   btnResetSelection,
   btnRestoreOpen,
   btnRestoreDiscard,
   restoreSessionBanner,
   saveStatusPill,
-  btnUndo,
   btnZoomFit,
-  btnZoomFitSelection,
   btnZoomIn,
   btnZoomOut,
   chkSnapGrid,
@@ -67,8 +60,6 @@ import {
   gifExportPanel,
   gifScenarioEmpty,
   gifScenarioList,
-  hudCoachCard,
-  btnDismissHudCoach,
   hudStatusTip,
   hudSearchInput,
   hudSearchCount,
@@ -81,7 +72,6 @@ import {
   settingsDialog,
   shortcutsDialog,
   shortcutsDialogBody,
-  stencilGrid,
   tabInspector,
   tabSimulations,
   tabTrace,
@@ -108,7 +98,6 @@ import {
   openPageDocument,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
-  performRedo,
   performUndo,
   pushHistory,
   mutateWithHistory,
@@ -143,13 +132,11 @@ import type {
   StreamTone,
 } from '../types';
 import {
-  STENCIL_CATALOG,
   createBlankDocument,
   createNodeFromStencil,
   findStencil,
-  createNotesCard,
+  likelyNext,
   createTextCard,
-  createSwimlaneZone,
   nextUid,
 } from '../templates/presets';
 import {
@@ -169,6 +156,7 @@ import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pageCount } from '../core/pages';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
+import { FIT_SCALE_MIN } from './viewportFrame';
 import { selectionOfStage } from './selection';
 import {
   deleteActiveDiagram,
@@ -181,20 +169,20 @@ import {
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
-import { currentScheme, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import { setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
-import { allTags, colourKey } from '../core/meta';
-import { createHumanOutlineSvg,
-  createNodeIconSvg } from '../ui/icons';
+import { allTags, colourKey, normalizeStyle } from '../core/meta';
+import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
 import { initTooltips } from './tooltips';
-import { renameNodeInline, renameNotesInline } from './inlineRename';
+import { renameNotesInline } from './inlineRename';
 import { serializeClip, type Clip } from '../core/clipboard';
 import { frameAndDescendantIds, notesInFrames } from '../core/frameOps';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
-import { setPointerTool } from './pointerTool';
+import { setPointerTool, TOOL_TIPS } from './pointerTool';
 import { matchBinding } from '../core/keymap';
 import { allLevelNodes } from '../core/levels';
 import { holdInspectorOpen } from './inspectorAutoShow';
@@ -207,6 +195,7 @@ import { initChaosPanel } from './chaosPanel';
 import { initQueueBacklog } from './queueBacklog';
 import { queueWireDefaults } from '../core/appearance';
 import { initInsightsPanel } from './insights';
+import { initDockFaces } from './dockFaces';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
@@ -246,6 +235,16 @@ export function attachStencilDragAndDrop(
   btn: HTMLElement,
   stencilId: string,
   title: string,
+  options: {
+    /** A click or tap that was not a drag. Without it the component goes to the centre of the view. */
+    onTap?: (e: PointerEvent) => void;
+    /** A drag that ended. Return true when it was handled (a drop on the dock), so nothing is placed on the sheet. */
+    onDrop?: (e: PointerEvent) => boolean;
+    /** Something was placed on the sheet by a drag or by Enter. */
+    onPlaced?: () => void;
+    /** A name for the new component, when it was found by a word like `kafka`. */
+    name?: () => string | undefined;
+  } = {},
 ): void {
   // Pointer drag onto canvas OR simple click to add at viewport center
   const kind = stencilId;
@@ -266,10 +265,22 @@ export function attachStencilDragAndDrop(
     if (!btn.hasPointerCapture(e.pointerId)) return;
     if (!dragged && Math.hypot(e.clientX - startClientX, e.clientY - startClientY) > 6) {
       dragged = true;
+      const stencil = findStencil(kind);
+      const host = btn.classList.contains('cut') ? btn : btn.querySelector<HTMLElement>('.cut');
+      host?.classList.add('is-empty');
       ghostEl = document.createElement('div');
-      ghostEl.className = 'stencil-drag-ghost';
-      ghostEl.textContent = `+ ${title}`;
+      ghostEl.className = 'stencil-drag-ghost cutout-carry';
+      if (stencil) {
+        const drawing = cutoutDrawing(stencil);
+        ghostEl.style.setProperty('--t', TONE_CSS[stencil.accent][0]);
+        ghostEl.style.setProperty('--carry-w', `${drawing.width}px`);
+        ghostEl.style.setProperty('--carry-h', `${drawing.height}px`);
+        ghostEl.innerHTML = renderCutoutMarkup(stencil, { carried: true });
+      } else {
+        ghostEl.textContent = `+ ${title}`;
+      }
       document.body.appendChild(ghostEl);
+      requestAnimationFrame(() => ghostEl?.classList.add('is-full'));
     }
     if (ghostEl) {
       ghostEl.style.setProperty('--gx', String(e.clientX));
@@ -278,12 +289,15 @@ export function attachStencilDragAndDrop(
   });
 
   const finishStencilPointer = (e: PointerEvent, commit: boolean) => {
+    btn.classList.remove('is-empty');
+    btn.querySelector('.cut')?.classList.remove('is-empty');
     if (ghostEl) {
       ghostEl.remove();
       ghostEl = null;
     }
     if (!commit) return;
 
+    if (dragged && options.onDrop?.(e)) return;
     if (dragged) {
       const vpRect = viewport.getBoundingClientRect();
       if (
@@ -294,21 +308,17 @@ export function attachStencilDragAndDrop(
       ) {
         const [wx, wy] = screenToWorld(e.clientX, e.clientY);
         const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
-        addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2);
+        addNodeAt(kind, wx - dims.width / 2, wy - dims.height / 2, options.name?.());
       }
+    } else if (options.onTap) {
+      options.onTap(e);
     } else {
       const [cx, cy] = getViewportWorldCenter();
       const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
       const cascade = (app.doc.nodes.length % 5) * 24;
-      addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade);
+      addNodeAt(kind, cx - dims.width / 2 + cascade, cy - dims.height / 2 + cascade, options.name?.());
     }
-
-    if (
-      e.pointerType === 'touch' ||
-      (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches)
-    ) {
-      responsiveToolbar.togglePalette(true);
-    }
+    options.onPlaced?.();
   };
 
   btn.addEventListener('pointerup', (e) => finishStencilPointer(e, true));
@@ -320,63 +330,35 @@ export function attachStencilDragAndDrop(
       e.preventDefault();
       const [cx, cy] = getViewportWorldCenter();
       const dims = getNodeDimensions(findStencil(kind)?.kind ?? 'service');
-      addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2);
-      if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-        responsiveToolbar.togglePalette(true);
-      }
+      addNodeAt(kind, cx - dims.width / 2, cy - dims.height / 2, options.name?.());
+      options.onPlaced?.();
     }
   });
 }
 
-export function initStencilPalette(): void {
-  stencilGrid.replaceChildren();
-
-  for (const stencil of STENCIL_CATALOG) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'stencil-card';
-    btn.dataset.kind = stencil.kind;
-    btn.dataset.stencilId = stencil.id;
-    btn.setAttribute('role', 'listitem');
-    const [accent, soft] = TONE_CSS[stencil.accent];
-    btn.style.setProperty('--stencil-accent', accent);
-    btn.style.setProperty('--stencil-soft', soft);
-
-    const preview = document.createElement('span');
-    preview.className = 'stencil-preview';
-    if (stencil.kind === 'actor') {
-      preview.appendChild(createHumanOutlineSvg(true));
-    } else {
-      preview.appendChild(createNodeIconSvg(stencil.icon, 20));
-    }
-
-    const title = document.createElement('span');
-    title.className = 'stencil-title';
-    title.textContent = stencil.paletteTitle;
-
-    const sub = document.createElement('span');
-    sub.className = 'stencil-sub';
-    sub.textContent = stencil.paletteSub;
-
-    btn.setAttribute('data-tip', `${stencil.paletteTitle} — ${stencil.paletteSub}`);
-    btn.setAttribute('data-tip-pos', 'top');
-
-    btn.append(preview, title, sub);
-
-    attachStencilDragAndDrop(btn, stencil.id, stencil.paletteTitle);
-
-    stencilGrid.appendChild(btn);
+/** A deleted component fades out as a non-interactive copy for 120 ms (9.2). Call before the delete, then `showLeaving`. */
+export function copyLeavingNodes(ids: string[]): HTMLElement[] {
+  if (typeof document === 'undefined') return [];
+  const copies: HTMLElement[] = [];
+  for (const id of ids) {
+    const el = document.getElementById(`node-${id}`);
+    if (!el) continue;
+    const copy = el.cloneNode(true) as HTMLElement;
+    for (const attr of ['id', 'data-node', 'data-node-id', 'data-structure']) copy.removeAttribute(attr);
+    copy.querySelectorAll('[id]').forEach((n) => n.removeAttribute('id'));
+    copy.classList.add('is-leaving');
+    copy.setAttribute('aria-hidden', 'true');
+    copy.setAttribute('inert', '');
+    copies.push(copy);
   }
+  return copies;
+}
 
-  // Also wire drag-and-drop & click actions for collapsed palette rail buttons
-  const railBtns = document.querySelectorAll<HTMLButtonElement>('.rail-stencil-btn[data-stencil-kind], .rail-stencil-btn[data-stencil-id]');
-  railBtns.forEach((railBtn) => {
-    const id = railBtn.getAttribute('data-stencil-id') ?? railBtn.getAttribute('data-stencil-kind');
-    if (id && id !== 'zone' && id !== 'notes') {
-      const stencil = findStencil(id);
-      attachStencilDragAndDrop(railBtn, stencil?.id ?? id, stencil?.paletteTitle ?? id);
-    }
-  });
+export function showLeaving(copies: HTMLElement[]): void {
+  for (const copy of copies) {
+    document.getElementById('nodes-layer')?.appendChild(copy);
+    setTimeout(() => copy.remove(), 140);
+  }
 }
 
 export function tagEnteringNodes(ids: string[]): void {
@@ -392,11 +374,12 @@ export function tagEnteringNodes(ids: string[]): void {
   });
 }
 
-export function addNodeAt(kind: NodeKind | string, rawX: number, rawY: number): DiagramNode {
+export function addNodeAt(kind: NodeKind | string, rawX: number, rawY: number, title?: string): DiagramNode {
   pushHistory();
   const clampedX = Math.max(24, rawX);
   const clampedY = Math.max(32, rawY);
   const node = createNodeFromStencil(kind, clampedX, clampedY, app.doc.nodes.length);
+  if (title) node.title = title;
   if (!app.snapToGrid) {
     node.x = Math.round(clampedX);
     node.y = Math.round(clampedY);
@@ -521,7 +504,10 @@ export function beginPortWireDrag(
       // Dropping a wire on empty canvas creates a connected component there, ready to be named.
       const [wx, wy] = screenToWorld(upEv.clientX, upEv.clientY);
       const created = createNodeFromWireDrop(draft.sourceNodeId, draft.sourcePort, wx, wy);
-      if (created) window.setTimeout(() => renameNodeInline(created.id), 0);
+      if (created) {
+        const sourceKind = app.doc.nodes.find((n) => n.id === draft.sourceNodeId)?.kind ?? 'service';
+        void import('./kindStrip').then((m) => m.showKindStrip(created.id, sourceKind));
+      }
     }
   };
 
@@ -579,7 +565,7 @@ const WIRE_DROP_MIN_DRAG_PX = 32;
 /** True for a point on bare canvas: inside the viewport, and not on a component, wire, note, swimlane or control. */
 function isEmptyCanvasPoint(hitEl: Element | null): boolean {
   if (!hitEl || !viewport.contains(hitEl)) return false;
-  return !hitEl.closest('.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a');
+  return !hitEl.closest('.arch-node, .blueprint-spec, .zone-banner, .conduit-group, [data-island], button, input, a');
 }
 
 /**
@@ -592,10 +578,12 @@ export function createNodeFromWireDrop(
   worldX: number,
   worldY: number,
 ): DiagramNode | null {
-  if (!app.doc.nodes.some((n) => n.id === sourceId)) return null;
+  const source = app.doc.nodes.find((n) => n.id === sourceId);
+  if (!source) return null;
   let created: DiagramNode | null = null;
   mutateWithHistory(() => {
-    const node = createNodeFromStencil('service', 0, 0, app.doc.nodes.length);
+    // The kind most likely to follow the source (7.4); the strip lets the person pick another.
+    const node = createNodeFromStencil(likelyNext(source.kind)[0]?.id ?? 'service', 0, 0, app.doc.nodes.length);
     const snap = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
     node.x = Math.max(24, snap(worldX - node.width / 2));
     node.y = Math.max(32, snap(worldY - node.height / 2));
@@ -649,6 +637,11 @@ export function createEdgeConnection(
   setSelection({ type: 'edge', id: newEdge.id });
   app.connectSourceNodeId = null;
   renderAll(true);
+  const target = typeof document === 'undefined' ? null : document.getElementById(`node-${toId}`);
+  if (target) {
+    target.classList.add('is-attached');
+    setTimeout(() => target.classList.remove('is-attached'), 600);
+  }
 }
 
 const SHOW_LEGEND_KEY = 'conduitcraft:show-legend';
@@ -665,11 +658,17 @@ function legendCardWanted(): boolean {
 function syncLegendCard(): void {
   const card = document.getElementById('legend-card');
   const list = document.getElementById('legend-card-list');
-  if (!card || !list) return;
+  const key = document.getElementById('btn-legend-key');
+  if (!card || !list || !key) return;
   // Under "Colour by status" or "tag" the card explains those colours; otherwise it shows the document's own legend.
-  const key = colourKey(app.doc, app.colourBy);
-  const entries = key.length ? key : (app.doc.legend ?? []);
-  card.hidden = entries.length === 0 || !legendCardWanted();
+  const colours = colourKey(app.doc, app.colourBy);
+  const entries = colours.length ? colours : (app.doc.legend ?? []);
+  // The Key button is there when there is something to explain; the card opens from it (6.3).
+  key.hidden = entries.length === 0 || !legendCardWanted();
+  if (key.hidden) {
+    card.hidden = true;
+    key.setAttribute('aria-expanded', 'false');
+  }
   list.replaceChildren();
   for (const entry of entries) {
     const li = document.createElement('li');
@@ -698,6 +697,51 @@ export function bindLegendPreference(): void {
   });
 }
 
+/** "Animate wires while designing" (D8): off by default; the flag on the body lets the Design lens move its flow. */
+export function bindAnimateWiresPreference(): void {
+  const box = document.getElementById('chk-animate-wires') as HTMLInputElement | null;
+  if (!box) return;
+  const apply = () => document.body.toggleAttribute('data-animate-wires', box.checked);
+  try {
+    box.checked = localStorage.getItem('cc-animate-wires') === 'true';
+  } catch {
+    // Storage unavailable: the preference lasts until the page reloads.
+  }
+  apply();
+  box.addEventListener('change', () => {
+    apply();
+    try {
+      localStorage.setItem('cc-animate-wires', String(box.checked));
+    } catch {
+      // As above.
+    }
+  });
+}
+
+/** "Always show wire labels" (8.3): off by default; zoomed out, labels wait for hover or selection. */
+export function bindAlwaysWireLabelsPreference(): void {
+  const box = document.getElementById('chk-always-wire-labels') as HTMLInputElement | null;
+  if (!box) return;
+  const apply = () => {
+    if (box.checked) document.body.setAttribute('data-wire-labels', 'always');
+    else document.body.removeAttribute('data-wire-labels');
+  };
+  try {
+    box.checked = localStorage.getItem('cc-always-wire-labels') === 'true';
+  } catch {
+    // Storage unavailable: the preference lasts until the page reloads.
+  }
+  apply();
+  box.addEventListener('change', () => {
+    apply();
+    try {
+      localStorage.setItem('cc-always-wire-labels', String(box.checked));
+    } catch {
+      // Ignore storage errors.
+    }
+  });
+}
+
 /** Keeps every tag filter's options in step with the tags in the document. */
 function syncTagFilter(): void {
   const tags = allTags(app.doc);
@@ -714,10 +758,21 @@ function syncTagFilter(): void {
     select.value = app.tagFilter;
   }
   for (const select of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) select.value = app.colourBy;
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-diagram-style')) select.value = (app.levelRoot ?? app.doc).style ?? '';
 }
 
-/** "Colour by" and "tag" controls: the run bar. */
+/** "Colour by" and "tag" controls: the view popover. */
 export function bindViewFilters(): void {
+  for (const select of document.querySelectorAll<HTMLSelectElement>('.js-diagram-style')) {
+    select.addEventListener('change', () => {
+      pushHistory();
+      const root = app.levelRoot ?? app.doc;
+      const style = normalizeStyle(select.value);
+      if (style) root.style = style;
+      else delete root.style;
+      renderAll(false);
+    });
+  }
   for (const colour of document.querySelectorAll<HTMLSelectElement>('.js-colour-by')) {
     colour.addEventListener('change', () => {
       app.colourBy = colour.value === 'status' || colour.value === 'tag' ? colour.value : 'tone';
@@ -824,12 +879,14 @@ export function deleteSelected(): void {
       return;
     }
     pushHistory();
+    const leaving = copyLeavingNodes([targetId]);
     const desc = node ? `"${node.title}"` : 'component';
     app.doc.nodes = app.doc.nodes.filter((n) => n.id !== targetId);
     app.doc.edges = app.doc.edges.filter((e) => e.from !== targetId && e.to !== targetId);
     dropNodesFromSimulations(new Set([targetId]));
     setSelection({ type: 'none' });
     renderAll(true);
+    showLeaving(leaving);
     notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
     return;
   }
@@ -885,6 +942,7 @@ export function deleteSelected(): void {
     const zoneIds = new Set(unlockedZoneIds);
     const notesIds = new Set(unlockedNoteIds);
     const edgeIds = new Set(unlockedEdgeIds);
+    const leaving = copyLeavingNodes(unlockedNodeIds);
     app.doc.nodes = app.doc.nodes.filter((n) => !idSet.has(n.id));
     app.doc.edges = app.doc.edges.filter((e) => !idSet.has(e.from) && !idSet.has(e.to) && !edgeIds.has(e.id));
     if (zoneIds.size > 0) app.doc.zones = app.doc.zones.filter((zone) => !zoneIds.has(zone.id));
@@ -892,6 +950,7 @@ export function deleteSelected(): void {
     dropNodesFromSimulations(idSet);
     setSelection({ type: 'none' });
     renderAll(true);
+    showLeaving(leaving);
     notify(`Deleted ${desc}`, { action: { label: 'Undo', onClick: () => performUndo() } });
     return;
   }
@@ -1397,6 +1456,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
           tone: step.tone,
           packetLabel: step.label,
           preserveSelection: false,
+          titleBlock: titleBlockEnabled(),
         });
         frames.push(await rasterizeSvg(svg, size.width, size.height));
       }
@@ -1437,6 +1497,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         frameCount === 1 ? undefined : { dashOffset: gifFrameDashOffset(index) };
       const options: StagePictureOptions | undefined = {
         preserveSelection: app.selection.type === 'multi',
+        titleBlock: titleBlockEnabled(),
         ...(view ? { currentView: true } : {}),
         ...dash,
       };
@@ -1541,10 +1602,10 @@ export function initEvents(): void {
 
         hudStatusTip.textContent =
           app.workspaceMode === 'design'
-            ? 'Drag stencils onto the grid · Drag from any port dot to draw an animated wire'
+            ? TOOL_TIPS[app.pointerTool]
             : app.lens === 'review'
-              ? 'Review · Insights flag single points of failure, cycles, orphans and latency overruns · Click an issue to jump to it'
-              : 'Traffic · Select a component and press X (or right-click) to fail it · Alt-hover previews the blast radius';
+              ? 'Click an issue to jump to it.'
+              : 'Select a component and press X to fail it.';
 
         if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
           const live = new Set(app.doc.nodes.map((node) => node.id));
@@ -1585,8 +1646,6 @@ export function initEvents(): void {
   });
 
   // Undo / Redo / Delete / Duplicate
-  btnUndo.addEventListener('click', performUndo);
-  btnRedo.addEventListener('click', performRedo);
   btnPropDelete.addEventListener('click', deleteSelected);
   btnPropDuplicate.addEventListener('click', duplicateSelected);
 
@@ -1596,40 +1655,6 @@ export function initEvents(): void {
   btnPropGroup?.addEventListener('click', () => {
     if (canGroupSelection(app.selection)) applyGroup();
     else applyUngroup();
-  });
-
-  // Add Swimlane & Notes Card
-  btnAddZone.setAttribute('data-tip', 'Create a swimlane stage banner');
-  btnAddZone.setAttribute('data-tip-pos', 'top');
-  btnAddZone.addEventListener('click', () => {
-    pushHistory();
-    const nextX =
-      app.doc.zones.length > 0
-        ? Math.max(...app.doc.zones.map((z) => z.x + z.width)) + 24
-        : 48;
-    const zone = createSwimlaneZone(app.doc.zones.length, nextX);
-    app.doc.zones.push(zone);
-    expandStageToFit(app.doc);
-    setSelection({ type: 'zone', id: zone.id });
-    renderAll(true);
-    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-      responsiveToolbar.togglePalette(true);
-    }
-  });
-
-  btnAddNotes.setAttribute('data-tip', 'Add a checklist specification card');
-  btnAddNotes.setAttribute('data-tip-pos', 'top');
-  btnAddNotes.addEventListener('click', () => {
-    pushHistory();
-    const [cx, cy] = getViewportWorldCenter();
-    const notes = createNotesCard(cx - 200, cy + 120);
-    app.doc.notesCards.push(notes);
-    expandStageToFit(app.doc);
-    setSelection({ type: 'notes', id: notes.id });
-    renderAll(true);
-    if (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches) {
-      responsiveToolbar.togglePalette(true);
-    }
   });
 
   let currentGalleryCategory: TemplateCategory = 'all';
@@ -1897,7 +1922,6 @@ export function initEvents(): void {
 
   // File Import Triggers
   const triggerFilePicker = () => fileUploadInput.click();
-  btnPaletteImport.addEventListener('click', triggerFilePicker);
 
   fileUploadInput.addEventListener('change', () => {
     const file = fileUploadInput.files?.[0];
@@ -1933,7 +1957,6 @@ export function initEvents(): void {
   });
 
   // Blueprint file dialog (shows the Blueprint file; Apply imports Mermaid or Blueprint)
-  btnPaletteCode.addEventListener('click', openCodeDialog);
 
   btnCopyCode.addEventListener('click', async () => {
     try {
@@ -1993,8 +2016,8 @@ export function initEvents(): void {
       if (shareLinkOptions) shareLinkOptions.hidden = !hasImages;
       if (shareImageSizes) shareImageSizes.textContent = notice.images;
       // Too long: the file is the main action and the link is still there as a smaller one.
-      btnShareDownloadFile?.classList.toggle('btn-primary-export', notice.preferFile);
-      btnCopyShareLink?.classList.toggle('btn-primary-export', !notice.preferFile);
+      btnShareDownloadFile?.classList.toggle('solid', notice.preferFile);
+      btnCopyShareLink?.classList.toggle('solid', !notice.preferFile);
     } catch {
       clearTimeout(timeoutId);
       shareLinkInput.value = 'Error generating link';
@@ -2094,6 +2117,9 @@ export function initEvents(): void {
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
+  document.getElementById('chk-export-title-block')?.addEventListener('change', (event) => {
+    setTitleBlockEnabled((event.target as HTMLInputElement).checked);
+  });
   btnExportSvg.addEventListener('click', () => {
     expandStageToFit(app.doc);
     renderAll(false);
@@ -2104,6 +2130,7 @@ export function initEvents(): void {
         undefined,
         app.selection.type === 'multi' ? app.selection : undefined,
         currentScheme(),
+        titleBlockEnabled() ? titleBlockFor(app.doc, pageInfo()) : null,
       ),
       filename,
       'image/svg+xml;charset=utf-8',
@@ -2123,7 +2150,7 @@ export function initEvents(): void {
     renderAll(false);
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(
-      renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi' }),
+      renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi', titleBlock: titleBlockEnabled() }),
       filename,
       'image/svg+xml;charset=utf-8',
     );
@@ -2139,7 +2166,7 @@ export function initEvents(): void {
     hudStatusTip.textContent = 'Rendering the canvas…';
     const filename = `${getSafeFilenameSlug()}.png`;
     downloadDiagramPng(
-      renderStagePictureSvg(width, height, { preserveSelection: app.selection.type === 'multi' }),
+      renderStagePictureSvg(width, height, { preserveSelection: app.selection.type === 'multi', titleBlock: titleBlockEnabled() }),
       width,
       height,
       filename,
@@ -2225,26 +2252,10 @@ export function initEvents(): void {
     installApp: () => void installApp(),
   });
 
-  // Dismissible Coach Mark Card
-  try {
-    if (localStorage.getItem('conduitcraft-coach-dismissed') === '1' && hudCoachCard) {
-      hudCoachCard.hidden = true;
-    }
-  } catch {
-    // Ignore storage issues
-  }
-  btnDismissHudCoach?.addEventListener('click', () => {
-    if (hudCoachCard) hudCoachCard.hidden = true;
-    try {
-      localStorage.setItem('conduitcraft-coach-dismissed', '1');
-    } catch {
-      // Ignore storage issues
-    }
-  });
-
-  // Node Search in Canvas HUD (Cmd/Ctrl+F)
+  // Find a component (Cmd/Ctrl+F), a popover over the SE slot
   if (hudSearchInput && hudSearchCount && btnClearSearch) {
     initNodeSearch({
+      popover: document.getElementById('hud-search-card') ?? undefined,
       searchInput: hudSearchInput,
       searchCount: hudSearchCount,
       clearButton: btnClearSearch,
@@ -2275,6 +2286,7 @@ export function initEvents(): void {
   initChaosPanel();
   initQueueBacklog();
   initInsightsPanel();
+  initDockFaces();
   initHelp();
   initChaosPreview(chaosNodesLayer);
 
@@ -2562,7 +2574,7 @@ export function initEvents(): void {
     if (!pinch) return;
     const pts = [...contacts.values()];
     if (pts.length < 2) return;
-    const next = pinchTransform(pinch, pts[0], pts[1], 0.35, 1.9);
+    const next = pinchTransform(pinch, pts[0], pts[1], FIT_SCALE_MIN, 1.9);
     app.scale = next.scale;
     app.panX = next.panX;
     app.panY = next.panY;
@@ -2643,7 +2655,7 @@ export function initEvents(): void {
     zoomAround(app.scale / 1.16, rect.width / 2, rect.height / 2);
   });
   btnZoomFit.addEventListener('click', fitToViewport);
-  btnZoomFitSelection.addEventListener('click', fitSelection);
+  document.getElementById('view-fit')?.addEventListener('click', fitToViewport);
   trackViewportResize();
 
   // Global Keyboard Shortcuts (Undo, Redo, Duplicate, Delete, Escape)
@@ -2708,7 +2720,7 @@ export function initEvents(): void {
     if (!inEditable) {
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
         e.preventDefault();
-        responsiveToolbar.togglePalette();
+        void import('./tray').then((m) => m.toggleTray());
         return;
       }
     }
@@ -2728,7 +2740,7 @@ export function initEvents(): void {
         if (app.selection.type !== 'none') {
           applyZOrder('back');
         } else {
-          responsiveToolbar.togglePalette();
+          void import('./tray').then((m) => m.toggleTray());
         }
         return;
       }
@@ -2757,15 +2769,7 @@ let firstRunDeps: FirstRunDeps | null = null;
 export function bootStudio(): void {
   localizeStaticShortcuts();
   initTooltips();
-  initStencilPalette();
-  responsiveToolbar.init(undefined, {
-    onAddZone: () => {
-      btnAddZone.click();
-    },
-    onAddNotes: () => {
-      btnAddNotes.click();
-    },
-  });
+  responsiveToolbar.init();
   initEvents();
 
   // Saved work is read from storage first; the offer to restore it and first run both wait for that.

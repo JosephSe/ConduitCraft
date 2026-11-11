@@ -1,6 +1,8 @@
 /** Stage rendering for zones, notes, wires, and components. */
 import { invalidateChaos } from './chaos';
 import { paintDlqLinks } from './queueBacklog';
+import { paintRedline } from './redline';
+import { paintTitleBlockStrip } from './titleBlockStrip';
 import { invalidateInsights } from './insights';
 import { paintGroupOutlines } from './groupOutlines';
 import {
@@ -107,6 +109,14 @@ function paintFrames(): void {
 }
 
 export function renderAll(rebuildInspector = true): void {
+  const workspaceEl = document.getElementById('workspace');
+  const style = (app.levelRoot ?? app.doc).style;
+  if (workspaceEl) {
+    if (style) workspaceEl.dataset.style = style;
+    else delete workspaceEl.dataset.style;
+  }
+  const styleSelect = document.getElementById('view-style') as HTMLSelectElement | null;
+  if (styleSelect) styleSelect.value = style ?? '';
   invalidateChaos();
   invalidateInsights();
   const isEmpty = app.doc.nodes.length === 0 && app.doc.zones.length === 0 && app.doc.notesCards.length === 0;
@@ -139,11 +149,12 @@ export function renderAll(rebuildInspector = true): void {
   paintDocumentBrand();
   setText(
     canvasStatsPill,
-    `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'NODE' : 'NODES'} · ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'WIRE' : 'WIRES'}`,
+    `${app.doc.nodes.length} ${app.doc.nodes.length === 1 ? 'component' : 'components'}, ${app.doc.edges.length} ${app.doc.edges.length === 1 ? 'wire' : 'wires'}`,
   );
 
   stageWorld.style.width = `${app.doc.stageWidth}px`;
   stageWorld.style.height = `${app.doc.stageHeight}px`;
+  stageWorld.style.setProperty('--stage-h', String(app.doc.stageHeight));
   wiresSvg.setAttribute('viewBox', `0 0 ${app.doc.stageWidth} ${app.doc.stageHeight}`);
   wiresSvg.setAttribute('width', String(app.doc.stageWidth));
   wiresSvg.setAttribute('height', String(app.doc.stageHeight));
@@ -157,6 +168,8 @@ export function renderAll(rebuildInspector = true): void {
   renderWiresOnly();
   renderNodes();
   paintDlqLinks();
+  paintRedline();
+  paintTitleBlockStrip();
   renderSimButtons();
   renderMatrixTable();
   updateVisualSelectionHighlights();
@@ -184,7 +197,7 @@ export function renderMatrixTable(): void {
     const tr = document.createElement('tr');
     const td = document.createElement('td');
     td.colSpan = 5;
-    td.style.color = 'var(--wl-ink-muted)';
+    td.style.color = 'var(--cc-ink-3)';
     td.textContent = 'No components placed on the canvas yet.';
     tr.appendChild(td);
     matrixTbody.appendChild(tr);
@@ -226,7 +239,7 @@ export function renderMatrixTable(): void {
         cells[0].appendChild(document.createElement('br'));
         const sub = document.createElement('span');
         sub.style.fontSize = '0.78rem';
-        sub.style.color = 'var(--wl-ink-muted)';
+        sub.style.color = 'var(--cc-ink-3)';
         sub.textContent = node.subtitle;
         cells[0].appendChild(sub);
       }

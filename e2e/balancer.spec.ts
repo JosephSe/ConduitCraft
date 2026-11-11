@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { runPaletteCommand } from './helpers';
+import { placeComponent, runPaletteCommand, showInspectorTab } from './helpers';
 
 const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
 
@@ -14,9 +14,7 @@ async function openThreeTier(page: Page): Promise<void> {
 test('a Load Balancer from the rail draws as a trapezoid with its own icon and chip', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
-  const balancer = page.locator('.rail-stencil-btn[data-stencil-id="balancer"]');
-  await expect(balancer).toBeVisible();
-  await balancer.click();
+  await placeComponent(page, 'balancer');
   const added = page.locator('.arch-node[data-kind="balancer"]');
   await expect(added).toHaveCount(1);
   await expect(added).toHaveAttribute('data-shape', 'trapezoid');
@@ -24,7 +22,7 @@ test('a Load Balancer from the rail draws as a trapezoid with its own icon and c
   await expect(added.locator('.micro-chip')).toHaveText('RR');
 });
 
-test('the example load balancer is a trapezoid, and failing one of its targets keeps traffic flowing', async ({ page }) => {
+test('the example load balancer is a trapezoid, and failing one of its targets keeps traffic flowing', { tag: '@quick' }, async ({ page }) => {
   await openThreeTier(page);
   await expect(node(page, 'alb')).toHaveAttribute('data-shape', 'trapezoid');
 
@@ -65,6 +63,7 @@ test('the Strategy field in the inspector changes the chip, and has no axe viola
   await openThreeTier(page);
   await page.keyboard.press('1');
   await node(page, 'alb').locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const strategy = page.locator('#prop-node-balancer-strategy');
   await expect(strategy).toBeVisible();
   await expect(strategy).toHaveValue('least-connections');

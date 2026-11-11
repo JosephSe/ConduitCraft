@@ -1,8 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, showInspectorTab } from './helpers';
 
-test('Traffic lens: failing a component shows the blast radius, announces it, and restores', async ({ page }) => {
+test('Traffic lens: failing a component shows the blast radius, announces it, and restores', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -62,6 +62,7 @@ test('the inspector sets replicas, so a failure degrades instead of failing', as
   await openLumenRelay(page);
   const node = page.locator('.arch-node').first();
   await node.click();
+  await showInspectorTab(page, 'behaviour');
   await page.locator('#prop-node-replicas').fill('3');
   await page.locator('#prop-node-replicas').press('Tab');
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
@@ -139,7 +140,7 @@ test('only the failed component\'s own wires stop, and nothing stays dimmed once
   expect(state).toEqual({ ownRunning: 0, othersStopped: 0, dimmedNodes: 0, dimmedWires: 0 });
 });
 
-test('a component that calls a failed one glows orange and pulses', async ({ page }) => {
+test('a component that calls a failed one glows amber and pulses', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -151,5 +152,21 @@ test('a component that calls a failed one glows orange and pulses', async ({ pag
   await expect(risk.locator('.chaos-badge')).toHaveText(/Potential disruption/);
   const hit = risk.locator('.node-select-hit');
   await expect(hit).toHaveCSS('animation-name', 'chaos-pulse');
-  await expect(hit).toHaveCSS('border-top-color', 'rgb(249, 115, 22)');
+  await expect(hit).toHaveCSS('border-top-color', 'rgb(180, 83, 9)');
+});
+
+test('the dock\'s Fail a component arms the action, and the next component clicked fails', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await page.keyboard.press('2');
+  await clearSelection(page);
+  const fail = page.locator('#run-bar-fail');
+  await expect(fail).toBeVisible();
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(0);
+  await fail.click();
+  await expect(fail).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('.arch-node').first().click();
+  await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(1);
+  await expect(fail).toHaveAttribute('aria-pressed', 'false');
 });

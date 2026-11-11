@@ -2,7 +2,7 @@
  * Tags, ownership, links and the custom legend (F-26, F-27): what they mean and how they are read from a file.
  * Pure and DOM-free. Every link URL goes through `safeLinkUrl`, on input, on import and again on export.
  */
-import type { DiagramDocument, DiagramNode, LegendEntry, NodeLink, NodeBalancer, NodeCache, NodeLimiter, NodeSchedule, NodeLinkKind, NodeQueue, NodeResilience, NodeSource, StreamTone } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramStyle, LegendEntry, NodeLink, NodeBalancer, NodeCache, NodeLimiter, NodeSchedule, NodeLinkKind, NodeQueue, NodeResilience, NodeSource, StreamTone } from '../types';
 import { normalizeBalancer } from './balancers';
 import { normalizeCache, normalizeLimiter, normalizeSchedule } from './components';
 import { normalizeQueue } from './queues';
@@ -18,7 +18,7 @@ export const LINK_KIND_NAMES: Record<NodeLinkKind, string> = {
   oncall: 'On-call',
 };
 
-const TONES: readonly StreamTone[] = ['blue', 'emerald', 'rose', 'violet', 'amber'];
+const TONES: readonly StreamTone[] = ['blue', 'emerald', 'rose', 'violet', 'amber', 'cyan', 'fuchsia'];
 const SAFE_PROTOCOLS = new Set(['https:', 'http:', 'mailto:']);
 
 export const MAX_TAGS = 12;
@@ -90,6 +90,11 @@ export function normalizeOwner(raw: unknown): string | undefined {
 }
 
 /** One entry per tone, with a non-empty label. Anything else is dropped. */
+/** The diagram style a file declares, or undefined for Studio and anything unknown (Y1). */
+export function normalizeStyle(value: unknown): DiagramStyle | undefined {
+  return value === 'blueprint' || value === 'print' || value === 'sketch' ? value : undefined;
+}
+
 export function normalizeLegend(raw: unknown): LegendEntry[] {
   if (!Array.isArray(raw)) return [];
   const seen = new Set<StreamTone>();
@@ -193,7 +198,7 @@ export function allTags(doc: Pick<DiagramDocument, 'nodes' | 'edges'>): string[]
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }
 
-/** The tone a tag is drawn in: tags take the five tones in alphabetical order, then start over. */
+/** The tone a tag is drawn in: tags take the seven tones in alphabetical order, then start over. */
 function toneForTag(doc: Pick<DiagramDocument, 'nodes' | 'edges'>, tag: string): StreamTone {
   const index = allTags(doc).findIndex((t) => t.toLowerCase() === tag.toLowerCase());
   return TONES[Math.max(0, index) % TONES.length];

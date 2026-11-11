@@ -1,0 +1,6 @@
+@layer reset {
+  [hidden] {
+    display: none !important;
+  }
+}
+

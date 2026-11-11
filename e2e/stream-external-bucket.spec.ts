@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
+import { placeComponent, showInspectorTab } from './helpers';
 
 async function open(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -7,15 +8,13 @@ async function open(page: Page): Promise<void> {
 }
 
 async function addFromRail(page: Page, id: string, kind: string) {
-  const button = page.locator(`.rail-stencil-btn[data-stencil-id="${id}"]`);
-  await expect(button).toBeVisible();
-  await button.click();
+  await placeComponent(page, id);
   const added = page.locator(`.arch-node[data-kind="${kind}"]`);
   await expect(added).toHaveCount(1);
   return added;
 }
 
-test('a Stream / Log from the rail is a pipe with lanes, and Partitions changes the lanes', async ({ page }) => {
+test('a Stream / Log from the list is a pipe with lanes, and Partitions changes the lanes', async ({ page }) => {
   await open(page);
   const stream = await addFromRail(page, 'stream', 'queue');
   await expect(stream).toHaveAttribute('data-shape', 'pipe');
@@ -23,6 +22,7 @@ test('a Stream / Log from the rail is a pipe with lanes, and Partitions changes 
   await expect(stream.locator('.node-shape-lanes')).toHaveCount(1);
   await page.keyboard.press('1');
   await stream.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const partitions = page.locator('#prop-node-queue-partitions');
   await expect(partitions).toBeVisible();
   await partitions.fill('6');
@@ -39,6 +39,7 @@ test('Run by someone else draws a component dashed with an external flag', async
   await expect(service).not.toHaveAttribute('data-external', 'true');
   await page.keyboard.press('1');
   await service.locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const box = page.locator('#prop-node-external');
   await expect(box).toBeVisible();
   await box.check();
@@ -47,7 +48,7 @@ test('Run by someone else draws a component dashed with an external flag', async
   await expect(service).not.toHaveAttribute('data-external', 'true');
 });
 
-test('Object Storage from the rail is a store drawn as a bucket', async ({ page }) => {
+test('Object Storage from the list is a store drawn as a bucket', async ({ page }) => {
   await open(page);
   const bucket = await addFromRail(page, 'object-store', 'store');
   await expect(bucket).toHaveAttribute('data-shape', 'cylinder');

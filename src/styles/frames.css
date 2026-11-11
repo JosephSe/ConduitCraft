@@ -5,33 +5,36 @@
   pointer-events: none;
 }
 .frame-box {
-  --ft: var(--wl-blue);
-  --fs: var(--wl-blue-soft);
+  --ft: var(--cc-blue);
+  --fs: var(--cc-blue-soft);
   position: absolute;
   left: calc(var(--fx) * 1px);
   top: calc(var(--fy) * 1px);
   width: calc(var(--fw) * 1px);
   height: calc(var(--fh) * 1px);
   box-sizing: border-box;
-  border: 1.5px dashed var(--ft);
-  border-radius: 0.9rem;
-  background: color-mix(in srgb, var(--fs) 55%, transparent);
+  border: 1px solid var(--ft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fs) 40%, transparent);
   pointer-events: none;
 }
-.frame-box[data-tone="emerald"] { --ft: var(--wl-emerald); --fs: var(--wl-emerald-soft); }
-.frame-box[data-tone="rose"] { --ft: var(--wl-rose); --fs: var(--wl-rose-soft); }
-.frame-box[data-tone="violet"] { --ft: var(--wl-violet); --fs: var(--wl-violet-soft); }
-.frame-box[data-tone="amber"] { --ft: var(--wl-amber); --fs: var(--wl-amber-soft); }
-.frame-box.is-selected { border-style: solid; box-shadow: 0 0 0 3px var(--fs); }
+.frame-box[data-tone] { --ft: var(--t); --fs: var(--t-soft); }
+.frame-box.is-selected { box-shadow: 0 0 0 3px var(--fs); }
 .frame-title-bar {
   display: flex;
   align-items: center;
-  height: 28px;
-  padding: 0 0.7rem;
-  border-radius: 0.8rem 0.8rem 0 0;
+  /* The title is a tab that breaks the top-left corner (8.1). */
+  box-sizing: border-box;
+  inline-size: max-content;
+  max-inline-size: calc(100% - 24px);
+  height: 24px;
+  margin: -12px 0 0 12px;
+  padding: 0 0.6rem;
+  background: var(--cc-sheet);
+  border: 1px solid var(--ft);
+  border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
   color: var(--ft);
   white-space: nowrap;
   overflow: hidden;
@@ -62,9 +65,9 @@
   top: calc(var(--fy) * 1px);
   width: calc(var(--fw) * 1px);
   height: calc(var(--fh) * 1px);
-  border: 1.5px dashed var(--wl-blue);
+  border: 1.5px dashed var(--cc-blue);
   border-radius: 0.9rem;
-  background: var(--wl-blue-soft);
+  background: var(--cc-blue-soft);
   pointer-events: none;
 }
 .workspace[data-tool="frame"] #canvas-viewport { cursor: crosshair; }

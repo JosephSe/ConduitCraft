@@ -56,7 +56,7 @@ const openShare = async (page: Page) => {
   await expect(page.locator('#share-link-box')).toBeVisible();
 };
 
-test('the Share dialog says who can see the link and that nothing is uploaded', async ({ page }) => {
+test('the Share dialog says who can see the link and that nothing is uploaded', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -67,7 +67,7 @@ test('the Share dialog says who can see the link and that nothing is uploaded', 
   await expect(page.locator('#share-image-sizes')).toContainText(/With images \d+\.\d KB, without \d+\.\d KB/);
   await expect(page.locator('#share-link-size')).not.toContainText('Download the file instead');
   await expect(page.locator('#btn-share-download-file')).toBeVisible();
-  await expect(page.locator('#btn-share-download-file')).not.toHaveClass(/btn-primary-export/);
+  await expect(page.locator('#btn-share-download-file')).not.toHaveClass(/\bsolid\b/);
 });
 
 test('a link made heavy by images shows both sizes, makes the file the main action, and shrinks without images', async ({
@@ -83,14 +83,14 @@ test('a link made heavy by images shows both sizes, makes the file the main acti
   await expect(page.locator('#share-link-options')).toBeVisible();
   await expect(page.locator('#share-link-size')).toContainText('Download the file instead');
   await expect(page.locator('#share-image-sizes')).toContainText(/With images \d+\.\d KB, without \d+\.\d KB/);
-  await expect(page.locator('#btn-share-download-file')).toHaveClass(/btn-primary-export/);
-  await expect(page.locator('#btn-copy-share-link')).not.toHaveClass(/btn-primary-export/);
+  await expect(page.locator('#btn-share-download-file')).toHaveClass(/\bsolid\b/);
+  await expect(page.locator('#btn-copy-share-link')).not.toHaveClass(/\bsolid\b/);
   const heavy = await page.locator('#share-link-input').inputValue();
 
   await page.locator('#chk-share-omit-images').check();
   await expect(page.locator('#share-link-size')).not.toContainText('Download the file instead');
-  await expect(page.locator('#btn-copy-share-link')).toHaveClass(/btn-primary-export/);
-  await expect(page.locator('#btn-share-download-file')).not.toHaveClass(/btn-primary-export/);
+  await expect(page.locator('#btn-copy-share-link')).toHaveClass(/\bsolid\b/);
+  await expect(page.locator('#btn-share-download-file')).not.toHaveClass(/\bsolid\b/);
   const light = await page.locator('#share-link-input').inputValue();
   expect(light.length).toBeLessThan(heavy.length / 4);
 });

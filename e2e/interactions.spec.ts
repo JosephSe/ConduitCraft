@@ -1,23 +1,10 @@
-import { clearSelection, openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay, undo, redo, undoDepth } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 async function loadShowcase(page: Page): Promise<void> {
   await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
-}
-
-/** Number of undo steps, measured by walking back to the start and replaying forward (state is restored). */
-async function undoDepth(page: Page): Promise<number> {
-  const undo = page.locator('#btn-undo');
-  const redo = page.locator('#btn-redo');
-  let depth = 0;
-  while (await undo.isEnabled()) {
-    await undo.click();
-    depth += 1;
-  }
-  for (let i = 0; i < depth; i += 1) await redo.click();
-  return depth;
 }
 
 /** Centre of a node's hit area in viewport coordinates, only if nothing else covers it. */
@@ -105,12 +92,12 @@ const nodePosition = (page: Page, id: string) =>
   }, id);
 
 const wireCount = async (page: Page) =>
-  Number(/(\d+)\s*WIRES?/.exec((await page.locator('#canvas-stats-pill').textContent()) ?? '')?.[1]);
+  Number(/(\d+)\s*WIRES?/i.exec((await page.locator('#canvas-stats-pill').textContent()) ?? '')?.[1]);
 const currentTool = (page: Page) => page.locator('#workspace').getAttribute('data-tool');
 const enterConnectMode = (page: Page) =>
   page.locator('[data-rail-tool="connect"]').first().evaluate((el: HTMLElement) => el.click());
 
-test('dragging between two nodes in Connect mode creates a wire (control)', async ({ page }) => {
+test('dragging between two nodes in Connect mode creates a wire (control)', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   const [a, b] = await unconnectedPair(page);
   const from = (await clickableCentre(page, a))!;
@@ -204,7 +191,7 @@ test('Data View inspector shows the real diagram title, not the HTML placeholder
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
   await expect(page.locator('#data-inspector-pane')).toBeVisible();
   await page.locator('#canvas-viewport').click({ position: { x: 6, y: 6 } });
-  await expect(page.locator('#insp-badge, .inspector-badge').first()).toContainText('SYSTEM OVERVIEW');
+  await expect(page.locator('#insp-badge, .inspector-badge').first()).toContainText(/system overview/i);
   await expect(page.locator('#insp-title')).toHaveText(title!);
 });
 
@@ -239,7 +226,7 @@ async function emptyCanvasPoint(page: Page, from: { x: number; y: number }, minG
   const point = await page.evaluate(
     ([fx, fy, gap]) => {
       const vp = document.getElementById('canvas-viewport')!.getBoundingClientRect();
-      const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, button, input, a';
+      const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, [data-island], button, input, a';
       for (let y = vp.top + 120; y < vp.bottom - 140; y += 30) {
         for (let x = vp.left + 40; x < vp.right - 40; x += 30) {
           if (Math.hypot(x - (fx as number), y - (fy as number)) < (gap as number)) continue;
@@ -257,7 +244,7 @@ async function emptyCanvasPoint(page: Page, from: { x: number; y: number }, minG
 
 const nodeCount = (page: Page) => page.locator('.arch-node').count();
 
-test('dropping a wire on empty canvas creates a connected component with its name ready to edit', async ({ page }) => {
+test('dropping a wire on empty canvas creates a connected component with a kind strip, and typing names it', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   const [a] = await unconnectedPair(page);
   const from = (await clickableCentre(page, a))!;
@@ -273,9 +260,14 @@ test('dropping a wire on empty canvas creates a connected component with its nam
 
   await expect.poll(() => nodeCount(page)).toBe(nodesBefore + 1);
   expect(await wireCount(page)).toBe(wiresBefore + 1);
-  // The new component's name is open for editing straight away.
+  // The new component carries a strip of four kinds; typing starts naming it (7.4).
+  await expect(page.locator('.kind-strip .kind-strip-item')).toHaveCount(4);
+  await expect(page.locator('.kind-strip-item[aria-checked="true"]')).toHaveCount(1);
+  await page.keyboard.type('D');
+  await expect(page.locator('.kind-strip')).toHaveCount(0);
   await expect(page.locator('.inline-edit-input')).toBeVisible();
   await expect(page.locator('.inline-edit-input')).toHaveAttribute('aria-label', 'Component name');
+  await expect(page.locator('.inline-edit-input')).toHaveValue('D');
   await page.locator('.inline-edit-input').fill('Dropped Service');
   await page.locator('.inline-edit-input').press('Enter');
   await expect(page.locator('.arch-node .node-title', { hasText: 'Dropped Service' })).toHaveCount(1);
@@ -288,12 +280,12 @@ test('dropping a wire on empty canvas creates a connected component with its nam
   await expect(page.locator(`.conduit-group[data-from="${a}"][data-to="${created}"]`)).toHaveCount(1);
 
   // Component + wire + rename: the creation is one undo step (the rename is its own), so two undos remove it all.
-  await page.locator('#btn-undo').click();
-  await page.locator('#btn-undo').click();
+  await undo(page);
+  await undo(page);
   await expect.poll(() => nodeCount(page)).toBe(nodesBefore);
   expect(await wireCount(page)).toBe(wiresBefore);
-  await page.locator('#btn-redo').click();
-  await page.locator('#btn-redo').click();
+  await redo(page);
+  await redo(page);
   await expect.poll(() => nodeCount(page)).toBe(nodesBefore + 1);
 });
 
@@ -401,9 +393,9 @@ test('dragging a wire end onto another component re-attaches it, as one undo ste
   expect(await wireCount(page), 'no wire is added or removed').toBe(wiresBefore);
   await expect(page.locator('#toast-container')).toContainText('Wire reconnected');
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect(group).toHaveAttribute('data-to', wire.to);
-  await page.locator('#btn-redo').click();
+  await redo(page);
   await expect(group).toHaveAttribute('data-to', newTarget);
 });
 
@@ -506,6 +498,48 @@ test('the wire inspector can re-attach either end without a mouse', async ({ pag
   await expect(group).toHaveAttribute('data-to', newTarget);
   await expect(page.locator('#prop-edge-to')).toHaveValue(newTarget);
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   await expect(group).toHaveAttribute('data-to', wire.to);
+});
+
+test('the kind strip changes the kind in place with the arrow keys, and anything else dismisses it', async ({ page }) => {
+  await loadShowcase(page);
+  const [a] = await unconnectedPair(page);
+  const from = (await clickableCentre(page, a))!;
+  const to = await emptyCanvasPoint(page, from);
+  const nodesBefore = await nodeCount(page);
+  const wiresBefore = await wireCount(page);
+
+  await enterConnectMode(page);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.locator('.kind-strip')).toBeVisible();
+
+  const kind = () => page.locator('.arch-node').last().getAttribute('data-kind');
+  const checked = () => page.locator('.kind-strip-item[aria-checked="true"]').getAttribute('data-stencil-id');
+  const first = await checked();
+  await page.keyboard.press('ArrowRight');
+  const second = await checked();
+  expect(second).not.toBe(first);
+  await expect.poll(kind).toBeTruthy();
+  const secondKind = await kind();
+  await page.keyboard.press('ArrowLeft');
+  expect(await checked()).toBe(first);
+  // The component and its wire stay: only the kind changed.
+  expect(await nodeCount(page)).toBe(nodesBefore + 1);
+  expect(await wireCount(page)).toBe(wiresBefore + 1);
+  expect(secondKind).toBeTruthy();
+
+  // Clicking a cut-out picks it; a press on the sheet dismisses the strip.
+  await page.locator('.kind-strip-item').nth(2).click();
+  await expect(page.locator('.kind-strip-item[aria-checked="true"]')).toHaveAttribute('data-stencil-id', /.+/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.kind-strip')).toHaveCount(0);
+
+  // The kind change belongs to the creation: one undo removes the component and its wire.
+  await undo(page);
+  await expect.poll(() => nodeCount(page)).toBe(nodesBefore);
+  expect(await wireCount(page)).toBe(wiresBefore);
 });

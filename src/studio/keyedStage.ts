@@ -57,8 +57,7 @@ import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
 import { paintBacklog, paintDlqLinks } from './queueBacklog';
-import { chaosLensActive, chaosStatusOf, isPreview } from './chaos';
-import { insightsFor, worstLevel } from './insights';
+import { chaosDistance, chaosLensActive, chaosStatusOf, isPreview } from './chaos';
 import { scheduleMinimapPaint } from './minimap';
 import { clearGuides, paintGuides } from './guideOverlay';
 import { distancesTo, snapToGuides } from './guides';
@@ -570,9 +569,9 @@ function createWireGroup(edgeId: string): SVGGElement {
       if (
         app.selection.type !== 'edge' ||
         app.selection.id !== id ||
-        propPanelHeading.textContent !== 'WIRE PROPERTIES'
+        propPanelHeading.textContent !== 'Wire properties'
       ) {
-        applySelection({ type: 'edge', id }, { expectedHeading: 'WIRE PROPERTIES' });
+        applySelection({ type: 'edge', id }, { expectedHeading: 'Wire properties' });
         renderWiresOnly();
       }
     } else {
@@ -624,6 +623,8 @@ function createWireGroup(edgeId: string): SVGGElement {
     selectWire(e);
   });
 
+  const casing = document.createElementNS(SVG_NS, 'path');
+  casing.setAttribute('class', 'conduit-casing');
   const glow = document.createElementNS(SVG_NS, 'path');
   glow.setAttribute('class', 'conduit-glow');
   const rail = document.createElementNS(SVG_NS, 'path');
@@ -635,7 +636,7 @@ function createWireGroup(edgeId: string): SVGGElement {
   const portDot = document.createElementNS(SVG_NS, 'circle');
   portDot.setAttribute('class', 'port-dot');
   portDot.setAttribute('r', '4');
-  g.append(hit, glow, rail, stream, streamRev, portDot);
+  g.append(hit, casing, glow, rail, stream, streamRev, portDot);
 
   const ensureBadge = (edge: RoutedDiagramEdge) => {
     let badge = g.querySelector<SVGGElement>('.conduit-badge-hit');
@@ -819,9 +820,6 @@ function createWireGroup(edgeId: string): SVGGElement {
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
     const cut = chaosLensActive() && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
     g.classList.toggle('is-chaos-cut', cut);
-    const wireLevel = worstLevel(insightsFor('edge', edge.id));
-    if (wireLevel) g.dataset.insight = wireLevel;
-    else delete g.dataset.insight;
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;
@@ -833,17 +831,19 @@ function createWireGroup(edgeId: string): SVGGElement {
       edge.laneOffset && (edge.laneOffset[0] !== 0 || edge.laneOffset[1] !== 0)
         ? `translate(${edge.laneOffset[0]}, ${edge.laneOffset[1]})`
         : null;
-    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-glow, .conduit-rail, .conduit-stream, .conduit-stream-reverse')) {
+    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-casing, .conduit-glow, .conduit-rail, .conduit-stream, .conduit-stream-reverse')) {
       path.setAttribute('d', edge.pathD);
       if (laneTx) path.setAttribute('transform', laneTx);
       else path.removeAttribute('transform');
     }
-    const stream = g.querySelector('.conduit-stream');
-    if (edge.flow === 'both') {
-      stream?.removeAttribute('marker-end');
-    } else {
-      stream?.setAttribute('marker-end', `url(#arrow-${edge.tone})`);
-    }
+    // M1: Traffic sends one capsule down the wire from its source, so it needs the wire's length.
+    const stream = g.querySelector<SVGPathElement>('.conduit-stream');
+    if (stream) stream.style.setProperty('--cc-len', String(Math.round(stream.getTotalLength?.() ?? 0)));
+    // The arrowhead sits on the rail, which is always drawn, so it survives the still Design lens (D8). Sync is a
+    // filled head, async an open chevron, and a two-way wire has none.
+    const rail = g.querySelector('.conduit-rail');
+    if (edge.flow === 'both') rail?.removeAttribute('marker-end');
+    else rail?.setAttribute('marker-end', `url(#${edge.sync === 'async' ? 'chevron' : 'arrow'}-${edge.tone})`);
     const dot = g.querySelector('.port-dot');
     dot?.setAttribute('cx', String(edge.startPoint[0]));
     dot?.setAttribute('cy', String(edge.startPoint[1]));
@@ -920,7 +920,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     iconBox.className = 'node-icon';
     const eyebrow = document.createElement('span');
     eyebrow.className = 'node-eyebrow';
-    top.append(iconBox, eyebrow);
+    const light = document.createElement('span');
+    light.className = 'node-light';
+    top.append(iconBox, light);
     const mid = document.createElement('div');
     const titleSpan = document.createElement('span');
     titleSpan.className = 'node-title';
@@ -933,7 +935,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     fLeft.className = 'node-footer-label';
     const chip = document.createElement('span');
     chip.className = 'micro-chip';
-    footer.append(fLeft, chip);
+    footer.append(eyebrow, fLeft, chip);
     selectBtn.append(top, mid, footer);
   }
 
@@ -996,7 +998,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         } else {
           applySelection({ type: 'node', id: current.id });
         }
-      } else if (app.selection.type === 'node' && propPanelHeading.textContent !== 'COMPONENT PROPERTIES') {
+      } else if (app.selection.type === 'node' && propPanelHeading.textContent !== 'Component properties') {
         requestInspectorRefresh();
       }
 
@@ -1147,7 +1149,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       const current = liveNode(nodeId);
       if (!current || wasMoved || isToggleNodeEvent(e)) return;
       if (app.workspaceMode === 'design') {
-        applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
+        applySelection({ type: 'node', id: current.id }, { expectedHeading: 'Component properties' });
       } else {
         applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
       }
@@ -1188,7 +1190,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         applySelection({ type: 'node', id: current.id }, { refreshIfUnchanged: true });
       }
     } else {
-      applySelection({ type: 'node', id: current.id }, { expectedHeading: 'COMPONENT PROPERTIES' });
+      applySelection({ type: 'node', id: current.id }, { expectedHeading: 'Component properties' });
     }
   });
 
@@ -1354,13 +1356,13 @@ const paintedNodeContent = new WeakMap<HTMLElement, { sig: string; image: string
 const CHAOS_BADGES: Record<string, string> = {
   failed: 'Failed',
   degraded: 'Degraded',
-  unreachable: '⛓ Unreachable',
-  rerouted: '↪ Rerouted',
-  'at-risk': '⚠ Potential disruption',
-  buffering: '⏸ Buffering',
-  delayed: '⏳ Delayed',
-  slowed: '🐢 Slowed',
-  bypassed: '↷ Bypassed',
+  unreachable: 'Unreachable',
+  rerouted: 'Rerouted',
+  'at-risk': 'Potential disruption',
+  buffering: 'Buffering',
+  delayed: 'Delayed',
+  slowed: 'Slowed',
+  bypassed: 'Bypassed',
 };
 
 /** Failure state from a chaos run (F-01): a data attribute for the styles and a small badge for the words. */
@@ -1369,6 +1371,11 @@ function paintChaos(wrapper: HTMLElement, nodeId: string): void {
   const before = wrapper.dataset.chaos;
   if (status) wrapper.dataset.chaos = status;
   else delete wrapper.dataset.chaos;
+  if (status && before !== status && status !== 'failed') wrapper.style.setProperty('--cc-lag', `${Math.min(chaosDistance(nodeId), 12) * 40}ms`);
+  if (before === 'failed' && !status) {
+    wrapper.classList.add('is-restored');
+    setTimeout(() => wrapper.classList.remove('is-restored'), 700);
+  }
   if (status && isPreview()) wrapper.dataset.chaosPreview = 'true';
   else delete wrapper.dataset.chaosPreview;
   let badge = wrapper.querySelector<HTMLElement>(':scope > .chaos-badge');
@@ -1384,26 +1391,6 @@ function paintChaos(wrapper: HTMLElement, nodeId: string): void {
   if (before !== status) badge.textContent = CHAOS_BADGES[status];
 }
 
-/** Review lens only (F-02): a small badge with the number of issues on this component, coloured by the worst. */
-function paintInsights(wrapper: HTMLElement, nodeId: string): void {
-  const issues = insightsFor('node', nodeId);
-  const level = worstLevel(issues);
-  let badge = wrapper.querySelector<HTMLElement>(':scope > .insight-badge');
-  if (!level) {
-    delete wrapper.dataset.insight;
-    badge?.remove();
-    return;
-  }
-  wrapper.dataset.insight = level;
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.className = 'insight-badge';
-    badge.setAttribute('aria-hidden', 'true');
-    wrapper.appendChild(badge);
-  }
-  badge.textContent = `⚠ ${issues.length}`;
-}
-
 function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.id = 'node-' + node.id;
   wrapper.dataset.node = node.id;
@@ -1412,7 +1399,6 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.dataset.accent = effectiveTone(app.doc, node, app.colourBy);
   wrapper.classList.toggle('is-tag-dimmed', !matchesTag(node, app.tagFilter));
   paintChaos(wrapper, node.id);
-  paintInsights(wrapper, node.id);
   paintBacklog(wrapper, node);
   if (node.external) wrapper.dataset.external = 'true';
   else delete wrapper.dataset.external;
@@ -1448,6 +1434,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
     node.chip,
     node.icon,
     node.eyebrow,
+    node.external,
     node.footerLeft,
     node.queue,
     node.balancer,
@@ -1464,7 +1451,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
       lockBadge = document.createElement('span');
       lockBadge.className = 'node-lock-badge';
       lockBadge.setAttribute('aria-label', 'Locked component');
-      lockBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+      lockBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
       wrapper.appendChild(lockBadge);
     }
   } else {
@@ -1518,7 +1505,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
       commentBadge.className = 'node-comment-badge';
       // A plain span may not carry a label; as an image it can, and screen readers read the comment.
       commentBadge.setAttribute('role', 'img');
-      commentBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+      commentBadge.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
       wrapper.appendChild(commentBadge);
     }
     commentBadge.setAttribute('data-tip', node.comment.length > 70 ? `${node.comment.slice(0, 67)}…` : node.comment);
@@ -1578,7 +1565,7 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   }
   if (node.kind !== 'client') {
     const eyebrow = wrapper.querySelector('.node-eyebrow');
-    if (eyebrow) eyebrow.textContent = node.eyebrow;
+    if (eyebrow) eyebrow.textContent = node.external ? 'External' : node.eyebrow;
     const footer = wrapper.querySelector('.node-footer-label');
     if (footer) footer.textContent = cardText.footer;
   }

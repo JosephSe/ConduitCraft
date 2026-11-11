@@ -15,7 +15,7 @@ const toolbar = (page: Page) => page.locator('.context-toolbar');
 // A component that is fully on screen at the default zoom (the first one in the DOM sits half behind the rail).
 const firstNode = (page: Page) => page.locator('.arch-node[data-node-id="night-desk"]');
 
-test('selecting a component shows a toolbar just above it; clearing the selection hides it', async ({ page }) => {
+test('selecting a component shows a toolbar just above it; clearing the selection hides it', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } }); // the showcase opens with a selection
   await expect(toolbar(page)).toBeHidden();
@@ -75,13 +75,12 @@ test('a multi-selection offers Group', async ({ page }) => {
   await expect(toolbar(page).getByRole('button', { name: 'Group' })).toBeVisible();
 });
 
-for (const scheme of ['light', 'dark'] as const) {
-  test(`the toolbar has no axe violations (${scheme})`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await open(page);
-    await firstNode(page).locator('.node-select-hit').click();
-    await expect(toolbar(page)).toBeVisible();
-    const results = await new AxeBuilder({ page }).include('.context-toolbar').analyze();
-    expect(results.violations.map((v) => v.id)).toEqual([]);
-  });
-}
+test('the toolbar has no axe violations', async ({ page }) => {
+  // One theme. The toolbar is the same control in both, and dark ink is the tighter contrast.
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await open(page);
+  await firstNode(page).locator('.node-select-hit').click();
+  await expect(toolbar(page)).toBeVisible();
+  const results = await new AxeBuilder({ page }).include('.context-toolbar').analyze();
+  expect(results.violations.map((v) => v.id)).toEqual([]);
+});

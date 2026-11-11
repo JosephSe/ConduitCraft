@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 import { describeSelection } from '../src/studio/a11y';
 import { createBlankDocument } from '../src/templates/presets';
 import type { DiagramDocument, DiagramNode, DiagramEdge, DiagramZone, DiagramNotesCard } from '../src/types';
@@ -109,28 +110,28 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
 
   it('verifies high-contrast ink tokens in shared.css', () => {
     const sharedCss = fs.readFileSync(path.resolve('src/styles/shared.css'), 'utf8');
-    assert.ok(sharedCss.includes('--wl-ink-muted-dark: #9bb0d0;'), 'ink-muted-dark must use high-contrast #9bb0d0');
-    assert.ok(sharedCss.includes('--wl-ink-muted-light: #485973;'), 'ink-muted-light must use high-contrast #485973');
-    assert.ok(sharedCss.includes('--wl-ink-secondary-dark: #cbd5e1;'), 'ink-secondary-dark must use high-contrast #cbd5e1');
-    assert.ok(sharedCss.includes('--wl-ink-secondary-light: #334155;'), 'ink-secondary-light must use high-contrast #334155');
+    assert.ok(sharedCss.includes('--cc-ink-3: #92979C;'), 'graphite hints must stay #92979C');
+    assert.ok(sharedCss.includes('--cc-ink-3: #5C626A;'), 'vellum hints must stay #5C626A');
+    assert.ok(sharedCss.includes('--cc-ink-2: #B7BBBF;'), 'graphite secondary text must stay #B7BBBF');
+    assert.ok(sharedCss.includes('--cc-ink-2: #565C64;'), 'vellum secondary text must stay #565C64');
   });
 
   it('verifies Level-of-Detail (LoD) CSS rules for low zoom', () => {
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+    const studioCss = readStudioCss();
     assert.ok(studioCss.includes('#stage-world[data-lod="low"] .node-footer'), 'must hide node footer at low zoom');
     assert.ok(studioCss.includes('#stage-world[data-lod="low"] .node-eyebrow'), 'must hide node eyebrow at low zoom');
     assert.ok(studioCss.includes('#stage-world[data-lod="low"] .node-title'), 'must keep node title prominent at low zoom');
   });
 
   it('verifies consistent focus-visible outline in studio.css', () => {
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+    const studioCss = readStudioCss();
     assert.ok(studioCss.includes(':focus-visible {'), 'must declare universal focus-visible outline');
-    assert.ok(studioCss.includes('.stencil-card:focus-visible'), 'must declare stencil-card focus ring');
+    assert.ok(studioCss.includes('.tray-item:focus-visible'), 'must declare tray item focus ring');
   });
 
   it('verifies global [hidden] rule inside earliest @layer reset in shared.css and studio.css', () => {
     const sharedCss = fs.readFileSync(path.resolve('src/styles/shared.css'), 'utf8');
-    const studioCss = fs.readFileSync(path.resolve('src/styles/studio.css'), 'utf8');
+    const studioCss = readStudioCss();
 
     // Both files must declare [hidden] { display: none !important; } in @layer reset
     assert.match(
@@ -145,19 +146,11 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
     );
   });
 
-  it('verifies #hud-status-tip is decoupled from dismissible #hud-coach-card in index.html', () => {
+  it('keeps the status line as the one role="status" hint line, with no dismissible card around it', () => {
     const indexHtml = fs.readFileSync(path.resolve('index.html'), 'utf8');
-    // Ensure #hud-coach-card does not contain #hud-status-tip
-    const coachCardMatch = indexHtml.match(/<div[^>]*id="hud-coach-card"[^>]*>([\s\S]*?)<\/div>/);
-    assert.ok(coachCardMatch, 'hud-coach-card exists in index.html');
-    assert.ok(
-      !coachCardMatch[1].includes('id="hud-status-tip"'),
-      '#hud-status-tip must not live inside #hud-coach-card so dismissal does not silence status messages',
-    );
-    assert.ok(
-      indexHtml.includes('id="hud-status-tip"'),
-      '#hud-status-tip exists in index.html',
-    );
+    assert.match(indexHtml, /<p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">/);
+    assert.ok(!indexHtml.includes('hud-coach-card'), 'the coach card is gone');
+    assert.ok(!indexHtml.includes('hud-status-card'), 'the status card is gone');
   });
 
   it('verifies the copy link button starts disabled and the empty-state doors are gone', () => {

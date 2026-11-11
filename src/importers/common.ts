@@ -26,7 +26,7 @@ export function uniqueId(base: string, used: Set<string>): string {
   return id;
 }
 
-/** Nearest of the five wire colours for a `#rrggbb` colour, or undefined for none, default or greys. */
+/** Nearest of the seven wire colours for a `#rrggbb` colour, or undefined for none, default or greys. */
 export function colourToTone(raw: string | undefined): StreamTone | undefined {
   if (!raw) return undefined;
   const hex = /^#([0-9a-f]{6})$/i.exec(raw.trim());
@@ -46,9 +46,11 @@ export function colourToTone(raw: string | undefined): StreamTone | undefined {
   hue = (hue * 60 + 360) % 360;
   if (hue < 20 || hue >= 330) return 'rose';
   if (hue < 75) return 'amber';
-  if (hue < 190) return 'emerald';
+  if (hue < 170) return 'emerald';
+  if (hue < 205) return 'cyan';
   if (hue < 260) return 'blue';
-  return 'violet';
+  if (hue < 285) return 'violet';
+  return 'fuchsia';
 }
 
 function rectsOverlap(a: DiagramNode, b: DiagramNode, gap: number): boolean {
@@ -163,6 +165,11 @@ const BUS_IMAGES = ['nats', 'mosquitto', 'zookeeper'];
 const BALANCER_IMAGES = ['haproxy'];
 const CACHE_IMAGES = ['memcached', 'varnish'];
 const GATE_IMAGES = ['nginx', 'traefik', 'envoy', 'caddy', 'kong', 'apisix', 'httpd'];
+
+/** Every image word the importers recognise, for the component tray's search (7.3). */
+export const IMAGE_WORDS: string[] = [
+  ...new Set([...STORE_IMAGES, ...QUEUE_IMAGES, ...STREAM_IMAGES, ...BUCKET_IMAGES, ...BUS_IMAGES, ...BALANCER_IMAGES, ...CACHE_IMAGES, ...GATE_IMAGES]),
+];
 
 /** The kind of component a container image most likely is: a data store, a message bus, a gateway, else a service. */
 export function kindForImage(image: string): NodeKind {

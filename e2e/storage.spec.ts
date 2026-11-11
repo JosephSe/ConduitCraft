@@ -103,7 +103,7 @@ test('never destroys old copies that were never moved: they are left alone and n
   expect(await page.evaluate(() => localStorage.getItem('conduitcraft-autosave-v1'))).not.toBeNull();
 });
 
-test('never loses an edit when the page is reloaded', async ({ page }) => {
+test('never loses an edit when the page is reloaded', { tag: '@quick' }, async ({ page }) => {
   await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('#save-status-pill')).toHaveAttribute('data-status', 'saved');

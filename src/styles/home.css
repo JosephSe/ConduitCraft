@@ -4,10 +4,6 @@
   max-inline-size: calc(100vw - 2rem);
   overflow-x: hidden;
 }
-.home-dialog-shell {
-  inline-size: 100%;
-  min-inline-size: 0;
-}
 .home-dialog-body {
   min-inline-size: 0;
   overflow-x: hidden;
@@ -40,18 +36,18 @@
 .home-search input {
   font: inherit;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--wl-border-ui);
+  border: 1px solid var(--cc-hair-2);
   border-radius: 0.5rem;
-  background: var(--wl-surface);
-  color: var(--wl-ink);
+  background: var(--cc-sheet);
+  color: var(--cc-ink);
 }
 .home-warning {
   margin: 0;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--wl-border-ui);
+  border: 1px solid var(--cc-hair-2);
   border-radius: 0.5rem;
-  background: var(--wl-surface-elevated);
-  color: var(--wl-ink);
+  background: var(--cc-well);
+  color: var(--cc-ink);
 }
 .home-section h3 {
   margin: 0 0 0.5rem;
@@ -71,33 +67,32 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 0.25rem;
-  padding: 0.5rem;
+  padding: 0;
   font: inherit;
   text-align: start;
-  color: var(--wl-ink);
-  border: 1px solid var(--wl-border-subtle);
-  border-radius: 0.5rem;
-  background: var(--wl-surface);
+  color: var(--cc-ink);
+  border: 0;
+  background: none;
   cursor: pointer;
 }
-.home-card:hover,
-.home-card:focus-visible {
-  border-color: var(--wl-blue);
+.home-card:hover .home-thumb,
+.home-card:focus-visible .home-thumb {
+  border-color: var(--cc-ink-3);
 }
-.home-card[aria-current='true'] {
-  border-color: var(--wl-border-ui);
-  background: var(--wl-surface-elevated);
+.home-card[aria-current='true'] .home-thumb {
+  border-color: var(--cc-ink);
 }
 .home-thumb {
   inline-size: 100%;
   aspect-ratio: 16 / 10;
   object-fit: contain;
-  border-radius: 0.25rem;
-  background: var(--wl-canvas);
+  border: 1px solid var(--cc-hair);
+  border-radius: 0.6rem;
+  background: var(--cc-canvas);
 }
 .home-thumb-empty {
   display: block;
-  border: 1px dashed var(--wl-border-subtle);
+  border: 1px dashed var(--cc-hair);
 }
 .home-card-title {
   font-weight: 700;
@@ -105,7 +100,7 @@
 }
 .home-card-when {
   font-size: 0.8rem;
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-3);
 }
 .home-card-new {
   justify-content: center;
@@ -113,6 +108,8 @@
   text-align: center;
   min-block-size: 9rem;
   border-style: dashed;
+  border: 1px dashed var(--cc-hair);
+  border-radius: 0.6rem;
 }
 .home-card-plus {
   font-size: 2rem;
@@ -120,7 +117,7 @@
 }
 .home-note {
   margin: 0.5rem 0 0;
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-3);
 }
 .home-templates {
   display: grid;

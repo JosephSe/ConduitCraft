@@ -72,9 +72,9 @@ function build(): HTMLDialogElement {
       </div>
       <div class="dialog-body find-replace-body">
         <label class="field-label" for="fr-find">Find</label>
-        <input id="fr-find" class="prop-input" type="text" autocomplete="off" spellcheck="false" />
+        <input id="fr-find" class="field" type="text" autocomplete="off" spellcheck="false" />
         <label class="field-label" for="fr-replace">Replace with</label>
-        <input id="fr-replace" class="prop-input" type="text" autocomplete="off" spellcheck="false" />
+        <input id="fr-replace" class="field" type="text" autocomplete="off" spellcheck="false" />
         <div class="find-replace-options">
           <label><input type="checkbox" id="fr-case" /> Match case</label>
           <label><input type="checkbox" id="fr-word" /> Whole word</label>
@@ -86,7 +86,7 @@ function build(): HTMLDialogElement {
         <ul class="find-replace-results" id="fr-results" aria-label="Matches"></ul>
         <div class="find-replace-actions">
           <button type="button" class="btn" id="fr-select">Select all matches</button>
-          <button type="button" class="btn btn-primary" id="fr-replace-all">Replace all</button>
+          <button type="button" class="btn solid" id="fr-replace-all">Replace all</button>
         </div>
       </div>
     </div>`;

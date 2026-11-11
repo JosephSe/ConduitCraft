@@ -2,7 +2,7 @@ export type NodeKind = 'actor' | 'core' | 'service' | 'bus' | 'gate' | 'store' |
 
 export type NodeShape = 'card' | 'rounded' | 'pill' | 'circle' | 'diamond' | 'hexagon' | 'asymmetric' | 'trapezoid' | 'bucket';
 
-export type StreamTone = 'blue' | 'emerald' | 'rose' | 'violet' | 'amber';
+export type StreamTone = 'blue' | 'emerald' | 'rose' | 'violet' | 'amber' | 'cyan' | 'fuchsia';
 
 export type PortSide = 'auto' | 'top' | 'right' | 'bottom' | 'left';
 
@@ -384,6 +384,9 @@ export interface DiagramPage extends LevelContent {
   stageHeight?: number;
 }
 
+/** The look of the sheet and every export (8.8). Absent means Studio. */
+export type DiagramStyle = 'blueprint' | 'print' | 'sketch';
+
 export interface DiagramDocument {
   title: string;
   systemTag: string;
@@ -400,7 +403,7 @@ export interface DiagramDocument {
   /** Frames (F-09). Absent means none. */
   frames?: DiagramFrame[];
   simulations: SimulationScenario[];
-  /** Custom names for the five colours. Absent means the built-in names. */
+  /** Custom names for the seven colours. Absent means the built-in names. */
   legend?: LegendEntry[];
   /** Per-diagram settings for the Review lens (F-02). */
   insights?: { muted: string[] };
@@ -408,6 +411,8 @@ export interface DiagramDocument {
   pages?: DiagramPage[];
   /** Name of the first page. Absent means "Page 1". */
   pageTitle?: string;
+  /** Diagram style (Y1, schema 13). Absent means Studio. */
+  style?: DiagramStyle;
   /** Id of the first page, once it has moved or been told apart from the others. Absent means "page-1". */
   pageId?: string;
 }

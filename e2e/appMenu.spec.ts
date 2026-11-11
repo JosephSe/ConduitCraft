@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { clearSelection, openLumenRelay } from './helpers';
 
 async function open(page: Page) {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -22,7 +22,7 @@ test('the menu button lists the actions that have no button of their own', async
   }
 });
 
-test('choosing an item runs its action', async ({ page }) => {
+test('choosing an item runs its action', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await button(page).click();
   await menu(page).getByRole('menuitem', { name: 'Export…', exact: true }).click();
@@ -53,7 +53,12 @@ test('clicking the button again closes the menu instead of reopening it', async 
 test('every item can be reached on a short window', async ({ page }) => {
   await open(page);
   await page.setViewportSize({ width: 1024, height: 420 });
-  await button(page).click();
+  // The selection's toolbar floats over the top left on a window this short; let go of the selection first.
+  await clearSelection(page);
+  // Keyboard, not a click: with the wider sheet the selection's toolbar can still sit over the mark on a window this short.
+  await button(page).focus();
+  await page.keyboard.press('Enter');
+  await expect(menu(page)).toBeVisible();
   const last = menu(page).getByRole('menuitem').last();
   await last.scrollIntoViewIfNeeded();
   await expect(last).toBeInViewport();

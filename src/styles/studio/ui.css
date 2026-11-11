@@ -1,0 +1,421 @@
+/* Primitives (T3). The layer sits after stage so layout and stage keep losing
+   to these rules, and before inspector so the inspector can still override them. */
+@layer ui {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding-inline: 0.68rem;
+    padding-block: 0.36rem;
+    min-block-size: 2.15rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--cc-hair-2);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .btn:hover:not(:disabled) {
+    background: var(--cc-well);
+  }
+
+  .btn:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .btn:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
+  .btn.solid {
+    background: var(--cc-ink);
+    color: var(--cc-on-ink);
+    border-color: transparent;
+  }
+
+  .btn.solid:hover:not(:disabled) {
+    background: var(--cc-ink);
+    filter: brightness(1.07);
+  }
+
+  /* On an island a button is not a box in a box (6.2, 6.4): it is text or an icon on the island, with a well on hover. Run (.solid) stays filled. */
+  [data-island] .btn:not(.solid),
+  .slot .btn:not(.solid) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-island] .btn:not(.solid):hover:not(:disabled),
+  .slot .btn:not(.solid):hover:not(:disabled) {
+    background: var(--cc-well);
+  }
+  [data-island] .btn:not(.solid)[aria-pressed="true"],
+  .slot .btn:not(.solid)[aria-pressed="true"],
+  [data-island] .btn:not(.solid)[aria-expanded="true"],
+  .slot .btn:not(.solid)[aria-expanded="true"] {
+    background: var(--cc-well);
+    color: var(--cc-ink);
+  }
+  /* The first-run card's second and third actions keep their outline: they sit beside a filled button and must still read as buttons. */
+  .first-run .btn:not(.solid) {
+    border-color: var(--cc-hair-2);
+    background: var(--cc-sheet);
+  }
+
+  .btn-compact {
+    min-block-size: 1.9rem;
+    padding-inline: 0.55rem;
+    padding-block: 0.22rem;
+    font-size: 0.75rem;
+    flex: 1 1 auto;
+  }
+
+  .btn-approve {
+    border-color: var(--cc-emerald);
+    background: var(--cc-emerald-soft);
+  }
+
+  .btn-reject {
+    border-color: var(--cc-rose);
+    background: var(--cc-rose-soft);
+  }
+
+  .btn-icon-only {
+    padding-inline: 0.5rem;
+    min-inline-size: 2.15rem;
+  }
+
+  .field {
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    padding: 0.45rem 0.6rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--cc-field-edge);
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+
+    @media (pointer: coarse) {
+      font-size: 1rem;
+      min-block-size: 2.75rem;
+    }
+  }
+
+  textarea.field {
+    resize: vertical;
+    min-block-size: 4.5rem;
+  }
+
+  .field-code {
+    font-family: var(--cc-font-mono);
+    font-size: 0.75rem;
+    background: var(--cc-surface-code);
+    color: #e2e8f0;
+    min-block-size: 6rem;
+  }
+
+  .field.is-inferred {
+    color: var(--text-muted, #64748b);
+  }
+
+  .field:focus-visible {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  .switch {
+    appearance: none;
+    inline-size: 2.25rem;
+    block-size: 1.25rem;
+    margin: 0;
+    border: 1px solid var(--cc-hair-2);
+    border-radius: 999px;
+    background: var(--cc-well);
+    cursor: pointer;
+  }
+
+  .switch:checked {
+    background: var(--cc-ink);
+    border-color: transparent;
+  }
+
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.15rem;
+    border: 1px solid var(--cc-hair-2);
+    border-radius: 0.6rem;
+    background: var(--cc-well);
+  }
+
+  .segmented-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--cc-well);
+    padding: 0.1875rem;
+    border-radius: 0.625rem;
+    border: 1px solid var(--cc-hair);
+    gap: 0.125rem;
+  }
+
+  .segmented-label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding-inline: 0.6rem;
+    padding-block: 0.28rem;
+    border-radius: 0.45rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--cc-ink-2);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background-color 0.18s ease, color 0.18s ease;
+  }
+
+  .segmented-label:has(input:checked) {
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    box-shadow: 0 1px 3px rgba(2, 6, 23, 0.14);
+  }
+
+  /* The lens switch (6.2): equal segments under one ink thumb that springs to the chosen one. */
+  .mode-switcher {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .mode-switcher::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    inline-size: 33.34%;
+    border-radius: 0.45rem;
+    background: var(--cc-ink);
+    transition: transform var(--cc-dur-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .mode-switcher:has(label:nth-of-type(2) input:checked)::before { transform: translateX(100%); }
+  .mode-switcher:has(label:nth-of-type(3) input:checked)::before { transform: translateX(200%); }
+
+  .mode-switcher .segmented-label,
+  .mode-switcher .segmented-label:has(input:checked) {
+    justify-content: center;
+    background: none;
+    box-shadow: none;
+  }
+
+  .mode-switcher .segmented-label:has(input:checked) { color: var(--cc-on-ink); }
+
+  .segmented-label:has(input:focus-visible) {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  .popover {
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    border: 1px solid var(--cc-hair-2);
+    border-radius: var(--cc-radius-m);
+    box-shadow: var(--cc-shadow-2);
+  }
+
+  dialog {
+    margin: auto;
+    border: 1px solid var(--cc-hair-2);
+    border-radius: 1rem;
+    background: var(--cc-sheet);
+    color: var(--cc-ink);
+    box-shadow: var(--cc-shadow-elevated);
+    max-inline-size: min(62rem, calc(100vw - 2rem));
+    max-block-size: calc(100dvh - 3rem);
+    padding: 0;
+    opacity: 0;
+    transform: scale(0.95);
+    transition-property: opacity, transform, display, overlay;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+
+    @media (prefers-reduced-motion: reduce) {
+      transform: none;
+      transition-duration: 0.1s;
+    }
+  }
+
+  dialog:modal {
+    overscroll-behavior: contain;
+  }
+
+  :is(dialog[open]):where(:not([data-closing])) {
+    opacity: 1;
+    transform: scale(1);
+
+    @starting-style {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      @starting-style {
+        transform: none;
+      }
+    }
+  }
+
+  dialog::backdrop {
+    overflow: hidden;
+    overscroll-behavior: contain;
+    background-color: rgba(2, 6, 23, 0);
+    backdrop-filter: blur(4px);
+    transition-property: background-color, display, overlay;
+    transition-duration: 0.22s;
+    transition-timing-function: ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  :is(dialog[open]):where(:not([data-closing]))::backdrop {
+    background-color: rgba(2, 6, 23, 0.58);
+
+    @starting-style {
+      background-color: rgba(2, 6, 23, 0);
+    }
+  }
+
+  .dialog-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    max-block-size: calc(100dvh - 3rem);
+    min-inline-size: 0;
+  }
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 24px 24px 12px;
+    border-block-end: 1px solid var(--cc-hair);
+    flex-wrap: wrap;
+  }
+
+  .dialog-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .dialog-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .dialog-body {
+    padding: 12px 24px 24px;
+    overflow: auto;
+  }
+
+  /* Cut-out (7.1). Rest is an ink-3 outline. Reaching fills it and lifts it. */
+  .cutout {
+    display: block;
+    overflow: visible;
+  }
+
+  .cutout :is(path, rect, ellipse, circle, polygon) {
+    fill: transparent;
+    stroke: var(--cc-ink-3);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    transition: fill var(--cc-dur-fast) var(--cc-ease-out), stroke var(--cc-dur-fast) var(--cc-ease-out);
+  }
+
+  .cut {
+    transition: transform 0.26s var(--cc-spring);
+  }
+
+  .cut:hover,
+  .cut:focus-visible,
+  .cut.is-on,
+  .tray-item:hover .cut,
+  .tray-item:focus-visible .cut {
+    transform: translateY(-4px) scale(1.12);
+  }
+
+  .cut:hover .cutout :is(path, rect, ellipse, circle, polygon),
+  .cut:focus-visible .cutout :is(path, rect, ellipse, circle, polygon),
+  .cut.is-on .cutout :is(path, rect, ellipse, circle, polygon),
+  .tray-item:hover .cut .cutout :is(path, rect, ellipse, circle, polygon),
+  .tray-item:focus-visible .cut .cutout :is(path, rect, ellipse, circle, polygon),
+  .cutout.is-carried :is(path, rect, ellipse, circle, polygon) {
+    fill: color-mix(in oklab, var(--t, var(--cc-blue)) 13%, var(--cc-sheet));
+    stroke: var(--t, var(--cc-blue));
+  }
+
+  .cutout .cutout-mark,
+  .cut:hover .cutout .cutout-mark,
+  .cut:focus-visible .cutout .cutout-mark,
+  .cut.is-on .cutout .cutout-mark,
+  .tray-item:hover .cut .cutout .cutout-mark,
+  .cutout.is-carried .cutout-mark {
+    fill: none;
+  }
+
+  /* The slot left behind while the filled copy is under the pointer. */
+  .cut.is-empty,
+  .tray-item:hover .cut.is-empty {
+    transform: none;
+  }
+
+  .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon),
+  .tray-item:hover .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon) {
+    fill: transparent;
+    stroke: var(--cc-ink-3);
+  }
+
+  .stencil-drag-ghost.cutout-carry {
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    inline-size: 38px;
+    block-size: 30px;
+    transition: inline-size 0.26s var(--cc-spring), block-size 0.26s var(--cc-spring);
+  }
+
+  .stencil-drag-ghost.cutout-carry.is-full {
+    inline-size: var(--carry-w);
+    block-size: var(--carry-h);
+  }
+
+  .cutout-carry .cutout {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cut,
+    .cutout :is(path, rect, ellipse, circle, polygon),
+    .stencil-drag-ghost.cutout-carry {
+      transition: none;
+    }
+  }
+}

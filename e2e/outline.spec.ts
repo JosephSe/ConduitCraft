@@ -9,20 +9,21 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 });
 
-test('passes axe with the outline open in all four lenses', async ({ page }) => {
+test('the outline stays open in every lens and has no axe violations', async ({ page }) => {
   await runPaletteCommand(page, 'Toggle Text Outline');
   const panel = page.locator('#outline-panel');
   await expect(panel).toBeVisible();
+  // The panel markup does not change with the lens, so one scan covers it.
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).include('#outline-panel').analyze();
+  expect(results.violations).toEqual([]);
   for (const key of ['1', '2', '3', '4']) {
     await page.locator('#canvas-viewport').focus();
     await page.keyboard.press(key);
     await expect(panel).toBeVisible();
-    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).include('#outline-panel').analyze();
-    expect(results.violations).toEqual([]);
   }
 });
 
-test('reaches a component by keyboard alone and selects it', async ({ page }) => {
+test('reaches a component by keyboard alone and selects it', { tag: '@quick' }, async ({ page }) => {
   await clearSelection(page);
   await runPaletteCommand(page, 'Toggle Text Outline');
   const tree = page.locator('#outline-tree');

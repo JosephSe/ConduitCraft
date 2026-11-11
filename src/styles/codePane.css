@@ -10,17 +10,15 @@
   max-inline-size: 60vw;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
-  background: var(--wl-surface);
-  border-inline-start: 1px solid var(--wl-border);
+  background: var(--cc-sheet);
+  border-inline-start: 1px solid var(--cc-border);
   box-shadow: -8px 0 24px rgba(2, 6, 23, 0.1);
 }
 .code-pane[hidden] { display: none; }
 
-/* The canvas, its HUD, the page strip and the run bar give way to the pane. */
+/* The canvas and the slots give way to the pane. */
 .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: calc(100% - var(--code-pane-w)); }
-.canvas-shell[data-code-pane="open"] :is(.canvas-hud, .page-strip, .legend-card) { inset-inline-end: calc(var(--code-pane-w) + 0.875rem); }
-.canvas-shell[data-code-pane="open"] .page-strip { inset-inline-end: var(--code-pane-w); }
-.canvas-shell[data-code-pane="open"] :is(.run-bar, .chaos-panel) { inset-inline-start: calc(50% - var(--code-pane-w) / 2); }
+.canvas-shell[data-code-pane="open"] .slots { inset-inline-end: var(--code-pane-w); }
 
 .code-pane-resize {
   position: absolute;
@@ -31,16 +29,16 @@
   touch-action: none;
   z-index: 1;
 }
-.code-pane-resize:hover, .code-pane-resize:focus-visible { background: var(--wl-blue-soft); outline: none; }
+.code-pane-resize:hover, .code-pane-resize:focus-visible { background: var(--cc-accent-soft); outline: none; }
 
-.code-pane-head { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--wl-border-subtle); }
+.code-pane-head { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--cc-hair); }
 .code-pane-title { flex: 1; margin: 0; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; }
 
-.code-pane-body { display: grid; grid-template-columns: auto minmax(0, 1fr); min-block-size: 0; background: var(--wl-canvas); }
+.code-pane-body { display: grid; grid-template-columns: auto minmax(0, 1fr); min-block-size: 0; background: var(--cc-canvas); }
 .code-gutter, .code-area {
   margin: 0;
   padding: 0.5rem 0.5rem;
-  font-family: var(--wl-font-mono);
+  font-family: var(--cc-font-mono);
   font-size: 0.74rem;
   line-height: 1.5;
 }
@@ -48,14 +46,14 @@
   overflow: hidden;
   white-space: pre;
   text-align: end;
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-3);
   user-select: none;
   padding-inline: 0.5rem 0.4rem;
-  border-inline-end: 1px solid var(--wl-border-subtle);
+  border-inline-end: 1px solid var(--cc-hair);
 }
-.code-gutter .is-bad { color: var(--wl-rose, #b91c1c); font-weight: 700; }
+.code-gutter .is-bad { color: var(--cc-rose, #b91c1c); font-weight: 700; }
 .code-area-wrap { position: relative; min-inline-size: 0; min-block-size: 0; display: grid; }
-.code-highlight { position: absolute; inset-inline: 0; z-index: 0; background: var(--wl-blue-soft); border-inline-start: 3px solid var(--wl-blue); pointer-events: none; }
+.code-highlight { position: absolute; inset-inline: 0; z-index: 0; background: var(--cc-accent-soft); border-inline-start: 3px solid var(--cc-accent); pointer-events: none; }
 .code-highlight[hidden] { display: none; }
 .code-area {
   position: relative;
@@ -64,31 +62,28 @@
   resize: none;
   border: 0;
   background: transparent;
-  color: var(--wl-ink);
+  color: var(--cc-ink);
   white-space: pre;
   overflow: auto;
   tab-size: 2;
 }
-.code-area:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.code-area:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 
-.code-status { margin: 0; padding: 0.35rem 0.6rem; font-size: 0.74rem; color: var(--wl-ink); border-block-start: 1px solid var(--wl-border-subtle); }
-.code-status[data-tone="warn"] { font-weight: 600; border-inline-start: 3px solid var(--wl-amber); }
+.code-status { margin: 0; padding: 0.35rem 0.6rem; font-size: 0.74rem; color: var(--cc-ink); border-block-start: 1px solid var(--cc-hair); }
+.code-status[data-tone="warn"] { font-weight: 600; border-inline-start: 3px solid var(--cc-amber); }
 .code-diagnostics { list-style: none; margin: 0; padding: 0 0.4rem 0.4rem; max-block-size: 7rem; overflow: auto; }
 .code-diagnostics:empty { display: none; }
-.code-diagnostic { display: block; inline-size: 100%; padding: 0.2rem 0.3rem; border: 0; background: none; color: var(--wl-ink); font: inherit; font-size: 0.74rem; text-align: start; cursor: pointer; border-radius: 0.3rem; }
-.code-diagnostic:hover { background: var(--wl-hover, rgba(127, 127, 127, 0.1)); }
+.code-diagnostic { display: block; inline-size: 100%; padding: 0.2rem 0.3rem; border: 0; background: none; color: var(--cc-ink); font: inherit; font-size: 0.74rem; text-align: start; cursor: pointer; border-radius: 0.3rem; }
+.code-diagnostic:hover { background: var(--cc-hover, rgba(127, 127, 127, 0.1)); }
 .code-diagnostic[data-level="error"] { font-weight: 600; }
-.code-diagnostic:focus-visible { outline: 2px solid var(--wl-blue); outline-offset: -2px; }
+.code-diagnostic:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 
 /* Narrow screens: the pane sits below the canvas instead of beside it. */
 @media (max-width: 66rem) {
-  .code-pane { inset-block: auto 0; inset-inline: 0; inline-size: auto; max-inline-size: none; block-size: var(--code-pane-h); border-inline-start: 0; border-block-start: 1px solid var(--wl-border); }
+  .code-pane { inset-block: auto 0; inset-inline: 0; inline-size: auto; max-inline-size: none; block-size: var(--code-pane-h); border-inline-start: 0; border-block-start: 1px solid var(--cc-border); }
   .code-pane-resize { inset-block: -4px auto; inset-inline: 0; block-size: 8px; inline-size: auto; cursor: row-resize; }
   .canvas-shell[data-code-pane="open"] .canvas-viewport { inline-size: 100%; block-size: calc(100% - var(--code-pane-h)); }
-  .canvas-shell[data-code-pane="open"] :is(.canvas-hud, .legend-card, .page-strip) { inset-inline-end: 0.875rem; }
-  .canvas-shell[data-code-pane="open"] .page-strip { inset-inline-end: 0; inset-block-end: var(--code-pane-h); }
-  .canvas-shell[data-code-pane="open"] .canvas-hud { inset-block-end: calc(var(--code-pane-h) + var(--page-strip-h) + 0.5rem); }
-  .canvas-shell[data-code-pane="open"] :is(.run-bar, .chaos-panel) { inset-inline-start: 50%; inset-block-end: calc(var(--code-pane-h) + var(--page-strip-h) + 5rem); }
+  .canvas-shell[data-code-pane="open"] .slots { inset-inline-end: 0; inset-block-end: var(--code-pane-h); }
 }
 
 @media (pointer: coarse) {

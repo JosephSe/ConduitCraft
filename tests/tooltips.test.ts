@@ -1,8 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { placeTooltip, preferredPlacement } from '../src/studio/tooltips.ts';
+import { readStudioCss } from './studioCss.ts';
 
 const VIEWPORT = { width: 1000, height: 700 };
 const TIP = { width: 200, height: 30 };
@@ -71,31 +70,17 @@ describe('preferred tooltip placement', () => {
     assert.equal(preferredPlacement(fake({})), 'bottom');
   });
 
-  it('points collapsed rails toward the canvas', () => {
-    assert.equal(preferredPlacement(fake({}, ['.palette-rail-content'])), 'right');
+  it('points the collapsed inspector rail toward the canvas', () => {
     assert.equal(preferredPlacement(fake({}, ['.inspector-rail-content'])), 'left');
-  });
-
-  it('keeps tool tips off the next tool when the tools run sideways above the open palette', () => {
-    assert.equal(preferredPlacement(fake({}, ['.palette-rail-content', '.rail-tool-btn'])), 'bottom');
-    assert.equal(
-      preferredPlacement(fake({}, ['.palette-rail-content', '.rail-tool-btn', '[data-palette-collapsed="true"]'])),
-      'right',
-    );
   });
 });
 
 describe('tooltip styles', () => {
-  const css = readFileSync(resolve(process.cwd(), 'src/styles/studio.css'), 'utf8');
+  const css = readStudioCss();
 
   it('styles one shared layer above everything and drops the per-element pseudo-element tooltips', () => {
     assert.ok(css.includes('.tooltip-layer {'), 'defines the shared tooltip layer');
     assert.ok(css.includes('.tooltip-layer[data-visible="true"]'), 'defines its visible state');
     assert.ok(!css.includes('[data-tip]::after'), 'no per-element ::after tooltips remain');
-  });
-
-  it('keeps the collapsed palette sidebar overflow visible and stencil cards positioned', () => {
-    assert.ok(css.includes('.workspace[data-palette-collapsed="true"] .palette-sidebar {\n    overflow: visible;'));
-    assert.ok(css.includes('.stencil-card {\n    position: relative;'));
   });
 });

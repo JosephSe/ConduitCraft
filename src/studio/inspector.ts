@@ -88,6 +88,8 @@ import { normalizeBrandAccent } from '../core/brand';
 import { normalizeBudgetMs } from '../core/insights';
 import { NODE_SHAPE_LABELS, NODE_SHAPES, nodeShapeFrame, sanitizeIconImage } from '../core/nodeStyle';
 import { TONE_CSS, TONE_META } from '../shared/tones';
+import { findStencil } from '../templates/presets';
+import { renderCutoutMarkup } from '../ui/cutout';
 import {
   LINK_KINDS,
   LINK_KIND_NAMES,
@@ -165,7 +167,7 @@ export function makeTextInput(
 ): HTMLInputElement {
   const input = document.createElement('input');
   input.type = 'text';
-  input.className = 'prop-input';
+  input.className = 'field';
   input.value = value;
   if (opts?.identifier) {
     input.setAttribute('autocorrect', 'off');
@@ -191,7 +193,7 @@ export function makeTextarea(
   isCode = false,
 ): HTMLTextAreaElement {
   const ta = document.createElement('textarea');
-  ta.className = isCode ? 'prop-textarea prop-textarea-code' : 'prop-textarea';
+  ta.className = isCode ? 'field field-code' : 'field';
   ta.value = value;
   if (isCode) {
     ta.spellcheck = false;
@@ -235,7 +237,7 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
   replicas.min = '1';
   replicas.max = '99';
   replicas.step = '1';
-  replicas.className = 'prop-input';
+  replicas.className = 'field';
   replicas.value = String(replicaCount(node));
   replicas.addEventListener('change', () => {
     const n = Math.max(1, Math.min(99, Math.floor(Number(replicas.value)) || 1));
@@ -244,7 +246,7 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
   });
 
   const fallback = document.createElement('select');
-  fallback.className = 'prop-select';
+  fallback.className = 'field';
   fallback.appendChild(makeOption('', 'None'));
   for (const other of app.doc.nodes) {
     if (other.id !== node.id) fallback.appendChild(makeOption(other.id, other.title || other.id));
@@ -276,13 +278,13 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   };
 
   const ordering = document.createElement('select');
-  ordering.className = 'prop-select';
+  ordering.className = 'field';
   for (const o of QUEUE_ORDERINGS) ordering.appendChild(makeOption(o, o === 'fifo' ? 'FIFO' : o[0].toUpperCase() + o.slice(1)));
   ordering.value = node.queue?.ordering ?? 'standard';
   ordering.addEventListener('change', () => commit({ ordering: ordering.value }));
 
   const delivery = document.createElement('select');
-  delivery.className = 'prop-select';
+  delivery.className = 'field';
   delivery.appendChild(makeOption('competing', 'One reader gets each message'));
   delivery.appendChild(makeOption('fanout', 'Every reader gets every message (stream)'));
   delivery.value = node.queue?.delivery ?? 'competing';
@@ -301,7 +303,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   depth.min = '1';
   depth.max = String(MAX_QUEUE_DEPTH);
   depth.step = '1';
-  depth.className = 'prop-input';
+  depth.className = 'field';
   depth.placeholder = 'Unbounded';
   depth.value = node.queue?.maxDepth ? String(node.queue.maxDepth) : '';
   depth.addEventListener('change', () => {
@@ -312,7 +314,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   });
 
   const dead = document.createElement('select');
-  dead.className = 'prop-select';
+  dead.className = 'field';
   dead.appendChild(makeOption('', 'None'));
   const others = app.doc.nodes.filter((n) => n.id !== node.id);
   // Queues first: a dead-letter target is nearly always another queue.
@@ -350,7 +352,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
 /** How a load balancer spreads traffic (K2). The strategy is recorded for the reader; playback does not use it. */
 function makeBalancerFields(node: DiagramNode): HTMLElement[] {
   const strategy = document.createElement('select');
-  strategy.className = 'prop-select';
+  strategy.className = 'field';
   for (const s of BALANCER_STRATEGIES) strategy.appendChild(makeOption(s, BALANCER_STRATEGY_LABELS[s]));
   strategy.value = node.balancer?.strategy ?? 'round-robin';
   strategy.addEventListener('change', () => {
@@ -401,7 +403,7 @@ function wholeNumberInput(value: number | undefined, min: number, max: number, p
   input.min = String(min);
   input.max = String(max);
   input.step = '1';
-  input.className = 'prop-input';
+  input.className = 'field';
   input.placeholder = placeholder;
   input.value = value === undefined ? '' : String(value);
   return input;
@@ -425,7 +427,7 @@ function makeCacheFields(node: DiagramNode): HTMLElement[] {
   });
 
   const backing = document.createElement('select');
-  backing.className = 'prop-select';
+  backing.className = 'field';
   const inferred = node.cache?.backingId ? null : backingStoreOf(app.doc, node.id);
   const inferredTitle = inferred ? app.doc.nodes.find((n) => n.id === inferred)?.title || inferred : '';
   backing.appendChild(makeOption('', inferred ? `${inferredTitle} (inferred)` : 'None'));
@@ -531,7 +533,7 @@ function makeLinksEditor(node: DiagramNode): HTMLElement {
       const line = document.createElement('div');
       line.className = 'prop-link-row';
       const kind = document.createElement('select');
-      kind.className = 'prop-select';
+      kind.className = 'field';
       kind.setAttribute('aria-label', 'Link type');
       kind.appendChild(makeOption('', 'Link'));
       for (const k of LINK_KINDS) kind.appendChild(makeOption(k, LINK_KIND_NAMES[k]));
@@ -666,7 +668,7 @@ function makeIconPicker(selected: NodeIconName, onChange: (next: NodeIconName) =
 
   const trigger = document.createElement('button');
   trigger.type = 'button';
-  trigger.className = 'prop-select icon-picker-trigger';
+  trigger.className = 'field icon-picker-trigger';
   trigger.setAttribute('aria-haspopup', 'listbox');
   trigger.setAttribute('aria-expanded', 'false');
 
@@ -802,17 +804,6 @@ export function makeCollapsibleSection(
   return details;
 }
 
-/**
- * A section with a `?` beside its title. The button sits next to the <summary>, not inside it, because a
- * control nested in a <summary> is a nested interactive element (axe `nested-interactive`).
- */
-function sectionWithHelp(details: HTMLDetailsElement, topicId: string): HTMLElement {
-  const wrap = document.createElement('div');
-  wrap.className = 'prop-section-wrap';
-  wrap.append(details, helpButton(topicId));
-  return wrap;
-}
-
 function updateSelectionActionButtons(sel: SelectionTarget): void {
   if (sel.type === 'none') {
     propSelectionActions.hidden = true;
@@ -848,6 +839,86 @@ function updateSelectionActionButtons(sel: SelectionTarget): void {
   }
 }
 
+let inspectorTab = 'look';
+
+/** The selection's cut-out in its colour, its name, and its kind (6.5). */
+function makeSelectionHeader(node: DiagramNode): HTMLElement {
+  const stencil = findStencil(node.kind);
+  const head = document.createElement('div');
+  head.className = 'prop-selection-head';
+  const tone = TONE_CSS[node.accent ?? stencil?.accent ?? 'slate']?.[0];
+  if (tone) head.style.setProperty('--t', tone);
+  const art = document.createElement('span');
+  art.className = 'prop-selection-art';
+  if (stencil) art.innerHTML = renderCutoutMarkup({ ...stencil, icon: node.icon ?? stencil.icon });
+  const text = document.createElement('div');
+  text.className = 'prop-selection-text';
+  const name = document.createElement('span');
+  name.className = 'prop-selection-name';
+  name.textContent = node.title || node.id;
+  const kind = document.createElement('span');
+  kind.className = 'prop-selection-kind';
+  kind.textContent = stencil?.paletteTitle ?? node.kind;
+  text.append(name, kind);
+  head.append(art, text);
+  return head;
+}
+
+/** Look, Behaviour and Notes: a tablist in a well, and one panel each. Hidden panels keep their fields in the page. */
+function makeInspectorTabs(tabs: Array<{ id: string; label: string; help: string; elements: HTMLElement[] }>): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'prop-tabs';
+  if (!tabs.some((t) => t.id === inspectorTab)) inspectorTab = tabs[0].id;
+  const list = document.createElement('div');
+  list.className = 'prop-tablist';
+  list.setAttribute('role', 'tablist');
+  list.setAttribute('aria-label', 'Component properties');
+  const buttons: HTMLButtonElement[] = [];
+  const panels: HTMLElement[] = [];
+  const show = (id: string, focus = false) => {
+    inspectorTab = id;
+    tabs.forEach((tab, i) => {
+      const on = tab.id === id;
+      buttons[i].setAttribute('aria-selected', String(on));
+      buttons[i].tabIndex = on ? 0 : -1;
+      panels[i].hidden = !on;
+      if (on && focus) buttons[i].focus();
+    });
+  };
+  tabs.forEach((tab, i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'prop-tab';
+    button.id = `prop-tab-${tab.id}`;
+    button.setAttribute('role', 'tab');
+    button.setAttribute('aria-controls', `prop-panel-${tab.id}`);
+    button.textContent = tab.label;
+    button.addEventListener('click', () => show(tab.id));
+    button.addEventListener('keydown', (e) => {
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (step) {
+        e.preventDefault();
+        show(tabs[(i + step + tabs.length) % tabs.length].id, true);
+      } else if (e.key === 'Home' || e.key === 'End') {
+        e.preventDefault();
+        show(tabs[e.key === 'Home' ? 0 : tabs.length - 1].id, true);
+      }
+    });
+    buttons.push(button);
+    const panel = document.createElement('div');
+    panel.className = 'prop-tabpanel';
+    panel.id = `prop-panel-${tab.id}`;
+    panel.setAttribute('role', 'tabpanel');
+    panel.setAttribute('aria-labelledby', button.id);
+    panel.append(...tab.elements, helpButton(tab.help));
+    panels.push(panel);
+    list.appendChild(button);
+  });
+  wrap.append(list, ...panels);
+  show(inspectorTab);
+  return wrap;
+}
+
 export function renderPropertyEditor(): void {
   closeIconMenus();
   propFormContainer.replaceChildren();
@@ -863,7 +934,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'COMPONENT PROPERTIES';
+    propPanelHeading.textContent = 'Component properties';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -900,7 +971,7 @@ export function renderPropertyEditor(): void {
     const appearanceElements: HTMLElement[] = [];
 
     const kindSelect = document.createElement('select');
-    kindSelect.className = 'prop-select';
+    kindSelect.className = 'field';
     for (const st of kindStencils()) {
       const opt = document.createElement('option');
       opt.value = st.kind;
@@ -935,7 +1006,7 @@ export function renderPropertyEditor(): void {
     }
 
     const shapeSelect = document.createElement('select');
-    shapeSelect.className = 'prop-select';
+    shapeSelect.className = 'field';
     for (const shape of NODE_SHAPES) {
       // A load balancer's default outline already is the trapezoid, so it lists one entry for it.
       if (shape === 'trapezoid' && node.kind === 'balancer') continue;
@@ -971,6 +1042,8 @@ export function renderPropertyEditor(): void {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.className = 'visually-hidden';
+    fileInput.setAttribute('aria-label', 'Custom icon image file');
+    fileInput.tabIndex = -1;
     fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
 
     const iconHint = document.createElement('p');
@@ -981,7 +1054,6 @@ export function renderPropertyEditor(): void {
     uploadZone.className = 'custom-icon-upload-zone';
     uploadZone.setAttribute('role', 'button');
     uploadZone.setAttribute('tabindex', '0');
-    uploadZone.setAttribute('aria-label', 'Upload custom icon image');
 
     const handleIconFile = (picked: File) => {
       if (!picked.type.startsWith('image/') || picked.size > 280_000) {
@@ -1057,6 +1129,9 @@ export function renderPropertyEditor(): void {
       promptWrap.append(promptTitle, promptSub);
       uploadZone.append(uploadIcon, promptWrap);
     }
+
+    // The name keeps its first words and contains the visible text (WCAG 2.5.3).
+    uploadZone.setAttribute('aria-label', `Upload custom icon image. ${uploadZone.querySelector('.custom-icon-upload-prompt')?.textContent ?? ''}`.trim());
 
     uploadZone.addEventListener('click', (e) => {
       if ((e.target as HTMLElement).tagName !== 'BUTTON') {
@@ -1183,7 +1258,7 @@ export function renderPropertyEditor(): void {
     mHeader.className = 'prop-list-header';
     const mTitle = document.createElement('span');
     mTitle.className = 'section-heading';
-    mTitle.textContent = 'METRICS';
+    mTitle.textContent = 'Metrics';
     const btnAddMetric = document.createElement('button');
     btnAddMetric.type = 'button';
     btnAddMetric.className = 'btn btn-compact';
@@ -1246,7 +1321,7 @@ export function renderPropertyEditor(): void {
     // --- 5. Review & Status Section ---
     const reviewElements: HTMLElement[] = [];
     const statusSelect = document.createElement('select');
-    statusSelect.className = 'prop-select';
+    statusSelect.className = 'field';
     statusSelect.id = 'prop-node-status';
     const statusOptions: Array<{ value: string; label: string }> = [
       { value: '', label: 'None / Unspecified' },
@@ -1310,13 +1385,26 @@ export function renderPropertyEditor(): void {
     if (node.kind === 'limiter') reviewElements.push(...makeLimiterFields(node));
     if (node.kind === 'scheduler') reviewElements.push(...makeSchedulerFields(node));
 
-    // Assemble Form Sections
+    // Assemble the form (6.5): a header, then three tabs. Every field goes in exactly one tab.
+    const onNotes = (el: HTMLElement) =>
+      el === linksField || el.matches('#prop-node-comment, #prop-node-owner, #prop-node-tags') || el.querySelector('#prop-node-comment, #prop-node-owner, #prop-node-tags') !== null;
+    const isSummary = (el: HTMLElement) => el.querySelector('#prop-node-summary') !== null;
+    const isInterface = (el: HTMLElement) => el.querySelector('#prop-node-interface') !== null;
+    const reviewBehaviour = reviewElements.filter((el) => !onNotes(el));
+    const notesElements = [...basicsElements.filter(isSummary), ...reviewElements.filter(onNotes)];
+    const lookElements = [
+      ...basicsElements.filter((el) => !isSummary(el)),
+      ...appearanceElements,
+      ...metadataElements.filter((el) => !isInterface(el)),
+    ];
+    const behaviourElements = [...reviewBehaviour, ...metadataElements.filter(isInterface), ...telemetryElements];
     form.append(
-      sectionWithHelp(makeCollapsibleSection('basics', 'Basics', true, basicsElements), 'components'),
-      sectionWithHelp(makeCollapsibleSection('appearance', 'Appearance', false, appearanceElements), 'components'),
-      sectionWithHelp(makeCollapsibleSection('review', 'Review & Status', true, reviewElements), 'links-owner'),
-      sectionWithHelp(makeCollapsibleSection('metadata', 'More details', false, metadataElements), 'components'),
-      sectionWithHelp(makeCollapsibleSection('telemetry', 'Metrics & Contract', false, telemetryElements), 'traffic'),
+      makeSelectionHeader(node),
+      makeInspectorTabs([
+        { id: 'look', label: 'Look', help: 'components', elements: lookElements },
+        { id: 'behaviour', label: 'Behaviour', help: 'traffic', elements: behaviourElements },
+        { id: 'notes', label: 'Notes', help: 'links-owner', elements: notesElements },
+      ]),
     );
   } else if (sel.type === 'edge') {
     const edge = app.doc.edges.find((e) => e.id === sel.id);
@@ -1325,13 +1413,13 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'WIRE PROPERTIES';
+    propPanelHeading.textContent = 'Wire properties';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
 
     const wireHeading = document.createElement('h3');
     wireHeading.className = 'section-heading';
-    wireHeading.textContent = 'WIRE FIELDS';
+    wireHeading.textContent = 'Wire fields';
     wireHeading.appendChild(helpButton('wire-fields'));
     form.appendChild(wireHeading);
     form.appendChild(
@@ -1347,7 +1435,7 @@ export function renderPropertyEditor(): void {
 
     // Protocol, call style and latency (F-17). Empty means "not set" and is left out of the saved file.
     const protocolSelect = document.createElement('select');
-    protocolSelect.className = 'prop-select';
+    protocolSelect.className = 'field';
     protocolSelect.append(makeOption('', 'Not set'));
     for (const p of WIRE_PROTOCOLS) protocolSelect.append(makeOption(p, WIRE_PROTOCOL_NAMES[p]));
     protocolSelect.value = edge.protocol ?? '';
@@ -1360,7 +1448,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(makeField('prop-edge-protocol', 'Protocol', protocolSelect));
 
     const syncSelect = document.createElement('select');
-    syncSelect.className = 'prop-select';
+    syncSelect.className = 'field';
     syncSelect.append(makeOption('sync', 'Waits for a reply (sync)'), makeOption('async', "Doesn't wait (async, dashed)"));
     syncSelect.value = edge.sync === 'async' ? 'async' : 'sync';
     syncSelect.addEventListener('change', () => {
@@ -1375,7 +1463,7 @@ export function renderPropertyEditor(): void {
     latencyInput.type = 'number';
     latencyInput.min = '0';
     latencyInput.step = '1';
-    latencyInput.className = 'prop-input';
+    latencyInput.className = 'field';
     latencyInput.placeholder = 'e.g. 120';
     latencyInput.value = edge.latencyMs === undefined ? '' : String(edge.latencyMs);
     latencyInput.addEventListener('focus', () => beginHistoryGesture());
@@ -1400,7 +1488,7 @@ export function renderPropertyEditor(): void {
     for (const n of app.doc.nodes) titleCounts.set(n.title, (titleCounts.get(n.title) ?? 0) + 1);
     const makeEndSelect = (end: 'from' | 'to'): HTMLSelectElement => {
       const select = document.createElement('select');
-      select.className = 'prop-select';
+      select.className = 'field';
       for (const n of app.doc.nodes) {
         const option = document.createElement('option');
         option.value = n.id;
@@ -1547,11 +1635,11 @@ export function renderPropertyEditor(): void {
     // Source & Target Port Overrides
     const makePortSelect = (current: PortSide, onChange: (p: PortSide) => void) => {
       const sel = document.createElement('select');
-      sel.className = 'prop-select';
+      sel.className = 'field';
       for (const side of ['auto', 'top', 'right', 'bottom', 'left'] as PortSide[]) {
         const opt = document.createElement('option');
         opt.value = side;
-        opt.textContent = side.toUpperCase();
+        opt.textContent = side.charAt(0).toUpperCase() + side.slice(1);
         opt.selected = side === current;
         sel.appendChild(opt);
       }
@@ -1728,10 +1816,10 @@ export function renderPropertyEditor(): void {
     const excludedEdges = app.doc.edges.filter((e) => sel.excludedEdgeIds?.includes(e.id));
 
     const counts = [
-      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'NODE' : 'NODES'}` : '',
-      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'CONNECTOR' : 'CONNECTORS'}` : '',
-      zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'SWIMLANE' : 'SWIMLANES'}` : '',
-      notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'NOTE' : 'NOTES'}` : '',
+      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'node' : 'nodes'}` : '',
+      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'connector' : 'connectors'}` : '',
+      zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'swimlane' : 'swimlanes'}` : '',
+      notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'note' : 'notes'}` : '',
     ].filter(Boolean);
     propPanelHeading.textContent = `MULTI-SELECT (${counts.join(', ')})`;
     propSelectionActions.hidden = false;
@@ -1743,7 +1831,7 @@ export function renderPropertyEditor(): void {
 
     const membersHeading = document.createElement('span');
     membersHeading.className = 'section-heading';
-    membersHeading.textContent = 'SELECTION MEMBERS';
+    membersHeading.textContent = 'Selection members';
     membersSection.appendChild(membersHeading);
 
     const helpTip = document.createElement('p');
@@ -1997,7 +2085,7 @@ export function renderPropertyEditor(): void {
     alignSection.className = 'prop-divider';
     const alignHeading = document.createElement('span');
     alignHeading.className = 'section-heading';
-    alignHeading.textContent = 'ALIGN & DISTRIBUTE';
+    alignHeading.textContent = 'Align & distribute';
     alignSection.appendChild(alignHeading);
 
     const grid = document.createElement('div');
@@ -2097,7 +2185,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'SWIMLANE STAGE';
+    propPanelHeading.textContent = 'Swimlane stage';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2161,7 +2249,7 @@ export function renderPropertyEditor(): void {
       setSelection({ type: 'none' });
       return;
     }
-    propPanelHeading.textContent = 'FRAME';
+    propPanelHeading.textContent = 'Frame';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
     void import('./frameStage').then((m) => {
@@ -2174,7 +2262,7 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'NOTE';
+    propPanelHeading.textContent = 'Note';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2210,7 +2298,7 @@ export function renderPropertyEditor(): void {
     iHeader.className = 'prop-list-header';
     const iTitle = document.createElement('span');
     iTitle.className = 'section-heading';
-    iTitle.textContent = 'ITEMS';
+    iTitle.textContent = 'Items';
     const btnAddItem = document.createElement('button');
     btnAddItem.type = 'button';
     btnAddItem.className = 'btn btn-compact';
@@ -2237,7 +2325,7 @@ export function renderPropertyEditor(): void {
       topBar.className = 'notes-item-topbar';
 
       const iconSelect = document.createElement('select');
-      iconSelect.className = 'prop-select notes-item-icon-select';
+      iconSelect.className = 'field notes-item-icon-select';
       iconSelect.setAttribute('aria-label', `Item ${idx + 1} icon`);
       const currentIcon = normalizeNotesItemIcon(item.icon);
       for (const opt of NOTES_ITEM_ICONS) {
@@ -2288,7 +2376,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(itemsSection);
   } else {
     // Document Overview Properties
-    propPanelHeading.textContent = 'DOCUMENT PROPERTIES';
+    propPanelHeading.textContent = 'Document properties';
     propSelectionActions.hidden = true;
     if (!app.doc.brand) app.doc.brand = { name: '', accent: '', logo: '' };
 
@@ -2332,7 +2420,7 @@ export function renderPropertyEditor(): void {
     form.appendChild(rowTags);
 
     const dirSelect = document.createElement('select');
-    dirSelect.className = 'prop-select';
+    dirSelect.className = 'field';
     for (const d of [
       { value: 'LR', label: 'Left → Right (LR)' },
       { value: 'TD', label: 'Top → Down (TD)' },
@@ -2364,7 +2452,7 @@ export function renderPropertyEditor(): void {
 
     const legendHeading = document.createElement('h3');
     legendHeading.className = 'section-heading';
-    legendHeading.textContent = 'COLOUR LEGEND';
+    legendHeading.textContent = 'Colour legend';
     legendHeading.appendChild(helpButton('legend'));
     form.appendChild(legendHeading);
     for (const tone of Object.keys(TONE_META) as StreamTone[]) {
@@ -2387,7 +2475,7 @@ export function renderPropertyEditor(): void {
 
     const brandHeading = document.createElement('h3');
     brandHeading.className = 'section-heading';
-    brandHeading.textContent = 'EXPORTED PAGE';
+    brandHeading.textContent = 'Exported page';
     form.appendChild(brandHeading);
     form.appendChild(
       makeField(
@@ -2481,7 +2569,7 @@ export function renderPropertyEditor(): void {
     tipDiv.className = 'prop-divider';
     const tipText = document.createElement('p');
     tipText.style.fontSize = '0.78rem';
-    tipText.style.color = 'var(--wl-ink-muted)';
+    tipText.style.color = 'var(--cc-ink-3)';
     tipText.style.lineHeight = '1.5';
     tipText.textContent =
       'Tip: Select any component, wire, swimlane, or note on the canvas to customise its metrics, wire colour, routing style, and JSON payload.';
@@ -2527,7 +2615,7 @@ export function renderLineageRows(upstream: DiagramNode[], downstream: DiagramNo
     if (list.length === 0) {
       const empty = document.createElement('span');
       empty.style.fontSize = '0.8rem';
-      empty.style.color = 'var(--wl-ink-muted)';
+      empty.style.color = 'var(--cc-ink-3)';
       empty.textContent = 'None';
       row.appendChild(empty);
     } else {
@@ -2598,7 +2686,7 @@ export function syncDataViewInspector(): void {
     if (selected.length > 0) {
       const lineage = lineageOutsideSelection(selected);
       withInspectorTransition(() => {
-        inspBadge.textContent = 'MULTI-SELECT';
+        inspBadge.textContent = 'Multi-select';
         inspId.textContent = `${selected.length} SELECTED`;
         inspTitle.textContent = `${selected.length} components`;
         inspSummary.textContent = selected.map((node) => node.title).join(', ');
@@ -2624,7 +2712,7 @@ export function syncDataViewInspector(): void {
   }
 
   withInspectorTransition(() => {
-    inspBadge.textContent = 'SYSTEM OVERVIEW';
+    inspBadge.textContent = 'System overview';
     inspId.textContent = 'ALL';
     inspTitle.textContent = app.doc.title;
     inspSummary.textContent = app.doc.overviewSummary;
@@ -2679,7 +2767,7 @@ export function addSimulationScenario(): void {
             id: nextUid('step'),
             nodes: [first.id],
             tone: 'blue',
-            label: first.title.toUpperCase(),
+            label: first.title,
             trace: `${first.title} processed a packet.`,
           },
         ]
@@ -3036,7 +3124,7 @@ export function renderSimulationEditor(force = false): void {
 
     const stepsHeading = document.createElement('h3');
     stepsHeading.className = 'section-heading';
-    stepsHeading.textContent = 'HOPS';
+    stepsHeading.textContent = 'Hops';
 
     const steps = document.createElement('div');
     scenario.steps.forEach((step, stepIndex) => {
@@ -3138,7 +3226,7 @@ export function renderSimulationEditor(force = false): void {
         id: nextUid('step'),
         nodes: node ? [node.id] : [],
         tone: live.tone,
-        label: node ? node.title.toUpperCase() : `STEP ${live.steps.length + 1}`,
+        label: node ? node.title : `Step ${live.steps.length + 1}`,
         trace: node ? `${node.title} processed a packet.` : 'Processed telemetry step.',
       });
       renderSimButtons();

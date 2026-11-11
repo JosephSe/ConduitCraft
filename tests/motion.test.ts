@@ -1,7 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 
 // Set up minimal document mock before loading studio DOM modules
 if (typeof (globalThis as any).document === 'undefined') {
@@ -30,8 +29,7 @@ const { tagEnteringNodes } = await import('../src/studio/interactions.ts');
 
 describe('polished motion (node drop-in, port glow, selection ring)', () => {
   it('defines node drop-in and port pulse keyframe animations in CSS', () => {
-    const cssPath = path.resolve('src/styles/studio.css');
-    const css = fs.readFileSync(cssPath, 'utf-8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('@keyframes nodeDropIn'), 'CSS defines @keyframes nodeDropIn');
     assert.ok(css.includes('@keyframes portPulse'), 'CSS defines @keyframes portPulse');
@@ -40,8 +38,7 @@ describe('polished motion (node drop-in, port glow, selection ring)', () => {
   });
 
   it('defines smooth selection ring with outline-offset and box-shadow transitions', () => {
-    const cssPath = path.resolve('src/styles/studio.css');
-    const css = fs.readFileSync(cssPath, 'utf-8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('outline-offset: 4px'), 'aria-pressed expands outline offset');
     assert.ok(css.includes('outline-color: var(--node-accent)'), 'aria-pressed activates outline color');
@@ -49,8 +46,7 @@ describe('polished motion (node drop-in, port glow, selection ring)', () => {
   });
 
   it('defines view transitions for mode switching and respects prefers-reduced-motion', () => {
-    const cssPath = path.resolve('src/styles/studio.css');
-    const css = fs.readFileSync(cssPath, 'utf-8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('::view-transition-old(root)'), 'defines view-transition-old');
     assert.ok(css.includes('::view-transition-new(root)'), 'defines view-transition-new');

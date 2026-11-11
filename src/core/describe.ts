@@ -15,6 +15,8 @@ const TONE_COLOURS: Record<StreamTone, string> = {
   rose: 'Red',
   violet: 'Violet',
   amber: 'Amber',
+  cyan: 'Cyan',
+  fuchsia: 'Fuchsia',
 };
 
 /** Hand-built documents (tests, old files) can lack text fields; a description never throws over one. */

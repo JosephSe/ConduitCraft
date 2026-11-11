@@ -135,7 +135,7 @@ describe('frames survive every way out and back in', () => {
   it('the SVG export draws every frame with its title, the larger one first', () => {
     const svg = renderDiagramSvg(adopted());
     assert.ok(svg.indexOf('>VPC<') > 0 && svg.indexOf('>VPC<') < svg.indexOf('>Subnet<'));
-    assert.match(svg, /stroke-dasharray="6 5"/);
+    assert.match(svg, /rx="10"[^>]*stroke-width="1"/); // a 1 px solid outline, with the title on a tab
   });
 
   it('Blueprint JSON', () => {

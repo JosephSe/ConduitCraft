@@ -238,7 +238,7 @@ describe('inspector collapsible sections and tone picker', () => {
 
     assert.strictEqual(picker.tagName, 'FIELDSET');
     const options = picker.children.filter((c) => c.className.includes('swatch-option'));
-    assert.strictEqual(options.length, 5, 'renders all 5 stream tones');
+    assert.strictEqual(options.length, 7, 'renders all 7 stream tones');
 
     const first = options[0];
     assert.ok(first.className.includes('swatch-dot-only'));
@@ -250,7 +250,8 @@ describe('inspector collapsible sections and tone picker', () => {
     const { readFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
 
-    const studioCss = readFileSync(resolve(process.cwd(), 'src/styles/studio.css'), 'utf8');
+    const { readStudioCss } = await import('./studioCss.ts');
+    const studioCss = readStudioCss();
     const sharedCss = readFileSync(resolve(process.cwd(), 'src/styles/shared.css'), 'utf8');
 
     // Body bounds preventing horizontal blowout
@@ -265,7 +266,7 @@ describe('inspector collapsible sections and tone picker', () => {
 
     // Form inputs and triggers contained within bounds
     assert.ok(studioCss.includes('.prop-row-2 {') && studioCss.includes('repeat(auto-fit'), 'prop-row-2 uses responsive auto-fit columns');
-    assert.ok(studioCss.includes('.prop-input,') && studioCss.includes('box-sizing: border-box;'), 'prop inputs use border-box sizing');
+    assert.ok(studioCss.includes('.field {') && studioCss.includes('box-sizing: border-box;'), 'fields use border-box sizing');
     assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
 
     // Collapsible scenarios and drag-and-drop

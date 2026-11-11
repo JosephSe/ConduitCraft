@@ -1,0 +1,29 @@
+@layer palette {
+  .compile-pill {
+    font: var(--cc-font-small);
+    color: var(--cc-ink-3);
+    background: none;
+    border: 0;
+    padding: 0;
+    border-radius: 0;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .stencil-drag-ghost {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 999;
+    pointer-events: none;
+    padding: 0.45rem 0.75rem;
+    border-radius: 0.65rem;
+    background: var(--cc-sheet);
+    border: 1.5px solid var(--cc-accent);
+    box-shadow: var(--cc-shadow-elevated);
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--cc-ink);
+    translate: calc(var(--gx, 0) * 1px - 50%) calc(var(--gy, 0) * 1px - 50%);
+  }
+}

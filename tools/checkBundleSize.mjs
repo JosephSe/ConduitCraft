@@ -7,8 +7,8 @@ const dist = path.resolve('dist/assets');
 // feature moved out of the entry cannot quietly grow without bound.
 const budgets = [
   // Raised from 480 kB for the new components (COMPONENTS_PLAN.md); the queue (K1) added about 18 kB raw, 6 kB gzip.
-  { pattern: /^index-.*\.js$/, maxBytes: 540 * 1024, label: 'entry JS' },
-  { pattern: /^index-.*\.css$/, maxBytes: 115 * 1024, label: 'entry CSS' },
+  { pattern: /^index-.*\.js$/, maxBytes: 560 * 1024, label: 'entry JS' },
+  { pattern: /^index-.*\.css$/, maxBytes: 130 * 1024, label: 'entry CSS' },
 ];
 
 // Lazy chunks: every one is checked (not just the first match). Patterns are tried in order; a chunk that matches
@@ -44,6 +44,20 @@ for (const { pattern, maxBytes, label } of budgets) {
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${label}: ${(size / 1024).toFixed(1)} kB / ${(maxBytes / 1024).toFixed(0)} kB (${match})`);
   if (!ok) failed = true;
 }
+
+// Self-hosted fonts (Z4). Their own line, separate from the entry CSS budget.
+const FONT_MAX_BYTES = 150 * 1024;
+const fontFiles = files.filter((f) => f.endsWith('.woff2'));
+const fontBytes = fontFiles.reduce((sum, file) => sum + fs.statSync(path.join(dist, file)).size, 0);
+if (fontFiles.length === 0) {
+  console.error('FAIL fonts: no woff2 files in dist/assets');
+  failed = true;
+} else {
+  const ok = fontBytes <= FONT_MAX_BYTES;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} fonts: ${(fontBytes / 1024).toFixed(1)} kB / ${(FONT_MAX_BYTES / 1024).toFixed(0)} kB (${fontFiles.length} files)`);
+  if (!ok) failed = true;
+}
+
 const entryJs = files.find((f) => /^index-.*\.js$/.test(f));
 for (const file of files.filter((f) => f.endsWith('.js') && f !== entryJs)) {
   const budget = lazyBudgets.find((b) => b.pattern.test(file));

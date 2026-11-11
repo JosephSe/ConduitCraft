@@ -1,0 +1,407 @@
+@layer layout {
+  /* The three top slots (6.1): NW the document, N the lens, NE the actions. */
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.875rem 0.875rem 0.5rem;
+    z-index: 20;
+  }
+
+  /* An island (6.1): the translucent fill, a hair edge, a lift shadow and a 5 px padding. */
+  .slot-nw, .slot-n, .slot-ne {
+    padding: 5px;
+    background: var(--cc-island);
+    border: 1px solid var(--cc-hair);
+    border-radius: 0.9rem;
+    box-shadow: var(--cc-shadow-card);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  .slot-nw { justify-self: start; max-inline-size: 100%; min-inline-size: 0; overflow: hidden; }
+  .slot-n { justify-self: center; }
+  .slot-ne { justify-self: end; max-inline-size: 100%; }
+
+  /* The bottom slots (6.1): one grid over the sheet. Islands are the [data-island] children. S grows upward. */
+  .slots {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    container-type: inline-size;
+  }
+
+  .slots-grid {
+    position: absolute;
+    inset: 0.875rem;
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+    grid-template-rows: 1fr auto auto;
+    grid-template-areas: ". . ." "s s s" "sw . se";
+    column-gap: 0.625rem;
+  }
+
+  .slot {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 0.625rem;
+    min-inline-size: 0;
+    pointer-events: none;
+  }
+
+  .slot > * { pointer-events: auto; }
+  .slot-sw { grid-area: sw; align-items: flex-start; max-inline-size: min(24rem, 46cqi); }
+  .slot-s { grid-area: s; align-items: center; margin-block-end: 0.625rem; }
+  .slot-se { grid-area: se; align-items: flex-end; position: relative; }
+
+  /* Wide enough for the run bar to sit between the corners; otherwise it takes its own row above them. */
+  @container (min-width: 74rem) {
+    .slots-grid { grid-template-areas: ". . ." ". . ." "sw s se"; }
+    .slot-s { margin-block-end: 0; }
+  }
+
+  /* The hint line: plain text, no container; it is also the status line for screen readers. */
+  .hint-line {
+    margin: 0;
+    max-inline-size: 100%;
+    font: var(--cc-font-small);
+    color: var(--cc-ink-3);
+    text-align: center;
+    text-wrap: balance;
+    pointer-events: none;
+  }
+
+  /* Popovers (the legend, the view options, the find box) hang above their corner island; they are not islands. */
+  .slot-popover {
+    position: absolute;
+    inset-block-end: calc(100% + 0.625rem);
+    z-index: 2;
+  }
+
+  .slot-sw > .slot-popover { inset-inline-start: 0; }
+  .slot-se > .slot-popover { inset-inline-end: 0; }
+  .slot-sw { position: relative; }
+
+  .view-popover {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    inline-size: min(15rem, 80cqi);
+  }
+
+  .brand-cluster {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    min-inline-size: 0;
+  }
+
+  .brand-mark-btn {
+    display: grid;
+    padding: 0;
+    border: 0;
+    background: none;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .brand-mark {
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    border-radius: 0.625rem;
+    display: grid;
+    place-items: center;
+    background: var(--cc-ink);
+    color: var(--cc-on-ink);
+    flex-shrink: 0;
+  }
+
+  .brand-cluster[data-brand] .brand-mark {
+    background: var(--brand-accent);
+    /* A document-chosen colour can't be assumed light or dark, so keep the original white glyph there. */
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .brand-logo {
+    inline-size: 1.35rem;
+    block-size: 1.35rem;
+    object-fit: contain;
+  }
+
+  .brand-name {
+    font: var(--cc-font-small);
+    font-weight: 600;
+    color: var(--brand-accent, var(--cc-ink-3));
+  }
+
+  /* A document-chosen accent can't be guaranteed readable on both themes, so blend it toward the text colour. */
+  .brand-cluster[data-brand] .brand-name {
+    color: color-mix(in srgb, var(--brand-accent) 55%, var(--cc-ink));
+  }
+
+  .brand-titles {
+    min-inline-size: 0;
+  }
+
+  .title-edit-trigger {
+    background: transparent;
+    border: none;
+    padding: 0.1rem 0.35rem;
+    margin-inline-start: -0.35rem;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    text-align: left;
+    max-inline-size: 18rem;
+    transition: background-color 0.15s ease;
+  }
+
+  .title-edit-trigger:hover {
+    background: var(--cc-well);
+  }
+
+  .title-edit-trigger:focus-visible {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  h1 {
+    font-size: clamp(0.95rem, 1.2vw, 1.125rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    /* Hinting snaps the Linux fallback width. Precision keeps the scale linear. */
+    text-rendering: geometricPrecision;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-inline-size: 0;
+  }
+
+  /* The save state is plain text in --ink-3, with a colour only when something is wrong. */
+  .save-state {
+    font: var(--cc-font-meta);
+    font-weight: 500;
+    color: var(--cc-ink-3);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .save-state[data-status="error"] { color: var(--cc-redline); }
+
+  .toolbar-center {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22.5rem;
+    min-block-size: 0;
+    min-inline-size: 0;
+    max-inline-size: 100vw;
+    overflow: hidden;
+    position: relative;
+    transition: grid-template-columns 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+
+  .workspace[data-inspector-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr) 3.25rem;
+  }
+
+
+  .workspace[data-mode="data"] {
+    grid-template-columns: minmax(0, 1fr) 23.5rem;
+  }
+
+  .workspace[data-mode="data"][data-inspector-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr) 3.25rem;
+  }
+
+  .inspector-rail-content {
+    display: none;
+  }
+
+  .workspace[data-inspector-collapsed="true"] .inspector {
+    overflow: visible;
+  }
+
+  .workspace[data-inspector-collapsed="true"] .inspector-mode-pane {
+    display: none !important;
+  }
+
+  .workspace[data-inspector-collapsed="true"] .inspector-rail-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding-block: 0.65rem;
+    padding-inline: 0.25rem;
+    cursor: pointer;
+    block-size: 100%;
+  }
+
+  .rail-vertical-label {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    font-family: var(--cc-font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--cc-ink-3);
+    user-select: none;
+    margin-block-start: 0.5rem;
+  }
+
+  @media (max-width: 82rem) {
+    .btn-text-responsive {
+      display: none;
+    }
+
+    .title-edit-trigger {
+      max-inline-size: 13rem;
+    }
+
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) 21.5rem;
+    }
+
+
+    .workspace[data-inspector-collapsed="true"] {
+      grid-template-columns: minmax(0, 1fr) 3.25rem;
+    }
+
+
+    .workspace[data-mode="data"] {
+      grid-template-columns: minmax(0, 1fr) 21.5rem;
+    }
+
+    .workspace[data-mode="data"][data-inspector-collapsed="true"] {
+      grid-template-columns: minmax(0, 1fr) 3.25rem;
+    }
+  }
+
+  /* Narrow: NW takes what N and NE leave, so the title gives way before undo and redo do. */
+  @media (max-width: 56rem) {
+    .topbar {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+    }
+
+    /* The inspector is a bottom sheet here, so the thumb reaches it. */
+    .workspace .inspector {
+      inset-block: auto 0;
+      inset-inline: 0;
+      inline-size: auto;
+      max-inline-size: none;
+      max-block-size: 60vh;
+      border-radius: 1.25rem 1.25rem 0 0;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  @media (max-width: 66rem) {
+    .topbar {
+      gap: 0.45rem;
+      padding-inline: 0.75rem;
+    }
+
+    .title-edit-trigger {
+      max-inline-size: 10rem;
+    }
+
+    .workspace,
+    .workspace[data-mode="design"],
+    .workspace[data-mode="data"],
+    .workspace[data-inspector-collapsed="true"],
+    .workspace[data-mode="data"][data-inspector-collapsed="true"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .inspector {
+      position: absolute;
+      inset-block: 0;
+      inset-inline-end: 0;
+      inline-size: 21.5rem;
+      max-inline-size: min(21.5rem, 90vw);
+      z-index: 42;
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .workspace[data-inspector-collapsed="true"] .inspector {
+      display: none !important;
+    }
+  }
+
+  /* Phone layout. A 768px tablet in portrait keeps the full top bar (A12c), so this stops just below it. */
+  @media (max-width: 47.9rem) {
+    .topbar {
+      gap: 0.35rem;
+      padding-inline: 0.5rem;
+      min-block-size: 3rem;
+      max-block-size: 3.5rem;
+      overflow: visible;
+    }
+
+    .brand-mark {
+      inline-size: 1.85rem;
+      block-size: 1.85rem;
+    }
+
+    .brand-titles .brand-name {
+      display: none;
+    }
+
+    .title-edit-trigger {
+      max-inline-size: 7.5rem;
+      font-size: 0.8rem;
+    }
+
+    .toolbar-center {
+      display: none;
+    }
+
+    #btn-open-palette {
+      display: none;
+    }
+  }
+
+  .drawer-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 35;
+    transition: opacity 0.2s ease;
+  }
+
+  .drawer-scrim[hidden] {
+    display: none !important;
+  }
+
+  @media (min-width: 66.01rem) {
+    .drawer-scrim {
+      display: none !important;
+    }
+  }
+}
+

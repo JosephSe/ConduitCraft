@@ -1,7 +1,5 @@
 /** Document, selection, history, autosave, and viewport state. */
 import {
-  btnRedo,
-  btnUndo,
   saveStatusPill,
   stageWorld,
   viewport,
@@ -55,6 +53,7 @@ import {
   frameDocumentInViewport,
   viewportWorldRect,
   panToCenterWorld,
+  FIT_SCALE_MIN,
 } from './viewportFrame';
 import {
   beginGesture,
@@ -436,7 +435,6 @@ function commitHistorySnapshot(snapshot: DiagramDocument = takeSnapshot()): void
   for (const listener of historyCommitListeners) listener();
   if (app.undoStack.length > MAX_HISTORY) app.undoStack.shift();
   app.redoStack.length = 0;
-  syncHistoryButtons();
   scheduleAutosave();
 }
 
@@ -480,11 +478,6 @@ export function pushHistoryNudge(): void {
   commitHistorySnapshot();
 }
 
-export function syncHistoryButtons(): void {
-  btnUndo.disabled = app.undoStack.length === 0;
-  btnRedo.disabled = app.redoStack.length === 0;
-}
-
 function restoreSnapshot(snapshot: DiagramDocument): void {
   const before = `${currentPageId()}|${app.levelPath.join('/')}`;
   const place = snapshotPlaces.get(snapshot);
@@ -518,7 +511,6 @@ export function performUndo(): void {
   app.redoStack.push(takeSnapshot(snapshotPlaces.get(prev)));
   restoreSnapshot(prev);
   validateSelection();
-  syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
   pagesChanged();
@@ -531,7 +523,6 @@ export function performRedo(): void {
   app.undoStack.push(takeSnapshot(snapshotPlaces.get(next)));
   restoreSnapshot(next);
   validateSelection();
-  syncHistoryButtons();
   scheduleAutosave();
   historyApplied();
   pagesChanged();
@@ -702,9 +693,11 @@ export function applyTransform(): void {
   // Paint at the displayed size. A transform scale stretches a 1× layer and softens text and icons.
   stageWorld.style.setProperty('zoom', String(scale));
   stageWorld.style.transform = `translate(${app.panX / scale}px, ${app.panY / scale}px)`;
+  stageWorld.style.setProperty('--cam-scale', String(scale));
   stageWorld.dataset.lod = scale < 0.55 ? 'low' : scale < 0.8 ? 'medium' : 'high';
   // Lets on-canvas grab handles keep a usable on-screen size when zoomed out (see .conduit-endpoint-handle).
   stageWorld.style.setProperty('--inv-zoom', String(Math.max(1, 1 / scale)));
+  viewport.toggleAttribute('data-faint', scale < 0.5); // the dot grid fades below 50% (8.1)
   zoomReadout.textContent = `${Math.round(scale * 100)}%`;
   minimapPainter?.();
 }
@@ -795,7 +788,7 @@ export function trackViewportResize(): void {
 }
 
 export function zoomAround(nextScale: number, cx: number, cy: number): void {
-  const clamped = Math.min(1.9, Math.max(0.35, nextScale));
+  const clamped = Math.min(1.9, Math.max(FIT_SCALE_MIN, nextScale));
   const worldX = (cx - app.panX) / app.scale;
   const worldY = (cy - app.panY) / app.scale;
   app.scale = clamped;
