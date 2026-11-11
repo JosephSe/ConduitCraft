@@ -22,7 +22,7 @@ test('a Load Balancer from the rail draws as a trapezoid with its own icon and c
   await expect(added.locator('.micro-chip')).toHaveText('RR');
 });
 
-test('the example load balancer is a trapezoid, and failing one of its targets keeps traffic flowing', async ({ page }) => {
+test('the example load balancer is a trapezoid, and failing one of its targets keeps traffic flowing', { tag: '@quick' }, async ({ page }) => {
   await openThreeTier(page);
   await expect(node(page, 'alb')).toHaveAttribute('data-shape', 'trapezoid');
 

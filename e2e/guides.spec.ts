@@ -54,7 +54,7 @@ const nodeX = (page: Page, id: string) =>
 
 const guideLines = (page: Page) => page.locator('#guides-g line.guide-line');
 
-test('dragging a component near another snaps its edge to it and draws a guide', async ({ page }) => {
+test('dragging a component near another snaps its edge to it and draws a guide', { tag: '@quick' }, async ({ page }) => {
   await load(page);
   const { a, bX, dx, from } = await pick(page);
 

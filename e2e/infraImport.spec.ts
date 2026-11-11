@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test('dropping docker-compose.yml draws the services, volumes and wires, and reports what it left out', async ({ page }) => {
+test('dropping docker-compose.yml draws the services, volumes and wires, and reports what it left out', { tag: '@quick' }, async ({ page }) => {
   await dropFile(page, 'docker-compose.yml', read('compose/docker-compose.yml'));
   await expect(page.locator('.arch-node')).toHaveCount(8);
   await expect(page.locator('#toast-container')).toContainText('from Docker Compose');

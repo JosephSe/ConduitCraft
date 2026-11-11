@@ -8,7 +8,7 @@ async function open(page: Page, query = '') {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
-test('the run bar appears in the Traffic lens and drives a scenario', async ({ page }) => {
+test('the run bar appears in the Traffic lens and drives a scenario', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   const bar = page.locator('#run-bar');
   await expect(bar).toBeHidden();

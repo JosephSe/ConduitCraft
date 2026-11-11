@@ -157,7 +157,7 @@ test('the find box is a popover: closed until Cmd/Ctrl+F, closed again by Escape
   await expect(page.locator('#hud-search-card')).toBeHidden();
 });
 
-test('the top bar is three slots and the bottom has one hint line', async ({ page }) => {
+test('the top bar is three slots and the bottom has one hint line', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -205,7 +205,7 @@ test('the zoom readout opens the view options above SE: minimap, Colour by and t
   await expect(popover).toBeHidden();
 });
 
-test('only one corner popover is open at a time', async ({ page }) => {
+test('only one corner popover is open at a time', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   await openLumenRelay(page);

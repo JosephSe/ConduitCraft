@@ -20,7 +20,7 @@ async function loadShowcase(page: Page): Promise<void> {
   await expect(page.locator('.arch-node').first()).toBeVisible();
 }
 
-test('boots to an empty canvas with no errors', async ({ page, errors }) => {
+test('boots to an empty canvas with no errors', { tag: '@quick' }, async ({ page, errors }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/ConduitCraft/);
   await expect(page.locator('#empty-stage-overlay')).toBeVisible();
@@ -28,14 +28,14 @@ test('boots to an empty canvas with no errors', async ({ page, errors }) => {
   expect(errors).toEqual([]);
 });
 
-test('loads the showcase diagram with nodes and wires', async ({ page }) => {
+test('loads the showcase diagram with nodes and wires', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   expect(await page.locator('.arch-node').count()).toBeGreaterThan(3);
   await expect(page.locator('#canvas-stats-pill')).toContainText(/nodes?/);
   await expect(page.locator('#canvas-stats-pill')).toContainText(/wires?/);
 });
 
-test('dragging a node moves it and undo puts it back', async ({ page }) => {
+test('dragging a node moves it and undo puts it back', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
 
   // Pick the node nearest the middle of the canvas so nothing (sidebar, HUD) can sit on top of it.
@@ -99,7 +99,7 @@ test('exports an animated GIF (worker + lazy chunk)', async ({ page }) => {
   expect(file.last).toBe(0x3b);
 });
 
-test('exports a standalone HTML file that contains the diagram', async ({ page }) => {
+test('exports a standalone HTML file that contains the diagram', { tag: '@quick' }, async ({ page }) => {
   await captureExports(page);
   await loadShowcase(page);
   const firstTitle = (await page.locator('.arch-node .node-title').first().textContent())?.trim();

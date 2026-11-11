@@ -255,7 +255,7 @@ test('never loses the open diagram when a shared link is opened: the link become
   expect(kept.doc.nodes.length).toBe(2);
 });
 
-test('never loses the open diagram when a file is imported: the file becomes a new diagram', async ({ page }) => {
+test('never loses the open diagram when a file is imported: the file becomes a new diagram', { tag: '@quick' }, async ({ page }) => {
   await seedAutosave(page, 'Mine', 2);
   await page.goto('/');
   await page.locator('#btn-restore-open').click();

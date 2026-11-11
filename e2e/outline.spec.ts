@@ -23,7 +23,7 @@ test('the outline stays open in every lens and has no axe violations', async ({ 
   }
 });
 
-test('reaches a component by keyboard alone and selects it', async ({ page }) => {
+test('reaches a component by keyboard alone and selects it', { tag: '@quick' }, async ({ page }) => {
   await clearSelection(page);
   await runPaletteCommand(page, 'Toggle Text Outline');
   const tree = page.locator('#outline-tree');

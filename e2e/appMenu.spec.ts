@@ -22,7 +22,7 @@ test('the menu button lists the actions that have no button of their own', async
   }
 });
 
-test('choosing an item runs its action', async ({ page }) => {
+test('choosing an item runs its action', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await button(page).click();
   await menu(page).getByRole('menuitem', { name: 'Export…', exact: true }).click();

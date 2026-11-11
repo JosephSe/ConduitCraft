@@ -52,7 +52,7 @@ test('the Hand tool pans with a plain drag, even starting on a component, and mo
   expect(await page.locator('.arch-node').first().evaluate((el) => el.style.getPropertyValue('--nx'))).toBe(nodeBefore);
 });
 
-test('the Text tool puts a label where you click, lets you type, and goes back to Select', async ({ page }) => {
+test('the Text tool puts a label where you click, lets you type, and goes back to Select', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   const cards = await page.locator('.blueprint-spec').count();
   await tool(page, 'text').click();

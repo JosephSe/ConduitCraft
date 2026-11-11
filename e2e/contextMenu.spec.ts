@@ -13,7 +13,7 @@ async function loadShowcase(page: Page) {
 
 const menu = (page: Page) => page.locator('.context-menu');
 
-test('right-click on a component selects it and opens a menu; Escape closes it and restores focus', async ({ page }) => {
+test('right-click on a component selects it and opens a menu; Escape closes it and restores focus', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   const node = page.locator('.arch-node[data-node-id="night-desk"]');
   await node.locator('.node-select-hit').click({ button: 'right' });

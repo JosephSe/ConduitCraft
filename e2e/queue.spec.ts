@@ -25,7 +25,7 @@ async function centre(hit: Locator): Promise<{ x: number; y: number }> {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-test('a Message Queue from the rail draws as a pipe, and wires into and out of it are async', async ({ page }) => {
+test('a Message Queue from the rail draws as a pipe, and wires into and out of it are async', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
 

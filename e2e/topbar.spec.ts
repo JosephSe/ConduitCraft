@@ -33,7 +33,7 @@ test('each top island shows at most 8 controls, and holds what 6.2 says', async 
   await expect(page.locator('#btn-undo, #btn-redo')).toHaveCount(0);
 });
 
-test('Run switches to Traffic and plays the first scenario', async ({ page }) => {
+test('Run switches to Traffic and plays the first scenario', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   await clearSelection(page);
   await page.locator('#btn-run').click();

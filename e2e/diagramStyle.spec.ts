@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
-test('the view popover picks a diagram style; the sheet follows (Y1)', async ({ page }) => {
+test('the view popover picks a diagram style; the sheet follows (Y1)', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto('/');
   await openLumenRelay(page);

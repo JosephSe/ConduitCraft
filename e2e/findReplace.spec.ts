@@ -13,7 +13,7 @@ async function open(page: Page) {
 const dialog = (page: Page) => page.locator('#find-replace-dialog');
 const titles = (page: Page) => page.locator('.arch-node .node-title').allTextContents();
 
-test('Cmd/Ctrl+Shift+F finds, and Replace all is one undo step', async ({ page }) => {
+test('Cmd/Ctrl+Shift+F finds, and Replace all is one undo step', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   const before = await titles(page);
   const word = before.find((t) => t.trim().length > 3)!.trim().split(/\s+/)[0];

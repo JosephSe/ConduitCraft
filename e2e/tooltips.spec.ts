@@ -42,7 +42,7 @@ test('the tooltip hides when the pointer leaves and on Escape', async ({ page })
   await expect(layer).toHaveAttribute('data-visible', 'false');
 });
 
-test('keyboard focus shows the tooltip too', async ({ page }) => {
+test('keyboard focus shows the tooltip too', { tag: '@quick' }, async ({ page }) => {
   // Start from a known control: clicking "Load showcase" (which then disappears) would otherwise leave
   // the browser's sequential-focus starting point down in the canvas.
   await page.locator('#btn-focus-doc-title').focus();
