@@ -107,7 +107,7 @@
   /* First run: one sentence and three small actions, over the canvas while the example plays */
   .first-run {
     position: fixed;
-    inset-block-end: 1.25rem;
+    inset-block-end: 5.5rem;
     inset-inline: 0;
     margin-inline: auto;
     inline-size: fit-content;
