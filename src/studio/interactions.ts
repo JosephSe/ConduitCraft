@@ -2745,6 +2745,8 @@ export function initEvents(): void {
         return;
       }
       if (e.key === 'Escape') {
+        // An open More popover owns the key: it closes itself and the selection stays.
+        if (document.querySelector('#prop-more-popover:popover-open')) return;
         // Each press backs out one level: the wire being drawn, then a pending click-to-connect source,
         // then Connect mode itself, and only then the selection.
         if (app.activeWireDraft) {

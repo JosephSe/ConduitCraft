@@ -1884,21 +1884,6 @@ body[data-presenting="true"] .page-strip { display: none; }
   pointer-events: none;
 }
 
-/* The inspector (6.5): a header with the selection's cut-out, then Look, Behaviour and Notes in a well. */
-.prop-selection-head { display: flex; align-items: center; gap: 0.75rem; padding: 0.25rem 0 0.75rem; }
-.prop-selection-art { flex: none; display: grid; place-items: center; inline-size: 3rem; block-size: 2.25rem; border-radius: 0.6rem; background: color-mix(in srgb, var(--t, var(--cc-ink-3)) 22%, transparent); }
-.prop-selection-art .cutout { inline-size: 2.25rem; block-size: auto; }
-.prop-selection-text { display: grid; min-inline-size: 0; }
-.prop-selection-name { font-size: 1rem; font-weight: 600; color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.prop-selection-kind { font: var(--cc-font-small); color: var(--cc-ink-3); }
-.prop-tablist { display: flex; gap: 0.2rem; padding: 0.2rem; margin-block-end: 0.75rem; background: var(--cc-well); border-radius: 0.7rem; }
-.prop-tab { flex: 1; block-size: 1.9rem; border: 0; border-radius: 0.5rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); font-weight: 600; cursor: pointer; }
-.prop-tab:hover { color: var(--cc-ink); }
-.prop-tab[aria-selected="true"] { background: var(--cc-sheet); color: var(--cc-ink); box-shadow: 0 1px 2px rgba(2, 6, 23, 0.12); }
-.prop-tab:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
-.prop-tabpanel[hidden] { display: none; }
-.prop-tabpanel { display: grid; gap: 0.75rem; }
-
 /* Create by wiring (7.4): four cut-outs above the new component. */
 .kind-strip { position: fixed; z-index: 40; display: flex; gap: 0.2rem; padding: 0.3rem; transform: translate(-50%, -100%); background: var(--cc-island); border: 1px solid var(--cc-hair); border-radius: 0.9rem; box-shadow: var(--cc-shadow-card); -webkit-backdrop-filter: blur(18px) saturate(1.4); backdrop-filter: blur(18px) saturate(1.4); }
 .kind-strip-item { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.25rem; border: 0; border-radius: 0.6rem; background: none; color: inherit; cursor: pointer; }

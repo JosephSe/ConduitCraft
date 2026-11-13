@@ -7,13 +7,16 @@ test('a component form has a header and three tabs, and each field is in exactly
   await openLumenRelay(page);
   await expect(page.locator('.arch-node[data-node-id="night-desk"]')).toBeVisible();
 
-  await expect(page.locator('.prop-selection-head .prop-selection-name')).not.toBeEmpty();
+  await expect(page.locator('.prop-head .prop-head-name')).not.toBeEmpty();
+  // Name and kind live in the card header, not on a tab.
+  await expect(page.locator('.prop-head').getByLabel('Name', { exact: true })).toBeVisible();
+  await expect(page.locator('.prop-head').getByLabel('Kind', { exact: true })).toBeAttached();
   await expect(page.locator('#prop-tab-look')).toHaveText('Look');
   await expect(page.locator('#prop-tab-behaviour')).toHaveText('Behaviour');
   await expect(page.locator('#prop-tab-notes')).toHaveText('Notes');
 
   const fields: Record<string, string[]> = {
-    look: ['Name', 'Kind', 'Subtitle (shown under the name)', 'Label above title', 'Badge'],
+    look: ['Subtitle (shown under the name)', 'Label above title', 'Badge'],
     behaviour: ['Architecture Status'],
     notes: ['Description', 'Owner', 'Review Comment / Note'],
   };

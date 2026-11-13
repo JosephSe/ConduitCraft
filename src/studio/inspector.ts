@@ -856,28 +856,91 @@ function updateSelectionActionButtons(sel: SelectionTarget): void {
 
 let inspectorTab = 'look';
 
-/** The selection's cut-out in its colour, its name, and its kind (6.5). */
-function makeSelectionHeader(node: DiagramNode): HTMLElement {
-  const stencil = findStencil(node.kind);
+interface CardHeader {
+  /** SVG markup for the 44×36 tile. */
+  art: string;
+  /** CSS colour for the tile, e.g. TONE_CSS[tone][0]. Omit for a neutral tile. */
+  tone?: string;
+  /** The name control: an <input> that already has its handlers, or a text node for multi-select. */
+  name: HTMLElement;
+  /** The line under the name: a <select> (component kind) or plain text. */
+  under: HTMLSelectElement | string;
+}
+
+/** The card's header, the same for every selection: a tile, the name, the kind, and the More and Close buttons (section 6). */
+function makeCardHeader(h: CardHeader): HTMLElement {
   const head = document.createElement('div');
-  head.className = 'prop-selection-head';
-  const tone = TONE_CSS[node.accent ?? stencil?.accent ?? 'slate']?.[0];
-  if (tone) head.style.setProperty('--t', tone);
+  head.className = 'prop-head';
+  if (h.tone) head.style.setProperty('--t', h.tone);
+
   const art = document.createElement('span');
-  art.className = 'prop-selection-art';
-  if (stencil) art.innerHTML = renderCutoutMarkup({ ...stencil, icon: node.icon ?? stencil.icon });
+  art.className = 'prop-head-art';
+  art.setAttribute('aria-hidden', 'true');
+  art.innerHTML = h.art;
+
   const text = document.createElement('div');
-  text.className = 'prop-selection-text';
-  const name = document.createElement('span');
-  name.className = 'prop-selection-name';
-  name.textContent = node.title || node.id;
+  text.className = 'prop-head-text';
+  h.name.classList.add('prop-head-name');
+  text.appendChild(h.name);
   const kind = document.createElement('span');
-  kind.className = 'prop-selection-kind';
-  kind.textContent = stencil?.paletteTitle ?? node.kind;
-  text.append(name, kind);
-  head.append(art, text);
+  if (typeof h.under === 'string') {
+    kind.className = 'prop-head-kind';
+    kind.textContent = h.under;
+  } else {
+    const select = h.under;
+    kind.className = 'prop-head-kind prop-head-kind--pick';
+    const kindText = document.createElement('span');
+    kindText.className = 'prop-head-kind-text';
+    kindText.textContent = select.selectedOptions[0]?.textContent ?? '';
+    select.addEventListener('change', () => {
+      kindText.textContent = select.selectedOptions[0]?.textContent ?? '';
+    });
+    kind.append(kindText, select);
+  }
+  text.appendChild(kind);
+
+  const buttons = document.createElement('div');
+  buttons.className = 'prop-head-buttons';
+  const more = document.createElement('button');
+  more.type = 'button';
+  more.className = 'prop-icon-btn';
+  more.id = 'btn-prop-more';
+  more.setAttribute('popovertarget', 'prop-more-popover');
+  more.setAttribute('aria-label', 'More actions');
+  more.setAttribute('aria-expanded', 'false');
+  more.setAttribute('data-tip', 'More');
+  more.appendChild(createUiIconSvg('more'));
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'prop-icon-btn';
+  close.id = 'btn-collapse-inspector';
+  close.setAttribute('aria-label', 'Close properties (])');
+  close.setAttribute('data-tip', 'Close (])');
+  close.appendChild(createUiIconSvg('close'));
+  buttons.append(more, close);
+
+  head.append(art, text, buttons);
   return head;
 }
+
+/** A name input for the header: built like any text field, but with its own id and name, since it has no visible label. */
+function headerName(id: string, ariaLabel: string, input: HTMLInputElement, placeholder?: string): HTMLInputElement {
+  input.id = id;
+  input.setAttribute('aria-label', ariaLabel);
+  if (placeholder) input.placeholder = placeholder;
+  return input;
+}
+
+const HEAD_ART = {
+  zone: '<svg viewBox="0 0 38 30" fill="none" stroke-width="1.4"><path d="M8 3v24M30 3v24"/><path d="M12 8h10" /></svg>',
+  frame: '<svg viewBox="0 0 38 30" fill="none" stroke-width="1.4" stroke-dasharray="4 3"><rect x="4" y="5" width="30" height="20" rx="4"/></svg>',
+  notes: '<svg viewBox="0 0 38 30" fill="none" stroke-width="1.4" stroke-linejoin="round"><path d="M8 3h16l6 6v18H8z"/><path d="M24 3v6h6"/></svg>',
+  multi: '<svg viewBox="0 0 38 30" fill="none" stroke-width="1.4"><rect x="5" y="4" width="20" height="14" rx="3"/><rect x="13" y="12" width="20" height="14" rx="3"/></svg>',
+  doc: '<svg viewBox="0 0 38 30" fill="none" stroke-width="1.4"><rect x="5" y="3" width="28" height="24" rx="3"/><path d="M5 21h28M23 21v6"/></svg>',
+};
+
+const wireArt = (async: boolean): string =>
+  `<svg viewBox="0 0 38 30" fill="none" stroke-width="1.75" stroke-linecap="round"><path d="M3 15H35"${async ? ' stroke-dasharray="6 5"' : ''}/></svg>`;
 
 /** Look, Behaviour and Notes: a tablist in a well, and one panel each. Hidden panels keep their fields in the page. */
 function makeInspectorTabs(tabs: Array<{ id: string; label: string; help: string; elements: HTMLElement[] }>): HTMLElement {
@@ -921,7 +984,7 @@ function makeInspectorTabs(tabs: Array<{ id: string; label: string; help: string
     });
     buttons.push(button);
     const panel = document.createElement('div');
-    panel.className = 'prop-tabpanel';
+    panel.className = 'prop-tabpanel prop-body';
     panel.id = `prop-panel-${tab.id}`;
     panel.setAttribute('role', 'tabpanel');
     panel.setAttribute('aria-labelledby', button.id);
@@ -934,35 +997,20 @@ function makeInspectorTabs(tabs: Array<{ id: string; label: string; help: string
   return wrap;
 }
 
-/** Step 1 only: a stand-in for the card header's More and Close buttons. Step 2 replaces it with makeCardHeader. */
-function makeTemporaryCardButtons(): HTMLElement {
-  const bar = document.createElement('div');
-  bar.className = 'prop-head-buttons prop-temp-buttons';
-  const more = document.createElement('button');
-  more.type = 'button';
-  more.className = 'prop-icon-btn';
-  more.id = 'btn-prop-more';
-  more.setAttribute('popovertarget', 'prop-more-popover');
-  more.setAttribute('aria-label', 'More actions');
-  more.setAttribute('aria-expanded', 'false');
-  more.setAttribute('data-tip', 'More');
-  more.appendChild(createUiIconSvg('more'));
-  const close = document.createElement('button');
-  close.type = 'button';
-  close.className = 'prop-icon-btn';
-  close.id = 'btn-collapse-inspector';
-  close.setAttribute('aria-label', 'Close properties (])');
-  close.setAttribute('data-tip', 'Close (])');
-  close.appendChild(createUiIconSvg('close'));
-  bar.append(more, close);
-  return bar;
-}
+/** Which selection the card showed last, so a re-render of the same one keeps focus and scroll (6.4). */
+let lastRenderedSelection = '';
 
 export function renderPropertyEditor(): void {
   closeIconMenus();
-  propFormContainer.replaceChildren(makeTemporaryCardButtons());
+  const keepFocusId = document.activeElement?.id;
+  const keepScroll = propFormContainer.querySelector<HTMLElement>('.prop-body:not([hidden])')?.scrollTop ?? 0;
+  propFormContainer.replaceChildren();
   const form = document.createElement('div');
   form.className = 'prop-form';
+  /** The scrolling body for every selection except a component, whose three tabs each are one. */
+  const body = document.createElement('div');
+  body.className = 'prop-body';
+  let header: HTMLElement | undefined;
   const sel = app.selection;
   updateSelectionActionButtons(sel);
 
@@ -979,15 +1027,13 @@ export function renderPropertyEditor(): void {
 
     // --- 1. Basics Section ---
     const basicsElements: HTMLElement[] = [];
-    basicsElements.push(
-      makeField(
-        'prop-node-title',
-        'Name',
-        makeTextInput(node.title, (v) => {
-          node.title = v;
-          renderAll(false);
-        }),
-      ),
+    const nameInput = headerName(
+      'prop-node-title',
+      'Name',
+      makeTextInput(node.title, (v) => {
+        node.title = v;
+        renderAll(false);
+      }),
     );
 
     // Description (the long text) and Kind are added below, once their controls exist.
@@ -1262,7 +1308,10 @@ export function renderPropertyEditor(): void {
       ),
     );
 
-    // Name, Description and Kind are what most people need; everything else lives under "More details".
+    kindSelect.id = 'prop-node-kind';
+    kindSelect.setAttribute('aria-label', 'Kind');
+
+    // Name and Kind live in the header; Description is the first field on the Notes tab.
     basicsElements.splice(
       1,
       0,
@@ -1273,7 +1322,6 @@ export function renderPropertyEditor(): void {
           node.summary = v;
         }),
       ),
-      makeField('prop-node-kind', 'Kind', kindSelect),
     );
 
     metadataElements.unshift(
@@ -1437,8 +1485,14 @@ export function renderPropertyEditor(): void {
       ...metadataElements.filter((el) => !isInterface(el)),
     ];
     const behaviourElements = [...reviewBehaviour, ...metadataElements.filter(isInterface), ...telemetryElements];
+    const stencil = findStencil(node.kind);
     form.append(
-      makeSelectionHeader(node),
+      makeCardHeader({
+        art: renderCutoutMarkup({ kind: node.kind, icon: node.icon ?? stencil?.icon, shape: node.shape, queue: node.queue }),
+        tone: TONE_CSS[node.accent ?? stencil?.accent ?? 'slate']?.[0],
+        name: nameInput,
+        under: kindSelect,
+      }),
       makeInspectorTabs([
         { id: 'look', label: 'Look', help: 'components', elements: lookElements },
         { id: 'behaviour', label: 'Behaviour', help: 'traffic', elements: behaviourElements },
@@ -1460,17 +1514,21 @@ export function renderPropertyEditor(): void {
     wireHeading.className = 'section-heading';
     wireHeading.textContent = 'Wire fields';
     wireHeading.appendChild(helpButton('wire-fields'));
-    form.appendChild(wireHeading);
-    form.appendChild(
-      makeField(
+    body.appendChild(wireHeading);
+    header = makeCardHeader({
+      art: wireArt(edge.sync === 'async'),
+      tone: TONE_CSS[edge.tone]?.[0],
+      name: headerName(
         'prop-edge-label',
-        'Wire label (optional)',
+        'Wire label',
         makeTextInput(edge.label, (v) => {
           edge.label = v;
           renderWiresOnly();
         }),
+        'Unlabelled wire',
       ),
-    );
+      under: 'Wire',
+    });
 
     // Protocol, call style and latency (F-17). Empty means "not set" and is left out of the saved file.
     const protocolSelect = document.createElement('select');
@@ -1484,7 +1542,7 @@ export function renderPropertyEditor(): void {
       if (!edge.protocol) delete edge.protocol;
       renderAll(false);
     });
-    form.appendChild(makeField('prop-edge-protocol', 'Protocol', protocolSelect));
+    body.appendChild(makeField('prop-edge-protocol', 'Protocol', protocolSelect));
 
     const syncSelect = document.createElement('select');
     syncSelect.className = 'field';
@@ -1496,7 +1554,7 @@ export function renderPropertyEditor(): void {
       else delete edge.sync;
       renderAll(false);
     });
-    form.appendChild(makeField('prop-edge-sync', 'Call style', syncSelect));
+    body.appendChild(makeField('prop-edge-sync', 'Call style', syncSelect));
 
     const latencyInput = document.createElement('input');
     latencyInput.type = 'number';
@@ -1514,8 +1572,8 @@ export function renderPropertyEditor(): void {
       else delete edge.latencyMs;
       renderWiresOnly();
     });
-    form.appendChild(makeField('prop-edge-latency', 'Typical latency (ms)', latencyInput));
-    form.appendChild(
+    body.appendChild(makeField('prop-edge-latency', 'Typical latency (ms)', latencyInput));
+    body.appendChild(
       makeTagsField('prop-edge-tags', edge.tags, (next) => {
         edge.tags = next;
         renderAll(false);
@@ -1542,8 +1600,8 @@ export function renderPropertyEditor(): void {
       });
       return select;
     };
-    form.appendChild(makeField('prop-edge-from', 'Source component', makeEndSelect('from')));
-    form.appendChild(makeField('prop-edge-to', 'Target component', makeEndSelect('to')));
+    body.appendChild(makeField('prop-edge-from', 'Source component', makeEndSelect('from')));
+    body.appendChild(makeField('prop-edge-to', 'Target component', makeEndSelect('to')));
 
     const toneWrap = document.createElement('div');
     toneWrap.className = 'prop-field';
@@ -1558,7 +1616,7 @@ export function renderPropertyEditor(): void {
         renderSimButtons();
       }),
     );
-    form.appendChild(toneWrap);
+    body.appendChild(toneWrap);
 
     // Routing Style (Visual Schematic Picker)
     const routeFieldset = document.createElement('fieldset');
@@ -1669,7 +1727,7 @@ export function renderPropertyEditor(): void {
     }
 
     routeFieldset.appendChild(routeGrid);
-    form.appendChild(routeFieldset);
+    body.appendChild(routeFieldset);
 
     // Source & Target Port Overrides
     const makePortSelect = (current: PortSide, onChange: (p: PortSide) => void) => {
@@ -1708,7 +1766,7 @@ export function renderPropertyEditor(): void {
         }),
       ),
     );
-    form.appendChild(portRow);
+    body.appendChild(portRow);
 
     // Telemetry Flow Direction (One-way with arrow vs Both ways without arrow)
     const flowRow = document.createElement('div');
@@ -1781,7 +1839,7 @@ export function renderPropertyEditor(): void {
     const flowLegend = document.createElement('legend');
     flowLegend.textContent = 'Flow Direction';
     flowFieldset.append(flowLegend, flowRow);
-    form.appendChild(flowFieldset);
+    body.appendChild(flowFieldset);
 
     // Animated Pulse Toggle
     const animLabel = document.createElement('label');
@@ -1795,7 +1853,7 @@ export function renderPropertyEditor(): void {
       renderWiresOnly();
     });
     animLabel.append(animChk, document.createTextNode('Animated dashed wire'));
-    form.appendChild(animLabel);
+    body.appendChild(animLabel);
 
     // Reverse Direction Button
     const btnReverse = document.createElement('button');
@@ -1813,9 +1871,9 @@ export function renderPropertyEditor(): void {
       edge.targetPort = tmpPort;
       renderAll(true);
     });
-    form.appendChild(btnReverse);
+    body.appendChild(btnReverse);
 
-    form.appendChild(
+    body.appendChild(
       makeField(
         'prop-edge-comment',
         'Review Comment (optional)',
@@ -1837,7 +1895,7 @@ export function renderPropertyEditor(): void {
         renderWiresOnly();
         renderPropertyEditor();
       });
-      form.appendChild(btnResetWp);
+      body.appendChild(btnResetWp);
     }
   } else if (sel.type === 'multi') {
     const selectedNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
@@ -1855,12 +1913,15 @@ export function renderPropertyEditor(): void {
     const excludedEdges = app.doc.edges.filter((e) => sel.excludedEdgeIds?.includes(e.id));
 
     const counts = [
-      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'node' : 'nodes'}` : '',
-      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'connector' : 'connectors'}` : '',
+      selectedNodes.length > 0 ? `${selectedNodes.length} ${selectedNodes.length === 1 ? 'component' : 'components'}` : '',
+      activeEdges.length > 0 ? `${activeEdges.length} ${activeEdges.length === 1 ? 'wire' : 'wires'}` : '',
       zoneCount > 0 ? `${zoneCount} ${zoneCount === 1 ? 'swimlane' : 'swimlanes'}` : '',
       notesCount > 0 ? `${notesCount} ${notesCount === 1 ? 'note' : 'notes'}` : '',
     ].filter(Boolean);
-    propPanelHeading.textContent = `MULTI-SELECT (${counts.join(', ')})`;
+    propPanelHeading.textContent = `Selection (${counts.join(', ')})`;
+    const countsName = document.createElement('span');
+    countsName.textContent = counts.join(', ');
+    header = makeCardHeader({ art: HEAD_ART.multi, name: countsName, under: 'Selection' });
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2118,7 +2179,7 @@ export function renderPropertyEditor(): void {
       membersSection.appendChild(chipsWrap);
     }
 
-    form.appendChild(membersSection);
+    body.appendChild(membersSection);
 
     const alignSection = document.createElement('div');
     alignSection.className = 'prop-divider';
@@ -2188,7 +2249,7 @@ export function renderPropertyEditor(): void {
 
     if (selectedNodes.length > 1) {
     alignSection.appendChild(grid);
-    form.appendChild(alignSection);
+    body.appendChild(alignSection);
 
     // Batch Accent Colour Picker
     const toneWrap = document.createElement('div');
@@ -2203,14 +2264,14 @@ export function renderPropertyEditor(): void {
         renderAll(false);
       }),
     );
-    form.appendChild(toneWrap);
+    body.appendChild(toneWrap);
     }
 
     // Shared fields (kind, shape, status, tags, wire colour and timing) load on demand (F-29).
     if (selectedNodes.length > 0 || activeEdges.length > 0) {
       const bulkHost = document.createElement('div');
       bulkHost.className = 'prop-divider bulk-fields';
-      form.appendChild(bulkHost);
+      body.appendChild(bulkHost);
       const nodeIds = selectedNodes.map((n) => n.id);
       const edgeIds = activeEdges.map((e) => e.id);
       void import('./bulkFields').then((m) => {
@@ -2260,19 +2321,21 @@ export function renderPropertyEditor(): void {
         ),
       ),
     );
-    form.appendChild(rowTop);
+    body.appendChild(rowTop);
 
-    form.appendChild(
-      makeField(
+    header = makeCardHeader({
+      art: HEAD_ART.zone,
+      name: headerName(
         'prop-zone-title',
-        'Stage Title',
+        'Stage title',
         makeTextInput(zone.title, (v) => {
           zone.title = v;
           renderZones();
         }),
       ),
-    );
-    form.appendChild(
+      under: 'Swimlane',
+    });
+    body.appendChild(
       makeField(
         'prop-zone-sub',
         'Stage Subtitle',
@@ -2291,8 +2354,19 @@ export function renderPropertyEditor(): void {
     propPanelHeading.textContent = 'Frame';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
+    // The frame's fields load on demand, so its header is added when they arrive.
     void import('./frameStage').then((m) => {
-      if (form.isConnected) m.mountFrameFields(form, sel.id);
+      if (!form.isConnected) return;
+      const fields = m.frameFields(sel.id);
+      if (!fields) return;
+      form.prepend(
+        makeCardHeader({
+          art: HEAD_ART.frame,
+          name: headerName('prop-frame-title', 'Frame name', fields.title),
+          under: 'Frame',
+        }),
+      );
+      body.append(...fields.fields);
     });
   } else if (sel.type === 'notes') {
     const card = app.doc.notesCards.find((c) => c.id === sel.id);
@@ -2305,17 +2379,19 @@ export function renderPropertyEditor(): void {
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
-    const rowTop = document.createElement('div');
-    rowTop.className = 'prop-row-2';
-    rowTop.append(
-      makeField(
+    header = makeCardHeader({
+      art: HEAD_ART.notes,
+      name: headerName(
         'prop-notes-title',
-        'Header Title',
+        'Header title',
         makeTextInput(card.title, (v) => {
           card.title = v;
           renderNotesCards();
         }),
       ),
+      under: 'Note',
+    });
+    body.appendChild(
       makeField(
         'prop-notes-code',
         'Spec Tag',
@@ -2329,7 +2405,6 @@ export function renderPropertyEditor(): void {
         ),
       ),
     );
-    form.appendChild(rowTop);
 
     const itemsSection = document.createElement('div');
     itemsSection.className = 'prop-divider';
@@ -2412,23 +2487,25 @@ export function renderPropertyEditor(): void {
       box.append(topBar, bodyIn);
       itemsSection.appendChild(box);
     });
-    form.appendChild(itemsSection);
+    body.appendChild(itemsSection);
   } else {
     // Document Overview Properties
     propPanelHeading.textContent = 'Document properties';
     propSelectionActions.hidden = true;
     if (!app.doc.brand) app.doc.brand = { name: '', accent: '', logo: '' };
 
-    form.appendChild(
-      makeField(
+    header = makeCardHeader({
+      art: HEAD_ART.doc,
+      name: headerName(
         'prop-doc-title',
-        'Architecture Title',
+        'Architecture title',
         makeTextInput(app.doc.title, (v) => {
           app.doc.title = v;
           docTitleHeadingEl.textContent = v || 'Untitled Architecture';
         }),
       ),
-    );
+      under: 'Document',
+    });
 
     const rowTags = document.createElement('div');
     rowTags.className = 'prop-row-2';
@@ -2456,7 +2533,7 @@ export function renderPropertyEditor(): void {
         ),
       ),
     );
-    form.appendChild(rowTags);
+    body.appendChild(rowTags);
 
     const dirSelect = document.createElement('select');
     dirSelect.className = 'field';
@@ -2477,9 +2554,9 @@ export function renderPropertyEditor(): void {
       renderAll(true);
       fitToViewport();
     });
-    form.appendChild(makeField('prop-doc-dir', 'Auto-Layout Flow Direction', dirSelect));
+    body.appendChild(makeField('prop-doc-dir', 'Auto-Layout Flow Direction', dirSelect));
 
-    form.appendChild(
+    body.appendChild(
       makeField(
         'prop-doc-summary',
         'Overview Summary',
@@ -2493,7 +2570,7 @@ export function renderPropertyEditor(): void {
     legendHeading.className = 'section-heading';
     legendHeading.textContent = 'Colour legend';
     legendHeading.appendChild(helpButton('legend'));
-    form.appendChild(legendHeading);
+    body.appendChild(legendHeading);
     for (const tone of Object.keys(TONE_META) as StreamTone[]) {
       const input = makeTextInput(app.doc.legend?.find((entry) => entry.tone === tone)?.label ?? '', (value) => {
         const label = value.trim().slice(0, MAX_LEGEND_LABEL);
@@ -2505,18 +2582,18 @@ export function renderPropertyEditor(): void {
         renderAll(false);
       });
       input.placeholder = TONE_META[tone].shortLabel;
-      form.appendChild(makeField(`prop-legend-${tone}`, `${TONE_META[tone].shortLabel} means`, input));
+      body.appendChild(makeField(`prop-legend-${tone}`, `${TONE_META[tone].shortLabel} means`, input));
     }
     const legendNote = document.createElement('p');
     legendNote.className = 'prop-hint';
     legendNote.textContent = 'Name what each colour means for your team. It replaces the default name in the pickers, the filter and the exported page.';
-    form.appendChild(legendNote);
+    body.appendChild(legendNote);
 
     const brandHeading = document.createElement('h3');
     brandHeading.className = 'section-heading';
     brandHeading.textContent = 'Exported page';
-    form.appendChild(brandHeading);
-    form.appendChild(
+    body.appendChild(brandHeading);
+    body.appendChild(
       makeField(
         'prop-brand-name',
         'Brand name',
@@ -2551,7 +2628,7 @@ export function renderPropertyEditor(): void {
       });
       accentField.appendChild(clearAccent);
     }
-    form.appendChild(accentField);
+    body.appendChild(accentField);
 
     const logoInput = document.createElement('input');
     logoInput.type = 'file';
@@ -2598,11 +2675,11 @@ export function renderPropertyEditor(): void {
       });
       logoField.appendChild(clearLogo);
     }
-    form.appendChild(logoField);
+    body.appendChild(logoField);
     const brandNote = document.createElement('p');
     brandNote.className = 'prop-hint';
     brandNote.textContent = 'The name, colour and logo appear on the exported page header. The canvas preview uses them too.';
-    form.appendChild(brandNote);
+    body.appendChild(brandNote);
 
     const tipDiv = document.createElement('div');
     tipDiv.className = 'prop-divider';
@@ -2613,10 +2690,23 @@ export function renderPropertyEditor(): void {
     tipText.textContent =
       'Tip: Select any component, wire, swimlane, or note on the canvas to customise its metrics, wire colour, routing style, and JSON payload.';
     tipDiv.appendChild(tipText);
-    form.appendChild(tipDiv);
+    body.appendChild(tipDiv);
   }
 
+  if (sel.type !== 'node') {
+    if (header) form.append(header);
+    form.append(body);
+  }
   propFormContainer.appendChild(form);
+
+  // The same selection as last time: keep focus and scroll, so clicking a colour or a shape does not jump the card.
+  const selectionKey = `${sel.type}:${'id' in sel ? sel.id : ''}`;
+  if (selectionKey === lastRenderedSelection) {
+    if (keepFocusId) document.getElementById(keepFocusId)?.focus({ preventScroll: true });
+    const bodyNow = propFormContainer.querySelector<HTMLElement>('.prop-body:not([hidden])');
+    if (bodyNow) bodyNow.scrollTop = keepScroll;
+  }
+  lastRenderedSelection = selectionKey;
 }
 
 // ---------------------------------------------------------------------------
