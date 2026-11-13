@@ -19,7 +19,8 @@ const focusedId = (page: Page) => page.evaluate(() => (document.activeElement as
 
 async function emptySpot(page: Page): Promise<{ x: number; y: number }> {
   const box = (await page.locator('#canvas-viewport').boundingBox())!;
-  return { x: box.x + box.width - 160, y: box.y + 140 };
+  // Above the diagram and left of the floating properties card (304 px wide, 14 px from the right edge).
+  return { x: box.x + box.width - 400, y: box.y + 140 };
 }
 
 test('All components and C open the tray; it holds six groups and every component', { tag: '@quick' }, async ({ page }) => {

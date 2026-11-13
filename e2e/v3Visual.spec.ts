@@ -177,7 +177,7 @@ for (const theme of THEMES) {
       await fit(page);
       await shoot(page, `01-design-fit-${theme}.png`);
 
-      expect(await zoomNear100(page)).toBe('101%');
+      expect(await zoomNear100(page)).toBe('105%'); // the sheet is the full width now (no docked inspector), so Fit starts higher
       const search = page.locator('#hud-search-input');
       await page.keyboard.press('ControlOrMeta+f');
       await search.fill('Virtual Waiting Room');

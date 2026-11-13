@@ -5,7 +5,7 @@
     inset-block-start: 0;
     inset-inline-end: 14px;       /* the slot inset used by every island */
     inline-size: 304px;
-    max-block-size: calc(100% - 113px);  /* the SE island (85px) + its 14px inset + 14px of air */
+    max-block-size: calc(100% - 150px);  /* clears the SE island (85px + 14px inset) and the find box that opens above it (30px + gaps) */
     display: flex;
     flex-direction: column;
     border-radius: 16px;

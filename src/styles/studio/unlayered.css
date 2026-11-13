@@ -1335,6 +1335,10 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 .run-bar[hidden] {
   display: none;
 }
+/* The Traffic card is 360px wide; keep the dock clear of it (the dock scrolls sideways). */
+.workspace[data-mode="data"]:not([data-inspector-collapsed="true"]) .dock {
+  max-inline-size: 38rem;
+}
 /* A14: the groups name the bar's two regions for the control count and for assistive tech; they add no box. */
 .run-bar-group {
   display: contents;
@@ -1719,8 +1723,6 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 }
 .help-btn:hover, .help-btn[aria-expanded="true"] { color: var(--cc-ink); border-color: var(--cc-accent); }
 .help-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 2px; }
-.prop-section-wrap { position: relative; }
-.prop-section-wrap > .help-btn { position: absolute; inset-inline-end: 2.2rem; inset-block-start: 0.55rem; margin: 0; z-index: 1; }
 .insights-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-block-end: 0.4rem; }
 .insights-head .insights-heading { margin: 0; }
 .help-popover {
