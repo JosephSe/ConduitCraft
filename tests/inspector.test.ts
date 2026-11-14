@@ -76,9 +76,16 @@ class MockElement {
     }
   }
 
-  append(...children: MockElement[]) {
+  append(...children: Array<MockElement | string>) {
     for (const child of children) {
-      this.appendChild(child);
+      if (typeof child === 'string') {
+        // Like the DOM, a string becomes a text node.
+        const text = new MockElement('#text');
+        text.textContent = child;
+        this.appendChild(text);
+      } else {
+        this.appendChild(child);
+      }
     }
   }
 
@@ -241,7 +248,7 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.strictEqual(options.length, 7, 'renders all 7 stream tones');
 
     const first = options[0];
-    assert.ok(first.className.includes('swatch-dot-only'));
+    assert.ok(first.children.some((c) => c.className.includes('pill-swatch')), 'shows the colour as a dot');
     assert.ok(first.getAttribute('data-tip'), 'has data-tip for hover tooltip');
     assert.ok(first.getAttribute('aria-label'), 'has aria-label for accessibility');
   });
@@ -265,7 +272,8 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(studioCss.includes('.inspector-scroll {') && studioCss.includes('overflow-x: hidden;'), 'inspector-scroll clips horizontal overflow');
 
     // Form inputs and triggers contained within bounds
-    assert.ok(studioCss.includes('.prop-row-2 {') && studioCss.includes('repeat(auto-fit'), 'prop-row-2 uses responsive auto-fit columns');
+    assert.ok(studioCss.includes('.prop-field--row { grid-template-columns: 84px minmax(0, 1fr);'), 'a row field lets its control shrink');
+    assert.ok(studioCss.includes('.prop-field--row > :nth-child(n + 3) { grid-column: 2;'), 'buttons and hints after a control sit under it');
     assert.ok(studioCss.includes('.field {') && studioCss.includes('box-sizing: border-box;'), 'fields use border-box sizing');
     assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
 

@@ -242,6 +242,9 @@ export type UiIconName =
   | 'kind'
   | 'shape'
   | 'more'
+  | 'minus'
+  | 'plus'
+  | 'swap'
   | 'close';
 
 const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
@@ -289,6 +292,9 @@ const UI_ICON_PRIMITIVES: Record<UiIconName, SvgPrimitive[]> = {
     { tag: 'rect', attrs: { x: '4', y: '3', width: '16', height: '18', rx: '2' } },
     { tag: 'path', attrs: { d: 'M8 8h8M8 12h8M8 16h5' } },
   ],
+  minus: [{ tag: 'path', attrs: { d: 'M5 12h14' } }],
+  plus: [{ tag: 'path', attrs: { d: 'M12 5v14M5 12h14' } }],
+  swap: [{ tag: 'path', attrs: { d: 'M7 7h13l-3-3M17 17H4l3 3' } }],
   upload: [
     { tag: 'path', attrs: { d: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12' } },
   ],

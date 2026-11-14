@@ -88,7 +88,7 @@
   .prop-tab[aria-selected="true"] { background: var(--cc-sheet); color: var(--cc-ink); box-shadow: var(--cc-contact); }
   .prop-tab:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
   .prop-body { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-  .prop-head + .prop-body { padding-block-start: 2px; }   /* no tabs: sit closer to the header */
+  .prop-head + .prop-body { padding-block-start: 8px; }   /* no tabs: sit closer to the header */
   .prop-tabpanel[hidden] { display: none; }
 
   .inspector-tabs {
@@ -158,27 +158,6 @@
     max-inline-size: 100%;
   }
 
-  .prop-row-2 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-    gap: 0.55rem;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-  }
-
-  .prop-field {
-    display: grid;
-    gap: 0.25rem;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-  }
-
-  .prop-field label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--cc-ink-2);
-  }
-
   .prop-file {
     inline-size: 100%;
     font-size: 0.75rem;
@@ -194,16 +173,8 @@
     background: var(--cc-sheet);
   }
 
-  .prop-hint {
-    margin: 0.25rem 0 0;
-    font-size: 0.75rem;
-    color: var(--cc-rose);
-  }
-
-  .prop-field .btn-compact {
-    margin-block-start: 0.35rem;
-    flex: 0 0 auto;
-  }
+  .prop-hint { font: var(--cc-font-small); color: var(--cc-ink-3); margin: 0; }
+  .prop-hint.is-error { color: var(--cc-rose); }
 
   .icon-picker {
     min-inline-size: 0;
@@ -279,38 +250,6 @@
     outline-offset: 2px;
   }
 
-  .swatch-picker {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.38rem;
-    border: none;
-  }
-
-  .swatch-option {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.55rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--cc-hair-2);
-    background: var(--cc-sheet);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  .swatch-option:has(input:checked) {
-    border-color: var(--cc-accent);
-    background: var(--cc-accent-soft);
-  }
-
-  .swatch-option:has(input:focus-visible) {
-    outline: 2px solid var(--cc-ink);
-    outline-offset: 2px;
-  }
-
   .route-style-fieldset {
     border: none;
     display: grid;
@@ -365,23 +304,9 @@
     color: var(--cc-accent);
   }
 
-  .prop-divider {
-    padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--cc-hair);
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .prop-list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .prop-list-header .section-heading {
-    margin-block-end: 0;
-  }
+  .prop-divider { margin-block-start: 8px; padding-block-start: 8px; border-block-start: 1px solid var(--cc-hair); display: grid; gap: 6px; }
+  .prop-list-header { display: flex; justify-content: space-between; align-items: center; min-block-size: 24px; }
+  .prop-list-header .section-heading { font: 600 12.5px/16px var(--cc-font-sans); color: var(--cc-ink); text-transform: none; letter-spacing: 0; margin: 0; }
 
   .kv-row {
     display: grid;
@@ -415,13 +340,41 @@
     font-weight: 600;
   }
 
-  .checkbox-inline {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    cursor: pointer;
+  /* Rows and basic controls (7.1 to 7.6, 7.9) */
+  .prop-field { display: grid; align-items: center; gap: 6px 10px; min-inline-size: 0; }
+  .prop-field--row { grid-template-columns: 84px minmax(0, 1fr); min-block-size: 30px; }
+  /* Buttons and hints added after the control sit under it, not in the label column. */
+  .prop-field--row > :nth-child(n + 3) { grid-column: 2; justify-self: start; }
+  .prop-field--row > .prop-hint { justify-self: stretch; }
+  .prop-field--block { grid-template-columns: minmax(0, 1fr); }
+  .prop-field--switch { grid-template-columns: minmax(0, 1fr) auto; min-block-size: 30px; }
+  .prop-field > label, .prop-field > .field-label { font: 400 12.5px/16px var(--cc-font-sans); color: var(--cc-ink-2); }
+  .inspector .field { inline-size: 100%; min-inline-size: 0; block-size: 30px; border: 0; border-radius: 8px; padding-inline: 10px; background: var(--cc-well); box-shadow: inset 0 -1px 0 var(--cc-field-edge); font: var(--cc-font-control); color: var(--cc-ink); }
+  .inspector .field::placeholder { color: var(--cc-ink-3); font-weight: 400; }
+  .inspector .field:hover { background: var(--cc-well-2); }
+  .inspector .field:focus { outline: none; background: var(--cc-sheet); box-shadow: inset 0 0 0 1.5px var(--cc-ink); }
+  .inspector textarea.field { block-size: auto; min-block-size: 66px; padding-block: 6px; resize: vertical; line-height: 18px; font-weight: 400; display: block; }
+  .inspector textarea.field-code { font: 400 11.5px/17px var(--cc-font-mono); min-block-size: 84px; background: var(--cc-well); color: var(--cc-ink); }
+  .select-wrap { position: relative; display: block; min-inline-size: 0; }
+  .select-wrap > select.field { appearance: none; padding-inline-end: 26px; cursor: pointer; text-overflow: ellipsis; }
+  .select-wrap::after { content: ""; position: absolute; inset-inline-end: 11px; inset-block-start: 11px; inline-size: 6px; block-size: 6px; border: solid var(--cc-ink-3); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); pointer-events: none; }
+  .select-wrap--dot > select.field { padding-inline-start: 26px; }
+  .select-wrap--dot::before { content: ""; position: absolute; inset-inline-start: 11px; inset-block-start: 11.5px; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--dot); z-index: 1; pointer-events: none; }
+  .with-unit { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .prop-unit { font: var(--cc-font-small); color: var(--cc-ink-3); }
+  .swatch-picker { display: flex; flex-wrap: wrap; gap: 7px; min-block-size: 30px; align-items: center; border: 0; padding: 4px 0; margin: 0; min-inline-size: 0; }
+  .swatch-option { display: grid; place-items: center; cursor: pointer; }
+  .swatch-option .pill-swatch { inline-size: 18px; block-size: 18px; border-radius: 50%; display: block; }
+  .swatch-option:has(input:checked) .pill-swatch { box-shadow: 0 0 0 2px var(--cc-sheet), 0 0 0 3.5px var(--cc-ink); }
+  .swatch-option:has(input:focus-visible) .pill-swatch { outline: 2px solid var(--cc-ink); outline-offset: 4px; }
+  .prop-group { margin-block-start: 8px; padding-block-start: 10px; border-block-start: 1px solid var(--cc-hair); font: 600 12.5px/16px var(--cc-font-sans); color: var(--cc-ink); }
+  .prop-quiet-btn { block-size: 30px; padding-inline: 10px; border: 0; border-radius: 8px; background: none; display: inline-flex; align-items: center; gap: 6px; font: var(--cc-font-control); color: var(--cc-ink-2); cursor: pointer; }
+  .prop-quiet-btn:hover { background: var(--cc-well); color: var(--cc-ink); }
+  .prop-quiet-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
+  .with-swatch { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: center; }
+  @media (pointer: coarse) {
+    .swatch-picker { gap: 4px; }
+    .swatch-option { inline-size: 32px; block-size: 32px; }
   }
 
   /* Data View Telemetry Inspector Styles */

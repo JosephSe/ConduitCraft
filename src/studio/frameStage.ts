@@ -22,7 +22,7 @@ import { announce } from './a11y';
 import { framesLayer, stageWorld, viewport } from './dom';
 import { commitRename, startTextEdit } from './inlineRename';
 import { notify } from './toast';
-import { makeTextInput, makeTonePicker, renderPropertyEditor } from './inspector';
+import { makeTextInput, makeToneField, renderPropertyEditor } from './inspector';
 import { scheduleMinimapPaint } from './minimap';
 import { setPointerTool } from './pointerTool';
 import { reconcileKeyed } from './reconcile';
@@ -381,7 +381,7 @@ export function frameFields(id: string): { title: HTMLInputElement; fields: HTML
     frame.title = v;
     renderFrames();
   });
-  const tone = makeTonePicker('frame-tone', frame.tone, (tone) => {
+  const tone = makeToneField('frame-tone', frame.tone, (tone) => {
     pushHistory();
     frame.tone = tone;
     renderFrames();

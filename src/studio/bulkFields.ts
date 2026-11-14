@@ -60,8 +60,8 @@ export function mountBulkFields(host: HTMLElement, nodeIds: string[], edgeIds: s
   const edges = (): DiagramEdge[] => app.doc.edges.filter((e) => edgeIds.includes(e.id));
   host.replaceChildren();
 
-  const heading = document.createElement('span');
-  heading.className = 'section-heading';
+  const heading = document.createElement('div');
+  heading.className = 'prop-group';
   heading.textContent = 'Edit shared fields';
   host.appendChild(heading);
 
@@ -108,7 +108,7 @@ export function mountBulkFields(host: HTMLElement, nodeIds: string[], edgeIds: s
   for (const [text, fn] of [['Add', addTag], ['Remove', removeTag]] as const) {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'btn btn-compact';
+    b.className = 'prop-quiet-btn';
     b.textContent = text;
     b.addEventListener('click', () => {
       const tag = tagInput.value;

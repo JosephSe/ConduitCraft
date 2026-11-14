@@ -16,9 +16,9 @@ test('a component form has a header and three tabs, and each field is in exactly
   await expect(page.locator('#prop-tab-notes')).toHaveText('Notes');
 
   const fields: Record<string, string[]> = {
-    look: ['Subtitle (shown under the name)', 'Label above title', 'Badge'],
-    behaviour: ['Architecture Status'],
-    notes: ['Description', 'Owner', 'Review Comment / Note'],
+    look: ['Subtitle', 'Label above', 'Badge'],
+    behaviour: ['Status'],
+    notes: ['Description', 'Owner', 'Review comment'],
   };
   for (const [tab, labels] of Object.entries(fields)) {
     await page.locator(`#prop-tab-${tab}`).click();

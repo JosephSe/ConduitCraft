@@ -98,6 +98,7 @@ import {
   normalizeLinks,
   parseTagInput,
   safeLinkUrl,
+  STATUS_TONE,
   toneName,
 } from '../core/meta';
 import { normalizeResilience, replicaCount } from '../core/reachability';
@@ -145,18 +146,93 @@ function makeOption(value: string, text: string): HTMLOptionElement {
   return option;
 }
 
+export type FieldLayout = 'row' | 'block' | 'switch';
+
+export interface FieldOptions {
+  /** Defaults from the control: a textarea is a block, a checkbox a switch, the rest a row. */
+  layout?: FieldLayout;
+  /** A unit shown after the control ("%", "ms"). */
+  unit?: string;
+  /** Something shown before the control, such as a colour dot. */
+  lead?: HTMLElement;
+}
+
+function makeStepper(input: HTMLInputElement, name: string): HTMLElement {
+  const wrap = document.createElement('div');
+  wrap.className = 'stepper';
+  input.classList.remove('field');
+  const button = (label: string, icon: 'minus' | 'plus', delta: 1 | -1) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('aria-label', label);
+    b.appendChild(createUiIconSvg(icon));
+    b.addEventListener('click', () => {
+      if (input.value.trim() === '') input.value = input.placeholder || input.min || '0';
+      if (delta === 1) input.stepUp();
+      else input.stepDown();
+      // Stepper fields commit on change; one click is one undo step.
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    return b;
+  };
+  wrap.append(button(`Decrease ${name}`, 'minus', -1), input, button(`Increase ${name}`, 'plus', 1));
+  return wrap;
+}
+
+/** Wrap a select in the chevron frame the card uses. */
+export function wrapSelect(select: HTMLSelectElement): HTMLElement {
+  const w = document.createElement('span');
+  w.className = 'select-wrap';
+  w.appendChild(select);
+  return w;
+}
+
+/**
+ * A labelled field. Pass the control itself, never a wrapper: the id and the label's `for`
+ * go on `control`, and makeField adds the select frame, stepper, unit or lead around it.
+ */
 export function makeField(
   id: string,
   labelText: string,
   control: HTMLElement,
+  options: FieldOptions = {},
 ): HTMLElement {
+  const isCheckbox = control instanceof HTMLInputElement && control.type === 'checkbox';
+  const kind: FieldLayout =
+    options.layout ?? (control instanceof HTMLTextAreaElement ? 'block' : isCheckbox ? 'switch' : 'row');
+
   const wrap = document.createElement('div');
-  wrap.className = 'prop-field';
+  wrap.className = `prop-field prop-field--${kind}`;
   const lbl = document.createElement('label');
   lbl.htmlFor = id;
   lbl.textContent = labelText;
   control.id = id;
-  wrap.append(lbl, control);
+
+  let shown: HTMLElement = control;
+  if (control instanceof HTMLSelectElement) {
+    shown = wrapSelect(control);
+  } else if (isCheckbox) {
+    control.classList.add('switch');
+    control.setAttribute('role', 'switch');
+  } else if (control instanceof HTMLInputElement && control.type === 'number' && control.dataset.stepper === 'true') {
+    shown = makeStepper(control, labelText);
+  }
+  if (options.lead) {
+    const lead = document.createElement('div');
+    lead.className = 'with-swatch';
+    lead.append(options.lead, shown);
+    shown = lead;
+  }
+  if (options.unit) {
+    const u = document.createElement('div');
+    u.className = 'with-unit';
+    const span = document.createElement('span');
+    span.className = 'prop-unit';
+    span.textContent = options.unit;
+    u.append(shown, span);
+    shown = u;
+  }
+  wrap.append(lbl, shown);
   return wrap;
 }
 
@@ -238,6 +314,7 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
   replicas.max = '99';
   replicas.step = '1';
   replicas.className = 'field';
+  replicas.dataset.stepper = 'true';
   replicas.value = String(replicaCount(node));
   replicas.addEventListener('change', () => {
     const n = Math.max(1, Math.min(99, Math.floor(Number(replicas.value)) || 1));
@@ -259,7 +336,6 @@ function makeResilienceFields(node: DiagramNode): HTMLElement[] {
   breaker.checked = Boolean(node.resilience?.circuitBreaker);
   breaker.addEventListener('change', () => commit({ circuitBreaker: breaker.checked }));
   const breakerField = makeField('prop-node-breaker', 'Circuit breaker', breaker);
-  breakerField.classList.add('prop-field-check');
 
   return [
     makeField('prop-node-replicas', 'Replicas', replicas),
@@ -291,6 +367,7 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   delivery.addEventListener('change', () => commit({ delivery: delivery.value }));
 
   const partitions = wholeNumberInput(node.queue?.partitions, 1, MAX_PARTITIONS, String(DEFAULT_PARTITIONS));
+  partitions.dataset.stepper = 'true';
   partitions.addEventListener('change', () => {
     const n = Math.round(Number(partitions.value));
     const next = partitions.value.trim() === '' || !Number.isFinite(n) ? DEFAULT_PARTITIONS : Math.max(1, Math.min(MAX_PARTITIONS, n));
@@ -332,19 +409,13 @@ function makeQueueFields(node: DiagramNode): HTMLElement[] {
   retention.maxLength = MAX_QUEUE_RETENTION;
   retention.placeholder = '4 days';
 
-  const heading = document.createElement('span');
-  heading.className = 'field-label';
-  heading.textContent = 'Queue';
-  const group = document.createElement('div');
-  group.className = 'prop-field prop-queue-heading';
-  group.appendChild(heading);
   return [
-    group,
+    fieldGroup('Queue'),
     makeField('prop-node-queue-ordering', 'Ordering', ordering),
     makeField('prop-node-queue-delivery', 'Delivery', delivery),
-    ...(node.queue?.delivery === 'fanout' ? [makeField('prop-node-queue-partitions', 'Partitions (drawn)', partitions)] : []),
+    ...(node.queue?.delivery === 'fanout' ? [makeField('prop-node-queue-partitions', 'Partitions', partitions)] : []),
     makeField('prop-node-queue-depth', 'Max depth', depth),
-    makeField('prop-node-queue-dlq', 'Dead-letter queue', dead),
+    makeField('prop-node-queue-dlq', 'Dead letters', dead),
     makeField('prop-node-queue-retention', 'Retention', retention),
   ];
 }
@@ -362,13 +433,7 @@ function makeBalancerFields(node: DiagramNode): HTMLElement[] {
     renderAll(false);
   });
 
-  const heading = document.createElement('span');
-  heading.className = 'field-label';
-  heading.textContent = 'Load balancer';
-  const group = document.createElement('div');
-  group.className = 'prop-field prop-queue-heading';
-  group.appendChild(heading);
-  return [group, makeField('prop-node-balancer-strategy', 'Strategy', strategy)];
+  return [fieldGroup('Load balancer'), makeField('prop-node-balancer-strategy', 'Strategy', strategy)];
 }
 
 /** "Run by someone else" (K7): the component is drawn dashed and counts as outside the team's control. */
@@ -382,18 +447,13 @@ function makeExternalField(node: DiagramNode): HTMLElement {
     else delete node.external;
     renderAll(false);
   });
-  const field = makeField('prop-node-external', 'Run by someone else', box);
-  field.classList.add('prop-field-check');
-  return field;
+  return makeField('prop-node-external', 'Run by someone else', box);
 }
 
 function fieldGroup(title: string): HTMLElement {
-  const heading = document.createElement('span');
-  heading.className = 'field-label';
-  heading.textContent = title;
   const group = document.createElement('div');
-  group.className = 'prop-field prop-queue-heading';
-  group.appendChild(heading);
+  group.className = 'prop-group';
+  group.textContent = title;
   return group;
 }
 
@@ -418,6 +478,7 @@ function makeCacheFields(node: DiagramNode): HTMLElement[] {
     renderAll(false);
   };
   const rate = wholeNumberInput(node.cache?.hitRate, 0, 100, String(DEFAULT_HIT_RATE));
+  rate.dataset.stepper = 'true';
   rate.addEventListener('change', () => {
     const n = Number(rate.value);
     const next = rate.value.trim() === '' || !Number.isFinite(n) ? undefined : Math.max(0, Math.min(100, Math.round(n)));
@@ -440,7 +501,7 @@ function makeCacheFields(node: DiagramNode): HTMLElement[] {
 
   return [
     fieldGroup('Cache'),
-    makeField('prop-node-cache-hitrate', 'Hit rate (%)', rate),
+    makeField('prop-node-cache-hitrate', 'Hit rate', rate, { unit: '%' }),
     makeField('prop-node-cache-backing', 'Backing store', backing),
   ];
 }
@@ -456,6 +517,8 @@ function makeLimiterFields(node: DiagramNode): HTMLElement[] {
   const now = limiterRate(node.limiter);
   const admit = wholeNumberInput(now.admit, 1, MAX_PER, String(DEFAULT_ADMIT));
   const per = wholeNumberInput(now.per, 1, MAX_PER, String(DEFAULT_PER));
+  admit.dataset.stepper = 'true';
+  per.dataset.stepper = 'true';
   const read = (input: HTMLInputElement, fallback: number): number => {
     const n = Math.round(Number(input.value));
     return Number.isFinite(n) && n >= 1 ? Math.min(MAX_PER, n) : fallback;
@@ -470,7 +533,6 @@ function makeLimiterFields(node: DiagramNode): HTMLElement[] {
   open.checked = Boolean(node.limiter?.failOpen);
   open.addEventListener('change', () => commit({ failOpen: open.checked }));
   const openField = makeField('prop-node-limiter-failopen', 'Fails open', open);
-  openField.classList.add('prop-field-check');
 
   return [
     fieldGroup('Rate limiter'),
@@ -559,7 +621,7 @@ function makeLinksEditor(node: DiagramNode): HTMLElement {
       url.setAttribute('aria-label', 'Link address');
       const remove = document.createElement('button');
       remove.type = 'button';
-      remove.className = 'btn btn-compact';
+      remove.className = 'prop-quiet-btn';
       remove.textContent = 'Remove';
       remove.setAttribute('aria-label', `Remove link ${index + 1}`);
       remove.addEventListener('click', () => {
@@ -569,14 +631,14 @@ function makeLinksEditor(node: DiagramNode): HTMLElement {
         drawRows();
         renderAll(false);
       });
-      line.append(kind, label, url, remove);
+      line.append(wrapSelect(kind), label, url, remove);
       list.appendChild(line);
     });
   };
   const add = document.createElement('button');
   add.type = 'button';
   add.id = 'prop-node-link-add';
-  add.className = 'btn btn-compact';
+  add.className = 'prop-quiet-btn';
   add.textContent = 'Add link';
   add.addEventListener('click', () => {
     if (rows.length >= MAX_LINKS) return;
@@ -600,12 +662,12 @@ export function makeTonePicker(
   fs.className = 'swatch-picker';
   const legend = document.createElement('legend');
   legend.className = 'visually-hidden';
-  legend.textContent = 'Accent Colour';
+  legend.textContent = 'Colour';
   fs.appendChild(legend);
 
   for (const opt of STREAM_TONE_OPTIONS) {
     const lbl = document.createElement('label');
-    lbl.className = 'swatch-option swatch-dot-only';
+    lbl.className = 'swatch-option';
     const capName = toneName(
       app.doc.legend,
       opt.id,
@@ -636,6 +698,21 @@ export function makeTonePicker(
     fs.appendChild(lbl);
   }
   return fs;
+}
+
+/** A "Colour" row: the label on the left, the colour dots on the right. */
+export function makeToneField(
+  groupName: string,
+  current: StreamTone,
+  onChange: (tone: StreamTone) => void,
+): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'prop-field prop-field--row';
+  const title = document.createElement('span');
+  title.className = 'field-label';
+  title.textContent = 'Colour';
+  row.append(title, makeTonePicker(groupName, current, onChange));
+  return row;
 }
 
 function closeIconMenus(): void {
@@ -1038,19 +1115,12 @@ export function renderPropertyEditor(): void {
 
     // Description (the long text) and Kind are added below, once their controls exist.
 
-    const toneWrap = document.createElement('div');
-    toneWrap.className = 'prop-field';
-    const toneTitle = document.createElement('span');
-    toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Accent Colour';
-    toneWrap.append(
-      toneTitle,
-      makeTonePicker('node-accent-tone', node.accent, (tone) => {
+    basicsElements.push(
+      makeToneField('node-accent-tone', node.accent, (tone) => {
         node.accent = tone;
         renderAll(false);
       }),
     );
-    basicsElements.push(toneWrap);
 
     // --- 2. Appearance Section ---
     const appearanceElements: HTMLElement[] = [];
@@ -1079,11 +1149,7 @@ export function renderPropertyEditor(): void {
         node.icon = icon;
         renderAll(false);
       });
-      const row = document.createElement('div');
-      row.className = 'prop-row-2';
-      row.append(
-        makeField('prop-node-icon', 'Icon', iconPicker),
-      );
+      const row = makeField('prop-node-icon', 'Icon', iconPicker);
       const trigger = iconPicker.querySelector('button');
       if (trigger) trigger.id = 'prop-node-icon';
       iconPicker.removeAttribute('id');
@@ -1132,7 +1198,8 @@ export function renderPropertyEditor(): void {
     fileInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
 
     const iconHint = document.createElement('p');
-    iconHint.className = 'prop-hint';
+    iconHint.className = 'prop-hint is-error';
+    iconHint.setAttribute('role', 'alert');
     iconHint.hidden = true;
 
     const uploadZone = document.createElement('div');
@@ -1188,7 +1255,7 @@ export function renderPropertyEditor(): void {
 
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'btn btn-compact btn-reject';
+      removeBtn.className = 'prop-quiet-btn';
       removeBtn.textContent = 'Remove';
       removeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1245,7 +1312,7 @@ export function renderPropertyEditor(): void {
       if (file) handleIconFile(file);
     });
 
-    const iconField = makeField('prop-node-icon-file', 'Custom Icon', uploadZone);
+    const iconField = makeField('prop-node-icon-file', 'Image', uploadZone);
     iconField.append(fileInput, iconHint);
     appearanceElements.push(iconField);
 
@@ -1253,12 +1320,10 @@ export function renderPropertyEditor(): void {
     const metadataElements: HTMLElement[] = [];
 
     if (node.kind !== 'actor') {
-      const rowBadges = document.createElement('div');
-      rowBadges.className = 'prop-row-2';
-      rowBadges.append(
+      metadataElements.push(
         makeField(
           'prop-node-eyebrow',
-          'Label above title',
+          'Label above',
           makeTextInput(
             node.eyebrow,
             (v) => {
@@ -1281,13 +1346,12 @@ export function renderPropertyEditor(): void {
           ),
         ),
       );
-      metadataElements.push(rowBadges);
 
       if (node.kind !== 'client') {
         metadataElements.push(
           makeField(
             'prop-node-footer',
-            'Card Footer Label',
+            'Footer',
             makeTextInput(node.footerLeft, (v) => {
               node.footerLeft = v;
               renderAll(false);
@@ -1300,7 +1364,7 @@ export function renderPropertyEditor(): void {
     metadataElements.push(
       makeField(
         'prop-node-interface',
-        'Interface (shown in the matrix)',
+        'Interface',
         makeTextInput(node.interfaceLabel, (v) => {
           node.interfaceLabel = v;
           renderMatrixTable();
@@ -1327,7 +1391,7 @@ export function renderPropertyEditor(): void {
     metadataElements.unshift(
       makeField(
         'prop-node-subtitle',
-        'Subtitle (shown under the name)',
+        'Subtitle',
         makeTextInput(node.subtitle, (v) => {
           node.subtitle = v;
           renderAll(false);
@@ -1348,9 +1412,10 @@ export function renderPropertyEditor(): void {
     mTitle.textContent = 'Metrics';
     const btnAddMetric = document.createElement('button');
     btnAddMetric.type = 'button';
-    btnAddMetric.className = 'btn btn-compact';
+    btnAddMetric.className = 'prop-quiet-btn';
     btnAddMetric.style.flex = '0 0 auto';
-    btnAddMetric.textContent = '+ Add';
+    btnAddMetric.append(createUiIconSvg('plus', 14), 'Add');
+    btnAddMetric.setAttribute('aria-label', 'Add metric');
     btnAddMetric.addEventListener('click', () => {
       pushHistory();
       node.metrics.push({ label: 'Metric', value: '100%' });
@@ -1373,8 +1438,8 @@ export function renderPropertyEditor(): void {
 
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
-      delBtn.className = 'btn btn-compact';
-      delBtn.textContent = '×';
+      delBtn.className = 'prop-quiet-btn';
+      delBtn.appendChild(createUiIconSvg('close', 14));
       delBtn.setAttribute('aria-label', `Remove metric ${m.label}`);
       delBtn.addEventListener('click', () => {
         pushHistory();
@@ -1393,7 +1458,7 @@ export function renderPropertyEditor(): void {
     payloadDiv.appendChild(
       makeField(
         'prop-node-code',
-        'Sample Payload / Contract (JSON or Text)',
+        'Sample payload',
         makeTextarea(
           node.code,
           (v) => {
@@ -1411,11 +1476,11 @@ export function renderPropertyEditor(): void {
     statusSelect.className = 'field';
     statusSelect.id = 'prop-node-status';
     const statusOptions: Array<{ value: string; label: string }> = [
-      { value: '', label: 'None / Unspecified' },
-      { value: 'live', label: 'Live (Production Active)' },
-      { value: 'planned', label: 'Planned (Upcoming)' },
-      { value: 'at-risk', label: 'At Risk (Incident / Deprecating)' },
-      { value: 'deprecated', label: 'Deprecated (Legacy)' },
+      { value: '', label: 'Not set' },
+      { value: 'live', label: 'Live' },
+      { value: 'planned', label: 'Planned' },
+      { value: 'at-risk', label: 'At risk' },
+      { value: 'deprecated', label: 'Deprecated' },
     ];
     for (const opt of statusOptions) {
       const el = document.createElement('option');
@@ -1424,17 +1489,27 @@ export function renderPropertyEditor(): void {
       el.selected = (node.status || '') === opt.value;
       statusSelect.appendChild(el);
     }
+    const statusField = makeField('prop-node-status', 'Status', statusSelect);
+    const statusWrap = statusField.querySelector<HTMLElement>('.select-wrap');
+    statusWrap?.classList.add('select-wrap--dot');
+    // The same colour "colour by status" gives the component on the canvas.
+    const paintStatusDot = () => {
+      const tone = STATUS_TONE[statusSelect.value as ComponentStatus];
+      statusWrap?.style.setProperty('--dot', tone ? TONE_META[tone].cssVar : 'var(--cc-hair-2)');
+    };
+    paintStatusDot();
     statusSelect.addEventListener('change', () => {
+      paintStatusDot();
       pushHistory();
       node.status = (statusSelect.value as ComponentStatus) || undefined;
       renderAll(false);
     });
-    reviewElements.push(makeField('prop-node-status', 'Architecture Status', statusSelect));
+    reviewElements.push(statusField);
 
     reviewElements.push(
       makeField(
         'prop-node-comment',
-        'Review Comment / Note',
+        'Review comment',
         makeTextarea(node.comment || '', (v) => {
           node.comment = v.trim() || undefined;
           renderAll(false);
@@ -1466,11 +1541,12 @@ export function renderPropertyEditor(): void {
     reviewElements.push(linksField);
     reviewElements.push(...makeResilienceFields(node));
     reviewElements.push(makeExternalField(node));
-    if (node.kind === 'queue') reviewElements.push(...makeQueueFields(node));
-    if (node.kind === 'balancer') reviewElements.push(...makeBalancerFields(node));
-    if (node.kind === 'cache') reviewElements.push(...makeCacheFields(node));
-    if (node.kind === 'limiter') reviewElements.push(...makeLimiterFields(node));
-    if (node.kind === 'scheduler') reviewElements.push(...makeSchedulerFields(node));
+    const kindElements: HTMLElement[] = [];
+    if (node.kind === 'queue') kindElements.push(...makeQueueFields(node));
+    if (node.kind === 'balancer') kindElements.push(...makeBalancerFields(node));
+    if (node.kind === 'cache') kindElements.push(...makeCacheFields(node));
+    if (node.kind === 'limiter') kindElements.push(...makeLimiterFields(node));
+    if (node.kind === 'scheduler') kindElements.push(...makeSchedulerFields(node));
 
     // Assemble the form (6.5): a header, then three tabs. Every field goes in exactly one tab.
     const onNotes = (el: HTMLElement) =>
@@ -1484,7 +1560,7 @@ export function renderPropertyEditor(): void {
       ...appearanceElements,
       ...metadataElements.filter((el) => !isInterface(el)),
     ];
-    const behaviourElements = [...reviewBehaviour, ...metadataElements.filter(isInterface), ...telemetryElements];
+    const behaviourElements = [...reviewBehaviour, ...metadataElements.filter(isInterface), ...kindElements, ...telemetryElements];
     const stencil = findStencil(node.kind);
     form.append(
       makeCardHeader({
@@ -1510,11 +1586,6 @@ export function renderPropertyEditor(): void {
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = true;
 
-    const wireHeading = document.createElement('h3');
-    wireHeading.className = 'section-heading';
-    wireHeading.textContent = 'Wire fields';
-    wireHeading.appendChild(helpButton('wire-fields'));
-    body.appendChild(wireHeading);
     header = makeCardHeader({
       art: wireArt(edge.sync === 'async'),
       tone: TONE_CSS[edge.tone]?.[0],
@@ -1561,7 +1632,7 @@ export function renderPropertyEditor(): void {
     latencyInput.min = '0';
     latencyInput.step = '1';
     latencyInput.className = 'field';
-    latencyInput.placeholder = 'e.g. 120';
+    latencyInput.placeholder = 'Typical';
     latencyInput.value = edge.latencyMs === undefined ? '' : String(edge.latencyMs);
     latencyInput.addEventListener('focus', () => beginHistoryGesture());
     latencyInput.addEventListener('blur', () => endHistoryGesture());
@@ -1572,7 +1643,7 @@ export function renderPropertyEditor(): void {
       else delete edge.latencyMs;
       renderWiresOnly();
     });
-    body.appendChild(makeField('prop-edge-latency', 'Typical latency (ms)', latencyInput));
+    body.appendChild(makeField('prop-edge-latency', 'Latency', latencyInput, { unit: 'ms' }));
     body.appendChild(
       makeTagsField('prop-edge-tags', edge.tags, (next) => {
         edge.tags = next;
@@ -1600,30 +1671,23 @@ export function renderPropertyEditor(): void {
       });
       return select;
     };
-    body.appendChild(makeField('prop-edge-from', 'Source component', makeEndSelect('from')));
-    body.appendChild(makeField('prop-edge-to', 'Target component', makeEndSelect('to')));
+    body.appendChild(makeField('prop-edge-from', 'From', makeEndSelect('from')));
+    body.appendChild(makeField('prop-edge-to', 'To', makeEndSelect('to')));
 
-    const toneWrap = document.createElement('div');
-    toneWrap.className = 'prop-field';
-    const toneTitle = document.createElement('span');
-    toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Wire colour';
-    toneWrap.append(
-      toneTitle,
-      makeTonePicker('edge-stream-tone', edge.tone, (tone) => {
+    body.appendChild(
+      makeToneField('edge-stream-tone', edge.tone, (tone) => {
         edge.tone = tone;
         renderWiresOnly();
         renderSimButtons();
       }),
     );
-    body.appendChild(toneWrap);
 
     // Routing Style (Visual Schematic Picker)
     const routeFieldset = document.createElement('fieldset');
     routeFieldset.className = 'route-style-fieldset';
     const routeLegend = document.createElement('legend');
     routeLegend.className = 'field-label';
-    routeLegend.textContent = 'Routing Style';
+    routeLegend.textContent = 'Route';
     routeLegend.appendChild(helpButton('routing'));
     routeFieldset.appendChild(routeLegend);
 
@@ -1638,23 +1702,23 @@ export function renderPropertyEditor(): void {
     }> = [
       {
         value: 'auto',
-        label: 'Smart Auto (Context-Aware)',
+        label: 'Smart',
         previewPath: 'M 2 9 L 10 9 C 15 9, 13 5, 19 5 L 25 5',
         fullSpan: true,
       },
       {
         value: 'straight',
-        label: 'Direct Line',
+        label: 'Straight',
         previewPath: 'M 2 13 L 25 4',
       },
       {
         value: 'bezier',
-        label: 'Smooth S-Curve',
+        label: 'S-curve',
         previewPath: 'M 2 9 C 10 1, 18 17, 25 9',
       },
       {
         value: 'arc',
-        label: 'Curved Arc',
+        label: 'Arc',
         previewPath: 'M 2 13 Q 14 1 25 13',
       },
       {
@@ -1748,25 +1812,22 @@ export function renderPropertyEditor(): void {
       return sel;
     };
 
-    const portRow = document.createElement('div');
-    portRow.className = 'prop-row-2';
-    portRow.append(
+    body.append(
       makeField(
         'prop-edge-src-port',
-        'Source Port',
+        'From port',
         makePortSelect(edge.sourcePort, (p) => {
           edge.sourcePort = p;
         }),
       ),
       makeField(
         'prop-edge-dst-port',
-        'Target Port',
+        'To port',
         makePortSelect(edge.targetPort, (p) => {
           edge.targetPort = p;
         }),
       ),
     );
-    body.appendChild(portRow);
 
     // Telemetry Flow Direction (One-way with arrow vs Both ways without arrow)
     const flowRow = document.createElement('div');
@@ -1837,13 +1898,11 @@ export function renderPropertyEditor(): void {
     const flowFieldset = document.createElement('fieldset');
     flowFieldset.className = 'prop-fieldset';
     const flowLegend = document.createElement('legend');
-    flowLegend.textContent = 'Flow Direction';
+    flowLegend.textContent = 'Direction';
     flowFieldset.append(flowLegend, flowRow);
     body.appendChild(flowFieldset);
 
     // Animated Pulse Toggle
-    const animLabel = document.createElement('label');
-    animLabel.className = 'checkbox-inline';
     const animChk = document.createElement('input');
     animChk.type = 'checkbox';
     animChk.checked = edge.animated;
@@ -1852,14 +1911,13 @@ export function renderPropertyEditor(): void {
       edge.animated = animChk.checked;
       renderWiresOnly();
     });
-    animLabel.append(animChk, document.createTextNode('Animated dashed wire'));
-    body.appendChild(animLabel);
+    body.appendChild(makeField('prop-edge-animated', 'Animated dashed wire', animChk));
 
     // Reverse Direction Button
     const btnReverse = document.createElement('button');
     btnReverse.type = 'button';
-    btnReverse.className = 'btn';
-    btnReverse.textContent = '⇄ Reverse Flow Direction';
+    btnReverse.className = 'prop-quiet-btn';
+    btnReverse.append(createUiIconSvg('swap', 14), 'Reverse direction');
     btnReverse.disabled = edge.flow === 'both';
     btnReverse.addEventListener('click', () => {
       pushHistory();
@@ -1876,7 +1934,7 @@ export function renderPropertyEditor(): void {
     body.appendChild(
       makeField(
         'prop-edge-comment',
-        'Review Comment (optional)',
+        'Review comment',
         makeTextarea(edge.comment || '', (v) => {
           edge.comment = v.trim() || undefined;
           renderWiresOnly();
@@ -1887,8 +1945,9 @@ export function renderPropertyEditor(): void {
     if (edge.waypoint) {
       const btnResetWp = document.createElement('button');
       btnResetWp.type = 'button';
-      btnResetWp.className = 'btn';
-      btnResetWp.textContent = `↺ Reset Custom Waypoint (${edge.waypoint[0]}, ${edge.waypoint[1]})`;
+      btnResetWp.className = 'prop-quiet-btn';
+      btnResetWp.textContent = 'Reset waypoint';
+      btnResetWp.title = `Waypoint at ${edge.waypoint[0]}, ${edge.waypoint[1]}`;
       btnResetWp.addEventListener('click', () => {
         pushHistory();
         delete edge.waypoint;
@@ -1897,6 +1956,8 @@ export function renderPropertyEditor(): void {
       });
       body.appendChild(btnResetWp);
     }
+    // Like each component tab, the wire panel ends with its "?".
+    body.appendChild(helpButton('wire-fields'));
   } else if (sel.type === 'multi') {
     const selectedNodes = app.doc.nodes.filter((n) => sel.ids.includes(n.id));
     const zoneCount = sel.zoneIds?.length ?? 0;
@@ -1929,14 +1990,11 @@ export function renderPropertyEditor(): void {
     const membersSection = document.createElement('div');
     membersSection.className = 'prop-divider selection-members-section';
 
-    const membersHeading = document.createElement('span');
-    membersHeading.className = 'section-heading';
-    membersHeading.textContent = 'Selection members';
-    membersSection.appendChild(membersHeading);
+    membersSection.appendChild(fieldGroup('Selection members'));
 
     const helpTip = document.createElement('p');
-    helpTip.className = 'field-tip selection-help-tip';
-    helpTip.textContent = 'Click any item chip or Shift+click on canvas to unselect individually.';
+    helpTip.className = 'prop-hint selection-help-tip';
+    helpTip.textContent = 'Click a chip to drop it from the selection.';
     membersSection.appendChild(helpTip);
 
     const actionsBar = document.createElement('div');
@@ -1944,22 +2002,22 @@ export function renderPropertyEditor(): void {
 
     const toggleModeBtn = document.createElement('button');
     toggleModeBtn.type = 'button';
-    toggleModeBtn.className = `btn btn-compact selection-mode-toggle ${app.selectionUnselectMode ? 'btn-active is-active' : ''}`;
-    toggleModeBtn.textContent = app.selectionUnselectMode ? '✓ Click-to-Unselect: Active' : 'Click-to-Unselect on Canvas';
+    toggleModeBtn.className = `prop-quiet-btn selection-mode-toggle ${app.selectionUnselectMode ? 'is-active' : ''}`;
+    toggleModeBtn.setAttribute('aria-pressed', String(app.selectionUnselectMode));
+    toggleModeBtn.textContent = 'Click to unselect';
     toggleModeBtn.title = 'When active, regular clicking canvas items unselects them without Shift';
     toggleModeBtn.addEventListener('click', () => {
       app.selectionUnselectMode = !app.selectionUnselectMode;
       toggleModeBtn.classList.toggle('is-active', app.selectionUnselectMode);
-      toggleModeBtn.classList.toggle('btn-active', app.selectionUnselectMode);
-      toggleModeBtn.textContent = app.selectionUnselectMode ? '✓ Click-to-Unselect: Active' : 'Click-to-Unselect on Canvas';
+      toggleModeBtn.setAttribute('aria-pressed', String(app.selectionUnselectMode));
     });
     actionsBar.appendChild(toggleModeBtn);
 
     if (activeEdges.length > 0) {
       const btnUnselectConnectors = document.createElement('button');
       btnUnselectConnectors.type = 'button';
-      btnUnselectConnectors.className = 'btn btn-compact';
-      btnUnselectConnectors.textContent = 'Unselect All Connectors';
+      btnUnselectConnectors.className = 'prop-quiet-btn';
+      btnUnselectConnectors.textContent = 'Unselect all wires';
       btnUnselectConnectors.title = 'Exclude all connectors from selection highlight';
       btnUnselectConnectors.addEventListener('click', () => {
         const nextSel = excludeAllEdgesInSelection(app.selection, app.doc.edges);
@@ -1972,8 +2030,8 @@ export function renderPropertyEditor(): void {
     if (excludedEdges.length > 0) {
       const btnRestoreConnectors = document.createElement('button');
       btnRestoreConnectors.type = 'button';
-      btnRestoreConnectors.className = 'btn btn-compact';
-      btnRestoreConnectors.textContent = 'Restore Connectors';
+      btnRestoreConnectors.className = 'prop-quiet-btn';
+      btnRestoreConnectors.textContent = 'Restore wires';
       btnRestoreConnectors.title = 'Re-include excluded connectors in selection';
       btnRestoreConnectors.addEventListener('click', () => {
         const nextSel = includeAllEdgesInSelection(app.selection);
@@ -2006,7 +2064,7 @@ export function renderPropertyEditor(): void {
 
         const removeIcon = document.createElement('span');
         removeIcon.className = 'chip-remove';
-        removeIcon.textContent = '✕';
+        removeIcon.appendChild(createUiIconSvg('close', 12));
         removeIcon.setAttribute('aria-hidden', 'true');
 
         chip.append(nameSpan, removeIcon);
@@ -2043,7 +2101,7 @@ export function renderPropertyEditor(): void {
 
         const removeIcon = document.createElement('span');
         removeIcon.className = 'chip-remove';
-        removeIcon.textContent = '✕';
+        removeIcon.appendChild(createUiIconSvg('close', 12));
         removeIcon.setAttribute('aria-hidden', 'true');
 
         chip.append(nameSpan, removeIcon);
@@ -2080,7 +2138,7 @@ export function renderPropertyEditor(): void {
 
         const removeIcon = document.createElement('span');
         removeIcon.className = 'chip-remove';
-        removeIcon.textContent = '✕';
+        removeIcon.appendChild(createUiIconSvg('close', 12));
         removeIcon.setAttribute('aria-hidden', 'true');
 
         chip.append(nameSpan, removeIcon);
@@ -2122,7 +2180,7 @@ export function renderPropertyEditor(): void {
 
         const removeIcon = document.createElement('span');
         removeIcon.className = 'chip-remove';
-        removeIcon.textContent = '✕';
+        removeIcon.appendChild(createUiIconSvg('close', 12));
         removeIcon.setAttribute('aria-hidden', 'true');
 
         chip.append(nameSpan, removeIcon);
@@ -2164,7 +2222,7 @@ export function renderPropertyEditor(): void {
 
         const addIcon = document.createElement('span');
         addIcon.className = 'chip-add';
-        addIcon.textContent = '+';
+        addIcon.appendChild(createUiIconSvg('plus', 12));
         addIcon.setAttribute('aria-hidden', 'true');
 
         chip.append(nameSpan, addIcon);
@@ -2183,10 +2241,7 @@ export function renderPropertyEditor(): void {
 
     const alignSection = document.createElement('div');
     alignSection.className = 'prop-divider';
-    const alignHeading = document.createElement('span');
-    alignHeading.className = 'section-heading';
-    alignHeading.textContent = 'Align & distribute';
-    alignSection.appendChild(alignHeading);
+    alignSection.appendChild(fieldGroup('Align & distribute'));
 
     const grid = document.createElement('div');
     grid.className = 'multi-action-grid';
@@ -2194,7 +2249,7 @@ export function renderPropertyEditor(): void {
     const makeAlignBtn = (label: string, fn: () => void) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'btn btn-compact';
+      b.className = 'prop-quiet-btn';
       b.textContent = label;
       b.addEventListener('click', () => {
         // Already aligned (or too few components to distribute) changes nothing, so records no undo step.
@@ -2225,7 +2280,7 @@ export function renderPropertyEditor(): void {
           selectedNodes.reduce((acc, n) => acc + n.y + n.height / 2, 0) / selectedNodes.length;
         for (const n of selectedNodes) n.y = Math.round(avgCy - n.height / 2);
       }),
-      makeAlignBtn('↔ Distribute Horiz', () => {
+      makeAlignBtn('Distribute horizontally', () => {
         if (selectedNodes.length < 3) return;
         const sorted = [...selectedNodes].sort((a, b) => a.x - b.x);
         const first = sorted[0].x;
@@ -2235,7 +2290,7 @@ export function renderPropertyEditor(): void {
           n.x = Math.round((first + step * idx) / 16) * 16;
         });
       }),
-      makeAlignBtn('↕ Distribute Vert', () => {
+      makeAlignBtn('Distribute vertically', () => {
         if (selectedNodes.length < 3) return;
         const sorted = [...selectedNodes].sort((a, b) => a.y - b.y);
         const first = sorted[0].y;
@@ -2252,19 +2307,12 @@ export function renderPropertyEditor(): void {
     body.appendChild(alignSection);
 
     // Batch Accent Colour Picker
-    const toneWrap = document.createElement('div');
-    toneWrap.className = 'prop-divider';
-    const toneTitle = document.createElement('span');
-    toneTitle.className = 'field-label';
-    toneTitle.textContent = 'Batch Accent Colour';
-    toneWrap.append(
-      toneTitle,
-      makeTonePicker('multi-node-accent', selectedNodes[0].accent, (tone) => {
+    body.appendChild(
+      makeToneField('multi-node-accent', selectedNodes[0].accent, (tone) => {
         for (const n of selectedNodes) n.accent = tone;
         renderAll(false);
       }),
     );
-    body.appendChild(toneWrap);
     }
 
     // Shared fields (kind, shape, status, tags, wire colour and timing) load on demand (F-29).
@@ -2289,12 +2337,10 @@ export function renderPropertyEditor(): void {
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
-    const rowTop = document.createElement('div');
-    rowTop.className = 'prop-row-2';
-    rowTop.append(
+    body.append(
       makeField(
         'prop-zone-num',
-        'Stage Number',
+        'Number',
         makeTextInput(
           zone.number,
           (v) => {
@@ -2306,7 +2352,7 @@ export function renderPropertyEditor(): void {
       ),
       makeField(
         'prop-zone-width',
-        'Width (px)',
+        'Width',
         makeTextInput(
           String(zone.width),
           (v) => {
@@ -2319,9 +2365,9 @@ export function renderPropertyEditor(): void {
           },
           { identifier: true },
         ),
+        { unit: 'px' },
       ),
     );
-    body.appendChild(rowTop);
 
     header = makeCardHeader({
       art: HEAD_ART.zone,
@@ -2338,7 +2384,7 @@ export function renderPropertyEditor(): void {
     body.appendChild(
       makeField(
         'prop-zone-sub',
-        'Stage Subtitle',
+        'Subtitle',
         makeTextInput(zone.subtitle, (v) => {
           zone.subtitle = v;
           renderZones();
@@ -2394,7 +2440,7 @@ export function renderPropertyEditor(): void {
     body.appendChild(
       makeField(
         'prop-notes-code',
-        'Spec Tag',
+        'Tag',
         makeTextInput(
           card.code,
           (v) => {
@@ -2415,9 +2461,10 @@ export function renderPropertyEditor(): void {
     iTitle.textContent = 'Items';
     const btnAddItem = document.createElement('button');
     btnAddItem.type = 'button';
-    btnAddItem.className = 'btn btn-compact';
+    btnAddItem.className = 'prop-quiet-btn';
     btnAddItem.style.flex = '0 0 auto';
-    btnAddItem.textContent = '+ Add Item';
+    btnAddItem.append(createUiIconSvg('plus', 14), 'Add');
+    btnAddItem.setAttribute('aria-label', 'Add item');
     btnAddItem.addEventListener('click', () => {
       pushHistory();
       card.items.push({
@@ -2449,6 +2496,7 @@ export function renderPropertyEditor(): void {
         if (opt.value === currentIcon) oEl.selected = true;
         iconSelect.appendChild(oEl);
       }
+      const iconWrap = wrapSelect(iconSelect);
       iconSelect.addEventListener('change', () => {
         pushHistory();
         item.icon = iconSelect.value as NotesItemIcon;
@@ -2464,8 +2512,8 @@ export function renderPropertyEditor(): void {
 
       const delBtn = document.createElement('button');
       delBtn.type = 'button';
-      delBtn.className = 'btn btn-compact btn-sim-reorder';
-      delBtn.textContent = '×';
+      delBtn.className = 'prop-quiet-btn btn-sim-reorder';
+      delBtn.appendChild(createUiIconSvg('close', 14));
       delBtn.title = 'Delete item';
       delBtn.setAttribute('aria-label', `Delete item ${idx + 1}`);
       delBtn.addEventListener('click', () => {
@@ -2475,7 +2523,7 @@ export function renderPropertyEditor(): void {
         renderPropertyEditor();
       });
 
-      topBar.append(iconSelect, tIn, delBtn);
+      topBar.append(iconWrap, tIn, delBtn);
 
       const bodyIn = makeTextInput(item.text, (v) => {
         item.text = v;
@@ -2507,12 +2555,10 @@ export function renderPropertyEditor(): void {
       under: 'Document',
     });
 
-    const rowTags = document.createElement('div');
-    rowTags.className = 'prop-row-2';
-    rowTags.append(
+    body.append(
       makeField(
         'prop-doc-systag',
-        'System Tag',
+        'System tag',
         makeTextInput(
           app.doc.systemTag,
           (v) => {
@@ -2523,7 +2569,7 @@ export function renderPropertyEditor(): void {
       ),
       makeField(
         'prop-doc-status',
-        'Status Badge',
+        'Status badge',
         makeTextInput(
           app.doc.statusLabel,
           (v) => {
@@ -2533,7 +2579,6 @@ export function renderPropertyEditor(): void {
         ),
       ),
     );
-    body.appendChild(rowTags);
 
     const dirSelect = document.createElement('select');
     dirSelect.className = 'field';
@@ -2554,21 +2599,19 @@ export function renderPropertyEditor(): void {
       renderAll(true);
       fitToViewport();
     });
-    body.appendChild(makeField('prop-doc-dir', 'Auto-Layout Flow Direction', dirSelect));
+    body.appendChild(makeField('prop-doc-dir', 'Layout flows', dirSelect));
 
     body.appendChild(
       makeField(
         'prop-doc-summary',
-        'Overview Summary',
+        'Summary',
         makeTextarea(app.doc.overviewSummary, (v) => {
           app.doc.overviewSummary = v;
         }),
       ),
     );
 
-    const legendHeading = document.createElement('h3');
-    legendHeading.className = 'section-heading';
-    legendHeading.textContent = 'Colour legend';
+    const legendHeading = fieldGroup('Colour legend');
     legendHeading.appendChild(helpButton('legend'));
     body.appendChild(legendHeading);
     for (const tone of Object.keys(TONE_META) as StreamTone[]) {
@@ -2582,17 +2625,19 @@ export function renderPropertyEditor(): void {
         renderAll(false);
       });
       input.placeholder = TONE_META[tone].shortLabel;
-      body.appendChild(makeField(`prop-legend-${tone}`, `${TONE_META[tone].shortLabel} means`, input));
+      const dot = document.createElement('span');
+      dot.className = 'pill-swatch';
+      dot.style.inlineSize = '18px';
+      dot.style.blockSize = '18px';
+      dot.style.background = TONE_META[tone].cssVar;
+      body.appendChild(makeField(`prop-legend-${tone}`, TONE_META[tone].shortLabel, input, { lead: dot }));
     }
     const legendNote = document.createElement('p');
     legendNote.className = 'prop-hint';
     legendNote.textContent = 'Name what each colour means for your team. It replaces the default name in the pickers, the filter and the exported page.';
     body.appendChild(legendNote);
 
-    const brandHeading = document.createElement('h3');
-    brandHeading.className = 'section-heading';
-    brandHeading.textContent = 'Exported page';
-    body.appendChild(brandHeading);
+    body.appendChild(fieldGroup('Exported page'));
     body.appendChild(
       makeField(
         'prop-brand-name',
@@ -2619,7 +2664,7 @@ export function renderPropertyEditor(): void {
     if (app.doc.brand?.accent) {
       const clearAccent = document.createElement('button');
       clearAccent.type = 'button';
-      clearAccent.className = 'btn btn-compact';
+      clearAccent.className = 'prop-quiet-btn';
       clearAccent.textContent = 'Use default colour';
       clearAccent.addEventListener('click', () => {
         pushHistory();
@@ -2634,8 +2679,10 @@ export function renderPropertyEditor(): void {
     logoInput.type = 'file';
     logoInput.className = 'prop-file';
     logoInput.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
+    logoInput.hidden = true;
     const logoHint = document.createElement('p');
-    logoHint.className = 'prop-hint';
+    logoHint.className = 'prop-hint is-error';
+    logoHint.setAttribute('role', 'alert');
     logoHint.hidden = true;
     logoInput.addEventListener('change', () => {
       const picked = logoInput.files?.[0];
@@ -2662,12 +2709,18 @@ export function renderPropertyEditor(): void {
       reader.readAsDataURL(picked);
     });
     const logoField = makeField('prop-brand-logo', 'Logo', logoInput);
+    const uploadLogo = document.createElement('button');
+    uploadLogo.type = 'button';
+    uploadLogo.className = 'prop-quiet-btn';
+    uploadLogo.append(createUiIconSvg('upload', 14), 'Upload');
+    uploadLogo.addEventListener('click', () => logoInput.click());
+    logoField.appendChild(uploadLogo);
     logoField.appendChild(logoHint);
     if (app.doc.brand?.logo) {
       const clearLogo = document.createElement('button');
       clearLogo.type = 'button';
-      clearLogo.className = 'btn btn-compact';
-      clearLogo.textContent = 'Remove logo';
+      clearLogo.className = 'prop-quiet-btn';
+      clearLogo.textContent = 'Remove';
       clearLogo.addEventListener('click', () => {
         pushHistory();
         app.doc.brand.logo = '';
