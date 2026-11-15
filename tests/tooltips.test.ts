@@ -69,10 +69,6 @@ describe('preferred tooltip placement', () => {
     assert.equal(preferredPlacement(fake({ 'data-tip-pos': 'diagonal' })), 'bottom');
     assert.equal(preferredPlacement(fake({})), 'bottom');
   });
-
-  it('points the collapsed inspector rail toward the canvas', () => {
-    assert.equal(preferredPlacement(fake({}, ['.inspector-rail-content'])), 'left');
-  });
 });
 
 describe('tooltip styles', () => {

@@ -43,6 +43,7 @@ test('a visible tooltip has no axe violations', async ({ page }) => {
   await page.goto('/');
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
+  await page.locator('#btn-prop-more').click();
   await page.locator('#btn-prop-delete').hover();
   await expect(page.locator('#tooltip-layer')).toHaveAttribute('role', 'tooltip');
   expect(await scan(page)).toEqual([]);

@@ -718,11 +718,20 @@ export function getViewportWorldCenter(): [number, number] {
   ];
 }
 
+/** Width the open properties card covers on the right, so Fit can keep the diagram clear of it. */
+function inspectorInset(): number {
+  const card = document.getElementById('inspector-panel');
+  if (!card || card.offsetParent === null) return 0; // closed
+  if (window.matchMedia('(max-width: 56rem)').matches) return 0; // bottom sheet, section 10
+  const view = viewport.getBoundingClientRect();
+  return Math.max(0, view.right - card.getBoundingClientRect().left + 14);
+}
+
 export function fitToViewport(): void {
   const rect = viewport.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) return;
 
-  const frame = frameDocumentInViewport(rect.width, rect.height, app.doc);
+  const frame = frameDocumentInViewport(rect.width - inspectorInset(), rect.height, app.doc);
   if (frame) {
     app.scale = frame.scale;
     app.panX = Math.round(frame.panX);
@@ -740,7 +749,7 @@ export function fitSelection(): void {
     fitToViewport();
     return;
   }
-  const frame = frameRectInViewport(rect.width, rect.height, bounds);
+  const frame = frameRectInViewport(rect.width - inspectorInset(), rect.height, bounds);
   if (!frame) return;
   app.scale = frame.scale;
   app.panX = Math.round(frame.panX);

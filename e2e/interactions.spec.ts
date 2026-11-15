@@ -174,7 +174,7 @@ test('a cancelled wire drag does not break the next one', async ({ page }) => {
 test('align buttons have clean labels', async ({ page }) => {
   await loadShowcase(page);
   await page.keyboard.press('ControlOrMeta+a');
-  const buttons = page.locator('button.btn-compact', { hasText: /^Align / });
+  const buttons = page.locator('button.prop-quiet-btn', { hasText: /^Align / });
   await expect(buttons.first()).toBeVisible();
   const labels = await buttons.allTextContents();
   expect(labels).toEqual(expect.arrayContaining(['Align Left', 'Align Centre', 'Align Top', 'Align Middle']));

@@ -49,15 +49,9 @@ export class ResponsiveToolbarManager {
       this.toggleInspector(false);
     });
 
-    // Right Inspector Collapse/Expand buttons
-    const btnCollapseInspector = document.getElementById('btn-collapse-inspector');
-    btnCollapseInspector?.addEventListener('click', () => {
-      this.toggleInspector(true);
-    });
-
-    const btnRailExpandInspector = document.getElementById('btn-rail-expand-inspector');
-    btnRailExpandInspector?.addEventListener('click', () => {
-      this.toggleInspector(false);
+    // The Close button is rebuilt with the card's header on every render, so listen on the card.
+    document.getElementById('inspector-panel')?.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement | null)?.closest('#btn-collapse-inspector')) this.toggleInspector(true);
     });
 
     // Tap-to-dismiss scrim for narrow screens
@@ -73,15 +67,6 @@ export class ResponsiveToolbarManager {
       },
       { passive: false }
     );
-
-    // Clicking anywhere on inspector rail expands it
-    const inspectorRail = document.getElementById('inspector-rail-content');
-    inspectorRail?.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement | null;
-      if (!target?.closest('button')) {
-        this.toggleInspector(false);
-      }
-    });
   }
 
   /** Update tap-to-dismiss scrim visibility */

@@ -175,7 +175,7 @@ export type ColourBy = 'tone' | 'status' | 'tag';
 
 export const COLOUR_BY_OPTIONS: readonly ColourBy[] = ['tone', 'status', 'tag'];
 
-const STATUS_TONE: Record<NonNullable<DiagramNode['status']>, StreamTone> = {
+export const STATUS_TONE: Readonly<Record<NonNullable<DiagramNode['status']>, StreamTone>> = {
   live: 'emerald',
   planned: 'blue',
   'at-risk': 'amber',

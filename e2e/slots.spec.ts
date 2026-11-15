@@ -201,7 +201,7 @@ test('the zoom readout opens the view options above SE: minimap, Colour by and t
   await expect(popover).toBeHidden();
   await readout.click();
   await expect(popover).toBeVisible();
-  await page.mouse.click(300, 300);
+  await page.mouse.click(200, 150); // empty sheet, above the diagram
   await expect(popover).toBeHidden();
 });
 

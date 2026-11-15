@@ -34,8 +34,7 @@ test('a component takes an owner, tags and links, and the legend renames a colou
   await page.locator('#prop-node-owner').blur();
   await page.keyboard.press('Escape');
   // The new layout folds the panel away when nothing is selected; open it as a person would.
-  const expand = page.locator('#btn-rail-expand-inspector');
-  if (await expand.isVisible()) await expand.click();
+  if ((await page.locator('#workspace').getAttribute('data-inspector-collapsed')) === 'true') await page.keyboard.press(']');
   await page.locator('#prop-legend-rose').fill('PII');
   await expect(page.locator('#legend-card-list')).toContainText('PII');
 });

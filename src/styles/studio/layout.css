@@ -213,63 +213,12 @@
 
   .workspace {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 22.5rem;
+    grid-template-columns: minmax(0, 1fr);
     min-block-size: 0;
     min-inline-size: 0;
     max-inline-size: 100vw;
     overflow: hidden;
     position: relative;
-    transition: grid-template-columns 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-
-  .workspace[data-inspector-collapsed="true"] {
-    grid-template-columns: minmax(0, 1fr) 3.25rem;
-  }
-
-
-  .workspace[data-mode="data"] {
-    grid-template-columns: minmax(0, 1fr) 23.5rem;
-  }
-
-  .workspace[data-mode="data"][data-inspector-collapsed="true"] {
-    grid-template-columns: minmax(0, 1fr) 3.25rem;
-  }
-
-  .inspector-rail-content {
-    display: none;
-  }
-
-  .workspace[data-inspector-collapsed="true"] .inspector {
-    overflow: visible;
-  }
-
-  .workspace[data-inspector-collapsed="true"] .inspector-mode-pane {
-    display: none !important;
-  }
-
-  .workspace[data-inspector-collapsed="true"] .inspector-rail-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding-block: 0.65rem;
-    padding-inline: 0.25rem;
-    cursor: pointer;
-    block-size: 100%;
-  }
-
-  .rail-vertical-label {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
-    transform: rotate(180deg);
-    font-family: var(--cc-font-mono);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    color: var(--cc-ink-3);
-    user-select: none;
-    margin-block-start: 0.5rem;
   }
 
   @media (max-width: 82rem) {
@@ -281,23 +230,6 @@
       max-inline-size: 13rem;
     }
 
-    .workspace {
-      grid-template-columns: minmax(0, 1fr) 21.5rem;
-    }
-
-
-    .workspace[data-inspector-collapsed="true"] {
-      grid-template-columns: minmax(0, 1fr) 3.25rem;
-    }
-
-
-    .workspace[data-mode="data"] {
-      grid-template-columns: minmax(0, 1fr) 21.5rem;
-    }
-
-    .workspace[data-mode="data"][data-inspector-collapsed="true"] {
-      grid-template-columns: minmax(0, 1fr) 3.25rem;
-    }
   }
 
   /* Narrow: NW takes what N and NE leave, so the title gives way before undo and redo do. */
@@ -326,28 +258,6 @@
 
     .title-edit-trigger {
       max-inline-size: 10rem;
-    }
-
-    .workspace,
-    .workspace[data-mode="design"],
-    .workspace[data-mode="data"],
-    .workspace[data-inspector-collapsed="true"],
-    .workspace[data-mode="data"][data-inspector-collapsed="true"] {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .inspector {
-      position: absolute;
-      inset-block: 0;
-      inset-inline-end: 0;
-      inline-size: 21.5rem;
-      max-inline-size: min(21.5rem, 90vw);
-      z-index: 42;
-      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
-    }
-
-    .workspace[data-inspector-collapsed="true"] .inspector {
-      display: none !important;
     }
   }
 

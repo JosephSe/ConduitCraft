@@ -17,8 +17,11 @@ test('Fit with the properties panel open keeps the whole showcase inside the vie
     const zones = [...document.querySelectorAll('.arch-node, .zone, [data-zone-id]')].map((el) => el.getBoundingClientRect());
     const left = Math.min(...zones.map((r) => r.left));
     const right = Math.max(...zones.map((r) => r.right));
-    return { left: left - view.left, right: view.right - right };
+    const cardLeft = document.querySelector('#inspector-panel')!.getBoundingClientRect().left;
+    return { left: left - view.left, right: view.right - right, clearOfCard: cardLeft - right };
   });
   expect(gap.left).toBeGreaterThanOrEqual(0);
   expect(gap.right).toBeGreaterThanOrEqual(0);
+  // The card floats over the sheet, so Fit must leave the diagram to its left.
+  expect(gap.clearOfCard).toBeGreaterThanOrEqual(0);
 });

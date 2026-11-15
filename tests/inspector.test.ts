@@ -76,9 +76,16 @@ class MockElement {
     }
   }
 
-  append(...children: MockElement[]) {
+  append(...children: Array<MockElement | string>) {
     for (const child of children) {
-      this.appendChild(child);
+      if (typeof child === 'string') {
+        // Like the DOM, a string becomes a text node.
+        const text = new MockElement('#text');
+        text.textContent = child;
+        this.appendChild(text);
+      } else {
+        this.appendChild(child);
+      }
     }
   }
 
@@ -201,33 +208,11 @@ if (!globalThis.getComputedStyle) {
     }) as unknown as CSSStyleDeclaration;
 }
 
-const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario, reorderSimulationScenario } = await import('../src/studio/inspector.ts');
+const { makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario, reorderSimulationScenario } = await import('../src/studio/inspector.ts');
 
-describe('inspector collapsible sections and tone picker', () => {
+describe('inspector tone picker', () => {
   beforeEach(() => {
     mockStorage.clear();
-  });
-
-  it('creates a collapsible <details> section with localStorage persistence', () => {
-    const child = new MockElement('DIV');
-    child.textContent = 'Content here';
-    const section = makeCollapsibleSection('basics', 'Basics', true, [child as unknown as HTMLElement]);
-
-    assert.strictEqual(section.tagName, 'DETAILS');
-    assert.strictEqual(section.open, true, 'is open by default');
-
-    const summary = section.children.find((c) => c.tagName === 'SUMMARY');
-    assert.ok(summary);
-    assert.strictEqual(summary.textContent, 'Basics');
-
-    // Toggle to closed
-    section.open = false;
-    section.dispatchEvent('toggle');
-    assert.strictEqual(mockStorage.get('conduitcraft-section-basics'), 'closed');
-
-    // Create next instance - should read saved state
-    const nextSection = makeCollapsibleSection('basics', 'Basics', true, []);
-    assert.strictEqual(nextSection.open, false, 'reads closed state from storage');
   });
 
   it('creates compact dot swatches with tooltip and aria-label', () => {
@@ -241,7 +226,7 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.strictEqual(options.length, 7, 'renders all 7 stream tones');
 
     const first = options[0];
-    assert.ok(first.className.includes('swatch-dot-only'));
+    assert.ok(first.children.some((c) => c.className.includes('pill-swatch')), 'shows the colour as a dot');
     assert.ok(first.getAttribute('data-tip'), 'has data-tip for hover tooltip');
     assert.ok(first.getAttribute('aria-label'), 'has aria-label for accessibility');
   });
@@ -265,7 +250,8 @@ describe('inspector collapsible sections and tone picker', () => {
     assert.ok(studioCss.includes('.inspector-scroll {') && studioCss.includes('overflow-x: hidden;'), 'inspector-scroll clips horizontal overflow');
 
     // Form inputs and triggers contained within bounds
-    assert.ok(studioCss.includes('.prop-row-2 {') && studioCss.includes('repeat(auto-fit'), 'prop-row-2 uses responsive auto-fit columns');
+    assert.ok(studioCss.includes('.prop-field--row { grid-template-columns: 84px minmax(0, 1fr);'), 'a row field lets its control shrink');
+    assert.ok(studioCss.includes('.prop-field--row > :nth-child(n + 3) { grid-column: 2;'), 'buttons and hints after a control sit under it');
     assert.ok(studioCss.includes('.field {') && studioCss.includes('box-sizing: border-box;'), 'fields use border-box sizing');
     assert.ok(studioCss.includes('.custom-icon-upload-zone {') && studioCss.includes('box-sizing: border-box;'), 'custom icon upload zone uses border-box sizing');
 

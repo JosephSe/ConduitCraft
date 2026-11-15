@@ -1,28 +1,95 @@
 @layer inspector {
   .inspector {
+    position: absolute;
+    /* .workspace starts 69px down the window, under the top bar, and the NE island ends 8px above that: 0 clears it by 8px. */
+    inset-block-start: 0;
+    inset-inline-end: 14px;       /* the slot inset used by every island */
+    inline-size: 304px;
+    max-block-size: calc(100% - 150px);  /* clears the SE island (85px + 14px inset) and the find box that opens above it (30px + gaps) */
+    display: flex;
+    flex-direction: column;
+    border-radius: 16px;
     background: var(--cc-island);
-    backdrop-filter: blur(20px);
-    border-inline-start: 1px solid var(--cc-hair);
-    display: grid;
-    min-block-size: 0;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-    overflow: hidden;
+    border: 1px solid var(--cc-hair);
+    box-shadow: var(--cc-lift);
+    backdrop-filter: blur(18px) saturate(1.4);
     z-index: 12;
+    animation: prop-card-in 300ms var(--cc-spring);
   }
+  .workspace[data-mode="data"] .inspector { inline-size: 360px; }
+  .workspace[data-inspector-collapsed="true"] .inspector { display: none; }
+  @keyframes prop-card-in { from { opacity: 0; transform: translateX(14px); } }
 
-  .inspector-mode-pane {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-block-size: 0;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-    overflow: hidden;
-  }
+  .inspector-mode-pane { display: flex; flex-direction: column; min-block-size: 0; }
+  .inspector-mode-pane[hidden] { display: none; }
 
-  .inspector-mode-pane[hidden] {
-    display: none;
+  @media (prefers-reduced-motion: reduce) { .inspector { animation: none; } }
+  @media (prefers-reduced-transparency: reduce) { .inspector { background: var(--cc-sheet); backdrop-filter: none; } }
+  @supports not (backdrop-filter: blur(1px)) { .inspector { background: var(--cc-sheet); } }
+
+  /* More popover */
+  .prop-more {
+    position: fixed; inset: auto; margin: 0;
+    min-inline-size: 190px; padding: 4px;
+    border: 1px solid var(--cc-hair); border-radius: 12px;
+    background: var(--cc-sheet); color: var(--cc-ink); box-shadow: var(--cc-lift);
   }
+  .prop-more:popover-open { display: grid; }
+  .prop-more-actions { display: grid; }
+  .prop-more-actions[hidden] { display: none; }
+  .prop-more-item {
+    display: flex; align-items: center; gap: 10px;
+    block-size: 32px; padding-inline: 10px;
+    border: 0; border-radius: 8px; background: none;
+    font: var(--cc-font-control); color: var(--cc-ink); text-align: start; cursor: pointer;
+  }
+  .prop-more-item:hover, .prop-more-item:focus-visible { background: var(--cc-well); outline: none; }
+  .prop-more-item[aria-pressed="true"] { font-weight: 600; }
+  .prop-more-item[hidden] { display: none; }
+  .prop-more-danger { color: var(--cc-redline); }
+  .prop-more hr { border: 0; border-block-start: 1px solid var(--cc-hair); margin: 4px 6px; }
+
+  /* The header (6.2) */
+  .prop-head { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 12px 8px 10px 14px; flex: none; }
+  .prop-head-art { inline-size: 44px; block-size: 36px; border-radius: 10px; display: grid; place-items: center;
+    background: var(--cc-well); border: 1px solid var(--cc-hair); }
+  .prop-head[style*="--t"] .prop-head-art {
+    background: color-mix(in oklab, var(--t) 13%, var(--cc-sheet));
+    border-color: color-mix(in oklab, var(--t) 36%, var(--cc-sheet)); }
+  .prop-head-art svg { inline-size: 30px; block-size: 24px; overflow: visible; stroke: var(--cc-ink-2); }
+  .prop-head[style*="--t"] .prop-head-art svg { stroke: var(--t); }
+  .prop-head-text { min-inline-size: 0; display: grid; }
+  .prop-head-name { inline-size: 100%; min-inline-size: 0; border: 0; background: none; padding: 1px 4px; margin-inline-start: -4px;
+    border-radius: 6px; font: var(--cc-font-panel); color: var(--cc-ink); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; box-shadow: none; block-size: auto; }
+  input.prop-head-name:hover { background: var(--cc-well); }
+  input.prop-head-name:focus { background: var(--cc-well); outline: none; box-shadow: inset 0 0 0 1.5px var(--cc-ink); }
+  .prop-head-kind { justify-self: start; max-inline-size: 100%; font: var(--cc-font-small); color: var(--cc-ink-3);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prop-head-kind--pick { position: relative; display: inline-flex; align-items: center; gap: 7px; padding-inline: 4px 6px; margin-inline-start: -4px; border-radius: 5px; overflow: visible; }
+  .prop-head-kind--pick::after { content: ""; inline-size: 5px; block-size: 5px; margin-block-start: -3px; flex: none;
+    border: solid var(--cc-ink-3); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); }
+  .prop-head-kind--pick:hover { background: var(--cc-well); color: var(--cc-ink); }
+  .prop-head-kind--pick:focus-within { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
+  .prop-head-kind--pick select { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; opacity: 0; cursor: pointer; }
+  .prop-head-kind-text { overflow: hidden; text-overflow: ellipsis; }
+  .prop-head-buttons { display: flex; align-self: start; }
+  .prop-icon-btn { inline-size: 28px; block-size: 28px; border: 0; border-radius: 8px; background: none; color: var(--cc-ink-2); display: grid; place-items: center; cursor: pointer; }
+  .prop-icon-btn:hover, .prop-icon-btn[aria-expanded="true"] { background: var(--cc-well); color: var(--cc-ink); }
+  @media (pointer: coarse) { .prop-icon-btn { inline-size: 44px; block-size: 44px; } }
+
+  /* Assembly (6.4): header, tabs, then one scrolling body. */
+  /* Scoped to the design pane: the Traffic pane keeps its own scrolling container and form (R8). */
+  #design-inspector-pane .inspector-scroll { display: flex; flex-direction: column; overflow: hidden; padding: 0; contain: none; }
+  #design-inspector-pane .prop-form { display: flex; flex-direction: column; gap: 0; min-block-size: 0; }
+  .prop-tabs { display: flex; flex-direction: column; min-block-size: 0; }
+  .prop-tablist { display: flex; gap: 2px; margin-inline: 12px; padding: 3px; border-radius: 10px; background: var(--cc-well); flex: none; }
+  .prop-tab { flex: 1; block-size: 26px; border: 0; border-radius: 7px; background: none; font: 500 12.5px/1 var(--cc-font-sans); color: var(--cc-ink-2); cursor: pointer; }
+  .prop-tab:hover { color: var(--cc-ink); }
+  .prop-tab[aria-selected="true"] { background: var(--cc-sheet); color: var(--cc-ink); box-shadow: var(--cc-contact); }
+  .prop-tab:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
+  .prop-body { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px 14px; min-block-size: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  .prop-head + .prop-body { padding-block-start: 8px; }   /* no tabs: sit closer to the header */
+  .prop-tabpanel[hidden] { display: none; }
 
   .inspector-tabs {
     display: flex;
@@ -35,36 +102,6 @@
     flex-wrap: wrap;
     min-inline-size: 0;
     max-inline-size: 100%;
-  }
-
-  .inspector-tabs-heading {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    min-inline-size: 0;
-    flex: 1 0 auto;
-  }
-
-  .prop-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-    flex-wrap: wrap;
-    min-inline-size: 0;
-    flex: 1 1 auto;
-    justify-content: flex-end;
-  }
-
-  .prop-header-actions[hidden] {
-    display: none;
-  }
-
-  .prop-header-actions .btn-compact {
-    flex: 1 1 auto;
-    text-align: center;
-    padding-inline: 0.45rem;
-    white-space: nowrap;
-    min-inline-size: 0;
   }
 
   .tablist {
@@ -121,27 +158,6 @@
     max-inline-size: 100%;
   }
 
-  .prop-row-2 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
-    gap: 0.55rem;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-  }
-
-  .prop-field {
-    display: grid;
-    gap: 0.25rem;
-    min-inline-size: 0;
-    max-inline-size: 100%;
-  }
-
-  .prop-field label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--cc-ink-2);
-  }
-
   .prop-file {
     inline-size: 100%;
     font-size: 0.75rem;
@@ -157,16 +173,8 @@
     background: var(--cc-sheet);
   }
 
-  .prop-hint {
-    margin: 0.25rem 0 0;
-    font-size: 0.75rem;
-    color: var(--cc-rose);
-  }
-
-  .prop-field .btn-compact {
-    margin-block-start: 0.35rem;
-    flex: 0 0 auto;
-  }
+  .prop-hint { font: var(--cc-font-small); color: var(--cc-ink-3); margin: 0; }
+  .prop-hint.is-error { color: var(--cc-rose); }
 
   .icon-picker {
     min-inline-size: 0;
@@ -242,38 +250,6 @@
     outline-offset: 2px;
   }
 
-  .swatch-picker {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.38rem;
-    border: none;
-  }
-
-  .swatch-option {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.3rem 0.55rem;
-    border-radius: 0.5rem;
-    border: 1px solid var(--cc-hair-2);
-    background: var(--cc-sheet);
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-
-  .swatch-option:has(input:checked) {
-    border-color: var(--cc-accent);
-    background: var(--cc-accent-soft);
-  }
-
-  .swatch-option:has(input:focus-visible) {
-    outline: 2px solid var(--cc-ink);
-    outline-offset: 2px;
-  }
-
   .route-style-fieldset {
     border: none;
     display: grid;
@@ -328,23 +304,9 @@
     color: var(--cc-accent);
   }
 
-  .prop-divider {
-    padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--cc-hair);
-    display: grid;
-    gap: 0.55rem;
-  }
-
-  .prop-list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .prop-list-header .section-heading {
-    margin-block-end: 0;
-  }
+  .prop-divider { margin-block-start: 8px; padding-block-start: 8px; border-block-start: 1px solid var(--cc-hair); display: grid; gap: 6px; }
+  .prop-list-header { display: flex; justify-content: space-between; align-items: center; min-block-size: 24px; }
+  .prop-list-header .section-heading { font: 600 12.5px/16px var(--cc-font-sans); color: var(--cc-ink); text-transform: none; letter-spacing: 0; margin: 0; }
 
   .kv-row {
     display: grid;
@@ -378,13 +340,41 @@
     font-weight: 600;
   }
 
-  .checkbox-inline {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8125rem;
-    font-weight: 600;
-    cursor: pointer;
+  /* Rows and basic controls (7.1 to 7.6, 7.9) */
+  .prop-field { display: grid; align-items: center; gap: 6px 10px; min-inline-size: 0; }
+  .prop-field--row { grid-template-columns: 84px minmax(0, 1fr); min-block-size: 30px; }
+  /* Buttons and hints added after the control sit under it, not in the label column. */
+  .prop-field--row > :nth-child(n + 3) { grid-column: 2; justify-self: start; }
+  .prop-field--row > .prop-hint { justify-self: stretch; }
+  .prop-field--block { grid-template-columns: minmax(0, 1fr); }
+  .prop-field--switch { grid-template-columns: minmax(0, 1fr) auto; min-block-size: 30px; }
+  .prop-field > label, .prop-field > .field-label { font: 400 12.5px/16px var(--cc-font-sans); color: var(--cc-ink-2); }
+  .inspector .field { inline-size: 100%; min-inline-size: 0; block-size: 30px; border: 0; border-radius: 8px; padding-inline: 10px; background: var(--cc-well); box-shadow: inset 0 -1px 0 var(--cc-field-edge); font: var(--cc-font-control); color: var(--cc-ink); }
+  .inspector .field::placeholder { color: var(--cc-ink-3); font-weight: 400; }
+  .inspector .field:hover { background: var(--cc-well-2); }
+  .inspector .field:focus { outline: none; background: var(--cc-sheet); box-shadow: inset 0 0 0 1.5px var(--cc-ink); }
+  .inspector textarea.field { block-size: auto; min-block-size: 66px; padding-block: 6px; resize: vertical; line-height: 18px; font-weight: 400; display: block; }
+  .inspector textarea.field-code { font: 400 11.5px/17px var(--cc-font-mono); min-block-size: 84px; background: var(--cc-well); color: var(--cc-ink); }
+  .select-wrap { position: relative; display: block; min-inline-size: 0; }
+  .select-wrap > select.field { appearance: none; padding-inline-end: 26px; cursor: pointer; text-overflow: ellipsis; }
+  .select-wrap::after { content: ""; position: absolute; inset-inline-end: 11px; inset-block-start: 11px; inline-size: 6px; block-size: 6px; border: solid var(--cc-ink-3); border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); pointer-events: none; }
+  .select-wrap--dot > select.field { padding-inline-start: 26px; }
+  .select-wrap--dot::before { content: ""; position: absolute; inset-inline-start: 11px; inset-block-start: 11.5px; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--dot); z-index: 1; pointer-events: none; }
+  .with-unit { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+  .prop-unit { font: var(--cc-font-small); color: var(--cc-ink-3); }
+  .swatch-picker { display: flex; flex-wrap: wrap; gap: 7px; min-block-size: 30px; align-items: center; border: 0; padding: 4px 0; margin: 0; min-inline-size: 0; }
+  .swatch-option { display: grid; place-items: center; cursor: pointer; }
+  .swatch-option .pill-swatch { inline-size: 18px; block-size: 18px; border-radius: 50%; display: block; }
+  .swatch-option:has(input:checked) .pill-swatch { box-shadow: 0 0 0 2px var(--cc-sheet), 0 0 0 3.5px var(--cc-ink); }
+  .swatch-option:has(input:focus-visible) .pill-swatch { outline: 2px solid var(--cc-ink); outline-offset: 4px; }
+  .prop-group { margin-block-start: 8px; padding-block-start: 10px; border-block-start: 1px solid var(--cc-hair); font: 600 12.5px/16px var(--cc-font-sans); color: var(--cc-ink); }
+  .prop-quiet-btn { block-size: 30px; padding-inline: 10px; border: 0; border-radius: 8px; background: none; display: inline-flex; align-items: center; gap: 6px; font: var(--cc-font-control); color: var(--cc-ink-2); cursor: pointer; }
+  .prop-quiet-btn:hover { background: var(--cc-well); color: var(--cc-ink); }
+  .prop-quiet-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: 1px; }
+  .with-swatch { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: center; }
+  @media (pointer: coarse) {
+    .swatch-picker { gap: 4px; }
+    .swatch-option { inline-size: 32px; block-size: 32px; }
   }
 
   /* Data View Telemetry Inspector Styles */
