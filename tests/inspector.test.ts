@@ -208,33 +208,11 @@ if (!globalThis.getComputedStyle) {
     }) as unknown as CSSStyleDeclaration;
 }
 
-const { makeCollapsibleSection, makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario, reorderSimulationScenario } = await import('../src/studio/inspector.ts');
+const { makeTonePicker, isScenarioCollapsed, setScenarioCollapsed, duplicateSimulationScenario, moveSimulationScenario, reorderSimulationScenario } = await import('../src/studio/inspector.ts');
 
-describe('inspector collapsible sections and tone picker', () => {
+describe('inspector tone picker', () => {
   beforeEach(() => {
     mockStorage.clear();
-  });
-
-  it('creates a collapsible <details> section with localStorage persistence', () => {
-    const child = new MockElement('DIV');
-    child.textContent = 'Content here';
-    const section = makeCollapsibleSection('basics', 'Basics', true, [child as unknown as HTMLElement]);
-
-    assert.strictEqual(section.tagName, 'DETAILS');
-    assert.strictEqual(section.open, true, 'is open by default');
-
-    const summary = section.children.find((c) => c.tagName === 'SUMMARY');
-    assert.ok(summary);
-    assert.strictEqual(summary.textContent, 'Basics');
-
-    // Toggle to closed
-    section.open = false;
-    section.dispatchEvent('toggle');
-    assert.strictEqual(mockStorage.get('conduitcraft-section-basics'), 'closed');
-
-    // Create next instance - should read saved state
-    const nextSection = makeCollapsibleSection('basics', 'Basics', true, []);
-    assert.strictEqual(nextSection.open, false, 'reads closed state from storage');
   });
 
   it('creates compact dot swatches with tooltip and aria-label', () => {

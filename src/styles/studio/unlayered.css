@@ -185,63 +185,6 @@ kbd {
   line-height: 1.2;
 }
 
-/* Collapsible Inspector Sections */
-.prop-section-details {
-  border: 1px solid var(--cc-hair);
-  border-radius: 0.65rem;
-  background: var(--cc-sheet);
-  overflow: hidden;
-  transition: border-color 0.15s ease;
-  margin-bottom: 0.75rem;
-}
-
-.prop-section-details[open] {
-  border-color: var(--cc-hair-2);
-}
-
-.prop-section-summary {
-  padding: 0.6rem 0.75rem;
-  font: var(--cc-font-meta);
-  font-weight: 600;
-  color: var(--cc-ink-2);
-  cursor: pointer;
-  -webkit-user-select: none;
-  user-select: none;
-  background: var(--cc-sheet);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  list-style: none;
-  transition: color 0.15s, background-color 0.15s;
-}
-
-.prop-section-summary::-webkit-details-marker {
-  display: none;
-}
-
-.prop-section-summary::after {
-  content: '▸';
-  font-size: 0.75rem;
-  transition: transform 0.2s ease;
-  color: var(--cc-ink-3);
-}
-
-.prop-section-details[open] > .prop-section-summary::after {
-  transform: rotate(90deg);
-}
-
-.prop-section-summary:hover {
-  color: var(--cc-ink);
-  background: var(--cc-well);
-}
-
-.prop-section-content {
-  padding: 0.75rem;
-  display: grid;
-  gap: 0.75rem;
-  border-top: 1px solid var(--cc-hair);
-}
-
 /* Custom Icon Upload Zone */
 .custom-icon-upload-zone {
   display: flex;

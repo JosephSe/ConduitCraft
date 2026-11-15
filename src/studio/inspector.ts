@@ -844,43 +844,6 @@ function makeIconPicker(selected: NodeIconName, onChange: (next: NodeIconName) =
   return root;
 }
 
-export function makeCollapsibleSection(
-  id: string,
-  title: string,
-  defaultOpen: boolean,
-  children: HTMLElement[],
-): HTMLDetailsElement {
-  const details = document.createElement('details');
-  details.className = 'prop-section-details';
-  details.id = `prop-section-${id}`;
-
-  try {
-    const saved = localStorage.getItem(`conduitcraft-section-${id}`);
-    details.open = saved !== null ? saved === 'open' : defaultOpen;
-  } catch {
-    details.open = defaultOpen;
-  }
-
-  details.addEventListener('toggle', () => {
-    try {
-      localStorage.setItem(`conduitcraft-section-${id}`, details.open ? 'open' : 'closed');
-    } catch {
-      // Ignore storage errors
-    }
-  });
-
-  const summary = document.createElement('summary');
-  summary.className = 'prop-section-summary';
-  summary.textContent = title;
-
-  const content = document.createElement('div');
-  content.className = 'prop-section-content';
-  content.append(...children);
-
-  details.append(summary, content);
-  return details;
-}
-
 // Optional-chained: the unit tests load this module against a document stub where the element is null.
 const morePopover = document.getElementById('prop-more-popover') as HTMLElement | null;
 morePopover?.addEventListener('toggle', () => {
