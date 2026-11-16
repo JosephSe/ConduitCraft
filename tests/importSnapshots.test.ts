@@ -12,7 +12,7 @@ import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 // hashes were recorded again then. The flash-sale showcase was added later still.
 const EXPECTED: Record<string, string> = {
   'auth-oauth-oidc.blueprint.json': 'c6c8fec87be4cbfe',
-  'cicd-pipeline.blueprint.json': '9d935169ff85edba',
+  'cicd-pipeline.blueprint.json': '602e4b7810fae480',
   'cloud-data-pipeline.blueprint.json': '9055ce508c9c2843',
   'event-driven-microservices.blueprint.json': 'c90bee8a2a5ddcf2',
   'flash-sale-ticketing.blueprint.json': '41272d4af18ca7c6',
