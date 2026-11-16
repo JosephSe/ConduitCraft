@@ -58,6 +58,7 @@ import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
 import { paintBacklog, paintDlqLinks } from './queueBacklog';
 import { chaosDistance, chaosLensActive, chaosStatusOf, isPreview } from './chaos';
+import { wireTraffic } from '../core/beads';
 import { scheduleMinimapPaint } from './minimap';
 import { clearGuides, paintGuides } from './guideOverlay';
 import { distancesTo, snapToGuides } from './guides';
@@ -818,8 +819,11 @@ function createWireGroup(edgeId: string): SVGGElement {
     const byId = new Map(app.doc.nodes.map((n) => [n.id, n]));
     const endsMatch = [byId.get(edge.from), byId.get(edge.to)].every((n) => n && matchesTag(n, app.tagFilter));
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
-    const cut = chaosLensActive() && [edge.from, edge.to].some((id) => chaosStatusOf(id) === 'failed');
-    g.classList.toggle('is-chaos-cut', cut);
+    // Under a failure a wire carries nothing when either end is down or cut off, and runs slower at a degraded end.
+    const traffic = chaosLensActive() ? wireTraffic(chaosStatusOf(edge.from), chaosStatusOf(edge.to)) : 'live';
+    g.classList.toggle('is-chaos-cut', traffic === 'cut');
+    if (traffic === 'slow') g.dataset.traffic = 'slow';
+    else delete g.dataset.traffic;
     g.dataset.flow = edge.flow || 'forward';
     g.classList.toggle('is-selected', app.selection.type === 'edge' && app.selection.id === edge.id);
     const flowText = edge.flow === 'both' ? 'bidirectional' : `from ${fromName} to ${toName}`;

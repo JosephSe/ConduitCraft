@@ -7,6 +7,7 @@ import {
   beadSpeed,
   beadStart,
   beadVisible,
+  wireTraffic,
 } from '../src/core/beads.ts';
 
 describe('traffic beads', () => {
@@ -44,5 +45,34 @@ describe('traffic beads', () => {
   it('hides a bead while it is past the end of the wire', () => {
     assert.strictEqual(beadVisible(399, 400), true);
     assert.strictEqual(beadVisible(420, 400), false);
+  });
+});
+
+describe('wire traffic under failures', () => {
+  it('flows when nothing has happened to either end', () => {
+    assert.strictEqual(wireTraffic(null, null), 'live');
+  });
+
+  it('carries nothing into or out of a failed component', () => {
+    assert.strictEqual(wireTraffic('failed', null), 'cut');
+    assert.strictEqual(wireTraffic(null, 'failed'), 'cut');
+  });
+
+  it('carries nothing to or from a component the failure cut off', () => {
+    assert.strictEqual(wireTraffic('unreachable', 'unreachable'), 'cut');
+    assert.strictEqual(wireTraffic('unreachable', null), 'cut');
+    assert.strictEqual(wireTraffic('buffering', 'delayed'), 'cut');
+  });
+
+  it('keeps flowing through components that still serve', () => {
+    for (const s of ['buffering', 'bypassed', 'rerouted', 'at-risk']) assert.strictEqual(wireTraffic(s, null), 'live', s);
+    // A caller at risk still reaches its other dependencies; only its wire to the failed one is cut.
+    assert.strictEqual(wireTraffic('at-risk', 'failed'), 'cut');
+  });
+
+  it('slows down at a degraded or slowed component', () => {
+    assert.strictEqual(wireTraffic('degraded', null), 'slow');
+    assert.strictEqual(wireTraffic(null, 'slowed'), 'slow');
+    assert.strictEqual(wireTraffic('slowed', 'failed'), 'cut');
   });
 });

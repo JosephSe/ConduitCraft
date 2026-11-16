@@ -1,5 +1,6 @@
 import {
   BEAD_PARTS,
+  BEAD_SLOW_FACTOR,
   advanceBead,
   beadCount,
   beadSpeed,
@@ -28,6 +29,7 @@ interface WireBeads {
   d: string;
   transform: string;
   key: string;
+  group: SVGGElement;
   length: number;
   path: SVGPathElement;
   layer: SVGGElement;
@@ -84,7 +86,7 @@ function build(g: SVGGElement, path: SVGPathElement): WireBeads | null {
   // Above the rail and the (hidden) stream, below the port dot and the label badge.
   path.after(layer);
   g.dataset.beads = 'true';
-  return { d: path.getAttribute('d') ?? '', transform, key: `${g.dataset.flow}|${g.dataset.sync}|${flowScale}`, length, path, layer, beads };
+  return { d: path.getAttribute('d') ?? '', transform, key: `${g.dataset.flow}|${g.dataset.sync}|${flowScale}`, group: g, length, path, layer, beads };
 }
 
 function place(wire: WireBeads, bead: Bead): void {
@@ -144,8 +146,10 @@ function start(workspace: HTMLElement): void {
     sync(workspace);
     const paused = document.body.classList.contains('motion-paused');
     for (const wire of wires.values()) {
+      // A wire into or out of a degraded or slowed component runs slower (set by the wire painter under a failure).
+      const factor = wire.group.dataset.traffic === 'slow' ? BEAD_SLOW_FACTOR : 1;
       for (const bead of wire.beads) {
-        if (!paused) bead.pos = advanceBead(bead.pos, bead.speed, dt, wire.length);
+        if (!paused) bead.pos = advanceBead(bead.pos, bead.speed * factor, dt, wire.length);
         place(wire, bead);
       }
     }
