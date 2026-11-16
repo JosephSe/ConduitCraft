@@ -158,7 +158,8 @@
   padding: 0 0.6rem;
   border: 2px solid var(--cc-accent);
   border-radius: 6px;
-  background: var(--cc-well);
+  /* Opaque: the field sits over the label it renames, and a see-through fill showed both texts doubled. */
+  background: var(--cc-sheet);
   color: var(--cc-ink);
   box-shadow: var(--cc-shadow-card);
   text-align: center;
