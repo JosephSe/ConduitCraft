@@ -57,8 +57,11 @@ test('a wire\'s latency changes how fast its dashes flow', async ({ page }) => {
 
   await page.locator('#prop-edge-latency').fill('50');
   await expect.poll(duration).toBe('1.35s');
-  await page.locator('#prop-edge-latency').fill('250');
+  await page.locator('#prop-edge-latency').fill('200');
   await expect.poll(duration).toBe('2.7s');
+  // A fast call runs clearly faster: 5 ms is about a third of the standard pace.
+  await page.locator('#prop-edge-latency').fill('5');
+  await expect.poll(duration).toBe('0.432s');
   await page.locator('#prop-edge-latency').fill('');
   await expect.poll(duration).toBe('1.35s');
 });

@@ -1607,15 +1607,8 @@ export function initEvents(): void {
               ? 'Click an issue to jump to it.'
               : 'Select a component and press X to fail it.';
 
-        if (app.workspaceMode === 'data' && app.selection.type !== 'node' && app.doc.nodes.length > 0) {
-          const live = new Set(app.doc.nodes.map((node) => node.id));
-          const kept = app.selection.type === 'multi' ? app.selection.ids.filter((id) => live.has(id)) : [];
-          setSelection(
-            kept.length > 0
-              ? selectionOfStage({ nodes: kept, zones: [], notes: [] })
-              : { type: 'node', id: app.doc.nodes[0].id },
-          );
-        }
+        // Traffic and Review open with nothing selected, so no component is focused until the user picks one.
+        if (app.workspaceMode === 'data' && app.selection.type !== 'none') setSelection({ type: 'none' });
 
         updateVisualSelectionHighlights();
         requestInspectorRefresh();

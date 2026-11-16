@@ -15,6 +15,7 @@ import { simulationPlayback } from './simulationPlayback';
 import { applyGroup, applyLockToggle, applyUngroup, applyZOrder } from './zOrderActions';
 import { renameSelectionInline } from './inlineRename';
 import { responsiveToolbar } from './responsiveToolbar';
+import { togglePanel } from './panelVisibility';
 import { toggleOutline } from './outlineTrigger';
 import { HELP_TOPICS } from '../core/helpTopics';
 import { openHelp } from './helpPopover';
@@ -548,6 +549,28 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       keywords: ['inspector', 'properties', 'telemetry', 'right', 'hide', 'show', 'collapse'],
       run: () => {
         responsiveToolbar.toggleInspector();
+      },
+    },
+    {
+      id: 'toggle-left-panel',
+      title: 'Hide or Show Left Panel',
+      subtitle: 'In every tab: the Review issue list',
+      category: 'Mode & View',
+      shortcut: '{',
+      keywords: ['left', 'panel', 'sidebar', 'issues', 'hide', 'show', 'collapse', 'focus', 'canvas'],
+      run: () => {
+        togglePanel('left');
+      },
+    },
+    {
+      id: 'toggle-right-panel',
+      title: 'Hide or Show Right Panel',
+      subtitle: 'In every tab: the inspector and the outline',
+      category: 'Mode & View',
+      shortcut: '}',
+      keywords: ['right', 'panel', 'sidebar', 'inspector', 'outline', 'hide', 'show', 'collapse', 'focus', 'canvas'],
+      run: () => {
+        togglePanel('right');
       },
     },
     {

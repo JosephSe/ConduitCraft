@@ -47,12 +47,18 @@ export const REFERENCE_LATENCY_MS = 50;
 /**
  * How long a packet takes to cross from one step to the next, given the typical latency of the wires it crosses.
  * The slowest wire sets the pace. A wire at the reference latency keeps the base delay, slower wires stretch it and
- * faster ones shorten it, within half and three times the base so a 5 s call cannot stall playback.
+ * faster ones shorten it. The curve is the square root of the ratio to the reference, so every tenfold step in latency
+ * reads as a clear change: 5 ms runs about three times as fast as 50 ms, 500 ms about three times as slow. It is held
+ * between a quarter and four times the base, so a 5 s call cannot stall playback.
  */
+export const LATENCY_SCALE_MIN = 0.25;
+export const LATENCY_SCALE_MAX = 4;
+
 export function latencyScale(latenciesMs: readonly number[]): number {
   const slowest = Math.max(...latenciesMs.filter((ms) => Number.isFinite(ms) && ms >= 0), -1);
   if (slowest < 0) return 1;
-  return Math.min(3, Math.max(0.5, 1 + (slowest - REFERENCE_LATENCY_MS) / 200));
+  const scale = Math.sqrt(slowest / REFERENCE_LATENCY_MS);
+  return Math.round(Math.min(LATENCY_SCALE_MAX, Math.max(LATENCY_SCALE_MIN, scale)) * 100) / 100;
 }
 
 export function hopDelayMs(baseMs: number, latenciesMs: readonly number[]): number {

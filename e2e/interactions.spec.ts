@@ -187,10 +187,10 @@ test('Data View inspector shows the real diagram title, not the HTML placeholder
   expect(title).toBeTruthy();
   expect(title).not.toBe('Untitled Architecture');
 
-  // Data View starts on a node; deselecting it shows the whole-diagram overview with the real title.
+  // Data View opens with nothing selected, so it shows the whole-diagram overview with the real title.
   await page.locator('input[name="workspace-mode"][value="data"]').evaluate((el: HTMLElement) => el.click());
   await expect(page.locator('#data-inspector-pane')).toBeVisible();
-  await page.locator('#canvas-viewport').click({ position: { x: 6, y: 6 } });
+  await expect(page.locator('.arch-node .node-select-hit[aria-pressed="true"]')).toHaveCount(0);
   await expect(page.locator('#insp-badge, .inspector-badge').first()).toContainText(/system overview/i);
   await expect(page.locator('#insp-title')).toHaveText(title!);
 });

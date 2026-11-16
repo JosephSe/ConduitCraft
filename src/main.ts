@@ -14,6 +14,7 @@ import { findPaletteCommand } from './studio/palette';
 import { initDock } from './studio/dock';
 import { initAppMenu } from './studio/appMenu';
 import { initInspectorAutoShow } from './studio/inspectorAutoShow';
+import { initPanelVisibility } from './studio/panelVisibility';
 import { initContextToolbar } from './studio/contextToolbar';
 import { notify } from './studio/toast';
 
@@ -57,6 +58,7 @@ initDock();
 initAppMenu();
 initPageTabs();
 initInspectorAutoShow();
+initPanelVisibility();
 initContextToolbar();
 initRovingFocus();
 initContextMenu();
