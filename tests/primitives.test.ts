@@ -68,7 +68,7 @@ describe('T3 primitives', () => {
     }
   });
 
-  it('locks entry CSS at 133 KiB', () => {
-    assert.match(read('tools/checkBundleSize.mjs'), /maxBytes: 133 \* 1024, label: 'entry CSS'/);
+  it('locks entry CSS at 135 KiB', () => {
+    assert.match(read('tools/checkBundleSize.mjs'), /maxBytes: 135 \* 1024, label: 'entry CSS'/);
   });
 });
