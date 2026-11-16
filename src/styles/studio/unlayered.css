@@ -1872,6 +1872,11 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 /* One capsule per wire: it leaves the source and runs to the target, at a steady speed (about 120 px a second, scaled by the wire's latency). */
 .workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { stroke-dasharray: 7 calc(var(--cc-len, 400) * 1px + 40px); stroke-dashoffset: 8; animation: cc-capsule max(0.9s, calc(var(--cc-len, 400) * 1s / 120 * var(--flow-scale, 1))) linear infinite; }
 @keyframes cc-capsule { from { stroke-dashoffset: 8; } to { stroke-dashoffset: calc(var(--cc-len, 400) * -1); } }
+/* v4 beads: in Traffic a loop (trafficBeads.ts) runs glowing beads down each live wire. A wire with beads hides its CSS capsule, which stays the fallback and what pictures draw. */
+.workspace[data-lens="traffic"] .conduit-group[data-beads] :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
+.cc-beads { pointer-events: none; }
+.cc-bead-dot { fill: var(--t, var(--cc-hair-2)); }
+.cc-bead-dot.cc-bead-core { fill: var(--cc-sheet); }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { animation: none; stroke-dasharray: none; } }
 .workspace[data-lens="traffic"] .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 7 37; }
 .workspace[data-lens="traffic"] .conduit-stream-reverse { stroke-width: 7; stroke-dasharray: 7 37; }

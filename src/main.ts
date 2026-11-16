@@ -4,6 +4,7 @@ import { renderAll, renderWiresOnly, requestInspectorRefresh, updateVisualSelect
 import { bindAlwaysWireLabelsPreference, bindAnimateWiresPreference, bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
 import { initSlotPopovers } from './studio/slotPopovers';
+import { initTrafficBeads } from './studio/trafficBeads';
 import { announceSelectionChange } from './studio/a11y';
 import { initRovingFocus } from './studio/rovingFocus';
 import { initContextMenu } from './studio/contextMenu';
@@ -48,6 +49,7 @@ try {
 }
 bindLegendPreference();
 bindAnimateWiresPreference();
+initTrafficBeads();
 bindAlwaysWireLabelsPreference();
 bindViewFilters();
 bootStudio();
