@@ -23,6 +23,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('a tooltip on a far-right control stays inside the viewport', async ({ page }) => {
+  await page.locator('#btn-prop-more').click();
   await page.locator('#btn-prop-delete').hover();
   await expect(page.locator('#tooltip-layer')).toHaveAttribute('data-visible', 'true');
   await expect(page.locator('#tooltip-layer')).toContainText('Delete selection');
@@ -31,18 +32,20 @@ test('a tooltip on a far-right control stays inside the viewport', async ({ page
 
 test('the tooltip hides when the pointer leaves and on Escape', async ({ page }) => {
   const layer = page.locator('#tooltip-layer');
+  await page.locator('#btn-prop-more').click();
   await page.locator('#btn-prop-delete').hover();
   await expect(layer).toHaveAttribute('data-visible', 'true');
   await page.mouse.move(700, 400);
   await expect(layer).toHaveAttribute('data-visible', 'false');
 
+  // The More popover is still open from above (clicking its button again would close it).
   await page.locator('#btn-prop-delete').hover();
   await expect(layer).toHaveAttribute('data-visible', 'true');
   await page.keyboard.press('Escape');
   await expect(layer).toHaveAttribute('data-visible', 'false');
 });
 
-test('keyboard focus shows the tooltip too', async ({ page }) => {
+test('keyboard focus shows the tooltip too', { tag: '@quick' }, async ({ page }) => {
   // Start from a known control: clicking "Load showcase" (which then disappears) would otherwise leave
   // the browser's sequential-focus starting point down in the canvas.
   await page.locator('#btn-focus-doc-title').focus();
@@ -66,6 +69,7 @@ test('the tooltip layer is exposed to assistive tech only while it shows somethi
   await expect(layer).toHaveAttribute('aria-hidden', 'true');
   await expect(layer).not.toHaveAttribute('role', /.+/);
 
+  await page.locator('#btn-prop-more').click();
   await page.locator('#btn-prop-delete').hover();
   await expect(layer).toHaveAttribute('role', 'tooltip');
   await expect(layer).not.toHaveAttribute('aria-hidden', 'true');

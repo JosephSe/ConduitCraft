@@ -297,10 +297,10 @@ describe('colour by and tag filter (F-26)', () => {
 describe('SVG and PNG export legend (F-26)', () => {
   it('draws the legend, escaped, and draws none without one', () => {
     const doc = docWithNode();
-    assert.doesNotMatch(renderDiagramSvg(doc), /LEGEND/);
+    assert.doesNotMatch(renderDiagramSvg(doc), /Legend/);
     doc.legend = [{ tone: 'rose', label: 'PII <data>', description: 'Personal' }];
     const svg = renderDiagramSvg(doc);
-    assert.match(svg, /LEGEND/);
+    assert.match(svg, /Legend/);
     assert.match(svg, /PII &lt;data&gt; — Personal/);
   });
 });

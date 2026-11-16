@@ -8,9 +8,9 @@ Design mode is the drafting surface. The stencil palette sits on the left, the c
 
 The tools (Select, Wire, Hand, Text and Frame) are at the top of the left panel whether the component list is open or folded. The menu button at the right of the top bar holds file, view and settings actions such as Save, Export, Auto-Layout and Preferences. `Cmd/Ctrl+K` searches every action.
 
-![Design mode with a starter pair, the stencil palette, and the property inspector](images/design-canvas.png)
+![The Design lens fitted to the Marquee showcase: lenses on top, the dock at the bottom, zoom at the bottom right](images/design-canvas.png)
 
-![Data View with tone filters, lineage, and the inspector beside the canvas](images/data-view.png)
+![A component selected at 100%, with its properties open on the right](images/design-selected.png)
 
 ## Lenses
 
@@ -87,6 +87,8 @@ Tones are shared by nodes, wires, and simulation steps:
 | `rose` | Exception |
 | `violet` | Control |
 | `amber` | Async |
+| `cyan` | Data |
+| `fuchsia` | Security |
 
 In the Blueprint file's Mermaid block, a Primary wire is `-->`, a Success wire is `==>`, and an Exception wire is `-.->`.
 

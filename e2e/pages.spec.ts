@@ -26,7 +26,7 @@ test('the strip is always there, with one page called Page 1', async ({ page }) 
   await expect(tabs(page).first()).toHaveAttribute('aria-selected', 'true');
 });
 
-test('adding a page opens a blank one, and each page keeps its own components', async ({ page }) => {
+test('adding a page opens a blank one, and each page keeps its own components', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -234,18 +234,17 @@ test('a component on the second page still opens as a level', async ({ page }) =
   await expect(nodes(page).first().locator('.node-level-badge')).not.toHaveAttribute('data-has-child', 'true');
 });
 
-for (const scheme of ['light', 'dark'] as const) {
-  test(`three pages have no axe violations (${scheme})`, async ({ page }) => {
-    await page.emulateMedia({ colorScheme: scheme });
-    await page.goto('/');
-    await openLumenRelay(page);
-    await addPage(page);
-    await addPage(page);
-    await clearSelection(page);
-    const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
-    expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
-  });
-}
+test('three pages have no axe violations', async ({ page }) => {
+  // The strip is already in the full-page scan. This one checks three tabs, in the darker theme.
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await addPage(page);
+  await addPage(page);
+  await clearSelection(page);
+  const results = await new AxeBuilder({ page }).include('#page-strip').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([]);
+});
 
 // ---------------------------------------------------------------------------------------------------------------
 // Pages everywhere else (P1b)

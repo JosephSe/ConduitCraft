@@ -95,7 +95,11 @@ export function isActionMenuOpenFor(anchor: HTMLElement): boolean {
 /** Show a menu of palette actions at (x, y). */
 export function openActionMenu({ ids: requested, x, y, label: menuLabel, labelFor, anchor, onClose }: ActionMenuOptions): void {
   closeContextMenu(false);
-  const ctx = buildActionContext(app.selection, app.doc, app.workspaceMode);
+  const ctx = {
+    ...buildActionContext(app.selection, app.doc, app.workspaceMode),
+    canUndo: app.undoStack.length > 0,
+    canRedo: app.redoStack.length > 0,
+  };
   const ids = tidySeparators(requested.filter((id) => id === MENU_SEPARATOR || isActionAvailable(id, ctx)));
 
   const menu = document.createElement('div');

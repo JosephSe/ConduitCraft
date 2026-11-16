@@ -165,7 +165,7 @@ The file holds three pages, shown as tabs along the bottom of the canvas:
 | All 9 wire routes | Auto (Fans → App), straight, S-curve, arc (Gateway → Fraud), rounded elbow (Push → App), sharp step (fail-over to Processor B), under-loop (SMS), over-loop (token skip, seat updates), fan-out (Order Events) |
 | Wire options | Every port side, a waypoint (Checkout, CDC), a two-way wire (WebSocket), wires that do not animate (planned, redrive, sweeper), wire comments, all seven protocols, sync and async, latencies |
 | Swimlanes, frames, notes and text | Five swimlanes, a PCI DSS frame and an async frame, an "On-sale rules" checklist and a headline text label |
-| Legend, tags, owners, links, comments | The legend names the five colours; most cards have an owner team, tags such as `tier-0` and `pci`, and links to a repository, runbook, dashboard or on-call rota |
+| Legend, tags, owners, links, comments | The legend names the five colours it uses; most cards have an owner team, tags such as `tier-0` and `pci`, and links to a repository, runbook, dashboard or on-call rota |
 | Statuses | Live, at risk, deprecated, planned |
 | Resilience | Replicas, fallbacks, circuit breakers, a limiter that fails closed |
 | Queues and streams | FIFO ordering, a maximum depth, a dead-letter queue, retention, a fan-out stream with 12 partitions |

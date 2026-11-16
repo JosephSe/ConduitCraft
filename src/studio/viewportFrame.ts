@@ -22,7 +22,7 @@ export function notesCardHeight(itemCount: number): number {
 export const FIT_PAD_X = 48;
 export const FIT_PAD_Y = 64;
 /** Same floor and ceiling as `zoomAround`. */
-export const FIT_SCALE_MIN = 0.35;
+export const FIT_SCALE_MIN = 0.25;
 export const FIT_SCALE_MAX = 1.9;
 /** Minimum readable scale when framing small diagrams (e.g. 1-2 nodes) to prevent low-LOD shrinkage. */
 export const READABLE_FIT_SCALE_MIN = 0.65;

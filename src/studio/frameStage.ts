@@ -22,7 +22,7 @@ import { announce } from './a11y';
 import { framesLayer, stageWorld, viewport } from './dom';
 import { commitRename, startTextEdit } from './inlineRename';
 import { notify } from './toast';
-import { makeField, makeTextInput, makeTonePicker, renderPropertyEditor } from './inspector';
+import { makeTextInput, makeToneField, renderPropertyEditor } from './inspector';
 import { scheduleMinimapPaint } from './minimap';
 import { setPointerTool } from './pointerTool';
 import { reconcileKeyed } from './reconcile';
@@ -373,26 +373,21 @@ viewport.addEventListener('lostpointercapture', (e) => {
 // ---------------------------------------------------------------------------
 // Inspector panel
 // ---------------------------------------------------------------------------
-export function mountFrameFields(form: HTMLElement, id: string): void {
+/** The frame's fields for the properties card: its name goes in the card header, the rest in the body. */
+export function frameFields(id: string): { title: HTMLInputElement; fields: HTMLElement[] } | undefined {
   const frame = liveFrame(id);
-  if (!frame) return;
-  form.append(
-    makeField(
-      'prop-frame-title',
-      'Name',
-      makeTextInput(frame.title, (v) => {
-        frame.title = v;
-        renderFrames();
-      }),
-    ),
-    makeTonePicker('frame-tone', frame.tone, (tone) => {
-      pushHistory();
-      frame.tone = tone;
-      renderFrames();
-    }),
-  );
+  if (!frame) return undefined;
+  const title = makeTextInput(frame.title, (v) => {
+    frame.title = v;
+    renderFrames();
+  });
+  const tone = makeToneField('frame-tone', frame.tone, (tone) => {
+    pushHistory();
+    frame.tone = tone;
+    renderFrames();
+  });
   const hint = document.createElement('p');
   hint.className = 'prop-hint';
   hint.textContent = 'Components inside a frame move with it. Drag the title strip to move, the corner to resize.';
-  form.appendChild(hint);
+  return { title, fields: [tone, hint] };
 }

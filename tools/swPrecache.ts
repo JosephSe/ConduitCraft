@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 
-/** Built files worth precaching: hashed JS/CSS chunks (including lazy chunks and workers). */
+/** Built files worth precaching: hashed JS/CSS chunks (including lazy chunks and workers) and the self-hosted fonts. */
 export function selectPrecacheAssets(fileNames: string[]): string[] {
   return fileNames
-    .filter((name) => /\.(js|css)$/.test(name))
+    .filter((name) => /\.(js|css|woff2)$/.test(name))
     .map((name) => `./${name.replace(/^\.?\//, '')}`)
     .sort();
 }

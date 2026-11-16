@@ -71,7 +71,7 @@ export function renderSnapshotsDialogHtml(
         <form class="snapshot-create-row" id="snapshot-create-form" onsubmit="return false;">
           <input
             type="text"
-            class="prop-input snapshot-name-input"
+            class="field snapshot-name-input"
             id="input-snapshot-name"
             placeholder="e.g. Baseline v1, Pre-migration…"
             maxlength="48"
@@ -130,7 +130,7 @@ export function renderSnapshotsDialogHtml(
           !selectedSnapshot
             ? `
           <div class="diff-empty-state">
-            <svg class="ui-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg class="ui-icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>

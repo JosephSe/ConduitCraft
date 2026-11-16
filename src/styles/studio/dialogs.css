@@ -1,0 +1,202 @@
+@layer dialogs {
+  .code-dialog-body {
+    display: grid;
+    gap: 0.65rem;
+    inline-size: min(56rem, calc(100vw - 4rem));
+  }
+
+  .blueprint-editor {
+    inline-size: 100%;
+    min-block-size: 18rem;
+    resize: vertical;
+    border-radius: 0.7rem;
+    border: 1px solid var(--cc-hair-2);
+    background: var(--cc-surface-code);
+    color: #e2e8f0;
+    padding: 0.85rem 0.95rem;
+    font-family: var(--cc-font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    tab-size: 2;
+
+    @media (pointer: coarse) {
+      font-size: 1rem;
+    }
+  }
+
+  .blueprint-editor:focus-visible {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  .editor-diagnostics {
+    font-family: var(--cc-font-mono);
+    font-size: 0.75rem;
+    color: var(--cc-ink-3);
+    min-block-size: 1.15rem;
+  }
+
+  .editor-diagnostics[data-tone="warn"] {
+    color: var(--cc-amber);
+  }
+
+  .subgraph-mode {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .dialog-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .guide-lead {
+    font-size: 0.875rem;
+    color: var(--cc-ink-2);
+    margin-block-end: 0.5rem;
+    line-height: 1.55;
+  }
+
+  .guide-lead code,
+  .matrix-table code {
+    font-family: var(--cc-font-mono);
+    font-size: 0.78rem;
+    padding-inline: 0.35rem;
+    padding-block: 0.1rem;
+    border-radius: 0.35rem;
+    background: var(--cc-well);
+  }
+
+  .export-cards {
+    display: grid;
+    gap: 0.65rem;
+    inline-size: min(38rem, calc(100vw - 4rem));
+  }
+
+  .export-cards[hidden] {
+    display: none;
+  }
+
+  .gif-export-panel {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .gif-export-panel[hidden] {
+    display: none;
+  }
+
+  .gif-export-panel .guide-lead,
+  .gif-export-panel .section-heading {
+    margin: 0;
+  }
+
+  .export-option-card {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0.95rem 1.1rem;
+    border-radius: 0.8rem;
+    border: 1px solid var(--cc-hair-2);
+    background: var(--cc-sheet);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+  }
+
+  .export-option-card:hover {
+    border-color: var(--cc-accent);
+    background: var(--cc-well);
+    transform: translateY(-1px);
+  }
+
+  .export-option-card:focus-visible {
+    outline: 2px solid var(--cc-ink);
+    outline-offset: 2px;
+  }
+
+  .export-option-card.is-recommended {
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
+    box-shadow: 0 0 0 3px var(--cc-accent-soft);
+  }
+
+  .export-option-card strong {
+    font-size: 0.9375rem;
+    color: var(--cc-ink);
+  }
+
+  .export-option-card span {
+    font-size: 0.8125rem;
+    color: var(--cc-ink-2);
+    line-height: 1.45;
+  }
+
+  .export-option-card .export-option-kicker {
+    font: var(--cc-font-meta);
+    font-weight: 600;
+    color: var(--cc-accent);
+  }
+
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .matrix-table caption {
+    text-align: left;
+    font-size: 0.8125rem;
+    color: var(--cc-ink-2);
+    margin-block-end: 0.75rem;
+  }
+
+  .matrix-table th,
+  .matrix-table td {
+    padding: 0.6rem 0.75rem;
+    border-block-end: 1px solid var(--cc-hair);
+    vertical-align: top;
+  }
+
+  .matrix-table thead th {
+    font-family: var(--cc-font-mono);
+    font-size: 0.75rem;
+    color: var(--cc-ink-3);
+    background: var(--cc-well);
+  }
+
+  .theme-fieldset {
+    border: 1px solid var(--cc-hair);
+    border-radius: 0.75rem;
+    padding: 0.875rem;
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .theme-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--cc-hair);
+    cursor: pointer;
+  }
+
+  .theme-option:has(input:checked) {
+    border-color: var(--cc-accent);
+    background: var(--cc-accent-soft);
+  }
+
+  .theme-option-sub {
+    font-size: 0.78rem;
+    color: var(--cc-ink-2);
+    display: block;
+  }
+}

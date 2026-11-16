@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay, runPaletteCommand } from './helpers';
+import { openLumenRelay, runPaletteCommand, undo } from './helpers';
 
 async function open(page: Page) {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -13,7 +13,7 @@ async function open(page: Page) {
 const dialog = (page: Page) => page.locator('#find-replace-dialog');
 const titles = (page: Page) => page.locator('.arch-node .node-title').allTextContents();
 
-test('Cmd/Ctrl+Shift+F finds, and Replace all is one undo step', async ({ page }) => {
+test('Cmd/Ctrl+Shift+F finds, and Replace all is one undo step', { tag: '@quick' }, async ({ page }) => {
   await open(page);
   const before = await titles(page);
   const word = before.find((t) => t.trim().length > 3)!.trim().split(/\s+/)[0];
@@ -34,7 +34,7 @@ test('Cmd/Ctrl+Shift+F finds, and Replace all is one undo step', async ({ page }
   expect(after.some((t) => t.includes('Zzyzx'))).toBe(true);
   expect(after.some((t) => t.includes(word) && !t.includes('Zzyzx'))).toBe(false);
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   expect(await titles(page)).toEqual(before);
 });
 
@@ -65,7 +65,7 @@ test('Select all matches selects them, and the shared Status field changes all i
   expect(changed).not.toEqual(before);
   expect(changed.filter((s) => s === 'deprecated').length).toBeGreaterThan(1);
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   expect(await statusOf()).toEqual(before);
 });
 
@@ -84,7 +84,7 @@ test('adding a tag to the selection tags every selected component', async ({ pag
   await expect(bulk.getByLabel('Tag to add or remove')).toHaveValue('pci'); // already there: nothing changed
   await bulk.getByRole('button', { name: 'Remove' }).click();
   await expect(bulk.getByLabel('Tag to add or remove')).toHaveValue('');
-  await page.locator('#btn-undo').click();
+  await undo(page);
 });
 
 test('the dialog has no axe violations', async ({ page }) => {

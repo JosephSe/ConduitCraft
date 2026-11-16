@@ -104,6 +104,26 @@ export function chaosResult(): ReachabilityResult | null {
   return cached;
 }
 
+/** Hops from the nearest failed component, so the failure spreads outward in order (9.2). */
+export function chaosDistance(nodeId: string): number {
+  const start = effectiveFailures();
+  if (!start.length) return 0;
+  const seen = new Map<string, number>(start.map((id) => [id, 0] as [string, number]));
+  const queue = [...start];
+  for (let i = 0; i < queue.length; i++) {
+    const at = queue[i];
+    if (at === nodeId) return seen.get(at) ?? 0;
+    for (const e of app.doc.edges) {
+      const next = e.from === at ? e.to : e.to === at ? e.from : null;
+      if (next && !seen.has(next)) {
+        seen.set(next, (seen.get(at) ?? 0) + 1);
+        queue.push(next);
+      }
+    }
+  }
+  return seen.get(nodeId) ?? 0;
+}
+
 export function chaosStatusOf(nodeId: string): ChaosStatus | null {
   const r = chaosResult();
   if (!r) return null;

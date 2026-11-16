@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CURRENT_SCHEMA_VERSION, MIGRATIONS, migrate, readSchemaVersion } from '../src/core/schema.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
-import { createBlankDocument } from '../src/templates/presets.ts';
+import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
+import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
+import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 
 describe('schema versioning (T-03)', () => {
   it('treats a missing or odd version as 1', () => {
@@ -50,6 +52,57 @@ describe('schema versioning (T-03)', () => {
     const back = parseBlueprintJson(text);
     assert.ok(back.ok);
     assert.equal(back.ok && back.doc.title, 'Round trip');
+  });
+
+  it('keeps the diagram style through JSON and the Blueprint file, and drops an unknown one (Y1)', () => {
+    const doc = createBlankDocument();
+    doc.style = 'blueprint';
+    const json = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(json.ok && json.doc.style === 'blueprint');
+    const md = importMermaidOrBlueprint(serializeToBlueprintMarkdown(doc));
+    assert.equal(md.doc?.style, 'blueprint');
+    const odd = parseBlueprintJson(JSON.stringify({ kind: 'conduitcraft.blueprint', version: 13, document: { ...doc, style: 'neon' } }));
+    assert.ok(odd.ok && odd.doc.style === undefined);
+    const studio = createBlankDocument();
+    assert.equal('style' in JSON.parse(serializeBlueprintJson(studio)).document, false);
+  });
+
+  it('draws each style differently in the vector export (Y1)', () => {
+    const doc = createBlankDocument();
+    const studio = renderDiagramSvg(doc);
+    doc.style = 'blueprint';
+    const blueprint = renderDiagramSvg(doc);
+    doc.style = 'print';
+    const print = renderDiagramSvg(doc);
+    assert.notEqual(studio, blueprint);
+    assert.notEqual(blueprint, print);
+    assert.match(blueprint, /#0b3a6b/);
+  });
+
+  it('Blueprint tells wires apart by dash pattern in the vector export (Y1)', () => {
+    const doc = createBlankDocument();
+    const a = createNodeFromStencil('service', 100, 100, 0);
+    const b = createNodeFromStencil('service', 500, 100, 1);
+    doc.nodes = [a, b];
+    doc.edges = [{ id: 'e1', from: a.id, to: b.id, sourcePort: 'right', targetPort: 'left', tone: 'emerald', route: 'auto', label: '', animated: false }];
+    doc.style = 'blueprint';
+    assert.match(renderDiagramSvg(doc), /stroke-dasharray="10 5"/);
+    doc.style = 'print';
+    assert.doesNotMatch(renderDiagramSvg(doc), /stroke-dasharray="10 5"/);
+  });
+
+  it('Sketch round-trips and wobbles every stroke through one fixed-seed filter (Y2)', () => {
+    const doc = createBlankDocument();
+    doc.style = 'sketch';
+    const back = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(back.ok && back.doc.style === 'sketch');
+    assert.equal(importMermaidOrBlueprint(serializeToBlueprintMarkdown(doc)).doc?.style, 'sketch');
+    const svg = renderDiagramSvg(doc);
+    assert.match(svg, /<filter id="cc-rough"[^>]*>.*seed="7"/);
+    assert.match(svg, /filter="url\(#cc-rough\)"/);
+    assert.equal(svg, renderDiagramSvg(doc));
+    doc.style = undefined;
+    assert.doesNotMatch(renderDiagramSvg(doc), /cc-rough/);
   });
 
   it('opens a version-11 file unchanged and stamps 12 (queues, K1)', () => {

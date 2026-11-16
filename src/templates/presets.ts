@@ -47,17 +47,20 @@ export interface StencilDefinition {
   icon: NodeIconName;
   accent: StreamTone;
   interfaceLabel: string;
+  /** Stencil ids of the four kinds most likely to follow this one on a wire (7.4). */
+  next?: [string, string, string, string];
 }
 
 export const STENCIL_CATALOG: StencilDefinition[] = [
   {
     id: 'actor',
+    next: ['gate', 'balancer', 'service', 'client'],
     kind: 'actor',
     paletteTitle: 'Actor',
     paletteSub: 'Human outline role',
     defaultTitle: 'Actor',
     defaultSubtitle: 'Human Role',
-    eyebrow: 'ACTOR',
+    eyebrow: 'Actor',
     footerLeft: 'Interactive Session',
     chip: 'ROLE',
     icon: 'actor',
@@ -66,12 +69,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'core',
+    next: ['store', 'queue', 'service', 'cache'],
     kind: 'core',
     paletteTitle: 'Core System',
     paletteSub: 'Primary platform card',
     defaultTitle: 'Core System',
     defaultSubtitle: 'Primary Application',
-    eyebrow: 'PLATFORM',
+    eyebrow: 'Platform',
     footerLeft: 'Core Runtime',
     chip: 'TIER 1',
     icon: 'monitor',
@@ -80,12 +84,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'service',
+    next: ['store', 'queue', 'cache', 'service'],
     kind: 'service',
     paletteTitle: 'Service / API',
     paletteSub: 'Microservice or endpoint',
     defaultTitle: 'Service API',
     defaultSubtitle: 'Request Processor',
-    eyebrow: 'SERVICE',
+    eyebrow: 'Service',
     footerLeft: 'REST / gRPC',
     chip: 'API',
     icon: 'code',
@@ -94,12 +99,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'queue',
+    next: ['service', 'stream', 'store', 'bus'],
     kind: 'queue',
     paletteTitle: 'Message Queue',
     paletteSub: 'Buffers work between services',
     defaultTitle: 'Queue',
     defaultSubtitle: 'Work Queue',
-    eyebrow: 'QUEUE',
+    eyebrow: 'Queue',
     footerLeft: 'Point to point',
     chip: 'ASYNC',
     icon: 'queue',
@@ -108,12 +114,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'balancer',
+    next: ['service', 'core', 'cache', 'gate'],
     kind: 'balancer',
     paletteTitle: 'Load Balancer',
     paletteSub: 'Spreads traffic over instances',
     defaultTitle: 'Load Balancer',
     defaultSubtitle: 'Traffic Distributor',
-    eyebrow: 'BALANCER',
+    eyebrow: 'Balancer',
     footerLeft: 'L4 / L7',
     chip: 'RR',
     icon: 'balancer',
@@ -122,12 +129,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'cache',
+    next: ['store', 'service', 'core', 'object-store'],
     kind: 'cache',
     paletteTitle: 'Cache',
     paletteSub: 'Answers repeat reads fast',
     defaultTitle: 'Cache',
     defaultSubtitle: 'Fast Read Layer',
-    eyebrow: 'CACHE',
+    eyebrow: 'Cache',
     footerLeft: 'In-memory',
     chip: 'HIT 80%',
     icon: 'bolt',
@@ -136,12 +144,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'limiter',
+    next: ['service', 'core', 'cache', 'balancer'],
     kind: 'limiter',
     paletteTitle: 'Rate Limiter',
     paletteSub: 'Turns away traffic over a limit',
     defaultTitle: 'Rate Limiter',
     defaultSubtitle: 'Traffic Throttle',
-    eyebrow: 'LIMITER',
+    eyebrow: 'Limiter',
     footerLeft: 'Admit / reject',
     chip: '4/5',
     icon: 'gauge',
@@ -150,12 +159,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'scheduler',
+    next: ['queue', 'service', 'bus', 'store'],
     kind: 'scheduler',
     paletteTitle: 'Scheduler',
     paletteSub: 'Starts work on a timer',
     defaultTitle: 'Scheduler',
     defaultSubtitle: 'Cron Trigger',
-    eyebrow: 'SCHEDULE',
+    eyebrow: 'Schedule',
     footerLeft: 'Timer',
     chip: 'CRON',
     icon: 'clock',
@@ -164,13 +174,14 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'stream',
+    next: ['service', 'store', 'object-store', 'queue'],
     kind: 'queue',
     preset: { queue: { delivery: 'fanout' } },
     paletteTitle: 'Stream / Log',
     paletteSub: 'Every reader gets every message',
     defaultTitle: 'Stream',
     defaultSubtitle: 'Event Log',
-    eyebrow: 'LOG',
+    eyebrow: 'Log',
     footerLeft: 'Fan-out, replayable',
     chip: 'STREAM',
     icon: 'stream',
@@ -179,12 +190,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'bus',
+    next: ['service', 'queue', 'stream', 'store'],
     kind: 'bus',
     paletteTitle: 'Event Broker',
     paletteSub: 'Pub/sub event bus',
     defaultTitle: 'Event Broker',
     defaultSubtitle: 'Async Stream Router',
-    eyebrow: 'CONNECTOR',
+    eyebrow: 'Connector',
     footerLeft: 'Pub/Sub Stream',
     chip: 'ASYNC',
     icon: 'bridge',
@@ -193,12 +205,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'gate',
+    next: ['balancer', 'service', 'limiter', 'core'],
     kind: 'gate',
     paletteTitle: 'Control Gate',
     paletteSub: 'Decision or policy gate',
     defaultTitle: 'Control Gate',
     defaultSubtitle: 'Policy & Routing Engine',
-    eyebrow: 'GATEWAY',
+    eyebrow: 'Gateway',
     footerLeft: 'Policy Check',
     chip: 'GATE',
     icon: 'shield',
@@ -207,12 +220,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'store',
+    next: ['cache', 'object-store', 'service', 'queue'],
     kind: 'store',
     paletteTitle: 'Data Store',
     paletteSub: 'Database, cache, or ledger',
     defaultTitle: 'Data Store',
     defaultSubtitle: 'Persistent Storage',
-    eyebrow: 'STORAGE',
+    eyebrow: 'Storage',
     footerLeft: 'Read / Write API',
     chip: 'STORE',
     icon: 'database',
@@ -221,13 +235,14 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'object-store',
+    next: ['service', 'cache', 'store', 'queue'],
     kind: 'store',
     shape: 'bucket',
     paletteTitle: 'Object Storage',
     paletteSub: 'Blobs and files',
     defaultTitle: 'Object Storage',
     defaultSubtitle: 'Blobs and files',
-    eyebrow: 'STORAGE',
+    eyebrow: 'Storage',
     footerLeft: 'Objects',
     chip: 'OBJECTS',
     icon: 'bucket',
@@ -236,12 +251,13 @@ export const STENCIL_CATALOG: StencilDefinition[] = [
   },
   {
     id: 'client',
+    next: ['gate', 'balancer', 'service', 'limiter'],
     kind: 'client',
     paletteTitle: 'External Client',
     paletteSub: 'Compact consumer node',
     defaultTitle: 'External Client',
     defaultSubtitle: 'Downstream Consumer',
-    eyebrow: 'CONSUMER',
+    eyebrow: 'Consumer',
     footerLeft: 'API Client',
     chip: 'SYNC',
     icon: 'agency',
@@ -255,11 +271,13 @@ export const STREAM_TONE_OPTIONS: Array<{
   label: string;
   cssVar: string;
 }> = [
-  { id: 'blue', label: 'Primary (Blue)', cssVar: 'var(--wl-blue)' },
-  { id: 'emerald', label: 'Success / Output (Emerald)', cssVar: 'var(--wl-emerald)' },
-  { id: 'rose', label: 'Exception / Return (Rose)', cssVar: 'var(--wl-rose)' },
-  { id: 'violet', label: 'Control / Policy (Violet)', cssVar: 'var(--wl-violet)' },
-  { id: 'amber', label: 'Async / Event (Amber)', cssVar: 'var(--wl-amber)' },
+  { id: 'blue', label: 'Primary (Blue)', cssVar: 'var(--cc-blue)' },
+  { id: 'emerald', label: 'Success / Output (Emerald)', cssVar: 'var(--cc-emerald)' },
+  { id: 'rose', label: 'Exception / Return (Rose)', cssVar: 'var(--cc-rose)' },
+  { id: 'violet', label: 'Control / Policy (Violet)', cssVar: 'var(--cc-violet)' },
+  { id: 'amber', label: 'Async / Event (Amber)', cssVar: 'var(--cc-amber)' },
+  { id: 'cyan', label: 'Data (Cyan)', cssVar: 'var(--cc-cyan)' },
+  { id: 'fuchsia', label: 'Security (Fuchsia)', cssVar: 'var(--cc-fuchsia)' },
 ];
 
 export function createBlankDocument(): DiagramDocument {
@@ -296,6 +314,12 @@ export function findStencil(idOrKind: string): StencilDefinition | undefined {
 export function kindStencils(): StencilDefinition[] {
   const seen = new Set<NodeKind>();
   return STENCIL_CATALOG.filter((s) => (seen.has(s.kind) ? false : (seen.add(s.kind), true)));
+}
+
+/** The four stencils most likely to follow a component of this kind on a wire (7.4). Falls back to the service stencils. */
+export function likelyNext(kindOrStencilId: string): StencilDefinition[] {
+  const ids = findStencil(kindOrStencilId)?.next ?? ['service', 'store', 'queue', 'cache'];
+  return ids.map((id) => findStencil(id)).filter((s): s is StencilDefinition => Boolean(s));
 }
 
 export function createNodeFromStencil(

@@ -18,10 +18,10 @@ const EXPECTED: Record<string, string> = {
   'flash-sale-ticketing.blueprint.json': '41272d4af18ca7c6',
   'kubernetes-ingress.blueprint.json': '0691b103258bb88c',
   'lumen-relay.blueprint.json': 'a953451e446175d6',
-  'plain-mermaid-demo.mmd': 'aa6c2ec40bc0e667',
-  'plain-mermaid-demo.mmd (levels)': '7cebac775efd99d5',
-  'sample-blueprint.md': '59facbb3cb5ebc92',
-  'sample-blueprint.md (levels)': '12ec449fbb94cfe1',
+  'plain-mermaid-demo.mmd': '4ccf05b96db80824',
+  'plain-mermaid-demo.mmd (levels)': 'fcf835270591c78a',
+  'sample-blueprint.md': 'e583e0c1754ef27e',
+  'sample-blueprint.md (levels)': '8409b7d4ac0ae029',
   'three-tier-web.blueprint.json': '82a322248f998ea6',
 };
 

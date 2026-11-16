@@ -38,21 +38,19 @@ export function toastBottomOffset(viewportHeight: number, hudTop: number | null)
 
 let hudTracked = false;
 
-/** Keep `--toast-bottom` in step with the HUD's top edge so toasts always sit just above it. */
+/** Keep `--toast-bottom` in step with the top of the bottom slots (SW, S, SE) so toasts always sit just above them. */
 function trackHudClearance(container: HTMLElement): void {
   if (hudTracked || typeof ResizeObserver === 'undefined') return;
-  const hud = document.querySelector<HTMLElement>('.canvas-hud');
-  if (!hud) return;
+  const slots = [...document.querySelectorAll<HTMLElement>('.slot-sw, .slot-s, .slot-se')];
+  if (!slots.length) return;
   hudTracked = true;
   const update = () => {
-    const rect = hud.getBoundingClientRect();
-    const measurable = rect.height > 0 && getComputedStyle(hud).display !== 'none';
-    container.style.setProperty(
-      '--toast-bottom',
-      `${toastBottomOffset(window.innerHeight, measurable ? rect.top : null)}px`,
-    );
+    const tops = slots.filter((el) => el.getBoundingClientRect().height > 0).map((el) => el.getBoundingClientRect().top);
+    const top = tops.length ? Math.min(...tops) : null;
+    container.style.setProperty('--toast-bottom', `${toastBottomOffset(window.innerHeight, top)}px`);
   };
-  new ResizeObserver(update).observe(hud);
+  const observer = new ResizeObserver(update);
+  for (const el of slots) observer.observe(el);
   window.addEventListener('resize', update);
   update();
 }

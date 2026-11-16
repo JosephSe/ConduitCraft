@@ -38,8 +38,8 @@ describe('SVG export details', () => {
     const light = renderDiagramSvg(doc, undefined, undefined, 'light');
     const dark = renderDiagramSvg(doc, undefined, undefined, 'dark');
     assert.notEqual(light, dark);
-    assert.ok(light.includes('fill="#f4f7fb"'));
-    assert.ok(dark.includes('fill="#070b14"'));
+    assert.ok(light.includes('fill="#ECEFEE"'));
+    assert.ok(dark.includes('fill="#1D1F21"'));
     assert.equal(renderDiagramSvg(doc), light, 'light is the default');
   });
 });

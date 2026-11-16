@@ -56,19 +56,11 @@ export const restoreBannerText = document.getElementById('restore-banner-text') 
 export const btnRestoreOpen = document.getElementById('btn-restore-open') as HTMLButtonElement | null;
 export const btnRestoreDiscard = document.getElementById('btn-restore-discard') as HTMLButtonElement | null;
 
-export const btnUndo = document.getElementById('btn-undo') as HTMLButtonElement;
-export const btnRedo = document.getElementById('btn-redo') as HTMLButtonElement;
 
 export const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement;
-export const paletteSidebar = document.getElementById('palette-sidebar') as HTMLElement | null;
 export const inspectorPanel = document.getElementById('inspector-panel') as HTMLElement | null;
 
 export const canvasStatsPill = document.getElementById('canvas-stats-pill') as HTMLElement;
-export const stencilGrid = document.getElementById('stencil-grid') as HTMLElement;
-export const btnAddZone = document.getElementById('btn-add-zone') as HTMLButtonElement;
-export const btnAddNotes = document.getElementById('btn-add-notes') as HTMLButtonElement;
-export const btnPaletteImport = document.getElementById('btn-palette-import') as HTMLButtonElement;
-export const btnPaletteCode = document.getElementById('btn-palette-code') as HTMLButtonElement;
 
 export const windowDropVeil = document.getElementById('window-drop-veil') as HTMLElement;
 export const emptyStageOverlay = document.getElementById('empty-stage-overlay') as HTMLElement;
@@ -105,7 +97,6 @@ export const zoomReadout = document.getElementById('zoom-readout') as HTMLElemen
 export const btnZoomIn = document.getElementById('btn-zoom-in') as HTMLButtonElement;
 export const btnZoomOut = document.getElementById('btn-zoom-out') as HTMLButtonElement;
 export const btnZoomFit = document.getElementById('btn-zoom-fit') as HTMLButtonElement;
-export const btnZoomFitSelection = document.getElementById('btn-zoom-fit-selection') as HTMLButtonElement;
 export const minimapCanvas = document.getElementById('minimap') as HTMLCanvasElement | null;
 
 // Right Panel: Design vs Data View
@@ -185,5 +176,3 @@ export const chkSnapGrid = document.getElementById('chk-snap-grid') as HTMLInput
 
 export const shortcutsDialog = document.getElementById('shortcuts-dialog') as HTMLDialogElement | null;
 export const shortcutsDialogBody = document.getElementById('shortcuts-dialog-body') as HTMLElement | null;
-export const btnDismissHudCoach = document.getElementById('btn-dismiss-hud-coach') as HTMLButtonElement | null;
-export const hudCoachCard = document.getElementById('hud-coach-card') as HTMLElement | null;

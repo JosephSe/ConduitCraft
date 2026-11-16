@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test('dropping a .drawio file on the canvas imports it as a new diagram, with a report of what was skipped', async ({ page }) => {
+test('dropping a .drawio file on the canvas imports it as a new diagram, with a report of what was skipped', { tag: '@quick' }, async ({ page }) => {
   await dropFile(page, 'orders.drawio', fixture('plain.drawio'));
   await expect(page.locator('.arch-node')).toHaveCount(4);
   await expect(page.locator('#toast-container')).toContainText('Imported 4 components and 3 wires from draw.io');

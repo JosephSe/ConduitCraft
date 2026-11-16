@@ -80,14 +80,10 @@ export function placeTooltip(
   };
 }
 
-/** The side a tooltip prefers: an explicit `data-tip-pos`, or the side of a collapsed rail that faces the canvas. */
+/** The side a tooltip prefers: an explicit `data-tip-pos`, else below. */
 export function preferredPlacement(el: Element): TipPlacement {
   const explicit = el.getAttribute('data-tip-pos');
   if (explicit === 'top' || explicit === 'bottom' || explicit === 'left' || explicit === 'right') return explicit;
-  // With the palette open the tools run in a row, so a tip to the side would cover the next tool.
-  if (el.closest('.rail-tool-btn') && !el.closest('[data-palette-collapsed="true"]')) return 'bottom';
-  if (el.closest('.palette-rail-content')) return 'right';
-  if (el.closest('.inspector-rail-content')) return 'left';
   return 'bottom';
 }
 

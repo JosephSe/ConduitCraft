@@ -1,6 +1,7 @@
 /**
  * Touch pass (A12). Runs only on the tablet projects (768 x 1024 and 1024 x 768, touch, coarse pointer).
  * Gestures are real touch events sent through the DevTools protocol, so the app sees pointerType "touch".
+ * Tests tagged `@layout` also run in landscape. The gesture flows run in portrait only.
  */
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type CDPSession, type Page } from '@playwright/test';
@@ -108,7 +109,7 @@ const stageTransform = (page: Page) => page.locator('#stage-world').evaluate((el
 async function emptyPoint(page: Page, spread = 0): Promise<Pt> {
   const p = await page.evaluate((r) => {
     const vp = document.getElementById('canvas-viewport')!.getBoundingClientRect();
-    const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, .canvas-hud, .context-toolbar, button, input, a';
+    const blocked = '.arch-node, .blueprint-spec, .zone-banner, .conduit-group, [data-island], .context-toolbar, button, input, a';
     for (let y = vp.top + 80; y < vp.bottom - 80; y += 30) {
       for (let x = vp.left + 40; x < vp.right - 40; x += 30) {
         const clear = [x - r, x, x + r].every((px) => !document.elementFromPoint(px, y)?.closest(blocked));
@@ -121,7 +122,7 @@ async function emptyPoint(page: Page, spread = 0): Promise<Pt> {
   return p!;
 }
 
-test('everything you tap is at least 44 px', async ({ page }) => {
+test('everything you tap is at least 44 px', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   const [first] = await freePair(page);
   const c = await nodeCentre(page, first);
@@ -149,28 +150,63 @@ test('tap places a component from the command palette', async ({ page }) => {
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
-test('tap places a component from the palette drawer', async ({ page }) => {
+test('tap a component in the tray, then tap the sheet to place it', async ({ page }) => {
   await open(page);
   const before = await page.locator('.arch-node').count();
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
-  await page.locator('#btn-drawer-palette').tap();
-  await expect(page.locator('#palette-sidebar')).toBeVisible();
-  await expect(page.locator('#btn-drawer-palette')).toBeHidden();
-  await page.locator('#palette-sidebar .stencil-card').first().tap();
+  await expect(page.locator('#tray')).toHaveCount(0);
+  await page.locator('#btn-all-components').tap();
+  await expect(page.locator('#tray')).toBeVisible();
+  await page.locator('#tray .tray-item[data-stencil-id="service"]').tap();
+  await expect(page.locator('#tray')).toBeHidden();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', 'service');
+  const box = (await page.locator('#canvas-viewport').boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + 120);
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
-test('a tool in the palette drawer closes the drawer so the canvas can be used', async ({ page }) => {
+test('Frame in the tray picks the Frame tool and puts the tray away', async ({ page }) => {
   await open(page);
-  await page.locator('#btn-drawer-palette').tap();
-  await page.locator('[data-rail-tool="frame"]').tap();
+  await page.locator('#btn-all-components').tap();
+  await page.locator('#tray .tray-item[data-structure="frame"]').tap();
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
-  await expect(page.locator('#palette-sidebar')).toBeHidden();
+  await expect(page.locator('#tray')).toBeHidden();
 });
 
-test('the drawer tabs are full-size targets that never overlap the top bar', async ({ page }) => {
+test('tap a favourite on the dock to carry it, then tap the sheet to place it', async ({ page }) => {
   await open(page);
-  for (const id of ['#btn-drawer-palette', '#btn-drawer-inspector']) {
+  const before = await page.locator('.arch-node').count();
+  await page.locator('#dock .dock-fav').first().tap();
+  await expect(page.locator('#workspace')).toHaveAttribute('data-armed', /.+/);
+  const box = (await page.locator('#canvas-viewport').boundingBox())!;
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + 120);
+  await expect(page.locator('.arch-node')).toHaveCount(before + 1);
+  await expect(page.locator('#workspace')).not.toHaveAttribute('data-armed', /.*/);
+});
+
+test('the dock keeps three favourites and scrolls sideways on a phone', async ({ page }) => {
+  await open(page);
+  await page.setViewportSize({ width: 480, height: 800 });
+  await expect(page.locator('#dock .dock-fav:visible')).toHaveCount(3);
+  expect(await page.locator('#dock').evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+});
+
+test('on a phone SW and SE are one button each, and Fit moves into the view popover (S10)', async ({ page }) => {
+  await open(page);
+  await page.setViewportSize({ width: 480, height: 800 });
+  await expect(page.locator('#btn-zoom-out')).toBeHidden();
+  await expect(page.locator('#btn-zoom-in')).toBeHidden();
+  await expect(page.locator('#btn-zoom-fit')).toBeHidden();
+  await expect(page.locator('#zoom-readout')).toBeVisible();
+  await expect(page.locator('.page-tab:visible')).toHaveCount(1);
+  await page.locator('#zoom-readout').tap();
+  await expect(page.locator('#view-fit')).toBeVisible();
+  await page.locator('#view-fit').tap();
+  await expect(page.locator('#zoom-readout')).toBeVisible();
+});
+
+test('the drawer tabs are full-size targets that never overlap the top bar', { tag: '@layout' }, async ({ page }) => {
+  await open(page);
+  for (const id of ['#btn-drawer-inspector']) {
     const box = await page.locator(id).boundingBox();
     expect(box!.width).toBeGreaterThanOrEqual(43.5);
     expect(box!.height).toBeGreaterThanOrEqual(43.5);
@@ -179,10 +215,11 @@ test('the drawer tabs are full-size targets that never overlap the top bar', asy
   await expect(page.locator('.topbar .panel-rail-toggles')).toHaveCount(0);
 });
 
-test('the top bar keeps the lens switch and undo/redo', async ({ page }) => {
+test('the top bar keeps the lens switch, the menu mark and Run', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   await expect(page.locator('.topbar .mode-switcher')).toBeVisible();
-  await expect(page.locator('.topbar .doc-history-controls')).toBeVisible();
+  await expect(page.locator('#btn-app-menu')).toBeVisible();
+  await expect(page.locator('#btn-run')).toBeVisible();
   // Nothing in the bar is cut off: it fits the viewport width.
   const overflow = await page.evaluate(() => {
     const bar = document.querySelector('.topbar') as HTMLElement;
@@ -191,7 +228,7 @@ test('the top bar keeps the lens switch and undo/redo', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('canvas hit areas are 44 px at 100% zoom', async ({ page }) => {
+test('canvas hit areas are 44 px at 100% zoom', { tag: '@layout' }, async ({ page }) => {
   await open(page);
   const [a] = await freePair(page);
   await page.touchscreen.tap((await nodeCentre(page, a)).x, (await nodeCentre(page, a)).y);

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay } from './helpers';
+import { openLumenRelay, undo } from './helpers';
 
 async function open(page: Page) {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -30,7 +30,7 @@ test('Colour on the toolbar recolours three selected components in one undo step
 
   for (const i of [0, 1, 2]) await expect(first3.nth(i)).toHaveAttribute('data-accent', 'rose');
 
-  await page.locator('#btn-undo').click();
+  await undo(page);
   for (const i of [0, 1, 2]) await expect(first3.nth(i)).toHaveAttribute('data-accent', before[i]!);
 });
 

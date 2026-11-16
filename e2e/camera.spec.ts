@@ -104,7 +104,7 @@ test('switching between Design and Data View keeps the zoom', async ({ page }) =
   expect(await zoomPercent(page), 'switching back must not refit either').toBe(zoom);
 });
 
-test('wheel zoom is proportional to how far the wheel moved', async ({ page }) => {
+test('wheel zoom is proportional to how far the wheel moved', { tag: '@quick' }, async ({ page }) => {
   await loadShowcase(page);
   await zoomInTo(page, 95);
   await overCanvas(page);

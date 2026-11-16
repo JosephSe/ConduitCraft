@@ -24,6 +24,9 @@ import { normalizeLinks, toneName } from '../core/meta';
 import { flowScale } from '../core/wire';
 import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
+import diagramStylesCss from '../styles/studio/diagramStyles.css?raw';
+import { ROUGH_FILTER } from './diagramSvg';
+import { titleBlockFor } from './titleBlock';
 import framesCss from '../styles/frames.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
 
@@ -81,7 +84,7 @@ function renderNodeBadges(node: DiagramNode, options?: StandaloneHtmlOptions): s
     html += `<span class="node-status-badge" data-status="${escapeHtml(node.status)}"><span class="status-dot"></span><span class="status-text">${escapeHtml(label)}</span></span>`;
   }
   if (node.comment) {
-    html += `<span class="node-comment-badge" title="${escapeHtml(node.comment)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>`;
+    html += `<span class="node-comment-badge" title="${escapeHtml(node.comment)}"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>`;
   }
   return html;
 }
@@ -143,7 +146,7 @@ function renderExportedNode(
       ${badges}
       <div class="node-top">
         <span class="node-icon">${exportedIconMarkup(node, 19, '')}</span>
-        <span class="node-eyebrow">${escapeHtml(node.eyebrow)}</span>
+        <span class="node-eyebrow">${node.external ? 'External' : escapeHtml(node.eyebrow)}</span>
       </div>
       <div>
         <span class="node-title">${escapeHtml(node.title)}</span>
@@ -335,7 +338,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
           : sim.tone === 'emerald'
             ? 'btn btn-approve'
             : 'btn';
-      const dotColor = TONE_META[sim.tone]?.cssVar || 'var(--wl-blue)';
+      const dotColor = TONE_META[sim.tone]?.cssVar || 'var(--cc-blue)';
       return `<button type="button" class="${cls}" data-sim-id="${escapeHtml(sim.id)}">
         <span class="pill-swatch" style="background: ${dotColor};"></span>
         <span>${escapeHtml(sim.name)}</span>
@@ -349,7 +352,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       const upStr = adj.upstream.length > 0 ? adj.upstream.map((u) => u.title).join(', ') : 'Entry Point';
       const downStr = adj.downstream.length > 0 ? adj.downstream.map((d) => d.title).join(', ') : 'Terminal Sink';
       return `<tr>
-        <td><strong>${escapeHtml(n.title)}</strong><br><span style="color: var(--wl-ink-muted); font-size: 0.78rem;">${escapeHtml(n.subtitle)}</span></td>
+        <td><strong>${escapeHtml(n.title)}</strong><br><span style="color: var(--cc-ink-3); font-size: 0.78rem;">${escapeHtml(n.subtitle)}</span></td>
         <td><code>${escapeHtml(n.kind.toUpperCase())}</code></td>
         <td>${escapeHtml(upStr)}</td>
         <td>${escapeHtml(downStr)}</td>
@@ -409,6 +412,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
 ${sharedCss}
 ${viewerCss}
 ${doc.frames?.length ? framesCss : ''}
+${doc.style ? diagramStylesCss : ''}
 </style>`;
 
   const brand = normalizeBrand(doc.brand);
@@ -419,13 +423,13 @@ ${doc.frames?.length ? framesCss : ''}
   const brandMark = brand.logo
     ? `<div class="brand-mark" aria-hidden="true"><img class="brand-logo" alt="" src="${escapeHtml(brand.logo)}"></div>`
     : `<div class="brand-mark" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/><path d="M3 12h6m6 0h6M12 3v6m0 6v6"/>
         </svg>
       </div>`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${doc.style ? ` data-style="${doc.style}"` : ''}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -472,7 +476,7 @@ ${colorSchemeBoot}
           ${zonesMarkup}
           ${notesMarkup}
           <svg class="wires-layer" viewBox="0 0 ${doc.stageWidth} ${doc.stageHeight}" width="${doc.stageWidth}" height="${doc.stageHeight}" aria-hidden="true">
-            <defs>
+            <defs>${doc.style === 'sketch' ? ROUGH_FILTER : ''}
               ${(Object.keys(TONE_META) as StreamTone[])
                 .map(
                   (tone) =>
@@ -483,7 +487,7 @@ ${colorSchemeBoot}
             ${edgesMarkup}
           </svg>
           <div class="sim-packet" id="sim-packet" hidden aria-hidden="true">
-            <span class="pill-swatch" id="sim-packet-dot" style="background: var(--wl-emerald);"></span>
+            <span class="pill-swatch" id="sim-packet-dot" style="background: var(--cc-emerald);"></span>
             <span id="sim-packet-label">PACKET</span>
           </div>
           ${nodesMarkup}
@@ -514,7 +518,7 @@ ${colorSchemeBoot}
         <div id="panel-inspector" role="tabpanel" aria-labelledby="tab-inspector">
           <div class="inspector-badge-row">
             <span class="tier-badge" id="insp-badge">OVERVIEW</span>
-            <span id="insp-id" style="font-family: var(--wl-font-mono); font-size: 0.75rem; color: var(--wl-ink-muted);">SYS</span>
+            <span id="insp-id" style="font-family: var(--cc-font-mono); font-size: 0.75rem; color: var(--cc-ink-3);">SYS</span>
           </div>
           <h2 class="inspector-title" id="insp-title">${escapeHtml(doc.title)}</h2>
           <p class="inspector-summary" id="insp-summary">${escapeHtml(doc.overviewSummary)}</p>
@@ -563,6 +567,7 @@ ${colorSchemeBoot}
     </aside>
   </main>
 
+  <div class="title-block" id="title-block" aria-hidden="true">${[titleBlockFor(doc, undefined, new Date(0))].map((b) => [b.title, b.systemTag, b.statusLabel].filter(Boolean).map((t) => `<span>${escapeHtml(String(t))}</span>`).join('')).join('')}</div>
   <div class="presentation-bar" id="presentation-bar" hidden>
     <button type="button" class="btn btn-icon-only" id="btn-pres-prev" aria-label="Previous step">←</button>
     <div class="presentation-pill-info" id="pres-pill-info">Overview</div>
@@ -799,7 +804,7 @@ ${colorSchemeBoot}
           wrap.appendChild(lbl);
           const row = document.createElement('div'); row.className = 'lineage-chips';
           if (!ids.length) {
-            const none = document.createElement('span'); none.style.fontSize = '0.8rem'; none.style.color = 'var(--wl-ink-muted)'; none.textContent = 'None';
+            const none = document.createElement('span'); none.style.fontSize = '0.8rem'; none.style.color = 'var(--cc-ink-3)'; none.textContent = 'None';
             row.appendChild(none);
           } else {
             for (const id of ids) {
@@ -866,7 +871,7 @@ ${colorSchemeBoot}
         for (const btn of nodeButtons) { btn.setAttribute('aria-pressed', 'false'); btn.classList.remove('is-dimmed'); }
         for (const g of conduitGroups) g.classList.remove('is-highlighted', 'is-dimmed');
         withInspectorTransition(() => {
-          inspBadge.textContent = 'SYSTEM OVERVIEW';
+          inspBadge.textContent = 'System overview';
           inspId.textContent = 'ALL';
           inspTitle.textContent = ${serializeScriptJson(doc.title)};
           inspSummary.textContent = DATA.overviewSummary;
@@ -927,7 +932,7 @@ ${colorSchemeBoot}
         }
 
         withInspectorTransition(() => {
-          inspBadge.textContent = 'MULTI SELECTION';
+          inspBadge.textContent = 'Multi selection';
           inspId.textContent = selectedNodes.size + ' SELECTED';
           inspTitle.textContent = selectedNodes.size + ' Components Selected';
           const selTitles = Array.from(selectedNodes).map(id => DATA.nodeShortLabels[id] || id);
@@ -1076,7 +1081,7 @@ ${colorSchemeBoot}
         presCaption.hidden = false;
         if (presIndex === 0) {
           presPill.textContent = 'Overview (' + tourNodes.length + ' nodes)';
-          presBadge.textContent = 'ARCHITECTURE';
+          presBadge.textContent = 'Architecture';
           presStep.textContent = 'System Overview';
           presTitle.textContent = ${serializeScriptJson(doc.title || 'Architecture Overview')};
           presSubtitle.textContent = 'System Architecture';
@@ -1088,7 +1093,7 @@ ${colorSchemeBoot}
           const nId = entry[0];
           const n = entry[1];
           presPill.textContent = presIndex + ' of ' + tourNodes.length;
-          presBadge.textContent = 'COMPONENT';
+          presBadge.textContent = 'Component';
           presStep.textContent = 'Step ' + presIndex + ' of ' + tourNodes.length;
           presTitle.textContent = n.title || nId;
           presSubtitle.textContent = n.subtitle || ('Component 0' + presIndex);

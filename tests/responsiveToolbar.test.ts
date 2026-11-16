@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { readStudioCss } from './studioCss.ts';
 
 class MockElement {
   tagName: string;
@@ -164,25 +165,6 @@ describe('responsive and compact toolbar', () => {
     elementsById.set('drawer-scrim', drawerScrim);
   });
 
-  it('toggles palette collapsed state and persists in localStorage', () => {
-    const manager = new ResponsiveToolbarManager();
-    manager.init(workspace as unknown as HTMLElement);
-
-    assert.strictEqual(manager.isPaletteCollapsed(), false);
-
-    // Collapse
-    const collapsed = manager.togglePalette();
-    assert.strictEqual(collapsed, true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
-    assert.strictEqual(mockStorage.get('conduitcraft:palette-collapsed'), 'true');
-
-    // Expand
-    const expanded = manager.togglePalette();
-    assert.strictEqual(expanded, false);
-    assert.strictEqual(workspace.hasAttribute('data-palette-collapsed'), false);
-    assert.strictEqual(mockStorage.has('conduitcraft:palette-collapsed'), false);
-  });
-
   it('toggles inspector collapsed state and persists in localStorage', () => {
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
@@ -203,24 +185,20 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('restores collapsed states from localStorage on initialization', () => {
-    mockStorage.set('conduitcraft:palette-collapsed', 'true');
     mockStorage.set('conduitcraft:inspector-collapsed', 'true');
 
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
     assert.strictEqual(manager.isInspectorCollapsed(), true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
     assert.strictEqual(workspace.getAttribute('data-inspector-collapsed'), 'true');
   });
 
   it('verifies responsive stylesheet rules for compact toolbar and rails', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
-    assert.ok(css.includes('.doc-history-controls'), 'CSS defines doc history controls next to title');
-    assert.ok(css.includes('workspace[data-palette-collapsed="true"]'), 'CSS defines palette collapsed rail layout');
+    assert.ok(css.includes('.slot-nw'), 'CSS defines the NW slot');
+    assert.ok(!css.includes('.doc-history-controls'), 'undo and redo left the top bar (6.2)');
     assert.ok(css.includes('workspace[data-inspector-collapsed="true"]'), 'CSS defines inspector collapsed rail layout');
     assert.ok(css.includes('@media (max-width: 82rem)'), 'CSS defines 82rem breakpoint');
     assert.ok(css.includes('@media (max-width: 66rem)'), 'CSS defines 66rem breakpoint');
@@ -231,7 +209,7 @@ describe('responsive and compact toolbar', () => {
     // Breakpoints to test per MUST_DO_PLAN.md Item 7
     const viewports = [390, 768, 1024, 1312, 1440];
     const rem = 16;
-    const railWidthPx = 3.25 * rem; // 52px per compact icon rail
+    const railWidthPx = 3.25 * rem; // 52px for the collapsed inspector rail
 
     for (const vpWidth of viewports) {
       for (const mode of ['design', 'data'] as const) {
@@ -242,14 +220,9 @@ describe('responsive and compact toolbar', () => {
           // Drawers are overlay drawers; when no drawer is open, sidebars are hidden (display: none).
           canvasWidth = vpWidth;
         } else {
-          // > 66rem: desktop multi-column layout with collapsed icon rails.
-          if (mode === 'design') {
-            // Both palette and inspector rails are collapsed: 52px left + 52px right = 104px
-            canvasWidth = vpWidth - (railWidthPx * 2);
-          } else {
-            // Data mode: palette sidebar is display: none; inspector rail is collapsed (52px)
-            canvasWidth = vpWidth - railWidthPx;
-          }
+          // > 66rem: the sheet runs under the left side; only the collapsed inspector rail (52px) takes room.
+          canvasWidth = vpWidth - railWidthPx;
+          void mode;
         }
 
         const share = canvasWidth / vpWidth;
@@ -262,12 +235,11 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies grid specificity cascade fix in studio.css (item 7)', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     // Verify fragile :not() chain that broke cascade was removed
     assert.ok(
-      !css.includes('.workspace:not([data-palette-collapsed="true"]):not([data-inspector-collapsed="true"])'),
+      !css.includes('.workspace:not([data-palette-collapsed="true"]):not([data-inspector-collapsed="true"])') && !css.includes('palette-collapsed'),
       'Must eliminate fragile (0, 3, 0) :not() chain at 82rem'
     );
 
@@ -278,52 +250,37 @@ describe('responsive and compact toolbar', () => {
     );
   });
 
-  it('boots with both panels collapsed by default below 66rem (item 8)', () => {
+  it('boots with the inspector collapsed by default below 66rem (item 8)', () => {
     globalThis.window.innerWidth = 768;
 
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
     assert.strictEqual(manager.isNarrowScreen(), true);
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
     assert.strictEqual(manager.isInspectorCollapsed(), true);
-    assert.strictEqual(workspace.getAttribute('data-palette-collapsed'), 'true');
     assert.strictEqual(workspace.getAttribute('data-inspector-collapsed'), 'true');
   });
 
-  it('mutually closes the other drawer on narrow screens and manages tap-to-dismiss scrim (item 8)', () => {
+  it('shows the scrim while the inspector drawer is open on a narrow screen, and a tap closes it (item 8)', () => {
     globalThis.window.innerWidth = 768;
 
     const manager = new ResponsiveToolbarManager();
     manager.init(workspace as unknown as HTMLElement);
 
-    // Initial state: both collapsed, scrim hidden
-    assert.strictEqual(manager.isPaletteCollapsed(), true);
     assert.strictEqual(manager.isInspectorCollapsed(), true);
     assert.strictEqual(drawerScrim.hasAttribute('hidden'), true);
 
-    // Open palette drawer
-    manager.togglePalette(false);
-    assert.strictEqual(manager.isPaletteCollapsed(), false, 'Palette must be open');
-    assert.strictEqual(manager.isInspectorCollapsed(), true, 'Inspector must stay collapsed');
-    assert.strictEqual(drawerScrim.hasAttribute('hidden'), false, 'Scrim must be visible when palette is open');
-
-    // Opening inspector drawer must close palette drawer
     manager.toggleInspector(false);
     assert.strictEqual(manager.isInspectorCollapsed(), false, 'Inspector must be open');
-    assert.strictEqual(manager.isPaletteCollapsed(), true, 'Palette must be automatically closed');
-    assert.strictEqual(drawerScrim.hasAttribute('hidden'), false, 'Scrim must remain visible');
+    assert.strictEqual(drawerScrim.hasAttribute('hidden'), false, 'Scrim must be visible when the drawer is open');
 
-    // Tapping the scrim closes both drawers
     drawerScrim.click();
-    assert.strictEqual(manager.isPaletteCollapsed(), true, 'Palette must close on scrim tap');
     assert.strictEqual(manager.isInspectorCollapsed(), true, 'Inspector must close on scrim tap');
-    assert.strictEqual(drawerScrim.hasAttribute('hidden'), true, 'Scrim must be hidden when both drawers close');
+    assert.strictEqual(drawerScrim.hasAttribute('hidden'), true, 'Scrim must be hidden when the drawer closes');
   });
 
   it('verifies 44px minimum tap targets inside @media (pointer: coarse) (item 8)', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     assert.ok(css.includes('@media (pointer: coarse)'), 'CSS must include coarse pointer block');
     assert.ok(
@@ -333,8 +290,7 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies low-zoom port interactivity and hit target expansion (item 9)', () => {
-    const cssPath = resolve(process.cwd(), 'src/styles/studio.css');
-    const css = readFileSync(cssPath, 'utf8');
+    const css = readStudioCss();
 
     // Verify .node-port is NOT in the pointer-events: none rule for low zoom
     const lowLodSection = css.slice(css.indexOf('Level-of-Detail (LoD) rendering for low zoom'));
@@ -357,30 +313,13 @@ describe('responsive and compact toolbar', () => {
     );
   });
 
-  it('verifies collapsed palette rail in index.html is rebuilt from STENCIL_CATALOG (item 9)', () => {
-    const htmlPath = resolve(process.cwd(), 'index.html');
-    const html = readFileSync(htmlPath, 'utf8');
-
-    const railStart = html.indexOf('id="palette-rail-content"');
-    const railEnd = html.indexOf('<!-- Expanded Palette Header', railStart);
-    const railHtml = html.slice(railStart, railEnd);
-
-    // Must contain real NodeKinds from STENCIL_CATALOG
-    assert.ok(railHtml.includes('data-stencil-kind="actor"'), 'Rail must contain actor');
-    assert.ok(railHtml.includes('data-stencil-kind="core"'), 'Rail must contain core');
-    assert.ok(railHtml.includes('data-stencil-kind="service"'), 'Rail must contain service');
-    assert.ok(railHtml.includes('data-stencil-kind="bus"'), 'Rail must contain bus');
-    assert.ok(railHtml.includes('data-stencil-kind="queue"'), 'Rail must contain queue');
-    assert.ok(railHtml.includes('data-stencil-id="queue"'), 'Rail must carry stencil ids');
-    assert.ok(railHtml.includes('data-stencil-kind="balancer"'), 'Rail must contain balancer');
-    assert.ok(railHtml.includes('data-stencil-kind="store"'), 'Rail must contain store');
-    assert.ok(railHtml.includes('data-stencil-kind="gate"'), 'Rail must contain gate');
-    assert.ok(railHtml.includes('data-stencil-kind="client"'), 'Rail must contain client');
-    assert.ok(railHtml.includes('data-stencil-kind="zone"'), 'Rail must contain zone');
-    assert.ok(railHtml.includes('data-stencil-kind="notes"'), 'Rail must contain notes');
-
-    // Must NOT contain invalid kinds database, cloud
-    assert.ok(!railHtml.includes('data-stencil-kind="database"'), 'Rail must not contain bogus kind database');
-    assert.ok(!railHtml.includes('data-stencil-kind="cloud"'), 'Rail must not contain bogus kind cloud');
+  it('has a dock with the five tools and an All components button, and no icon rail', () => {
+    const html = readFileSync(resolve(process.cwd(), 'index.html'), 'utf8');
+    assert.ok(!html.includes('palette-rail-content'), 'the collapsed rail is gone');
+    const dock = html.slice(html.indexOf('id="dock"'), html.indexOf('id="btn-all-components"'));
+    for (const tool of ['select', 'connect', 'hand', 'text', 'frame']) {
+      assert.ok(dock.includes(`data-rail-tool="${tool}"`), `dock has the ${tool} tool`);
+    }
+    assert.ok(html.includes('id="btn-all-components"'), 'dock has All components');
   });
 });

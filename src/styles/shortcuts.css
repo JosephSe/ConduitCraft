@@ -12,12 +12,10 @@
 }
 
 .shortcuts-category-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--wl-ink-muted);
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--wl-border-subtle);
+  font: var(--cc-font-meta);
+  font-weight: 600;
+  color: var(--cc-ink-3);
+  border-bottom: 1px solid var(--cc-hair);
   padding-bottom: 0.35rem;
   margin: 0;
 }
@@ -31,7 +29,7 @@
 }
 
 .shortcut-desc {
-  color: var(--wl-ink-secondary);
+  color: var(--cc-ink-2);
   font-size: 0.8rem;
 }
 
@@ -40,6 +38,6 @@
   align-items: center;
   gap: 0.2rem;
   font-size: 0.75rem;
-  color: var(--wl-ink-muted);
+  color: var(--cc-ink-3);
   flex-shrink: 0;
 }

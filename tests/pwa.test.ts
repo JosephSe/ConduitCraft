@@ -418,10 +418,10 @@ describe('PWA install, manifest, service worker and file system access (suggesti
 describe('service worker precache injection', () => {
   const sw = fs.readFileSync(path.resolve('public/sw.js'), 'utf8');
 
-  it('selects only js/css build outputs with relative paths', () => {
+  it('selects js, css, and woff2 build outputs with relative paths', () => {
     assert.deepStrictEqual(
-      selectPrecacheAssets(['index.html', 'assets/b.css', 'assets/a.js', 'icon.svg']),
-      ['./assets/a.js', './assets/b.css'],
+      selectPrecacheAssets(['index.html', 'assets/b.css', 'assets/a.js', 'icon.svg', 'assets/c.woff2']),
+      ['./assets/a.js', './assets/b.css', './assets/c.woff2'],
     );
   });
 

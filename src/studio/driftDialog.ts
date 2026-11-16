@@ -38,11 +38,11 @@ function build(): HTMLDialogElement {
       <div class="dialog-body drift-body">
         <p class="field-tip">Pick the newer copy of the file this diagram was imported from (${DRIFT_KINDS.map((k) => KIND_NAMES[k]).join(', ')}). The file is read in your browser and goes nowhere.</p>
         <label class="field-label" for="drift-file">Source file</label>
-        <input id="drift-file" class="prop-input" type="file" accept=".yml,.yaml,.json" />
+        <input id="drift-file" class="field" type="file" accept=".yml,.yaml,.json" />
         <p class="field-tip" id="drift-status" role="status" aria-live="polite"></p>
         <ul class="drift-list" id="drift-list" aria-label="Differences"></ul>
         <div class="drift-actions">
-          <button type="button" class="btn btn-primary" id="drift-accept-all" disabled>Accept all</button>
+          <button type="button" class="btn solid" id="drift-accept-all" disabled>Accept all</button>
         </div>
       </div>
     </div>`;

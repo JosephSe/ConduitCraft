@@ -301,9 +301,31 @@ export class SimulationPlaybackController {
         if (this.arrive(0, [], delayMs)) return;
         this.scheduleNextStep();
       } else {
+        this.lightRoute();
         this.pause();
       }
     }, delayMs);
+  }
+
+  /** The scenario finished: the tubes it used brighten once, in order from start to end (9.2). */
+  private lightRoute(): void {
+    const steps = this.scenario?.steps;
+    if (!steps || !wiresGroup || !app?.doc?.edges) return;
+    const lit: SVGGElement[] = [];
+    let order = 0;
+    for (let i = 0; i + 1 < steps.length; i++) {
+      for (const edge of app.doc.edges) {
+        if (!steps[i].nodes.includes(edge.from) || !steps[i + 1].nodes.includes(edge.to)) continue;
+        const g = Array.from(wiresGroup.querySelectorAll<SVGGElement>('.conduit-group')).find((x) => x.dataset.edgeId === edge.id);
+        if (!g || lit.includes(g)) continue;
+        g.style.setProperty('--cc-route-delay', `${order * 120}ms`);
+        g.classList.add('is-route-lit');
+        lit.push(g);
+        order++;
+      }
+    }
+    if (!lit.length) return;
+    setTimeout(() => lit.forEach((g) => g.classList.remove('is-route-lit')), order * 120 + 900);
   }
 
   /** The message stays in the queue: show where it went, then carry on from the top when looping, else pause. */
@@ -402,7 +424,7 @@ export class SimulationPlaybackController {
     const queue = app.doc.nodes.find((n) => n.id === queueId);
     if (queue && simPacket && simPacketLabel) {
       const [cx, cy] = getNodeCenter(queue);
-      simPacketLabel.textContent = outcome === 'held' ? 'HELD' : outcome === 'dead-lettered' ? 'DLQ' : 'DROPPED';
+      simPacketLabel.textContent = outcome === 'held' ? 'Held' : outcome === 'dead-lettered' ? 'DLQ' : 'Dropped';
       simPacket.style.setProperty('--px', String(cx));
       simPacket.style.setProperty('--py', String(cy));
       if (outcome !== 'held' && simPacketDot) simPacketDot.style.background = TONE_CSS.rose[0];
@@ -569,7 +591,7 @@ export function populateTraceRows(scenario: SimulationScenario): void {
 
     const s1 = document.createElement('span');
     s1.className = 'trace-step';
-    s1.textContent = `STEP 0${i + 1} · ${scenario.name.toUpperCase()}`;
+    s1.textContent = `Step ${i + 1} · ${scenario.name}`;
 
     const s2 = document.createElement('span');
     s2.className = 'trace-time';

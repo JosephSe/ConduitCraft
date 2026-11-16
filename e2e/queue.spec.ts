@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { runPaletteCommand } from './helpers';
+import { placeComponent, runPaletteCommand, showInspectorTab } from './helpers';
 
 const node = (page: Page, id: string) => page.locator(`.arch-node[data-node="${id}"]`);
 
@@ -25,25 +25,21 @@ async function centre(hit: Locator): Promise<{ x: number; y: number }> {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
-test('a Message Queue from the rail draws as a pipe, and wires into and out of it are async', async ({ page }) => {
+test('a Message Queue from the rail draws as a pipe, and wires into and out of it are async', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
 
-  const service = page.locator('.rail-stencil-btn[data-stencil-id="service"]');
-  const queue = page.locator('.rail-stencil-btn[data-stencil-id="queue"]');
-  await expect(queue).toBeVisible();
-
-  await service.click();
+  await placeComponent(page, 'service');
   await expect(page.locator('.arch-node')).toHaveCount(1);
   await dragTo(page, page.locator('.arch-node .node-select-hit').first(), 360, 460);
 
-  await queue.click();
+  await placeComponent(page, 'queue');
   await expect(page.locator('.arch-node')).toHaveCount(2);
   await expect(page.locator('.arch-node[data-kind="queue"]')).toHaveAttribute('data-shape', 'pipe');
   await expect(page.locator('.arch-node[data-kind="queue"] [data-plate="pipe"]')).toHaveCount(1);
   await dragTo(page, page.locator('.arch-node[data-kind="queue"] .node-select-hit'), 760, 460);
 
-  await service.click();
+  await placeComponent(page, 'service');
   await expect(page.locator('.arch-node')).toHaveCount(3);
   await dragTo(page, page.locator('.arch-node[data-kind="service"] .node-select-hit').last(), 1160, 460);
 
@@ -112,6 +108,7 @@ test('the Queue group in the inspector has no axe violations', async ({ page }) 
   await openEventDriven(page);
   await page.keyboard.press('1');
   await node(page, 'fulfilment-queue').locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   await expect(page.locator('#prop-node-queue-depth')).toBeVisible();
   await expect(page.locator('#prop-node-queue-depth')).toHaveValue('50');
   await expect(page.locator('#prop-node-queue-dlq')).toHaveValue('fulfilment-dlq');
@@ -126,6 +123,7 @@ test('the inspector sets a queue limit and the card shows it', async ({ page }) 
   await openEventDriven(page);
   await page.keyboard.press('1');
   await node(page, 'fulfilment-queue').locator('.node-select-hit').click();
+  await showInspectorTab(page, 'behaviour');
   const depth = page.locator('#prop-node-queue-depth');
   await depth.fill('120');
   await depth.press('Tab');

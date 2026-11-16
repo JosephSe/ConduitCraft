@@ -1,0 +1,23 @@
+@layer tokens {
+  :root {
+    --in-oklch: ;
+
+    --cc-panel-light: rgba(255, 255, 255, 0.9);
+    --cc-panel-dark: rgba(13, 19, 34, 0.88);
+
+    --cc-font-sans: "Instrument Sans", "Instrument Sans Fallback", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    --cc-font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+
+  @supports (background: linear-gradient(in oklab, white, black)) {
+    :root {
+      --in-oklch: in oklch;
+    }
+  }
+
+  ::selection {
+    background-color: var(--cc-accent-soft);
+    color: var(--cc-ink);
+  }
+}
+

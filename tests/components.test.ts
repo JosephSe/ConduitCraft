@@ -59,7 +59,7 @@ describe('K3 cache model (spec 5.1)', () => {
     assert.equal(s.kind, 'cache');
     assert.equal(s.icon, 'bolt');
     assert.equal(s.accent, 'emerald');
-    assert.equal(s.eyebrow, 'CACHE');
+    assert.equal(s.eyebrow, 'Cache');
     assert.deepEqual(getNodeDimensions('cache'), { width: 200, height: 112 });
     assert.equal(cacheChip({}), 'HIT 80%');
   });
@@ -279,7 +279,7 @@ describe('K5 scheduler model (spec 5.3)', () => {
     assert.equal(s.kind, 'scheduler');
     assert.equal(s.icon, 'clock');
     assert.equal(s.accent, 'blue');
-    assert.equal(s.eyebrow, 'SCHEDULE');
+    assert.equal(s.eyebrow, 'Schedule');
     assert.deepEqual(getNodeDimensions('scheduler'), { width: 192, height: 112 });
     assert.equal(scheduleChip({ every: '5m' }, 'CRON'), '5m');
     assert.equal(scheduleChip(undefined, 'CRON'), 'CRON');

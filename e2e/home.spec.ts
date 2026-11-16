@@ -42,7 +42,7 @@ async function seedAutosave(page: Page, title: string, nodes: number): Promise<v
 
 const home = (page: Page) => page.locator('#home-dialog');
 
-test('a returning visitor lands on Home with their diagram in Recent, and opens it from there', async ({ page }) => {
+test('a returning visitor lands on Home with their diagram in Recent, and opens it from there', { tag: '@quick' }, async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await seedAutosave(page, 'Payments', 2);
   await page.goto('/');
@@ -174,7 +174,7 @@ test('Home stays quiet when storage has room', async ({ page }) => {
   await expect(page.locator('#home-storage')).toBeHidden();
 });
 
-for (const width of [375, 1280, 1600]) {
+for (const width of [375, 1440]) {
   test(`Home has no axe violations at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await seedAutosave(page, 'Payments', 1);

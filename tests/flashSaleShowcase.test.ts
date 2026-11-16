@@ -20,7 +20,9 @@ const ICONS = [
   'actor', 'monitor', 'bridge', 'shield', 'code', 'database', 'agency', 'server', 'lock', 'cloud',
   'spark', 'cpu', 'globe', 'queue', 'balancer', 'bolt', 'gauge', 'clock', 'stream', 'bucket',
 ];
+/** The five tones this showcase must use; `cyan` and `fuchsia` are valid but optional (T5). */
 const TONES = ['blue', 'emerald', 'rose', 'violet', 'amber'];
+const OPTIONAL_TONES = ['cyan', 'fuchsia'];
 const ROUTES = ['auto', 'straight', 'bezier', 'arc', 'orthogonal', 'step', 'under', 'over', 'fanout'];
 const PORTS = ['auto', 'top', 'right', 'bottom', 'left'];
 const PROTOCOLS = ['http', 'grpc', 'graphql', 'kafka', 'amqp', 'sql', 'custom'];
@@ -44,6 +46,7 @@ function everything(): { nodes: DiagramNode[]; edges: DiagramEdge[] } {
   return { nodes, edges };
 }
 const set = <T>(items: T[]) => [...new Set(items)].sort();
+const usedTones = (items: string[]) => set(items.filter((t) => !OPTIONAL_TONES.includes(t)));
 
 describe('flash-sale ticketing showcase', () => {
   it('is the first-run example and parses', () => {
@@ -58,7 +61,7 @@ describe('flash-sale ticketing showcase', () => {
     assert.deepEqual(set(nodes.map((n) => n.kind)), set(KINDS));
     assert.deepEqual(set(nodes.map((n) => normalizeNodeShape(n.shape))), set(SHAPES));
     assert.deepEqual(set(nodes.map((n) => n.icon)), set(ICONS));
-    assert.deepEqual(set(doc.nodes.map((n) => n.accent)), set(TONES));
+    assert.deepEqual(usedTones(doc.nodes.map((n) => n.accent)), set(TONES));
     assert.deepEqual(set(doc.nodes.flatMap((n) => (n.status ? [n.status] : []))), set(STATUSES));
     assert.ok(doc.nodes.some((n) => n.iconImage));
     assert.ok(doc.nodes.every((n) => n.summary && n.metrics.length > 0), 'every card says what it is and shows a metric');
@@ -67,7 +70,7 @@ describe('flash-sale ticketing showcase', () => {
   it('uses every wire route, port, protocol and wire option', () => {
     const { edges } = everything();
     assert.deepEqual(set(doc.edges.map((e) => e.route)), set(ROUTES));
-    assert.deepEqual(set(doc.edges.map((e) => e.tone)), set(TONES));
+    assert.deepEqual(usedTones(doc.edges.map((e) => e.tone)), set(TONES));
     assert.deepEqual(set(doc.edges.flatMap((e) => [e.sourcePort, e.targetPort])), set(PORTS));
     assert.deepEqual(set(edges.flatMap((e) => (e.protocol ? [e.protocol] : []))), set(PROTOCOLS));
     assert.ok(doc.edges.some((e) => e.sync === 'async') && doc.edges.some((e) => e.sync !== 'async'));
@@ -120,7 +123,7 @@ describe('flash-sale ticketing showcase', () => {
         }
       }
     }
-    assert.deepEqual(set(doc.simulations.flatMap((s) => s.steps.map((st) => st.tone))), set(TONES));
+    assert.deepEqual(usedTones(doc.simulations.flatMap((s) => s.steps.map((st) => st.tone))), set(TONES));
     assert.ok(doc.simulations.some((s) => s.budgetMs));
     assert.ok(doc.simulations.some((s) => s.failures?.length));
     assert.equal(doc.simulations[0].steps[0].nodes[0], 'fans', 'first run plays a scenario that starts with the fans');

@@ -16,6 +16,9 @@ export const MENU_SEPARATOR = '-';
  * whose titles have to make sense in a search list.
  */
 export const APP_MENU_ITEMS: ReadonlyArray<{ id: string; label: string } | typeof MENU_SEPARATOR> = [
+  { id: 'edit-undo', label: 'Undo' },
+  { id: 'edit-redo', label: 'Redo' },
+  MENU_SEPARATOR,
   { id: 'open-home', label: 'Home' },
   { id: 'new-diagram', label: 'New Diagram' },
   { id: 'open-templates', label: 'Templates' },

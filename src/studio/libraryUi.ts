@@ -29,7 +29,6 @@ import {
   onAutosaved,
   scheduleAutosave,
   setSelection,
-  syncHistoryButtons,
   usableStoredDoc,
 } from './state';
 import { libraryDialog, libraryDialogBody, restoreSessionBanner, traceList } from './dom';
@@ -82,7 +81,6 @@ export function openDiagram(
   expandStageToFit(app.doc);
   setSelection(selection);
   traceList.replaceChildren();
-  syncHistoryButtons();
   renderAll(true);
   fitToViewport();
   return true;
@@ -187,7 +185,6 @@ export function deleteById(id: string): void {
       app.doc = createBlankDocument();
       setSelection({ type: 'none' });
       traceList.replaceChildren();
-      syncHistoryButtons();
       renderAll(true);
     }
   }
@@ -270,7 +267,7 @@ export function refreshLibraryDialog(): void {
   const activeId = getActiveDiagramId();
   libraryDialogBody.innerHTML = `
     <div class="library-toolbar">
-      <button type="button" class="btn btn-primary" id="btn-library-new">New diagram</button>
+      <button type="button" class="btn solid" id="btn-library-new">New diagram</button>
       <button type="button" class="btn" id="btn-library-export"${entries.length === 0 ? ' disabled' : ''}>Export all as .zip</button>
     </div>
     ${
@@ -359,7 +356,7 @@ function rasterThumbnail(svg: string): Promise<string | null> {
       canvas.height = THUMBNAIL_HEIGHT;
       const ctx = canvas.getContext('2d');
       if (!ctx) return resolve(null);
-      ctx.fillStyle = '#f4f7fb';
+      ctx.fillStyle = '#ECEFEE';
       ctx.fillRect(0, 0, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT);
       const scale = Math.min(THUMBNAIL_WIDTH / image.naturalWidth, THUMBNAIL_HEIGHT / image.naturalHeight);
       const width = image.naturalWidth * scale;

@@ -114,7 +114,7 @@ nodes:
 | `interfaceLabel` | How others talk to it: `"REST / JSON"`, `"gRPC"`, `"SQL"`, `"Kafka topic"`. |
 | `summary` | One or two plain sentences on what it does in this system. |
 | `icon` | One of the twenty icons in section 4.3. Leave it out to use the kind's default. |
-| `accent` | The card colour: `blue`, `emerald`, `rose`, `violet` or `amber` (section 6). Leave it out to use the kind's default. |
+| `accent` | The card colour: `blue`, `emerald`, `rose`, `violet`, `amber`, `cyan` or `fuchsia` (section 6). Leave it out to use the kind's default. |
 | `shape` | An outline from section 4.2. Leave it out for the standard card. |
 | `position` | `[x, y]`, the top-left corner, from the layout grid in section 7. |
 | `zoneLabel` | Optional text on the card naming its group. It does not decide which swimlane the card sits in; its position does. |
@@ -313,7 +313,7 @@ edges:
 
 ## 6. Colours (tones)
 
-There are five tones, shared by components, wires, frames and scenario steps. Use them for meaning, not decoration.
+There are seven tones, shared by components, wires, frames and scenario steps. Use them for meaning, not decoration.
 
 | Tone | Default name | Use for |
 | --- | --- | --- |
@@ -322,8 +322,10 @@ There are five tones, shared by components, wires, frames and scenario steps. Us
 | `rose` | Exception | Errors, retries, dead letters, fallbacks, risky or deprecated paths |
 | `violet` | Control | Auth, policy, gateways, configuration, admin and control traffic |
 | `amber` | Async | Events, queues, streams, background and scheduled work |
+| `cyan` | Data | Data flows into and out of stores, pipelines, warehouses and object storage |
+| `fuchsia` | Security | Secrets, keys, encryption, identity and audit paths |
 
-If the source has a colour key, keep its grouping and write it as a `legend`, for example `legend: [{ tone: violet, label: "Payments" }, { tone: amber, label: "Analytics" }]`. Map the source's colours to the nearest tone: greens to `emerald`, reds and pinks to `rose`, purples to `violet`, yellows and oranges to `amber`, blues, greys and black to `blue`.
+If the source has a colour key, keep its grouping and write it as a `legend`, for example `legend: [{ tone: violet, label: "Payments" }, { tone: amber, label: "Analytics" }]`. Map the source's colours to the nearest tone: greens to `emerald`, reds and pinks to `rose`, purples to `violet`, teals and aquas to `cyan`, magentas and fuchsias to `fuchsia`, yellows and oranges to `amber`, blues, greys and black to `blue`.
 
 ## 7. Layout
 
@@ -476,7 +478,7 @@ simulations:
 - A **step** moves the packet along one wire, or along a chain of wires. `nodes` lists component ids in the order the packet visits them, usually two per step. **Every two neighbouring ids in `nodes` must be joined by a wire**, in either direction. A reply goes back along the same wires, so `[orders-api, web, shopper]` is fine when wires `shopper → web` and `web → orders-api` exist.
 - `label` is a short uppercase caption shown on the packet: `"POST /orders"`, `"CACHE LOOKUP"`, `"ORDERPLACED"`.
 - `trace` is one plain sentence on what happens in the step.
-- `tone` per step follows section 6: blue for requests, emerald for replies and writes, amber for async hops, rose for errors and retries, violet for auth and policy checks.
+- `tone` per step follows section 6: blue for requests, emerald for replies and writes, amber for async hops, rose for errors and retries, violet for policy checks, fuchsia for auth and secrets, cyan for data moves.
 - Keep the first scenario short, at most eight steps. It is the one people see first.
 - A scenario starts at an entry point: an `actor`, `client` or `scheduler`.
 - `failures: [component-id]` makes the scenario run with those components failed. Use it for a failure story the source describes, such as "if the primary database is down, reads go to the replica".

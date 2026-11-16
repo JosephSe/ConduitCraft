@@ -7,7 +7,7 @@
  * To change the schema: bump `CURRENT_SCHEMA_VERSION`, add `MIGRATIONS[oldVersion]` that returns the document in
  * the next version's shape, and add a round-trip test (JSON, share link) for each new field.
  */
-export const CURRENT_SCHEMA_VERSION = 12;
+export const CURRENT_SCHEMA_VERSION = 13;
 
 type RawDocument = Record<string, unknown>;
 
@@ -38,6 +38,8 @@ export const MIGRATIONS: Record<number, (doc: RawDocument) => RawDocument> = {
   10: (doc) => doc,
   // 11 -> 12: components may be kind `queue` and carry `queue` (K1). Optional, so nothing to rewrite.
   11: (doc) => doc,
+  // 12 -> 13: the document may carry `style`, the diagram style (Y1). Optional, so nothing to rewrite.
+  12: (doc) => doc,
 };
 
 export type MigrateResult = { ok: true; doc: RawDocument; from: number } | { ok: false; error: string };

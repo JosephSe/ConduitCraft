@@ -36,7 +36,7 @@ test('the three actions are within 3 Tab presses', async ({ page }) => {
   expect([...reached]).toEqual(['first-run-blank', 'first-run-template', 'first-run-mermaid']);
 });
 
-test('Start blank leaves a one-line hint, in the Design lens', async ({ page }) => {
+test('Start blank leaves a one-line hint, in the Design lens', { tag: '@quick' }, async ({ page }) => {
   await page.goto('/');
   await page.locator('#first-run-blank').click();
   await expect(page.locator('#first-run')).toBeHidden();

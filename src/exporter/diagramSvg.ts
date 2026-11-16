@@ -1,10 +1,11 @@
 /** Standalone SVG picture of a diagram. No studio CSS or external assets. */
 import { describeDiagram } from '../core/describe';
-import type { DiagramDocument, DiagramNode, StreamTone, SelectionTarget } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramStyle, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { queueCardText, streamLanes } from '../core/queues';
 import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsBucket, storeDrawsCylinder } from '../core/nodeStyle';
-import { nodeIconShapes } from '../ui/icons';
+import { titleBlockSvg, type TitleBlock } from './titleBlock';
+import { ICON_STROKE, nodeIconShapes } from '../ui/icons';
 
 export type SvgScheme = 'light' | 'dark';
 
@@ -21,29 +22,50 @@ interface Palette {
   tone: Record<StreamTone, string>;
 }
 
-const PALETTES: Record<SvgScheme, Palette> = {
+const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
   light: {
-    canvas: '#f4f7fb',
-    surface: '#ffffff',
-    elevated: '#eef3fa',
-    ink: '#0b1324',
-    secondary: '#334155',
-    muted: '#485973',
-    border: '#b6c5db',
-    subtle: '#dce5f2',
-    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309' },
+    canvas: '#ECEFEE',
+    surface: '#FFFFFF',
+    elevated: '#F2F3F2',
+    ink: '#15181C',
+    secondary: '#565C64',
+    muted: '#5C626A',
+    border: '#D0D1D2',
+    subtle: '#E5E6E6',
+    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
+  },
+  // Diagram styles (Y1, 8.8). Blueprint is one ink on a cyanotype sheet; Print is black on white with colour on wires.
+  blueprint: {
+    canvas: '#0b3a6b', surface: '#0b3a6b', elevated: '#134a82', ink: '#f4f8ff', secondary: '#d3e2f6', muted: '#b3cbea', border: '#f4f8ff', subtle: '#2a5a92',
+    tone: { blue: '#f4f8ff', emerald: '#f4f8ff', rose: '#f4f8ff', violet: '#f4f8ff', amber: '#f4f8ff', cyan: '#f4f8ff', fuchsia: '#f4f8ff' },
+  },
+  print: {
+    canvas: '#ffffff', surface: '#ffffff', elevated: '#f3f3f3', ink: '#000000', secondary: '#222222', muted: '#444444', border: '#555555', subtle: '#dddddd',
+    tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
+  },
+  sketch: {
+    canvas: '#fbf8f1', surface: '#fffdf8', elevated: '#f3efe4', ink: '#2b2a28', secondary: '#4a4843', muted: '#625f58', border: '#3d3b37', subtle: '#d9d4c6',
+    tone: { blue: '#2f5fb3', emerald: '#2c7a58', rose: '#b23a4a', violet: '#6a4aa8', amber: '#a8651a', cyan: '#237f96', fuchsia: '#a4338f' },
   },
   dark: {
-    canvas: '#070b14',
-    surface: '#101829',
-    elevated: '#17223a',
-    ink: '#f1f5f9',
-    secondary: '#cbd5e1',
-    muted: '#9bb0d0',
-    border: '#2a3b5c',
-    subtle: '#1b2842',
-    tone: { blue: '#60a5fa', emerald: '#34d399', rose: '#fb7185', violet: '#a78bfa', amber: '#fbbf24' },
+    canvas: '#1D1F21',
+    surface: '#2A2C2F',
+    elevated: '#393B3E',
+    ink: '#F2F3F1',
+    secondary: '#B7BBBF',
+    muted: '#92979C',
+    border: '#555659',
+    subtle: '#3F4144',
+    tone: { blue: '#60a5fa', emerald: '#34d399', rose: '#fb7185', violet: '#a78bfa', amber: '#fbbf24', cyan: '#22d3ee', fuchsia: '#f0abfc' },
   },
+};
+
+/** Sketch (Y2): a fixed-seed displacement filter wobbles every stroke the same way each time. */
+export const ROUGH_FILTER = '<filter id="cc-rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="3.5"/></filter>';
+
+/** Blueprint (Y1) has one ink, so wires are told apart by dash pattern, the same patterns the canvas uses. */
+const BLUEPRINT_DASH: Partial<Record<StreamTone, string>> = {
+  emerald: '10 5', rose: '2 5', violet: '12 4 2 4', amber: '18 6', cyan: '6 3 1 3 1 3', fuchsia: '3 3',
 };
 
 const SANS = 'ui-sans-serif, system-ui, sans-serif';
@@ -75,7 +97,7 @@ function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direct
   const outline = nodeOutlineBase(node, pal, isSelected, direction);
   if (!node.external) return outline;
   const dashed = outline.replace(/ stroke-width="/g, ' stroke-dasharray="6 4" stroke-width="');
-  const label = `<text x="${node.x + node.width - 14}" y="${node.y - 6}" text-anchor="end" font-family="${MONO}" font-size="10" font-weight="600" letter-spacing="0.6" fill="${pal.muted}">EXTERNAL</text>`;
+  const label = `<text x="${node.x + node.width - 14}" y="${node.y - 6}" text-anchor="end" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.muted}">External</text>`;
   return dashed + label;
 }
 
@@ -188,7 +210,7 @@ function iconMarkup(node: DiagramNode, x: number, y: number, size: number, pal: 
   const color = pal.tone[node.accent] || pal.tone.blue;
   const glyph = Math.round(size * 0.6);
   const offset = (size - glyph) / 2;
-  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${mix(color, pal.surface, 0.14)}"/><g transform="translate(${x + offset} ${y + offset}) scale(${glyph / 24})" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${nodeIconShapes(node.icon)}</g>`;
+  return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="8" fill="${mix(color, pal.surface, 0.14)}"/><g transform="translate(${x + offset} ${y + offset}) scale(${glyph / 24})" fill="none" stroke="${color}" stroke-width="${ICON_STROKE}" stroke-linecap="round" stroke-linejoin="round">${nodeIconShapes(node.icon)}</g>`;
 }
 
 const CENTERED = new Set(['circle', 'diamond', 'hexagon', 'trapezoid']);
@@ -274,7 +296,7 @@ function nodeMarkup(
       ? chipMarkup(node.chip, right, topMid, pal)
       : ''
     : node.eyebrow
-      ? `<text x="${right}" y="${topMid + 4}" text-anchor="end" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.muted}">${escapeXml(node.eyebrow)}</text>`
+      ? `<text x="${right}" y="${topMid + 4}" text-anchor="end" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.muted}">${escapeXml(node.eyebrow)}</text>`
       : '';
   const titleY = y + 14 + iconSize + 26;
   const card = queueCardText(node);
@@ -317,7 +339,7 @@ function legendMarkup(doc: DiagramDocument, height: number, pal: Palette): strin
       return `<circle cx="34" cy="${cy - 4}" r="5" fill="${pal.tone[entry.tone]}"/><text x="48" y="${cy}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">${escapeXml(text)}</text>`;
     })
     .join('');
-  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="${pal.surface}" stroke="${pal.border}"/><text x="28" y="${y + 20}" font-family="${MONO}" font-size="11" font-weight="700" fill="${pal.tone.blue}">LEGEND</text>${rows}</g>`;
+  return `<g><rect x="16" y="${y}" width="280" height="${boxHeight}" rx="12" fill="${pal.surface}" stroke="${pal.border}"/><text x="28" y="${y + 20}" font-family="${SANS}" font-size="11" font-weight="700" fill="${pal.tone.blue}">Legend</text>${rows}</g>`;
 }
 
 export function renderDiagramSvg(
@@ -325,8 +347,9 @@ export function renderDiagramSvg(
   frame?: { dashOffset: number },
   selection?: SelectionTarget,
   scheme: SvgScheme = 'light',
+  block?: TitleBlock | null,
 ): string {
-  const pal = PALETTES[scheme];
+  const pal = PALETTES[doc.style ?? scheme];
   const width = Math.max(1, doc.stageWidth);
   const height = Math.max(1, doc.stageHeight);
   const routed = routeDiagramEdges(doc);
@@ -356,17 +379,20 @@ export function renderDiagramSvg(
     .sort((a, b) => b.width * b.height - a.width * a.height)
     .map((f) => {
       const color = pal.tone[f.tone];
-      return `<g><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}" rx="14" fill="${color}" fill-opacity="0.07" stroke="${color}" stroke-width="1.5" stroke-dasharray="6 5"/><text x="${f.x + 12}" y="${f.y + 19}" font-family="${SANS}" font-size="12" font-weight="700" fill="${color}">${escapeXml(f.title)}</text></g>`;
+      // A 1 px outline, a light tint, and the title on a tab that breaks the top-left corner (8.1).
+      const tabWidth = Math.min(f.width - 24, Math.round(f.title.length * 7 + 20));
+      return `<g><rect x="${f.x}" y="${f.y}" width="${f.width}" height="${f.height}" rx="10" fill="${color}" fill-opacity="0.06" stroke="${color}" stroke-width="1"/><rect x="${f.x + 12}" y="${f.y - 12}" width="${tabWidth}" height="24" rx="8" fill="${pal.surface}" stroke="${color}" stroke-width="1"/><text x="${f.x + 22}" y="${f.y + 4}" font-family="${SANS}" font-size="12" font-weight="700" fill="${color}">${escapeXml(f.title)}</text></g>`;
     })
     .join('');
 
   const zones = doc.zones
     .map((zone) => {
       const isSel = isMulti && selectedZones.has(zone.id);
-      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : '';
-      const fillOpacity = isSel ? '0.14' : '0.05';
-      const numColor = isSel ? pal.tone.blue : pal.muted;
-      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="${pal.tone.blue}" fill-opacity="${fillOpacity}"${stroke}/><text x="${zone.x + 16}" y="32" font-family="${SANS}" font-size="13" font-weight="700" fill="${numColor}">${escapeXml(zone.number)} ${escapeXml(zone.title)}</text></g>`;
+      // A column: a wash between two hairlines, with the number in muted grey and the title at 15/600 (8.1).
+      const x2 = zone.x + zone.width;
+      const edge = isSel ? pal.tone.blue : pal.border;
+      const edgeWidth = isSel ? 2 : 1;
+      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="${pal.surface}" fill-opacity="0.34"/><path d="M${zone.x} 0V${height}M${x2} 0V${height}" stroke="${edge}" stroke-width="${edgeWidth}" fill="none"/><text x="${zone.x + 16}" y="30" font-family="${SANS}" font-size="15" font-weight="600" fill="${pal.ink}"><tspan font-family="${MONO}" fill="${pal.muted}">${escapeXml(zone.number)}</tspan> ${escapeXml(zone.title)}</text></g>`;
     })
     .join('');
 
@@ -376,7 +402,7 @@ export function renderDiagramSvg(
       if (card.variant === 'text') {
         return `<text x="${card.x + 8}" y="${card.y + 22}" font-family="${SANS}" font-size="16" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>`;
       }
-      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}" stroke-dasharray="5 4"`;
+      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}"`;
       const boxHeight = notesHeight(card.items.length);
       const items = (card.items || [])
         .map((item, idx) => {
@@ -389,7 +415,11 @@ export function renderDiagramSvg(
           return `<text x="${card.x + 18}" y="${card.y + 54 + idx * 24}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">• ${escapeXml(itemText)}</text>`;
         })
         .join('');
-      return `<g><rect x="${card.x}" y="${card.y}" width="404" height="${boxHeight}" rx="16" fill="${pal.surface}"${stroke}/><text x="${card.x + 18}" y="${card.y + 28}" font-family="${MONO}" font-size="12" font-weight="700" fill="${pal.tone.blue}">${escapeXml(card.title)}</text>${items}</g>`;
+      // A sheet with a folded top-right corner (8.1), sans throughout.
+      const { x, y } = card;
+      const outline = `M${x} ${y}H${x + 386}L${x + 404} ${y + 18}V${y + boxHeight}H${x}Z`;
+      const fold = `<path d="M${x + 386} ${y}V${y + 18}H${x + 404}" fill="${pal.border}" fill-opacity="0.35" stroke="${pal.border}"/>`;
+      return `<g><path d="${outline}" fill="${pal.surface}"${stroke}/>${fold}<text x="${x + 18}" y="${y + 28}" font-family="${SANS}" font-size="13" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>${items}</g>`;
     })
     .join('');
 
@@ -412,7 +442,7 @@ export function renderDiagramSvg(
           ? (() => {
               const w = monoWidth(edge.label, 11) + 20;
               const [bx, by] = edge.badgePos;
-              return `<rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="11" fill="${pal.surface}" stroke="${pal.subtle}"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${MONO}" font-size="11" font-weight="600" fill="${pal.ink}">${escapeXml(edge.label)}</text>`;
+              return `<rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="11" fill="${pal.surface}" stroke="${pal.subtle}"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.ink}">${escapeXml(edge.label)}</text>`;
             })()
           : '';
       const isBoth = edge.flow === 'both';
@@ -434,9 +464,11 @@ export function renderDiagramSvg(
       const dash =
         frame && edge.animated !== false
           ? ` stroke-dasharray="8 10" stroke-dashoffset="${frame.dashOffset}"`
-          : edge.sync === 'async'
-            ? ' stroke-dasharray="7 6"'
-            : '';
+          : doc.style === 'blueprint' && BLUEPRINT_DASH[edge.tone]
+            ? ` stroke-dasharray="${BLUEPRINT_DASH[edge.tone]}"`
+            : edge.sync === 'async'
+              ? ' stroke-dasharray="7 6"'
+              : '';
       return `<g${wireOpacity}>${glow}<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}</g>`;
     })
     .join('');
@@ -447,18 +479,21 @@ export function renderDiagramSvg(
 
   const legend = legendMarkup(doc, height, pal);
 
+  const rough = (body: string): string => (doc.style === 'sketch' ? `<g filter="url(#cc-rough)">${body}</g>` : body);
+
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="diagram-title diagram-desc">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-stretch="88%" role="img" aria-labelledby="diagram-title diagram-desc">
   <title id="diagram-title">${escapeXml(doc.title.trim() || 'Untitled diagram')}</title>
   <desc id="diagram-desc">${escapeXml(describeDiagram(doc))}</desc>
-  <defs>${markers}</defs>
+  <defs>${markers}${doc.style === 'sketch' ? ROUGH_FILTER : ''}</defs>
   <rect width="100%" height="100%" fill="${pal.canvas}"/>
-  ${frames}
+  ${rough(`${frames}
   ${zones}
   ${notes}
   ${wires}
-  ${nodes}
+  ${nodes}`)}
   ${legend}
+  ${block ? titleBlockSvg(block, width, height, doc.style === 'blueprint' ? 'dark' : doc.style === 'print' || doc.style === 'sketch' ? 'light' : scheme) : ''}
 </svg>`;
 }
 

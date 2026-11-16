@@ -60,7 +60,7 @@ describe('load balancer model and outline (K2, spec 4.1)', () => {
     const s = findStencil('balancer')!;
     assert.equal(s.kind, 'balancer');
     assert.equal(s.paletteTitle, 'Load Balancer');
-    assert.equal(s.eyebrow, 'BALANCER');
+    assert.equal(s.eyebrow, 'Balancer');
     assert.equal(s.chip, 'RR');
     assert.equal(s.accent, 'violet');
     assert.deepEqual(getNodeDimensions('balancer'), { width: 200, height: 120 });

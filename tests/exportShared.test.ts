@@ -8,19 +8,19 @@ import { createBlankDocument } from '../src/templates/presets.ts';
 describe('shared export stylesheet and tone metadata', () => {
   it('inlines shared rules once and keeps the viewer layout', () => {
     const html = generateStandaloneHtml(createBlankDocument());
-    assert.equal(html.split('--wl-blue-light: #1d4ed8').length - 1, 1);
+    assert.equal(html.split('--cc-blue: #1D4ED8').length - 1, 1);
     assert.equal(html.split('box-sizing: border-box').length - 1, 1);
-    assert.match(html, /--wl-panel-light: rgba\(255, 255, 255, 0\.88\)/);
+    assert.match(html, /--cc-panel-light: rgba\(255, 255, 255, 0\.88\)/);
     assert.equal(html.includes('rgba(255, 255, 255, 0.9)'), false);
     assert.match(html, /grid-template-columns: minmax\(0, 1fr\) 24rem/);
     assert.equal(html.includes('16.5rem minmax(0, 1fr) 22.5rem'), false);
     assert.match(html, /--stage-w: 1680px; --stage-h: 920px/);
     assert.match(html, /width: var\(--stage-w\); height: var\(--stage-h\)/);
     assert.match(html, /id="arrow-blue"/);
-    assert.match(html, /fill="var\(--wl-blue\)"/);
+    assert.match(html, /fill="var\(--cc-blue\)"/);
     assert.match(html, /window\.conduitBindColorScheme/);
     assert.match(html, /e\.pointerType !== 'touch' && e\.pointerType !== 'pen'/);
-    assert.match(html, /"blue":\["var\(--wl-blue\)","var\(--wl-blue-soft\)"\]/);
+    assert.match(html, /"blue":\["var\(--cc-blue\)","var\(--cc-blue-soft\)"\]/);
     assert.equal(html.includes('${'), false);
   });
 
@@ -31,5 +31,17 @@ describe('shared export stylesheet and tone metadata', () => {
     assert.match(index, /\/\*__COLOR_SCHEME_BOOT__\*\//);
     assert.match(boot, /blueprint-studio-color-scheme/);
     assert.match(boot, /window\.conduitBindColorScheme/);
+  });
+
+  it('the standalone HTML carries the diagram style (Y1, Y2)', () => {
+    const doc = createBlankDocument();
+    assert.doesNotMatch(generateStandaloneHtml(doc), /data-style=/);
+    doc.style = 'blueprint';
+    const blueprint = generateStandaloneHtml(doc);
+    assert.match(blueprint, /<html lang="en" data-style="blueprint">/);
+    assert.match(blueprint, /\[data-style="blueprint"\]/);
+    assert.doesNotMatch(blueprint, /id="cc-rough"/);
+    doc.style = 'sketch';
+    assert.match(generateStandaloneHtml(doc), /id="cc-rough"/);
   });
 });
