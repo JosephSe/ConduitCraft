@@ -1393,7 +1393,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 .chaos-item:hover, .chaos-item:focus-visible { background: var(--cc-border); outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 .chaos-item[data-status="failed"] { color: var(--cc-rose); font-weight: 600; }
 
-/* A failed component carries nothing: the flowing dashes on its own wires (not those of components it cuts off) stop. */
+/* A wire carries nothing when either end has failed or is cut off by the failure (unreachable or delayed): its flow stops (core/beads.ts wireTraffic). */
 .conduit-group.is-chaos-cut .conduit-stream,
 .conduit-group.is-chaos-cut .conduit-stream-reverse {
   animation: none;
@@ -1872,9 +1872,19 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 /* One capsule per wire: it leaves the source and runs to the target, at a steady speed (about 120 px a second, scaled by the wire's latency). */
 .workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { stroke-dasharray: 7 calc(var(--cc-len, 400) * 1px + 40px); stroke-dashoffset: 8; animation: cc-capsule max(0.9s, calc(var(--cc-len, 400) * 1s / 120 * var(--flow-scale, 1))) linear infinite; }
 @keyframes cc-capsule { from { stroke-dashoffset: 8; } to { stroke-dashoffset: calc(var(--cc-len, 400) * -1); } }
+/* v4 beads: in Traffic a loop (trafficBeads.ts) runs glowing beads down each live wire. A wire with beads hides its CSS capsule, which stays the fallback and what pictures draw. */
+.workspace[data-lens="traffic"] .conduit-group[data-beads] :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
+.cc-beads { pointer-events: none; }
+.cc-bead-dot { fill: var(--t, var(--cc-hair-2)); }
+.cc-bead-dot.cc-bead-core { fill: var(--cc-sheet); }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { animation: none; stroke-dasharray: none; } }
 .workspace[data-lens="traffic"] .conduit-group[data-flow="both"] .conduit-stream { stroke-dasharray: 7 37; }
 .workspace[data-lens="traffic"] .conduit-stream-reverse { stroke-width: 7; stroke-dasharray: 7 37; }
+/* A wire marked not animated carries no flow in Traffic either: the capsule rules above would otherwise move it. */
+.workspace[data-lens="traffic"] .conduit-group[data-animated="false"] :is(.conduit-stream, .conduit-stream-reverse) { animation: none; stroke-dasharray: none; opacity: 0; }
+/* A cut wire reads as dead, as in the v4 concept: a grey dotted line with no glow, so it is not mistaken for an idle one. */
+.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-rail { stroke: var(--cc-ink-3); stroke-dasharray: 1.5 5; stroke-linecap: round; opacity: 0.8; }
+.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-glow { opacity: 0; }
 .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: cc-arrive 320ms var(--cc-spring) 1; transform-origin: center; transform-box: fill-box; }
 @keyframes cc-arrive { 50% { transform: scale(1.14); } }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }

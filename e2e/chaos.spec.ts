@@ -114,7 +114,7 @@ test('wires into and out of a failed component stop flowing', async ({ page }) =
   expect(await running(touching)).toBe(true);
 });
 
-test('only the failed component\'s own wires stop, and nothing stays dimmed once it is unselected', async ({ page }) => {
+test('only wires that touch a down or cut-off component stop, and nothing stays dimmed once it is unselected', async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   await openLumenRelay(page);
@@ -128,16 +128,26 @@ test('only the failed component\'s own wires stop, and nothing stays dimmed once
   await page.waitForTimeout(1000); // the highlight fades out
 
   const state = await page.evaluate((failed) => {
+    // Traffic can neither reach nor leave a component that failed, is unreachable, or is delayed behind a queue.
+    const down = new Set(
+      [...document.querySelectorAll('.arch-node[data-chaos]')]
+        .filter((n) => ['failed', 'unreachable', 'delayed'].includes(n.getAttribute('data-chaos') ?? ''))
+        .map((n) => n.getAttribute('data-node')),
+    );
     const flows = (g: Element) => getComputedStyle(g.querySelector('.conduit-stream')!).animationName !== 'none';
+    const hasBeads = (g: Element) => g.querySelector('.cc-bead') !== null;
     const wires = [...document.querySelectorAll('.conduit-group[data-from]')];
+    const touchesDown = (g: Element) => down.has(g.getAttribute('data-from')) || down.has(g.getAttribute('data-to'));
+    const live = wires.filter((g) => !touchesDown(g) && g.getAttribute('data-animated') === 'true');
     return {
-      ownRunning: wires.filter((g) => [g.getAttribute('data-from'), g.getAttribute('data-to')].includes(failed) && flows(g)).length,
-      othersStopped: wires.filter((g) => ![g.getAttribute('data-from'), g.getAttribute('data-to')].includes(failed) && g.getAttribute('data-animated') === 'true' && !flows(g)).length,
+      failedIsDown: down.has(failed),
+      deadRunning: wires.filter((g) => touchesDown(g) && (flows(g) || hasBeads(g))).length,
+      othersStopped: live.filter((g) => !flows(g) || !hasBeads(g)).length,
       dimmedNodes: [...document.querySelectorAll('.arch-node')].filter((n) => Number(getComputedStyle(n).opacity) < 1).length,
       dimmedWires: wires.filter((g) => Number(getComputedStyle(g).opacity) < 1).length,
     };
   }, id);
-  expect(state).toEqual({ ownRunning: 0, othersStopped: 0, dimmedNodes: 0, dimmedWires: 0 });
+  expect(state).toEqual({ failedIsDown: true, deadRunning: 0, othersStopped: 0, dimmedNodes: 0, dimmedWires: 0 });
 });
 
 test('a component that calls a failed one glows amber and pulses', async ({ page }) => {

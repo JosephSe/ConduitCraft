@@ -218,6 +218,9 @@ export function cleanClonedStage(clone: HTMLElement, options?: { preserveSelecti
     '.drag-handle, .node-drag-handle, .sim-drag-handle, .node-port, .waypoint-handle, .conduit-waypoint-handle, .wire-handle'
   );
   handlesAndPorts.forEach((el) => el.remove());
+  // Traffic beads are live-only: a picture draws the CSS capsule train instead (see trafficBeads.ts).
+  clone.querySelectorAll('.cc-beads').forEach((el) => el.remove());
+  clone.querySelectorAll('[data-beads]').forEach((el) => el.removeAttribute('data-beads'));
 
   // 2. Remove selection overlays, boxes, rings, guides, draft wire, and drag ghosts
   const overlays = clone.querySelectorAll(

@@ -20,6 +20,30 @@ test('Traffic draws the flow as 14 x 7 capsules and Design does not', async ({ p
   expect(gap).toBeGreaterThan(dash.len);
 });
 
+test('Traffic runs beads along the wires, and they come back after a trip to Design', async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem('conduitcraft-home-shown', '1'));
+  await page.goto('/');
+  await runPaletteCommand(page, 'Load Showcase');
+  await page.locator('.conduit-stream').first().waitFor({ state: 'attached', timeout: 20000 });
+  const beads = page.locator('.cc-bead');
+  const corePos = () => page.locator('.cc-bead-core').first().evaluate((el) => `${el.getAttribute('cx')},${el.getAttribute('cy')}`);
+  // Design is still from the first load (D8): no beads, and the flow is hidden.
+  await expect(page.locator('#workspace')).toHaveAttribute('data-lens', 'design');
+  await expect(beads).toHaveCount(0);
+  const designOpacity = await page.locator('.conduit-group:not(.is-highlighted, .is-selected) .conduit-stream').first().evaluate((el) => getComputedStyle(el).opacity);
+  expect(designOpacity).toBe('0');
+  for (let trip = 0; trip < 2; trip += 1) {
+    await page.keyboard.press('2');
+    await expect(page.locator('#workspace')).toHaveAttribute('data-lens', 'traffic');
+    await expect.poll(() => beads.count()).toBeGreaterThan(0);
+    const before = await corePos();
+    await expect.poll(corePos).not.toBe(before);
+    await page.keyboard.press('1');
+    await expect(page.locator('#workspace')).toHaveAttribute('data-lens', 'design');
+    await expect(beads).toHaveCount(0);
+  }
+});
+
 test('a failure spreads outward in order and a restore gives one emerald ring', async ({ page }) => {
   await page.goto('/');
   await openLumenRelay(page);
