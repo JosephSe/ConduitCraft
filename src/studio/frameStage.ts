@@ -33,9 +33,15 @@ const area = (f: DiagramFrame) => f.width * f.height;
 const snap = (v: number) => (app.snapToGrid ? Math.round(v / 16) * 16 : Math.round(v));
 const liveFrame = (id: string) => app.doc.frames?.find((f) => f.id === id);
 
+/**
+ * True while a frame is being dragged. Ownership is fixed for the whole gesture: re-adopting by geometry on every
+ * move would pick up each component the frame passes over and carry it off.
+ */
+let frameDragActive = false;
+
 export function renderFrames(): void {
-  // Who owns what follows from where things sit, so it is settled before anything is drawn.
-  adoptByGeometry(app.doc);
+  // Who owns what follows from where things sit, so it is settled before anything is drawn (except mid-drag).
+  if (!frameDragActive) adoptByGeometry(app.doc);
   // Larger frames first, so a frame inside another is drawn on top of it.
   const frames = [...(app.doc.frames ?? [])].sort((a, b) => area(b) - area(a));
   reconcileKeyed(
@@ -196,6 +202,7 @@ function createFrameBox(frame: DiagramFrame): HTMLElement {
       beginHistoryGesture();
       pushHistory();
       moved = true;
+      frameDragActive = true;
       box.classList.add('dragging');
     }
     if (!moved) return;
@@ -221,6 +228,9 @@ function createFrameBox(frame: DiagramFrame): HTMLElement {
     moved = false;
     box.classList.remove('dragging');
     if (didMove) {
+      // Settle ownership once, where the frame was dropped.
+      frameDragActive = false;
+      renderFrames();
       endHistoryGesture();
       renderPropertyEditor();
     }

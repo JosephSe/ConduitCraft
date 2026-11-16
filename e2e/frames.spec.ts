@@ -73,6 +73,33 @@ test('moving a frame by its title strip moves the components inside it and nothi
   expect(otherAfter).toEqual(otherBefore);
 });
 
+test('a frame dragged across other components leaves them where they were', async ({ page }) => {
+  await open(page);
+  const beacon = page.locator('.arch-node').filter({ hasText: 'Beacon' }).first();
+  const box = (await beacon.locator('.node-select-hit').boundingBox())!;
+  await draw(page, [box.x - 15, box.y - 30], [box.x + box.width + 15, box.y + box.height + 15]);
+  await expect(frames(page)).toHaveCount(1);
+  const positions = () =>
+    page.locator('.arch-node').evaluateAll((els) =>
+      Object.fromEntries(els.map((el) => [(el as HTMLElement).dataset.node, (el as HTMLElement).style.getPropertyValue('--nx') + ',' + (el as HTMLElement).style.getPropertyValue('--ny')])),
+    );
+  const before = await positions();
+
+  // Up over Relay Bus, right across Sorter, then down past Dock Rack into open space.
+  const bar = (await page.locator('.frame-title-bar').first().boundingBox())!;
+  const [sx, sy] = [bar.x + 10, bar.y + bar.height / 2];
+  await page.mouse.move(sx, sy);
+  await page.mouse.down();
+  for (const [dx, dy] of [[0, -100], [120, -100], [250, -100], [250, 150], [250, 230]]) {
+    await page.mouse.move(sx + dx, sy + dy, { steps: 12 });
+  }
+  await page.mouse.up();
+
+  const after = await positions();
+  const moved = Object.keys(before).filter((id) => before[id] !== after[id]);
+  expect(moved).toEqual(['beacon']);
+});
+
 test('a component dragged into a frame moves with it afterwards', async ({ page }) => {
   await open(page);
   // An empty frame in free space at the top right, then drag the first component onto it.
