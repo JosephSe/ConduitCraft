@@ -136,6 +136,59 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
     ids.forEach((id, index) => laneInfo.set(id, { index, count: ids.length }));
   }
 
+  // Resolve port sides up front for wires routed port-to-port, steering 'auto' ports away from
+  // paths that would cut through other components.
+  const SIDE_ROUTES = new Set<DiagramEdge['route']>(['bezier', 'straight', 'arc', 'orthogonal', 'step']);
+  const resolvedSides = new Map<string, { srcSide: Side; dstSide: Side }>();
+  for (const e of doc.edges) {
+    const src = nodeMap.get(e.from);
+    const dst = nodeMap.get(e.to);
+    if (!src || !dst) continue;
+    const explicitAuto = e.route === 'auto' && (e.sourcePort !== 'auto' || e.targetPort !== 'auto');
+    if (!SIDE_ROUTES.has(e.route) && !explicitAuto) continue;
+    const sides = chooseRouteSides(e, src, dst, doc.nodes);
+    // Auto routes with both ends on the top or bottom become U-loops, which place their own ports.
+    if (explicitAuto && sides.srcSide === sides.dstSide && (sides.srcSide === 'top' || sides.srcSide === 'bottom')) {
+      continue;
+    }
+    resolvedSides.set(e.id, sides);
+  }
+
+  // Wires that meet one side of a component get their own spot along it instead of sharing the
+  // midpoint. Parallel wires between the same pair already separate by lane, so they sit this out.
+  const portOffsets = new Map<string, number>(); // `${edgeId}|src` or `${edgeId}|dst` -> offset ratio
+  const sideGroups = new Map<string, Array<{ key: string; order: number }>>();
+  for (const e of doc.edges) {
+    const sides = resolvedSides.get(e.id);
+    if (!sides || (laneInfo.get(e.id)?.count ?? 1) > 1) continue;
+    const src = nodeMap.get(e.from)!;
+    const dst = nodeMap.get(e.to)!;
+    const ends: Array<[DiagramNode, Side, DiagramNode, string]> = [
+      [src, sides.srcSide, dst, `${e.id}|src`],
+      [dst, sides.dstSide, src, `${e.id}|dst`],
+    ];
+    for (const [node, side, other, key] of ends) {
+      if (node.kind === 'actor') continue; // actor ports are fixed points
+      const [ox, oy] = getNodeCenter(other);
+      const groupKey = `${node.id}|${side}`;
+      const group = sideGroups.get(groupKey) || [];
+      // Order along the side by where the far end sits, so neighbouring wires don't cross.
+      group.push({ key, order: side === 'top' || side === 'bottom' ? ox : oy });
+      sideGroups.set(groupKey, group);
+    }
+  }
+  for (const [groupKey, group] of sideGroups) {
+    if (group.length < 2) continue;
+    const [nodeId, side] = groupKey.split('|') as [string, Side];
+    const node = nodeMap.get(nodeId)!;
+    const span = side === 'top' || side === 'bottom' ? node.width : node.height;
+    // Keep ports inside the middle 60% of the side, at most 40px apart.
+    const gap = Math.min(40, (span * 0.6) / (group.length - 1));
+    group
+      .sort((a, b) => a.order - b.order)
+      .forEach((entry, i) => portOffsets.set(entry.key, ((i - (group.length - 1) / 2) * gap) / span));
+  }
+
   // Lowest / highest obstacle edge for nodes overlapping a horizontal span (keeps loops clear of siblings)
   const lowestBottomWithin = (minX: number, maxX: number): number => {
     let bottom = -Infinity;
@@ -285,12 +338,17 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
         };
       }
 
-      const resolvedSrcSide = e.sourcePort === 'auto' ? inferBestSide(src, dst) : e.sourcePort;
-      const resolvedDstSide = e.targetPort === 'auto' ? inferBestSide(dst, src) : e.targetPort;
+      const presetSides = resolvedSides.get(e.id);
+      const resolvedSrcSide =
+        presetSides?.srcSide ?? (e.sourcePort === 'auto' ? inferBestSide(src, dst) : e.sourcePort);
+      const resolvedDstSide =
+        presetSides?.dstSide ?? (e.targetPort === 'auto' ? inferBestSide(dst, src) : e.targetPort);
+      const srcPort = (): Point => getPortPoint(src, resolvedSrcSide, portOffsets.get(`${e.id}|src`) ?? 0);
+      const dstPort = (): Point => getPortPoint(dst, resolvedDstSide, portOffsets.get(`${e.id}|dst`) ?? 0);
 
       if (e.route === 'straight') {
-        const startPt = getPortPoint(src, resolvedSrcSide);
-        const endPt = getPortPoint(dst, resolvedDstSide);
+        const startPt = srcPort();
+        const endPt = dstPort();
         const vx = endPt[0] - startPt[0];
         const vy = endPt[1] - startPt[1];
         const len = Math.hypot(vx, vy) || 1;
@@ -309,8 +367,8 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
       }
 
       if (e.route === 'bezier') {
-        const startPt = getPortPoint(src, resolvedSrcSide);
-        const endPt = getPortPoint(dst, resolvedDstSide);
+        const startPt = srcPort();
+        const endPt = dstPort();
         const { pathD, badgePos } = buildPortToPortBezier(
           startPt,
           resolvedSrcSide,
@@ -330,8 +388,8 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
       }
 
       if (e.route === 'arc') {
-        const startPt = getPortPoint(src, resolvedSrcSide);
-        const endPt = getPortPoint(dst, resolvedDstSide);
+        const startPt = srcPort();
+        const endPt = dstPort();
         const dx = endPt[0] - startPt[0];
         const dy = endPt[1] - startPt[1];
         const dist = Math.hypot(dx, dy) || 1;
@@ -370,8 +428,8 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
       }
 
       if (e.route === 'orthogonal' || e.route === 'step') {
-        const startPt = getPortPoint(src, resolvedSrcSide);
-        const endPt = getPortPoint(dst, resolvedDstSide);
+        const startPt = srcPort();
+        const endPt = dstPort();
         const eVec = sideDirVec(resolvedDstSide);
         const targetTip: [number, number] = [endPt[0] + eVec[0] * 6, endPt[1] + eVec[1] * 6];
         const waypoints = buildOrthogonalWaypoints(
@@ -403,8 +461,8 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
           return buildOverLoop();
         }
 
-        const startPt = getPortPoint(src, resolvedSrcSide);
-        const endPt = getPortPoint(dst, resolvedDstSide);
+        const startPt = srcPort();
+        const endPt = dstPort();
         const { pathD, badgePos } = buildPortToPortBezier(
           startPt,
           resolvedSrcSide,
@@ -631,6 +689,30 @@ function buildPortToPortBezier(
   withBadge: boolean,
   forceWaveWhenCollinear = false,
 ): { pathD: string; badgePos?: [number, number] } {
+  const { c1, c2, targetTip } = portToPortBezierControls(
+    start,
+    startSide,
+    end,
+    endSide,
+    forceWaveWhenCollinear,
+  );
+  const pathD = `M ${start[0]} ${start[1]} C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${targetTip[0]} ${targetTip[1]}`;
+  const midX = Math.round(0.125 * start[0] + 0.375 * c1[0] + 0.375 * c2[0] + 0.125 * targetTip[0]);
+  const midY = Math.round(0.125 * start[1] + 0.375 * c1[1] + 0.375 * c2[1] + 0.125 * targetTip[1]);
+
+  return {
+    pathD,
+    badgePos: withBadge ? [midX, midY] : undefined,
+  };
+}
+
+function portToPortBezierControls(
+  start: [number, number],
+  startSide: Exclude<PortSide, 'auto'>,
+  end: [number, number],
+  endSide: Exclude<PortSide, 'auto'>,
+  forceWaveWhenCollinear: boolean,
+): { c1: [number, number]; c2: [number, number]; targetTip: [number, number] } {
   const dist = Math.hypot(end[0] - start[0], end[1] - start[1]);
   const pull = Math.max(48, Math.min(180, dist * 0.45));
 
@@ -661,14 +743,114 @@ function buildPortToPortBezier(
     }
   }
 
-  const pathD = `M ${start[0]} ${start[1]} C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${targetTip[0]} ${targetTip[1]}`;
-  const midX = Math.round(0.125 * start[0] + 0.375 * c1[0] + 0.375 * c2[0] + 0.125 * targetTip[0]);
-  const midY = Math.round(0.125 * start[1] + 0.375 * c1[1] + 0.375 * c2[1] + 0.125 * targetTip[1]);
+  return { c1, c2, targetTip };
+}
 
-  return {
-    pathD,
-    badgePos: withBadge ? [midX, midY] : undefined,
+type Side = Exclude<PortSide, 'auto'>;
+type Point = [number, number];
+const ALL_SIDES: readonly Side[] = ['top', 'right', 'bottom', 'left'];
+
+/** Points along the path a side-based route would draw, close enough to test for collisions. */
+function sampleSideRoute(
+  route: DiagramEdge['route'],
+  start: Point,
+  startSide: Side,
+  end: Point,
+  endSide: Side,
+): Point[] {
+  const eVec = sideDirVec(endSide);
+  const tip: Point = [end[0] + eVec[0] * 6, end[1] + eVec[1] * 6];
+  const polyline = (pts: Point[], perSegment: number): Point[] => {
+    const out: Point[] = [pts[0]];
+    for (let i = 1; i < pts.length; i++) {
+      const [ax, ay] = pts[i - 1];
+      const [bx, by] = pts[i];
+      for (let s = 1; s <= perSegment; s++) {
+        const t = s / perSegment;
+        out.push([ax + (bx - ax) * t, ay + (by - ay) * t]);
+      }
+    }
+    return out;
   };
+  if (route === 'straight') return polyline([start, end], 24);
+  if (route === 'orthogonal' || route === 'step') {
+    return polyline(buildOrthogonalWaypoints(start, startSide, tip, endSide), 8);
+  }
+  const { c1, c2, targetTip } = portToPortBezierControls(start, startSide, end, endSide, route === 'bezier');
+  const out: Point[] = [];
+  for (let s = 0; s <= 32; s++) {
+    const t = s / 32;
+    const u = 1 - t;
+    const a = u * u * u;
+    const b = 3 * u * u * t;
+    const c = 3 * u * t * t;
+    const d = t * t * t;
+    out.push([
+      a * start[0] + b * c1[0] + c * c2[0] + d * targetTip[0],
+      a * start[1] + b * c1[1] + c * c2[1] + d * targetTip[1],
+    ]);
+  }
+  return out;
+}
+
+/** How many obstacle boxes a sampled path enters, and how long it is. */
+function scoreSampledPath(points: Point[], obstacles: readonly DiagramNode[]): { hits: number; length: number } {
+  const pad = 8;
+  let hits = 0;
+  for (const n of obstacles) {
+    const inside = points.some(
+      ([x, y]) => x > n.x - pad && x < n.x + n.width + pad && y > n.y - pad && y < n.y + n.height + pad,
+    );
+    if (inside) hits++;
+  }
+  let length = 0;
+  for (let i = 1; i < points.length; i++) {
+    length += Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]);
+  }
+  return { hits, length };
+}
+
+/**
+ * Resolve 'auto' ports to sides. The usual nearest-facing pair wins unless its path would run
+ * through another component; then the side pair that crosses the fewest (then is shortest) wins.
+ * Explicit ports are never changed.
+ */
+function chooseRouteSides(
+  e: DiagramEdge,
+  src: DiagramNode,
+  dst: DiagramNode,
+  nodes: readonly DiagramNode[],
+): { srcSide: Side; dstSide: Side } {
+  const preferredSrc = e.sourcePort === 'auto' ? inferBestSide(src, dst) : e.sourcePort;
+  const preferredDst = e.targetPort === 'auto' ? inferBestSide(dst, src) : e.targetPort;
+  if (e.sourcePort !== 'auto' && e.targetPort !== 'auto') {
+    return { srcSide: preferredSrc, dstSide: preferredDst };
+  }
+  const obstacles = nodes.filter((n) => n.id !== src.id && n.id !== dst.id);
+  if (obstacles.length === 0) return { srcSide: preferredSrc, dstSide: preferredDst };
+
+  const score = (s: Side, d: Side) =>
+    scoreSampledPath(
+      sampleSideRoute(e.route, getPortPoint(src, s), s, getPortPoint(dst, d), d),
+      obstacles,
+    );
+  const preferred = score(preferredSrc, preferredDst);
+  if (preferred.hits === 0) return { srcSide: preferredSrc, dstSide: preferredDst };
+
+  let best = { srcSide: preferredSrc, dstSide: preferredDst, ...preferred };
+  const srcOptions = e.sourcePort === 'auto' ? ALL_SIDES : [preferredSrc];
+  const dstOptions = e.targetPort === 'auto' ? ALL_SIDES : [preferredDst];
+  for (const s of srcOptions) {
+    for (const d of dstOptions) {
+      // Same-side pairs on the top or bottom are U-loops in auto routing, not port-to-port curves.
+      if (e.route === 'auto' && s === d && (s === 'top' || s === 'bottom')) continue;
+      const result = score(s, d);
+      if (result.hits < best.hits || (result.hits === best.hits && result.length < best.length)) {
+        best = { srcSide: s, dstSide: d, ...result };
+      }
+    }
+  }
+  return { srcSide: best.srcSide, dstSide: best.dstSide };
 }
 
 function buildOrthogonalWaypoints(
