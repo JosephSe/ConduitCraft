@@ -58,7 +58,7 @@ import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
 import { paintBacklog, paintDlqLinks } from './queueBacklog';
 import { chaosDistance, chaosLensActive, chaosStatusOf, isPreview } from './chaos';
-import { wireTraffic } from '../core/beads';
+import { wireTraffic } from '../core/wireTraffic';
 import { scheduleMinimapPaint } from './minimap';
 import { clearGuides, paintGuides } from './guideOverlay';
 import { distancesTo, snapToGuides } from './guides';

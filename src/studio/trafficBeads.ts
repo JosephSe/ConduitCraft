@@ -158,10 +158,8 @@ function start(workspace: HTMLElement): void {
   frame = requestAnimationFrame(tick);
 }
 
-/** Run the beads whenever the workspace is in the Traffic lens. Call once at boot. */
-export function initTrafficBeads(): void {
-  const workspace = document.getElementById('workspace');
-  if (!workspace) return;
+/** Run the beads whenever the workspace is in the Traffic lens. Called by `bootTrafficBeads` on the first Traffic visit. */
+export function initTrafficBeads(workspace: HTMLElement): void {
   const apply = () => (workspace.dataset.lens === 'traffic' && !reducedMotion() ? start(workspace) : stop());
   new MutationObserver(apply).observe(workspace, { attributes: true, attributeFilter: ['data-lens'] });
   window.matchMedia?.('(prefers-reduced-motion: reduce)').addEventListener?.('change', apply);
