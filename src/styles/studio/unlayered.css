@@ -1246,7 +1246,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   display: none;
 }
 /* The Traffic card is 360px wide; keep the dock clear of it (the dock scrolls sideways). */
-.workspace[data-mode="data"]:not([data-inspector-collapsed="true"]) .dock {
+.workspace[data-mode="data"]:not([data-inspector-collapsed="true"], [data-hide-right="true"]) .dock {
   max-inline-size: 38rem;
 }
 /* A14: the groups name the bar's two regions for the control count and for assistive tech; they add no box. */
@@ -1865,12 +1865,11 @@ body[data-presenting="true"] .page-strip { display: none; }
 body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not(:hover, .is-selected, .is-highlighted) :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
 /* C5 lens lighting (8.4). Traffic dims the sheet, thins the line and fades in a 10 px tube; Review greys everything. */
 .conduit-glow { display: inline; fill: none; stroke: var(--t, var(--cc-hair-2)); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity 320ms; }
-.workspace[data-lens="traffic"] .conduit-glow { opacity: 0.2; }
 .workspace[data-lens="traffic"] .conduit-rail { stroke-width: 1; opacity: 0.55; }
 /* M1 (9.2): in Traffic the flow is capsules, 14 x 7 (a 7 px dash with round caps), in the wire's tone. A component that a run reaches springs 1 -> 1.14 -> 1. */
 .workspace[data-lens="traffic"] .conduit-stream { stroke-width: 7; stroke-dasharray: 7 29; }
 /* One capsule per wire: it leaves the source and runs to the target, at a steady speed (about 120 px a second, scaled by the wire's latency). */
-.workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { stroke-dasharray: 7 calc(var(--cc-len, 400) * 1px + 40px); stroke-dashoffset: 8; animation: cc-capsule max(0.9s, calc(var(--cc-len, 400) * 1s / 120 * var(--flow-scale, 1))) linear infinite; }
+.workspace[data-lens="traffic"] .conduit-group:not([data-flow="both"], .is-chaos-cut) .conduit-stream { stroke-dasharray: 7 calc(var(--cc-len, 400) * 1px + 40px); stroke-dashoffset: 8; animation: cc-capsule max(0.35s, calc(var(--cc-len, 400) * 1s / 120 * var(--flow-scale, 1))) linear infinite; }
 @keyframes cc-capsule { from { stroke-dashoffset: 8; } to { stroke-dashoffset: calc(var(--cc-len, 400) * -1); } }
 /* v4 beads: in Traffic a loop (trafficBeads.ts) runs glowing beads down each live wire. A wire with beads hides its CSS capsule, which stays the fallback and what pictures draw. */
 .workspace[data-lens="traffic"] .conduit-group[data-beads] :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
@@ -1884,7 +1883,6 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .workspace[data-lens="traffic"] .conduit-group[data-animated="false"] :is(.conduit-stream, .conduit-stream-reverse) { animation: none; stroke-dasharray: none; opacity: 0; }
 /* A cut wire reads as dead, as in the v4 concept: a grey dotted line with no glow, so it is not mistaken for an idle one. */
 .workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-rail { stroke: var(--cc-ink-3); stroke-dasharray: 1.5 5; stroke-linecap: round; opacity: 0.8; }
-.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-glow { opacity: 0; }
 .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: cc-arrive 320ms var(--cc-spring) 1; transform-origin: center; transform-box: fill-box; }
 @keyframes cc-arrive { 50% { transform: scale(1.14); } }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }
@@ -1984,7 +1982,9 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 
 /* Wire labels (plan 8.3): zoomed out they are noise, so they wait for the wire you point at, select, or that a run lights up, and then show at a readable size. */
 #stage-world[data-lod="low"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit { display: none; }
-#stage-world[data-lod="low"] .conduit-badge-hit { scale: calc(0.92 / var(--cam-scale, 1)); transform-box: fill-box; transform-origin: center; }
+/* The pill's parts scale, not the group: `scale` on the group would also multiply its translate() and carry the label off its wire.
+   The pill is centred on the group's origin, so scaling each part about 0 0 keeps it in place. */
+#stage-world[data-lod="low"] .conduit-badge-hit > :is(.route-pill-bg, .route-pill-text) { scale: calc(0.92 / var(--cam-scale, 1)); transform-box: view-box; transform-origin: 0 0; }
 body[data-wire-labels="always"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit,
 .workspace[data-style="print"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit { display: revert; }
 
@@ -2013,6 +2013,44 @@ body[data-wire-labels="always"] #stage-world[data-lod="low"] .conduit-group .con
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .template-card:hover .tpl-wire { stroke-dasharray: 100; animation: cc-wire-draw 700ms var(--cc-ease-out) 1 both; }
 }
+
+/* Side panels can be hidden in any tab (panelVisibility.ts). A hidden side wins over the inspector opening on a selection. */
+.workspace[data-hide-left="true"] .insights-panel,
+.workspace[data-hide-right="true"] :is(.inspector, .outline-panel) { display: none !important; }
+.workspace[data-hide-right="true"] #drawer-scrim { display: none; }
+.hud-zoom-card .panel-toggle[aria-pressed="true"] { color: var(--cc-ink-3); }
+.hud-zoom-card .panel-toggle[aria-pressed="true"] .panel-toggle-fill { opacity: 0; }
+.hud-zoom-sep { align-self: stretch; inline-size: 1px; margin-block: 0.35rem; margin-inline: 0.15rem; background: var(--cc-hair-2); }
+
+/* The usable space's top and left edges. Nothing can sit above y 0 or left of x 0 (the sheet grows freely right and
+   down), so the space beyond those two edges is tinted and the edges carry a line. Two fills, not a shadow: cheap to
+   paint at any zoom. Pictures copy the stage and leave these out (stagePicture.ts). */
+#canvas-viewport > .stage-world::before,
+#canvas-viewport > .stage-world::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--cc-off-sheet, color-mix(in srgb, var(--cc-ink) 7%, transparent));
+}
+/* Left of x 0, every y. */
+#canvas-viewport > .stage-world::before {
+  inset-block-start: -100000px;
+  inset-inline-start: -100000px;
+  inline-size: 100000px;
+  block-size: 200000px;
+  box-shadow: inset calc(-1.5px * var(--inv-zoom, 1)) 0 0 var(--cc-off-sheet-line, color-mix(in srgb, var(--cc-ink) 22%, transparent));
+}
+/* Above y 0, right of x 0. */
+#canvas-viewport > .stage-world::after {
+  inset-block-start: -100000px;
+  inset-inline-start: 0;
+  inline-size: 100000px;
+  block-size: 100000px;
+  box-shadow: inset 0 calc(-1.5px * var(--inv-zoom, 1)) 0 var(--cc-off-sheet-line, color-mix(in srgb, var(--cc-ink) 22%, transparent));
+}
+/* Dark themes darken the outside instead, so it still reads as recessed. */
+:root[data-theme="graphite"] #canvas-viewport > .stage-world { --cc-off-sheet: rgba(0, 0, 0, 0.3); }
 
 /* S10 (6.6): below 56rem SW and SE collapse to one button each. SW shows the open page (tap for the next); SE shows the zoom readout, and Fit moves into the view popover. */
 .view-fit { display: none; }

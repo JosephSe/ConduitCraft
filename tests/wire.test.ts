@@ -84,14 +84,14 @@ describe('latency sets the pace of a hop (F-17)', () => {
   });
 
   it('stretches slow wires, shortens fast ones, and clamps both ends', () => {
-    assert.equal(hopDelayMs(1000, [250]), 2000);
-    assert.equal(hopDelayMs(1000, [0]), 750);
-    assert.equal(hopDelayMs(1000, [5000]), 3000);
+    assert.equal(hopDelayMs(1000, [200]), 2000);
+    assert.equal(hopDelayMs(1000, [0]), 250);
+    assert.equal(hopDelayMs(1000, [5000]), 4000);
     assert.equal(hopDelayMs(1000, [-5, Infinity]), 1000, 'bad values are ignored');
   });
 
   it('is set by the slowest wire crossed', () => {
-    assert.equal(hopDelayMs(1000, [10, 250]), 2000);
+    assert.equal(hopDelayMs(1000, [10, 200]), 2000);
   });
 
   it('only counts wires that run from one step to the next', () => {
@@ -111,14 +111,22 @@ describe('latency sets how fast the wire flows (F-17)', () => {
   });
 
   it('slows the dashes for slow calls and speeds them for fast ones, within limits', () => {
-    assert.equal(flowScale(250), 2);
-    assert.equal(flowScale(0), 0.75);
-    assert.equal(flowScale(10_000), 3);
+    assert.equal(flowScale(200), 2);
+    assert.equal(flowScale(0), 0.25);
+    assert.equal(flowScale(10_000), 4);
+  });
+
+  it('makes a fast call look clearly different from a slow one', () => {
+    // Each tenfold step in latency changes the pace by about three times, down to a few milliseconds.
+    assert.equal(flowScale(5), 0.32);
+    assert.equal(flowScale(10), 0.45);
+    assert.equal(flowScale(500), 3.16);
+    assert.ok(flowScale(500) / flowScale(5) >= 9, 'a 500 ms call runs about ten times slower than a 5 ms one');
   });
 
   it('puts the scale on the exported wire', async () => {
     const { generateStandaloneHtml } = await import('../src/exporter/standaloneHtml.ts');
-    const doc = docWithWire({ latencyMs: 250 });
+    const doc = docWithWire({ latencyMs: 200 });
     doc.nodes = doc.nodes.map((n) => ({
       ...n,
       kind: 'service',

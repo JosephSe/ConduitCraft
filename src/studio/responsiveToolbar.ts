@@ -75,7 +75,7 @@ export class ResponsiveToolbarManager {
     const scrim = document.getElementById('drawer-scrim');
     if (!scrim) return;
     const isNarrow = this.isNarrowScreen();
-    const anyOpen = !this.isInspectorCollapsed();
+    const anyOpen = !this.isInspectorCollapsed() && this.getWorkspace()?.getAttribute('data-hide-right') !== 'true';
     if (isNarrow && anyOpen) {
       scrim.removeAttribute('hidden');
     } else {

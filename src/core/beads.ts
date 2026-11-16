@@ -25,7 +25,7 @@ export function beadCount(length: number, twoWay = false): number {
   return twoWay ? Math.max(2, count) : count;
 }
 
-/** Speed in px per second. `flowScale` is the wire's latency scale (1 is normal, larger is slower). */
+/** Speed in px per second. `flowScale` is the wire's latency scale (1 is normal, larger is slower; see `latencyScale`). */
 export function beadSpeed(async: boolean, flowScale = 1): number {
   const base = async ? BEAD_SPEED_ASYNC : BEAD_SPEED_SYNC;
   return base / (flowScale > 0 && Number.isFinite(flowScale) ? flowScale : 1);

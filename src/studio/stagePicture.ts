@@ -518,6 +518,7 @@ export function renderStagePictureSvg(
       max-inline-size: none !important;
       overflow: hidden !important;
     }
+    .stage-world::before, .stage-world::after { display: none !important; }
     .stage-world {
       width: ${stageWidth}px !important;
       height: ${stageHeight}px !important;
