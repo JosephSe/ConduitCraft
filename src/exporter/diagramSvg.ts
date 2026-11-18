@@ -1,4 +1,12 @@
 /** Standalone SVG picture of a diagram. No studio CSS or external assets. */
+import {
+  NOTES_EXPORT_FIRST_LINE,
+  NOTES_EXPORT_ITEM_GAP,
+  NOTES_EXPORT_LINE,
+  notesCardWidth,
+  notesExportHeight,
+  notesExportLines,
+} from '../core/notesSize';
 import { describeDiagram } from '../core/describe';
 import type { DiagramDocument, DiagramNode, DiagramStyle, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
@@ -86,10 +94,6 @@ function escapeXml(value: unknown): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-}
-
-function notesHeight(itemCount: number): number {
-  return 72 + Math.max(0, itemCount) * 40;
 }
 
 /** The outline of a node. Something someone else runs gets a dashed stroke and a small EXTERNAL label (K7). */
@@ -403,22 +407,23 @@ export function renderDiagramSvg(
         return `<text x="${card.x + 8}" y="${card.y + 22}" font-family="${SANS}" font-size="16" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>`;
       }
       const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}"`;
-      const boxHeight = notesHeight(card.items.length);
-      const items = (card.items || [])
-        .map((item, idx) => {
-          const itemText =
-            typeof item === 'string'
-              ? item
-              : item && typeof item === 'object'
-                ? (item.title ? `${item.title}: ` : '') + (item.text || '')
-                : '';
-          return `<text x="${card.x + 18}" y="${card.y + 54 + idx * 24}" font-family="${SANS}" font-size="12" fill="${pal.secondary}">• ${escapeXml(itemText)}</text>`;
+      // The card keeps its width and grows or shrinks with its wrapped items.
+      const boxHeight = notesExportHeight(card);
+      const w = notesCardWidth(card);
+      let lineY = card.y + NOTES_EXPORT_FIRST_LINE;
+      const items = notesExportLines(card)
+        .map((lines) => {
+          const tspans = lines
+            .map((line, i) => `<tspan x="${card.x + 18}" y="${lineY + i * NOTES_EXPORT_LINE}">${escapeXml(line)}</tspan>`)
+            .join('');
+          lineY += lines.length * NOTES_EXPORT_LINE + NOTES_EXPORT_ITEM_GAP;
+          return `<text font-family="${SANS}" font-size="12" fill="${pal.secondary}">${tspans}</text>`;
         })
         .join('');
       // A sheet with a folded top-right corner (8.1), sans throughout.
       const { x, y } = card;
-      const outline = `M${x} ${y}H${x + 386}L${x + 404} ${y + 18}V${y + boxHeight}H${x}Z`;
-      const fold = `<path d="M${x + 386} ${y}V${y + 18}H${x + 404}" fill="${pal.border}" fill-opacity="0.35" stroke="${pal.border}"/>`;
+      const outline = `M${x} ${y}H${x + w - 18}L${x + w} ${y + 18}V${y + boxHeight}H${x}Z`;
+      const fold = `<path d="M${x + w - 18} ${y}V${y + 18}H${x + w}" fill="${pal.border}" fill-opacity="0.35" stroke="${pal.border}"/>`;
       return `<g><path d="${outline}" fill="${pal.surface}"${stroke}/>${fold}<text x="${x + 18}" y="${y + 28}" font-family="${SANS}" font-size="13" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>${items}</g>`;
     })
     .join('');

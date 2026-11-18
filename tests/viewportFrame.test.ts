@@ -138,7 +138,7 @@ describe('viewport framing', () => {
       x: 30,
       y: 40,
       width: NOTES_CARD_WIDTH,
-      height: notesCardHeight(1),
+      height: notesCardHeight(doc.notesCards[0]),
     });
   });
 

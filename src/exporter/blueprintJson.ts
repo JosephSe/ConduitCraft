@@ -14,6 +14,7 @@ import type {
   StreamTone,
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
+import { clampNotesWidth } from '../core/notesSize';
 import { normalizeWireFields } from '../core/wire';
 import { pruneDanglingChaos } from '../core/reachability';
 import { normalizeBudgetMs, normalizeInsights } from '../core/insights';
@@ -188,6 +189,7 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
         }];
       })
     : [];
+  const width = clampNotesWidth(raw.width);
   return {
     id: str(raw.id, `notes-${index + 1}`),
     title: str(raw.title, 'Notes'),
@@ -196,6 +198,7 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
     y: num(raw.y),
     items,
     ...(raw.variant === 'text' ? { variant: 'text' as const } : {}),
+    ...(raw.variant !== 'text' && width !== undefined ? { width } : {}),
   };
 }
 

@@ -1,4 +1,5 @@
 import { nodeShapeFrame, storeDrawsCylinder } from './nodeStyle';
+import { notesCardHeight, notesCardWidth } from './notesSize';
 import { wireLabelText } from './wire';
 import type {
   DiagramDocument,
@@ -1346,9 +1347,12 @@ export function expandStageToFit(doc: DiagramDocument): void {
   const maxNodeR = doc.nodes.length > 0 ? Math.max(...doc.nodes.map((n) => n.x + n.width)) : 1200;
   const maxNodeB = doc.nodes.length > 0 ? Math.max(...doc.nodes.map((n) => n.y + n.height)) : 700;
   const maxZoneR = doc.zones.length > 0 ? Math.max(...doc.zones.map((z) => z.x + z.width)) : 0;
-  const maxNotesR = doc.notesCards.length > 0 ? Math.max(...doc.notesCards.map((c) => c.x + 410)) : 0;
+  const maxNotesR = doc.notesCards.length > 0 ? Math.max(...doc.notesCards.map((c) => c.x + notesCardWidth(c) + 6)) : 0;
   const maxNotesB = doc.notesCards.length > 0
-    ? Math.max(0, ...doc.notesCards.map((c) => c.y + Math.max(220, 54 + (c.items?.length || 0) * 26 + 24)))
+    ? Math.max(0, ...doc.notesCards.map((c) =>
+        // A resized card uses its wrapped height; an untouched one keeps the original allowance, so stages don't shift.
+        c.y + Math.max(220, c.width !== undefined ? notesCardHeight(c) : 54 + (c.items?.length || 0) * 26 + 24),
+      ))
     : 0;
   const maxEdgeR = doc.edges.length > 0
     ? Math.max(0, ...doc.edges.map((e) => (e.waypoint ? e.waypoint[0] + 60 : 0)))
