@@ -9,7 +9,8 @@ const budgets = [
   // Raised from 480 kB for the new components (COMPONENTS_PLAN.md); the queue (K1) added about 18 kB raw, 6 kB gzip.
   // Raised from 560 kB for panel hiding (about 1.5 kB: panelVisibility, palette commands).
   // Raised from 563 kB for resizable notes, the scenario GIF crop and the right-panel fix (about 4.8 kB).
-  { pattern: /^index-.*\.js$/, maxBytes: 570 * 1024, label: 'entry JS' },
+  // Raised from 570 kB for the shared front-to-back order and text label width, size and colour (about 2.3 kB).
+  { pattern: /^index-.*\.js$/, maxBytes: 575 * 1024, label: 'entry JS' },
   // Raised from 130 kB for the floating properties card (inspector card, Steps 1–3), after reclaiming 0.9 kB of dead CSS (D3).
   // Raised from 133 kB for panel hiding and the canvas edge (about 1 kB).
   { pattern: /^index-.*\.css$/, maxBytes: 135 * 1024, label: 'entry CSS' },

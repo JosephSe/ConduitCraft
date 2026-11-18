@@ -1,6 +1,6 @@
 /** Pure viewport framing math. Safe to import from node tests. */
 import type { DiagramDocument, DiagramNode, DiagramNotesCard, SelectionTarget } from '../types';
-import { NOTES_CARD_WIDTH, notesCardHeight, notesCardWidth } from '../core/notesSize';
+import { NOTES_CARD_WIDTH, notesCardHeight, notesCardWidth, textLabelRect } from '../core/notesSize';
 
 export { NOTES_CARD_WIDTH, notesCardHeight };
 
@@ -39,7 +39,10 @@ export function nodeRect(node: Pick<DiagramNode, 'x' | 'y' | 'width' | 'height'>
   return { x: node.x, y: node.y, width: node.width, height: node.height };
 }
 
-export function notesRect(card: Pick<DiagramNotesCard, 'x' | 'y' | 'items' | 'width'>): WorldRect {
+export function notesRect(
+  card: Pick<DiagramNotesCard, 'x' | 'y' | 'items' | 'width'> & Partial<Pick<DiagramNotesCard, 'variant' | 'title' | 'fontSize'>>,
+): WorldRect {
+  if (card.variant === 'text') return textLabelRect({ ...card, title: card.title ?? '' });
   return {
     x: card.x,
     y: card.y,
@@ -170,11 +173,7 @@ export function diagramPictureBounds(
   }
   for (const f of doc.frames ?? []) rects.push({ x: f.x, y: f.y, width: f.width, height: f.height });
   for (const card of doc.notesCards) {
-    rects.push(
-      card.variant === 'text'
-        ? { x: card.x, y: card.y, width: Math.max(40, card.title.length * 9 + 16), height: 32 }
-        : notesRect(card),
-    );
+    rects.push(notesRect(card));
   }
   for (const zone of doc.zones) {
     const inside = doc.nodes.filter((n) => n.x < zone.x + zone.width && n.x + n.width > zone.x);

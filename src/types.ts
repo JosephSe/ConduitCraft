@@ -170,8 +170,15 @@ export interface DiagramNotesCard {
   groupId?: string;
   /** `text`: a free text label (the Text tool). Its words are `title`; it has no border, background or items. */
   variant?: 'text';
-  /** Card width in px, set by dragging its right edge. Absent means the default. The height follows the content. */
+  /**
+   * Width in px, set by dragging the right edge. Absent means the default: a note's standard width, or for a text
+   * label as wide as its words. The height follows the content.
+   */
   width?: number;
+  /** Text labels only: the font size in px. Absent means 16. */
+  fontSize?: number;
+  /** Text labels only: the text colour. Absent means the ink colour. */
+  color?: StreamTone;
 }
 
 export interface DiagramZone {

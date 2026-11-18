@@ -20,7 +20,8 @@ import type {
   StreamTone,
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
-import { clampNotesWidth } from './notesSize';
+import { clampNotesWidth, textStyleOf } from './notesSize';
+import { stackZOf } from './stack';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
@@ -63,6 +64,7 @@ interface RawNodeMeta {
   comment?: string;
   locked?: boolean;
   groupId?: string;
+  z?: number;
   frame?: string;
   owner?: unknown;
   tags?: unknown;
@@ -137,6 +139,9 @@ interface RawBlueprintMeta {
     items?: Array<{ title?: string; text?: string; icon?: string }>;
     variant?: string;
     width?: number;
+    fontSize?: number;
+    color?: string;
+    z?: number;
   }>;
   specCard?: {
     id?: string;
@@ -1386,6 +1391,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
       ...(metaNode.comment ? { comment: String(metaNode.comment) } : {}),
       ...(metaNode.locked !== undefined ? { locked: Boolean(metaNode.locked) } : {}),
       ...(metaNode.groupId ? { groupId: String(metaNode.groupId) } : {}),
+      ...stackZOf(metaNode.z),
       ...(typeof metaNode.frame === 'string' && metaNode.frame.trim() ? { frameId: metaNode.frame.trim() } : {}),
       ...normalizeNodeMeta(metaNode as Record<string, unknown>),
       title,
@@ -1605,6 +1611,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
   rawNotesList.forEach((rc, idx) => {
     const isText = (rc as { variant?: string }).variant === 'text';
     const width = clampNotesWidth((rc as { width?: unknown }).width);
+
     if (!isText && (!rc.items || rc.items.length === 0)) return;
     const x = Array.isArray(rc.position) ? Number(rc.position[0]) || 48 : (rc.x ?? 48);
     const y = Array.isArray(rc.position) ? Number(rc.position[1]) || 600 : (rc.y ?? 600);
@@ -1620,7 +1627,8 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
         ...(item.icon ? { icon: normalizeNotesItemIcon(item.icon) } : {}),
       })),
       ...(isText ? { variant: 'text' as const } : {}),
-      ...(!isText && width !== undefined ? { width } : {}),
+      ...(isText ? textStyleOf(rc as Record<string, unknown>) : width !== undefined ? { width } : {}),
+      ...stackZOf((rc as { z?: unknown }).z),
     });
   });
   doc.notesCards = notesCards;
@@ -1886,6 +1894,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       ...(n.comment ? { comment: n.comment } : {}),
       ...(n.locked !== undefined ? { locked: n.locked } : {}),
       ...(n.groupId ? { groupId: n.groupId } : {}),
+      ...(n.z !== undefined ? { z: n.z } : {}),
       ...(n.frameId ? { frame: n.frameId } : {}),
       ...(n.owner ? { owner: n.owner } : {}),
       ...(n.tags?.length ? { tags: n.tags } : {}),
@@ -2009,7 +2018,10 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       code: c.code,
       position: [Math.round(c.x), Math.round(c.y)],
       ...(c.variant === 'text' ? { variant: 'text' } : {}),
-      ...(c.variant !== 'text' && c.width !== undefined ? { width: c.width } : {}),
+      ...(c.width !== undefined ? { width: c.width } : {}),
+      ...(c.variant === 'text' && c.fontSize !== undefined ? { fontSize: c.fontSize } : {}),
+      ...(c.variant === 'text' && c.color ? { color: c.color } : {}),
+      ...(c.z !== undefined ? { z: c.z } : {}),
       items: c.items.map((it) => ({
         title: it.title,
         text: it.text,

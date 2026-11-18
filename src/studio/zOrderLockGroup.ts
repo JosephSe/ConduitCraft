@@ -1,151 +1,51 @@
 import type { DiagramDocument, SelectionTarget } from '../types';
+import { moveInStack, type StackMove } from '../core/stack';
 
-/**
- * Brings selected elements to the front (end of array).
- */
+/** The components and notes a selection reorders in the shared stack. */
+function stackPicks(sel: SelectionTarget): { nodeIds: string[]; notesIds: string[] } | null {
+  if (sel.type === 'node') return { nodeIds: [sel.id], notesIds: [] };
+  if (sel.type === 'notes') return { nodeIds: [], notesIds: [sel.id] };
+  if (sel.type === 'multi') return { nodeIds: sel.ids, notesIds: sel.notesIds ?? [] };
+  return null;
+}
+
+function reorder(doc: DiagramDocument, sel: SelectionTarget, move: StackMove): boolean {
+  if (sel.type === 'zone') return reorderZone(doc, sel.id, move);
+  const picks = stackPicks(sel);
+  return picks ? moveInStack(doc, move, picks.nodeIds, picks.notesIds) : false;
+}
+
+/** Swimlanes keep an order of their own: they always sit under everything else. */
+function reorderZone(doc: DiagramDocument, id: string, move: StackMove): boolean {
+  const idx = doc.zones.findIndex((z) => z.id === id);
+  if (idx === -1) return false;
+  const last = doc.zones.length - 1;
+  const to = move === 'front' ? last : move === 'back' ? 0 : move === 'forward' ? idx + 1 : idx - 1;
+  if (to < 0 || to > last || to === idx) return false;
+  const [zone] = doc.zones.splice(idx, 1);
+  doc.zones.splice(to, 0, zone);
+  updateZIndices(doc.zones);
+  return true;
+}
+
+/** Brings the selection in front of every other component, note and text label. */
 export function bringToFront(doc: DiagramDocument, sel: SelectionTarget): boolean {
-  if (sel.type === 'node') {
-    const idx = doc.nodes.findIndex((n) => n.id === sel.id);
-    if (idx === -1 || idx === doc.nodes.length - 1) return false;
-    const [node] = doc.nodes.splice(idx, 1);
-    doc.nodes.push(node);
-    updateZIndices(doc.nodes);
-    return true;
-  }
-  if (sel.type === 'multi') {
-    const selectedIds = new Set(sel.ids);
-    const unselected = doc.nodes.filter((n) => !selectedIds.has(n.id));
-    const selected = doc.nodes.filter((n) => selectedIds.has(n.id));
-    if (selected.length === 0) return false;
-    doc.nodes = [...unselected, ...selected];
-    updateZIndices(doc.nodes);
-    return true;
-  }
-  if (sel.type === 'zone') {
-    const idx = doc.zones.findIndex((z) => z.id === sel.id);
-    if (idx === -1 || idx === doc.zones.length - 1) return false;
-    const [zone] = doc.zones.splice(idx, 1);
-    doc.zones.push(zone);
-    updateZIndices(doc.zones);
-    return true;
-  }
-  if (sel.type === 'notes') {
-    const idx = doc.notesCards.findIndex((c) => c.id === sel.id);
-    if (idx === -1 || idx === doc.notesCards.length - 1) return false;
-    const [card] = doc.notesCards.splice(idx, 1);
-    doc.notesCards.push(card);
-    updateZIndices(doc.notesCards);
-    return true;
-  }
-  return false;
+  return reorder(doc, sel, 'front');
 }
 
-/**
- * Sends selected elements to the back (start of array).
- */
+/** Sends the selection behind every other component, note and text label. */
 export function sendToBack(doc: DiagramDocument, sel: SelectionTarget): boolean {
-  if (sel.type === 'node') {
-    const idx = doc.nodes.findIndex((n) => n.id === sel.id);
-    if (idx <= 0) return false;
-    const [node] = doc.nodes.splice(idx, 1);
-    doc.nodes.unshift(node);
-    updateZIndices(doc.nodes);
-    return true;
-  }
-  if (sel.type === 'multi') {
-    const selectedIds = new Set(sel.ids);
-    const unselected = doc.nodes.filter((n) => !selectedIds.has(n.id));
-    const selected = doc.nodes.filter((n) => selectedIds.has(n.id));
-    if (selected.length === 0) return false;
-    doc.nodes = [...selected, ...unselected];
-    updateZIndices(doc.nodes);
-    return true;
-  }
-  if (sel.type === 'zone') {
-    const idx = doc.zones.findIndex((z) => z.id === sel.id);
-    if (idx <= 0) return false;
-    const [zone] = doc.zones.splice(idx, 1);
-    doc.zones.unshift(zone);
-    updateZIndices(doc.zones);
-    return true;
-  }
-  if (sel.type === 'notes') {
-    const idx = doc.notesCards.findIndex((c) => c.id === sel.id);
-    if (idx <= 0) return false;
-    const [card] = doc.notesCards.splice(idx, 1);
-    doc.notesCards.unshift(card);
-    updateZIndices(doc.notesCards);
-    return true;
-  }
-  return false;
+  return reorder(doc, sel, 'back');
 }
 
-/**
- * Steps selected elements one layer forward.
- */
+/** Steps the selection one layer forward. */
 export function bringForward(doc: DiagramDocument, sel: SelectionTarget): boolean {
-  if (sel.type === 'node') {
-    const idx = doc.nodes.findIndex((n) => n.id === sel.id);
-    if (idx === -1 || idx >= doc.nodes.length - 1) return false;
-    const temp = doc.nodes[idx];
-    doc.nodes[idx] = doc.nodes[idx + 1];
-    doc.nodes[idx + 1] = temp;
-    updateZIndices(doc.nodes);
-    return true;
-  }
-  if (sel.type === 'zone') {
-    const idx = doc.zones.findIndex((z) => z.id === sel.id);
-    if (idx === -1 || idx >= doc.zones.length - 1) return false;
-    const temp = doc.zones[idx];
-    doc.zones[idx] = doc.zones[idx + 1];
-    doc.zones[idx + 1] = temp;
-    updateZIndices(doc.zones);
-    return true;
-  }
-  if (sel.type === 'notes') {
-    const idx = doc.notesCards.findIndex((c) => c.id === sel.id);
-    if (idx === -1 || idx >= doc.notesCards.length - 1) return false;
-    const temp = doc.notesCards[idx];
-    doc.notesCards[idx] = doc.notesCards[idx + 1];
-    doc.notesCards[idx + 1] = temp;
-    updateZIndices(doc.notesCards);
-    return true;
-  }
-  return false;
+  return reorder(doc, sel, 'forward');
 }
 
-/**
- * Steps selected elements one layer backward.
- */
+/** Steps the selection one layer backward. */
 export function sendBackward(doc: DiagramDocument, sel: SelectionTarget): boolean {
-  if (sel.type === 'node') {
-    const idx = doc.nodes.findIndex((n) => n.id === sel.id);
-    if (idx <= 0) return false;
-    const temp = doc.nodes[idx];
-    doc.nodes[idx] = doc.nodes[idx - 1];
-    doc.nodes[idx - 1] = temp;
-    updateZIndices(doc.nodes);
-    return true;
-  }
-  if (sel.type === 'zone') {
-    const idx = doc.zones.findIndex((z) => z.id === sel.id);
-    if (idx <= 0) return false;
-    const temp = doc.zones[idx];
-    doc.zones[idx] = doc.zones[idx - 1];
-    doc.zones[idx - 1] = temp;
-    updateZIndices(doc.zones);
-    return true;
-  }
-  if (sel.type === 'notes') {
-    const idx = doc.notesCards.findIndex((c) => c.id === sel.id);
-    if (idx <= 0) return false;
-    const temp = doc.notesCards[idx];
-    doc.notesCards[idx] = doc.notesCards[idx - 1];
-    doc.notesCards[idx - 1] = temp;
-    updateZIndices(doc.notesCards);
-    return true;
-  }
-  return false;
+  return reorder(doc, sel, 'backward');
 }
 
 function updateZIndices(items: Array<{ z?: number }>): void {

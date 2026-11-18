@@ -3,12 +3,16 @@ import {
   NOTES_EXPORT_FIRST_LINE,
   NOTES_EXPORT_ITEM_GAP,
   NOTES_EXPORT_LINE,
+  clampTextWidth,
   notesCardWidth,
   notesExportHeight,
   notesExportLines,
+  textFontSize,
+  wrapNotesText,
 } from '../core/notesSize';
+import { stackOrder, stackZIndices, type StackItem } from '../core/stack';
 import { describeDiagram } from '../core/describe';
-import type { DiagramDocument, DiagramNode, DiagramStyle, StreamTone, SelectionTarget } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramNotesCard, DiagramStyle, StreamTone, SelectionTarget } from '../types';
 import { relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { queueCardText, streamLanes } from '../core/queues';
 import { cylinderPlate, drawnShape, nodeShapePlate, pipePlate, queueDrawsPipe, sanitizeIconImage, storeDrawsBucket, storeDrawsCylinder } from '../core/nodeStyle';
@@ -400,33 +404,41 @@ export function renderDiagramSvg(
     })
     .join('');
 
-  const notes = doc.notesCards
-    .map((card) => {
-      const isSel = isMulti && selectedNotes.has(card.id);
-      if (card.variant === 'text') {
-        return `<text x="${card.x + 8}" y="${card.y + 22}" font-family="${SANS}" font-size="16" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>`;
-      }
-      const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}"`;
-      // The card keeps its width and grows or shrinks with its wrapped items.
-      const boxHeight = notesExportHeight(card);
-      const w = notesCardWidth(card);
-      let lineY = card.y + NOTES_EXPORT_FIRST_LINE;
-      const items = notesExportLines(card)
-        .map((lines) => {
-          const tspans = lines
-            .map((line, i) => `<tspan x="${card.x + 18}" y="${lineY + i * NOTES_EXPORT_LINE}">${escapeXml(line)}</tspan>`)
-            .join('');
-          lineY += lines.length * NOTES_EXPORT_LINE + NOTES_EXPORT_ITEM_GAP;
-          return `<text font-family="${SANS}" font-size="12" fill="${pal.secondary}">${tspans}</text>`;
-        })
+  const noteMarkup = (card: DiagramNotesCard): string => {
+    const isSel = isMulti && selectedNotes.has(card.id);
+    if (card.variant === 'text') {
+      // The canvas draws the words 4px down and 8px in, on a 1.3 line, wrapped inside the width when it has one.
+      const size = textFontSize(card);
+      const fill = card.color ? pal.tone[card.color] : pal.ink;
+      const width = clampTextWidth(card.width);
+      const lines = width === undefined ? [card.title] : wrapNotesText(card.title, (width - 16) / (size * 0.56));
+      const lineH = Math.round(size * 1.3);
+      const first = card.y + 4 + Math.round(size * 1.05);
+      const tspans = lines
+        .map((line, i) => `<tspan x="${card.x + 8}" y="${first + i * lineH}">${escapeXml(line)}</tspan>`)
         .join('');
-      // A sheet with a folded top-right corner (8.1), sans throughout.
-      const { x, y } = card;
-      const outline = `M${x} ${y}H${x + w - 18}L${x + w} ${y + 18}V${y + boxHeight}H${x}Z`;
-      const fold = `<path d="M${x + w - 18} ${y}V${y + 18}H${x + w}" fill="${pal.border}" fill-opacity="0.35" stroke="${pal.border}"/>`;
-      return `<g><path d="${outline}" fill="${pal.surface}"${stroke}/>${fold}<text x="${x + 18}" y="${y + 28}" font-family="${SANS}" font-size="13" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>${items}</g>`;
-    })
-    .join('');
+      return `<text font-family="${SANS}" font-size="${size}" font-weight="600" fill="${fill}">${tspans}</text>`;
+    }
+    const stroke = isSel ? ` stroke="${pal.tone.blue}" stroke-width="2.5"` : ` stroke="${pal.border}"`;
+    // The card keeps its width and grows or shrinks with its wrapped items.
+    const boxHeight = notesExportHeight(card);
+    const w = notesCardWidth(card);
+    let lineY = card.y + NOTES_EXPORT_FIRST_LINE;
+    const items = notesExportLines(card)
+      .map((lines) => {
+        const tspans = lines
+          .map((line, i) => `<tspan x="${card.x + 18}" y="${lineY + i * NOTES_EXPORT_LINE}">${escapeXml(line)}</tspan>`)
+          .join('');
+        lineY += lines.length * NOTES_EXPORT_LINE + NOTES_EXPORT_ITEM_GAP;
+        return `<text font-family="${SANS}" font-size="12" fill="${pal.secondary}">${tspans}</text>`;
+      })
+      .join('');
+    // A sheet with a folded top-right corner (8.1), sans throughout.
+    const { x, y } = card;
+    const outline = `M${x} ${y}H${x + w - 18}L${x + w} ${y + 18}V${y + boxHeight}H${x}Z`;
+    const fold = `<path d="M${x + w - 18} ${y}V${y + 18}H${x + w}" fill="${pal.border}" fill-opacity="0.35" stroke="${pal.border}"/>`;
+    return `<g><path d="${outline}" fill="${pal.surface}"${stroke}/>${fold}<text x="${x + 18}" y="${y + 28}" font-family="${SANS}" font-size="13" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>${items}</g>`;
+  };
 
   const wires = routed
     .map((edge) => {
@@ -478,9 +490,14 @@ export function renderDiagramSvg(
     })
     .join('');
 
-  const nodes = doc.nodes
-    .map((node) => nodeMarkup(node, pal, selection, related, spotlight, doc.direction))
-    .join('');
+  // One front-to-back order for components, notes and text, as on the canvas: notes under every component sit
+  // under the wires; from the lowest component up, everything is drawn in stack order above them.
+  const zIndex = stackZIndices(doc);
+  const drawn = (s: StackItem) =>
+    s.kind === 'node' ? nodeMarkup(s.item, pal, selection, related, spotlight, doc.direction) : noteMarkup(s.item);
+  const stack = stackOrder(doc);
+  const notes = stack.filter((s) => zIndex.get(s.item.id) === undefined).map(drawn).join('');
+  const nodes = stack.filter((s) => zIndex.get(s.item.id) !== undefined).map(drawn).join('');
 
   const legend = legendMarkup(doc, height, pal);
 

@@ -1,5 +1,6 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
-import { notesCardWidth } from '../core/notesSize';
+import { clampTextWidth, notesCardWidth, textFontSize } from '../core/notesSize';
+import { STACK_BASE_Z, stackZIndices } from '../core/stack';
 import { breadcrumb, viewOfLevel } from '../core/levels';
 import { pageList, viewOfPage } from '../core/pages';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -96,6 +97,7 @@ function renderExportedNode(
   options?: StandaloneHtmlOptions,
   related?: Set<string>,
   direction: 'LR' | 'TD' = 'LR',
+  zIndex?: number,
 ): string {
   const multiSel = options?.initialSelection?.type === 'multi' ? options.initialSelection : null;
   const hasSelection = Boolean(options?.initialSelection && options.initialSelection.type !== 'none');
@@ -109,7 +111,7 @@ function renderExportedNode(
   const isDim = Boolean(multiSel && multiSel.ids.length > 0 && !isSel && !isRel);
   const stateCls = isRel ? ' is-related' : isDim ? ' is-dimmed' : '';
   const shape = nodeShapeAttr(node) + (node.external ? ' data-external="true"' : '');
-  const box = nodeBoxStyle(node);
+  const box = nodeBoxStyle(node) + (zIndex !== undefined ? `; z-index: ${zIndex}` : '');
   const plate = nodePlateMarkup(node, direction);
   const badges = renderNodeBadges(node, options);
   if (node.kind === 'actor') {
@@ -235,19 +237,34 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
     })
     .join('\n');
 
+  // Components, notes and text share one front-to-back order. Only when a note or a text label has been brought
+  // above a component does anything need a z-index; otherwise the page's own order already draws it.
+  const stackIndices = stackZIndices(doc);
+  const reordered = doc.notesCards.some((c) => stackIndices.get(c.id) !== undefined);
+  const stackZ = (id: string): number | undefined => {
+    const z = reordered ? stackIndices.get(id) : undefined;
+    return z === undefined ? undefined : z - STACK_BASE_Z + 1;
+  };
   const notesMarkup = doc.notesCards
     .map((card) => {
       const isSel = isMulti && selectedNotes.has(card.id);
-      const selCls = (isSel ? ' is-selected' : '') + (card.variant === 'text' ? ' is-text' : '');
+      const z = stackZ(card.id);
+      const zStyle = z !== undefined ? ` z-index: ${z};` : '';
       if (card.variant === 'text') {
+        const width = clampTextWidth(card.width);
+        const textCls = ' is-text' + (width !== undefined ? ' has-width' : '');
+        const textStyle =
+          (width !== undefined ? ` --nw: ${width};` : '') +
+          (card.fontSize !== undefined ? ` --tfs: ${textFontSize(card)};` : '') +
+          (card.color ? ` --tc: var(--cc-${card.color});` : '');
         return `
-      <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};" aria-label="${escapeHtml(card.title)}">
+      <aside class="blueprint-spec${isSel ? ' is-selected' : ''}${textCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};${textStyle}${zStyle}" aria-label="${escapeHtml(card.title)}">
         <div class="blueprint-spec-header"><span>${escapeHtml(card.title)}</span></div>
       </aside>`;
       }
       const widthVar = card.width !== undefined ? ` --nw: ${notesCardWidth(card)};` : '';
       return `
-      <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};${widthVar}" aria-label="${escapeHtml(card.title)}">
+      <aside class="blueprint-spec${isSel ? ' is-selected' : ''}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};${widthVar}${zStyle}" aria-label="${escapeHtml(card.title)}">
         <div class="blueprint-spec-header">
           <span>${escapeHtml(card.title)}</span>
           <span>${escapeHtml(card.code)}</span>
@@ -330,7 +347,9 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
         )
         .join('')}</div></nav>`
     : '';
-  const nodesMarkup = doc.nodes.map((n, idx) => renderExportedNode(n, idx, options, related, doc.direction)).join('\n');
+  const nodesMarkup = doc.nodes
+    .map((n, idx) => renderExportedNode(n, idx, options, related, doc.direction, stackZ(n.id)))
+    .join('\n');
 
   const simButtonsMarkup = simulations
     .map((sim) => {

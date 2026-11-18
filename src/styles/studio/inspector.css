@@ -363,6 +363,8 @@
   .with-unit { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
   .prop-unit { font: var(--cc-font-small); color: var(--cc-ink-3); }
   .swatch-picker { display: flex; flex-wrap: wrap; gap: 7px; min-block-size: 30px; align-items: center; border: 0; padding: 4px 0; margin: 0; min-inline-size: 0; }
+  /* A text label's colours: ink and the seven tones, which need a little less room between them to fit on one line. */
+  .swatch-picker--text { gap: 5px; }
   .swatch-option { display: grid; place-items: center; cursor: pointer; }
   .swatch-option .pill-swatch { inline-size: 18px; block-size: 18px; border-radius: 50%; display: block; }
   .swatch-option:has(input:checked) .pill-swatch { box-shadow: 0 0 0 2px var(--cc-sheet), 0 0 0 3.5px var(--cc-ink); }

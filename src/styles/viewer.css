@@ -143,7 +143,9 @@
   .blueprint-spec.is-text.is-selected { border: 1px solid var(--cc-blue); }
   .blueprint-spec.is-text::after { display: none; }
   .blueprint-spec.is-text { width: max-content; max-width: 404px; padding: 0.25rem 0.5rem; background: none; border-color: transparent; backdrop-filter: none; }
-  .blueprint-spec.is-text .blueprint-spec-header { margin-block-end: 0; font-family: inherit; font-size: 1rem; font-weight: 600; color: var(--cc-ink); }
+  .blueprint-spec.is-text.has-width { width: calc(var(--nw) * 1px); max-width: none; }
+  .blueprint-spec.is-text .blueprint-spec-header { margin-block-end: 0; font-family: inherit; font-size: calc(var(--tfs, 16) * 1px); line-height: 1.3; font-weight: 600; color: var(--tc, var(--cc-ink)); }
+  .blueprint-spec.is-text .blueprint-spec-header > span { min-inline-size: 0; overflow-wrap: anywhere; }
   .blueprint-spec.is-text .blueprint-spec-list { display: none; }
   .blueprint-spec-header { display: flex; align-items: center; justify-content: space-between; margin-block-end: 0.625rem; font-size: 0.8125rem; font-family: inherit; font-weight: 600; color: var(--cc-ink); }
   .blueprint-spec-list { display: grid; gap: 0.5rem; }
@@ -367,7 +369,7 @@
   .sim-packet {
     position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 0.4rem;
     padding: 0.3rem 0.65rem; border-radius: 999px; background: var(--cc-sheet); border: 2px solid var(--cc-emerald);
-    color: var(--cc-ink); font-family: var(--cc-font-mono); font-size: 0.75rem; font-weight: 700; pointer-events: none; z-index: 15;
+    color: var(--cc-ink); font-family: var(--cc-font-mono); font-size: 0.75rem; font-weight: 700; pointer-events: none; z-index: 100000;
     translate: calc(var(--px, 0) * 1px - 50%) calc(var(--py, 0) * 1px - 50%);
     transition: translate 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
     @media (prefers-reduced-motion: reduce) { transition: opacity 0.15s linear; }

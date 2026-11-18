@@ -325,7 +325,7 @@
 
   .blueprint-spec.is-text::after { display: none; }
 
-  /* Drag the right edge to make a note wider or narrower (Design only, and not on a text label). */
+  /* Drag the right edge to make a note or a text label wider or narrower (Design only). */
   .notes-resize-handle {
     position: absolute;
     top: 18px;
@@ -336,8 +336,11 @@
     touch-action: none;
     display: none;
   }
-  .workspace[data-mode="design"] .blueprint-spec:not(.is-text) .notes-resize-handle {
+  .workspace[data-mode="design"] .blueprint-spec .notes-resize-handle {
     display: block;
+  }
+  .blueprint-spec.is-text .notes-resize-handle {
+    top: 0;
   }
 
   .blueprint-spec.is-selected {
@@ -361,12 +364,23 @@
     filter: none;
     box-shadow: none;
   }
+  /* A width the user dragged to: the words wrap inside it. */
+  .blueprint-spec.is-text.has-width {
+    width: calc(var(--nw) * 1px);
+    max-width: none;
+  }
+  /* --tfs and --tc: the font size and colour chosen in the inspector. */
   .blueprint-spec.is-text .blueprint-spec-header {
     margin-block-end: 0;
     font-family: inherit;
-    font-size: 1rem;
+    font-size: calc(var(--tfs, 16) * 1px);
+    line-height: 1.3;
     font-weight: 600;
-    color: var(--cc-ink);
+    color: var(--tc, var(--cc-ink));
+  }
+  .blueprint-spec.is-text .notes-title {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
   }
   .blueprint-spec.is-text .notes-code,
   .blueprint-spec.is-text .blueprint-spec-list {
@@ -482,8 +496,9 @@
     z-index: 3;
   }
 
+  /* Above every component and note: those take z-index 5, 6, 7 ... from their place in the stack (Bring to Front). */
   .wire-handles-layer {
-    z-index: 12;
+    z-index: 100000;
   }
 
   .conduit-hit {
@@ -657,7 +672,7 @@
     background: var(--cc-blue-soft);
     border-radius: 0.35rem;
     pointer-events: none;
-    z-index: 60;
+    z-index: 100001;
   }
 
   .multi-action-grid {
