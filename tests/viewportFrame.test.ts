@@ -7,6 +7,7 @@ import {
   READABLE_FIT_SCALE_MIN,
   NOTES_CARD_WIDTH,
   contentWorldBounds,
+  diagramPictureBounds,
   frameRectInViewport,
   frameDocumentInViewport,
   minimapMap,
@@ -222,5 +223,39 @@ describe('viewport framing', () => {
     assert.equal(edge?.x, 0);
     assert.equal(edge?.y, 0);
     assert.equal(scenarioPictureBounds({ ...doc, nodes: [] }, [], [], 32), null);
+  });
+
+  it('crops a whole-diagram picture to components, wires, notes and swimlanes, not the padded stage', () => {
+    const a = node({ id: 'a', x: 200, y: 300, width: 160, height: 100 });
+    const b = node({ id: 'b', x: 600, y: 320, width: 160, height: 100 });
+    const doc = blank({
+      nodes: [a, b],
+      stageWidth: 3000,
+      stageHeight: 1800,
+      zones: [{ id: 'z', number: '01', title: 'Lane', subtitle: '', x: 150, width: 300 }],
+      notesCards: [{ id: 'n', title: 'Notes', code: 'S', x: 220, y: 520, items: [{ title: 'A', text: 'B' }] }],
+    });
+    const box = diagramPictureBounds(doc, [{ pathD: 'M 360 350 L 600 370' }], 32);
+    assert.ok(box);
+    // The swimlane starts at its banner (y 0); the note is the right- and bottom-most thing.
+    assert.equal(box.x, 118);
+    assert.equal(box.y, 0);
+    assert.equal(box.x + box.width, Math.max(760, 220 + NOTES_CARD_WIDTH) + 32);
+    assert.equal(box.y + box.height, Math.ceil(520 + notesCardHeight(doc.notesCards[0]) + 32));
+    // Well inside the stage: the empty padding to the right and below is gone.
+    assert.ok(box.width < 1000 && box.height < 800);
+  });
+
+  it('Fit frames the diagram, not the padded stage', () => {
+    const nodes = Array.from({ length: 6 }, (_, i) => node({ id: `n${i}`, x: 100 + i * 200, y: 200, width: 160, height: 100 }));
+    const doc = blank({ nodes, stageWidth: 3000, stageHeight: 1800 });
+    const frame = frameDocumentInViewport(1400, 800, doc);
+    assert.ok(frame);
+    // Stage framing would give (1400 - 48) / 3000 = 0.45. The diagram is 1160 px wide plus margins.
+    assert.ok(frame.scale > 0.9, `scale ${frame.scale}`);
+    // And it is centred: the first and last components are the same distance from the edges.
+    const left = frame.panX + 100 * frame.scale;
+    const right = 1400 - (frame.panX + 1260 * frame.scale);
+    assert.ok(Math.abs(left - right) < 1, `left ${left}, right ${right}`);
   });
 });
