@@ -3,6 +3,7 @@ import type { StreamTone } from '../types';
 import { TONE_CSS } from '../shared/tones';
 import { describeDiagram } from '../core/describe';
 import { renderDiagramSvg, ROUGH_FILTER } from '../exporter/diagramSvg';
+import { notesRect, type WorldRect } from './viewportFrame';
 import { titleBlockFor, titleBlockSvg } from '../exporter/titleBlock';
 import { pageCount } from '../core/pages';
 import { app } from './state';
@@ -17,6 +18,8 @@ export interface StagePictureOptions {
   dashOffset?: number;
   /** Crop to the canvas viewport, including the current pan and zoom. */
   currentView?: boolean;
+  /** Crop to this part of the stage, in stage pixels (a scenario GIF keeps just its components). */
+  crop?: WorldRect;
   /** Components lit for one scenario hop. */
   activeNodes?: readonly string[];
   tone?: StreamTone;
@@ -292,6 +295,18 @@ function documentCss(): string {
   return chunks.join('\n');
 }
 
+/** A cropped picture shows a note only if all of it fits, so no card is cut in half at the edge. */
+function hideNotesOutside(clone: HTMLElement, crop: WorldRect): void {
+  clone.querySelectorAll<HTMLElement>('.blueprint-spec').forEach((el) => {
+    const card = app.doc.notesCards.find((c) => c.id === el.dataset.notesId);
+    if (!card) return;
+    const r = notesRect(card);
+    const inside =
+      r.x >= crop.x && r.y >= crop.y && r.x + r.width <= crop.x + crop.width && r.y + r.height <= crop.y + crop.height;
+    if (!inside) el.style.display = 'none';
+  });
+}
+
 function paintScenario(clone: HTMLElement, frame: StagePictureOptions): void {
   const activeNodes = frame.activeNodes ?? [];
   if (activeNodes.length === 0) return;
@@ -350,8 +365,17 @@ export function renderStagePictureSvg(
   const stageWidth = Math.max(1, Math.round(app.doc.stageWidth));
   const stageHeight = Math.max(1, Math.round(app.doc.stageHeight));
   const currentView = Boolean(frame?.currentView) && Boolean(liveViewport && liveViewport.clientWidth > 0 && liveViewport.clientHeight > 0);
-  const frameWidth = currentView && liveViewport ? Math.max(1, Math.round(liveViewport.clientWidth)) : stageWidth;
-  const frameHeight = currentView && liveViewport ? Math.max(1, Math.round(liveViewport.clientHeight)) : stageHeight;
+  const crop = !currentView && frame?.crop && frame.crop.width >= 1 && frame.crop.height >= 1 ? frame.crop : null;
+  const frameWidth = currentView && liveViewport
+    ? Math.max(1, Math.round(liveViewport.clientWidth))
+    : crop
+      ? Math.round(crop.width)
+      : stageWidth;
+  const frameHeight = currentView && liveViewport
+    ? Math.max(1, Math.round(liveViewport.clientHeight))
+    : crop
+      ? Math.round(crop.height)
+      : stageHeight;
   const outWidth = pixelWidth ?? frameWidth;
   const outHeight = pixelHeight ?? frameHeight;
 
@@ -404,6 +428,7 @@ export function renderStagePictureSvg(
   cleanClonedStage(clone, { preserveSelection: frame?.preserveSelection ?? (app.selection.type === 'multi') });
 
   if (frame) paintScenario(clone, frame);
+  if (crop) hideNotesOutside(clone, crop);
   clone.removeAttribute('id');
   // The live stage uses CSS zoom. This picture keeps the previous scale transform.
   clone.style.removeProperty('zoom');
@@ -419,6 +444,9 @@ export function renderStagePictureSvg(
     } else {
       clone.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
+  } else if (crop) {
+    const cropScale = Math.min(outWidth / crop.width, outHeight / crop.height);
+    clone.style.transform = `scale(${cropScale}) translate(${-crop.x}px, ${-crop.y}px)`;
   } else {
     const fitScale = Math.min(outWidth / stageWidth, outHeight / stageHeight);
     if (fitScale !== 1) {

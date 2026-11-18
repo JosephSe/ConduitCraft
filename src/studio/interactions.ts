@@ -145,6 +145,7 @@ import {
   getNodeCenter,
   getNodeDimensions,
   getPortPoint,
+  routeDiagramEdges,
 } from '../core/layout';
 import {
   importMermaidOrBlueprint,
@@ -156,7 +157,7 @@ import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pageCount } from '../core/pages';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
-import { FIT_SCALE_MIN } from './viewportFrame';
+import { FIT_SCALE_MIN, scenarioPictureBounds } from './viewportFrame';
 import { selectionOfStage } from './selection';
 import {
   deleteActiveDiagram,
@@ -170,7 +171,7 @@ import {
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
 import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
-import { setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
+import { TITLE_BLOCK_HEIGHT, setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey, normalizeStyle } from '../core/meta';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
@@ -1448,15 +1449,25 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         hudStatusTip.textContent = 'That scenario has no hops to record.';
         return;
       }
-      const size = gifPixelSize(doc.stageWidth, doc.stageHeight);
+      // Keep the components and a small margin, not the whole padded stage.
+      const withTitle = titleBlockEnabled();
+      let crop = scenarioPictureBounds(doc, routeDiagramEdges(doc), scenario.steps) ?? undefined;
+      let size = crop ? gifPixelSize(crop.width, crop.height) : gifPixelSize(doc.stageWidth, doc.stageHeight);
+      if (crop && withTitle) {
+        // The title block covers the bottom strip of the picture, so give it room below the components.
+        const extra = Math.ceil(TITLE_BLOCK_HEIGHT * (crop.width / size.width));
+        crop = { ...crop, height: crop.height + extra };
+        size = gifPixelSize(crop.width, crop.height);
+      }
       const frames: Uint8ClampedArray[] = [];
       for (const step of scenario.steps) {
         const svg = renderStagePictureSvg(size.width, size.height, {
+          ...(crop ? { crop } : {}),
           activeNodes: step.nodes,
           tone: step.tone,
           packetLabel: step.label,
           preserveSelection: false,
-          titleBlock: titleBlockEnabled(),
+          titleBlock: withTitle,
         });
         frames.push(await rasterizeSvg(svg, size.width, size.height));
       }

@@ -97,6 +97,62 @@ export function contentWorldBounds(doc: DiagramDocument): WorldRect | null {
   ]);
 }
 
+/** Margin around the components in a scenario GIF, in stage pixels. */
+export const SCENARIO_PICTURE_PAD = 32;
+
+/** Every coordinate pair in an absolute SVG path (M, L, C, Q), including curve control points. */
+function pathRect(pathD: string): WorldRect | null {
+  const nums = (pathD.match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/gi) ?? []).map(Number);
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    xs.push(nums[i]);
+    ys.push(nums[i + 1]);
+  }
+  if (xs.length === 0) return null;
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  // A straight wire is a line; give it some thickness so the union keeps it.
+  return { x, y, width: Math.max(1, Math.max(...xs) - x), height: Math.max(1, Math.max(...ys) - y) };
+}
+
+/**
+ * The part of the stage a scenario GIF shows: the components, the wires between them, the frames around them and the
+ * packet label drawn above the lit component of each hop, plus a small margin. Swimlanes, notes and the empty stage
+ * around them are left out, so the animation is not mostly blank. Clamped to the stage.
+ */
+export function scenarioPictureBounds(
+  doc: Pick<DiagramDocument, 'nodes' | 'frames' | 'stageWidth' | 'stageHeight'>,
+  wires: readonly { pathD: string }[],
+  steps: readonly { nodes: readonly string[]; label?: string }[],
+  pad = SCENARIO_PICTURE_PAD,
+): WorldRect | null {
+  const rects: WorldRect[] = doc.nodes.map(nodeRect);
+  for (const wire of wires) {
+    const r = pathRect(wire.pathD);
+    if (r) rects.push(r);
+  }
+  for (const f of doc.frames ?? []) rects.push({ x: f.x, y: f.y, width: f.width, height: f.height });
+  for (const step of steps) {
+    const anchor = doc.nodes.find((n) => n.id === step.nodes[0]);
+    if (!anchor) continue;
+    // The packet pill sits 62px above the component's middle (see paintScenario).
+    const label = step.label || anchor.title || '';
+    const w = Math.max(80, label.length * 7.5 + 44);
+    const cx = anchor.x + anchor.width / 2;
+    const cy = anchor.y + anchor.height / 2 - 62;
+    rects.push({ x: cx - w / 2, y: cy - 16, width: w, height: 32 });
+  }
+  const box = unionRects(rects);
+  if (!box) return null;
+  const x0 = Math.max(0, Math.floor(box.x - pad));
+  const y0 = Math.max(0, Math.floor(box.y - pad));
+  const x1 = Math.min(Math.max(1, doc.stageWidth), Math.ceil(box.x + box.width + pad));
+  const y1 = Math.min(Math.max(1, doc.stageHeight), Math.ceil(box.y + box.height + pad));
+  if (x1 <= x0 || y1 <= y0) return null;
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+}
+
 /**
  * World bounds for the current selection.
  * An empty selection frames every node, zone, and notes card.
