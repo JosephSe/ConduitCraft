@@ -1,7 +1,7 @@
 /** Keyed stage rendering. Existing elements are updated in place; listeners stay bound. */
 import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagramEdge } from '../types';
 import { getNotesItemIconMeta } from '../types';
-import { NOTES_CARD_WIDTH, clampNotesWidth, notesCardWidth } from '../core/notesSize';
+import { NOTES_CARD_WIDTH, clampNotesWidth, clampTextWidth, notesCardWidth, textFontSize } from '../core/notesSize';
 import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
 import {
@@ -54,6 +54,7 @@ import {
 } from './interactions';
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
+import { stackZIndices } from '../core/stack';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -275,7 +276,25 @@ export function renderNotesCards(): void {
     createNotesCard,
     (el, card) => paintNotesCard(el as HTMLElement, card),
   );
+  paintStackOrder();
   scheduleMinimapPaint();
+}
+
+/**
+ * Components, notes and text share one front-to-back order (Bring to Front, Send to Back). They live in two layers,
+ * so the order is drawn with a z-index on each element; notes under every component keep none and stay under the wires.
+ */
+export function paintStackOrder(): void {
+  const z = stackZIndices(app.doc);
+  const apply = (el: HTMLElement, id: string | undefined) => {
+    const value = id === undefined ? undefined : z.get(id);
+    if (value === undefined) el.style.removeProperty('z-index');
+    else el.style.zIndex = String(value);
+  };
+  for (const layer of [nodesLayer, notesLayer]) {
+    // A page without one of the layers (a test fixture) has nothing to order there.
+    for (const el of Array.from(layer?.children ?? []) as HTMLElement[]) apply(el, el.dataset.node ?? el.dataset.notesId);
+  }
 }
 
 function createNotesCard(card: DiagramNotesCard): HTMLElement {
@@ -295,7 +314,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
   list.className = 'blueprint-spec-list';
   const resizeHandle = document.createElement('div');
   resizeHandle.className = 'notes-resize-handle';
-  resizeHandle.title = 'Drag to change the note width. Double-click to reset it.';
+  resizeHandle.title = 'Drag to change the width. Double-click to reset it.';
   aside.append(header, list, resizeHandle);
 
   const isToggleNotesEvent = (e: MouseEvent | PointerEvent) => {
@@ -411,12 +430,13 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
   resizeHandle.addEventListener('pointerdown', (e) => {
     if (app.workspaceMode !== 'design' || e.button !== 0) return;
     const current = liveNotes(aside.dataset.notesId || '');
-    if (!current || current.variant === 'text') return;
+    if (!current) return;
     e.stopPropagation();
     applySelection({ type: 'notes', id: current.id });
     if (current.locked) return;
     resizeStartX = e.clientX;
-    origW = notesCardWidth(current);
+    // A text label without a width is as wide as its words: start from what is drawn.
+    origW = current.variant === 'text' ? (clampTextWidth(current.width) ?? aside.offsetWidth) : notesCardWidth(current);
     resized = false;
     resizeHandle.setPointerCapture(e.pointerId);
   });
@@ -433,8 +453,10 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     }
     if (resized) {
       const raw = origW + dw;
-      current.width = clampNotesWidth(app.snapToGrid ? Math.round(raw / 16) * 16 : raw);
+      const snapped = app.snapToGrid ? Math.round(raw / 16) * 16 : raw;
+      current.width = current.variant === 'text' ? clampTextWidth(snapped) : clampNotesWidth(snapped);
       aside.style.setProperty('--nw', String(current.width));
+      aside.classList.toggle('has-width', current.variant === 'text');
       expandStageToFit(app.doc);
       scheduleMinimapPaint();
     }
@@ -460,6 +482,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     pushHistory();
     delete current.width;
     aside.style.removeProperty('--nw');
+    aside.classList.remove('has-width');
     scheduleMinimapPaint();
     renderPropertyEditor();
   });
@@ -470,9 +493,16 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
 function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   aside.style.setProperty('--bx', String(card.x));
   aside.style.setProperty('--by', String(card.y));
-  if (card.width !== undefined && card.variant !== 'text') aside.style.setProperty('--nw', String(notesCardWidth(card)));
+  const isText = card.variant === 'text';
+  const width = isText ? clampTextWidth(card.width) : card.width !== undefined ? notesCardWidth(card) : undefined;
+  if (width !== undefined) aside.style.setProperty('--nw', String(width));
   else aside.style.removeProperty('--nw');
-  aside.classList.toggle('is-text', card.variant === 'text');
+  aside.classList.toggle('is-text', isText);
+  aside.classList.toggle('has-width', isText && width !== undefined);
+  if (isText && card.fontSize !== undefined) aside.style.setProperty('--tfs', String(textFontSize(card)));
+  else aside.style.removeProperty('--tfs');
+  if (isText && card.color) aside.style.setProperty('--tc', `var(--cc-${card.color})`);
+  else aside.style.removeProperty('--tc');
   const title = aside.querySelector('.notes-title');
   if (title) title.textContent = card.title;
   const code = aside.querySelector('.notes-code');
@@ -942,6 +972,7 @@ export function renderNodes(): void {
     createNodeElement,
     (el, node) => paintNode(el as HTMLElement, node),
   );
+  paintStackOrder();
   scheduleMinimapPaint();
 }
 

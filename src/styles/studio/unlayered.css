@@ -1525,7 +1525,8 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 6;
+  /* Above every component and note, whatever their place in the stack. */
+  z-index: 100000;
 }
 .level-ports[hidden] {
   display: none;

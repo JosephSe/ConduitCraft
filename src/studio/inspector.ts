@@ -57,6 +57,7 @@ import {
 import type {
   ComponentStatus,
   DiagramNode,
+  DiagramNotesCard,
   EdgeFlowMode,
   EdgeRouteMode,
   NodeIconName,
@@ -72,7 +73,18 @@ import type {
 } from '../types';
 import { WIRE_PROTOCOLS, WIRE_PROTOCOL_NAMES } from '../core/wire';
 import { NOTES_ITEM_ICONS, normalizeNotesItemIcon } from '../types';
-import { NOTES_CARD_WIDTH, NOTES_MAX_WIDTH, NOTES_MIN_WIDTH, clampNotesWidth } from '../core/notesSize';
+import {
+  NOTES_CARD_WIDTH,
+  NOTES_MAX_WIDTH,
+  NOTES_MIN_WIDTH,
+  TEXT_FONT_SIZE,
+  TEXT_MAX_FONT_SIZE,
+  TEXT_MIN_FONT_SIZE,
+  TEXT_MIN_WIDTH,
+  clampNotesWidth,
+  clampTextFontSize,
+  clampTextWidth,
+} from '../core/notesSize';
 import {
   kindStencils,
   STREAM_TONE_OPTIONS,
@@ -470,6 +482,48 @@ function wholeNumberInput(value: number | undefined, min: number, max: number, p
   return input;
 }
 
+/** A text label's Width, Font size and Colour fields. An empty Width means as wide as its words. */
+function makeTextLabelFields(card: DiagramNotesCard): HTMLElement[] {
+  const commit = (change: () => void) => {
+    pushHistory();
+    change();
+    expandStageToFit(app.doc);
+    renderNotesCards();
+  };
+
+  const widthInput = wholeNumberInput(card.width, TEXT_MIN_WIDTH, NOTES_MAX_WIDTH, 'Auto');
+  widthInput.addEventListener('change', () => {
+    const next = clampTextWidth(widthInput.value);
+    commit(() => {
+      if (next === undefined) delete card.width;
+      else card.width = next;
+    });
+    widthInput.value = card.width === undefined ? '' : String(card.width);
+  });
+
+  const sizeInput = wholeNumberInput(card.fontSize, TEXT_MIN_FONT_SIZE, TEXT_MAX_FONT_SIZE, String(TEXT_FONT_SIZE));
+  sizeInput.dataset.stepper = 'true';
+  sizeInput.addEventListener('change', () => {
+    const next = clampTextFontSize(sizeInput.value);
+    commit(() => {
+      // The default size is stored as absent.
+      if (next === undefined || next === TEXT_FONT_SIZE) delete card.fontSize;
+      else card.fontSize = next;
+    });
+    sizeInput.value = card.fontSize === undefined ? '' : String(card.fontSize);
+  });
+
+  return [
+    makeField('prop-text-width', 'Width', widthInput, { unit: 'px' }),
+    makeField('prop-text-size', 'Font size', sizeInput, { unit: 'px' }),
+    makeTextColourField(card.color, (tone) => {
+      if (tone) card.color = tone;
+      else delete card.color;
+      renderNotesCards();
+    }),
+  ];
+}
+
 /** A cache (K3): its hit rate and the store behind it. An inferred store is shown greyed out. */
 function makeCacheFields(node: DiagramNode): HTMLElement[] {
   const commit = (next: Record<string, unknown>): void => {
@@ -654,10 +708,18 @@ function makeLinksEditor(node: DiagramNode): HTMLElement {
   return wrap;
 }
 
-export function makeTonePicker(
+interface SwatchChoice {
+  value: string;
+  name: string;
+  css: string;
+}
+
+/** A row of colour dots as radio buttons. Picking one records an undo step and calls `onPick`. */
+function makeSwatchPicker(
   groupName: string,
-  current: StreamTone,
-  onChange: (tone: StreamTone) => void,
+  choices: SwatchChoice[],
+  current: string,
+  onPick: (value: string) => void,
 ): HTMLFieldSetElement {
   const fs = document.createElement('fieldset');
   fs.className = 'swatch-picker';
@@ -666,32 +728,27 @@ export function makeTonePicker(
   legend.textContent = 'Colour';
   fs.appendChild(legend);
 
-  for (const opt of STREAM_TONE_OPTIONS) {
+  for (const choice of choices) {
     const lbl = document.createElement('label');
     lbl.className = 'swatch-option';
-    const capName = toneName(
-      app.doc.legend,
-      opt.id,
-      opt.id.charAt(0).toUpperCase() + opt.id.slice(1),
-    );
-    lbl.setAttribute('data-tip', capName);
-    lbl.setAttribute('aria-label', capName);
+    lbl.setAttribute('data-tip', choice.name);
+    lbl.setAttribute('aria-label', choice.name);
 
     const radio = document.createElement('input');
     radio.type = 'radio';
     radio.name = groupName;
-    radio.value = opt.id;
-    radio.checked = opt.id === current;
+    radio.value = choice.value;
+    radio.checked = choice.value === current;
     radio.className = 'visually-hidden';
 
     const dot = document.createElement('span');
     dot.className = 'pill-swatch';
-    dot.style.background = opt.cssVar;
+    dot.style.background = choice.css;
 
     radio.addEventListener('change', () => {
       if (radio.checked) {
         pushHistory();
-        onChange(opt.id);
+        onPick(choice.value);
       }
     });
 
@@ -699,6 +756,38 @@ export function makeTonePicker(
     fs.appendChild(lbl);
   }
   return fs;
+}
+
+function toneChoices(): SwatchChoice[] {
+  return STREAM_TONE_OPTIONS.map((opt) => ({
+    value: opt.id,
+    name: toneName(app.doc.legend, opt.id, opt.id.charAt(0).toUpperCase() + opt.id.slice(1)),
+    css: opt.cssVar,
+  }));
+}
+
+export function makeTonePicker(
+  groupName: string,
+  current: StreamTone,
+  onChange: (tone: StreamTone) => void,
+): HTMLFieldSetElement {
+  return makeSwatchPicker(groupName, toneChoices(), current, (value) => onChange(value as StreamTone));
+}
+
+/** A text label's "Colour" row: the ink colour (the default) and then the seven tones. */
+function makeTextColourField(current: StreamTone | undefined, onChange: (tone: StreamTone | undefined) => void): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'prop-field prop-field--row';
+  const title = document.createElement('span');
+  title.className = 'field-label';
+  title.textContent = 'Colour';
+  const choices = [{ value: '', name: 'Ink (default)', css: 'var(--cc-ink)' }, ...toneChoices()];
+  const picker = makeSwatchPicker('prop-text-colour', choices, current ?? '', (value) =>
+    onChange((value || undefined) as StreamTone | undefined),
+  );
+  picker.classList.add('swatch-picker--text');
+  row.append(title, picker);
+  return row;
 }
 
 /** A "Colour" row: the label on the left, the colour dots on the right. */
@@ -2385,7 +2474,8 @@ export function renderPropertyEditor(): void {
       return;
     }
 
-    propPanelHeading.textContent = 'Note';
+    const isText = card.variant === 'text';
+    propPanelHeading.textContent = isText ? 'Text' : 'Note';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2393,29 +2483,32 @@ export function renderPropertyEditor(): void {
       art: HEAD_ART.notes,
       name: headerName(
         'prop-notes-title',
-        'Header title',
+        isText ? 'Text' : 'Header title',
         makeTextInput(card.title, (v) => {
           card.title = v;
           renderNotesCards();
         }),
       ),
-      under: 'Note',
+      under: isText ? 'Text' : 'Note',
     });
-    body.appendChild(
-      makeField(
-        'prop-notes-code',
-        'Tag',
-        makeTextInput(
-          card.code,
-          (v) => {
-            card.code = v;
-            renderNotesCards();
-          },
-          { identifier: true },
+    if (isText) {
+      // A text label is only its words: no tag and no items, but a width, a font size and a colour.
+      body.append(...makeTextLabelFields(card));
+    } else {
+      body.appendChild(
+        makeField(
+          'prop-notes-code',
+          'Tag',
+          makeTextInput(
+            card.code,
+            (v) => {
+              card.code = v;
+              renderNotesCards();
+            },
+            { identifier: true },
+          ),
         ),
-      ),
-    );
-    if (card.variant !== 'text') {
+      );
       const widthInput = wholeNumberInput(card.width, NOTES_MIN_WIDTH, NOTES_MAX_WIDTH, String(NOTES_CARD_WIDTH));
       widthInput.addEventListener('change', () => {
         const next = clampNotesWidth(widthInput.value);
@@ -2428,92 +2521,92 @@ export function renderPropertyEditor(): void {
         renderNotesCards();
       });
       body.appendChild(makeField('prop-notes-width', 'Width', widthInput, { unit: 'px' }));
-    }
 
-    const itemsSection = document.createElement('div');
-    itemsSection.className = 'prop-divider';
-    const iHeader = document.createElement('div');
-    iHeader.className = 'prop-list-header';
-    const iTitle = document.createElement('span');
-    iTitle.className = 'section-heading';
-    iTitle.textContent = 'Items';
-    const btnAddItem = document.createElement('button');
-    btnAddItem.type = 'button';
-    btnAddItem.className = 'prop-quiet-btn';
-    btnAddItem.style.flex = '0 0 auto';
-    btnAddItem.append(createUiIconSvg('plus', 14), 'Add');
-    btnAddItem.setAttribute('aria-label', 'Add item');
-    btnAddItem.addEventListener('click', () => {
-      pushHistory();
-      card.items.push({
-        title: `Item 0${card.items.length + 1}`,
-        text: 'Describe architectural note.',
-        icon: 'check',
-      });
-      renderNotesCards();
-      renderPropertyEditor();
-    });
-    iHeader.append(iTitle, btnAddItem);
-    itemsSection.appendChild(iHeader);
-
-    card.items.forEach((item, idx) => {
-      const box = document.createElement('div');
-      box.className = 'notes-item-editor';
-
-      const topBar = document.createElement('div');
-      topBar.className = 'notes-item-topbar';
-
-      const iconSelect = document.createElement('select');
-      iconSelect.className = 'field notes-item-icon-select';
-      iconSelect.setAttribute('aria-label', `Item ${idx + 1} icon`);
-      const currentIcon = normalizeNotesItemIcon(item.icon);
-      for (const opt of NOTES_ITEM_ICONS) {
-        const oEl = document.createElement('option');
-        oEl.value = opt.value;
-        oEl.textContent = opt.label;
-        if (opt.value === currentIcon) oEl.selected = true;
-        iconSelect.appendChild(oEl);
-      }
-      const iconWrap = wrapSelect(iconSelect);
-      iconSelect.addEventListener('change', () => {
+      const itemsSection = document.createElement('div');
+      itemsSection.className = 'prop-divider';
+      const iHeader = document.createElement('div');
+      iHeader.className = 'prop-list-header';
+      const iTitle = document.createElement('span');
+      iTitle.className = 'section-heading';
+      iTitle.textContent = 'Items';
+      const btnAddItem = document.createElement('button');
+      btnAddItem.type = 'button';
+      btnAddItem.className = 'prop-quiet-btn';
+      btnAddItem.style.flex = '0 0 auto';
+      btnAddItem.append(createUiIconSvg('plus', 14), 'Add');
+      btnAddItem.setAttribute('aria-label', 'Add item');
+      btnAddItem.addEventListener('click', () => {
         pushHistory();
-        item.icon = iconSelect.value as NotesItemIcon;
-        renderNotesCards();
-      });
-
-      const tIn = makeTextInput(item.title, (v) => {
-        item.title = v;
-        renderNotesCards();
-      });
-      tIn.setAttribute('aria-label', `Note ${idx + 1} title`);
-      tIn.placeholder = 'Item title';
-
-      const delBtn = document.createElement('button');
-      delBtn.type = 'button';
-      delBtn.className = 'prop-quiet-btn btn-sim-reorder';
-      delBtn.appendChild(createUiIconSvg('close', 14));
-      delBtn.title = 'Delete item';
-      delBtn.setAttribute('aria-label', `Delete item ${idx + 1}`);
-      delBtn.addEventListener('click', () => {
-        pushHistory();
-        card.items.splice(idx, 1);
+        card.items.push({
+          title: `Item 0${card.items.length + 1}`,
+          text: 'Describe architectural note.',
+          icon: 'check',
+        });
         renderNotesCards();
         renderPropertyEditor();
       });
+      iHeader.append(iTitle, btnAddItem);
+      itemsSection.appendChild(iHeader);
 
-      topBar.append(iconWrap, tIn, delBtn);
+      card.items.forEach((item, idx) => {
+        const box = document.createElement('div');
+        box.className = 'notes-item-editor';
 
-      const bodyIn = makeTextInput(item.text, (v) => {
-        item.text = v;
-        renderNotesCards();
+        const topBar = document.createElement('div');
+        topBar.className = 'notes-item-topbar';
+
+        const iconSelect = document.createElement('select');
+        iconSelect.className = 'field notes-item-icon-select';
+        iconSelect.setAttribute('aria-label', `Item ${idx + 1} icon`);
+        const currentIcon = normalizeNotesItemIcon(item.icon);
+        for (const opt of NOTES_ITEM_ICONS) {
+          const oEl = document.createElement('option');
+          oEl.value = opt.value;
+          oEl.textContent = opt.label;
+          if (opt.value === currentIcon) oEl.selected = true;
+          iconSelect.appendChild(oEl);
+        }
+        const iconWrap = wrapSelect(iconSelect);
+        iconSelect.addEventListener('change', () => {
+          pushHistory();
+          item.icon = iconSelect.value as NotesItemIcon;
+          renderNotesCards();
+        });
+
+        const tIn = makeTextInput(item.title, (v) => {
+          item.title = v;
+          renderNotesCards();
+        });
+        tIn.setAttribute('aria-label', `Note ${idx + 1} title`);
+        tIn.placeholder = 'Item title';
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'prop-quiet-btn btn-sim-reorder';
+        delBtn.appendChild(createUiIconSvg('close', 14));
+        delBtn.title = 'Delete item';
+        delBtn.setAttribute('aria-label', `Delete item ${idx + 1}`);
+        delBtn.addEventListener('click', () => {
+          pushHistory();
+          card.items.splice(idx, 1);
+          renderNotesCards();
+          renderPropertyEditor();
+        });
+
+        topBar.append(iconWrap, tIn, delBtn);
+
+        const bodyIn = makeTextInput(item.text, (v) => {
+          item.text = v;
+          renderNotesCards();
+        });
+        bodyIn.setAttribute('aria-label', `Note ${idx + 1} description`);
+        bodyIn.placeholder = 'Item description...';
+
+        box.append(topBar, bodyIn);
+        itemsSection.appendChild(box);
       });
-      bodyIn.setAttribute('aria-label', `Note ${idx + 1} description`);
-      bodyIn.placeholder = 'Item description...';
-
-      box.append(topBar, bodyIn);
-      itemsSection.appendChild(box);
-    });
-    body.appendChild(itemsSection);
+      body.appendChild(itemsSection);
+    }
   } else {
     // Document Overview Properties
     propPanelHeading.textContent = 'Document properties';

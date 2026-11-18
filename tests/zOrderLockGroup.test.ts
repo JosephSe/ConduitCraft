@@ -12,6 +12,7 @@ import {
   ungroupSelection,
   getGroupSiblingIds,
 } from '../src/studio/zOrderLockGroup.ts';
+import { stackOrder, stackZIndices } from '../src/core/stack.ts';
 import { createBlankDocument } from '../src/templates/presets.ts';
 import { SHORTCUTS } from '../src/studio/commands.ts';
 import type { DiagramDocument } from '../src/types.ts';
@@ -136,8 +137,40 @@ describe('Z-order, lock, and group commands', () => {
     sendBackward(doc, { type: 'node', id: 'n1' });
     assert.deepEqual(doc.nodes.map((n) => n.id), ['n1', 'n2', 'n3']);
 
-    // Cannot step backward past beginning
+    // Notes share the stack: below the lowest component, n1 steps under the notes one at a time.
+    assert.equal(sendBackward(doc, { type: 'node', id: 'n1' }), true);
+    assert.equal(sendBackward(doc, { type: 'node', id: 'n1' }), true);
+    assert.deepEqual(stackOrder(doc).map((s) => s.item.id), ['n1', 'c1', 'c2', 'n2', 'n3']);
+    // Cannot step backward past the bottom of the stack
     assert.equal(sendBackward(doc, { type: 'node', id: 'n1' }), false);
+  });
+
+  it('puts notes and text in front of components, and components in front of notes', () => {
+    const doc = makeTestDoc();
+    doc.notesCards.push({ id: 't1', title: 'Label', code: '', x: 0, y: 0, items: [], variant: 'text' });
+    // With no order set, notes and text sit under every component.
+    assert.deepEqual(stackOrder(doc).map((s) => s.item.id), ['c1', 'c2', 't1', 'n1', 'n2', 'n3']);
+    assert.equal(stackZIndices(doc).get('c1'), undefined);
+
+    assert.equal(bringToFront(doc, { type: 'notes', id: 'c1' }), true);
+    assert.deepEqual(stackOrder(doc).map((s) => s.item.id), ['c2', 't1', 'n1', 'n2', 'n3', 'c1']);
+    assert.equal(stackZIndices(doc).get('c1'), 8);
+    assert.equal(bringToFront(doc, { type: 'notes', id: 'c1' }), false);
+
+    assert.equal(bringToFront(doc, { type: 'notes', id: 't1' }), true);
+    assert.equal(stackOrder(doc).at(-1)?.item.id, 't1');
+
+    assert.equal(bringToFront(doc, { type: 'node', id: 'n1' }), true);
+    assert.deepEqual(stackOrder(doc).map((s) => s.item.id), ['c2', 'n2', 'n3', 'c1', 't1', 'n1']);
+    assert.deepEqual(doc.notesCards.map((c) => c.id), ['c2', 'c1', 't1']);
+
+    // A mixed selection moves together and keeps its own order.
+    assert.equal(sendToBack(doc, { type: 'multi', ids: ['n3'], notesIds: ['t1'] }), true);
+    assert.deepEqual(stackOrder(doc).map((s) => s.item.id), ['n3', 't1', 'c2', 'n2', 'c1', 'n1']);
+
+    // Something added after a reorder goes on top.
+    doc.notesCards.push({ id: 'c3', title: 'New', code: '', x: 0, y: 0, items: [] });
+    assert.equal(stackOrder(doc).at(-1)?.item.id, 'c3');
   });
 
   it('reorders multi-selection of nodes to the front or back together', () => {

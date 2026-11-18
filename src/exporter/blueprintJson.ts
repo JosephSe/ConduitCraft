@@ -14,7 +14,8 @@ import type {
   StreamTone,
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
-import { clampNotesWidth } from '../core/notesSize';
+import { clampNotesWidth, textStyleOf } from '../core/notesSize';
+import { stackZOf } from '../core/stack';
 import { normalizeWireFields } from '../core/wire';
 import { pruneDanglingChaos } from '../core/reachability';
 import { normalizeBudgetMs, normalizeInsights } from '../core/insights';
@@ -101,6 +102,7 @@ function coerceNode(raw: unknown, depth = 0): DiagramNode | null {
     ...normalizeNodeMeta(raw),
     ...(typeof raw.locked === 'boolean' ? { locked: raw.locked } : {}),
     ...(typeof raw.groupId === 'string' && raw.groupId.trim() ? { groupId: raw.groupId.trim() } : {}),
+    ...stackZOf(raw.z),
     ...(typeof raw.frameId === 'string' && raw.frameId.trim() ? { frameId: raw.frameId.trim() } : {}),
   };
   const child = depth < MAX_LEVEL_DEPTH ? coerceLevel(raw.child, depth + 1) : null;
@@ -198,7 +200,8 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
     y: num(raw.y),
     items,
     ...(raw.variant === 'text' ? { variant: 'text' as const } : {}),
-    ...(raw.variant !== 'text' && width !== undefined ? { width } : {}),
+    ...(raw.variant === 'text' ? textStyleOf(raw) : width !== undefined ? { width } : {}),
+    ...stackZOf(raw.z),
   };
 }
 

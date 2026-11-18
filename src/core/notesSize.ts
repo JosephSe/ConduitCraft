@@ -3,18 +3,63 @@
  * follows the wrapped text of its items. On the canvas the browser lays that out; everywhere that cannot read
  * layout (fit, the minimap, frames, the vector export) uses the estimate here. Pure and DOM-free.
  */
-import type { DiagramNotesCard } from '../types';
+import type { DiagramNotesCard, StreamTone } from '../types';
 
 /** Width of a card that has never been resized, the studio's original `.blueprint-spec` width. */
 export const NOTES_CARD_WIDTH = 404;
 export const NOTES_MIN_WIDTH = 200;
 export const NOTES_MAX_WIDTH = 960;
 
+/** A text label can be much narrower than a note: a single short word. */
+export const TEXT_MIN_WIDTH = 40;
+export const TEXT_FONT_SIZE = 16;
+export const TEXT_MIN_FONT_SIZE = 8;
+export const TEXT_MAX_FONT_SIZE = 96;
+
+function finite(raw: unknown): number {
+  return typeof raw === 'number' ? raw : typeof raw === 'string' && raw.trim() !== '' ? Number(raw) : NaN;
+}
+
 /** A whole-pixel width inside the allowed range, or undefined for anything that is not a finite number. */
-export function clampNotesWidth(raw: unknown): number | undefined {
-  const n = typeof raw === 'number' ? raw : typeof raw === 'string' && raw.trim() !== '' ? Number(raw) : NaN;
+export function clampNotesWidth(raw: unknown, min = NOTES_MIN_WIDTH): number | undefined {
+  const n = finite(raw);
   if (!Number.isFinite(n)) return undefined;
-  return Math.max(NOTES_MIN_WIDTH, Math.min(NOTES_MAX_WIDTH, Math.round(n)));
+  return Math.max(min, Math.min(NOTES_MAX_WIDTH, Math.round(n)));
+}
+
+/** A text label's width: like a note's, but it may be as narrow as {@link TEXT_MIN_WIDTH}. */
+export function clampTextWidth(raw: unknown): number | undefined {
+  return clampNotesWidth(raw, TEXT_MIN_WIDTH);
+}
+
+/** A whole-pixel font size for a text label, or undefined for anything that is not a finite number. */
+export function clampTextFontSize(raw: unknown): number | undefined {
+  const n = finite(raw);
+  if (!Number.isFinite(n)) return undefined;
+  return Math.max(TEXT_MIN_FONT_SIZE, Math.min(TEXT_MAX_FONT_SIZE, Math.round(n)));
+}
+
+/** The font size a text label is drawn at. */
+export function textFontSize(card: Pick<DiagramNotesCard, 'fontSize'>): number {
+  return clampTextFontSize(card.fontSize) ?? TEXT_FONT_SIZE;
+}
+
+/**
+ * Estimated size of a text label, for everything that cannot read layout. Without a width it is as wide as its
+ * words (about 0.56em a character, plus its 8px side padding); with one, the words wrap inside it.
+ */
+export function textLabelRect(card: Pick<DiagramNotesCard, 'x' | 'y' | 'title' | 'width' | 'fontSize'>): {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} {
+  const size = textFontSize(card);
+  const charW = size * 0.56;
+  const natural = Math.max(TEXT_MIN_WIDTH, Math.ceil(card.title.length * charW) + 16);
+  const width = clampTextWidth(card.width) ?? Math.min(natural, NOTES_CARD_WIDTH);
+  const lines = wrapNotesText(card.title, (width - 16) / charW).length;
+  return { x: card.x, y: card.y, width, height: Math.round(lines * size * 1.3 + 8) };
 }
 
 /** The width a card is drawn at. */
@@ -90,4 +135,21 @@ export function notesCardHeight(card: Pick<DiagramNotesCard, 'width' | 'items'>)
   const items = card.items ?? [];
   const lines = items.reduce((sum, item) => sum + wrapNotesText(itemText(item), maxChars).length, 0);
   return Math.round(64 + lines * 17.5 + Math.max(0, items.length - 1) * 8);
+}
+
+const TEXT_TONES: readonly StreamTone[] = ['blue', 'emerald', 'rose', 'violet', 'amber', 'cyan', 'fuchsia'];
+
+/** A text label's width, font size and colour read from a file, keeping only the valid ones. */
+export function textStyleOf(raw: { width?: unknown; fontSize?: unknown; color?: unknown }): Pick<
+  DiagramNotesCard,
+  'width' | 'fontSize' | 'color'
+> {
+  const width = clampTextWidth(raw.width);
+  const fontSize = clampTextFontSize(raw.fontSize);
+  const color = TEXT_TONES.find((t) => t === raw.color);
+  return {
+    ...(width !== undefined ? { width } : {}),
+    ...(fontSize !== undefined && fontSize !== TEXT_FONT_SIZE ? { fontSize } : {}),
+    ...(color ? { color } : {}),
+  };
 }
