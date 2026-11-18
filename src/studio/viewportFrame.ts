@@ -1,22 +1,14 @@
 /** Pure viewport framing math. Safe to import from node tests. */
-import type { DiagramDocument, DiagramNode, SelectionTarget } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramNotesCard, SelectionTarget } from '../types';
+import { NOTES_CARD_WIDTH, notesCardHeight, notesCardWidth } from '../core/notesSize';
+
+export { NOTES_CARD_WIDTH, notesCardHeight };
 
 export interface WorldRect {
   x: number;
   y: number;
   width: number;
   height: number;
-}
-
-/** Studio `.blueprint-spec` width. */
-export const NOTES_CARD_WIDTH = 404;
-
-/**
- * Estimated notes-card height from padding, the header, and list rows.
- * Used to frame the card without reading layout.
- */
-export function notesCardHeight(itemCount: number): number {
-  return 72 + Math.max(0, itemCount) * 40;
 }
 
 export const FIT_PAD_X = 48;
@@ -47,12 +39,12 @@ export function nodeRect(node: Pick<DiagramNode, 'x' | 'y' | 'width' | 'height'>
   return { x: node.x, y: node.y, width: node.width, height: node.height };
 }
 
-export function notesRect(card: { x: number; y: number; items: readonly unknown[] }): WorldRect {
+export function notesRect(card: Pick<DiagramNotesCard, 'x' | 'y' | 'items' | 'width'>): WorldRect {
   return {
     x: card.x,
     y: card.y,
-    width: NOTES_CARD_WIDTH,
-    height: notesCardHeight(card.items.length),
+    width: notesCardWidth(card),
+    height: notesCardHeight(card),
   };
 }
 

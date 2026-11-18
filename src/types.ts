@@ -170,6 +170,8 @@ export interface DiagramNotesCard {
   groupId?: string;
   /** `text`: a free text label (the Text tool). Its words are `title`; it has no border, background or items. */
   variant?: 'text';
+  /** Card width in px, set by dragging its right edge. Absent means the default. The height follows the content. */
+  width?: number;
 }
 
 export interface DiagramZone {

@@ -72,6 +72,7 @@ import type {
 } from '../types';
 import { WIRE_PROTOCOLS, WIRE_PROTOCOL_NAMES } from '../core/wire';
 import { NOTES_ITEM_ICONS, normalizeNotesItemIcon } from '../types';
+import { NOTES_CARD_WIDTH, NOTES_MAX_WIDTH, NOTES_MIN_WIDTH, clampNotesWidth } from '../core/notesSize';
 import {
   kindStencils,
   STREAM_TONE_OPTIONS,
@@ -2414,6 +2415,20 @@ export function renderPropertyEditor(): void {
         ),
       ),
     );
+    if (card.variant !== 'text') {
+      const widthInput = wholeNumberInput(card.width, NOTES_MIN_WIDTH, NOTES_MAX_WIDTH, String(NOTES_CARD_WIDTH));
+      widthInput.addEventListener('change', () => {
+        const next = clampNotesWidth(widthInput.value);
+        pushHistory();
+        // The default width is stored as absent, so an empty field or the default clears it.
+        if (next === undefined || next === NOTES_CARD_WIDTH) delete card.width;
+        else card.width = next;
+        widthInput.value = card.width === undefined ? '' : String(card.width);
+        expandStageToFit(app.doc);
+        renderNotesCards();
+      });
+      body.appendChild(makeField('prop-notes-width', 'Width', widthInput, { unit: 'px' }));
+    }
 
     const itemsSection = document.createElement('div');
     itemsSection.className = 'prop-divider';

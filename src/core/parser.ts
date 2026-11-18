@@ -20,6 +20,7 @@ import type {
   StreamTone,
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
+import { clampNotesWidth } from './notesSize';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
 import { brandIsDefault, normalizeBrand } from './brand';
@@ -135,6 +136,7 @@ interface RawBlueprintMeta {
     y?: number;
     items?: Array<{ title?: string; text?: string; icon?: string }>;
     variant?: string;
+    width?: number;
   }>;
   specCard?: {
     id?: string;
@@ -1602,6 +1604,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
 
   rawNotesList.forEach((rc, idx) => {
     const isText = (rc as { variant?: string }).variant === 'text';
+    const width = clampNotesWidth((rc as { width?: unknown }).width);
     if (!isText && (!rc.items || rc.items.length === 0)) return;
     const x = Array.isArray(rc.position) ? Number(rc.position[0]) || 48 : (rc.x ?? 48);
     const y = Array.isArray(rc.position) ? Number(rc.position[1]) || 600 : (rc.y ?? 600);
@@ -1617,6 +1620,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
         ...(item.icon ? { icon: normalizeNotesItemIcon(item.icon) } : {}),
       })),
       ...(isText ? { variant: 'text' as const } : {}),
+      ...(!isText && width !== undefined ? { width } : {}),
     });
   });
   doc.notesCards = notesCards;
@@ -2005,6 +2009,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       code: c.code,
       position: [Math.round(c.x), Math.round(c.y)],
       ...(c.variant === 'text' ? { variant: 'text' } : {}),
+      ...(c.variant !== 'text' && c.width !== undefined ? { width: c.width } : {}),
       items: c.items.map((it) => ({
         title: it.title,
         text: it.text,
