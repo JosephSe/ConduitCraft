@@ -31,3 +31,24 @@ test('the run bar appears in the Traffic lens and drives a scenario', { tag: '@q
   await expect(bar).toBeHidden();
 });
 
+
+for (const [key, lens] of [['1', 'Design'], ['3', 'Review']] as const) {
+  test(`leaving Traffic for ${lens} takes the hop label and highlights off the canvas`, async ({ page }) => {
+    await open(page);
+    await page.keyboard.press('2');
+    const select = page.locator('#run-bar-scenario');
+    const first = await select.locator('option:not([value=""])').first().getAttribute('value');
+    await select.selectOption(first!);
+    const packet = page.locator('#sim-packet');
+    await expect(packet).toBeVisible();
+
+    await page.keyboard.press(key);
+    await expect(packet).toBeHidden();
+    await expect(page.locator('.arch-node[data-sim-active="true"]')).toHaveCount(0);
+
+    // Coming back to Traffic starts clean: no run is loaded.
+    await page.keyboard.press('2');
+    await expect(packet).toBeHidden();
+    await expect(page.locator('#run-bar-step')).toHaveText(/no run|held/);
+  });
+}
