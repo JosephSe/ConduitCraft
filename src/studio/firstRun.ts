@@ -49,6 +49,13 @@ function switchToTraffic(): void {
   document.querySelector<HTMLInputElement>('input[name="workspace-mode"][value="data"]')?.click();
 }
 
+let endActive: (() => void) | null = null;
+
+/** Close first run, if it is showing: a diagram from the library is replacing the example on the canvas. */
+export function endFirstRun(): void {
+  endActive?.();
+}
+
 /** Show first run if this visitor qualifies. Call once at boot, after storage has been read (`initStorage`). */
 export function startFirstRunIfNew(deps: FirstRunDeps): void {
   const card = document.getElementById('first-run');
@@ -79,9 +86,11 @@ export function startFirstRunIfNew(deps: FirstRunDeps): void {
     const end = (): void => {
       if (!active) return;
       active = false;
+      endActive = null;
       card.hidden = true;
       markSeen();
     };
+    endActive = end;
 
     // Assigned directly, with no history step, so the example is never autosaved as the visitor's own work.
     app.doc = doc;

@@ -32,6 +32,7 @@ import {
   usableStoredDoc,
 } from './state';
 import { libraryDialog, libraryDialogBody, restoreSessionBanner, traceList } from './dom';
+import { endFirstRun } from './firstRun';
 import { resetActiveFile } from './pwa';
 import { renderAll } from './render';
 import { renderStagePictureSvg } from './stagePicture';
@@ -74,6 +75,7 @@ export function openDiagram(
   clearPendingRestoreOffer();
   if (restoreSessionBanner) restoreSessionBanner.hidden = true;
   if (!keepFile) resetActiveFile();
+  endFirstRun();
   deps?.clearSimulation();
   app.undoStack.length = 0;
   app.redoStack.length = 0;
@@ -125,8 +127,10 @@ export async function openAsNewDiagram(
 export async function newDiagram(): Promise<void> {
   if (app.hasPendingAutosave) flushAutosave();
   try {
-    const record = await createDiagram(createBlankDocument());
-    openDiagram(record.id);
+    // Forced: with nothing remembered as open (a fresh visit), the new entry is already the fallback active id, so an
+    // unforced open would think it is on the canvas and leave whatever is showing there.
+    const record = await createDiagram(createBlankDocument(), Date.now(), listLibrary().length === 0 ? AUTOSAVE_ID : undefined);
+    if (!openDiagram(record.id, { force: true })) throw new Error('The new diagram could not be opened');
     notify('Started a new diagram');
   } catch (err) {
     failed(err, 'new diagram');

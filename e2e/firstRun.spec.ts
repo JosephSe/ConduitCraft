@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
-import { seedAutosave } from './helpers';
+import { runPaletteCommand, seedAutosave } from './helpers';
 
 // A brand-new visitor: nothing remembered. The other specs start as a returning visitor.
 test.use({
@@ -47,6 +47,15 @@ test('Start blank leaves a one-line hint, in the Design lens', { tag: '@quick' }
   // The choice is remembered: a reload is not a first run.
   await page.reload();
   await expect(page.locator('#first-run')).toBeHidden();
+});
+
+test('New Diagram from the palette replaces the example with a blank canvas', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#first-run')).toBeVisible();
+  await expect(page.locator('.arch-node').first()).toBeVisible();
+  await runPaletteCommand(page, 'New Diagram');
+  await expect(page.locator('#first-run')).toBeHidden();
+  await expect(page.locator('.arch-node')).toHaveCount(0);
 });
 
 test('Pick a template and Paste Mermaid open their dialogs', async ({ page }) => {
