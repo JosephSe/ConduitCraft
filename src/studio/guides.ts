@@ -36,6 +36,17 @@ export interface Distance {
   value: number;
 }
 
+/**
+ * A centre line the moving rectangle's centre snaps to, such as the middle of the swimlane it sits in. `from` and `to`
+ * span the line on the other axis, as for a guide.
+ */
+export interface CentreLine {
+  axis: 'x' | 'y';
+  pos: number;
+  from: number;
+  to: number;
+}
+
 export interface GuideResult {
   /** The snapped position of the moving rectangle. */
   x: number;
@@ -61,10 +72,27 @@ function overlaps(a: Rect, b: Rect, axis: 'x' | 'y'): boolean {
   return a.x < b.x + b.width && b.x < a.x + a.width;
 }
 
-/** The best (smallest) offset that lines one of the moving rectangle's lines up with one of the others', or null. */
-function bestLineOffset(moving: Rect, others: Rect[], axis: 'x' | 'y', threshold: number): number | null {
+const centreOf = (r: Rect, axis: 'x' | 'y'): number => (axis === 'x' ? r.x + r.width / 2 : r.y + r.height / 2);
+
+/**
+ * The best (smallest) offset that lines one of the moving rectangle's lines up with one of the others', or its centre
+ * up with one of the centre lines, or null.
+ */
+function bestLineOffset(
+  moving: Rect,
+  others: Rect[],
+  centres: CentreLine[],
+  axis: 'x' | 'y',
+  threshold: number,
+): number | null {
   let best: number | null = null;
   const mine = lines(moving, axis);
+  const centre = centreOf(moving, axis);
+  for (const line of centres) {
+    if (line.axis !== axis) continue;
+    const delta = line.pos - centre;
+    if (Math.abs(delta) <= threshold && (best === null || Math.abs(delta) < Math.abs(best))) best = delta;
+  }
   for (const other of others) {
     for (const target of lines(other, axis)) {
       for (const m of mine) {
@@ -111,8 +139,8 @@ function bestSpacingOffset(moving: Rect, others: Rect[], axis: 'x' | 'y', thresh
   return best;
 }
 
-/** Guide lines for every other rectangle that now shares a line with the moving one. */
-function guidesFor(moving: Rect, others: Rect[], axis: 'x' | 'y'): Guide[] {
+/** Guide lines for every other rectangle that now shares a line with the moving one, and every centre line it is on. */
+function guidesFor(moving: Rect, others: Rect[], centres: CentreLine[], axis: 'x' | 'y'): Guide[] {
   const found = new Map<number, Guide>();
   const mine = lines(moving, axis);
   const spanOf = (r: Rect): [number, number] => (axis === 'x' ? [r.y, r.y + r.height] : [r.x, r.x + r.width]);
@@ -129,6 +157,18 @@ function guidesFor(moving: Rect, others: Rect[], axis: 'x' | 'y'): Guide[] {
       } else {
         found.set(key, { axis, pos: target, from: Math.min(mFrom, oFrom), to: Math.max(mTo, oTo) });
       }
+    }
+  }
+  const centre = centreOf(moving, axis);
+  for (const line of centres) {
+    if (line.axis !== axis || Math.abs(line.pos - centre) >= EPS) continue;
+    const key = Math.round(line.pos * 2) / 2;
+    const existing = found.get(key);
+    if (existing) {
+      existing.from = Math.min(existing.from, line.from);
+      existing.to = Math.max(existing.to, line.to);
+    } else {
+      found.set(key, { axis, pos: line.pos, from: Math.min(mFrom, line.from), to: Math.max(mTo, line.to) });
     }
   }
   return [...found.values()];
@@ -169,19 +209,22 @@ function spacingMarks(moving: Rect, others: Rect[], axis: 'x' | 'y'): SpacingMar
 
 /**
  * Snap the moving rectangle to the others. A line (edge or centre) of the moving rectangle snaps to a line of another
- * one within `threshold` world units; failing that, the rectangle snaps to equal spacing between neighbours. The
- * returned guides and spacing marks are for the snapped position.
+ * one within `threshold` world units, and its centre snaps to any of `centres` (the middle of its swimlane); failing
+ * that, the rectangle snaps to equal spacing between neighbours. The returned guides and spacing marks are for the
+ * snapped position.
  */
-export function snapToGuides(moving: Rect, others: Rect[], threshold: number): GuideResult {
-  const dx = bestLineOffset(moving, others, 'x', threshold) ?? bestSpacingOffset(moving, others, 'x', threshold);
-  const dy = bestLineOffset(moving, others, 'y', threshold) ?? bestSpacingOffset(moving, others, 'y', threshold);
+export function snapToGuides(moving: Rect, others: Rect[], threshold: number, centres: CentreLine[] = []): GuideResult {
+  const dx =
+    bestLineOffset(moving, others, centres, 'x', threshold) ?? bestSpacingOffset(moving, others, 'x', threshold);
+  const dy =
+    bestLineOffset(moving, others, centres, 'y', threshold) ?? bestSpacingOffset(moving, others, 'y', threshold);
   const snapped: Rect = { ...moving, x: moving.x + (dx ?? 0), y: moving.y + (dy ?? 0) };
   return {
     x: snapped.x,
     y: snapped.y,
     snappedX: dx !== null,
     snappedY: dy !== null,
-    guides: [...guidesFor(snapped, others, 'x'), ...guidesFor(snapped, others, 'y')],
+    guides: [...guidesFor(snapped, others, centres, 'x'), ...guidesFor(snapped, others, centres, 'y')],
     spacing: [...spacingMarks(snapped, others, 'x'), ...spacingMarks(snapped, others, 'y')],
   };
 }

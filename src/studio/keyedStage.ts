@@ -1579,8 +1579,8 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
 const SNAP_SCREEN_PX = 6;
 
 /**
- * Where a dragged component lands: snapped to the other components' edges and centres (and to equal spacing), else to
- * the grid. Holding Cmd or Ctrl suspends snapping; holding Alt shows the distance to the nearest neighbours.
+ * Where a dragged component lands: snapped to the other components' edges and centres, to the centre of its swimlane
+ * (and to equal spacing), else to the grid. Holding Cmd or Ctrl suspends snapping; holding Alt shows the distance to the nearest neighbours.
  */
 function computeSnappedPosition(
   movingNode: DiagramNode,
@@ -1597,7 +1597,11 @@ function computeSnappedPosition(
   }
   const others = app.doc.nodes.filter((n) => n.id !== movingNode.id);
   const rect = { x: nextX, y: nextY, width: movingNode.width, height: movingNode.height };
-  const result = snapToGuides(rect, others, SNAP_SCREEN_PX / app.scale);
+  // The swimlane that holds the component's centre offers its own centre line, drawn from the top of the lane.
+  const centre = nextX + movingNode.width / 2;
+  const lane = app.doc.zones.find((zone) => centre >= zone.x && centre < zone.x + zone.width);
+  const laneCentres = lane ? [{ axis: 'x' as const, pos: lane.x + lane.width / 2, from: 0, to: nextY }] : [];
+  const result = snapToGuides(rect, others, SNAP_SCREEN_PX / app.scale, laneCentres);
   const x = result.snappedX ? Math.round(result.x) : grid(nextX);
   const y = result.snappedY ? Math.round(result.y) : grid(nextY);
   paintGuides(result, modifiers.distances ? distancesTo({ ...rect, x, y }, others) : []);

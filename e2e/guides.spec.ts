@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openLumenRelay, undo } from './helpers';
+import { openLumenRelay, seedStorage, undo } from './helpers';
 
 async function load(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -110,4 +110,92 @@ test('a snapped drag is still one undo step', async ({ page }) => {
 
   await undo(page);
   await expect.poll(() => nodeX(page, a)).toBe(before);
+});
+
+/**
+ * One swimlane (x 100 to 700, centre 400) holding two components of different sizes, placed so that no edge of one is
+ * near a line of the other: only centres can line up.
+ */
+const laneNode = (id: string, x: number, y: number, width: number, height: number) => ({
+  id,
+  kind: 'service',
+  accent: 'blue',
+  icon: 'code',
+  title: id,
+  subtitle: 'Request Processor',
+  eyebrow: 'SERVICE',
+  footerLeft: 'REST / gRPC',
+  chip: 'API',
+  zoneLabel: 'ARCHITECTURE STAGE',
+  interfaceLabel: 'REST / gRPC mTLS',
+  summary: 'A part.',
+  metrics: [],
+  code: '{}',
+  x,
+  y,
+  width,
+  height,
+});
+
+async function loadLane(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.addInitScript(() => sessionStorage.setItem('conduitcraft-home-shown', '1'));
+  const doc = {
+    title: 'Lane guides',
+    direction: 'LR',
+    stageWidth: 1200,
+    stageHeight: 700,
+    brand: { name: '', accent: '', logo: '' },
+    nodes: [laneNode('Mover', 150, 300, 222, 142), laneNode('Sibling', 560, 120, 120, 96)],
+    edges: [],
+    zones: [{ id: 'lane', number: '01', title: 'Lane', subtitle: '', x: 100, width: 600 }],
+    notesCards: [],
+    simulations: [],
+  };
+  await seedStorage(page, { diagrams: [{ id: 'autosave', title: doc.title, updatedAt: Date.now(), doc }] });
+  await page.goto('/');
+  await page.locator('#btn-restore-open').click();
+  await expect(page.locator('.arch-node[data-node="Mover"]')).toBeVisible();
+  await expect(page.locator('.zone-banner')).toHaveCount(1);
+}
+
+/** Drag the mover by world units, holding the button down, and return the guide lines drawn at that point. */
+async function dragMover(page: Page, worldDx: number, worldDy: number): Promise<string[]> {
+  const grab = await page.evaluate(() => {
+    const host = document.querySelector<HTMLElement>('.arch-node[data-node="Mover"]')!;
+    const hit = host.querySelector<HTMLElement>('.node-select-hit')!.getBoundingClientRect();
+    return { x: hit.x + hit.width / 2, y: hit.y + hit.height / 2, scale: host.getBoundingClientRect().width / host.offsetWidth };
+  });
+  await page.mouse.move(grab.x, grab.y);
+  await page.mouse.down();
+  await page.mouse.move(grab.x + worldDx * grab.scale, grab.y + worldDy * grab.scale, { steps: 12 });
+  await expect.poll(() => guideLines(page).count()).toBeGreaterThan(0);
+  return page.evaluate(() =>
+    [...document.querySelectorAll('#guides-g line.guide-line')].map((l) =>
+      l.getAttribute('x1') === l.getAttribute('x2') ? `x=${l.getAttribute('x1')}` : `y=${l.getAttribute('y1')}`,
+    ),
+  );
+}
+
+const nodeY = (page: Page, id: string) =>
+  page.evaluate((nid) => Number(document.querySelector<HTMLElement>(`.arch-node[data-node="${nid}"]`)!.style.getPropertyValue('--ny')), id);
+
+test('dragging a component near the middle of its swimlane snaps its centre there and draws a guide', async ({ page }) => {
+  await loadLane(page);
+  // The mover's centre goes from 261 to 403: three short of the lane centre, 400.
+  const lines = await dragMover(page, 142, 0);
+  expect(lines).toContain('x=400');
+  await page.mouse.up();
+  await expect.poll(() => nodeX(page, 'Mover')).toBe(400 - 111);
+  await expect(page.locator('#guides-g > *')).toHaveCount(0);
+});
+
+test('dragging a component in a swimlane lines its centre up with a sibling on both axes', async ({ page }) => {
+  await loadLane(page);
+  // The sibling's centre is (620, 168). Aim the mover's centre at (618, 170).
+  const lines = await dragMover(page, 618 - 261, 170 - 371);
+  expect(lines).toEqual(expect.arrayContaining(['x=620', 'y=168']));
+  await page.mouse.up();
+  await expect.poll(() => nodeX(page, 'Mover')).toBe(620 - 111);
+  expect(await nodeY(page, 'Mover')).toBe(168 - 71);
 });
