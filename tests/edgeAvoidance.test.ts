@@ -93,3 +93,66 @@ describe('wires sharing a side get their own port', () => {
     assert.equal(routed.startPoint[1], Math.round(left.y + left.height / 2));
   });
 });
+
+describe('wires meeting an actor on one side get their own port', () => {
+  // Secure folder -> colleague -> H, both wires on the top of the actor (the head), as when uploads are drawn by hand.
+  const relay = (route: DiagramEdge['route']) => {
+    const doc = createBlankDocument();
+    const folder = createNodeFromStencil('service', 80, 190, 0);
+    const person = createNodeFromStencil('actor', 520, 190, 1);
+    const tool = createNodeFromStencil('service', 860, 190, 2);
+    doc.nodes.push(folder, person, tool);
+    doc.edges.push(
+      wire('in', folder.id, person.id, { route, sourcePort: 'top', targetPort: 'top' }),
+      wire('out', person.id, tool.id, { route, sourcePort: 'top', targetPort: 'top' }),
+    );
+    const routed = routeDiagramEdges(doc);
+    return { person, inbound: routed.find((e) => e.id === 'in')!, outbound: routed.find((e) => e.id === 'out')! };
+  };
+
+  for (const route of ['auto', 'over', 'orthogonal', 'step', 'bezier', 'straight'] as const) {
+    it(`separates the incoming and outgoing ends on the head (${route})`, () => {
+      const { person, inbound, outbound } = relay(route);
+      const gap = outbound.startPoint[0] - inbound.endPoint[0];
+      assert.ok(gap >= 12, `ends are ${gap}px apart`);
+      // Ordered by where the far end sits: the wire from the left arrives on the left.
+      const cx = person.x + person.width / 2;
+      assert.ok(inbound.endPoint[0] < cx && outbound.startPoint[0] > cx);
+      // Both stay on the head: within its radius of the centre line and at or below the top port.
+      for (const [x, y] of [inbound.endPoint, outbound.startPoint]) {
+        assert.ok(Math.abs(x - cx) < 12, `x ${x} is off the head`);
+        assert.ok(y >= person.y + 4 && y <= person.y + 16, `y ${y} is off the top of the head`);
+      }
+    });
+  }
+
+  it('runs a loop into the actor and a loop out of it along one line, with a gap between them', () => {
+    // Wires drawn port to port are `auto`; top to top makes each a loop over the components.
+    const { inbound, outbound } = relay('auto');
+    const runY = (pathD: string) => Number(pathD.match(/Q \S+ (-?\d+)/)![1]);
+    assert.equal(runY(inbound.pathD), runY(outbound.pathD));
+    assert.ok(outbound.startPoint[0] - inbound.endPoint[0] >= 12);
+  });
+
+  it('still steps a loop up past another over the same stretch', () => {
+    const doc = createBlankDocument();
+    const a = createNodeFromStencil('service', 80, 190, 0);
+    const b = createNodeFromStencil('service', 860, 190, 1);
+    const c = createNodeFromStencil('service', 1300, 190, 2);
+    doc.nodes.push(a, b, c);
+    doc.edges.push(wire('ab', a.id, b.id, { route: 'over' }), wire('ac', a.id, c.id, { route: 'over' }));
+    const [ab, ac] = routeDiagramEdges(doc);
+    const runY = (pathD: string) => Number(pathD.match(/Q \S+ (-?\d+)/)![1]);
+    assert.ok(Math.abs(runY(ab.pathD) - runY(ac.pathD)) >= 20);
+  });
+
+  it('keeps a lone wire on the top of the head', () => {
+    const doc = createBlankDocument();
+    const folder = createNodeFromStencil('service', 80, 190, 0);
+    const person = createNodeFromStencil('actor', 520, 190, 1);
+    doc.nodes.push(folder, person);
+    doc.edges.push(wire('in', folder.id, person.id, { route: 'orthogonal', sourcePort: 'top', targetPort: 'top' }));
+    const [routed] = routeDiagramEdges(doc);
+    assert.deepEqual(routed.endPoint, [Math.round(person.x + person.width / 2), person.y + 4]);
+  });
+});

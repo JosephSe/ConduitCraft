@@ -54,6 +54,20 @@ export function getNodeCenter(node: DiagramNode): [number, number] {
   return [Math.round(node.x + node.width / 2), Math.round(node.y + node.height / 2)];
 }
 
+/** The radius of an actor's head, in world units, as drawn at the top of its box (the top port is its crown). */
+const ACTOR_HEAD_R = 12;
+
+/**
+ * How far apart, at most, wires that share one of an actor's ports sit. The head is small, so its ends stay on it;
+ * the body's sides are short.
+ */
+const ACTOR_PORT_SPREAD: Record<Exclude<PortSide, 'auto'>, { gap: number; room: number }> = {
+  top: { gap: 16, room: 2 * (ACTOR_HEAD_R - 2) },
+  bottom: { gap: 24, room: 72 },
+  left: { gap: 14, room: 32 },
+  right: { gap: 14, room: 32 },
+};
+
 export function getPortPoint(
   node: DiagramNode,
   side: Exclude<PortSide, 'auto'>,
@@ -63,15 +77,20 @@ export function getPortPoint(
   const cy = node.y + node.height / 2;
 
   if (node.kind === 'actor') {
+    // The figure's ports are fixed points on the head, the caption and the sides of the body. When several wires
+    // share one, `offsetRatio` moves each along it: around the head for the top, so the ends stay on the outline.
     switch (side) {
-      case 'top':
-        return [Math.round(cx), Math.round(node.y + 4)];
+      case 'top': {
+        const dx = Math.max(-ACTOR_HEAD_R + 2, Math.min(ACTOR_HEAD_R - 2, node.width * offsetRatio));
+        const drop = ACTOR_HEAD_R - Math.sqrt(ACTOR_HEAD_R * ACTOR_HEAD_R - dx * dx);
+        return [Math.round(cx + dx), Math.round(node.y + 4 + drop)];
+      }
       case 'bottom':
-        return [Math.round(cx), Math.round(node.y + node.height - 2)];
+        return [Math.round(cx + node.width * offsetRatio), Math.round(node.y + node.height - 2)];
       case 'left':
-        return [Math.round(node.x + 22), Math.round(node.y + 58)];
+        return [Math.round(node.x + 22), Math.round(node.y + 58 + node.height * offsetRatio)];
       case 'right':
-        return [Math.round(node.x + node.width - 22), Math.round(node.y + 58)];
+        return [Math.round(node.x + node.width - 22), Math.round(node.y + 58 + node.height * offsetRatio)];
     }
   }
 
@@ -120,7 +139,7 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   }
 
   let underLoopCount = 0;
-  let overLoopCount = 0;
+  const overLoops: Array<{ minX: number; maxX: number; y: number }> = [];
 
   // Group wires that connect the same pair of components so they can be fanned into lanes
   const laneInfo = new Map<string, { index: number; count: number }>();
@@ -140,15 +159,24 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   // paths that would cut through other components.
   const SIDE_ROUTES = new Set<DiagramEdge['route']>(['bezier', 'straight', 'arc', 'orthogonal', 'step']);
   const resolvedSides = new Map<string, { srcSide: Side; dstSide: Side }>();
+  // U-loops leave and enter on the same side (both tops or both bottoms). They draw their own path, but their ends
+  // still share sides with other wires.
+  const loopSides = new Map<string, { srcSide: Side; dstSide: Side }>();
   for (const e of doc.edges) {
     const src = nodeMap.get(e.from);
     const dst = nodeMap.get(e.to);
     if (!src || !dst) continue;
+    if (e.route === 'over' || e.route === 'under') {
+      const side = e.route === 'over' ? 'top' : 'bottom';
+      loopSides.set(e.id, { srcSide: side, dstSide: side });
+      continue;
+    }
     const explicitAuto = e.route === 'auto' && (e.sourcePort !== 'auto' || e.targetPort !== 'auto');
     if (!SIDE_ROUTES.has(e.route) && !explicitAuto) continue;
     const sides = chooseRouteSides(e, src, dst, doc.nodes);
-    // Auto routes with both ends on the top or bottom become U-loops, which place their own ports.
+    // Auto routes with both ends on the top or bottom become U-loops.
     if (explicitAuto && sides.srcSide === sides.dstSide && (sides.srcSide === 'top' || sides.srcSide === 'bottom')) {
+      loopSides.set(e.id, sides);
       continue;
     }
     resolvedSides.set(e.id, sides);
@@ -159,7 +187,7 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   const portOffsets = new Map<string, number>(); // `${edgeId}|src` or `${edgeId}|dst` -> offset ratio
   const sideGroups = new Map<string, Array<{ key: string; order: number }>>();
   for (const e of doc.edges) {
-    const sides = resolvedSides.get(e.id);
+    const sides = resolvedSides.get(e.id) ?? loopSides.get(e.id);
     if (!sides || (laneInfo.get(e.id)?.count ?? 1) > 1) continue;
     const src = nodeMap.get(e.from)!;
     const dst = nodeMap.get(e.to)!;
@@ -168,7 +196,6 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
       [dst, sides.dstSide, src, `${e.id}|dst`],
     ];
     for (const [node, side, other, key] of ends) {
-      if (node.kind === 'actor') continue; // actor ports are fixed points
       const [ox, oy] = getNodeCenter(other);
       const groupKey = `${node.id}|${side}`;
       const group = sideGroups.get(groupKey) || [];
@@ -182,8 +209,12 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
     const [nodeId, side] = groupKey.split('|') as [string, Side];
     const node = nodeMap.get(nodeId)!;
     const span = side === 'top' || side === 'bottom' ? node.width : node.height;
-    // Keep ports inside the middle 60% of the side, at most 40px apart.
-    const gap = Math.min(40, (span * 0.6) / (group.length - 1));
+    // Keep ports inside the middle 60% of the side, at most 40px apart. An actor's ports are points on the figure,
+    // so its wires spread over the little room around each one instead.
+    const actor = node.kind === 'actor' ? ACTOR_PORT_SPREAD[side] : null;
+    const gap = actor
+      ? Math.min(actor.gap, actor.room / (group.length - 1))
+      : Math.min(40, (span * 0.6) / (group.length - 1));
     group
       .sort((a, b) => a.order - b.order)
       .forEach((entry, i) => portOffsets.set(entry.key, ((i - (group.length - 1) / 2) * gap) / span));
@@ -223,9 +254,13 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
         const [sx, sy] = getPortPoint(
           src,
           'bottom',
-          hasDownwardOut.has(src.id) || hasUnderIn.has(src.id) ? -0.19 : 0,
+          portOffsets.get(`${e.id}|src`) ?? (hasDownwardOut.has(src.id) || hasUnderIn.has(src.id) ? -0.19 : 0),
         );
-        const [tx, ty] = getPortPoint(dst, 'bottom', hasUnderOut.has(dst.id) ? 0.16 : 0);
+        const [tx, ty] = getPortPoint(
+          dst,
+          'bottom',
+          portOffsets.get(`${e.id}|dst`) ?? (hasUnderOut.has(dst.id) ? 0.16 : 0),
+        );
         const loopY =
           Math.max(
             src.y + src.height,
@@ -262,14 +297,16 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
 
       // Helper for top U-channel ("Over U-Loop")
       const buildOverLoop = (): RoutedDiagramEdge => {
-        const [sx, sy] = getPortPoint(src, 'top');
-        const [tx, ty] = getPortPoint(dst, 'top');
-        const loopY =
-          Math.min(src.y, dst.y, highestTopWithin(Math.min(sx, tx), Math.max(sx, tx))) -
-          54 -
-          (overLoopCount % 2) * 24 -
-          lane.index * 30;
-        overLoopCount++;
+        const [sx, sy] = getPortPoint(src, 'top', portOffsets.get(`${e.id}|src`) ?? 0);
+        const [tx, ty] = getPortPoint(dst, 'top', portOffsets.get(`${e.id}|dst`) ?? 0);
+        const minX = Math.min(sx, tx);
+        const maxX = Math.max(sx, tx);
+        let loopY =
+          Math.min(src.y, dst.y, highestTopWithin(minX, maxX)) - 54 - lane.index * 30;
+        // Step up past any loop already drawn over the same stretch, so their runs never lie on top of each other.
+        // Loops side by side (such as one into a component and one out of it) keep one line.
+        while (overLoops.some((l) => l.minX < maxX && minX < l.maxX && Math.abs(l.y - loopY) < 20)) loopY -= 24;
+        overLoops.push({ minX, maxX, y: loopY });
         const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
         const dir = tx < sx ? -1 : 1;
         const pathD =
