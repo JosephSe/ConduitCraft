@@ -250,20 +250,32 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   };
   spreadPorts();
 
-  // Lowest / highest obstacle edge for nodes overlapping a horizontal span (keeps loops clear of siblings)
-  const lowestBottomWithin = (minX: number, maxX: number): number => {
-    let bottom = -Infinity;
-    for (const n of doc.nodes) {
-      if (n.x + n.width >= minX - 8 && n.x <= maxX + 8) bottom = Math.max(bottom, n.y + n.height);
+  // Loops keep clear of the components in their way, and only those: a component beyond the run (well above an over
+  // loop, well below an under one) leaves the run where it is, so components can sit on the far side of a loop.
+  const LOOP_CLEARANCE = 40;
+  const loopBlockers = (minX: number, maxX: number, skip: readonly DiagramNode[]): DiagramNode[] =>
+    doc.nodes.filter((n) => !skip.includes(n) && n.x + n.width >= minX - 8 && n.x <= maxX + 8);
+  /** The run's height over the stretch: lifted past each component it would cross on its way up from the ends. */
+  const clearOverRun = (y: number, minX: number, maxX: number, src: DiagramNode, dst: DiagramNode): number => {
+    const lowerTop = Math.max(src.y, dst.y);
+    const nodes = loopBlockers(minX, maxX, [src, dst]);
+    for (let guard = 0; guard <= nodes.length; guard++) {
+      const inWay = nodes.filter((n) => n.y < lowerTop && n.y + n.height + LOOP_CLEARANCE > y);
+      if (inWay.length === 0) break;
+      y = Math.min(y, Math.min(...inWay.map((n) => n.y)) - 54);
     }
-    return bottom;
+    return y;
   };
-  const highestTopWithin = (minX: number, maxX: number): number => {
-    let top = Infinity;
-    for (const n of doc.nodes) {
-      if (n.x + n.width >= minX - 8 && n.x <= maxX + 8) top = Math.min(top, n.y);
+  /** The run's depth under the stretch: dropped past each component it would cross on its way down from the ends. */
+  const clearUnderRun = (y: number, minX: number, maxX: number, src: DiagramNode, dst: DiagramNode): number => {
+    const upperBottom = Math.min(src.y + src.height, dst.y + dst.height);
+    const nodes = loopBlockers(minX, maxX, [src, dst]);
+    for (let guard = 0; guard <= nodes.length; guard++) {
+      const inWay = nodes.filter((n) => n.y + n.height > upperBottom && n.y - LOOP_CLEARANCE < y);
+      if (inWay.length === 0) break;
+      y = Math.max(y, Math.max(...inWay.map((n) => n.y + n.height)) + 58);
     }
-    return top;
+    return y;
   };
 
   const routeAll = () => {
@@ -294,15 +306,16 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
             'bottom',
             portOffsets.get(`${e.id}|dst`) ?? (hasUnderOut.has(dst.id) ? 0.16 : 0),
           );
-          const loopY =
-            Math.max(
-              src.y + src.height,
-              dst.y + dst.height,
-              lowestBottomWithin(Math.min(sx, tx), Math.max(sx, tx)),
-            ) +
-            58 +
-            (underLoopCount > 2 ? (underLoopCount % 2) * 28 : 0) +
-            lane.index * 30;
+          const loopY = clearUnderRun(
+            Math.max(src.y + src.height, dst.y + dst.height) +
+              58 +
+              (underLoopCount > 2 ? (underLoopCount % 2) * 28 : 0) +
+              lane.index * 30,
+            Math.min(sx, tx),
+            Math.max(sx, tx),
+            src,
+            dst,
+          );
           underLoopCount++;
           const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
           const dir = tx < sx ? -1 : 1;
@@ -334,11 +347,12 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
           const [tx, ty] = getPortPoint(dst, 'top', portOffsets.get(`${e.id}|dst`) ?? 0);
           const minX = Math.min(sx, tx);
           const maxX = Math.max(sx, tx);
-          let loopY =
-            Math.min(src.y, dst.y, highestTopWithin(minX, maxX)) - 54 - lane.index * 30;
+          let loopY = clearOverRun(Math.min(src.y, dst.y) - 54 - lane.index * 30, minX, maxX, src, dst);
           // Step up past any loop already drawn over the same stretch, so their runs never lie on top of each other.
           // Loops side by side (such as one into a component and one out of it) keep one line.
-          while (overLoops.some((l) => l.minX < maxX && minX < l.maxX && Math.abs(l.y - loopY) < 20)) loopY -= 24;
+          while (overLoops.some((l) => l.minX < maxX && minX < l.maxX && Math.abs(l.y - loopY) < 20)) {
+            loopY = clearOverRun(loopY - 24, minX, maxX, src, dst);
+          }
           overLoops.push({ minX, maxX, y: loopY });
           const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
           const dir = tx < sx ? -1 : 1;

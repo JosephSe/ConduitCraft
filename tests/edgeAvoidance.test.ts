@@ -156,3 +156,53 @@ describe('wires meeting an actor on one side get their own port', () => {
     assert.deepEqual(routed.endPoint, [Math.round(person.x + person.width / 2), person.y + 4]);
   });
 });
+
+describe('loops over or under components leave room for components beyond them', () => {
+  const runY = (pathD: string) => Number(pathD.match(/Q \S+ (-?\d+)/)![1]);
+  // Two components side by side with a loop between them, and a third somewhere over (or under) the stretch.
+  const pair = (route: 'over' | 'under', otherY: number) => {
+    const doc = createBlankDocument();
+    const a = createNodeFromStencil('service', 80, 600, 0);
+    const b = createNodeFromStencil('service', 860, 600, 1);
+    const other = createNodeFromStencil('actor', 460, otherY, 2);
+    doc.nodes.push(a, b, other);
+    doc.edges.push(wire('ab', a.id, b.id, { route }));
+    const [routed] = routeDiagramEdges(doc);
+    return { a, b, other, run: runY(routed.pathD) };
+  };
+
+  it('runs a loop over the components below a component placed well above them', () => {
+    const { a, other, run } = pair('over', 120);
+    assert.ok(run < a.y, `run ${run} is above the components`);
+    assert.ok(run > other.y + other.height + 30, `run ${run} stays under the component above`);
+  });
+
+  it('still lifts a loop over a component sitting in its way', () => {
+    const { other, run } = pair('over', 480);
+    assert.ok(run < other.y - 30, `run ${run} clears the component in the way`);
+  });
+
+  it('runs a loop under the components above a component placed well below them', () => {
+    const { a, other, run } = pair('under', 1100);
+    assert.ok(run > a.y + a.height, `run ${run} is under the components`);
+    assert.ok(run < other.y - 30, `run ${run} stays over the component below`);
+  });
+
+  it('still drops a loop under a component sitting in its way', () => {
+    const { other, run } = pair('under', 680);
+    assert.ok(run > other.y + other.height + 30, `run ${run} clears the component in the way`);
+  });
+
+  it('keeps a top-to-top wire between components from jumping over a component above (shared blueprint)', () => {
+    // Secure folder → colleague → H, drawn top to top, with Actor 4 well above the H end.
+    const doc = createBlankDocument();
+    const folder = createNodeFromStencil('gate', 672, 896, 0);
+    const colleague = createNodeFromStencil('actor', 1120, 911, 1);
+    const tool = createNodeFromStencil('gate', 1456, 896, 2);
+    const above = createNodeFromStencil('actor', 1424, 208, 3);
+    doc.nodes.push(folder, colleague, tool, above);
+    doc.edges.push(wire('up', colleague.id, tool.id, { route: 'auto', sourcePort: 'top', targetPort: 'top' }));
+    const [routed] = routeDiagramEdges(doc);
+    assert.ok(runY(routed.pathD) > above.y + above.height, 'the run stays under Actor 4');
+  });
+});
