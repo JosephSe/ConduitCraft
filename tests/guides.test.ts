@@ -114,3 +114,34 @@ describe('distancesTo', () => {
     assert.deepEqual(distancesTo(box(0, 0), [box(900, 900)]), []);
   });
 });
+
+describe('snapToGuides: centre lines (the middle of a swimlane)', () => {
+  const lane = { axis: 'x' as const, pos: 400, from: 0, to: 300 };
+
+  it("snaps the moving centre to a centre line and draws a guide from the line's start", () => {
+    // Moving is 100 wide at 345: centre 395, five short of the lane centre 400.
+    const r = snapToGuides(box(345, 300), [], 6, [lane]);
+    assert.equal(r.x, 350);
+    assert.equal(r.snappedX, true);
+    assert.deepEqual(r.guides, [{ axis: 'x', pos: 400, from: 0, to: 360 }]);
+  });
+
+  it('snaps only the centre, not an edge, to a centre line', () => {
+    // The left edge 397 is near 400, but the centre 447 is not.
+    const r = snapToGuides(box(397, 300), [], 6, [lane]);
+    assert.equal(r.snappedX, false);
+    assert.deepEqual(r.guides, []);
+  });
+
+  it('prefers the closer of a component line and a centre line', () => {
+    // Centre 395 is 5 from the lane centre; the left edge 345 is 2 from another component's left edge 343.
+    const r = snapToGuides(box(345, 300), [box(343, 100)], 6, [lane]);
+    assert.equal(r.x, 343);
+  });
+
+  it('ignores a centre line beyond the threshold', () => {
+    const r = snapToGuides(box(330, 300), [], 6, [lane]);
+    assert.equal(r.snappedX, false);
+    assert.equal(r.x, 330);
+  });
+});
