@@ -13,6 +13,7 @@ import {
   minimapToWorld,
   notesCardHeight,
   panToCenterWorld,
+  scenarioPictureBounds,
   selectionWorldBounds,
   viewportWorldRect,
   worldToMinimap,
@@ -198,5 +199,28 @@ describe('viewport framing', () => {
     const emptyFrame = frameDocumentInViewport(850, 600, blank());
     assert.ok(emptyFrame);
     assert.equal(emptyFrame.scale, 1.0);
+  });
+
+  it('crops a scenario picture to the components, their wires and the packet label, with a small margin', () => {
+    const a = node({ id: 'a', x: 200, y: 300, width: 160, height: 100 });
+    const b = node({ id: 'b', x: 600, y: 320, width: 160, height: 100 });
+    const doc = { nodes: [a, b], frames: [], stageWidth: 3000, stageHeight: 1800 };
+    const box = scenarioPictureBounds(doc, [], [], 32);
+    assert.deepEqual(box, { x: 168, y: 268, width: 624, height: 184 });
+
+    // A wire that bows below the components widens the crop to keep it.
+    const looped = scenarioPictureBounds(doc, [{ pathD: 'M 360 350 C 400 600, 560 600, 600 370' }], [], 32);
+    assert.equal(looped?.y, 268);
+    assert.equal((looped?.y ?? 0) + (looped?.height ?? 0), 632);
+
+    // The packet pill sits above the lit component, so the crop reaches up for it.
+    const lit = scenarioPictureBounds(doc, [], [{ nodes: ['a'], label: 'Request' }], 32);
+    assert.ok((lit?.y ?? 999) < 268 - 20);
+
+    // Never past the stage edge.
+    const edge = scenarioPictureBounds({ ...doc, nodes: [node({ id: 'c', x: 4, y: 4, width: 100, height: 60 })] }, [], [], 32);
+    assert.equal(edge?.x, 0);
+    assert.equal(edge?.y, 0);
+    assert.equal(scenarioPictureBounds({ ...doc, nodes: [] }, [], [], 32), null);
   });
 });
