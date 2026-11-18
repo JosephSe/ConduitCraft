@@ -294,14 +294,22 @@
     position: absolute;
     left: calc(var(--bx) * 1px);
     top: calc(var(--by) * 1px);
-    width: 404px;
+    /* --nw: the width the user dragged the card to. The height follows the wrapped items. */
+    width: calc(var(--nw, 404) * 1px);
     padding: 1.1rem 1.25rem;
     border-radius: 4px;
+    /* A sticky-note tint: a little yellow mixed into the sheet, so it follows the theme and the diagram style. */
+    --cc-note: color-mix(in oklab, var(--cc-sheet) 86%, #ffd23f);
     /* The folded top-right corner is the cut-out's shape (8.1): the background leaves it clear. */
-    background: linear-gradient(225deg, transparent 12.7px, var(--cc-sheet) 12.7px);
+    background: linear-gradient(225deg, transparent 12.7px, var(--cc-note) 12.7px);
     border: 0;
     filter: drop-shadow(0 0 0.5px var(--cc-hair-2)) drop-shadow(0 0 0.5px var(--cc-hair-2));
     pointer-events: auto;
+  }
+
+  /* On the dark theme the same mix reads olive, so use half as much yellow. */
+  :root[data-theme="graphite"] .blueprint-spec {
+    --cc-note: color-mix(in oklab, var(--cc-sheet) 93%, #ffd23f);
   }
 
   .blueprint-spec::after {
@@ -316,6 +324,21 @@
   }
 
   .blueprint-spec.is-text::after { display: none; }
+
+  /* Drag the right edge to make a note wider or narrower (Design only, and not on a text label). */
+  .notes-resize-handle {
+    position: absolute;
+    top: 18px;
+    right: -5px;
+    width: 10px;
+    bottom: 0;
+    cursor: ew-resize;
+    touch-action: none;
+    display: none;
+  }
+  .workspace[data-mode="design"] .blueprint-spec:not(.is-text) .notes-resize-handle {
+    display: block;
+  }
 
   .blueprint-spec.is-selected {
     filter: drop-shadow(0 0 1px var(--cc-blue)) drop-shadow(0 0 1px var(--cc-blue));
@@ -378,6 +401,8 @@
     display: flex;
     align-items: flex-start;
     gap: 0.5rem;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
     font-size: 0.78rem;
     line-height: 1.4;
     color: var(--cc-ink-2);

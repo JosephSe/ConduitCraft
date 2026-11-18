@@ -1,22 +1,14 @@
 /** Pure viewport framing math. Safe to import from node tests. */
-import type { DiagramDocument, DiagramNode, SelectionTarget } from '../types';
+import type { DiagramDocument, DiagramNode, DiagramNotesCard, SelectionTarget } from '../types';
+import { NOTES_CARD_WIDTH, notesCardHeight, notesCardWidth } from '../core/notesSize';
+
+export { NOTES_CARD_WIDTH, notesCardHeight };
 
 export interface WorldRect {
   x: number;
   y: number;
   width: number;
   height: number;
-}
-
-/** Studio `.blueprint-spec` width. */
-export const NOTES_CARD_WIDTH = 404;
-
-/**
- * Estimated notes-card height from padding, the header, and list rows.
- * Used to frame the card without reading layout.
- */
-export function notesCardHeight(itemCount: number): number {
-  return 72 + Math.max(0, itemCount) * 40;
 }
 
 export const FIT_PAD_X = 48;
@@ -47,12 +39,12 @@ export function nodeRect(node: Pick<DiagramNode, 'x' | 'y' | 'width' | 'height'>
   return { x: node.x, y: node.y, width: node.width, height: node.height };
 }
 
-export function notesRect(card: { x: number; y: number; items: readonly unknown[] }): WorldRect {
+export function notesRect(card: Pick<DiagramNotesCard, 'x' | 'y' | 'items' | 'width'>): WorldRect {
   return {
     x: card.x,
     y: card.y,
-    width: NOTES_CARD_WIDTH,
-    height: notesCardHeight(card.items.length),
+    width: notesCardWidth(card),
+    height: notesCardHeight(card),
   };
 }
 
@@ -95,6 +87,101 @@ export function contentWorldBounds(doc: DiagramDocument): WorldRect | null {
     ...doc.zones.map((zone) => zoneWorldBounds(zone, doc.stageHeight, doc.nodes)),
     ...doc.notesCards.map(notesRect),
   ]);
+}
+
+/** Margin around the components in a scenario GIF, in stage pixels. */
+export const SCENARIO_PICTURE_PAD = 32;
+
+/** Every coordinate pair in an absolute SVG path (M, L, C, Q), including curve control points. */
+function pathRect(pathD: string): WorldRect | null {
+  const nums = (pathD.match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/gi) ?? []).map(Number);
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) {
+    xs.push(nums[i]);
+    ys.push(nums[i + 1]);
+  }
+  if (xs.length === 0) return null;
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  // A straight wire is a line; give it some thickness so the union keeps it.
+  return { x, y, width: Math.max(1, Math.max(...xs) - x), height: Math.max(1, Math.max(...ys) - y) };
+}
+
+/**
+ * The part of the stage a scenario GIF shows: the components, the wires between them, the frames around them and the
+ * packet label drawn above the lit component of each hop, plus a small margin. Swimlanes, notes and the empty stage
+ * around them are left out, so the animation is not mostly blank. Clamped to the stage.
+ */
+export function scenarioPictureBounds(
+  doc: Pick<DiagramDocument, 'nodes' | 'frames' | 'stageWidth' | 'stageHeight'>,
+  wires: readonly { pathD: string }[],
+  steps: readonly { nodes: readonly string[]; label?: string }[],
+  pad = SCENARIO_PICTURE_PAD,
+): WorldRect | null {
+  const rects: WorldRect[] = doc.nodes.map(nodeRect);
+  for (const wire of wires) {
+    const r = pathRect(wire.pathD);
+    if (r) rects.push(r);
+  }
+  for (const f of doc.frames ?? []) rects.push({ x: f.x, y: f.y, width: f.width, height: f.height });
+  for (const step of steps) {
+    const anchor = doc.nodes.find((n) => n.id === step.nodes[0]);
+    if (!anchor) continue;
+    // The packet pill sits 62px above the component's middle (see paintScenario).
+    const label = step.label || anchor.title || '';
+    const w = Math.max(80, label.length * 7.5 + 44);
+    const cx = anchor.x + anchor.width / 2;
+    const cy = anchor.y + anchor.height / 2 - 62;
+    rects.push({ x: cx - w / 2, y: cy - 16, width: w, height: 32 });
+  }
+  return padToStage(rects, doc, pad);
+}
+
+/** The union of `rects`, grown by `pad` and clamped to the stage. Null when there is nothing to frame. */
+function padToStage(rects: WorldRect[], doc: Pick<DiagramDocument, 'stageWidth' | 'stageHeight'>, pad: number): WorldRect | null {
+  const box = unionRects(rects);
+  if (!box) return null;
+  const x0 = Math.max(0, Math.floor(box.x - pad));
+  const y0 = Math.max(0, Math.floor(box.y - pad));
+  const x1 = Math.min(Math.max(1, doc.stageWidth), Math.ceil(box.x + box.width + pad));
+  const y1 = Math.min(Math.max(1, doc.stageHeight), Math.ceil(box.y + box.height + pad));
+  if (x1 <= x0 || y1 <= y0) return null;
+  return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+}
+
+/** Height of a swimlane's title banner at the top of the stage. */
+const ZONE_BANNER_HEIGHT = 48;
+
+/**
+ * The part of the stage a whole-diagram picture (PNG, GIF) shows: components, wires, frames, notes, text labels and
+ * swimlanes (a lane from its banner down to its lowest component), with a small margin. The empty stage padding
+ * around them is left out. Clamped to the stage.
+ */
+export function diagramPictureBounds(
+  doc: Pick<DiagramDocument, 'nodes' | 'zones' | 'notesCards' | 'frames' | 'stageWidth' | 'stageHeight'>,
+  wires: readonly { pathD: string }[],
+  pad = SCENARIO_PICTURE_PAD,
+): WorldRect | null {
+  const rects: WorldRect[] = doc.nodes.map(nodeRect);
+  for (const wire of wires) {
+    const r = pathRect(wire.pathD);
+    if (r) rects.push(r);
+  }
+  for (const f of doc.frames ?? []) rects.push({ x: f.x, y: f.y, width: f.width, height: f.height });
+  for (const card of doc.notesCards) {
+    rects.push(
+      card.variant === 'text'
+        ? { x: card.x, y: card.y, width: Math.max(40, card.title.length * 9 + 16), height: 32 }
+        : notesRect(card),
+    );
+  }
+  for (const zone of doc.zones) {
+    const inside = doc.nodes.filter((n) => n.x < zone.x + zone.width && n.x + n.width > zone.x);
+    const bottom = Math.max(ZONE_BANNER_HEIGHT, ...inside.map((n) => n.y + n.height));
+    rects.push({ x: zone.x, y: 0, width: zone.width, height: bottom });
+  }
+  return padToStage(rects, doc, pad);
 }
 
 /**
@@ -183,6 +270,7 @@ export function frameDocumentInViewport(
   viewportWidth: number,
   viewportHeight: number,
   doc: DiagramDocument,
+  wires: readonly { pathD: string }[] = [],
 ): ViewportFrame | null {
   if (viewportWidth <= 0 || viewportHeight <= 0) return null;
 
@@ -194,33 +282,25 @@ export function frameDocumentInViewport(
     };
   }
 
-  const content = contentWorldBounds(doc);
-  // When framing small diagrams (1-4 nodes and no zones spanning the full stage),
-  // frame the actual content bounding box clamped to a readable minimum zoom (>= READABLE_FIT_SCALE_MIN).
-  if (content && doc.nodes.length <= 4 && doc.zones.length === 0) {
-    const padX = 80;
-    const padY = 80;
-    const availW = Math.max(32, viewportWidth - padX);
-    const availH = Math.max(32, viewportHeight - padY);
-    const raw = Math.min(availW / content.width, availH / content.height);
-    const scale = Math.min(1.0, Math.max(READABLE_FIT_SCALE_MIN, raw));
-    return {
-      scale,
-      panX: (viewportWidth - content.width * scale) / 2 - content.x * scale,
-      panY: (viewportHeight - content.height * scale) / 2 - content.y * scale,
-    };
-  }
-
-  // Large or zoned diagrams: frame stage dimensions clamped to [FIT_SCALE_MIN, 1.12]
-  const padX = 48;
-  const padY = 64;
-  const scaleX = (viewportWidth - padX) / doc.stageWidth;
-  const scaleY = (viewportHeight - padY) / doc.stageHeight;
-  const scale = Math.max(FIT_SCALE_MIN, Math.min(1.12, Math.min(scaleX, scaleY)));
+  // Frame the diagram itself (components, wires, frames, notes and swimlanes), not the padded stage around it, so it
+  // fills the view and sits in the middle of it.
+  // The same rectangle a PNG export shows, margin included, so Fit and the picture agree.
+  const content = diagramPictureBounds(doc, wires) ?? contentWorldBounds(doc);
+  if (!content) return null;
+  // Small diagrams (1-4 nodes, no swimlanes) keep a readable minimum zoom.
+  const small = doc.nodes.length <= 4 && doc.zones.length === 0;
+  const padX = small ? 80 : 48;
+  const padY = small ? 80 : 64;
+  const availW = Math.max(32, viewportWidth - padX);
+  const availH = Math.max(32, viewportHeight - padY);
+  const raw = Math.min(availW / Math.max(1, content.width), availH / Math.max(1, content.height));
+  const scale = small
+    ? Math.min(1.0, Math.max(READABLE_FIT_SCALE_MIN, raw))
+    : Math.max(FIT_SCALE_MIN, Math.min(1.12, raw));
   return {
     scale,
-    panX: Math.round((viewportWidth - doc.stageWidth * scale) / 2),
-    panY: Math.max(12, Math.round((viewportHeight - doc.stageHeight * scale) / 2 - 8)),
+    panX: (viewportWidth - content.width * scale) / 2 - content.x * scale,
+    panY: (viewportHeight - content.height * scale) / 2 - content.y * scale,
   };
 }
 

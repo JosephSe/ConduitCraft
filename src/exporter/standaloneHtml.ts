@@ -1,4 +1,5 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
+import { notesCardWidth } from '../core/notesSize';
 import { breadcrumb, viewOfLevel } from '../core/levels';
 import { pageList, viewOfPage } from '../core/pages';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -244,8 +245,9 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
         <div class="blueprint-spec-header"><span>${escapeHtml(card.title)}</span></div>
       </aside>`;
       }
+      const widthVar = card.width !== undefined ? ` --nw: ${notesCardWidth(card)};` : '';
       return `
-      <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};" aria-label="${escapeHtml(card.title)}">
+      <aside class="blueprint-spec${selCls}" data-notes-id="${escapeHtml(card.id)}" style="--bx: ${card.x}; --by: ${card.y};${widthVar}" aria-label="${escapeHtml(card.title)}">
         <div class="blueprint-spec-header">
           <span>${escapeHtml(card.title)}</span>
           <span>${escapeHtml(card.code)}</span>

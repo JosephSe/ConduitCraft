@@ -28,3 +28,6 @@
 }
 /* Every stroke goes through one fixed-seed displacement filter (#cc-rough), so it wobbles the same way every time. */
 [data-style="sketch"] #stage-world :is(.node-select-hit, .node-shape-plate, .conduit-rail, .conduit-glow) { filter: url(#cc-rough); }
+/* Blueprint and Print keep their own limited palettes: no sticky-note tint on notes. */
+[data-style="blueprint"] .blueprint-spec,
+[data-style="print"] .blueprint-spec { --cc-note: var(--cc-sheet); }

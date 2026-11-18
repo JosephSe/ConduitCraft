@@ -145,6 +145,7 @@ import {
   getNodeCenter,
   getNodeDimensions,
   getPortPoint,
+  routeDiagramEdges,
 } from '../core/layout';
 import {
   importMermaidOrBlueprint,
@@ -156,7 +157,7 @@ import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pageCount } from '../core/pages';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
-import { FIT_SCALE_MIN } from './viewportFrame';
+import { FIT_SCALE_MIN, diagramPictureBounds, scenarioPictureBounds, type WorldRect } from './viewportFrame';
 import { selectionOfStage } from './selection';
 import {
   deleteActiveDiagram,
@@ -170,7 +171,7 @@ import {
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
 import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
-import { setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
+import { TITLE_BLOCK_HEIGHT, setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey, normalizeStyle } from '../core/meta';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
@@ -1323,6 +1324,17 @@ export function downloadBlob(content: string, filename: string, mimeType: string
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/**
+ * The whole diagram plus a margin, in stage pixels. With the title block on, room is added below so the strip does
+ * not cover the diagram; `worldPerPixel` converts its fixed pixel height into stage pixels at the export's scale.
+ */
+function diagramCrop(withTitle: boolean, worldPerPixel: number): WorldRect | undefined {
+  const crop = diagramPictureBounds(app.doc, routeDiagramEdges(app.doc));
+  if (!crop) return undefined;
+  if (!withTitle) return crop;
+  return { ...crop, height: crop.height + Math.ceil(TITLE_BLOCK_HEIGHT * worldPerPixel) };
+}
+
 function downloadDiagramPng(svg: string, width: number, height: number, filename: string): void {
   // A blob URL taints the canvas when the SVG embeds the live stage. A data URL does not.
   const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -1448,15 +1460,25 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         hudStatusTip.textContent = 'That scenario has no hops to record.';
         return;
       }
-      const size = gifPixelSize(doc.stageWidth, doc.stageHeight);
+      // Keep the components and a small margin, not the whole padded stage.
+      const withTitle = titleBlockEnabled();
+      let crop = scenarioPictureBounds(doc, routeDiagramEdges(doc), scenario.steps) ?? undefined;
+      let size = crop ? gifPixelSize(crop.width, crop.height) : gifPixelSize(doc.stageWidth, doc.stageHeight);
+      if (crop && withTitle) {
+        // The title block covers the bottom strip of the picture, so give it room below the components.
+        const extra = Math.ceil(TITLE_BLOCK_HEIGHT * (crop.width / size.width));
+        crop = { ...crop, height: crop.height + extra };
+        size = gifPixelSize(crop.width, crop.height);
+      }
       const frames: Uint8ClampedArray[] = [];
       for (const step of scenario.steps) {
         const svg = renderStagePictureSvg(size.width, size.height, {
+          ...(crop ? { crop } : {}),
           activeNodes: step.nodes,
           tone: step.tone,
           packetLabel: step.label,
           preserveSelection: false,
-          titleBlock: titleBlockEnabled(),
+          titleBlock: withTitle,
         });
         frames.push(await rasterizeSvg(svg, size.width, size.height));
       }
@@ -1483,12 +1505,18 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
     const animated = doc.edges.filter((edge) => edge.animated !== false).length;
     const frameCount = gifFrameCount(animated);
     const viewScale = view ? Math.min(2, GIF_MAX_EDGE / Math.max(view.width, view.height, 1)) : 1;
+    // The whole diagram, without the empty stage padding. The title block's room is sized for the GIF's scale.
+    const wholeCrop = view
+      ? undefined
+      : diagramCrop(titleBlockEnabled(), Math.max(1, Math.max(doc.stageWidth, doc.stageHeight) / GIF_MAX_EDGE));
     const size = view
       ? {
           width: Math.max(1, Math.round(view.width * viewScale)),
           height: Math.max(1, Math.round(view.height * viewScale)),
         }
-      : gifPixelSize(doc.stageWidth, doc.stageHeight);
+      : wholeCrop
+        ? gifPixelSize(wholeCrop.width, wholeCrop.height)
+        : gifPixelSize(doc.stageWidth, doc.stageHeight);
     // The studio dash travels 36px in 1.35s. One 18px cycle across the frames is 8 centiseconds.
     const delayCs = 8;
     const frames: Uint8ClampedArray[] = [];
@@ -1499,6 +1527,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
         preserveSelection: app.selection.type === 'multi',
         titleBlock: titleBlockEnabled(),
         ...(view ? { currentView: true } : {}),
+        ...(wholeCrop ? { crop: wholeCrop } : {}),
         ...dash,
       };
       const svg = renderStagePictureSvg(size.width, size.height, options);
@@ -2056,7 +2085,11 @@ export function initEvents(): void {
 
   const updatePngExportEstimate = (): void => {
     const scale = getSelectedPngScale();
-    const estimate = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, scale);
+    // The picture is cropped to the diagram, so estimate from that, not the padded stage.
+    const crop = diagramPictureBounds(app.doc, routeDiagramEdges(app.doc));
+    const baseW = crop?.width ?? app.doc.stageWidth;
+    const baseH = crop?.height ?? app.doc.stageHeight;
+    const estimate = estimatePngExport(baseW, baseH, scale);
     if (exportPngEstimate) {
       exportPngEstimate.textContent = estimate.summary;
     }
@@ -2067,9 +2100,9 @@ export function initEvents(): void {
       const opt1 = exportPngScale.querySelector('option[value="1"]');
       const opt2 = exportPngScale.querySelector('option[value="2"]');
       const opt4 = exportPngScale.querySelector('option[value="4"]');
-      const est1 = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, 1);
-      const est2 = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, 2);
-      const est4 = estimatePngExport(app.doc.stageWidth, app.doc.stageHeight, 4);
+      const est1 = estimatePngExport(baseW, baseH, 1);
+      const est2 = estimatePngExport(baseW, baseH, 2);
+      const est4 = estimatePngExport(baseW, baseH, 4);
       if (opt1) opt1.textContent = `1× (${est1.width} × ${est1.height} px — ${est1.formattedSize})`;
       if (opt2) opt2.textContent = `2× (${est2.width} × ${est2.height} px — ${est2.formattedSize})`;
       if (opt4) opt4.textContent = `4× (${est4.width} × ${est4.height} px — ${est4.formattedSize})`;
@@ -2154,12 +2187,19 @@ export function initEvents(): void {
     expandStageToFit(app.doc);
     renderAll(false);
     const scale = getSelectedPngScale();
-    const width = Math.max(1, Math.round(app.doc.stageWidth * scale));
-    const height = Math.max(1, Math.round(app.doc.stageHeight * scale));
+    // Keep the diagram and a small margin, not the empty stage padding to its right and below.
+    const withTitle = titleBlockEnabled();
+    const crop = diagramCrop(withTitle, 1 / scale);
+    const width = Math.max(1, Math.round((crop?.width ?? app.doc.stageWidth) * scale));
+    const height = Math.max(1, Math.round((crop?.height ?? app.doc.stageHeight) * scale));
     hudStatusTip.textContent = 'Rendering the canvas…';
     const filename = `${getSafeFilenameSlug()}.png`;
     downloadDiagramPng(
-      renderStagePictureSvg(width, height, { preserveSelection: app.selection.type === 'multi', titleBlock: titleBlockEnabled() }),
+      renderStagePictureSvg(width, height, {
+        ...(crop ? { crop } : {}),
+        preserveSelection: app.selection.type === 'multi',
+        titleBlock: withTitle,
+      }),
       width,
       height,
       filename,

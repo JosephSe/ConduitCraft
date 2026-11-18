@@ -39,7 +39,7 @@ import {
   writePageBack,
 } from '../core/pages';
 import type { PageEdit } from '../core/pageOps';
-import { tightenLegacyStoreCylinder } from '../core/layout';
+import { routeDiagramEdges, tightenLegacyStoreCylinder } from '../core/layout';
 import { panForViewportResize } from './camera';
 import { createBlankDocument } from '../templates/presets';
 import {
@@ -727,11 +727,32 @@ function inspectorInset(): number {
   return Math.max(0, view.right - card.getBoundingClientRect().left + 14);
 }
 
+/**
+ * Height the floating bottom chrome covers (the dock or run bar, the zoom card, the page strip), so Fit can keep the
+ * diagram's bottom row above it rather than under it.
+ */
+function bottomChromeInset(): number {
+  const view = viewport.getBoundingClientRect();
+  let top = view.bottom;
+  for (const el of document.querySelectorAll<HTMLElement>('#dock, .hud-zoom-card, #page-strip')) {
+    if (el.offsetParent === null) continue;
+    const r = el.getBoundingClientRect();
+    if (r.height === 0 || r.top <= view.top + view.height / 2 || r.top >= view.bottom) continue;
+    top = Math.min(top, r.top);
+  }
+  return top < view.bottom ? Math.round(view.bottom - top + 8) : 0;
+}
+
 export function fitToViewport(): void {
   const rect = viewport.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) return;
 
-  const frame = frameDocumentInViewport(rect.width - inspectorInset(), rect.height, app.doc);
+  const frame = frameDocumentInViewport(
+    rect.width - inspectorInset(),
+    rect.height - bottomChromeInset(),
+    app.doc,
+    routeDiagramEdges(app.doc),
+  );
   if (frame) {
     app.scale = frame.scale;
     app.panX = Math.round(frame.panX);
@@ -749,7 +770,7 @@ export function fitSelection(): void {
     fitToViewport();
     return;
   }
-  const frame = frameRectInViewport(rect.width - inspectorInset(), rect.height, bounds);
+  const frame = frameRectInViewport(rect.width - inspectorInset(), rect.height - bottomChromeInset(), bounds);
   if (!frame) return;
   app.scale = frame.scale;
   app.panX = Math.round(frame.panX);

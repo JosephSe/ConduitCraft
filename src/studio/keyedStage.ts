@@ -1,6 +1,7 @@
 /** Keyed stage rendering. Existing elements are updated in place; listeners stay bound. */
 import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagramEdge } from '../types';
 import { getNotesItemIconMeta } from '../types';
+import { NOTES_CARD_WIDTH, clampNotesWidth, notesCardWidth } from '../core/notesSize';
 import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/layout';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
 import {
@@ -292,7 +293,10 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
 
   const list = document.createElement('ul');
   list.className = 'blueprint-spec-list';
-  aside.append(header, list);
+  const resizeHandle = document.createElement('div');
+  resizeHandle.className = 'notes-resize-handle';
+  resizeHandle.title = 'Drag to change the note width. Double-click to reset it.';
+  aside.append(header, list, resizeHandle);
 
   const isToggleNotesEvent = (e: MouseEvent | PointerEvent) => {
     return (
@@ -304,7 +308,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
   };
 
   aside.addEventListener('pointerdown', (e) => {
-    if (app.workspaceMode !== 'design' || e.button !== 0) return;
+    if (app.workspaceMode !== 'design' || e.button !== 0 || e.target === resizeHandle) return;
     const current = liveNotes(aside.dataset.notesId || '');
     if (!current) return;
     e.stopPropagation();
@@ -400,12 +404,74 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     renameNotesInline(aside.dataset.notesId || '');
   });
 
+  // Width: drag the right edge. The height is never stored; it follows the wrapped items.
+  let resizeStartX = 0;
+  let origW = NOTES_CARD_WIDTH;
+  let resized = false;
+  resizeHandle.addEventListener('pointerdown', (e) => {
+    if (app.workspaceMode !== 'design' || e.button !== 0) return;
+    const current = liveNotes(aside.dataset.notesId || '');
+    if (!current || current.variant === 'text') return;
+    e.stopPropagation();
+    applySelection({ type: 'notes', id: current.id });
+    if (current.locked) return;
+    resizeStartX = e.clientX;
+    origW = notesCardWidth(current);
+    resized = false;
+    resizeHandle.setPointerCapture(e.pointerId);
+  });
+  resizeHandle.addEventListener('pointermove', (e) => {
+    if (!resizeHandle.hasPointerCapture(e.pointerId)) return;
+    const current = liveNotes(aside.dataset.notesId || '');
+    if (!current) return;
+    const dw = (e.clientX - resizeStartX) / app.scale;
+    if (!resized && Math.abs(dw) > 3) {
+      beginHistoryGesture();
+      pushHistory();
+      resized = true;
+      aside.classList.add('resizing');
+    }
+    if (resized) {
+      const raw = origW + dw;
+      current.width = clampNotesWidth(app.snapToGrid ? Math.round(raw / 16) * 16 : raw);
+      aside.style.setProperty('--nw', String(current.width));
+      expandStageToFit(app.doc);
+      scheduleMinimapPaint();
+    }
+  });
+  const endNotesResize = () => {
+    if (!resized) return;
+    resized = false;
+    aside.classList.remove('resizing');
+    endHistoryGesture();
+    renderPropertyEditor();
+  };
+  resizeHandle.addEventListener('pointerup', (e) => {
+    e.stopPropagation();
+    endNotesResize();
+  });
+  resizeHandle.addEventListener('lostpointercapture', endNotesResize);
+  resizeHandle.addEventListener('click', (e) => e.stopPropagation());
+  resizeHandle.addEventListener('dblclick', (e) => {
+    if (app.workspaceMode !== 'design') return;
+    e.stopPropagation();
+    const current = liveNotes(aside.dataset.notesId || '');
+    if (!current || current.locked || current.width === undefined) return;
+    pushHistory();
+    delete current.width;
+    aside.style.removeProperty('--nw');
+    scheduleMinimapPaint();
+    renderPropertyEditor();
+  });
+
   return aside;
 }
 
 function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   aside.style.setProperty('--bx', String(card.x));
   aside.style.setProperty('--by', String(card.y));
+  if (card.width !== undefined && card.variant !== 'text') aside.style.setProperty('--nw', String(notesCardWidth(card)));
+  else aside.style.removeProperty('--nw');
   aside.classList.toggle('is-text', card.variant === 'text');
   const title = aside.querySelector('.notes-title');
   if (title) title.textContent = card.title;

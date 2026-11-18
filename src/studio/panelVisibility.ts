@@ -24,7 +24,17 @@ export function isPanelHidden(side: PanelSide): boolean {
   return workspace()?.getAttribute(ATTR[side]) === 'true';
 }
 
-function syncButton(side: PanelSide, hidden: boolean): void {
+/**
+ * Whether the side is out of view for any reason. The right side also counts as hidden while the inspector is
+ * collapsed (Design folds it away with nothing selected, and ] or the palette collapse it), so the panel toggle
+ * shows it again rather than only flipping its own flag.
+ */
+function isPanelOutOfView(side: PanelSide): boolean {
+  return isPanelHidden(side) || (side === 'right' && responsiveToolbar.isInspectorCollapsed());
+}
+
+function syncButton(side: PanelSide): void {
+  const hidden = isPanelOutOfView(side);
   const btn = document.getElementById(`btn-toggle-${side}-panel`);
   if (!btn) return;
   const label = `${hidden ? 'Show' : 'Hide'} ${NAME[side]}`;
@@ -38,7 +48,7 @@ export function setPanelHidden(side: PanelSide, hidden: boolean, persist = true)
   if (!ws) return;
   if (hidden) ws.setAttribute(ATTR[side], 'true');
   else ws.removeAttribute(ATTR[side]);
-  syncButton(side, hidden);
+  syncButton(side);
   if (persist) {
     try {
       if (hidden) localStorage.setItem(STORAGE_KEY[side], '1');
@@ -51,7 +61,12 @@ export function setPanelHidden(side: PanelSide, hidden: boolean, persist = true)
 }
 
 export function togglePanel(side: PanelSide): void {
-  setPanelHidden(side, !isPanelHidden(side));
+  if (isPanelOutOfView(side)) {
+    setPanelHidden(side, false);
+    if (side === 'right' && responsiveToolbar.isInspectorCollapsed()) responsiveToolbar.toggleInspector(false);
+  } else {
+    setPanelHidden(side, true);
+  }
 }
 
 function editing(target: EventTarget | null): boolean {
@@ -60,6 +75,7 @@ function editing(target: EventTarget | null): boolean {
 }
 
 export function initPanelVisibility(): void {
+  responsiveToolbar.onInspectorChange(() => syncButton('right'));
   for (const side of ['left', 'right'] as const) {
     let saved = false;
     try {

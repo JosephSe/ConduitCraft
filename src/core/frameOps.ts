@@ -3,6 +3,7 @@
  * parsers load at start-up) so the entry bundle only carries what reading a file needs. Pure and DOM-free.
  */
 import type { DiagramEdge, DiagramFrame, DiagramNode, DiagramNotesCard, StreamTone } from '../types';
+import { notesCardHeight, notesCardWidth } from './notesSize';
 import { FRAME_HEADER_HEIGHT, FRAME_MIN_HEIGHT, FRAME_MIN_WIDTH, FRAME_PADDING, MAX_FRAME_DEPTH } from './frames';
 
 /** The part of a document that frames touch. */
@@ -115,7 +116,8 @@ export function adoptByGeometry(host: FrameHost): boolean {
 
 /** Rough size of a note card and of a text label, used to find where one sits (cards store only a top-left corner). */
 const NOTE_SIZE = { card: [280, 96], text: [80, 28] } as const;
-const noteSize = (c: DiagramNotesCard) => NOTE_SIZE[c.variant === 'text' ? 'text' : 'card'];
+const noteSize = (c: DiagramNotesCard): readonly [number, number] =>
+  c.variant === 'text' ? NOTE_SIZE.text : c.width !== undefined ? [notesCardWidth(c), notesCardHeight(c)] : NOTE_SIZE.card;
 
 /** The notes and text labels whose middle lies inside any of the frames `ids`. */
 export function notesInFrames(host: FrameHost, ids: ReadonlySet<string>): DiagramNotesCard[] {
