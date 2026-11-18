@@ -34,6 +34,15 @@ function sync(): void {
   responsiveToolbar.toggleInspector(!wantOpen, false);
 }
 
+/**
+ * Traffic and Review have their own overview even with nothing selected, so the inspector Design folded away comes
+ * back when they open. A collapse the user chose (] or the palette) is kept, and a narrow screen keeps its drawer shut.
+ */
+function showForReadOnlyLens(): void {
+  if (responsiveToolbar.isNarrowScreen() || responsiveToolbar.isCollapseSaved()) return;
+  responsiveToolbar.toggleInspector(false, false);
+}
+
 export function initInspectorAutoShow(): void {
   const pin = document.getElementById('btn-pin-inspector');
   pinned = readPinned();
@@ -52,8 +61,9 @@ export function initInspectorAutoShow(): void {
   onSelectionChange(sync);
   document.querySelectorAll<HTMLInputElement>('input[name="workspace-mode"]').forEach((radio) => {
     radio.addEventListener('change', () => {
-      // Data View has its own overview even with no selection: leave the panel where it is.
-      if (radio.checked && radio.value === 'design') sync();
+      if (!radio.checked) return;
+      if (radio.value === 'design') sync();
+      else showForReadOnlyLens();
     });
   });
   sync();

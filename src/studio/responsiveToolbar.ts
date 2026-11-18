@@ -15,6 +15,7 @@ export interface ResponsiveToolbarOptions {
 export class ResponsiveToolbarManager {
   private workspaceEl: HTMLElement | null = null;
   private options: ResponsiveToolbarOptions;
+  private inspectorListeners: Array<() => void> = [];
 
   constructor(options: ResponsiveToolbarOptions = {}) {
     this.options = options;
@@ -101,7 +102,23 @@ export class ResponsiveToolbarManager {
       if (persist) this.safeRemoveStorage(STORAGE_INSPECTOR_KEY);
     }
     this.updateScrim();
+    for (const fn of this.inspectorListeners) fn();
     return next;
+  }
+
+  /** Run `fn` whenever the inspector opens or collapses, from any caller. */
+  public onInspectorChange(fn: () => void): void {
+    this.inspectorListeners.push(fn);
+  }
+
+  /** True when the user chose to collapse the inspector (] or the palette), as opposed to it folding away by itself. */
+  public isCollapseSaved(): boolean {
+    if (typeof localStorage === 'undefined') return false;
+    try {
+      return localStorage.getItem(STORAGE_INSPECTOR_KEY) === 'true';
+    } catch {
+      return false;
+    }
   }
 
   public isInspectorCollapsed(): boolean {
