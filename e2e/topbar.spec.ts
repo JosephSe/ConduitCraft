@@ -103,7 +103,8 @@ const REGIONS: Array<[name: string, selector: string]> = [
   ['text outline', '#outline-panel'],
   ['page strip', '#page-strip'],
 ];
-const NOT_COUNTED = '.dock-fav, .insight-item, #toast-container, #canvas-stage, .arch-node';
+// List content, one entry per issue or related component, is not chrome: the issue rows and the inspector's lineage chips.
+const NOT_COUNTED = '.dock-fav, .insight-item, .lineage-chip, #toast-container, #canvas-stage, .arch-node';
 
 const countByRegion = (page: Page) =>
   page.evaluate(
