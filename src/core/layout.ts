@@ -186,40 +186,50 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   // Wires that meet one side of a component get their own spot along it instead of sharing the
   // midpoint. Parallel wires between the same pair already separate by lane, so they sit this out.
   const portOffsets = new Map<string, number>(); // `${edgeId}|src` or `${edgeId}|dst` -> offset ratio
-  const sideGroups = new Map<string, Array<{ key: string; order: number }>>();
-  for (const e of doc.edges) {
-    const sides = resolvedSides.get(e.id) ?? loopSides.get(e.id);
-    if (!sides || (laneInfo.get(e.id)?.count ?? 1) > 1) continue;
-    const src = nodeMap.get(e.from)!;
-    const dst = nodeMap.get(e.to)!;
-    const ends: Array<[DiagramNode, Side, DiagramNode, string]> = [
-      [src, sides.srcSide, dst, `${e.id}|src`],
-      [dst, sides.dstSide, src, `${e.id}|dst`],
-    ];
-    for (const [node, side, other, key] of ends) {
-      const [ox, oy] = getNodeCenter(other);
-      const groupKey = `${node.id}|${side}`;
-      const group = sideGroups.get(groupKey) || [];
-      // Order along the side by where the far end sits, so neighbouring wires don't cross.
-      group.push({ key, order: side === 'top' || side === 'bottom' ? ox : oy });
-      sideGroups.set(groupKey, group);
+  // Sides that wires with both ports on 'auto' took, learnt by routing them once (see the second pass below).
+  const autoSides = new Map<string, { srcSide: Side; dstSide: Side }>();
+  /** Spread the ends that share a side. True when a wire with 'auto' ports shares a side with another end. */
+  const spreadPorts = (): boolean => {
+    portOffsets.clear();
+    let autoShares = false;
+    const sideGroups = new Map<string, Array<{ key: string; order: number }>>();
+    for (const e of doc.edges) {
+      const sides = resolvedSides.get(e.id) ?? loopSides.get(e.id) ?? autoSides.get(e.id);
+      if (!sides || (laneInfo.get(e.id)?.count ?? 1) > 1) continue;
+      const src = nodeMap.get(e.from)!;
+      const dst = nodeMap.get(e.to)!;
+      const ends: Array<[DiagramNode, Side, DiagramNode, string]> = [
+        [src, sides.srcSide, dst, `${e.id}|src`],
+        [dst, sides.dstSide, src, `${e.id}|dst`],
+      ];
+      for (const [node, side, other, key] of ends) {
+        const [ox, oy] = getNodeCenter(other);
+        const groupKey = `${node.id}|${side}`;
+        const group = sideGroups.get(groupKey) || [];
+        // Order along the side by where the far end sits, so neighbouring wires don't cross.
+        group.push({ key, order: side === 'top' || side === 'bottom' ? ox : oy });
+        sideGroups.set(groupKey, group);
+      }
     }
-  }
-  for (const [groupKey, group] of sideGroups) {
-    if (group.length < 2) continue;
-    const [nodeId, side] = groupKey.split('|') as [string, Side];
-    const node = nodeMap.get(nodeId)!;
-    const span = side === 'top' || side === 'bottom' ? node.width : node.height;
-    // Keep ports inside the middle 60% of the side, at most 40px apart. An actor's ports are points on the figure,
-    // so its wires spread over the little room around each one instead.
-    const actor = node.kind === 'actor' ? ACTOR_PORT_SPREAD[side] : null;
-    const gap = actor
-      ? Math.min(actor.gap, actor.room / (group.length - 1))
-      : Math.min(40, (span * 0.6) / (group.length - 1));
-    group
-      .sort((a, b) => a.order - b.order)
-      .forEach((entry, i) => portOffsets.set(entry.key, ((i - (group.length - 1) / 2) * gap) / span));
-  }
+    for (const [groupKey, group] of sideGroups) {
+      if (group.length < 2) continue;
+      const [nodeId, side] = groupKey.split('|') as [string, Side];
+      const node = nodeMap.get(nodeId)!;
+      const span = side === 'top' || side === 'bottom' ? node.width : node.height;
+      // Keep ports inside the middle 60% of the side, at most 40px apart. An actor's ports are points on the figure,
+      // so its wires spread over the little room around each one instead.
+      const actor = node.kind === 'actor' ? ACTOR_PORT_SPREAD[side] : null;
+      const gap = actor
+        ? Math.min(actor.gap, actor.room / (group.length - 1))
+        : Math.min(40, (span * 0.6) / (group.length - 1));
+      group
+        .sort((a, b) => a.order - b.order)
+        .forEach((entry, i) => portOffsets.set(entry.key, ((i - (group.length - 1) / 2) * gap) / span));
+      if (group.some((entry) => autoSides.has(entry.key.slice(0, entry.key.lastIndexOf('|'))))) autoShares = true;
+    }
+    return autoShares;
+  };
+  spreadPorts();
 
   // Lowest / highest obstacle edge for nodes overlapping a horizontal span (keeps loops clear of siblings)
   const lowestBottomWithin = (minX: number, maxX: number): number => {
@@ -237,120 +247,368 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
     return top;
   };
 
-  const routed = doc.edges
-    .map((rawEdge): RoutedDiagramEdge | null => {
-      // The routed label is what the wire shows: the protocol prefix plus the label (F-17).
-      const e = { ...rawEdge, label: wireLabelText(rawEdge) };
-      const src = nodeMap.get(e.from);
-      const dst = nodeMap.get(e.to);
-      if (!src || !dst) return null;
+  const routeAll = () => {
+    underLoopCount = 0;
+    overLoops.length = 0;
+    return doc.edges
+      .map((rawEdge): RoutedDiagramEdge | null => {
+        // The routed label is what the wire shows: the protocol prefix plus the label (F-17).
+        const e = { ...rawEdge, label: wireLabelText(rawEdge) };
+        const src = nodeMap.get(e.from);
+        const dst = nodeMap.get(e.to);
+        if (!src || !dst) return null;
 
-      const [scx, scy] = getNodeCenter(src);
-      const [dcx, dcy] = getNodeCenter(dst);
-      const badgeWidth = e.label ? Math.max(104, e.label.length * 8.2 + 34) : undefined;
-      const lane = laneInfo.get(e.id) || { index: 0, count: 1 };
+        const [scx, scy] = getNodeCenter(src);
+        const [dcx, dcy] = getNodeCenter(dst);
+        const badgeWidth = e.label ? Math.max(104, e.label.length * 8.2 + 34) : undefined;
+        const lane = laneInfo.get(e.id) || { index: 0, count: 1 };
 
-      // Helper for bottom U-channel ("Under U-Loop")
-      const buildUnderLoop = (): RoutedDiagramEdge => {
-        const [sx, sy] = getPortPoint(
-          src,
-          'bottom',
-          portOffsets.get(`${e.id}|src`) ?? (hasDownwardOut.has(src.id) || hasUnderIn.has(src.id) ? -0.19 : 0),
-        );
-        const [tx, ty] = getPortPoint(
-          dst,
-          'bottom',
-          portOffsets.get(`${e.id}|dst`) ?? (hasUnderOut.has(dst.id) ? 0.16 : 0),
-        );
-        const loopY =
-          Math.max(
-            src.y + src.height,
-            dst.y + dst.height,
-            lowestBottomWithin(Math.min(sx, tx), Math.max(sx, tx)),
-          ) +
-          58 +
-          (underLoopCount > 2 ? (underLoopCount % 2) * 28 : 0) +
-          lane.index * 30;
-        underLoopCount++;
-        const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
-        const dir = tx < sx ? -1 : 1;
-        const pathD =
-          Math.abs(sx - tx) < 8
-            ? `M ${sx} ${sy} C ${sx - 56} ${loopY}, ${tx + 56} ${loopY}, ${tx} ${ty + 6}`
-            : [
-                `M ${sx} ${sy}`,
-                `L ${sx} ${loopY - r}`,
-                `Q ${sx} ${loopY} ${sx + dir * r} ${loopY}`,
-                `L ${tx - dir * r} ${loopY}`,
-                `Q ${tx} ${loopY} ${tx} ${loopY - r}`,
-                `L ${tx} ${ty + 6}`,
-              ].join(' ');
-        return {
-          ...e,
-          pathD,
-          startPoint: [sx, sy],
-          endPoint: [tx, ty],
-          badgePos: e.label ? [Math.round((sx + tx) / 2), loopY] : undefined,
-          badgeWidth,
-          isLoop: true,
+        // Helper for bottom U-channel ("Under U-Loop")
+        const buildUnderLoop = (): RoutedDiagramEdge => {
+          const [sx, sy] = getPortPoint(
+            src,
+            'bottom',
+            portOffsets.get(`${e.id}|src`) ?? (hasDownwardOut.has(src.id) || hasUnderIn.has(src.id) ? -0.19 : 0),
+          );
+          const [tx, ty] = getPortPoint(
+            dst,
+            'bottom',
+            portOffsets.get(`${e.id}|dst`) ?? (hasUnderOut.has(dst.id) ? 0.16 : 0),
+          );
+          const loopY =
+            Math.max(
+              src.y + src.height,
+              dst.y + dst.height,
+              lowestBottomWithin(Math.min(sx, tx), Math.max(sx, tx)),
+            ) +
+            58 +
+            (underLoopCount > 2 ? (underLoopCount % 2) * 28 : 0) +
+            lane.index * 30;
+          underLoopCount++;
+          const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
+          const dir = tx < sx ? -1 : 1;
+          const pathD =
+            Math.abs(sx - tx) < 8
+              ? `M ${sx} ${sy} C ${sx - 56} ${loopY}, ${tx + 56} ${loopY}, ${tx} ${ty + 6}`
+              : [
+                  `M ${sx} ${sy}`,
+                  `L ${sx} ${loopY - r}`,
+                  `Q ${sx} ${loopY} ${sx + dir * r} ${loopY}`,
+                  `L ${tx - dir * r} ${loopY}`,
+                  `Q ${tx} ${loopY} ${tx} ${loopY - r}`,
+                  `L ${tx} ${ty + 6}`,
+                ].join(' ');
+          return {
+            ...e,
+            pathD,
+            startPoint: [sx, sy],
+            endPoint: [tx, ty],
+            badgePos: e.label ? [Math.round((sx + tx) / 2), loopY] : undefined,
+            badgeWidth,
+            isLoop: true,
+          };
         };
-      };
 
-      // Helper for top U-channel ("Over U-Loop")
-      const buildOverLoop = (): RoutedDiagramEdge => {
-        const [sx, sy] = getPortPoint(src, 'top', portOffsets.get(`${e.id}|src`) ?? 0);
-        const [tx, ty] = getPortPoint(dst, 'top', portOffsets.get(`${e.id}|dst`) ?? 0);
-        const minX = Math.min(sx, tx);
-        const maxX = Math.max(sx, tx);
-        let loopY =
-          Math.min(src.y, dst.y, highestTopWithin(minX, maxX)) - 54 - lane.index * 30;
-        // Step up past any loop already drawn over the same stretch, so their runs never lie on top of each other.
-        // Loops side by side (such as one into a component and one out of it) keep one line.
-        while (overLoops.some((l) => l.minX < maxX && minX < l.maxX && Math.abs(l.y - loopY) < 20)) loopY -= 24;
-        overLoops.push({ minX, maxX, y: loopY });
-        const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
-        const dir = tx < sx ? -1 : 1;
-        const pathD =
-          Math.abs(sx - tx) < 8
-            ? `M ${sx} ${sy} C ${sx - 56} ${loopY}, ${tx + 56} ${loopY}, ${tx} ${ty - 6}`
-            : [
-                `M ${sx} ${sy}`,
-                `L ${sx} ${loopY + r}`,
-                `Q ${sx} ${loopY} ${sx + dir * r} ${loopY}`,
-                `L ${tx - dir * r} ${loopY}`,
-                `Q ${tx} ${loopY} ${tx} ${loopY + r}`,
-                `L ${tx} ${ty - 6}`,
-              ].join(' ');
-        return {
-          ...e,
-          pathD,
-          startPoint: [sx, sy],
-          endPoint: [tx, ty],
-          badgePos: e.label ? [Math.round((sx + tx) / 2), loopY] : undefined,
-          badgeWidth,
-          isLoop: true,
+        // Helper for top U-channel ("Over U-Loop")
+        const buildOverLoop = (): RoutedDiagramEdge => {
+          const [sx, sy] = getPortPoint(src, 'top', portOffsets.get(`${e.id}|src`) ?? 0);
+          const [tx, ty] = getPortPoint(dst, 'top', portOffsets.get(`${e.id}|dst`) ?? 0);
+          const minX = Math.min(sx, tx);
+          const maxX = Math.max(sx, tx);
+          let loopY =
+            Math.min(src.y, dst.y, highestTopWithin(minX, maxX)) - 54 - lane.index * 30;
+          // Step up past any loop already drawn over the same stretch, so their runs never lie on top of each other.
+          // Loops side by side (such as one into a component and one out of it) keep one line.
+          while (overLoops.some((l) => l.minX < maxX && minX < l.maxX && Math.abs(l.y - loopY) < 20)) loopY -= 24;
+          overLoops.push({ minX, maxX, y: loopY });
+          const r = Math.min(20, Math.max(6, Math.abs(sx - tx) / 3));
+          const dir = tx < sx ? -1 : 1;
+          const pathD =
+            Math.abs(sx - tx) < 8
+              ? `M ${sx} ${sy} C ${sx - 56} ${loopY}, ${tx + 56} ${loopY}, ${tx} ${ty - 6}`
+              : [
+                  `M ${sx} ${sy}`,
+                  `L ${sx} ${loopY + r}`,
+                  `Q ${sx} ${loopY} ${sx + dir * r} ${loopY}`,
+                  `L ${tx - dir * r} ${loopY}`,
+                  `Q ${tx} ${loopY} ${tx} ${loopY + r}`,
+                  `L ${tx} ${ty - 6}`,
+                ].join(' ');
+          return {
+            ...e,
+            pathD,
+            startPoint: [sx, sy],
+            endPoint: [tx, ty],
+            badgePos: e.label ? [Math.round((sx + tx) / 2), loopY] : undefined,
+            badgeWidth,
+            isLoop: true,
+          };
         };
-      };
 
-      // 1. Explicit Routing Styles (always honored even when ports were chosen by port-dragging)
-      if (e.route === 'under') {
-        return buildUnderLoop();
-      }
+        // 1. Explicit Routing Styles (always honored even when ports were chosen by port-dragging)
+        if (e.route === 'under') {
+          return buildUnderLoop();
+        }
 
-      if (e.route === 'over') {
-        return buildOverLoop();
-      }
+        if (e.route === 'over') {
+          return buildOverLoop();
+        }
 
-      if (e.route === 'fanout') {
-        const [sx, sy] = getPortPoint(src, 'bottom');
-        const [tx, ty] = getPortPoint(dst, 'top');
-        const dy = ty - sy;
-        if (dy >= 20) {
+        if (e.route === 'fanout') {
+          autoSides.set(e.id, { srcSide: 'bottom', dstSide: 'top' });
+          const [sx, sy] = getPortPoint(src, 'bottom', portOffsets.get(`${e.id}|src`) ?? 0);
+          const [tx, ty] = getPortPoint(dst, 'top', portOffsets.get(`${e.id}|dst`) ?? 0);
+          const dy = ty - sy;
+          if (dy >= 20) {
+            const midY = Math.round((sy + ty) / 2);
+            const pathD =
+              Math.abs(sx - tx) <= 4
+                ? `M ${sx} ${sy} L ${tx} ${ty - 6}`
+                : `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty - 6}`;
+            return {
+              ...e,
+              pathD,
+              startPoint: [sx, sy],
+              endPoint: [tx, ty],
+              badgePos: e.label ? [Math.round((sx + tx) / 2), midY] : undefined,
+              badgeWidth,
+            };
+          }
+          const pull = Math.max(54, Math.round(Math.hypot(tx - sx, ty - sy) * 0.36));
+          const c1: [number, number] = [sx, sy + pull];
+          const c2: [number, number] = [tx, ty - 6 - pull];
+          const tip: [number, number] = [tx, ty - 6];
+          const midX = Math.round(0.125 * sx + 0.375 * c1[0] + 0.375 * c2[0] + 0.125 * tip[0]);
+          const midY = Math.round(0.125 * sy + 0.375 * c1[1] + 0.375 * c2[1] + 0.125 * tip[1]);
+          return {
+            ...e,
+            pathD: `M ${sx} ${sy} C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${tip[0]} ${tip[1]}`,
+            startPoint: [sx, sy],
+            endPoint: [tx, ty],
+            badgePos: e.label ? [midX, midY] : undefined,
+            badgeWidth,
+          };
+        }
+
+        const presetSides = resolvedSides.get(e.id);
+        const resolvedSrcSide =
+          presetSides?.srcSide ?? (e.sourcePort === 'auto' ? inferBestSide(src, dst) : e.sourcePort);
+        const resolvedDstSide =
+          presetSides?.dstSide ?? (e.targetPort === 'auto' ? inferBestSide(dst, src) : e.targetPort);
+        const srcPort = (): Point => getPortPoint(src, resolvedSrcSide, portOffsets.get(`${e.id}|src`) ?? 0);
+        const dstPort = (): Point => getPortPoint(dst, resolvedDstSide, portOffsets.get(`${e.id}|dst`) ?? 0);
+
+        if (e.route === 'straight') {
+          const startPt = srcPort();
+          const endPt = dstPort();
+          const vx = endPt[0] - startPt[0];
+          const vy = endPt[1] - startPt[1];
+          const len = Math.hypot(vx, vy) || 1;
+          const ex = Math.round(endPt[0] - (vx / len) * 6);
+          const ey = Math.round(endPt[1] - (vy / len) * 6);
+          const midX = Math.round((startPt[0] + ex) / 2);
+          const midY = Math.round((startPt[1] + ey) / 2);
+          return {
+            ...e,
+            pathD: `M ${startPt[0]} ${startPt[1]} L ${ex} ${ey}`,
+            startPoint: startPt,
+            endPoint: endPt,
+            badgePos: e.label ? [midX, midY - 16] : undefined,
+            badgeWidth,
+          };
+        }
+
+        if (e.route === 'bezier') {
+          const startPt = srcPort();
+          const endPt = dstPort();
+          const { pathD, badgePos } = buildPortToPortBezier(
+            startPt,
+            resolvedSrcSide,
+            endPt,
+            resolvedDstSide,
+            Boolean(e.label),
+            true,
+          );
+          return {
+            ...e,
+            pathD,
+            startPoint: startPt,
+            endPoint: endPt,
+            badgePos,
+            badgeWidth,
+          };
+        }
+
+        if (e.route === 'arc') {
+          const startPt = srcPort();
+          const endPt = dstPort();
+          const dx = endPt[0] - startPt[0];
+          const dy = endPt[1] - startPt[1];
+          const dist = Math.hypot(dx, dy) || 1;
+          const bow = Math.max(52, Math.min(116, dist * 0.36));
+
+          // Bow upward for predominantly horizontal wires; bow rightward for vertical wires
+          let nx = 0;
+          let ny = 0;
+          if (Math.abs(dx) >= Math.abs(dy)) {
+            nx = 0;
+            ny = -1;
+          } else {
+            nx = 1;
+            ny = 0;
+          }
+
+          const cx = Math.round((startPt[0] + endPt[0]) / 2 + nx * bow * 1.45);
+          const cy = Math.round((startPt[1] + endPt[1]) / 2 + ny * bow * 1.45);
+          const tvx = endPt[0] - cx;
+          const tvy = endPt[1] - cy;
+          const tlen = Math.hypot(tvx, tvy) || 1;
+          const ex = Math.round(endPt[0] - (tvx / tlen) * 6);
+          const ey = Math.round(endPt[1] - (tvy / tlen) * 6);
+
+          const bx = Math.round(0.25 * startPt[0] + 0.5 * cx + 0.25 * ex);
+          const by = Math.round(0.25 * startPt[1] + 0.5 * cy + 0.25 * ey);
+
+          return {
+            ...e,
+            pathD: `M ${startPt[0]} ${startPt[1]} Q ${cx} ${cy} ${ex} ${ey}`,
+            startPoint: startPt,
+            endPoint: endPt,
+            badgePos: e.label ? [bx, by] : undefined,
+            badgeWidth,
+          };
+        }
+
+        if (e.route === 'orthogonal' || e.route === 'step') {
+          const startPt = srcPort();
+          const endPt = dstPort();
+          const eVec = sideDirVec(resolvedDstSide);
+          const targetTip: [number, number] = [endPt[0] + eVec[0] * 6, endPt[1] + eVec[1] * 6];
+          const waypoints = buildOrthogonalWaypoints(
+            startPt,
+            resolvedSrcSide,
+            targetTip,
+            resolvedDstSide,
+          );
+          const { pathD, midPoint } = buildOrthogonalPathFromPoints(
+            waypoints,
+            e.route === 'orthogonal' ? 14 : 0,
+          );
+          return {
+            ...e,
+            pathD,
+            startPoint: startPt,
+            endPoint: endPt,
+            badgePos: e.label ? midPoint : undefined,
+            badgeWidth,
+          };
+        }
+
+        // 2. Smart Auto (`e.route === 'auto'`) with explicit ports
+        if (e.sourcePort !== 'auto' || e.targetPort !== 'auto') {
+          if (resolvedSrcSide === 'bottom' && resolvedDstSide === 'bottom') {
+            return buildUnderLoop();
+          }
+          if (resolvedSrcSide === 'top' && resolvedDstSide === 'top') {
+            return buildOverLoop();
+          }
+
+          const startPt = srcPort();
+          const endPt = dstPort();
+          const { pathD, badgePos } = buildPortToPortBezier(
+            startPt,
+            resolvedSrcSide,
+            endPt,
+            resolvedDstSide,
+            Boolean(e.label),
+            false,
+          );
+          return {
+            ...e,
+            pathD,
+            startPoint: startPt,
+            endPoint: endPt,
+            badgePos,
+            badgeWidth,
+          };
+        }
+
+        // 3. Smart Auto (`e.route === 'auto'`) when both ports are 'auto'
+        const shouldLoopUnder =
+          doc.direction === 'LR' && dcx < scx - 48 && Math.abs(dcy - scy) < 160;
+
+        if (shouldLoopUnder) {
+          return buildUnderLoop();
+        }
+
+        // Downward vertical or fan-out
+        const isDownward =
+          dst.y >= src.y + src.height + 16 &&
+          (Math.abs(dcx - scx) < 280 || dst.kind === 'client' || doc.direction === 'TD');
+
+        if (isDownward) {
+          const [, sy] = getPortPoint(src, 'bottom');
+          const [, ty] = getPortPoint(dst, 'top');
+          const srcOff = portOffsets.get(`${e.id}|src`);
+          const dstOff = portOffsets.get(`${e.id}|dst`);
+          const overlapMin = Math.max(src.x + 28, dst.x + 28);
+          const overlapMax = Math.min(src.x + src.width - 28, dst.x + dst.width - 28);
+
+          // Ends that share the target's top (or the source's bottom) are spread like any others.
+          autoSides.set(e.id, { srcSide: 'bottom', dstSide: 'top' });
+          const [spreadTx, spreadTy] = dstOff === undefined ? [dcx, ty] : getPortPoint(dst, 'top', dstOff);
+          if (overlapMax >= overlapMin && dst.kind !== 'client') {
+            // A straight drop where the two components overlap. When the target's top is shared, drop at this
+            // wire's own spot on it, if that is still over the source.
+            const x =
+              dstOff !== undefined
+                ? spreadTx
+                : Math.round(
+                    hasUnderOut.has(src.id)
+                      ? Math.max(overlapMin, Math.min(overlapMax, dcx))
+                      : (overlapMin + overlapMax) / 2,
+                  );
+            if (x >= overlapMin && x <= overlapMax) {
+              const endY = dstOff !== undefined ? spreadTy : ty;
+              return {
+                ...e,
+                pathD: `M ${x} ${sy} L ${x} ${endY - 6}`,
+                startPoint: [x, sy],
+                endPoint: [x, endY],
+                badgePos: e.label ? [x, Math.round((sy + endY) / 2)] : undefined,
+                badgeWidth,
+              };
+            }
+          }
+
+          const sx = srcOff === undefined ? scx : getPortPoint(src, 'bottom', srcOff)[0];
+          const tx = spreadTx;
+          const endY = spreadTy;
+          const midY = Math.round((sy + endY) / 2);
+          const pathD =
+            Math.abs(sx - tx) <= 4
+              ? `M ${sx} ${sy} L ${tx} ${endY - 6}`
+              : `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${endY - 6}`;
+          return {
+            ...e,
+            pathD,
+            startPoint: [sx, sy],
+            endPoint: [tx, endY],
+            badgePos: e.label ? [Math.round((sx + tx) / 2), midY] : undefined,
+            badgeWidth,
+          };
+        }
+
+        // Upward vertical
+        if (dst.y + dst.height <= src.y - 16 && Math.abs(dcx - scx) < 220) {
+          autoSides.set(e.id, { srcSide: 'top', dstSide: 'bottom' });
+          const [sx, sy] = getPortPoint(src, 'top', portOffsets.get(`${e.id}|src`) ?? 0);
+          const [tx, ty] = getPortPoint(dst, 'bottom', portOffsets.get(`${e.id}|dst`) ?? 0);
           const midY = Math.round((sy + ty) / 2);
           const pathD =
             Math.abs(sx - tx) <= 4
-              ? `M ${sx} ${sy} L ${tx} ${ty - 6}`
-              : `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty - 6}`;
+              ? `M ${sx} ${sy} L ${tx} ${ty + 6}`
+              : `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty + 6}`;
           return {
             ...e,
             pathD,
@@ -360,259 +618,39 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
             badgeWidth,
           };
         }
-        const pull = Math.max(54, Math.round(Math.hypot(tx - sx, ty - sy) * 0.36));
-        const c1: [number, number] = [sx, sy + pull];
-        const c2: [number, number] = [tx, ty - 6 - pull];
-        const tip: [number, number] = [tx, ty - 6];
-        const midX = Math.round(0.125 * sx + 0.375 * c1[0] + 0.375 * c2[0] + 0.125 * tip[0]);
-        const midY = Math.round(0.125 * sy + 0.375 * c1[1] + 0.375 * c2[1] + 0.125 * tip[1]);
-        return {
-          ...e,
-          pathD: `M ${sx} ${sy} C ${c1[0]} ${c1[1]}, ${c2[0]} ${c2[1]}, ${tip[0]} ${tip[1]}`,
-          startPoint: [sx, sy],
-          endPoint: [tx, ty],
-          badgePos: e.label ? [midX, midY] : undefined,
-          badgeWidth,
-        };
-      }
 
-      const presetSides = resolvedSides.get(e.id);
-      const resolvedSrcSide =
-        presetSides?.srcSide ?? (e.sourcePort === 'auto' ? inferBestSide(src, dst) : e.sourcePort);
-      const resolvedDstSide =
-        presetSides?.dstSide ?? (e.targetPort === 'auto' ? inferBestSide(dst, src) : e.targetPort);
-      const srcPort = (): Point => getPortPoint(src, resolvedSrcSide, portOffsets.get(`${e.id}|src`) ?? 0);
-      const dstPort = (): Point => getPortPoint(dst, resolvedDstSide, portOffsets.get(`${e.id}|dst`) ?? 0);
+        // Standard Horizontal Conduit
+        const goingRight = dcx >= scx;
+        autoSides.set(e.id, { srcSide: goingRight ? 'right' : 'left', dstSide: goingRight ? 'left' : 'right' });
+        const [sx, rawSy] = getPortPoint(src, goingRight ? 'right' : 'left', portOffsets.get(`${e.id}|src`) ?? 0);
+        const [tx, rawTy] = getPortPoint(dst, goingRight ? 'left' : 'right', portOffsets.get(`${e.id}|dst`) ?? 0);
+        const alignedY = Math.abs(rawSy - rawTy) <= 14 ? rawTy : undefined;
+        const sy = alignedY ?? rawSy;
+        const ty = alignedY ?? rawTy;
+        const endOffset = goingRight ? -6 : 6;
+        const midX = Math.round((sx + tx) / 2);
 
-      if (e.route === 'straight') {
-        const startPt = srcPort();
-        const endPt = dstPort();
-        const vx = endPt[0] - startPt[0];
-        const vy = endPt[1] - startPt[1];
-        const len = Math.hypot(vx, vy) || 1;
-        const ex = Math.round(endPt[0] - (vx / len) * 6);
-        const ey = Math.round(endPt[1] - (vy / len) * 6);
-        const midX = Math.round((startPt[0] + ex) / 2);
-        const midY = Math.round((startPt[1] + ey) / 2);
-        return {
-          ...e,
-          pathD: `M ${startPt[0]} ${startPt[1]} L ${ex} ${ey}`,
-          startPoint: startPt,
-          endPoint: endPt,
-          badgePos: e.label ? [midX, midY - 16] : undefined,
-          badgeWidth,
-        };
-      }
-
-      if (e.route === 'bezier') {
-        const startPt = srcPort();
-        const endPt = dstPort();
-        const { pathD, badgePos } = buildPortToPortBezier(
-          startPt,
-          resolvedSrcSide,
-          endPt,
-          resolvedDstSide,
-          Boolean(e.label),
-          true,
-        );
-        return {
-          ...e,
-          pathD,
-          startPoint: startPt,
-          endPoint: endPt,
-          badgePos,
-          badgeWidth,
-        };
-      }
-
-      if (e.route === 'arc') {
-        const startPt = srcPort();
-        const endPt = dstPort();
-        const dx = endPt[0] - startPt[0];
-        const dy = endPt[1] - startPt[1];
-        const dist = Math.hypot(dx, dy) || 1;
-        const bow = Math.max(52, Math.min(116, dist * 0.36));
-
-        // Bow upward for predominantly horizontal wires; bow rightward for vertical wires
-        let nx = 0;
-        let ny = 0;
-        if (Math.abs(dx) >= Math.abs(dy)) {
-          nx = 0;
-          ny = -1;
-        } else {
-          nx = 1;
-          ny = 0;
-        }
-
-        const cx = Math.round((startPt[0] + endPt[0]) / 2 + nx * bow * 1.45);
-        const cy = Math.round((startPt[1] + endPt[1]) / 2 + ny * bow * 1.45);
-        const tvx = endPt[0] - cx;
-        const tvy = endPt[1] - cy;
-        const tlen = Math.hypot(tvx, tvy) || 1;
-        const ex = Math.round(endPt[0] - (tvx / tlen) * 6);
-        const ey = Math.round(endPt[1] - (tvy / tlen) * 6);
-
-        const bx = Math.round(0.25 * startPt[0] + 0.5 * cx + 0.25 * ex);
-        const by = Math.round(0.25 * startPt[1] + 0.5 * cy + 0.25 * ey);
-
-        return {
-          ...e,
-          pathD: `M ${startPt[0]} ${startPt[1]} Q ${cx} ${cy} ${ex} ${ey}`,
-          startPoint: startPt,
-          endPoint: endPt,
-          badgePos: e.label ? [bx, by] : undefined,
-          badgeWidth,
-        };
-      }
-
-      if (e.route === 'orthogonal' || e.route === 'step') {
-        const startPt = srcPort();
-        const endPt = dstPort();
-        const eVec = sideDirVec(resolvedDstSide);
-        const targetTip: [number, number] = [endPt[0] + eVec[0] * 6, endPt[1] + eVec[1] * 6];
-        const waypoints = buildOrthogonalWaypoints(
-          startPt,
-          resolvedSrcSide,
-          targetTip,
-          resolvedDstSide,
-        );
-        const { pathD, midPoint } = buildOrthogonalPathFromPoints(
-          waypoints,
-          e.route === 'orthogonal' ? 14 : 0,
-        );
-        return {
-          ...e,
-          pathD,
-          startPoint: startPt,
-          endPoint: endPt,
-          badgePos: e.label ? midPoint : undefined,
-          badgeWidth,
-        };
-      }
-
-      // 2. Smart Auto (`e.route === 'auto'`) with explicit ports
-      if (e.sourcePort !== 'auto' || e.targetPort !== 'auto') {
-        if (resolvedSrcSide === 'bottom' && resolvedDstSide === 'bottom') {
-          return buildUnderLoop();
-        }
-        if (resolvedSrcSide === 'top' && resolvedDstSide === 'top') {
-          return buildOverLoop();
-        }
-
-        const startPt = srcPort();
-        const endPt = dstPort();
-        const { pathD, badgePos } = buildPortToPortBezier(
-          startPt,
-          resolvedSrcSide,
-          endPt,
-          resolvedDstSide,
-          Boolean(e.label),
-          false,
-        );
-        return {
-          ...e,
-          pathD,
-          startPoint: startPt,
-          endPoint: endPt,
-          badgePos,
-          badgeWidth,
-        };
-      }
-
-      // 3. Smart Auto (`e.route === 'auto'`) when both ports are 'auto'
-      const shouldLoopUnder =
-        doc.direction === 'LR' && dcx < scx - 48 && Math.abs(dcy - scy) < 160;
-
-      if (shouldLoopUnder) {
-        return buildUnderLoop();
-      }
-
-      // Downward vertical or fan-out
-      const isDownward =
-        dst.y >= src.y + src.height + 16 &&
-        (Math.abs(dcx - scx) < 280 || dst.kind === 'client' || doc.direction === 'TD');
-
-      if (isDownward) {
-        const [, sy] = getPortPoint(src, 'bottom');
-        const [, ty] = getPortPoint(dst, 'top');
-        const overlapMin = Math.max(src.x + 28, dst.x + 28);
-        const overlapMax = Math.min(src.x + src.width - 28, dst.x + dst.width - 28);
-
-        if (overlapMax >= overlapMin && dst.kind !== 'client') {
-          const x = Math.round(
-            hasUnderOut.has(src.id)
-              ? Math.max(overlapMin, Math.min(overlapMax, dcx))
-              : (overlapMin + overlapMax) / 2,
-          );
-          return {
-            ...e,
-            pathD: `M ${x} ${sy} L ${x} ${ty - 6}`,
-            startPoint: [x, sy],
-            endPoint: [x, ty],
-            badgePos: e.label ? [x, Math.round((sy + ty) / 2)] : undefined,
-            badgeWidth,
-          };
-        }
-
-        const midY = Math.round((sy + ty) / 2);
         const pathD =
-          Math.abs(scx - dcx) <= 4
-            ? `M ${scx} ${sy} L ${dcx} ${ty - 6}`
-            : `M ${scx} ${sy} C ${scx} ${midY}, ${dcx} ${midY}, ${dcx} ${ty - 6}`;
-        return {
-          ...e,
-          pathD,
-          startPoint: [scx, sy],
-          endPoint: [dcx, ty],
-          badgePos: e.label ? [Math.round((scx + dcx) / 2), midY] : undefined,
-          badgeWidth,
-        };
-      }
+          Math.abs(sy - ty) <= 4
+            ? `M ${sx} ${sy} L ${tx + endOffset} ${ty}`
+            : `M ${sx} ${sy} C ${midX} ${sy}, ${midX} ${ty}, ${tx + endOffset} ${ty}`;
 
-      // Upward vertical
-      if (dst.y + dst.height <= src.y - 16 && Math.abs(dcx - scx) < 220) {
-        const [sx, sy] = getPortPoint(src, 'top');
-        const [tx, ty] = getPortPoint(dst, 'bottom');
-        const midY = Math.round((sy + ty) / 2);
-        const pathD =
-          Math.abs(sx - tx) <= 4
-            ? `M ${sx} ${sy} L ${tx} ${ty + 6}`
-            : `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty + 6}`;
         return {
           ...e,
           pathD,
           startPoint: [sx, sy],
           endPoint: [tx, ty],
-          badgePos: e.label ? [Math.round((sx + tx) / 2), midY] : undefined,
+          badgePos: e.label ? [midX, Math.round((sy + ty) / 2 - 18)] : undefined,
           badgeWidth,
         };
-      }
+      })
+      .filter((edge): edge is RoutedDiagramEdge => edge !== null);
+  };
 
-      // Standard Horizontal Conduit
-      const goingRight = dcx >= scx;
-      const [sx, rawSy] = getPortPoint(src, goingRight ? 'right' : 'left');
-      const [tx, rawTy] = getPortPoint(dst, goingRight ? 'left' : 'right');
-      const alignedY = Math.abs(rawSy - rawTy) <= 14 ? rawTy : undefined;
-      const sy = alignedY ?? rawSy;
-      const ty = alignedY ?? rawTy;
-      const endOffset = goingRight ? -6 : 6;
-      const midX = Math.round((sx + tx) / 2);
-
-      const pathD =
-        Math.abs(sy - ty) <= 4
-          ? `M ${sx} ${sy} L ${tx + endOffset} ${ty}`
-          : `M ${sx} ${sy} C ${midX} ${sy}, ${midX} ${ty}, ${tx + endOffset} ${ty}`;
-
-      return {
-        ...e,
-        pathD,
-        startPoint: [sx, sy],
-        endPoint: [tx, ty],
-        badgePos: e.label ? [midX, Math.round((sy + ty) / 2 - 18)] : undefined,
-        badgeWidth,
-      };
-    })
-    .filter((edge): edge is RoutedDiagramEdge => edge !== null);
+  // Wires with both ports on 'auto' pick their sides while routing. Route once to learn them; if two ends then
+  // share a side, spread them like any other and route again, so they no longer meet at one point.
+  let routed = routeAll();
+  if (autoSides.size > 0 && spreadPorts()) routed = routeAll();
 
   return finalizeRoutes(routed, laneInfo);
 }
