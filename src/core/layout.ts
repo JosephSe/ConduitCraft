@@ -145,12 +145,14 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   // Group wires that connect the same pair of components so they can be fanned into lanes
   const laneInfo = new Map<string, { index: number; count: number }>();
   const pairGroups = new Map<string, string[]>();
+  const pairOf = new Map<string, string>(); // edge id -> its pair's key
   for (const e of doc.edges) {
     if (!nodeMap.has(e.from) || !nodeMap.has(e.to)) continue;
     const key = e.from < e.to ? `${e.from}|${e.to}` : `${e.to}|${e.from}`;
     const list = pairGroups.get(key) || [];
     list.push(e.id);
     pairGroups.set(key, list);
+    pairOf.set(e.id, key);
   }
   for (const ids of pairGroups.values()) {
     ids.forEach((id, index) => laneInfo.set(id, { index, count: ids.length }));
@@ -184,7 +186,8 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   }
 
   // Wires that meet one side of a component get their own spot along it instead of sharing the
-  // midpoint. Parallel wires between the same pair already separate by lane, so they sit this out.
+  // midpoint. Parallel wires between the same pair that meet the same side already separate by lane, so those
+  // ends sit this out; a pair's wires on different sides (one over the top, one back under) still spread.
   const portOffsets = new Map<string, number>(); // `${edgeId}|src` or `${edgeId}|dst` -> offset ratio
   // Sides that wires with both ports on 'auto' took, learnt by routing them once (see the second pass below).
   const autoSides = new Map<string, { srcSide: Side; dstSide: Side }>();
@@ -193,9 +196,24 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
     portOffsets.clear();
     let autoShares = false;
     const sideGroups = new Map<string, Array<{ key: string; order: number }>>();
+    const sidesOf = (id: string) => resolvedSides.get(id) ?? loopSides.get(id) ?? autoSides.get(id);
+    /** The side the wire meets `nodeId` on, or undefined when that is not known. */
+    const sideAt = (edge: DiagramEdge, nodeId: string): Side | undefined => {
+      const sides = sidesOf(edge.id);
+      if (!sides) return undefined;
+      return edge.from === nodeId ? sides.srcSide : edge.to === nodeId ? sides.dstSide : undefined;
+    };
+    const edgeById = new Map(doc.edges.map((e) => [e.id, e]));
+    /** True when another wire between the same two components meets `nodeId` on `side`: lanes keep those apart. */
+    const sharesSideWithTwin = (e: DiagramEdge, nodeId: string, side: Side): boolean =>
+      (laneInfo.get(e.id)?.count ?? 1) > 1 &&
+      (pairGroups.get(pairOf.get(e.id)!) ?? []).some((id) => {
+        const twin = id !== e.id ? edgeById.get(id) : undefined;
+        return !!twin && sideAt(twin, nodeId) === side;
+      });
     for (const e of doc.edges) {
-      const sides = resolvedSides.get(e.id) ?? loopSides.get(e.id) ?? autoSides.get(e.id);
-      if (!sides || (laneInfo.get(e.id)?.count ?? 1) > 1) continue;
+      const sides = sidesOf(e.id);
+      if (!sides) continue;
       const src = nodeMap.get(e.from)!;
       const dst = nodeMap.get(e.to)!;
       const ends: Array<[DiagramNode, Side, DiagramNode, string]> = [
@@ -203,6 +221,7 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
         [dst, sides.dstSide, src, `${e.id}|dst`],
       ];
       for (const [node, side, other, key] of ends) {
+        if (sharesSideWithTwin(e, node.id, side)) continue;
         const [ox, oy] = getNodeCenter(other);
         const groupKey = `${node.id}|${side}`;
         const group = sideGroups.get(groupKey) || [];

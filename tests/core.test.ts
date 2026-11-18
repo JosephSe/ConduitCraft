@@ -346,3 +346,32 @@ describe('automatic wires that meet one side of a component', () => {
     assert.deepEqual(routeDiagramEdges(doc)[0].endPoint, lone);
   });
 });
+
+describe('wires out and back between the same two components, on different sides', () => {
+  const wire = (id: string, from: string, to: string, port: 'top' | 'bottom') =>
+    ({ id, from, to, sourcePort: port, targetPort: port, tone: 'blue', route: 'auto', label: '', animated: true }) as const;
+
+  it("don't meet at one point on an actor's head", () => {
+    // An actor between two components, each joined to it over the top one way and under the bottom the other way.
+    const doc = createBlankDocument();
+    const left = createNodeFromStencil('gate', 439, 176, 0);
+    const actor = createNodeFromStencil('actor', 886, 191, 1);
+    const right = createNodeFromStencil('gate', 1231, 176, 2);
+    doc.nodes = [left, actor, right];
+    doc.edges = [
+      wire('in', left.id, actor.id, 'top'),
+      wire('out', actor.id, right.id, 'top'),
+      wire('back', right.id, actor.id, 'bottom'),
+      wire('return', actor.id, left.id, 'bottom'),
+    ];
+    const routed = new Map(routeDiagramEdges(doc).map((e) => [e.id, e]));
+    const inEnd = routed.get('in')!.endPoint;
+    const outStart = routed.get('out')!.startPoint;
+    // Apart on the head, the wire from the left on the left, and both still on the head (radius 12).
+    const cx = actor.x + actor.width / 2;
+    assert.ok(outStart[0] - inEnd[0] >= 12, `${inEnd[0]} vs ${outStart[0]}`);
+    for (const end of [inEnd, outStart]) assert.ok(Math.abs(end[0] - cx) <= 10, `x ${end[0]}`);
+    // The wires under the bottom stay apart too.
+    assert.notDeepEqual(routed.get('back')!.endPoint, routed.get('return')!.startPoint);
+  });
+});
