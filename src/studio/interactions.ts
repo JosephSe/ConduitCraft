@@ -1624,6 +1624,9 @@ export function initEvents(): void {
       const applyMode = () => {
         // Review is a second flavour of the read-only mode: the same panes as Traffic with its own panels.
         app.lens = radio.value === 'review' ? 'review' : targetMode === 'data' ? 'traffic' : 'design';
+        // A run lives in Traffic, the only lens with its run bar, so leaving it stops the run and takes its hop
+        // label and highlights off the canvas.
+        if (app.lens !== 'traffic') clearSimulation();
         workspace.dataset.mode = app.workspaceMode;
         workspace.dataset.lens = app.lens;
         designInspectorPane.hidden = app.workspaceMode !== 'design';
