@@ -3,8 +3,8 @@
   "version": 1,
   "document": {
     "direction": "LR",
-    "stageWidth": 1680,
-    "stageHeight": 920,
+    "stageWidth": 2278,
+    "stageHeight": 1170,
     "title": "Kubernetes Ingress & Mesh",
     "systemTag": "KUBERNETES // PROD CLUSTER",
     "statusLabel": "REFERENCE ARCHITECTURE",
@@ -34,8 +34,8 @@
       {
         "id": "zone-wl",
         "number": "03",
-        "title": "Workloads (Mesh)",
-        "subtitle": "Deployments with sidecars",
+        "title": "Workloads",
+        "subtitle": "Pods with mesh sidecars",
         "x": 1134,
         "width": 308
       },
