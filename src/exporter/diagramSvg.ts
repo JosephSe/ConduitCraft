@@ -405,6 +405,8 @@ export function renderDiagramSvg(
     .join('');
 
   const noteMarkup = (card: DiagramNotesCard): string => {
+    // Callouts are drawn by the picture exports, which copy the canvas; the plain vector file leaves them out.
+    if (card.variant === 'callout') return '';
     const isSel = isMulti && selectedNotes.has(card.id);
     if (card.variant === 'text') {
       // The canvas draws the words 4px down and 8px in, on a 1.3 line, wrapped inside the width when it has one.

@@ -1,4 +1,4 @@
-import type { DiagramDocument, DiagramNode, DiagramNotesCard } from '../types';
+import type { CalloutTone, DiagramDocument, DiagramNode, DiagramNotesCard } from '../types';
 
 /** Space between a callout and its component, and between stacked callouts. */
 export const CALLOUT_GAP = 12;
@@ -52,4 +52,26 @@ export function calloutTailSide(
   const gapY = Math.abs(ddy) - (cardH + node.height) / 2;
   if (gapY >= gapX) return ddy > 0 ? 'bottom' : 'top';
   return ddx > 0 ? 'right' : 'left';
+}
+
+const TONES: readonly CalloutTone[] = ['info', 'warning', 'time'];
+
+/**
+ * The callout fields of a stored note card, for the file and code-view parsers: `{}` when it is not a callout.
+ * A bad tone is dropped; offsets are rounded; a missing offset is left for `syncCallouts` to derive.
+ */
+export function calloutFieldsOf(
+  raw: Record<string, unknown>,
+): Pick<DiagramNotesCard, 'variant' | 'anchorId' | 'dx' | 'dy' | 'tone'> {
+  if (raw.variant !== 'callout') return {};
+  const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? Math.round(v) : undefined);
+  const dx = num(raw.dx);
+  const dy = num(raw.dy);
+  return {
+    variant: 'callout',
+    anchorId: typeof raw.anchorId === 'string' ? raw.anchorId : '',
+    ...(dx !== undefined ? { dx } : {}),
+    ...(dy !== undefined ? { dy } : {}),
+    ...(TONES.includes(raw.tone as CalloutTone) ? { tone: raw.tone as CalloutTone } : {}),
+  };
 }

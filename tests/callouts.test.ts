@@ -2,6 +2,12 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createBlankDocument, createCalloutCard, createNodeFromStencil } from '../src/templates/presets.ts';
 import { calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
+import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
+import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
+import { createShareUrl, decodeSharedDiagramFromHash } from '../src/studio/shareLink.ts';
+import { CURRENT_SCHEMA_VERSION } from '../src/core/schema.ts';
+import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
+import { createNotesCard } from '../src/templates/presets.ts';
 import type { DiagramDocument, DiagramNode, DiagramNotesCard } from '../src/types.ts';
 
 function docWithNode(): { doc: DiagramDocument; node: DiagramNode } {
@@ -123,5 +129,80 @@ describe('callout model', () => {
     card.x = node.x + node.width + 40;
     card.y = node.y + 20;
     assert.equal(calloutTailSide(card, node, 220, 44), 'left');
+  });
+});
+
+function docWithCallout(): DiagramDocument {
+  const { doc, node } = docWithNode();
+  const card = addCallout(doc, node, 'Maintenance 12am–2am');
+  card.tone = 'time';
+  card.width = 260;
+  return doc;
+}
+
+const calloutShape = (d: DiagramDocument) =>
+  callouts(d).map((c) => ({
+    id: c.id,
+    title: c.title,
+    anchorId: c.anchorId,
+    dx: c.dx,
+    dy: c.dy,
+    x: c.x,
+    y: c.y,
+    tone: c.tone,
+    width: c.width,
+    items: c.items.length,
+  }));
+
+describe('callout files (schema v15)', () => {
+  it('is schema version 15 or later', () => {
+    assert.ok(CURRENT_SCHEMA_VERSION >= 15);
+  });
+
+  it('round-trips through Blueprint JSON', () => {
+    const doc = docWithCallout();
+    const back = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(back.ok);
+    if (back.ok) assert.deepEqual(calloutShape(back.doc), calloutShape(doc));
+  });
+
+  it('round-trips through the markdown code view', () => {
+    const doc = docWithCallout();
+    const back = importMermaidOrBlueprint(serializeToBlueprintMarkdown(doc)).doc;
+    assert.deepEqual(calloutShape(back), calloutShape(doc));
+  });
+
+  it('round-trips through a share link', async () => {
+    const doc = docWithCallout();
+    const { hash } = await createShareUrl(doc, { baseUrl: 'https://example.com/app' });
+    const back = await decodeSharedDiagramFromHash(hash);
+    assert.ok(back);
+    assert.deepEqual(calloutShape(back), calloutShape(doc));
+  });
+
+  it('drops a callout whose component is missing on load', () => {
+    const doc = docWithCallout();
+    callouts(doc)[0].anchorId = 'ghost';
+    const back = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(back.ok);
+    if (!back.ok) return;
+    assert.doesNotThrow(() => syncCallouts(back.doc));
+    assert.equal(callouts(back.doc).length, 0);
+  });
+
+  it('is not drawn by the plain SVG export', () => {
+    const svg = renderDiagramSvg(docWithCallout());
+    assert.doesNotMatch(svg, /Maintenance 12am/);
+  });
+
+  it('loads a file without callouts unchanged', () => {
+    const doc = createBlankDocument();
+    doc.notesCards = [createNotesCard(100, 100)];
+    const back = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(back.ok);
+    if (back.ok) {
+      assert.equal(back.doc.notesCards.length, 1);
+      assert.equal(back.doc.notesCards[0].variant, undefined);
+    }
   });
 });
