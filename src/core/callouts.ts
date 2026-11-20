@@ -60,7 +60,8 @@ export function calloutTailSide(
 
 /**
  * Where the tail sits along the bubble's edge (px from the bubble's left or top): lined up with the component's
- * middle, kept 8 px inside the bubble's ends. The tail is a 10 px square, so this is its near edge.
+ * middle, but clear of the 10 px rounded corners (12 px from each end), or centred on a side too short for that.
+ * The tail is a 10 px square, so this is its near edge.
  */
 export function calloutTailAt(
   card: DiagramNotesCard,
@@ -71,7 +72,8 @@ export function calloutTailAt(
 ): number {
   const across = side === 'top' || side === 'bottom';
   const middle = across ? node.x + node.width / 2 - card.x : node.y + node.height / 2 - card.y;
-  return Math.round(Math.max(8, Math.min((across ? cardW : cardH) - 18, middle - 5)));
+  const size = across ? cardW : cardH;
+  return Math.round(size < 34 ? (size - 10) / 2 : Math.max(12, Math.min(size - 22, middle - 5)));
 }
 
 const TONES: readonly CalloutTone[] = ['info', 'warning', 'time'];

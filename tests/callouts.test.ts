@@ -297,13 +297,22 @@ describe('callout tail position', () => {
     assert.equal(calloutTailAt(card, node, 'left', 220, 80), 25);
   });
 
-  it('stays inside the bubble when the component\'s middle is beyond its edge', () => {
+  it('stays clear of the rounded corners when the component\'s middle is beyond the bubble\'s edge', () => {
     const { doc, node } = docWithNode();
     const card = addCallout(doc, node);
     card.x = node.x + node.width;
-    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 8);
+    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 12);
     card.x = node.x - 400;
-    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 220 - 18);
+    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 220 - 22);
+  });
+
+  it('is centred on a side too short to keep clear of both corners', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    card.x = node.x + node.width + 40;
+    card.y = node.y - 200;
+    // A one-line bubble is about 32 px tall: the tail sits in the middle of its side.
+    assert.equal(calloutTailAt(card, node, 'left', 220, 32), 11);
   });
 });
 
