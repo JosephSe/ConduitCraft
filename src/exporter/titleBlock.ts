@@ -58,8 +58,15 @@ export function titleBlockFor(
   };
 }
 
-/** The strip as an SVG group, `width` wide, sitting on the bottom edge of a picture `height` tall. */
-export function titleBlockSvg(block: TitleBlock, width: number, height: number, scheme: 'light' | 'dark'): string {
+/**
+ * The strip as an SVG group, `width` wide, sitting on the bottom edge of a picture `height` tall. `scale` is the
+ * picture's pixels per stage pixel: the strip is drawn at that scale like the diagram, so it is the same size against
+ * the diagram in every export (a 2x PNG and a GIF alike), not a fixed 28 pixels of the output.
+ */
+export function titleBlockSvg(block: TitleBlock, width: number, height: number, scheme: 'light' | 'dark', scale = 1): string {
+  if (scale > 0 && scale !== 1) {
+    return `<g transform="scale(${scale})">${titleBlockSvg(block, width / scale, height / scale, scheme)}</g>`;
+  }
   const c = COLOURS[scheme];
   const y = height - TITLE_BLOCK_HEIGHT;
   const cells = [block.title, block.systemTag, block.statusLabel, block.page, block.date].filter((v): v is string => Boolean(v));
