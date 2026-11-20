@@ -3,8 +3,8 @@
   "version": 1,
   "document": {
     "direction": "LR",
-    "stageWidth": 1680,
-    "stageHeight": 920,
+    "stageWidth": 2278,
+    "stageHeight": 1170,
     "title": "Cloud Data Pipeline (ETL / ELT)",
     "systemTag": "DATA PLATFORM // MEDALLION LAKEHOUSE",
     "statusLabel": "REFERENCE ARCHITECTURE",
@@ -19,7 +19,7 @@
         "id": "zone-sources",
         "number": "01",
         "title": "Sources",
-        "subtitle": "Devices, apps and SaaS systems",
+        "subtitle": "Devices, apps, SaaS",
         "x": 24,
         "width": 308
       },

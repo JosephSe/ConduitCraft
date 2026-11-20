@@ -9,15 +9,16 @@ import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 // any bundled example imports as. Each hash is the imported document and its
 // issues, recorded before the writers were removed. The six reference templates were
 // rewritten afterwards (cache, stream, bucket, scheduler and external kinds), so their
-// hashes were recorded again then. The flash-sale showcase was added later still.
+// hashes were recorded again then. The flash-sale showcase was added later still. The JSON templates' hashes
+// were recorded again after the template tidy-up (swimlane headers, lane widths, wire labels and routes).
 const EXPECTED: Record<string, string> = {
-  'auth-oauth-oidc.blueprint.json': 'c6c8fec87be4cbfe',
-  'cicd-pipeline.blueprint.json': '602e4b7810fae480',
-  'cloud-data-pipeline.blueprint.json': '9055ce508c9c2843',
-  'event-driven-microservices.blueprint.json': 'c90bee8a2a5ddcf2',
-  'flash-sale-ticketing.blueprint.json': '41272d4af18ca7c6',
-  'kubernetes-ingress.blueprint.json': '0691b103258bb88c',
-  'lumen-relay.blueprint.json': 'a953451e446175d6',
+  'auth-oauth-oidc.blueprint.json': 'c90610eb114726dd',
+  'cicd-pipeline.blueprint.json': '6f390600df15924a',
+  'cloud-data-pipeline.blueprint.json': '24b553d084b0c0ab',
+  'event-driven-microservices.blueprint.json': '8b75840316f82a87',
+  'flash-sale-ticketing.blueprint.json': 'b1240f27e9794ccd',
+  'kubernetes-ingress.blueprint.json': '6b3f16ef0edd1df1',
+  'lumen-relay.blueprint.json': '552e9bc1cadad255',
   'plain-mermaid-demo.mmd': '5137fcbc31c71e36',
   'plain-mermaid-demo.mmd (levels)': 'f4450146a54c8695',
   'sample-blueprint.md': 'e583e0c1754ef27e',
