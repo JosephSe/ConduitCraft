@@ -744,9 +744,9 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'node-add-callout',
       title: 'Add callout',
-      subtitle: 'Attach a speech-bubble note to this component, such as a maintenance window',
+      subtitle: 'A note bubble on this component',
       category: 'Components',
-      keywords: ['callout', 'bubble', 'annotate', 'comment', 'note', 'maintenance', 'warning'],
+      keywords: ['bubble', 'annotate'],
       run: () => {
         const sel = app.selection;
         if (sel.type === 'node') void import('./addCallout').then((m) => m.addCalloutTo(sel.id));

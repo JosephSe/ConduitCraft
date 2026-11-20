@@ -6,6 +6,9 @@ export const CALLOUT_DEFAULT_WIDTH = 220;
 /** The height assumed when placing a new callout, before it has been drawn. */
 export const CALLOUT_EST_HEIGHT = 44;
 
+/** The icon drawn before a callout's text, by tone. */
+export const CALLOUT_ICONS: Record<CalloutTone, string> = { info: 'ⓘ', warning: '⚠', time: '⏱' };
+
 /** The x/y each callout had after the last sync, to tell a user move from a component move. */
 const lastSynced = new WeakMap<DiagramNotesCard, { x: number; y: number }>();
 

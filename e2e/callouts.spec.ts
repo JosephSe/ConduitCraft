@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { clearSelection, dropFile, undo } from './helpers';
+import { captureExports, clearSelection, dropFile, nextExport, openExportDialog, undo } from './helpers';
 
 // Callouts: a speech-bubble note attached to one component. It points at the component, follows it, and goes when
 // the component goes.
@@ -36,6 +36,8 @@ async function openSeeded(page: Page): Promise<void> {
   await page.goto('/');
   await dropFile(page, 'callouts.blueprint.json', JSON.stringify({ kind: KIND, version: 15, document: doc }));
   await expect(page.locator('.arch-node')).toHaveCount(1);
+  // The callout styles load with the first callout: measure once they apply.
+  await expect(page.locator('.blueprint-spec.is-callout')).toHaveCSS('border-radius', '10px');
   await clearSelection(page);
 }
 
@@ -115,4 +117,55 @@ test('Add callout from the right-click menu, type text, pick a tone', async ({ p
   // The component's inspector replaces the callout's.
   await expect(page.locator('#prop-tab-look')).toBeVisible();
   await expect(page.locator('#prop-callout-tone')).toHaveCount(0);
+});
+
+/** Export through the dialog and return the downloaded file as base64. */
+async function exportBase64(page: Page, buttonId: string): Promise<string> {
+  const before = await page.evaluate(() => (window as any).__exports.length as number);
+  await openExportDialog(page);
+  await page.locator(buttonId).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__exports.length)).toBeGreaterThan(before);
+  return page.evaluate(async () => {
+    const w = window as any;
+    const { url } = w.__exports[w.__exports.length - 1];
+    const bytes = new Uint8Array(await (w.__blobs.get(url) as Blob).arrayBuffer());
+    let binary = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    return btoa(binary);
+  });
+}
+
+test('the callout shows in PNG, canvas SVG and HTML exports', async ({ page }) => {
+  await captureExports(page);
+  await openSeeded(page);
+
+  const svg = Buffer.from(await exportBase64(page, '#btn-export-svg-clone'), 'base64').toString('utf8');
+  expect(svg).toMatch(/class="blueprint-spec[^"]*is-callout/);
+  expect(svg).toContain('Maintenance 12am–2am');
+
+  const html = Buffer.from(await exportBase64(page, '#btn-export-html'), 'base64').toString('utf8');
+  // The element itself, not the stylesheet rules for it.
+  expect(html).toMatch(/<aside class="blueprint-spec is-callout"[^>]*data-tone="time"[^>]*data-tail="bottom"/);
+  expect(html).toMatch(/<span class="callout-icon" aria-hidden="true">⏱<\/span><span class="notes-title">Maintenance 12am–2am<\/span>/);
+
+  const png = await exportBase64(page, '#btn-export-png');
+  // The time tone's violet border: nothing else in this diagram is violet.
+  const violet = await page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${b64}`;
+    await img.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    const { data } = ctx.getImageData(0, 0, img.width, img.height);
+    let n = 0;
+    for (let i = 0; i < data.length; i += 4) {
+      const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
+      if (b > 140 && r > 60 && r < 140 && g < 70) n++;
+    }
+    return n;
+  }, png);
+  expect(violet).toBeGreaterThan(100);
 });

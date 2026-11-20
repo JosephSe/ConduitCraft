@@ -1,5 +1,9 @@
 # Release notes
 
+## Unreleased
+
+- **Callouts.** Attach a speech-bubble note to a component, such as a maintenance window or an access cut-off: right-click it and choose Add callout, or use Add callout in its Notes tab. Pick Info, Warning or Time. The bubble points at its component, follows it when it moves, is copied and deleted with it, and shows in PNG, GIF, canvas SVG and standalone HTML exports (the plain SVG leaves it out). Files that have callouts use format version 15.
+
 ## 3.0.0
 
 ConduitCraft is redrawn. The diagram is the interface; everything else is paper around it.

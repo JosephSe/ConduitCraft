@@ -147,18 +147,11 @@
   .blueprint-spec.is-text .blueprint-spec-header { margin-block-end: 0; font-family: inherit; font-size: calc(var(--tfs, 16) * 1px); line-height: 1.3; font-weight: 600; color: var(--tc, var(--cc-ink)); }
   .blueprint-spec.is-text .blueprint-spec-header > span { min-inline-size: 0; overflow-wrap: anywhere; }
   .blueprint-spec.is-text .blueprint-spec-list { display: none; }
-  .blueprint-spec.is-callout { --callout-tone: var(--cc-blue); --callout-bg: color-mix(in oklab, var(--cc-sheet) 90%, var(--callout-tone)); width: calc(var(--nw, 220) * 1px); padding: 0.45rem 0.7rem; border-radius: 10px; background: var(--callout-bg); border: 1.5px solid var(--callout-tone); filter: none; z-index: 99000; }
-  .blueprint-spec.is-callout[data-tone="warning"] { --callout-tone: var(--cc-amber); }
-  .blueprint-spec.is-callout[data-tone="time"] { --callout-tone: var(--cc-violet); }
-  .blueprint-spec.is-callout::after { inline-size: 10px; block-size: 10px; top: auto; right: auto; background: var(--callout-bg); border: 0 solid var(--callout-tone); transform: rotate(45deg); }
-  .blueprint-spec.is-callout[data-tail="bottom"]::after { bottom: -6.5px; left: calc(50% - 5px); border-width: 0 1.5px 1.5px 0; }
-  .blueprint-spec.is-callout[data-tail="top"]::after { top: -6.5px; left: calc(50% - 5px); border-width: 1.5px 0 0 1.5px; }
-  .blueprint-spec.is-callout[data-tail="left"]::after { left: -6.5px; top: calc(50% - 5px); border-width: 0 0 1.5px 1.5px; }
-  .blueprint-spec.is-callout[data-tail="right"]::after { right: -6.5px; top: calc(50% - 5px); border-width: 1.5px 1.5px 0 0; }
-  .blueprint-spec.is-callout .blueprint-spec-header { justify-content: flex-start; align-items: baseline; gap: 0.4rem; margin-block-end: 0; font-weight: 500; line-height: 1.35; }
-  .blueprint-spec.is-callout .callout-icon { flex: none; color: var(--callout-tone); font-weight: 700; }
-  .blueprint-spec.is-callout .notes-title { min-inline-size: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
-  .blueprint-spec.is-callout .blueprint-spec-list { display: none; }
+  .blueprint-spec.is-callout{--ct:var(--cc-blue);--cb:color-mix(in oklab,var(--cc-sheet) 90%,var(--ct));width:calc(var(--nw)*1px);padding:.45rem .7rem;border-radius:10px;background:var(--cb);border:1.5px solid var(--ct);z-index:99000}
+  .is-callout[data-tone=warning]{--ct:var(--cc-amber)}.is-callout[data-tone=time]{--ct:var(--cc-violet)}.callout-icon{color:var(--ct)}
+  .blueprint-spec.is-callout::after{inline-size:10px;block-size:10px;inset:var(--ty,auto) auto auto var(--tx,calc(50% - 5px));background:var(--cb);border:solid var(--ct);border-width:0 1.5px 1.5px 0;transform:rotate(var(--tr,45deg))}
+  [data-tail=bottom]{--ty:calc(100% - 4px)}[data-tail=top]{--ty:-6.5px;--tr:225deg}[data-tail=left]{--tx:-6.5px;--ty:calc(50% - 5px);--tr:135deg}[data-tail=right]{--tx:calc(100% - 4px);--ty:calc(50% - 5px);--tr:-45deg}
+  .is-callout .blueprint-spec-header{justify-content:start;gap:.4rem;margin:0;font-weight:500}
   .blueprint-spec-header { display: flex; align-items: center; justify-content: space-between; margin-block-end: 0.625rem; font-size: 0.8125rem; font-family: inherit; font-weight: 600; color: var(--cc-ink); }
   .blueprint-spec-list { display: grid; gap: 0.5rem; }
   .blueprint-spec-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.78rem; line-height: 1.4; color: var(--cc-ink-2); }

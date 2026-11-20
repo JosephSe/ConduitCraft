@@ -484,16 +484,14 @@ function wholeNumberInput(value: number | undefined, min: number, max: number, p
 }
 
 /** A text label's Width, Font size and Colour fields. An empty Width means as wide as its words. */
-/** A component's Notes tab: how many callouts it has, and a button to add one. */
+/** A component's Notes tab: a button to add a callout. */
 function makeCalloutsField(node: DiagramNode): HTMLElement {
-  const count = app.doc.notesCards.filter((c) => c.variant === 'callout' && c.anchorId === node.id).length;
   const add = document.createElement('button');
   add.type = 'button';
   add.className = 'prop-quiet-btn';
   add.append(createUiIconSvg('plus', 14), 'Add callout');
   add.addEventListener('click', () => void import('./addCallout').then((m) => m.addCalloutTo(node.id)));
-  const field = makeField('prop-node-add-callout', count ? `Callouts (${count})` : 'Callouts', add);
-  return field;
+  return makeField('prop-node-add-callout', 'Callouts', add);
 }
 
 const CALLOUT_TONES: Array<[CalloutTone, string]> = [
@@ -520,7 +518,6 @@ function makeCalloutFields(card: DiagramNotesCard): HTMLElement[] {
   anchor.type = 'button';
   anchor.className = 'prop-quiet-btn';
   anchor.textContent = node ? node.title || node.id : 'Missing component';
-  anchor.title = 'Select the component this callout points at';
   anchor.disabled = !node;
   anchor.addEventListener('click', () => {
     if (node) applySelection({ type: 'node', id: node.id });

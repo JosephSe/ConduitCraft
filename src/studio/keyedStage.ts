@@ -55,7 +55,7 @@ import {
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
 import { stackZIndices } from '../core/stack';
-import { CALLOUT_DEFAULT_WIDTH, CALLOUT_EST_HEIGHT, calloutTailSide, syncCallouts } from '../core/callouts';
+import { CALLOUT_DEFAULT_WIDTH, CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailSide, syncCallouts } from '../core/callouts';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -497,7 +497,8 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
   return aside;
 }
 
-const CALLOUT_ICONS = { info: 'ⓘ', warning: '⚠', time: '⏱' } as const;
+/** The callout styles load with the first callout (outside the entry stylesheet). */
+let calloutStyles: Promise<unknown> | undefined;
 
 /** A callout's tail points at its component from the nearest side of the bubble. */
 function paintCalloutTail(aside: HTMLElement, card: DiagramNotesCard): void {
@@ -529,6 +530,7 @@ function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   aside.style.setProperty('--bx', String(card.x));
   aside.style.setProperty('--by', String(card.y));
   const isCallout = card.variant === 'callout';
+  if (isCallout) calloutStyles ??= import('../styles/studio/callouts.css');
   aside.classList.toggle('is-callout', isCallout);
   let icon = aside.querySelector<HTMLElement>('.callout-icon');
   if (isCallout) {
