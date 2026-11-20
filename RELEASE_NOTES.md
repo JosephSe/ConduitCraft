@@ -7,16 +7,25 @@ ConduitCraft is redrawn. The diagram is the interface; everything else is paper 
 - **A new look.** Vellum (light) and Graphite (dark): ink chrome, one accent per diagram, sentence-case labels, a type scale, one dialog shell, and each component drawn as its own cut-out. Cyan (Data) and fuchsia (Security) join the wire colours.
 - **Seven slots, one dock.** The top bar is three islands (title and menu, the lens switch, search, Share and Run). The bottom edge is pages and legend, the dock, and zoom. The dock changes face with the lens: tools and favourites in Design, run controls in Traffic, issue stepping in Review. A component tray with a demo pane, search and seven small loops replaces the old palette.
 - **Create by wiring.** Drag from a port into empty space and a strip of likely kinds appears. The inspector has Look, Behaviour and Notes tabs; selections get an icon toolbar.
-- **Three lenses that look different.** Design is still; Traffic dims the sheet, thins the line and sends one capsule down each wire; Review greys the sheet and circles each issue with a hand-drawn redline.
+- **Three lenses that look different.** Design is still; Traffic dims the sheet, thins the line and runs traffic along each wire; Review greys the sheet and circles each issue with a hand-drawn redline.
 - **One card, many shapes.** Every component has a tile, a status light and a kind line. Zoom out and the diagram reads like a transit map: bigger tiles, bigger titles, and the detail drops away.
 - **Motion that explains.** Capsules arrive with a spring, failures shake and hatch, recovery runs a ring round the tile, blast radius spreads 40 ms a hop, drops, wires and deletes give feedback, the dock cross-fades and the tray rises. Nothing loops in Design, and reduced motion turns all of it off.
-- **Diagram styles.** Studio, Blueprint (navy sheet, outlined nodes, wires told apart by dash), Print (black and white with sub-labels) and Sketch (warm paper, hand-wobbled strokes). The style is saved in the file (format version 13), in share links, and in SVG, PNG, GIF and standalone HTML exports.
+- **Diagram styles.** Studio, Blueprint (navy sheet, outlined nodes, wires told apart by dash), Print (black and white with sub-labels) and Sketch (warm paper, hand-wobbled strokes). The style is saved in the file, in share links, and in SVG, PNG, GIF and standalone HTML exports.
 - **Title block.** Every picture export carries a title strip (mark, title, tag, status, page, date), and the standalone HTML shows it in Present. It is on by default and the export dialog can turn it off.
 - **Templates and Home.** Template and Home cards are unboxed sheets with a themed thumbnail; hovering a template draws its wires once.
 - **Narrow screens.** Below 56 rem the inspector is a bottom sheet, the tray is a sheet without the demo pane, the page strip shows the open page (tap for the next) and the zoom island is one button with Fit in its popover.
-- **Under the hood.** The old `--wl-` tokens are gone, `toolRail.ts` is folded into the dock, and entry CSS is 126 kB (cap 128).
+- **The properties card.** The inspector is a 304 px card floating over the sheet instead of a docked column, and closed means gone. Lock, Group, Duplicate, Delete and Keep open sit in a More popover. Steppers have minus and plus buttons, and switches and steppers have 44 px touch targets.
+- **Hide either panel.** The left or right panel can be hidden in any lens (the zoom island buttons, `{` and `}`, or the palette), and the choice is remembered. Traffic and Review open with nothing selected, and reopen a right panel that Design folded away by itself.
+- **Readable at Fit.** Zoomed out, component names are condensed onto up to three lines, frame titles show in full and wire labels appear on hover or selection (Always show wire labels keeps them on).
+- **Traffic.** Glowing beads run along each wire, faster or slower with latency (a 0.25x to 4x range). Under a failure a wire carries only what can really get through. Design is still from the first load, and leaving Traffic stops the run and clears its hop label and highlights.
+- **Wires find their own way.** An automatic wire that would cross a component tries the other sides and takes the clearest path. Wires meeting one side of a component, an actor or a loop each get their own point, and loops stay just over or under their ends.
+- **Notes and text.** Drag a note's right edge (or set Width) to change its width; its height follows the content. Text labels get a width, a font size (8 to 96 px) and a colour.
+- **One front-to-back order.** Components, notes and text share one stacking order, so Bring to Front and Send to Back can put a note or text over a component. The order is saved and followed by the SVG and HTML exports.
+- **Exports match the canvas.** PNG, GIF and the canvas SVG carry the studio's fonts and title styles instead of falling back to Arial and Courier, and the standalone HTML carries its fonts too. New diagrams no longer carry the placeholder tag ARCHITECTURE STUDIO // V1.0 and status TRAFFIC DIAGRAM, and exports leave them out of older diagrams too.
+- **Smaller fixes.** Dragging a component snaps to the centre of its swimlane. Dragging a frame no longer picks up components it passes over. New Diagram replaces the canvas on a fresh visit. The top and left edges of the usable canvas are marked, and exports leave them out.
+- **Under the hood.** The old `--wl-` tokens are gone and `toolRail.ts` is folded into the dock. Entry CSS is 134.6 kB (cap 135) and entry JS 574.7 kB (cap 575).
 
-Files from earlier versions open unchanged. Files saved by 3.0 use format version 13, which an older app will refuse rather than drop the style.
+Files from earlier versions open unchanged. Files saved by 3.0 use format version 14 (13 added the diagram style, 14 a note width), which an older app will refuse rather than drop them.
 
 ## 2.2.1
 
