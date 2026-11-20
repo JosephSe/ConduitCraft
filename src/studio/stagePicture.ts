@@ -272,7 +272,171 @@ export function cleanClonedStage(clone: HTMLElement, options?: { preserveSelecti
   }
 }
 
+/**
+ * The webfont files as data URLs, by the URL the stylesheet names. A picture is drawn as an SVG image, and an image
+ * cannot fetch anything, so without these its text falls back to Arial and Courier, and bold titles come out regular.
+ */
+const embeddedFonts = new Map<string, string>();
+let fontsLoading: Promise<void> | null = null;
+
+function fontFaceUrls(): string[] {
+  if (typeof document === 'undefined' || !document.styleSheets) return [];
+  const urls = new Set<string>();
+  const visit = (sheet: CSSStyleSheet): void => {
+    let rules: CSSRuleList;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      return;
+    }
+    for (const rule of rules) {
+      if (rule instanceof CSSImportRule) {
+        if (rule.styleSheet) visit(rule.styleSheet);
+      } else if (rule instanceof CSSFontFaceRule) {
+        const base = sheet.href ?? document.baseURI;
+        for (const match of rule.style.getPropertyValue('src').matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)) {
+          if (!match[1].startsWith('data:')) urls.add(new URL(match[1], base).href);
+        }
+      }
+    }
+  };
+  for (const sheet of document.styleSheets) visit(sheet);
+  return [...urls];
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+/** The text of each linked stylesheet, by its URL, as written (see `collectCss` for why not the CSSOM). */
+const sheetSources = new Map<string, string>();
+
+async function fetchCss(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok || !/\btext\/css\b/i.test(response.headers.get('content-type') ?? '')) return null;
+    return await response.text();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * A stylesheet's text, only when the server answers with CSS. The dev server answers a plain fetch of a stylesheet
+ * with a JavaScript module (its hot-reload wrapper), and gives the CSS itself for the `?direct` URL.
+ */
+async function fetchStylesheet(href: string): Promise<string | null> {
+  const css = await fetchCss(href);
+  if (css !== null) return css;
+  const direct = new URL(href);
+  direct.searchParams.set('direct', '');
+  return fetchCss(direct.href);
+}
+
+/**
+ * Read what a picture of the stage needs and an SVG image cannot fetch: the webfont files and the text of the linked
+ * stylesheets. Call before `renderStagePictureSvg`. Anything that cannot be read (offline and not cached) falls
+ * back: a font to the system face, a stylesheet to its CSSOM rules.
+ */
+export function loadPictureFonts(): Promise<void> {
+  if (typeof fetch !== 'function' || typeof document === 'undefined') return Promise.resolve();
+  // Stylesheets that load on demand appear later, so each call picks up the new ones.
+  const sheets = Promise.all(
+    [...document.styleSheets]
+      .map((sheet) => sheet.href)
+      .filter((href): href is string => Boolean(href) && !sheetSources.has(href!))
+      .map(async (href) => {
+        const text = await fetchStylesheet(href);
+        if (text !== null) sheetSources.set(href, text);
+      }),
+  );
+  fontsLoading ??= Promise.all(
+    fontFaceUrls().map(async (url) => {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return;
+        const type = response.headers.get('content-type')?.split(';')[0] || 'font/woff2';
+        embeddedFonts.set(url, `data:${type};base64,${bytesToBase64(new Uint8Array(await response.arrayBuffer()))}`);
+      } catch {
+        // Keep the fallback face for this one.
+      }
+    }),
+  ).then(() => {
+    // Try again next time if nothing could be read.
+    if (embeddedFonts.size === 0) fontsLoading = null;
+  });
+  return Promise.all([sheets, fontsLoading]).then(() => undefined);
+}
+
+/** Point the font URLs in some CSS at the embedded copies. */
+function embedFontUrls(css: string, base: string): string {
+  if (embeddedFonts.size === 0) return css;
+  return css.replace(/url\(\s*["']?([^"')]+)["']?\s*\)/g, (whole, url: string) => {
+    if (url.startsWith('data:') || url.startsWith('#')) return whole;
+    let href: string;
+    try {
+      href = new URL(url, base).href;
+    } catch {
+      return whole;
+    }
+    const data = embeddedFonts.get(href);
+    return data ? `url("${data}")` : whole;
+  });
+}
+
+/**
+ * The page's `@font-face` rules with the font files inline, for a file that must carry its own type (the standalone
+ * HTML). Empty until `loadPictureFonts` has read the files.
+ */
+export function embeddedFontFaceCss(): string {
+  if (embeddedFonts.size === 0 || typeof document === 'undefined') return '';
+  const rules: string[] = [];
+  const visit = (sheet: CSSStyleSheet): void => {
+    let list: CSSRuleList;
+    try {
+      list = sheet.cssRules;
+    } catch {
+      return;
+    }
+    for (const rule of list) {
+      if (rule instanceof CSSImportRule) {
+        if (rule.styleSheet) visit(rule.styleSheet);
+      } else if (rule instanceof CSSFontFaceRule) {
+        rules.push(fontFaceCss(rule, sheet.href ?? document.baseURI));
+      }
+    }
+  };
+  for (const sheet of document.styleSheets) visit(sheet);
+  return rules.join('\n');
+}
+
+function fontFaceCss(rule: CSSFontFaceRule, base: string): string {
+  return embedFontUrls(rule.cssText, base);
+}
+
+/**
+ * A stylesheet's CSS for the picture. The text as written is used where it can be had: Chrome writes a shorthand set
+ * from a `var()` (`font: var(--cc-font-title)`) back as empty longhands, and where the rule also sets one of those
+ * longhands (`font-stretch: 88%`) the shorthand cannot be read back at all, so titles lose their weight and size.
+ */
 function collectCss(sheet: CSSStyleSheet, chunks: string[]): void {
+  if (sheet.disabled) return;
+  const base = sheet.href ?? document.baseURI;
+  const owner = sheet.ownerNode;
+  const source =
+    typeof HTMLStyleElement !== 'undefined' && owner instanceof HTMLStyleElement
+      ? owner.textContent
+      : sheet.href
+        ? sheetSources.get(sheet.href)
+        : null;
+  if (source != null && !/@import\b/i.test(source)) {
+    const media = sheet.media?.mediaText;
+    const css = embedFontUrls(source, base);
+    chunks.push(media && media !== 'all' ? `@media ${media} {\n${css}\n}` : css);
+    return;
+  }
   let rules: CSSRuleList;
   try {
     rules = sheet.cssRules;
@@ -284,7 +448,7 @@ function collectCss(sheet: CSSStyleSheet, chunks: string[]): void {
       if (rule.styleSheet) collectCss(rule.styleSheet, chunks);
       continue;
     }
-    chunks.push(rule.cssText);
+    chunks.push(rule instanceof CSSFontFaceRule ? fontFaceCss(rule, base) : rule.cssText);
   }
 }
 
