@@ -21,7 +21,7 @@ ConduitCraft is redrawn. The diagram is the interface; everything else is paper 
 - **Wires find their own way.** An automatic wire that would cross a component tries the other sides and takes the clearest path. Wires meeting one side of a component, an actor or a loop each get their own point, and loops stay just over or under their ends.
 - **Notes and text.** Drag a note's right edge (or set Width) to change its width; its height follows the content. Text labels get a width, a font size (8 to 96 px) and a colour.
 - **One front-to-back order.** Components, notes and text share one stacking order, so Bring to Front and Send to Back can put a note or text over a component. The order is saved and followed by the SVG and HTML exports.
-- **Exports match the canvas.** PNG, GIF and the canvas SVG carry the studio's fonts and title styles instead of falling back to Arial and Courier, and the standalone HTML carries its fonts too.
+- **Exports match the canvas.** PNG, GIF and the canvas SVG carry the studio's fonts and title styles instead of falling back to Arial and Courier, and the standalone HTML carries its fonts too. New diagrams no longer carry the placeholder tag ARCHITECTURE STUDIO // V1.0 and status TRAFFIC DIAGRAM, and exports leave them out of older diagrams too.
 - **Smaller fixes.** Dragging a component snaps to the centre of its swimlane. Dragging a frame no longer picks up components it passes over. New Diagram replaces the canvas on a fresh visit. The top and left edges of the usable canvas are marked, and exports leave them out.
 - **Under the hood.** The old `--wl-` tokens are gone and `toolRail.ts` is folded into the dock. Entry CSS is 134.6 kB (cap 135) and entry JS 574.7 kB (cap 575).
 
