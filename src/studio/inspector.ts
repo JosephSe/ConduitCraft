@@ -133,6 +133,7 @@ import { DEFAULT_PARTITIONS, MAX_PARTITIONS, MAX_QUEUE_DEPTH, MAX_QUEUE_RETENTIO
 
 import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 import { notify } from './toast';
+import { CALLOUT_ICONS } from '../core/callouts';
 
 // Element-scoped View Transitions (`scoped-component-transitions`)
 export const supportsScopedVT =
@@ -494,17 +495,13 @@ function makeCalloutsField(node: DiagramNode): HTMLElement {
   return makeField('prop-node-add-callout', 'Callouts', add);
 }
 
-const CALLOUT_TONES: Array<[CalloutTone, string]> = [
-  ['info', 'Info'],
-  ['warning', 'Warning'],
-  ['time', 'Time'],
-];
 
 /** A callout's tone, and the component it points at (a button that selects it). */
 function makeCalloutFields(card: DiagramNotesCard): HTMLElement[] {
   const tone = document.createElement('select');
   tone.className = 'field';
-  for (const [value, label] of CALLOUT_TONES) tone.appendChild(makeOption(value, label));
+  // Info, Warning, Time: the tone names, capitalised.
+  for (const v of Object.keys(CALLOUT_ICONS)) tone.appendChild(makeOption(v, v[0].toUpperCase() + v.slice(1)));
   tone.value = card.tone ?? 'info';
   tone.addEventListener('change', () => {
     pushHistory();
@@ -517,8 +514,8 @@ function makeCalloutFields(card: DiagramNotesCard): HTMLElement[] {
   const anchor = document.createElement('button');
   anchor.type = 'button';
   anchor.className = 'prop-quiet-btn';
-  anchor.textContent = node ? node.title || node.id : 'Missing component';
-  anchor.disabled = !node;
+  // A callout whose component is gone is removed before it is drawn, so `node` is there.
+  anchor.textContent = node?.title ?? '';
   anchor.addEventListener('click', () => {
     if (node) applySelection({ type: 'node', id: node.id });
   });

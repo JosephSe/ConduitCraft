@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { captureExports, clearSelection, dropFile, nextExport, openExportDialog, undo } from './helpers';
+import { captureExports, clearSelection, dropFile, nextExport, openExportDialog, redo, undo } from './helpers';
 
 // Callouts: a speech-bubble note attached to one component. It points at the component, follows it, and goes when
 // the component goes.
@@ -117,6 +117,60 @@ test('Add callout from the right-click menu, type text, pick a tone', async ({ p
   // The component's inspector replaces the callout's.
   await expect(page.locator('#prop-tab-look')).toBeVisible();
   await expect(page.locator('#prop-callout-tone')).toHaveCount(0);
+});
+
+test('a callout dragged on its own keeps its new place through undo and redo', async ({ page }) => {
+  await openSeeded(page);
+  const node = (await component(page).boundingBox())!;
+  const header = (await callout(page).locator('.blueprint-spec-header').boundingBox())!;
+  await page.mouse.move(header.x + 20, header.y + header.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(header.x + 120, header.y + 60, { steps: 5 });
+  await page.mouse.move(node.x + node.width + 60, node.y + 60, { steps: 8 });
+  await page.mouse.up();
+  await expect(callout(page)).toHaveAttribute('data-tail', 'left');
+  const dragged = (await callout(page).boundingBox())!;
+  await undo(page);
+  await expect(callout(page)).toHaveAttribute('data-tail', 'bottom');
+  await redo(page);
+  await expect(callout(page)).toHaveAttribute('data-tail', 'left');
+  const back = (await callout(page).boundingBox())!;
+  expect(Math.abs(back.x - dragged.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(back.y - dragged.y)).toBeLessThanOrEqual(1);
+});
+
+test('resizing a callout starts from its drawn width', async ({ page }) => {
+  await openSeeded(page);
+  await callout(page).click();
+  const box = (await callout(page).boundingBox())!;
+  const handle = (await callout(page).locator('.notes-resize-handle').boundingBox())!;
+  const x = handle.x + handle.width / 2;
+  const y = handle.y + handle.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 10, y, { steps: 3 });
+  await page.mouse.move(x + 40, y, { steps: 4 });
+  await page.mouse.up();
+  const after = (await callout(page).boundingBox())!;
+  // Snap to grid may round the width to a multiple of 16.
+  expect(Math.abs(after.width - (box.width + 40))).toBeLessThanOrEqual(8);
+});
+
+test('dragging a component with its callout against the top edge keeps their offset', async ({ page }) => {
+  await openSeeded(page);
+  await component(page).click();
+  await callout(page).click({ modifiers: ['Shift'] });
+  const node = (await component(page).boundingBox())!;
+  const before = node.y - (await callout(page).boundingBox())!.y;
+  const cx = node.x + node.width / 2;
+  const cy = node.y + node.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx, cy - 40, { steps: 4 });
+  await page.mouse.move(cx, cy - 600, { steps: 10 });
+  await page.mouse.up();
+  const after = (await component(page).boundingBox())!.y - (await callout(page).boundingBox())!.y;
+  expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
 });
 
 /** Export through the dialog and return the downloaded file as base64. */

@@ -2,7 +2,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { IMAGE_LIMIT_CHARS, serializeClip } from '../src/core/clipboard.ts';
 import { materializeClip, parseClip } from '../src/core/clipboardPaste.ts';
-import { createBlankDocument, createCalloutCard, createNodeFromStencil } from '../src/templates/presets.ts';
+import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
+import { createCalloutCard } from '../src/core/calloutPlacement.ts';
 import { syncCallouts } from '../src/core/callouts.ts';
 import type { DiagramEdge } from '../src/types.ts';
 

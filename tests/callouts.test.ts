@@ -1,12 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createBlankDocument, createCalloutCard, createNodeFromStencil } from '../src/templates/presets.ts';
+import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
+import { createCalloutCard } from '../src/core/calloutPlacement.ts';
 import { calloutCopiesFor, calloutIdsOn, calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import { createShareUrl, decodeSharedDiagramFromHash } from '../src/studio/shareLink.ts';
 import { CURRENT_SCHEMA_VERSION } from '../src/core/schema.ts';
 import { renderDiagramSvg } from '../src/exporter/diagramSvg.ts';
+import { generateStandaloneHtml } from '../src/exporter/standaloneHtml.ts';
+import { materializeClip } from '../src/core/clipboardPaste.ts';
 import { createNotesCard } from '../src/templates/presets.ts';
 import type { DiagramDocument, DiagramNode, DiagramNotesCard } from '../src/types.ts';
 
@@ -229,5 +232,49 @@ describe('callouts on duplicated components', () => {
     const card = addCallout(doc, node);
     assert.deepEqual(calloutIdsOn(doc, new Set([node.id])), [card.id]);
     assert.deepEqual(calloutIdsOn(doc, new Set(['other'])), []);
+  });
+});
+
+describe('callouts from untrusted input', () => {
+  const hostile = (): DiagramDocument => {
+    const doc = docWithCallout();
+    const card = callouts(doc)[0] as unknown as Record<string, unknown>;
+    card.tone = 'x" onmouseover="alert(1)';
+    card.width = '1;}</style><script>alert(2)</script>';
+    return doc;
+  };
+
+  it('the HTML export writes only a known tone and a numeric width', () => {
+    const html = generateStandaloneHtml(hostile());
+    assert.doesNotMatch(html, /onmouseover="alert\(1\)/);
+    assert.doesNotMatch(html, /<script>alert\(2\)/);
+    assert.match(html, /<aside class="blueprint-spec is-callout"[^>]*data-tone="info"[^>]*--nw: 220;/);
+  });
+
+  it('a pasted callout keeps only a known tone and a numeric width', () => {
+    const doc = hostile();
+    const card = callouts(doc)[0];
+    const out = materializeClip({ nodes: [], edges: [], notes: [card], droppedImages: false }, [], (p) => `${p}-n`);
+    assert.equal(out.notes[0].tone, undefined);
+    assert.equal(out.notes[0].width, undefined);
+  });
+});
+
+describe('callout placement near the top edge', () => {
+  it('goes below a component with no room above it', () => {
+    const { doc, node } = docWithNode();
+    node.y = 52;
+    const card = createCalloutCard(doc, node);
+    assert.ok(card.y >= 16, `y ${card.y} is on the sheet`);
+    assert.equal(card.y, node.y + node.height + 12);
+  });
+
+  it('stacks only over the callouts above it', () => {
+    const { doc, node } = docWithNode();
+    const below = addCallout(doc, node);
+    below.y = node.y + node.height + 12;
+    syncCallouts(doc);
+    const next = createCalloutCard(doc, node);
+    assert.equal(next.y, node.y - 12 - 44, 'the one dragged below does not push the new one onto the component');
   });
 });

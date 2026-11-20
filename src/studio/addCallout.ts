@@ -1,7 +1,7 @@
 import { app, pushHistory, setSelection } from './state';
 import { renderAll } from './render';
 import { renameNotesInline } from './inlineRename';
-import { createCalloutCard } from '../templates/presets';
+import { createCalloutCard } from '../core/calloutPlacement';
 import { expandStageToFit } from '../core/layout';
 
 /**

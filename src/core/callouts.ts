@@ -1,4 +1,5 @@
 import type { CalloutTone, DiagramDocument, DiagramNode, DiagramNotesCard } from '../types';
+import { clampNotesWidth } from './notesSize';
 
 /** Space between a callout and its component, and between stacked callouts. */
 export const CALLOUT_GAP = 12;
@@ -80,7 +81,7 @@ export function calloutFieldsOf(
 }
 
 /** The ids of the callouts attached to any of `nodeIds`, so copying a component takes its callouts along. */
-export function calloutIdsOn(doc: DiagramDocument, nodeIds: ReadonlySet<string>): string[] {
+export function calloutIdsOn(doc: Pick<DiagramDocument, 'notesCards'>, nodeIds: ReadonlySet<string>): string[] {
   return doc.notesCards.filter((c) => isCallout(c) && c.anchorId && nodeIds.has(c.anchorId)).map((c) => c.id);
 }
 
@@ -89,12 +90,12 @@ export function calloutIdsOn(doc: DiagramDocument, nodeIds: ReadonlySet<string>)
  * offset. Callouts in `skip` are being copied by the caller already. The copies are not added to the document.
  */
 export function calloutCopiesFor(
-  doc: DiagramDocument,
+  doc: { notesCards?: DiagramNotesCard[] },
   idMap: ReadonlyMap<string, string>,
   skip: ReadonlySet<string>,
   newId: (prefix: string) => string,
 ): DiagramNotesCard[] {
-  return doc.notesCards.flatMap((c) => {
+  return (doc.notesCards ?? []).flatMap((c) => {
     const anchor = isCallout(c) && c.anchorId && !skip.has(c.id) ? idMap.get(c.anchorId) : undefined;
     if (!anchor) return [];
     const copy = structuredClone(c);
@@ -103,4 +104,18 @@ export function calloutCopiesFor(
     delete copy.groupId;
     return [copy];
   });
+}
+
+/** A callout's tone, `info` when it has none or an unknown one. */
+export const calloutTone = (card: DiagramNotesCard): CalloutTone => (TONES.includes(card.tone!) ? card.tone! : 'info');
+
+/** A callout's drawn width: its stored width, clamped, or the default. */
+export const calloutWidth = (card: DiagramNotesCard): number => clampNotesWidth(card.width) ?? CALLOUT_DEFAULT_WIDTH;
+
+/** Drop a callout's tone and width when they are not a known tone and a number (a pasted clip is untrusted). */
+export function cleanCallout(card: DiagramNotesCard): void {
+  if (card.tone !== undefined && calloutTone(card) !== card.tone) delete card.tone;
+  const width = clampNotesWidth(card.width);
+  if (width === undefined) delete card.width;
+  else card.width = width;
 }

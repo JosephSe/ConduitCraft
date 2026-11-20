@@ -7,7 +7,7 @@
   .blueprint-spec.is-callout {
     --ct: var(--cc-blue);
     --cb: color-mix(in oklab, var(--cc-sheet) 90%, var(--ct));
-    width: calc(var(--nw) * 1px);
+    width: calc(var(--nw, 220) * 1px);
     padding: 0.45rem 0.7rem;
     border-radius: 10px;
     background: var(--cb);

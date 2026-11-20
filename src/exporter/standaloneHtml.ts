@@ -1,7 +1,7 @@
 import type { DiagramDocument, DiagramNode, LevelContent, SelectionTarget, StreamTone } from '../types';
 import { clampTextWidth, notesCardWidth, textFontSize } from '../core/notesSize';
 import { STACK_BASE_Z, stackZIndices } from '../core/stack';
-import { CALLOUT_DEFAULT_WIDTH, CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailSide } from '../core/callouts';
+import { CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailSide, calloutTone, calloutWidth } from '../core/callouts';
 import { breadcrumb, viewOfLevel } from '../core/levels';
 import { pageList, viewOfPage } from '../core/pages';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -269,8 +269,8 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
         // Drawn as on the canvas; always above the components (its z-index is in the stylesheet).
         const node = doc.nodes.find((n) => n.id === card.anchorId);
         if (!node) return '';
-        const tone = card.tone ?? 'info';
-        const width = card.width ?? CALLOUT_DEFAULT_WIDTH;
+        const tone = calloutTone(card);
+        const width = calloutWidth(card);
         const tail = calloutTailSide(card, node, width, CALLOUT_EST_HEIGHT);
         return `
       <aside class="blueprint-spec is-callout${isSel ? ' is-selected' : ''}" data-notes-id="${escapeHtml(card.id)}" data-tone="${tone}" data-tail="${tail}" style="--bx: ${card.x}; --by: ${card.y}; --nw: ${width};" aria-label="${escapeHtml(card.title)}">

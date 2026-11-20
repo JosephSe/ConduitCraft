@@ -5,6 +5,7 @@
 import type { DiagramEdge, DiagramFrame, DiagramNode, DiagramNotesCard, StreamTone } from '../types';
 import { notesCardHeight, notesCardWidth, textLabelRect } from './notesSize';
 import { FRAME_HEADER_HEIGHT, FRAME_MIN_HEIGHT, FRAME_MIN_WIDTH, FRAME_PADDING, MAX_FRAME_DEPTH } from './frames';
+import { calloutCopiesFor } from './callouts';
 
 /** The part of a document that frames touch. */
 export interface FrameHost {
@@ -242,7 +243,13 @@ export function duplicateFrame(host: FrameHost, id: string, newId: (prefix: stri
   const edgeCopies = (host.edges ?? [])
     .filter((e) => nodeMap.has(e.from) && nodeMap.has(e.to))
     .map((e) => ({ ...structuredClone(e), id: newId('edge'), from: nodeMap.get(e.from)!, to: nodeMap.get(e.to)! }));
-  const noteCopies = notesInFrames(host, ids).map((c) => ({ ...structuredClone(c), id: newId('notes'), x: c.x + offset, y: c.y + offset }));
+  // Callouts go with their components (wherever they sit), attached to the copies; other notes go by position.
+  const noteCopies = [
+    ...notesInFrames(host, ids)
+      .filter((c) => c.variant !== 'callout')
+      .map((c) => ({ ...structuredClone(c), id: newId('notes'), x: c.x + offset, y: c.y + offset })),
+    ...calloutCopiesFor(host, nodeMap, new Set(), newId),
+  ];
   host.frames = [...frames, ...copies];
   host.nodes.push(...nodeCopies);
   if (host.edges) host.edges.push(...edgeCopies);

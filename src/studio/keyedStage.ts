@@ -55,7 +55,7 @@ import {
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
 import { stackZIndices } from '../core/stack';
-import { CALLOUT_DEFAULT_WIDTH, CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailSide, syncCallouts } from '../core/callouts';
+import { CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailSide, calloutTone, calloutWidth, syncCallouts } from '../core/callouts';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -408,7 +408,11 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
       current.y = app.snapToGrid ? Math.round(ny / 16) * 16 : Math.round(ny);
       aside.style.setProperty('--bx', String(current.x));
       aside.style.setProperty('--by', String(current.y));
-      if (current.variant === 'callout') paintCalloutTail(aside, current);
+      if (current.variant === 'callout') {
+        // The new place is the new offset from its component, so save, undo and copy keep it.
+        syncCallouts(app.doc);
+        paintCalloutTail(aside, current);
+      }
       expandStageToFit(app.doc);
       scheduleMinimapPaint();
     }
@@ -443,7 +447,12 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
     if (current.locked) return;
     resizeStartX = e.clientX;
     // A text label without a width is as wide as its words: start from what is drawn.
-    origW = current.variant === 'text' ? (clampTextWidth(current.width) ?? aside.offsetWidth) : notesCardWidth(current);
+    origW =
+      current.variant === 'text'
+        ? (clampTextWidth(current.width) ?? aside.offsetWidth)
+        : current.variant === 'callout'
+          ? calloutWidth(current)
+          : notesCardWidth(current);
     resized = false;
     resizeHandle.setPointerCapture(e.pointerId);
   });
@@ -504,9 +513,7 @@ let calloutStyles: Promise<unknown> | undefined;
 function paintCalloutTail(aside: HTMLElement, card: DiagramNotesCard): void {
   const node = app.doc.nodes.find((n) => n.id === card.anchorId);
   if (!node) return;
-  const w = card.width ?? CALLOUT_DEFAULT_WIDTH;
-  const h = aside.offsetHeight || CALLOUT_EST_HEIGHT;
-  aside.dataset.tail = calloutTailSide(card, node, w, h);
+  aside.dataset.tail = calloutTailSide(card, node, calloutWidth(card), aside.offsetHeight || CALLOUT_EST_HEIGHT);
 }
 
 /**
@@ -532,9 +539,10 @@ function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   const isCallout = card.variant === 'callout';
   if (isCallout) calloutStyles ??= import('../styles/studio/callouts.css');
   aside.classList.toggle('is-callout', isCallout);
-  let icon = aside.querySelector<HTMLElement>('.callout-icon');
+  // A card never changes variant, so a callout's element is only ever painted as a callout.
   if (isCallout) {
-    const tone = card.tone ?? 'info';
+    let icon = aside.querySelector<HTMLElement>('.callout-icon');
+    const tone = calloutTone(card);
     aside.dataset.tone = tone;
     if (!icon) {
       icon = document.createElement('span');
@@ -543,17 +551,12 @@ function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
       aside.querySelector('.blueprint-spec-header')?.prepend(icon);
     }
     icon.textContent = CALLOUT_ICONS[tone];
-    aside.style.setProperty('--nw', String(card.width ?? CALLOUT_DEFAULT_WIDTH));
+    aside.style.setProperty('--nw', String(calloutWidth(card)));
     const title = aside.querySelector('.notes-title');
     if (title) title.textContent = card.title;
-    aside.querySelector('.blueprint-spec-list')?.replaceChildren();
-    delete aside.dataset.itemsSig;
     paintCalloutTail(aside, card);
     return;
   }
-  icon?.remove();
-  delete aside.dataset.tone;
-  delete aside.dataset.tail;
   const isText = card.variant === 'text';
   const width = isText ? clampTextWidth(card.width) : card.width !== undefined ? notesCardWidth(card) : undefined;
   if (width !== undefined) aside.style.setProperty('--nw', String(width));
@@ -1223,8 +1226,17 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       const groupSize =
         (groupStartPositions?.size ?? 0) + (groupZonePositions?.size ?? 0) + (groupNotesPositions?.size ?? 0);
       if (groupStartPositions && groupSize > 1) {
-        const stepDx = app.snapToGrid ? Math.round(dx / 16) * 16 : Math.round(dx);
-        const stepDy = app.snapToGrid ? Math.round(dy / 16) * 16 : Math.round(dy);
+        let stepDx = app.snapToGrid ? Math.round(dx / 16) * 16 : Math.round(dx);
+        let stepDy = app.snapToGrid ? Math.round(dy / 16) * 16 : Math.round(dy);
+        // The whole group stops at the edge together, so nothing in it moves relative to the rest (a callout and its
+        // component keep their offset).
+        const stop = (sx: number, sy: number, minY: number) => {
+          stepDx = Math.max(stepDx, Math.min(0, 16 - sx));
+          stepDy = Math.max(stepDy, Math.min(0, minY - sy));
+        };
+        for (const [sx, sy] of groupStartPositions.values()) stop(sx, sy, 24);
+        for (const [sx, sy] of groupNotesPositions?.values() ?? []) stop(sx, sy, 16);
+        for (const sx of groupZonePositions?.values() ?? []) stop(sx, 16, 16);
         for (const [id, [sx, sy]] of groupStartPositions.entries()) {
           const member = liveNode(id);
           if (!member) continue;
