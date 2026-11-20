@@ -6,7 +6,9 @@
  *
  * What it honours:
  *  - fixed wire ends (a wire whose source or target side is not "auto") stay on that side of the component;
- *  - zones (the numbered columns) are layers, so a component stays in the zone it is in, left to right;
+ *  - zones (the numbered columns) are layers, so a component stays in the zone it is in, left to right. Each zone's
+ *    components are placed inside that zone, and a zone too narrow for them is widened (the zones after it move
+ *    right to keep their gaps), so arranging again finds every component in the same zone and changes nothing;
  *  - locked components stay exactly where they are, and are left out of the arranging.
  */
 import ELK from 'elkjs/lib/elk.bundled.js';
@@ -24,6 +26,16 @@ export interface ElkLayoutOptions {
 export interface ElkPlan {
   direction: LayoutDirection;
   positions: Map<string, { x: number; y: number; width: number; height: number }>;
+  /** Where each zone goes when the components were laid out zone by zone. Absent when zones played no part. */
+  zones?: Map<string, { x: number; width: number }>;
+}
+
+/** What `applyElkPlan` changed. */
+export interface ElkApplied {
+  /** Components that ended up somewhere else. */
+  components: number;
+  /** Zones that were moved or widened to hold their components. */
+  zones: number;
 }
 
 const GAPS: Record<LayoutDirection, Record<LayoutSpacing, { layer: number; node: number }>> = {
@@ -32,6 +44,8 @@ const GAPS: Record<LayoutDirection, Record<LayoutSpacing, { layer: number; node:
 };
 const SIDE: Record<Exclude<PortSide, 'auto'>, string> = { top: 'NORTH', right: 'EAST', bottom: 'SOUTH', left: 'WEST' };
 const snap = (n: number): number => Math.round(n / 16) * 16;
+/** The room left between a zone's edge and the components laid out inside it. */
+const ZONE_PAD = 24;
 
 let elk: InstanceType<typeof ELK> | null = null;
 
@@ -53,8 +67,8 @@ export async function planElkLayout(doc: DiagramDocument, options: ElkLayoutOpti
 
   // Zones are layers only in a left-to-right layout, and only when every movable component sits in one.
   const zoneOf = new Map<string, number>();
-  if (direction === 'LR' && doc.zones.length > 0) {
-    const zones = [...doc.zones].sort((a, b) => a.x - b.x);
+  const zones = [...doc.zones].sort((a, b) => a.x - b.x);
+  if (direction === 'LR' && zones.length > 0) {
     for (const n of movable) {
       const cx = n.x + n.width / 2;
       const index = zones.findIndex((z) => cx >= z.x && cx < z.x + z.width);
@@ -119,13 +133,51 @@ export async function planElkLayout(doc: DiagramDocument, options: ElkLayoutOpti
     const size = sizes.get(c.id)!;
     positions.set(c.id, { x: snap(anchorX + c.x! - minX), y: snap(anchorY + c.y! - minY), ...size });
   }
-  return { direction, positions };
+  if (!useZones) return { direction, positions };
+
+  // ELK keeps the partitions apart but knows nothing of where the zones are, so each partition is moved into its
+  // own zone: centred in it, with the zone widened when the partition does not fit.
+  const blocks = new Map<number, { left: number; right: number }>();
+  for (const c of placed) {
+    const index = zoneOf.get(c.id)!;
+    const right = c.x! + sizes.get(c.id)!.width;
+    const block = blocks.get(index);
+    blocks.set(index, block ? { left: Math.min(block.left, c.x!), right: Math.max(block.right, right) } : { left: c.x!, right });
+  }
+  const zonePlan: NonNullable<ElkPlan['zones']> = new Map();
+  const shift = new Map<number, number>();
+  let previousRight = 0;
+  zones.forEach((z, i) => {
+    const block = blocks.get(i);
+    const span = block ? block.right - block.left : 0;
+    const needed = Math.ceil((span + ZONE_PAD * 2) / 16) * 16;
+    // A zone keeps its gap to the one before it; a locked zone stays exactly where it is, at its own width.
+    const gap = i === 0 ? 0 : z.x - (zones[i - 1].x + zones[i - 1].width);
+    const x = z.locked || i === 0 ? z.x : previousRight + gap;
+    const width = z.locked ? z.width : Math.max(z.width, needed);
+    zonePlan.set(z.id, { x, width });
+    if (block) shift.set(i, x + (width - span) / 2 - block.left);
+    previousRight = x + width;
+  });
+  for (const c of placed) {
+    const at = positions.get(c.id)!;
+    at.x = snap(c.x! + shift.get(zoneOf.get(c.id)!)!);
+  }
+  return { direction, positions, zones: zonePlan };
 }
 
-/** Move the components to where the plan says. Returns how many ended up somewhere else. */
-export function applyElkPlan(doc: DiagramDocument, plan: ElkPlan): number {
+/** Move the components (and the zones, when the plan places them) to where the plan says. */
+export function applyElkPlan(doc: DiagramDocument, plan: ElkPlan): ElkApplied {
   let moved = 0;
+  let zonesMoved = 0;
   doc.direction = plan.direction;
+  for (const z of doc.zones) {
+    const to = plan.zones?.get(z.id);
+    if (!to || (z.x === to.x && z.width === to.width)) continue;
+    zonesMoved++;
+    z.x = to.x;
+    z.width = to.width;
+  }
   for (const n of doc.nodes) {
     const to = plan.positions.get(n.id);
     if (!to || n.locked) continue;
@@ -136,5 +188,5 @@ export function applyElkPlan(doc: DiagramDocument, plan: ElkPlan): number {
     n.height = to.height;
   }
   expandStageToFit(doc);
-  return moved;
+  return { components: moved, zones: zonesMoved };
 }
