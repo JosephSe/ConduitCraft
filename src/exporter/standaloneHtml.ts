@@ -28,7 +28,7 @@ import sharedCss from '../styles/shared.css?raw';
 import viewerCss from '../styles/viewer.css?raw';
 import diagramStylesCss from '../styles/studio/diagramStyles.css?raw';
 import { ROUGH_FILTER } from './diagramSvg';
-import { titleBlockFor } from './titleBlock';
+import { docLabel, titleBlockFor } from './titleBlock';
 import framesCss from '../styles/frames.css?raw';
 import colorSchemeBoot from '../shared/colorSchemeBoot.js?raw';
 
@@ -485,9 +485,10 @@ ${colorSchemeBoot}
         <div class="eyebrow-row">
           ${brandNameMarkup}
           <span class="live-dot" aria-hidden="true"></span>
-          <span>${escapeHtml(doc.systemTag)}</span>
-          <span aria-hidden="true">·</span>
-          <span>${escapeHtml(doc.statusLabel)}</span>
+          ${[docLabel(doc.systemTag), docLabel(doc.statusLabel)]
+            .filter((label): label is string => Boolean(label))
+            .map((label) => `<span>${escapeHtml(label)}</span>`)
+            .join('<span aria-hidden="true">·</span>')}
         </div>
         <h1>${escapeHtml(doc.title)}</h1>
         ${levelCrumbsMarkup}

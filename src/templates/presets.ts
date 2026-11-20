@@ -283,8 +283,8 @@ export const STREAM_TONE_OPTIONS: Array<{
 export function createBlankDocument(): DiagramDocument {
   return {
     title: 'Untitled Architecture',
-    systemTag: 'ARCHITECTURE STUDIO // V1.0',
-    statusLabel: 'TRAFFIC DIAGRAM',
+    systemTag: '',
+    statusLabel: '',
     direction: 'LR',
     stageWidth: 1680,
     stageHeight: 920,

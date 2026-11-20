@@ -28,6 +28,18 @@ export function titleBlockEnabled(): boolean {
   return enabled;
 }
 
+/**
+ * What new diagrams used to start with in place of a real system tag and status. Diagrams saved before then still
+ * carry them, so they are left out of the title block and the HTML header as if empty.
+ */
+const PLACEHOLDER_LABELS = new Set(['ARCHITECTURE STUDIO // V1.0', 'TRAFFIC DIAGRAM']);
+
+/** A system tag or status label worth showing: trimmed, and not empty or an old placeholder. */
+export function docLabel(value: string | undefined): string | undefined {
+  const text = value?.trim();
+  return text && !PLACEHOLDER_LABELS.has(text.toUpperCase()) ? text : undefined;
+}
+
 function esc(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
@@ -39,8 +51,8 @@ export function titleBlockFor(
 ): TitleBlock {
   return {
     title: doc.title.trim() || 'Untitled diagram',
-    systemTag: doc.systemTag,
-    statusLabel: doc.statusLabel,
+    systemTag: docLabel(doc.systemTag),
+    statusLabel: docLabel(doc.statusLabel),
     page: page && page.count > 1 ? [doc.pageTitle?.trim(), `${page.index + 1} of ${page.count}`].filter(Boolean).join(' · ') : undefined,
     date: now.toISOString().slice(0, 10),
   };
