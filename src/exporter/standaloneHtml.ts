@@ -42,6 +42,15 @@ function escapeHtml(value?: string | null): string {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * The fonts are kept once on the window and added to each page from there: a drill-down level replaces the document
+ * (`document.write`) but keeps the window, so every level gets them without a copy in each.
+ */
+function fontsTags(fontFaceCss: string | undefined): string {
+  const keep = fontFaceCss ? `window.__ccFonts = window.__ccFonts || ${serializeScriptJson(fontFaceCss)};` : '';
+  return `<script>${keep}if (window.__ccFonts) { var ccFonts = document.createElement('style'); ccFonts.textContent = window.__ccFonts; document.head.appendChild(ccFonts); }</script>`;
+}
+
 function serializeScriptJson(data: unknown): string {
   return JSON.stringify(data)
     .replace(/</g, '\\u003c')
@@ -173,6 +182,11 @@ export interface StandaloneHtmlOptions {
   };
   /** Set when the file has several pages (D10): one tab per page, each naming the page key that opens it. */
   pages?: { tabs: Array<{ title: string; key: string }>; current: number };
+  /**
+   * `@font-face` rules with the font files inline, so the page shows the studio's type without fetching anything.
+   * The studio passes them; without them the page uses the reader's system fonts.
+   */
+  fontFaceCss?: string;
 }
 
 export function generateStandaloneHtml(doc: DiagramDocument, options?: StandaloneHtmlOptions): string {
@@ -434,7 +448,8 @@ ${sharedCss}
 ${viewerCss}
 ${doc.frames?.length ? framesCss : ''}
 ${doc.style ? diagramStylesCss : ''}
-</style>`;
+</style>
+${fontsTags(options?.fontFaceCss)}`;
 
   const brand = normalizeBrand(doc.brand);
   const brandAttrs = brand.accent ? ` data-brand style="--brand-accent: ${brand.accent}"` : '';
@@ -1253,6 +1268,8 @@ export function generateStandaloneHtmlWithLevels(doc: DiagramDocument, options?:
   const html = entries.map((e, i) =>
     generateStandaloneHtml(viewOfLevel(e.pageDoc, e.path), {
       initialSelection: i === 0 ? options?.initialSelection : undefined,
+      // Only the first page carries the fonts; the others take them from the window.
+      ...(i === 0 && options?.fontFaceCss ? { fontFaceCss: options.fontFaceCss } : {}),
       levels: {
         childKey: (id) => key(e.page, [...e.path, id]),
         crumbs: breadcrumb(e.pageDoc, e.path).map((c) => ({ title: c.title, key: key(e.page, c.path) })),

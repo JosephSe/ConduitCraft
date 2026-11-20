@@ -182,3 +182,52 @@ for (const style of ['blueprint', 'print', 'sketch'] as const) {
     await context.close();
   });
 }
+
+// The picture exports (PNG, GIF, canvas SVG) are an SVG image of the live stage. An image cannot fetch fonts, and
+// Chrome drops `font: var(--cc-font-title)` when it writes a rule back as text, so a picture once showed Arial titles at
+// regular weight. The picture must carry the font files and the title rule as written.
+test('picture exports carry the webfonts and the title weight', async ({ browser }) => {
+  const context = await browser.newContext({
+    colorScheme: 'light',
+    reducedMotion: 'reduce',
+    viewport: { width: 1600, height: 900 },
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://localhost:4281',
+          localStorage: [
+            { name: 'conduitcraft-ui', value: '2' },
+            { name: 'conduitcraft-first-run-seen', value: '1' },
+          ],
+        },
+      ],
+    },
+  });
+  const page = await context.newPage();
+  exported = 0;
+  await captureExports(page);
+  await page.goto('http://localhost:4281/');
+  // Loading straight after boot can be undone by the startup restore, so load again until it sticks.
+  await expect(async () => {
+    await openLumenRelay(page);
+    await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 2000 });
+  }).toPass();
+
+  const svg = Buffer.from(await exportAs(page, '#btn-export-svg-clone'), 'base64').toString('utf8');
+  // Both font files (Instrument Sans and Geist Mono) are inline.
+  expect(svg.match(/url\("data:font\/woff2;base64,/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+
+  const view = await context.newPage();
+  await view.setContent(`<!doctype html><body style="margin:0">${svg.replace(/^<\?xml[^>]*\?>\s*/, '')}</body>`);
+  const title = view.locator('.arch-node[data-node="night-desk"] .node-title');
+  // The picture is drawn at full detail (not the zoomed-out view), where the title token is 600 weight.
+  await expect(title).toHaveCSS('font-weight', '600');
+  await expect(title).toHaveCSS('font-stretch', '88%');
+
+  const html = Buffer.from(await exportAs(page, '#btn-export-html'), 'base64').toString('utf8');
+  expect(html).toContain('window.__ccFonts');
+  await view.setContent(html);
+  await expect.poll(() => view.evaluate(() => document.fonts.check('600 16px "Instrument Sans"') && [...document.fonts].some((f) => f.family === 'Instrument Sans' && f.status === 'loaded'))).toBe(true);
+  await context.close();
+});

@@ -170,7 +170,7 @@ import {
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
-import { currentScheme, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import { currentScheme, embeddedFontFaceCss, loadPictureFonts, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
 import { TITLE_BLOCK_HEIGHT, setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey, normalizeStyle } from '../core/meta';
@@ -1454,6 +1454,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
     const { GIF_MAX_EDGE, encodeGifAsync, gifFrameCount, gifFrameDashOffset, gifPixelSize } = await import(
       '../exporter/gif'
     );
+    await loadPictureFonts();
     if (target.kind === 'scenario') {
       const scenario = getEffectiveSimulations(doc).find((item) => item.id === target.id);
       if (!scenario || scenario.steps.length === 0) {
@@ -2136,10 +2137,15 @@ export function initEvents(): void {
   btnExportHtml.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
-    const { generateStandaloneHtmlWithLevels } = await import('../exporter/standaloneHtml');
+    const [{ generateStandaloneHtmlWithLevels }] = await Promise.all([
+      import('../exporter/standaloneHtml'),
+      loadPictureFonts(),
+    ]);
+    const fontFaceCss = embeddedFontFaceCss();
     // The whole tree, so the page keeps the drill-down. At the root this is `app.doc` itself.
     const html = generateStandaloneHtmlWithLevels(fullDocument(), {
       initialSelection: app.selection.type === 'multi' ? app.selection : undefined,
+      ...(fontFaceCss ? { fontFaceCss } : {}),
     });
     const filename = `${getSafeFilenameSlug()}.html`;
     downloadBlob(html, filename, 'text/html;charset=utf-8');
@@ -2174,9 +2180,10 @@ export function initEvents(): void {
       notify(`Exported ${filename}`);
     });
   });
-  btnExportSvgClone?.addEventListener('click', () => {
+  btnExportSvgClone?.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
+    await loadPictureFonts();
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(
       renderStagePictureSvg(undefined, undefined, { preserveSelection: app.selection.type === 'multi', titleBlock: titleBlockEnabled() }),
@@ -2186,9 +2193,11 @@ export function initEvents(): void {
     void closeDialogSmoothly(exportDialog);
     notify(`Exported ${filename}`);
   });
-  btnExportPng.addEventListener('click', () => {
+  btnExportPng.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
+    hudStatusTip.textContent = 'Rendering the canvas…';
+    await loadPictureFonts();
     const scale = getSelectedPngScale();
     // Keep the diagram and a small margin, not the empty stage padding to its right and below.
     const withTitle = titleBlockEnabled();

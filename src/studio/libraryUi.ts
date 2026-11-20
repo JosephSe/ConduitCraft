@@ -35,7 +35,7 @@ import { libraryDialog, libraryDialogBody, restoreSessionBanner, traceList } fro
 import { endFirstRun } from './firstRun';
 import { resetActiveFile } from './pwa';
 import { renderAll } from './render';
-import { renderStagePictureSvg } from './stagePicture';
+import { loadPictureFonts, renderStagePictureSvg } from './stagePicture';
 import { notify } from './toast';
 
 export interface LibraryDeps {
@@ -386,8 +386,8 @@ function scheduleThumbnail(savedId: string): void {
     thumbnailTimer = null;
     const run = (): void => {
       if (document.hidden || app.hasPendingAutosave || savedId !== getActiveDiagramId() || app.levelPath.length > 0 || app.pageIndex > 0) return;
-      const svg = renderStagePictureSvg(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, { preserveSelection: false });
-      rasterThumbnail(svg)
+      loadPictureFonts()
+        .then(() => rasterThumbnail(renderStagePictureSvg(THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, { preserveSelection: false })))
         .then((picture) => (picture && savedId === getActiveDiagramId() ? setThumbnail(savedId, picture) : undefined))
         .then(refreshLibraryDialog)
         .catch(() => {
