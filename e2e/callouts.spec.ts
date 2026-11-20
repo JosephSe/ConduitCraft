@@ -173,6 +173,44 @@ test('dragging a component with its callout against the top edge keeps their off
   expect(Math.abs(after - before)).toBeLessThanOrEqual(2);
 });
 
+/** The centre of the callout's tail on screen, from its ::after box. */
+async function tailCentre(page: Page): Promise<{ x: number; y: number }> {
+  return callout(page).evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const after = getComputedStyle(el, '::after');
+    const scale = box.width / (el as HTMLElement).offsetWidth;
+    const border = parseFloat(getComputedStyle(el).borderLeftWidth);
+    return {
+      x: box.left + (border + parseFloat(after.left) + 5) * scale,
+      y: box.top + (border + parseFloat(after.top) + 5) * scale,
+    };
+  });
+}
+
+test('the tail points at the middle of the component wherever the bubble is moved', async ({ page }) => {
+  await openSeeded(page);
+  const node = (await component(page).boundingBox())!;
+  const header = (await callout(page).locator('.blueprint-spec-header').boundingBox())!;
+  // Slide the bubble 70 px right, still above the component.
+  await page.mouse.move(header.x + 30, header.y + header.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(header.x + 50, header.y + header.height / 2, { steps: 3 });
+  await page.mouse.move(header.x + 100, header.y + header.height / 2, { steps: 5 });
+  await page.mouse.up();
+  await expect(callout(page)).toHaveAttribute('data-tail', 'bottom');
+  expect(Math.abs((await tailCentre(page)).x - (node.x + node.width / 2))).toBeLessThanOrEqual(3);
+
+  // Then to the right of it, level with its middle: the tail is on the left side, at the component's middle.
+  const h2 = (await callout(page).locator('.blueprint-spec-header').boundingBox())!;
+  await page.mouse.move(h2.x + 30, h2.y + h2.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(h2.x + 60, h2.y + 40, { steps: 3 });
+  await page.mouse.move(node.x + node.width + 70, node.y + node.height / 2 + 6, { steps: 8 });
+  await page.mouse.up();
+  await expect(callout(page)).toHaveAttribute('data-tail', 'left');
+  expect(Math.abs((await tailCentre(page)).y - (node.y + node.height / 2))).toBeLessThanOrEqual(3);
+});
+
 /** Export through the dialog and return the downloaded file as base64. */
 async function exportBase64(page: Page, buttonId: string): Promise<string> {
   const before = await page.evaluate(() => (window as any).__exports.length as number);

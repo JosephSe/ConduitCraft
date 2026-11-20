@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 import { createCalloutCard } from '../src/core/calloutPlacement.ts';
-import { calloutCopiesFor, calloutIdsOn, calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
+import { calloutCopiesFor, calloutIdsOn, calloutTailAt, calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import { createShareUrl, decodeSharedDiagramFromHash } from '../src/studio/shareLink.ts';
@@ -276,5 +276,32 @@ describe('callout placement near the top edge', () => {
     syncCallouts(doc);
     const next = createCalloutCard(doc, node);
     assert.equal(next.y, node.y - 12 - 44, 'the one dragged below does not push the new one onto the component');
+  });
+});
+
+describe('callout tail position', () => {
+  it('lines up with the component\'s centre along the bubble edge', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    card.x = node.x + node.width / 2 - 40;
+    // The tail (10 px wide) is centred on the component's middle: 40 px into the bubble, minus half the tail.
+    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 35);
+  });
+
+  it('follows the component\'s middle on a side tail', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    card.x = node.x + node.width + 40;
+    card.y = node.y + node.height / 2 - 30;
+    assert.equal(calloutTailAt(card, node, 'left', 220, 80), 25);
+  });
+
+  it('stays inside the bubble when the component\'s middle is beyond its edge', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    card.x = node.x + node.width;
+    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 8);
+    card.x = node.x - 400;
+    assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 220 - 18);
   });
 });

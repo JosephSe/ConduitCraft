@@ -27,10 +27,11 @@
     border-width: 0 1.5px 1.5px 0;
     transform: rotate(var(--tr, 45deg));
   }
-  .is-callout[data-tail="bottom"] { --ty: calc(100% - 4px); }
-  .is-callout[data-tail="top"] { --ty: -6.5px; --tr: 225deg; }
-  .is-callout[data-tail="left"] { --tx: -6.5px; --ty: calc(50% - 5px); --tr: 135deg; }
-  .is-callout[data-tail="right"] { --tx: calc(100% - 4px); --ty: calc(50% - 5px); --tr: -45deg; }
+  /* --ta: how far along the side the tail sits, set from the component's middle (keyedStage.ts). */
+  .is-callout[data-tail="bottom"] { --tx: var(--ta); --ty: calc(100% - 4px); }
+  .is-callout[data-tail="top"] { --tx: var(--ta); --ty: -6.5px; --tr: 225deg; }
+  .is-callout[data-tail="left"] { --tx: -6.5px; --ty: var(--ta, calc(50% - 5px)); --tr: 135deg; }
+  .is-callout[data-tail="right"] { --tx: calc(100% - 4px); --ty: var(--ta, calc(50% - 5px)); --tr: -45deg; }
   .is-callout .blueprint-spec-header { justify-content: start; gap: 0.4rem; margin: 0; font-weight: 500; }
   .callout-icon { color: var(--ct); }
   .is-callout .notes-title { overflow-wrap: anywhere; }

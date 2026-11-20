@@ -55,7 +55,7 @@ import {
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
 import { stackZIndices } from '../core/stack';
-import { CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailSide, calloutTone, calloutWidth, syncCallouts } from '../core/callouts';
+import { CALLOUT_EST_HEIGHT, CALLOUT_ICONS, calloutTailAt, calloutTailSide, calloutTone, calloutWidth, syncCallouts } from '../core/callouts';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -513,7 +513,12 @@ let calloutStyles: Promise<unknown> | undefined;
 function paintCalloutTail(aside: HTMLElement, card: DiagramNotesCard): void {
   const node = app.doc.nodes.find((n) => n.id === card.anchorId);
   if (!node) return;
-  aside.dataset.tail = calloutTailSide(card, node, calloutWidth(card), aside.offsetHeight || CALLOUT_EST_HEIGHT);
+  const w = calloutWidth(card);
+  const h = aside.offsetHeight || CALLOUT_EST_HEIGHT;
+  const side = calloutTailSide(card, node, w, h);
+  aside.dataset.tail = side;
+  // Along that side, the tail lines up with the component's middle.
+  aside.style.setProperty('--ta', `${calloutTailAt(card, node, side, w, h)}px`);
 }
 
 /**
