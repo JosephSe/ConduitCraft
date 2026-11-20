@@ -29,3 +29,10 @@ describe('C6 title block', () => {
     assert.doesNotMatch(renderDiagramSvg(doc), /data-title-block/);
   });
 });
+
+it('the old placeholder tag and status are left out of the title block', () => {
+  const block = titleBlockFor({ ...doc, systemTag: 'ARCHITECTURE STUDIO // V1.0', statusLabel: 'TRAFFIC DIAGRAM' } as typeof doc);
+  assert.equal(block.systemTag, undefined);
+  assert.equal(block.statusLabel, undefined);
+  assert.equal(titleBlockFor({ ...doc, systemTag: '  ', statusLabel: '' } as typeof doc).systemTag, undefined);
+});
