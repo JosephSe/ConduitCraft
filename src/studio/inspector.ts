@@ -55,6 +55,7 @@ import {
   toggleZoneInSelection,
 } from './selection';
 import type {
+  CalloutTone,
   ComponentStatus,
   DiagramNode,
   DiagramNotesCard,
@@ -483,6 +484,50 @@ function wholeNumberInput(value: number | undefined, min: number, max: number, p
 }
 
 /** A text label's Width, Font size and Colour fields. An empty Width means as wide as its words. */
+/** A component's Notes tab: how many callouts it has, and a button to add one. */
+function makeCalloutsField(node: DiagramNode): HTMLElement {
+  const count = app.doc.notesCards.filter((c) => c.variant === 'callout' && c.anchorId === node.id).length;
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.className = 'prop-quiet-btn';
+  add.append(createUiIconSvg('plus', 14), 'Add callout');
+  add.addEventListener('click', () => void import('./addCallout').then((m) => m.addCalloutTo(node.id)));
+  const field = makeField('prop-node-add-callout', count ? `Callouts (${count})` : 'Callouts', add);
+  return field;
+}
+
+const CALLOUT_TONES: Array<[CalloutTone, string]> = [
+  ['info', 'Info'],
+  ['warning', 'Warning'],
+  ['time', 'Time'],
+];
+
+/** A callout's tone, and the component it points at (a button that selects it). */
+function makeCalloutFields(card: DiagramNotesCard): HTMLElement[] {
+  const tone = document.createElement('select');
+  tone.className = 'field';
+  for (const [value, label] of CALLOUT_TONES) tone.appendChild(makeOption(value, label));
+  tone.value = card.tone ?? 'info';
+  tone.addEventListener('change', () => {
+    pushHistory();
+    // Info is the default, stored as absent.
+    if (tone.value === 'info') delete card.tone;
+    else card.tone = tone.value as CalloutTone;
+    renderNotesCards();
+  });
+  const node = app.doc.nodes.find((n) => n.id === card.anchorId);
+  const anchor = document.createElement('button');
+  anchor.type = 'button';
+  anchor.className = 'prop-quiet-btn';
+  anchor.textContent = node ? node.title || node.id : 'Missing component';
+  anchor.title = 'Select the component this callout points at';
+  anchor.disabled = !node;
+  anchor.addEventListener('click', () => {
+    if (node) applySelection({ type: 'node', id: node.id });
+  });
+  return [makeField('prop-callout-tone', 'Tone', tone), makeField('prop-callout-anchor', 'Attached to', anchor)];
+}
+
 function makeTextLabelFields(card: DiagramNotesCard): HTMLElement[] {
   const commit = (change: () => void) => {
     pushHistory();
@@ -1607,7 +1652,7 @@ export function renderPropertyEditor(): void {
     const isSummary = (el: HTMLElement) => el.querySelector('#prop-node-summary') !== null;
     const isInterface = (el: HTMLElement) => el.querySelector('#prop-node-interface') !== null;
     const reviewBehaviour = reviewElements.filter((el) => !onNotes(el));
-    const notesElements = [...basicsElements.filter(isSummary), ...reviewElements.filter(onNotes)];
+    const notesElements = [...basicsElements.filter(isSummary), ...reviewElements.filter(onNotes), makeCalloutsField(node)];
     const lookElements = [
       ...basicsElements.filter((el) => !isSummary(el)),
       ...appearanceElements,
@@ -2475,7 +2520,8 @@ export function renderPropertyEditor(): void {
     }
 
     const isText = card.variant === 'text';
-    propPanelHeading.textContent = isText ? 'Text' : 'Note';
+    const isCallout = card.variant === 'callout';
+    propPanelHeading.textContent = isText ? 'Text' : isCallout ? 'Callout' : 'Note';
     propSelectionActions.hidden = false;
     btnPropDuplicate.hidden = false;
 
@@ -2483,15 +2529,17 @@ export function renderPropertyEditor(): void {
       art: HEAD_ART.notes,
       name: headerName(
         'prop-notes-title',
-        isText ? 'Text' : 'Header title',
+        isText || isCallout ? 'Text' : 'Header title',
         makeTextInput(card.title, (v) => {
           card.title = v;
           renderNotesCards();
         }),
       ),
-      under: isText ? 'Text' : 'Note',
+      under: isText ? 'Text' : isCallout ? 'Callout' : 'Note',
     });
-    if (isText) {
+    if (isCallout) {
+      body.append(...makeCalloutFields(card));
+    } else if (isText) {
       // A text label is only its words: no tag and no items, but a width, a font size and a colour.
       body.append(...makeTextLabelFields(card));
     } else {

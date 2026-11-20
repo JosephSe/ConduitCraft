@@ -89,3 +89,30 @@ test('deleting the component removes its callout, and undo brings both back', as
   expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(1);
   expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
 });
+
+test('Add callout from the right-click menu, type text, pick a tone', async ({ page }) => {
+  await openSeeded(page);
+  await component(page).locator('.node-select-hit').click({ button: 'right' });
+  await page.getByRole('menuitem', { name: /Add callout/ }).click();
+  await expect(callout(page)).toHaveCount(2);
+  const input = page.getByRole('textbox', { name: 'Note title' });
+  await expect(input).toBeFocused();
+  await page.keyboard.type('Actor loses access at midnight');
+  await page.keyboard.press('Enter');
+  const added = callout(page).filter({ hasText: 'Actor loses access at midnight' });
+  await expect(added).toHaveCount(1);
+  await expect(added).toHaveAttribute('data-tone', 'info');
+  // The new one stacks above the one already there.
+  const first = (await callout(page).filter({ hasText: 'Maintenance' }).boundingBox())!;
+  const second = (await added.boundingBox())!;
+  expect(second.y + second.height).toBeLessThan(first.y);
+
+  await page.locator('#prop-callout-tone').selectOption('time');
+  await expect(added).toHaveAttribute('data-tone', 'time');
+  await expect(added.locator('.callout-icon')).toHaveText('⏱');
+  await expect(page.locator('#prop-callout-anchor')).toContainText('Payments API');
+  await page.locator('#prop-callout-anchor').click();
+  // The component's inspector replaces the callout's.
+  await expect(page.locator('#prop-tab-look')).toBeVisible();
+  await expect(page.locator('#prop-callout-tone')).toHaveCount(0);
+});
