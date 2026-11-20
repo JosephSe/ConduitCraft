@@ -253,12 +253,13 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
     .join('\n');
 
   // Components, notes and text share one front-to-back order. Only when a note or a text label has been brought
-  // above a component does anything need a z-index; otherwise the page's own order already draws it.
+  // above a component, or there is a callout, does anything need a z-index; otherwise the page's own order draws it.
+  // Components start at 2, so a callout sent under them all can take 1: still over the wires, which have none.
   const stackIndices = stackZIndices(doc);
-  const reordered = doc.notesCards.some((c) => stackIndices.get(c.id) !== undefined);
+  const reordered = doc.notesCards.some((c) => c.variant === 'callout' || stackIndices.get(c.id) !== undefined);
   const stackZ = (id: string): number | undefined => {
     const z = reordered ? stackIndices.get(id) : undefined;
-    return z === undefined ? undefined : z - STACK_BASE_Z + 1;
+    return z === undefined ? undefined : z - STACK_BASE_Z + 2;
   };
   const notesMarkup = doc.notesCards
     .map((card) => {
@@ -266,7 +267,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       const z = stackZ(card.id);
       const zStyle = z !== undefined ? ` z-index: ${z};` : '';
       if (card.variant === 'callout') {
-        // Drawn as on the canvas; always above the components (its z-index is in the stylesheet).
+        // Drawn as on the canvas, in the stack order, and never under the wires.
         const node = doc.nodes.find((n) => n.id === card.anchorId);
         if (!node) return '';
         const tone = calloutTone(card);
@@ -274,7 +275,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
         const tail = calloutTailSide(card, node, width, CALLOUT_EST_HEIGHT);
         const along = calloutTailAt(card, node, tail, width, CALLOUT_EST_HEIGHT);
         return `
-      <aside class="blueprint-spec is-callout${isSel ? ' is-selected' : ''}" data-notes-id="${escapeHtml(card.id)}" data-tone="${tone}" data-tail="${tail}" style="--bx: ${card.x}; --by: ${card.y}; --nw: ${width}; --ta: ${along}px;" aria-label="${escapeHtml(card.title)}">
+      <aside class="blueprint-spec is-callout${isSel ? ' is-selected' : ''}" data-notes-id="${escapeHtml(card.id)}" data-tone="${tone}" data-tail="${tail}" style="--bx: ${card.x}; --by: ${card.y}; --nw: ${width}; --ta: ${along}px; z-index: ${z ?? 1};" aria-label="${escapeHtml(card.title)}">
         <div class="blueprint-spec-header"><span class="callout-icon" aria-hidden="true">${CALLOUT_ICONS[tone]}</span><span class="notes-title">${escapeHtml(card.title)}</span></div>
       </aside>`;
       }

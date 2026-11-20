@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 import { createCalloutCard } from '../src/core/calloutPlacement.ts';
+import { moveInStack, stackOrder, stackZIndices } from '../src/core/stack.ts';
 import { calloutCopiesFor, calloutIdsOn, calloutTailAt, calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
@@ -303,5 +304,53 @@ describe('callout tail position', () => {
     assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 8);
     card.x = node.x - 400;
     assert.equal(calloutTailAt(card, node, 'bottom', 220, 44), 220 - 18);
+  });
+});
+
+describe('callouts in the front-to-back order', () => {
+  const ids = (doc: DiagramDocument) => stackOrder(doc).map((s) => s.item.id);
+
+  it('starts above the components', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    assert.deepEqual(ids(doc), [node.id, card.id]);
+    assert.ok(stackZIndices(doc).get(card.id)! > stackZIndices(doc).get(node.id)!);
+  });
+
+  it('Send to Back puts it under its component', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    assert.equal(moveInStack(doc, 'back', [], [card.id]), true);
+    assert.deepEqual(ids(doc), [card.id, node.id]);
+  });
+
+  it('Bring to Front puts the component over it again', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    moveInStack(doc, 'front', [node.id], []);
+    assert.deepEqual(ids(doc), [card.id, node.id]);
+    moveInStack(doc, 'front', [], [card.id]);
+    assert.deepEqual(ids(doc), [node.id, card.id]);
+  });
+});
+
+describe('callouts in the HTML export order', () => {
+  const zOf = (html: string, attr: string) => Number(html.match(new RegExp(`${attr}[^>]*?z-index: (\\d+)`))?.[1] ?? NaN);
+
+  it('draws a callout over its component by default', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node, 'Over');
+    const html = generateStandaloneHtml(doc);
+    assert.ok(zOf(html, `data-notes-id="${card.id}"`) > zOf(html, `data-node="${node.id}"`));
+  });
+
+  it('draws a callout sent to back under its component but over the wires', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node, 'Under');
+    moveInStack(doc, 'back', [], [card.id]);
+    const html = generateStandaloneHtml(doc);
+    const callZ = zOf(html, `data-notes-id="${card.id}"`);
+    assert.ok(callZ >= 1, 'a z-index above the wires, which have none');
+    assert.ok(callZ < zOf(html, `data-node="${node.id}"`));
   });
 });

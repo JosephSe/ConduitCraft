@@ -297,8 +297,9 @@ export function paintStackOrder(): void {
   for (const layer of [nodesLayer, notesLayer]) {
     // A page without one of the layers (a test fixture) has nothing to order there.
     for (const el of Array.from(layer?.children ?? []) as HTMLElement[]) {
-      // Callouts are always on top (their z-index is in the stylesheet), so they are never hidden by what they explain.
-      apply(el, el.classList.contains('is-callout') ? undefined : (el.dataset.node ?? el.dataset.notesId));
+      apply(el, el.dataset.node ?? el.dataset.notesId);
+      // A callout sent under every component still sits above the wires (3), so it stays readable.
+      if (el.classList.contains('is-callout') && !el.style.zIndex) el.style.zIndex = '4';
     }
   }
 }

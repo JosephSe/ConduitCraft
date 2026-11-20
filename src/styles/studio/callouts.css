@@ -13,7 +13,6 @@
     background: var(--cb);
     border: 1.5px solid var(--ct);
     filter: none;
-    z-index: 99000;
   }
   .is-callout[data-tone="warning"] { --ct: var(--cc-amber); }
   .is-callout[data-tone="time"] { --ct: var(--cc-violet); }

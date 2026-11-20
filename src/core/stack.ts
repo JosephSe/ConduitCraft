@@ -11,7 +11,8 @@ export type StackItem = { kind: 'node'; item: DiagramNode } | { kind: 'notes'; i
 /** Every component, note and text label, back to front. */
 export function stackOrder(doc: Pick<DiagramDocument, 'nodes' | 'notesCards'>): StackItem[] {
   const all: Array<StackItem & { rank: number }> = [
-    ...doc.notesCards.map((item, i) => ({ kind: 'notes' as const, item, rank: i })),
+    // A callout with no place yet sits above the components (it explains one), other notes under them.
+    ...doc.notesCards.map((item, i) => ({ kind: 'notes' as const, item, rank: item.variant === 'callout' ? 1e6 + i : i })),
     ...doc.nodes.map((item, i) => ({ kind: 'node' as const, item, rank: doc.notesCards.length + i })),
   ];
   const key = (s: { item: { z?: number } }) => (typeof s.item.z === 'number' && Number.isFinite(s.item.z) ? s.item.z : Infinity);

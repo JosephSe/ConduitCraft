@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { captureExports, clearSelection, dropFile, nextExport, openExportDialog, redo, undo } from './helpers';
+import { captureExports, clearSelection, dropFile, nextExport, openExportDialog, redo, runPaletteCommand, undo } from './helpers';
 
 // Callouts: a speech-bubble note attached to one component. It points at the component, follows it, and goes when
 // the component goes.
@@ -209,6 +209,19 @@ test('the tail points at the middle of the component wherever the bubble is move
   await page.mouse.up();
   await expect(callout(page)).toHaveAttribute('data-tail', 'left');
   expect(Math.abs((await tailCentre(page)).y - (node.y + node.height / 2))).toBeLessThanOrEqual(3);
+});
+
+test('Send to Back and Bring to Front move a callout under and over its component, never under the wires', async ({ page }) => {
+  await openSeeded(page);
+  const z = (sel: string) => page.locator(sel).first().evaluate((el) => Number(getComputedStyle(el).zIndex) || 0);
+  const wires = await z('.wires-layer');
+  await callout(page).click();
+  await runPaletteCommand(page, 'Send to Back');
+  await expect.poll(async () => (await z('.blueprint-spec.is-callout')) < (await z('.arch-node[data-node="api"]'))).toBe(true);
+  expect(await z('.blueprint-spec.is-callout')).toBeGreaterThan(wires);
+  await callout(page).click();
+  await runPaletteCommand(page, 'Bring to Front');
+  await expect.poll(async () => (await z('.blueprint-spec.is-callout')) > (await z('.arch-node[data-node="api"]'))).toBe(true);
 });
 
 /** Export through the dialog and return the downloaded file as base64. */
