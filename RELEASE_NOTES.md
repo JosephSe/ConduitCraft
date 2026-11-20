@@ -1,5 +1,13 @@
 # Release notes
 
+## 3.1.1
+
+Documentation only; the app is unchanged from 3.1.0.
+
+- **README.** Covers callouts and the 3.0 changes it was missing: note widths, text label size and colour, one front-to-back order, swimlane centre snapping, readable diagrams at Fit, bottom sheets on narrow screens, the 0.25x to 4x latency range, exports that keep the studio's fonts, and a title block the export dialog can turn off. It links to these release notes.
+- **Fresh pictures.** The Design, Traffic and Review pictures are re-recorded on the Marquee showcase, with a new callout picture and a failure GIF made by the app's own export. The four Lumen Relay GIFs from before 3.0 are gone.
+- **`tools/captureReadmeMedia.mjs` works again.** It loads the showcase, fails Ticket Database (a component with no spare copies), clears the scroll offset a click leaves behind before each picture, and records the callout picture.
+
 ## 3.1.0
 
 Callouts: a speech-bubble note attached to one component, for the things a high-level design needs to say about it, such as a maintenance window or an access cut-off.
