@@ -9,6 +9,7 @@ import type {
   StreamTone,
 } from '../types';
 import { getNodeDimensions } from '../core/layout';
+import { CALLOUT_DEFAULT_WIDTH, CALLOUT_EST_HEIGHT, CALLOUT_GAP } from '../core/callouts';
 
 /*
  * Adding a new NodeKind: go through every line of this list.
@@ -393,6 +394,29 @@ export function createTextCard(x: number, y: number): DiagramNotesCard {
     y: Math.max(24, Math.round(y)),
     items: [],
     variant: 'text',
+  };
+}
+
+/**
+ * A callout bubble for `node`, above it and centred, stacked over any callouts it already has. The card is not
+ * added to the document.
+ */
+export function createCalloutCard(doc: DiagramDocument, node: DiagramNode, text = ''): DiagramNotesCard {
+  const x = Math.round(node.x + node.width / 2 - CALLOUT_DEFAULT_WIDTH / 2);
+  const above = doc.notesCards.filter((c) => c.variant === 'callout' && c.anchorId === node.id).map((c) => c.y);
+  const bottom = above.length ? Math.min(...above) : node.y;
+  const y = Math.round(bottom - CALLOUT_GAP - CALLOUT_EST_HEIGHT);
+  return {
+    id: nextUid('callout'),
+    title: text,
+    code: '',
+    x,
+    y,
+    items: [],
+    variant: 'callout',
+    anchorId: node.id,
+    dx: x - node.x,
+    dy: y - node.y,
   };
 }
 
