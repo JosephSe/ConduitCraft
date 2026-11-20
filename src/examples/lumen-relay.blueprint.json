@@ -21,31 +21,31 @@
         "title": "Intake",
         "subtitle": "Callers",
         "x": 16,
-        "width": 176
+        "width": 186
       },
       {
         "id": "zone-desk",
         "number": "02",
         "title": "Desk",
         "subtitle": "Permit and archive",
-        "x": 196,
-        "width": 740
+        "x": 206,
+        "width": 918
       },
       {
         "id": "zone-relay",
         "number": "03",
         "title": "Relay",
         "subtitle": "Bus, sorter, and dock",
-        "x": 1264,
-        "width": 800
+        "x": 1128,
+        "width": 968
       },
       {
         "id": "zone-ledger",
         "number": "04",
         "title": "Ledger",
         "subtitle": "Book, kiosk, and seal",
-        "x": 2128,
-        "width": 540
+        "x": 2100,
+        "width": 700
       }
     ],
     "notesCards": [

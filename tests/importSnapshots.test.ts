@@ -17,7 +17,7 @@ const EXPECTED: Record<string, string> = {
   'event-driven-microservices.blueprint.json': 'c90bee8a2a5ddcf2',
   'flash-sale-ticketing.blueprint.json': '41272d4af18ca7c6',
   'kubernetes-ingress.blueprint.json': '0691b103258bb88c',
-  'lumen-relay.blueprint.json': 'a953451e446175d6',
+  'lumen-relay.blueprint.json': 'b2f614ab54176aa5',
   'plain-mermaid-demo.mmd': '5137fcbc31c71e36',
   'plain-mermaid-demo.mmd (levels)': 'f4450146a54c8695',
   'sample-blueprint.md': 'e583e0c1754ef27e',
