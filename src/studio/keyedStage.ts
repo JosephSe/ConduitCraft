@@ -55,6 +55,7 @@ import {
 import { renameNodeInline, renameNotesInline, renameWireInline, renameZoneInline } from './inlineRename';
 import { reconcileKeyed } from './reconcile';
 import { stackZIndices } from '../core/stack';
+import { CALLOUT_DEFAULT_WIDTH, CALLOUT_EST_HEIGHT, calloutTailSide, syncCallouts } from '../core/callouts';
 import { effectiveTone, matchesTag } from '../core/meta';
 import { flowScale } from '../core/wire';
 import { queueCardText, streamLanes } from '../core/queues';
@@ -267,6 +268,8 @@ function paintZone(banner: HTMLElement, zone: DiagramZone): void {
 }
 
 export function renderNotesCards(): void {
+  // Callouts follow their component, and go with it (move, layout, delete, undo): place them before drawing.
+  syncCallouts(app.doc);
   reconcileKeyed(
     notesLayer,
     app.doc.notesCards,
@@ -293,7 +296,10 @@ export function paintStackOrder(): void {
   };
   for (const layer of [nodesLayer, notesLayer]) {
     // A page without one of the layers (a test fixture) has nothing to order there.
-    for (const el of Array.from(layer?.children ?? []) as HTMLElement[]) apply(el, el.dataset.node ?? el.dataset.notesId);
+    for (const el of Array.from(layer?.children ?? []) as HTMLElement[]) {
+      // Callouts are always on top (their z-index is in the stylesheet), so they are never hidden by what they explain.
+      apply(el, el.classList.contains('is-callout') ? undefined : (el.dataset.node ?? el.dataset.notesId));
+    }
   }
 }
 
@@ -402,6 +408,7 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
       current.y = app.snapToGrid ? Math.round(ny / 16) * 16 : Math.round(ny);
       aside.style.setProperty('--bx', String(current.x));
       aside.style.setProperty('--by', String(current.y));
+      if (current.variant === 'callout') paintCalloutTail(aside, current);
       expandStageToFit(app.doc);
       scheduleMinimapPaint();
     }
@@ -490,9 +497,61 @@ function createNotesCard(card: DiagramNotesCard): HTMLElement {
   return aside;
 }
 
+const CALLOUT_ICONS = { info: 'ⓘ', warning: '⚠', time: '⏱' } as const;
+
+/** A callout's tail points at its component from the nearest side of the bubble. */
+function paintCalloutTail(aside: HTMLElement, card: DiagramNotesCard): void {
+  const node = app.doc.nodes.find((n) => n.id === card.anchorId);
+  if (!node) return;
+  const w = card.width ?? CALLOUT_DEFAULT_WIDTH;
+  const h = aside.offsetHeight || CALLOUT_EST_HEIGHT;
+  aside.dataset.tail = calloutTailSide(card, node, w, h);
+}
+
+/**
+ * Put every callout where its component now is. Called whenever components move (`renderWiresOnly`), so a callout
+ * follows a drag, a nudge or a resize frame by frame without redrawing the notes.
+ */
+function repaintCallouts(): void {
+  if (!app.doc.notesCards.some((c) => c.variant === 'callout')) return;
+  syncCallouts(app.doc);
+  for (const el of Array.from(notesLayer?.children ?? []) as HTMLElement[]) {
+    if (!el.classList.contains('is-callout')) continue;
+    const card = liveNotes(el.dataset.notesId || '');
+    if (!card) continue;
+    el.style.setProperty('--bx', String(card.x));
+    el.style.setProperty('--by', String(card.y));
+    paintCalloutTail(el, card);
+  }
+}
+
 function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
   aside.style.setProperty('--bx', String(card.x));
   aside.style.setProperty('--by', String(card.y));
+  const isCallout = card.variant === 'callout';
+  aside.classList.toggle('is-callout', isCallout);
+  let icon = aside.querySelector<HTMLElement>('.callout-icon');
+  if (isCallout) {
+    const tone = card.tone ?? 'info';
+    aside.dataset.tone = tone;
+    if (!icon) {
+      icon = document.createElement('span');
+      icon.className = 'callout-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      aside.querySelector('.blueprint-spec-header')?.prepend(icon);
+    }
+    icon.textContent = CALLOUT_ICONS[tone];
+    aside.style.setProperty('--nw', String(card.width ?? CALLOUT_DEFAULT_WIDTH));
+    const title = aside.querySelector('.notes-title');
+    if (title) title.textContent = card.title;
+    aside.querySelector('.blueprint-spec-list')?.replaceChildren();
+    delete aside.dataset.itemsSig;
+    paintCalloutTail(aside, card);
+    return;
+  }
+  icon?.remove();
+  delete aside.dataset.tone;
+  delete aside.dataset.tail;
   const isText = card.variant === 'text';
   const width = isText ? clampTextWidth(card.width) : card.width !== undefined ? notesCardWidth(card) : undefined;
   if (width !== undefined) aside.style.setProperty('--nw', String(width));
@@ -537,6 +596,7 @@ function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
 }
 
 export function renderWiresOnly(): void {
+  repaintCallouts();
   const routed = routeDiagramEdges(app.doc);
   reconcileKeyed(
     wiresGroup,
