@@ -1326,13 +1326,13 @@ export function downloadBlob(content: string, filename: string, mimeType: string
 
 /**
  * The whole diagram plus a margin, in stage pixels. With the title block on, room is added below so the strip does
- * not cover the diagram; `worldPerPixel` converts its fixed pixel height into stage pixels at the export's scale.
+ * not cover the diagram. The strip is drawn at the picture's scale, so its room is the same in stage pixels.
  */
-function diagramCrop(withTitle: boolean, worldPerPixel: number): WorldRect | undefined {
+function diagramCrop(withTitle: boolean): WorldRect | undefined {
   const crop = diagramPictureBounds(app.doc, routeDiagramEdges(app.doc));
   if (!crop) return undefined;
   if (!withTitle) return crop;
-  return { ...crop, height: crop.height + Math.ceil(TITLE_BLOCK_HEIGHT * worldPerPixel) };
+  return { ...crop, height: crop.height + TITLE_BLOCK_HEIGHT };
 }
 
 function downloadDiagramPng(svg: string, width: number, height: number, filename: string): void {
@@ -1467,8 +1467,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
       let size = crop ? gifPixelSize(crop.width, crop.height) : gifPixelSize(doc.stageWidth, doc.stageHeight);
       if (crop && withTitle) {
         // The title block covers the bottom strip of the picture, so give it room below the components.
-        const extra = Math.ceil(TITLE_BLOCK_HEIGHT * (crop.width / size.width));
-        crop = { ...crop, height: crop.height + extra };
+        crop = { ...crop, height: crop.height + TITLE_BLOCK_HEIGHT };
         size = gifPixelSize(crop.width, crop.height);
       }
       const frames: Uint8ClampedArray[] = [];
@@ -1509,7 +1508,7 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
     // The whole diagram, without the empty stage padding. The title block's room is sized for the GIF's scale.
     const wholeCrop = view
       ? undefined
-      : diagramCrop(titleBlockEnabled(), Math.max(1, Math.max(doc.stageWidth, doc.stageHeight) / GIF_MAX_EDGE));
+      : diagramCrop(titleBlockEnabled());
     const size = view
       ? {
           width: Math.max(1, Math.round(view.width * viewScale)),
@@ -2201,7 +2200,7 @@ export function initEvents(): void {
     const scale = getSelectedPngScale();
     // Keep the diagram and a small margin, not the empty stage padding to its right and below.
     const withTitle = titleBlockEnabled();
-    const crop = diagramCrop(withTitle, 1 / scale);
+    const crop = diagramCrop(withTitle);
     const width = Math.max(1, Math.round((crop?.width ?? app.doc.stageWidth) * scale));
     const height = Math.max(1, Math.round((crop?.height ?? app.doc.stageHeight) * scale));
     hudStatusTip.textContent = 'Rendering the canvas…';

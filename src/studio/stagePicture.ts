@@ -598,11 +598,14 @@ export function renderStagePictureSvg(
   clone.style.removeProperty('zoom');
   clone.style.transformOrigin = '0 0';
 
+  // Output pixels per stage pixel (per screen pixel for the current view), for the title block.
+  let pictureScale = 1;
   if (currentView) {
     const scale = app.scale || 1;
     const panX = app.panX || 0;
     const panY = app.panY || 0;
     const viewFitScale = Math.min(outWidth / frameWidth, outHeight / frameHeight);
+    pictureScale = viewFitScale;
     if (viewFitScale !== 1) {
       clone.style.transform = `scale(${viewFitScale}) translate(${panX}px, ${panY}px) scale(${scale})`;
     } else {
@@ -610,9 +613,11 @@ export function renderStagePictureSvg(
     }
   } else if (crop) {
     const cropScale = Math.min(outWidth / crop.width, outHeight / crop.height);
+    pictureScale = cropScale;
     clone.style.transform = `scale(${cropScale}) translate(${-crop.x}px, ${-crop.y}px)`;
   } else {
     const fitScale = Math.min(outWidth / stageWidth, outHeight / stageHeight);
+    pictureScale = fitScale;
     if (fitScale !== 1) {
       clone.style.transform = `scale(${fitScale})`;
     } else {
@@ -742,6 +747,6 @@ export function renderStagePictureSvg(
   <title>${escapeXmlText(app.doc.title.trim() || 'Untitled diagram')}</title>
   <desc>${escapeXmlText(describeDiagram(app.doc))}</desc>
   <foreignObject x="0" y="0" width="${outWidth}" height="${outHeight}" style="width:${outWidth}px;height:${outHeight}px;overflow:visible;">${serialized}</foreignObject>
-  ${frame?.titleBlock ? titleBlockSvg(titleBlockFor(app.doc, pageInfo()), outWidth, outHeight, currentScheme()) : ''}
+  ${frame?.titleBlock ? titleBlockSvg(titleBlockFor(app.doc, pageInfo()), outWidth, outHeight, currentScheme(), pictureScale) : ''}
 </svg>`;
 }
