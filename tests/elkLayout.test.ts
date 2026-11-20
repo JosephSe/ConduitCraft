@@ -16,10 +16,21 @@ const examples = readdirSync(dir).filter((f) => f.endsWith('.blueprint.json'));
 type Node = DiagramDocument['nodes'][number];
 const overlap = (a: Node, b: Node) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
+/** Lumen Relay with every component inside a swimlane (the lanes are spelt out so the test does not hang on the file). */
+function lumenRelayInLanes(): DiagramDocument {
+  const doc = load('lumen-relay.blueprint.json');
+  const lanes: Record<string, [number, number]> = {
+    'zone-intake': [16, 186], 'zone-desk': [206, 918], 'zone-relay': [1128, 968], 'zone-ledger': [2100, 700],
+  };
+  for (const z of doc.zones) if (lanes[z.id]) [z.x, z.width] = lanes[z.id];
+  return doc;
+}
+
 async function arrange(doc: DiagramDocument, options?: Parameters<typeof planElkLayout>[1]) {
   const plan = await planElkLayout(doc, options);
   assert.ok(plan);
-  return { plan, moved: applyElkPlan(doc, plan) };
+  const applied = applyElkPlan(doc, plan);
+  return { plan, moved: applied.components + applied.zones, applied };
 }
 
 describe('layered (ELK) layout', () => {
@@ -100,5 +111,38 @@ describe('layered (ELK) layout', () => {
     await arrange(doc);
     const { moved } = await arrange(doc);
     assert.equal(moved, 0);
+  });
+
+  it('keeps every component inside its swimlane, so arranging a zoned diagram twice changes nothing', async () => {
+    // This used to drift: the components were laid out from the left edge while the lanes stayed put, so the next
+    // run found them in other lanes and moved them again.
+    const doc = lumenRelayInLanes();
+    const zones = [...doc.zones].sort((a, b) => a.x - b.x);
+    const laneOf = (n: Node) => zones.find((z) => n.x + n.width / 2 >= z.x && n.x + n.width / 2 < z.x + z.width)?.id;
+    const before = new Map(doc.nodes.map((n) => [n.id, laneOf(n)]));
+    assert.ok([...before.values()].every(Boolean), 'every component starts in a lane');
+
+    const { plan, moved } = await arrange(doc, { direction: 'LR' });
+    assert.ok(moved > 0);
+    assert.ok(plan.zones, 'the plan places the lanes too');
+    for (const n of doc.nodes) {
+      const lane = doc.zones.find((z) => z.id === before.get(n.id))!;
+      assert.ok(n.x >= lane.x && n.x + n.width <= lane.x + lane.width, `${n.title} sits wholly inside ${lane.title}`);
+    }
+    const ordered = [...doc.zones].sort((a, b) => a.x - b.x);
+    for (let i = 1; i < ordered.length; i++) {
+      assert.ok(ordered[i].x >= ordered[i - 1].x + ordered[i - 1].width, `${ordered[i].title} does not overlap ${ordered[i - 1].title}`);
+    }
+
+    const again = await arrange(doc, { direction: 'LR' });
+    assert.equal(again.moved, 0);
+  });
+
+  it('leaves a locked swimlane where it is', async () => {
+    const doc = lumenRelayInLanes();
+    const desk = doc.zones.find((z) => z.id === 'zone-desk')!;
+    desk.locked = true;
+    await arrange(doc, { direction: 'LR' });
+    assert.deepEqual([desk.x, desk.width], [206, 918]);
   });
 });
