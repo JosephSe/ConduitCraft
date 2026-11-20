@@ -124,6 +124,22 @@ describe('frames, part 2 (D1b): duplicate', () => {
   });
 });
 
+describe('frames, part 2: duplicating a frame with callouts', () => {
+  it('gives the copied components their own callouts, at the same offset', () => {
+    const doc = vpc();
+    doc.notesCards.push({ id: 'c1', title: 'Maint', code: '', x: 150, y: 124, items: [], variant: 'callout', anchorId: 'api', dx: -10, dy: -56 });
+    let k = 0;
+    const copy = duplicateFrame(doc, 'vpc', (p) => `${p}-dup${++k}`)!;
+    const apiCopy = doc.nodes.find((x) => x.frameId === copy.id && x.title === 'api')!;
+    const callouts = doc.notesCards.filter((c) => c.variant === 'callout');
+    assert.equal(callouts.length, 2);
+    const copied = callouts.find((c) => c.id !== 'c1')!;
+    assert.equal(copied.anchorId, apiCopy.id);
+    assert.equal(copied.dx, -10);
+    assert.equal(copied.dy, -56);
+  });
+});
+
 describe('frames, part 2 (D1b): lock', () => {
   it('locks and unlocks a frame, and an unlocked frame stores no flag', () => {
     const doc = vpc();

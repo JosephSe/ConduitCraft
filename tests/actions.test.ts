@@ -65,3 +65,12 @@ describe('action availability', () => {
     );
   });
 });
+
+describe('Add callout availability', () => {
+  it('is available for one component in Design only', () => {
+    const doc = docWithNodes();
+    assert.equal(isActionAvailable('node-add-callout', buildActionContext({ type: 'node', id: 'c' }, doc, 'design')), true);
+    assert.equal(isActionAvailable('node-add-callout', buildActionContext({ type: 'node', id: 'c' }, doc, 'data')), false);
+    assert.equal(isActionAvailable('node-add-callout', buildActionContext({ type: 'none' }, doc, 'design')), false);
+  });
+});

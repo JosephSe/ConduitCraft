@@ -1,5 +1,18 @@
 # Release notes
 
+## 3.1.0
+
+Callouts: a speech-bubble note attached to one component, for the things a high-level design needs to say about it, such as a maintenance window or an access cut-off.
+
+- **Add one** from a component's right-click menu (Add callout), the command palette, or Add callout in its Notes tab. Type the text, then pick Info (ⓘ), Warning (⚠) or Time (⏱) in the inspector. Double-click to edit the text; Attached to selects the component.
+- **It points at its component.** The tail is on the side facing the component and lines up with its middle wherever the bubble is moved. A new callout goes above the component, or below it when there is no room above, and further callouts stack.
+- **It goes with its component.** It follows drags, nudges, auto-layout and align. Deleting the component removes its callouts, and undo brings them back. Copying, duplicating or pasting a component, or duplicating its frame, takes its callouts along.
+- **Front to back.** Callouts start above the components and follow Bring to Front and Send to Back; sent to back, a callout still sits above the wires.
+- **Exports.** PNG, GIF, canvas SVG and standalone HTML show callouts. The plain vector SVG leaves them out.
+- **Under the hood.** Entry JS is 580.2 kB (cap raised to 581), entry CSS 134.6 kB (cap 135; callout styles load with the first callout), and the HTML export chunk 100.1 kB (cap raised to 101).
+
+Files from earlier versions open unchanged. Files saved by 3.1 use format version 15 (callouts), which an older app will refuse rather than drop them.
+
 ## 3.0.0
 
 ConduitCraft is redrawn. The diagram is the interface; everything else is paper around it.

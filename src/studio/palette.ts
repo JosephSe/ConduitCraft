@@ -742,6 +742,17 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       run: deps.deleteSelected,
     },
     {
+      id: 'node-add-callout',
+      title: 'Add callout',
+      subtitle: 'A note bubble on this component',
+      category: 'Components',
+      keywords: ['bubble', 'annotate'],
+      run: () => {
+        const sel = app.selection;
+        if (sel.type === 'node') void import('./addCallout').then((m) => m.addCalloutTo(sel.id));
+      },
+    },
+    {
       id: 'queue-add-dlq',
       title: 'Add dead-letter queue',
       subtitle: 'Create a queue to the right for overflow and set it on this queue',

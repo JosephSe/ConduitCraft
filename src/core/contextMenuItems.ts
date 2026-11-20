@@ -49,6 +49,7 @@ export function contextMenuCommandIds(type: ContextSelectionType, hints: Context
         'edit-rename',
         'edit-duplicate',
         'edit-lock',
+        'node-add-callout',
         ...(hints.grouped ? ['edit-ungroup'] : []),
         MENU_SEPARATOR,
         'edit-bring-to-front',

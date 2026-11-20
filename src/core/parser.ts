@@ -21,6 +21,7 @@ import type {
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
 import { clampNotesWidth, textStyleOf } from './notesSize';
+import { calloutFieldsOf } from './callouts';
 import { stackZOf } from './stack';
 import { STENCIL_CATALOG, createBlankDocument, nextUid } from '../templates/presets';
 import { normalizeIconName } from '../ui/icons';
@@ -142,6 +143,10 @@ interface RawBlueprintMeta {
     fontSize?: number;
     color?: string;
     z?: number;
+    anchorId?: string;
+    dx?: number;
+    dy?: number;
+    tone?: string;
   }>;
   specCard?: {
     id?: string;
@@ -1610,15 +1615,16 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
 
   rawNotesList.forEach((rc, idx) => {
     const isText = (rc as { variant?: string }).variant === 'text';
+    const callout = calloutFieldsOf(rc as Record<string, unknown>);
     const width = clampNotesWidth((rc as { width?: unknown }).width);
 
-    if (!isText && (!rc.items || rc.items.length === 0)) return;
+    if (!isText && !callout.variant && (!rc.items || rc.items.length === 0)) return;
     const x = Array.isArray(rc.position) ? Number(rc.position[0]) || 48 : (rc.x ?? 48);
     const y = Array.isArray(rc.position) ? Number(rc.position[1]) || 600 : (rc.y ?? 600);
     notesCards.push({
       id: rc.id || `notes-${idx + 1}`,
-      title: rc.title || (isText ? 'Text' : 'ARCHITECTURE NOTES'),
-      code: rc.code || (isText ? '' : `SPEC-0${idx + 1}`),
+      title: callout.variant ? (rc.title ?? '') : rc.title || (isText ? 'Text' : 'ARCHITECTURE NOTES'),
+      code: rc.code || (isText || callout.variant ? '' : `SPEC-0${idx + 1}`),
       x,
       y,
       items: (rc.items ?? []).map((item, itemIdx) => ({
@@ -1628,6 +1634,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
       })),
       ...(isText ? { variant: 'text' as const } : {}),
       ...(isText ? textStyleOf(rc as Record<string, unknown>) : width !== undefined ? { width } : {}),
+      ...callout,
       ...stackZOf((rc as { z?: unknown }).z),
     });
   });
@@ -2012,22 +2019,37 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
   }
 
   if (doc.notesCards.length > 0) {
-    frontmatterObj.notesCards = doc.notesCards.map((c) => ({
-      id: c.id,
-      title: c.title,
-      code: c.code,
-      position: [Math.round(c.x), Math.round(c.y)],
-      ...(c.variant === 'text' ? { variant: 'text' } : {}),
-      ...(c.width !== undefined ? { width: c.width } : {}),
-      ...(c.variant === 'text' && c.fontSize !== undefined ? { fontSize: c.fontSize } : {}),
-      ...(c.variant === 'text' && c.color ? { color: c.color } : {}),
-      ...(c.z !== undefined ? { z: c.z } : {}),
-      items: c.items.map((it) => ({
-        title: it.title,
-        text: it.text,
-        ...(it.icon ? { icon: it.icon } : {}),
-      })),
-    }));
+    frontmatterObj.notesCards = doc.notesCards.map((c) =>
+      c.variant === 'callout'
+        ? {
+            id: c.id,
+            title: c.title,
+            position: [Math.round(c.x), Math.round(c.y)],
+            variant: 'callout',
+            anchorId: c.anchorId,
+            ...(c.dx !== undefined ? { dx: c.dx } : {}),
+            ...(c.dy !== undefined ? { dy: c.dy } : {}),
+            ...(c.tone ? { tone: c.tone } : {}),
+            ...(c.width !== undefined ? { width: c.width } : {}),
+            ...(c.z !== undefined ? { z: c.z } : {}),
+          }
+        : {
+            id: c.id,
+            title: c.title,
+            code: c.code,
+            position: [Math.round(c.x), Math.round(c.y)],
+            ...(c.variant === 'text' ? { variant: 'text' } : {}),
+            ...(c.width !== undefined ? { width: c.width } : {}),
+            ...(c.variant === 'text' && c.fontSize !== undefined ? { fontSize: c.fontSize } : {}),
+            ...(c.variant === 'text' && c.color ? { color: c.color } : {}),
+            ...(c.z !== undefined ? { z: c.z } : {}),
+            items: c.items.map((it) => ({
+              title: it.title,
+              text: it.text,
+              ...(it.icon ? { icon: it.icon } : {}),
+            })),
+          },
+    );
   }
 
   if (Object.keys(nodesMeta).length > 0) {

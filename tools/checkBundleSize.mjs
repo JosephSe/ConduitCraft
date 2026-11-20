@@ -10,7 +10,9 @@ const budgets = [
   // Raised from 560 kB for panel hiding (about 1.5 kB: panelVisibility, palette commands).
   // Raised from 563 kB for resizable notes, the scenario GIF crop and the right-panel fix (about 4.8 kB).
   // Raised from 570 kB for the shared front-to-back order and text label width, size and colour (about 2.3 kB).
-  { pattern: /^index-.*\.js$/, maxBytes: 575 * 1024, label: 'entry JS' },
+  // Raised from 575 kB for callouts on components (the owner's choice over lazy loading).
+  // Raised from 580 kB for the callout tail lining up with its component (owner's choice).
+  { pattern: /^index-.*\.js$/, maxBytes: 581 * 1024, label: 'entry JS' },
   // Raised from 130 kB for the floating properties card (inspector card, Steps 1–3), after reclaiming 0.9 kB of dead CSS (D3).
   // Raised from 133 kB for panel hiding and the canvas edge (about 1 kB).
   { pattern: /^index-.*\.css$/, maxBytes: 135 * 1024, label: 'entry CSS' },
@@ -19,7 +21,8 @@ const budgets = [
 // Lazy chunks: every one is checked (not just the first match). Patterns are tried in order; a chunk that matches
 // none falls under the default limit, so a new lazy chunk is covered without editing this file.
 const lazyBudgets = [
-  { pattern: /^standaloneHtml-.*\.js$/, maxBytes: 100 * 1024, label: 'HTML export chunk' },
+  // Raised from 100 kB for callouts in the standalone HTML, with their tail lined up (owner's choice).
+  { pattern: /^standaloneHtml-.*\.js$/, maxBytes: 101 * 1024, label: 'HTML export chunk' },
   { pattern: /^gifWorker-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF worker' },
   { pattern: /^gif-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF exporter chunk' },
   // The showcase uses every feature (levels, pages, code samples), so it is several templates' worth of JSON.

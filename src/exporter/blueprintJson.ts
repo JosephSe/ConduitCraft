@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { normalizeNotesItemIcon } from '../types';
 import { clampNotesWidth, textStyleOf } from '../core/notesSize';
+import { calloutFieldsOf } from '../core/callouts';
 import { stackZOf } from '../core/stack';
 import { normalizeWireFields } from '../core/wire';
 import { pruneDanglingChaos } from '../core/reachability';
@@ -192,15 +193,17 @@ function coerceNotes(raw: unknown, index: number): DiagramNotesCard | null {
       })
     : [];
   const width = clampNotesWidth(raw.width);
+  const callout = calloutFieldsOf(raw);
   return {
     id: str(raw.id, `notes-${index + 1}`),
-    title: str(raw.title, 'Notes'),
+    title: str(raw.title, callout.variant ? '' : 'Notes'),
     code: str(raw.code),
     x: num(raw.x),
     y: num(raw.y),
     items,
     ...(raw.variant === 'text' ? { variant: 'text' as const } : {}),
     ...(raw.variant === 'text' ? textStyleOf(raw) : width !== undefined ? { width } : {}),
+    ...callout,
     ...stackZOf(raw.z),
   };
 }

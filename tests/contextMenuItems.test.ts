@@ -83,3 +83,9 @@ describe('top-bar menu items', () => {
     assert.equal(new Set(entries.map((i) => i.id)).size, entries.length);
   });
 });
+
+describe('Add callout', () => {
+  it('offers Add callout on a component', () => {
+    assert.ok(contextMenuCommandIds('node', {}).includes('node-add-callout'));
+  });
+});

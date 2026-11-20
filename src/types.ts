@@ -158,6 +158,8 @@ export interface NotesCheckItem {
 
 export type NotesItem = NotesCheckItem;
 
+export type CalloutTone = 'info' | 'warning' | 'time';
+
 export interface DiagramNotesCard {
   id: string;
   title: string;
@@ -168,8 +170,18 @@ export interface DiagramNotesCard {
   locked?: boolean;
   z?: number;
   groupId?: string;
-  /** `text`: a free text label (the Text tool). Its words are `title`; it has no border, background or items. */
-  variant?: 'text';
+  /**
+   * `text`: a free text label (the Text tool). Its words are `title`; it has no border, background or items.
+   * `callout`: a speech bubble attached to one component (`anchorId`). Its words are `title`; it has no items.
+   */
+  variant?: 'text' | 'callout';
+  /** Callouts only: the id of the component the bubble points at. */
+  anchorId?: string;
+  /** Callouts only: the offset of the bubble's top-left from the component's top-left. */
+  dx?: number;
+  dy?: number;
+  /** Callouts only: the tint and icon. Absent means `info`. */
+  tone?: CalloutTone;
   /**
    * Width in px, set by dragging the right edge. Absent means the default: a note's standard width, or for a text
    * label as wide as its words. The height follows the content.

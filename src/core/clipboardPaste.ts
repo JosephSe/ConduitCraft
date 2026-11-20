@@ -3,6 +3,7 @@
  */
 import type { DiagramEdge, DiagramFrame, DiagramNode, DiagramNotesCard, DiagramZone } from '../types';
 import { CLIP_MARKER, MAX_CLIP_CHARS, MAX_CLIP_NODES, type Clip, type ParsedClip } from './clipboard';
+import { cleanCallout } from './callouts';
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
@@ -134,6 +135,17 @@ export function materializeClip(
     copy.x = c.x + shift;
     copy.y = c.y + shift;
     delete copy.groupId;
+    if (c.variant === 'callout') cleanCallout(copy);
+    if (c.variant === 'callout' && c.anchorId) {
+      // Pasted with its component: it points at the copy, at the same offset. Pasted alone: it stays on the same
+      // component, moved by the paste shift.
+      const anchor = idMap.get(c.anchorId);
+      if (anchor) copy.anchorId = anchor;
+      else {
+        copy.dx = (c.dx ?? 0) + shift;
+        copy.dy = (c.dy ?? 0) + shift;
+      }
+    }
     return copy;
   });
   const zoneXs = new Set(existingZoneXs);

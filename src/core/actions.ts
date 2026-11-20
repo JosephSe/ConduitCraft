@@ -90,6 +90,7 @@ const RULES: Record<string, (c: ActionContext) => boolean> = {
   'edit-send-backward': (c) => design(c) && arrangeable(c),
   'wire-from-selection': (c) => design(c) && c.selection === 'node',
   'level-open': (c) => c.selection === 'node',
+  'node-add-callout': (c) => design(c) && c.selection === 'node',
   'queue-add-dlq': (c) => design(c) && c.selection === 'node' && Boolean(c.queueSelected),
   'edit-undo': (c) => c.canUndo !== false,
   'edit-redo': (c) => c.canRedo !== false,

@@ -1,0 +1,40 @@
+/*
+ * Callouts on the canvas. Loaded by keyedStage.ts when the first callout is drawn, so the entry stylesheet stays
+ * within its budget. Picture exports copy the page's stylesheets, so they include these once loaded.
+ */
+@layer stage {
+  /* A callout: a speech bubble attached to one component. Its tail (a turned square) is on the side facing it. */
+  .blueprint-spec.is-callout {
+    --ct: var(--cc-blue);
+    --cb: color-mix(in oklab, var(--cc-sheet) 90%, var(--ct));
+    width: calc(var(--nw, 220) * 1px);
+    padding: 0.45rem 0.7rem;
+    border-radius: 10px;
+    background: var(--cb);
+    border: 1.5px solid var(--ct);
+    filter: none;
+  }
+  .is-callout[data-tone="warning"] { --ct: var(--cc-amber); }
+  .is-callout[data-tone="time"] { --ct: var(--cc-violet); }
+  .is-callout.is-selected { filter: none; outline: 2px solid var(--cc-blue); outline-offset: 2px; }
+  .blueprint-spec.is-callout::after {
+    inline-size: 10px;
+    block-size: 10px;
+    inset: var(--ty, auto) auto auto var(--tx, calc(50% - 5px));
+    background: var(--cb);
+    border: solid var(--ct);
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(var(--tr, 45deg));
+  }
+  /* --ta: how far along the side the tail sits, set from the component's middle (keyedStage.ts). */
+  .is-callout[data-tail="bottom"] { --tx: var(--ta); --ty: calc(100% - 4px); }
+  .is-callout[data-tail="top"] { --tx: var(--ta); --ty: -6.5px; --tr: 225deg; }
+  .is-callout[data-tail="left"] { --tx: -6.5px; --ty: var(--ta, calc(50% - 5px)); --tr: 135deg; }
+  .is-callout[data-tail="right"] { --tx: calc(100% - 4px); --ty: var(--ta, calc(50% - 5px)); --tr: -45deg; }
+  .is-callout .blueprint-spec-header { justify-content: start; gap: 0.4rem; margin: 0; font-weight: 500; }
+  .callout-icon { color: var(--ct); }
+  .is-callout .notes-title { overflow-wrap: anywhere; }
+  .is-callout .notes-code,
+  .is-callout .blueprint-spec-list { display: none; }
+  .is-callout .notes-resize-handle { top: 0; }
+}
