@@ -134,6 +134,16 @@ export function materializeClip(
     copy.x = c.x + shift;
     copy.y = c.y + shift;
     delete copy.groupId;
+    if (c.variant === 'callout' && c.anchorId) {
+      // Pasted with its component: it points at the copy, at the same offset. Pasted alone: it stays on the same
+      // component, moved by the paste shift.
+      const anchor = idMap.get(c.anchorId);
+      if (anchor) copy.anchorId = anchor;
+      else {
+        copy.dx = (c.dx ?? 0) + shift;
+        copy.dy = (c.dy ?? 0) + shift;
+      }
+    }
     return copy;
   });
   const zoneXs = new Set(existingZoneXs);

@@ -181,6 +181,7 @@ import { initTooltips } from './tooltips';
 import { renameNotesInline } from './inlineRename';
 import { serializeClip, type Clip } from '../core/clipboard';
 import { frameAndDescendantIds, notesInFrames } from '../core/frameOps';
+import { calloutCopiesFor, calloutIdsOn } from '../core/callouts';
 import { isPanGesture, wheelPan, wheelZoomFactor } from './camera';
 import { initCommandPalette, findPaletteCommand } from './palette';
 import { setPointerTool, TOOL_TIPS } from './pointerTool';
@@ -973,6 +974,20 @@ function dropNodesFromSimulations(ids: Set<string>): void {
   }
 }
 
+/**
+ * A duplicated callout moved by 32 px: it points at its component's copy when that was duplicated too (the copy
+ * moved with it, so the offset holds), otherwise it stays on the same component with its offset moved.
+ */
+function shiftDuplicatedCallout(copy: DiagramNotesCard, idMap: ReadonlyMap<string, string>): void {
+  if (copy.variant !== 'callout' || !copy.anchorId) return;
+  const anchor = idMap.get(copy.anchorId);
+  if (anchor) copy.anchorId = anchor;
+  else {
+    copy.dx = (copy.dx ?? 0) + 32;
+    copy.dy = (copy.dy ?? 0) + 32;
+  }
+}
+
 export function duplicateSelected(): void {
   const sel = app.selection;
   if (sel.type === 'frame') {
@@ -987,6 +1002,7 @@ export function duplicateSelected(): void {
     copy.x += 32;
     copy.y += 32;
     app.doc.nodes.push(copy);
+    app.doc.notesCards.push(...calloutCopiesFor(app.doc, new Map([[orig.id, copy.id]]), new Set(), nextUid));
     expandStageToFit(app.doc);
     setSelection({ type: 'node', id: copy.id });
     renderAll(true);
@@ -1035,9 +1051,13 @@ export function duplicateSelected(): void {
       copy.id = nextUid('notes');
       copy.x += 32;
       copy.y += 32;
+      shiftDuplicatedCallout(copy, idMap);
       newNoteIds.push(copy.id);
       app.doc.notesCards.push(copy);
     }
+    const followers = calloutCopiesFor(app.doc, idMap, new Set(origNotes.map((c) => c.id)), nextUid);
+    app.doc.notesCards.push(...followers);
+    newNoteIds.push(...followers.map((c) => c.id));
     expandStageToFit(app.doc);
     setSelection(selectionOfStage({ nodes: newIds, zones: newZoneIds, notes: newNoteIds }));
     renderAll(true);
@@ -1063,6 +1083,7 @@ export function duplicateSelected(): void {
     copy.id = nextUid('notes');
     copy.x += 32;
     copy.y += 32;
+    shiftDuplicatedCallout(copy, new Map());
     app.doc.notesCards.push(copy);
     expandStageToFit(app.doc);
     setSelection({ type: 'notes', id: copy.id });
@@ -1114,6 +1135,8 @@ export function copySelection(data?: DataTransfer | null): void {
     for (const c of notesInFrames(app.doc, all)) noteIds.add(c.id);
   }
   if (nodeIds.size + zoneIds.size + noteIds.size + frameIds.size === 0) return;
+  // A component's callouts go with it.
+  for (const id of calloutIdsOn(app.doc, nodeIds)) noteIds.add(id);
   const nodes = structuredClone(app.doc.nodes.filter((n) => nodeIds.has(n.id)));
   const edges = structuredClone(app.doc.edges.filter((e) => nodeIds.has(e.from) && nodeIds.has(e.to)));
   const zones = structuredClone(app.doc.zones.filter((z) => zoneIds.has(z.id)));

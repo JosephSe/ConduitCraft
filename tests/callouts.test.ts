@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createBlankDocument, createCalloutCard, createNodeFromStencil } from '../src/templates/presets.ts';
-import { calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
+import { calloutCopiesFor, calloutIdsOn, calloutTailSide, syncCallouts } from '../src/core/callouts.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import { createShareUrl, decodeSharedDiagramFromHash } from '../src/studio/shareLink.ts';
@@ -204,5 +204,30 @@ describe('callout files (schema v15)', () => {
       assert.equal(back.doc.notesCards.length, 1);
       assert.equal(back.doc.notesCards[0].variant, undefined);
     }
+  });
+});
+
+describe('callouts on duplicated components', () => {
+  it('copies a component\'s callouts onto its copy, at the same offset', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    const copies = calloutCopiesFor(doc, new Map([[node.id, 'copy-1']]), new Set(), (p) => `${p}-x`);
+    assert.equal(copies.length, 1);
+    assert.equal(copies[0].anchorId, 'copy-1');
+    assert.equal(copies[0].dx, card.dx);
+    assert.notEqual(copies[0].id, card.id);
+  });
+
+  it('skips callouts already being copied', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    assert.equal(calloutCopiesFor(doc, new Map([[node.id, 'c']]), new Set([card.id]), (p) => p).length, 0);
+  });
+
+  it('lists the callouts on given components', () => {
+    const { doc, node } = docWithNode();
+    const card = addCallout(doc, node);
+    assert.deepEqual(calloutIdsOn(doc, new Set([node.id])), [card.id]);
+    assert.deepEqual(calloutIdsOn(doc, new Set(['other'])), []);
   });
 });

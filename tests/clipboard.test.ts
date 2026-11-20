@@ -2,7 +2,8 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { IMAGE_LIMIT_CHARS, serializeClip } from '../src/core/clipboard.ts';
 import { materializeClip, parseClip } from '../src/core/clipboardPaste.ts';
-import { createNodeFromStencil } from '../src/templates/presets.ts';
+import { createBlankDocument, createCalloutCard, createNodeFromStencil } from '../src/templates/presets.ts';
+import { syncCallouts } from '../src/core/callouts.ts';
 import type { DiagramEdge } from '../src/types.ts';
 
 const nodes = () => [createNodeFromStencil('service', 100, 100, 0), createNodeFromStencil('store', 400, 100, 1)];
@@ -131,5 +132,39 @@ describe('clipboard of stage containers', () => {
     );
     assert.equal(out.frames[0].x, 82);
     assert.equal(out.notes[0].x, 112);
+  });
+});
+
+describe('callout paste', () => {
+  const setup = () => {
+    const doc = createBlankDocument();
+    const node = createNodeFromStencil('service', 400, 300, 0);
+    doc.nodes = [node];
+    doc.edges = [];
+    doc.notesCards = [];
+    const card = createCalloutCard(doc, node, 'Maintenance');
+    doc.notesCards.push(card);
+    syncCallouts(doc);
+    return { doc, node, card };
+  };
+
+  it('a pasted component brings its callout, attached to the copy', () => {
+    const { doc, node, card } = setup();
+    const out = materializeClip({ nodes: [node], edges: [], notes: [card], droppedImages: false }, [node, card], newId);
+    assert.equal(out.notes[0].anchorId, out.nodes[0].id);
+    doc.nodes.push(...out.nodes);
+    doc.notesCards.push(...out.notes);
+    syncCallouts(doc);
+    assert.equal(out.notes[0].x - out.nodes[0].x, card.x - node.x, 'same offset from the copy');
+  });
+
+  it('a callout pasted alone stays on its component, moved by the paste shift', () => {
+    const { doc, card } = setup();
+    const out = materializeClip({ nodes: [], edges: [], notes: [card], droppedImages: false }, [card], newId);
+    assert.equal(out.notes[0].anchorId, card.anchorId);
+    doc.notesCards.push(...out.notes);
+    syncCallouts(doc);
+    assert.equal(out.notes[0].x, card.x + 32);
+    assert.equal(out.notes[0].y, card.y + 32);
   });
 });

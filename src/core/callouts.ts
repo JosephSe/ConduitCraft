@@ -75,3 +75,29 @@ export function calloutFieldsOf(
     ...(TONES.includes(raw.tone as CalloutTone) ? { tone: raw.tone as CalloutTone } : {}),
   };
 }
+
+/** The ids of the callouts attached to any of `nodeIds`, so copying a component takes its callouts along. */
+export function calloutIdsOn(doc: DiagramDocument, nodeIds: ReadonlySet<string>): string[] {
+  return doc.notesCards.filter((c) => isCallout(c) && c.anchorId && nodeIds.has(c.anchorId)).map((c) => c.id);
+}
+
+/**
+ * Copies of the callouts on the components in `idMap` (original id to copy id), attached to the copies at the same
+ * offset. Callouts in `skip` are being copied by the caller already. The copies are not added to the document.
+ */
+export function calloutCopiesFor(
+  doc: DiagramDocument,
+  idMap: ReadonlyMap<string, string>,
+  skip: ReadonlySet<string>,
+  newId: (prefix: string) => string,
+): DiagramNotesCard[] {
+  return doc.notesCards.flatMap((c) => {
+    const anchor = isCallout(c) && c.anchorId && !skip.has(c.id) ? idMap.get(c.anchorId) : undefined;
+    if (!anchor) return [];
+    const copy = structuredClone(c);
+    copy.id = newId('callout');
+    copy.anchorId = anchor;
+    delete copy.groupId;
+    return [copy];
+  });
+}
