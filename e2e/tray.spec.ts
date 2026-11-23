@@ -102,8 +102,8 @@ test('Esc closes the tray and hands focus back to the button that opened it', as
 test('a press on the sheet closes the tray', async ({ page }) => {
   await open(page);
   await page.locator('#btn-all-components').click();
-  const spot = await emptySpot(page);
-  await page.mouse.click(spot.x, spot.y);
+  // The corner stays clear of the swimlanes. A press on a lane selects the lane.
+  await page.locator('#canvas-viewport').click({ position: { x: 4, y: 4 } });
   await expect(tray(page)).toBeHidden();
 });
 
