@@ -3,8 +3,8 @@
   "version": 1,
   "document": {
     "direction": "LR",
-    "stageWidth": 1680,
-    "stageHeight": 920,
+    "stageWidth": 2279,
+    "stageHeight": 1070,
     "title": "CI/CD Deployment Pipeline",
     "systemTag": "DELIVERY // GITOPS",
     "statusLabel": "REFERENCE ARCHITECTURE",
@@ -34,8 +34,8 @@
       {
         "id": "zone-artifacts",
         "number": "03",
-        "title": "Artifacts & Desired State",
-        "subtitle": "Signed images and config repo",
+        "title": "Artifacts",
+        "subtitle": "Images and desired state",
         "x": 1134,
         "width": 308
       },

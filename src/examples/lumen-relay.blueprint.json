@@ -477,10 +477,10 @@
           }
         ],
         "code": "{\n  \"vault\": \"seal\",\n  \"signed\": true\n}",
-        "x": 2128,
-        "y": 465,
-        "width": 248,
-        "height": 172
+        "x": 2144,
+        "y": 476,
+        "width": 216,
+        "height": 150
       },
       {
         "id": "quay-mark",
@@ -567,7 +567,8 @@
         "tone": "rose",
         "route": "under",
         "label": "Denied",
-        "animated": true
+        "animated": true,
+        "sync": "async"
       },
       {
         "id": "e-fog",

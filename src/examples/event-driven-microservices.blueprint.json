@@ -3,8 +3,8 @@
   "version": 1,
   "document": {
     "direction": "LR",
-    "stageWidth": 1680,
-    "stageHeight": 920,
+    "stageWidth": 2279,
+    "stageHeight": 1270,
     "title": "Event-Driven Microservices",
     "systemTag": "COMMERCE PLATFORM // EVENT BACKBONE",
     "statusLabel": "REFERENCE ARCHITECTURE",
@@ -27,7 +27,7 @@
         "id": "zone-backbone",
         "number": "02",
         "title": "Event Backbone",
-        "subtitle": "Kafka topic, work queue and DLQ",
+        "subtitle": "Kafka, queue, DLQ",
         "x": 764,
         "width": 308
       },
@@ -42,8 +42,8 @@
       {
         "id": "zone-read",
         "number": "04",
-        "title": "Queries & Notifications",
-        "subtitle": "CQRS read model and notifications",
+        "title": "Read & Notify",
+        "subtitle": "CQRS views, alerts",
         "x": 1874,
         "width": 308
       }
@@ -423,8 +423,8 @@
             "value": "41k/day"
           }
         ],
-        "x": 1547,
-        "y": 745,
+        "x": 1917,
+        "y": 800,
         "width": 222,
         "height": 142
       }
@@ -477,7 +477,7 @@
         "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Publish OrderPlaced",
+        "label": "OrderPlaced",
         "animated": true,
         "protocol": "kafka",
         "sync": "async"
@@ -490,7 +490,7 @@
         "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Consume OrderPlaced",
+        "label": "OrderPlaced",
         "animated": true,
         "protocol": "kafka",
         "sync": "async"
@@ -512,11 +512,11 @@
         "id": "e7",
         "from": "payment-svc",
         "to": "event-stream",
-        "sourcePort": "auto",
-        "targetPort": "auto",
+        "sourcePort": "bottom",
+        "targetPort": "right",
         "tone": "amber",
-        "route": "bezier",
-        "label": "Publish payment result",
+        "route": "auto",
+        "label": "Payment result",
         "animated": true,
         "protocol": "kafka",
         "sync": "async"
@@ -525,11 +525,11 @@
         "id": "e8",
         "from": "event-stream",
         "to": "order-svc",
-        "sourcePort": "auto",
-        "targetPort": "auto",
+        "sourcePort": "top",
+        "targetPort": "top",
         "tone": "rose",
-        "route": "bezier",
-        "label": "PaymentFailed → cancel",
+        "route": "over",
+        "label": "PaymentFailed",
         "animated": true,
         "protocol": "kafka",
         "sync": "async"
@@ -555,7 +555,7 @@
         "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Deliver ShipOrder",
+        "label": "ShipOrder",
         "animated": true,
         "protocol": "amqp",
         "sync": "async"
@@ -581,7 +581,7 @@
         "targetPort": "auto",
         "tone": "amber",
         "route": "bezier",
-        "label": "Publish OrderShipped",
+        "label": "OrderShipped",
         "animated": true,
         "protocol": "kafka",
         "sync": "async"

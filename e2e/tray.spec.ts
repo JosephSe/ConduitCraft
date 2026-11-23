@@ -205,6 +205,8 @@ test('the tray fits above the dock on a short window, and scrolls inside itself'
   await page.locator('#btn-all-components').focus();
   await page.keyboard.press('Enter');
   await expect(tray(page)).toBeVisible();
+  // The tray rises 14 px as it opens; measure where it comes to rest.
+  await tray(page).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   const [box, dock] = await Promise.all([tray(page).boundingBox(), page.locator('#dock').boundingBox()]);
   expect(box!.y).toBeGreaterThanOrEqual(0);
   expect(box!.y + box!.height).toBeLessThanOrEqual(dock!.y);

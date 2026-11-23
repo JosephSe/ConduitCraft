@@ -6,7 +6,7 @@
     "systemTag": "MARQUEE LIVE // STADIUM TOUR ON-SALE",
     "statusLabel": "FULL SHOWCASE",
     "direction": "LR",
-    "stageWidth": 3168,
+    "stageWidth": 3229,
     "stageHeight": 1460,
     "overviewSummary": "Marquee (a made-up company) sells 60,000 stadium seats to 1.8 million fans who all arrive at 10:00. A virtual waiting room at the edge admits fans at a rate the origin can handle. Seat Inventory holds seats for 8 minutes while the fan pays, the Payment Orchestrator fails over between two card processors, and a transactional outbox streams every order to Kafka, where ticketing and the promoter's live dashboard read it at their own pace.",
     "brand": {
@@ -317,8 +317,7 @@
         "chip": "2/5",
         "summary": "Turns a stampede into a line. Admits 2 of every 5 requests per tick, so the origin never sees more than it can sell to; everyone else sees their place in the queue.",
         "limiter": {
-          "admit": 2,
-          "per": 5
+          "admit": 2
         },
         "resilience": {
           "replicas": 3
@@ -2553,8 +2552,8 @@
       {
         "id": "page-regions",
         "title": "Regions & Failover",
-        "stageWidth": 2000,
-        "stageHeight": 1060,
+        "stageWidth": 2098,
+        "stageHeight": 1170,
         "zones": [
           {
             "id": "rz-global",
@@ -2562,7 +2561,7 @@
             "title": "Global",
             "subtitle": "DNS and traffic steering",
             "x": 26,
-            "width": 664
+            "width": 656
           },
           {
             "id": "rz-eu",
@@ -2570,7 +2569,7 @@
             "title": "eu-west (active)",
             "subtitle": "Serves every fan today",
             "x": 686,
-            "width": 664
+            "width": 656
           },
           {
             "id": "rz-us",
@@ -2983,8 +2982,8 @@
       {
         "id": "page-tour",
         "title": "Start Here: A 5-Minute Tour",
-        "stageWidth": 1420,
-        "stageHeight": 700,
+        "stageWidth": 2861,
+        "stageHeight": 1319,
         "zones": [],
         "nodes": [],
         "edges": [],

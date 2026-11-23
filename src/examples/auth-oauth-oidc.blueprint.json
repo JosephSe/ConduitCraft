@@ -3,8 +3,8 @@
   "version": 1,
   "document": {
     "direction": "LR",
-    "stageWidth": 1680,
-    "stageHeight": 920,
+    "stageWidth": 2279,
+    "stageHeight": 1170,
     "title": "OAuth2 & OIDC Authentication",
     "systemTag": "IDENTITY // AUTHORIZATION CODE + PKCE",
     "statusLabel": "REFERENCE ARCHITECTURE",
@@ -111,7 +111,7 @@
             "value": "8 h, rotating"
           }
         ],
-        "x": 452,
+        "x": 420,
         "y": 460,
         "width": 192,
         "height": 112
@@ -297,7 +297,7 @@
         "targetPort": "auto",
         "tone": "violet",
         "route": "bezier",
-        "label": "/authorize + /token (PKCE)",
+        "label": "/authorize, /token",
         "animated": true,
         "protocol": "http",
         "latencyMs": 45
@@ -372,7 +372,7 @@
         "targetPort": "auto",
         "tone": "emerald",
         "route": "bezier",
-        "label": "Forward user id",
+        "label": "User id",
         "animated": true,
         "protocol": "http",
         "latencyMs": 10
@@ -385,7 +385,7 @@
         "targetPort": "auto",
         "tone": "emerald",
         "route": "bezier",
-        "label": "Forward user id",
+        "label": "User id",
         "animated": true,
         "protocol": "http",
         "latencyMs": 15
