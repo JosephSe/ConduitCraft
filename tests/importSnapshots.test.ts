@@ -11,6 +11,7 @@ import { parseBlueprintJson } from '../src/exporter/blueprintJson.ts';
 // rewritten afterwards (cache, stream, bucket, scheduler and external kinds), so their
 // hashes were recorded again then. The flash-sale showcase was added later still. The JSON templates' hashes
 // were recorded again after the template tidy-up (swimlane headers, lane widths, wire labels and routes).
+// Lumen Relay's lanes were widened so every component sits inside one, and its hash was recorded again.
 const EXPECTED: Record<string, string> = {
   'auth-oauth-oidc.blueprint.json': 'c90610eb114726dd',
   'cicd-pipeline.blueprint.json': '6f390600df15924a',
@@ -18,7 +19,7 @@ const EXPECTED: Record<string, string> = {
   'event-driven-microservices.blueprint.json': '8b75840316f82a87',
   'flash-sale-ticketing.blueprint.json': 'b1240f27e9794ccd',
   'kubernetes-ingress.blueprint.json': '6b3f16ef0edd1df1',
-  'lumen-relay.blueprint.json': '552e9bc1cadad255',
+  'lumen-relay.blueprint.json': '76398460e53cc835',
   'plain-mermaid-demo.mmd': '5137fcbc31c71e36',
   'plain-mermaid-demo.mmd (levels)': 'f4450146a54c8695',
   'sample-blueprint.md': 'e583e0c1754ef27e',

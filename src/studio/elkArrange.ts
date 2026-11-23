@@ -26,9 +26,10 @@ export async function arrangeWithElk(options: { direction?: LayoutDirection; spa
     }
     const before = new Map(app.doc.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
     let moved = 0;
+    let zones = 0;
     const changed = mutateWithHistory(() => {
-      moved = applyElkPlan(app.doc, plan);
-      return moved > 0;
+      ({ components: moved, zones } = applyElkPlan(app.doc, plan));
+      return moved > 0 || zones > 0;
     });
     if (!changed) {
       notify('Already arranged this way.');
@@ -37,7 +38,8 @@ export async function arrangeWithElk(options: { direction?: LayoutDirection; spa
     renderAll(true);
     fitToViewport();
     glide(before);
-    notify(`Arranged ${moved} ${moved === 1 ? 'component' : 'components'} in layers.`, {
+    const lanes = zones > 0 ? `, and fitted ${zones} ${zones === 1 ? 'swimlane' : 'swimlanes'} around them` : '';
+    notify(`Arranged ${moved} ${moved === 1 ? 'component' : 'components'} in layers${lanes}.`, {
       action: { label: 'Undo', onClick: () => performUndo() },
     });
   } catch {
