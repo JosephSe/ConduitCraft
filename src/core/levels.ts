@@ -139,8 +139,3 @@ export function allLevelNodes(root: DiagramDocument): LevelNodeEntry[] {
   walk(root, [], []);
   return out;
 }
-
-/** Number of nested levels under a component (0 for a leaf). */
-export function childCount(node: DiagramNode): number {
-  return node.child ? node.child.nodes.length : 0;
-}

@@ -7,14 +7,6 @@ export type WorkspaceMode = 'design' | 'data';
 
 export const LENSES: readonly Lens[] = ['design', 'traffic', 'review', 'present'];
 
-/** Display names, in the order of the keys 1 to 4. */
-export const LENS_LABELS: Record<Lens, string> = {
-  design: 'Design',
-  traffic: 'Traffic',
-  review: 'Review',
-  present: 'Present',
-};
-
 export function lensForKey(key: string): Lens | null {
   if (!/^[1-9]$/.test(key)) return null;
   return LENSES[Number(key) - 1] ?? null;

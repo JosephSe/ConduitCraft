@@ -141,8 +141,3 @@ export function renderCutoutMarkup(source: CutoutSource, options: CutoutOptions 
       : '';
   return `<svg class="cutout" data-cutout="${drawing.kind}" viewBox="0 0 ${CUTOUT_WIDTH} ${CUTOUT_HEIGHT}" width="${CUTOUT_WIDTH}" height="${CUTOUT_HEIGHT}" ${paint} overflow="visible" aria-hidden="true" focusable="false"><g transform="${fit(drawing.width, drawing.height)}">${drawing.inner}</g>${mark}</svg>`;
 }
-
-/** True when this source has an outline. Every stencil does. */
-export function hasCutout(source: CutoutSource): boolean {
-  return cutoutDrawing(source).inner.length > 0;
-}

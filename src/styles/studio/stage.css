@@ -704,8 +704,7 @@
     margin-bottom: 0.25rem;
   }
 
-  .selection-mode-toggle.is-active,
-  .selection-mode-toggle.btn-active {
+  .selection-mode-toggle.is-active {
     background: var(--cc-blue-soft);
     color: var(--cc-blue);
     border-color: var(--cc-blue);

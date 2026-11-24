@@ -12,12 +12,6 @@ export interface ToastOptions {
   tone?: 'normal' | 'error' | 'success';
 }
 
-export interface ToastInstance {
-  id: number;
-  message: string;
-  dismiss: () => void;
-}
-
 let nextToastId = 1;
 const activeToasts = new Map<number, { element: HTMLElement; timer: ReturnType<typeof setTimeout> | null }>();
 

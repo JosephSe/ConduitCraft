@@ -55,4 +55,4 @@ export function beadVisible(pos: number, length: number): boolean {
 }
 
 
-export { BEAD_SLOW_FACTOR, wireTraffic, type WireTraffic } from './wireTraffic';
+export { BEAD_SLOW_FACTOR, wireTraffic } from './wireTraffic';

@@ -12,8 +12,6 @@ export interface LineRange {
   end: number;
 }
 
-export type BlockKind = 'node' | 'edge' | 'zone' | 'notes' | 'frame';
-
 export interface BlockIndex {
   /** Components by their key in the `nodes:` map (the sanitised id, not necessarily the document id). */
   nodes: Map<string, LineRange>;

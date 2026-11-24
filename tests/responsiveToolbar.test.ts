@@ -206,7 +206,7 @@ describe('responsive and compact toolbar', () => {
   });
 
   it('verifies canvas takes at least 92% of workspace width across all 5 responsive breakpoints (390, 768, 1024, 1312, 1440 px) when no drawer is open (item 7)', () => {
-    // Breakpoints to test per MUST_DO_PLAN.md Item 7
+    // Breakpoints to test
     const viewports = [390, 768, 1024, 1312, 1440];
     const rem = 16;
     const railWidthPx = 3.25 * rem; // 52px for the collapsed inspector rail

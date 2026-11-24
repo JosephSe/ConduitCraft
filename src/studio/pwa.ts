@@ -336,11 +336,6 @@ export function initInstallPrompt(onAvailabilityChange?: (canInstall: boolean) =
   });
 }
 
-/** Whether the app can currently be installed via native prompt. */
-export function canInstallApp(): boolean {
-  return deferredInstallPrompt !== null;
-}
-
 /** Prompt the user to install ConduitCraft as a desktop/mobile app. */
 export async function promptInstallApp(): Promise<boolean> {
   if (!deferredInstallPrompt) return false;
