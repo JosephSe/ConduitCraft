@@ -20,7 +20,7 @@ import {
   setActiveDiagramId,
   setThumbnail,
 } from './library';
-import { AUTOSAVE_ID, getRecord, getStorageStatus, reportStorageFailure, type DiagramRecord } from './storage';
+import { AUTOSAVE_ID, getRecord, getStorageStatus, isStorageReady, reportStorageFailure, type DiagramRecord } from './storage';
 import {
   app,
   clearPendingRestoreOffer,
@@ -93,18 +93,27 @@ export function openDiagram(
  * Used by New Blueprint, templates, and file open and import. The toast's Undo goes back to the previous diagram.
  * `pickSelection` chooses what is selected once the new diagram is open.
  */
+let openedBeforeStorageReady = false;
+
+/** Whether a diagram was opened before saved work finished loading, so boot should not then cover it with Home. */
+export function openedDiagramDuringBoot(): boolean {
+  return openedBeforeStorageReady;
+}
+
 export async function openAsNewDiagram(
   doc: DiagramDocument,
   message: string,
   options: { pickSelection?: (doc: DiagramDocument) => SelectionTarget; keepFile?: boolean } = {},
 ): Promise<boolean> {
+  if (!isStorageReady()) openedBeforeStorageReady = true;
   if (app.hasPendingAutosave) flushAutosave();
   // Nothing saved yet (a fresh visit): there is no earlier diagram, so Undo opens a new blank one.
   const previousId = hasDiagram(getActiveDiagramId()) ? getActiveDiagramId() : null;
   try {
     // The very first diagram keeps the old autosave's id, so it stays the first entry (and the old storage key).
     const record = await createDiagram(doc, Date.now(), listLibrary().length === 0 ? AUTOSAVE_ID : undefined);
-    openDiagram(record.id, { selection: options.pickSelection?.(record.doc) ?? { type: 'none' }, force: true, keepFile: options.keepFile });
+    const opened = openDiagram(record.id, { selection: options.pickSelection?.(record.doc) ?? { type: 'none' }, force: true, keepFile: options.keepFile });
+    if (!opened) throw new Error('The new diagram could not be opened');
     notify(message, {
       action: {
         label: 'Undo',

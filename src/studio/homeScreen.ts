@@ -7,7 +7,7 @@ import { filterByTitle, gridTarget, relativeTime, shouldOpenHomeAtBoot, storageW
 import { escapeHtml } from '../shared/escapeHtml';
 import { listLibrary, getActiveDiagramId } from './library';
 import { homeDialog, homeDialogBody } from './dom';
-import { newDiagram, openDiagram, openLibraryDialog } from './libraryUi';
+import { newDiagram, openDiagram, openLibraryDialog, openedDiagramDuringBoot } from './libraryUi';
 import { app } from './state';
 import {
   TEMPLATE_CATEGORIES,
@@ -164,6 +164,7 @@ export function openHomeAtBootIfReturning(): void {
     hasShareLink: window.location.hash.length > 1,
     entryCount: listLibrary().length,
     shownThisSession: shownThisSession(),
+    openedDuringBoot: openedDiagramDuringBoot(),
   });
   // Only the first load of a tab can open Home; a reload while working goes straight back to the canvas.
   markShown();

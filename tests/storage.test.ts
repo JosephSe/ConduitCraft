@@ -63,6 +63,23 @@ describe('storage layer (T-04)', () => {
     assert.equal(hasRecord('diagrams', AUTOSAVE_ID), false);
   });
 
+  it('keeps what was written or removed before storage finished opening', async () => {
+    const backend = createMemoryBackend({
+      diagrams: [record('saved', docWith('Saved')), record('gone', docWith('Gone'))],
+    });
+    // A template opened straight after the page loads: written while the saved records are still loading.
+    const created = putRecord('diagrams', record('early', docWith('Early')));
+    const removed = removeRecord('diagrams', 'gone');
+    assert.equal(hasRecord('diagrams', 'early'), true);
+    await initStorage({ backend });
+    await Promise.all([created, removed]);
+    assert.equal(getRecord<DiagramRecord>('diagrams', 'early')?.doc.title, 'Early');
+    assert.equal(hasRecord('diagrams', 'saved'), true);
+    assert.equal(hasRecord('diagrams', 'gone'), false);
+    const onDisk = await backend.load();
+    assert.deepEqual(onDisk.diagrams.map((r) => r.id).sort(), ['early', 'saved']);
+  });
+
   it('writes in the order they were made', async () => {
     const seen: string[] = [];
     const slow: Backend = {
