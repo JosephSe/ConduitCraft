@@ -42,7 +42,7 @@ import {
   setSelection,
   openComponentLevel,
 } from './state';
-import { renderPropertyEditor } from './inspector';
+import { renderPropertyEditor } from './inspectorChunk';
 import { applySelection, requestInspectorRefresh } from './render';
 import {
   beginPortWireDrag,

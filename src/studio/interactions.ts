@@ -115,11 +115,8 @@ import {
   requestInspectorRefresh,
   updateVisualSelectionHighlights,
 } from './render';
-import {
-  addSimulationScenario,
-  renderSimulationEditor,
-  withInspectorTransition,
-} from './inspector';
+import { addSimulationScenario, renderSimulationEditor } from './inspectorChunk';
+import { withInspectorTransition } from './inspectorTransition';
 import type {
   DiagramDocument,
   SelectionTarget,
