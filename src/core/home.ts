@@ -10,6 +10,8 @@ export interface HomeBootFacts {
   entryCount: number;
   /** Home already opened once in this tab, so a reload does not cover the canvas again. */
   shownThisSession: boolean;
+  /** A diagram was opened while saved work was still loading (say, a template picked at once): Home would cover it. */
+  openedDuringBoot: boolean;
 }
 
 /**
@@ -17,7 +19,7 @@ export interface HomeBootFacts {
  * with nothing saved gets first run instead, and a reload in the same tab goes straight back to the canvas.
  */
 export function shouldOpenHomeAtBoot(f: HomeBootFacts): boolean {
-  return !f.hasShareLink && f.entryCount > 0 && !f.shownThisSession;
+  return !f.hasShareLink && f.entryCount > 0 && !f.shownThisSession && !f.openedDuringBoot;
 }
 
 /** Keep the entries whose title contains every word of the query, ignoring case. An empty query keeps all. */

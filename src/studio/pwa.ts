@@ -1,5 +1,5 @@
 import type { DiagramDocument } from '../types';
-import { serializeToBlueprintMarkdown } from '../core/parser';
+import { loadParser } from './parserChunk';
 import { serializeBlueprintJson } from '../exporter/blueprintJson';
 
 /**
@@ -94,12 +94,13 @@ export function blueprintNameFor(name: string): string {
  * - .md / .markdown -> Blueprint Markdown syntax
  * - .json / other   -> Blueprint JSON syntax
  */
-export function serializeForFilename(
+export async function serializeForFilename(
   doc: DiagramDocument,
   filename: string,
-): { content: string; mime: string; format: 'blueprint-md' | 'json' } {
+): Promise<{ content: string; mime: string; format: 'blueprint-md' | 'json' }> {
   const lower = filename.toLowerCase();
   if (lower.endsWith('.md') || lower.endsWith('.markdown')) {
+    const { serializeToBlueprintMarkdown } = await loadParser();
     return {
       content: serializeToBlueprintMarkdown(doc),
       mime: 'text/markdown;charset=utf-8',
@@ -204,7 +205,7 @@ export async function openWithNativeFilePicker(): Promise<{
  * Otherwise, prompts the native Save File Picker where supported.
  */
 export async function saveWithNativeFileSystem(
-  contentOrSerializer: string | ((chosenName: string) => string),
+  contentOrSerializer: string | ((chosenName: string) => string | Promise<string>),
   defaultName: string,
   forceSaveAs = false
 ): Promise<{ success: boolean; filename: string; directSaved: boolean; refusedMermaid?: boolean }> {
@@ -216,7 +217,7 @@ export async function saveWithNativeFileSystem(
     try {
       const filename = activeFileName || activeFileHandle.name || defaultName;
       const content =
-        typeof contentOrSerializer === 'function' ? contentOrSerializer(filename) : contentOrSerializer;
+        typeof contentOrSerializer === 'function' ? await contentOrSerializer(filename) : contentOrSerializer;
       const writable = await activeFileHandle.createWritable();
       await writable.write(content);
       await writable.close();
@@ -250,7 +251,7 @@ export async function saveWithNativeFileSystem(
       }
 
       const content =
-        typeof contentOrSerializer === 'function' ? contentOrSerializer(handle.name) : contentOrSerializer;
+        typeof contentOrSerializer === 'function' ? await contentOrSerializer(handle.name) : contentOrSerializer;
       const writable = await handle.createWritable();
       await writable.write(content);
       await writable.close();

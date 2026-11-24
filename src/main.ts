@@ -17,6 +17,7 @@ import { initInspectorAutoShow } from './studio/inspectorAutoShow';
 import { initPanelVisibility } from './studio/panelVisibility';
 import { initContextToolbar } from './studio/contextToolbar';
 import { notify } from './studio/toast';
+import { preloadParserWhenIdle } from './studio/parserChunk';
 
 setHistoryApplied(() => renderAll(true));
 onSelectionChange(() => {
@@ -54,6 +55,7 @@ bootTrafficBeads();
 bindAlwaysWireLabelsPreference();
 bindViewFilters();
 bootStudio();
+preloadParserWhenIdle();
 initDock();
 initAppMenu();
 initPageTabs();

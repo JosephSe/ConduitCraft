@@ -4,11 +4,12 @@ import { filterByTitle, gridTarget, relativeTime, shouldOpenHomeAtBoot, storageW
 
 describe('home screen rules', () => {
   it('opens at boot only for a returning visitor with no share link, once per tab', () => {
-    const base = { hasShareLink: false, entryCount: 2, shownThisSession: false };
+    const base = { hasShareLink: false, entryCount: 2, shownThisSession: false, openedDuringBoot: false };
     assert.equal(shouldOpenHomeAtBoot(base), true);
     assert.equal(shouldOpenHomeAtBoot({ ...base, hasShareLink: true }), false);
     assert.equal(shouldOpenHomeAtBoot({ ...base, entryCount: 0 }), false);
     assert.equal(shouldOpenHomeAtBoot({ ...base, shownThisSession: true }), false);
+    assert.equal(shouldOpenHomeAtBoot({ ...base, openedDuringBoot: true }), false);
   });
 
   it('searches titles by every word, ignoring case', () => {

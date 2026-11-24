@@ -269,6 +269,16 @@ const cache: Record<StoreName, Map<string, StoredRecord>> = {
   snapshots: new Map(),
   meta: new Map(),
 };
+/**
+ * Changes made before `initStorage` finishes (say, a template opened straight after the page loads). Loading the saved
+ * records replaces the in-memory copy, so these are laid back over it: without that, a diagram created early is
+ * written to disk but missing from the library until the next reload.
+ */
+const early: Record<StoreName, Map<string, StoredRecord | null>> = {
+  diagrams: new Map(),
+  snapshots: new Map(),
+  meta: new Map(),
+};
 let backend: Backend | null = null;
 let status: StorageStatus = { backend: 'memory', notice: null };
 let ready = false;
@@ -299,6 +309,10 @@ function hydrate(contents: StoreContents): void {
   for (const name of STORE_NAMES) {
     cache[name].clear();
     for (const record of contents[name]) cache[name].set(record.id, record);
+    for (const [id, record] of early[name]) {
+      if (record) cache[name].set(id, record);
+      else cache[name].delete(id);
+    }
   }
 }
 
@@ -363,6 +377,7 @@ export function initStorage(options: InitOptions = {}): Promise<StorageStatus> {
       }
     }
     ready = true;
+    for (const name of STORE_NAMES) early[name].clear();
     gate.open(status);
     return status;
   })();
@@ -373,7 +388,10 @@ export function initStorage(options: InitOptions = {}): Promise<StorageStatus> {
 
 /** Tests only: forget everything and start over. */
 export function resetStorageForTests(): void {
-  for (const name of STORE_NAMES) cache[name].clear();
+  for (const name of STORE_NAMES) {
+    cache[name].clear();
+    early[name].clear();
+  }
   backend = null;
   status = { backend: 'memory', notice: null };
   ready = false;
@@ -408,6 +426,7 @@ export function putRecord(store: StoreName, record: StoredRecord): Promise<void>
   const copy = structuredClone(record);
   const previous = cache[store].get(copy.id);
   cache[store].set(copy.id, copy);
+  if (!ready) early[store].set(copy.id, copy);
   return enqueue(async () => {
     if (!backend) throw new Error('Storage is not ready');
     try {
@@ -427,6 +446,7 @@ export function putRecord(store: StoreName, record: StoredRecord): Promise<void>
 export function removeRecord(store: StoreName, id: string): Promise<void> {
   const previous = cache[store].get(id);
   cache[store].delete(id);
+  if (!ready) early[store].set(id, null);
   return enqueue(async () => {
     if (!backend) throw new Error('Storage is not ready');
     try {

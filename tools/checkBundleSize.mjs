@@ -13,7 +13,8 @@ const budgets = [
   // Raised from 575 kB for callouts on components (the owner's choice over lazy loading).
   // Raised from 580 kB for the callout tail lining up with its component (owner's choice).
   // Raised from 581 kB for wire labels kept on their wires and dragged anywhere (about 2.4 kB).
-  { pattern: /^index-.*\.js$/, maxBytes: 584 * 1024, label: 'entry JS' },
+  // Lowered from 584 kB: the Markdown and Mermaid parser and js-yaml now load on demand (about 79 kB less).
+  { pattern: /^index-.*\.js$/, maxBytes: 510 * 1024, label: 'entry JS' },
   // Raised from 130 kB for the floating properties card (inspector card, Steps 1–3), after reclaiming 0.9 kB of dead CSS (D3).
   // Raised from 133 kB for panel hiding and the canvas edge (about 1 kB).
   { pattern: /^index-.*\.css$/, maxBytes: 135 * 1024, label: 'entry CSS' },
