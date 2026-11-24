@@ -12,7 +12,8 @@ const budgets = [
   // Raised from 570 kB for the shared front-to-back order and text label width, size and colour (about 2.3 kB).
   // Raised from 575 kB for callouts on components (the owner's choice over lazy loading).
   // Raised from 580 kB for the callout tail lining up with its component (owner's choice).
-  { pattern: /^index-.*\.js$/, maxBytes: 581 * 1024, label: 'entry JS' },
+  // Raised from 581 kB for wire labels kept on their wires and dragged anywhere (about 2.4 kB).
+  { pattern: /^index-.*\.js$/, maxBytes: 584 * 1024, label: 'entry JS' },
   // Raised from 130 kB for the floating properties card (inspector card, Steps 1–3), after reclaiming 0.9 kB of dead CSS (D3).
   // Raised from 133 kB for panel hiding and the canvas edge (about 1 kB).
   { pattern: /^index-.*\.css$/, maxBytes: 135 * 1024, label: 'entry CSS' },
