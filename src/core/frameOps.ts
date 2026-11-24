@@ -4,7 +4,7 @@
  */
 import type { DiagramEdge, DiagramFrame, DiagramNode, DiagramNotesCard, StreamTone } from '../types';
 import { notesCardHeight, notesCardWidth, textLabelRect } from './notesSize';
-import { FRAME_HEADER_HEIGHT, FRAME_MIN_HEIGHT, FRAME_MIN_WIDTH, FRAME_PADDING, MAX_FRAME_DEPTH } from './frames';
+import { FRAME_HEADER_HEIGHT, FRAME_MIN_HEIGHT, FRAME_MIN_WIDTH, FRAME_PADDING } from './frames';
 import { calloutCopiesFor } from './callouts';
 
 /** The part of a document that frames touch. */
@@ -52,18 +52,6 @@ export function frameAndDescendantIds(frames: readonly DiagramFrame[], id: strin
     }
   }
   return ids;
-}
-
-/** How many frames lie around this one. A top-level frame has depth 0. */
-export function frameDepth(frames: readonly DiagramFrame[], frame: DiagramFrame): number {
-  const byId = new Map(frames.map((f) => [f.id, f]));
-  let depth = 0;
-  for (let cur = frame; cur.parentId && depth <= MAX_FRAME_DEPTH; depth += 1) {
-    const next = byId.get(cur.parentId);
-    if (!next) break;
-    cur = next;
-  }
-  return depth;
 }
 
 /** The smallest frame whose area holds the centre of `box`, ignoring the frames in `skip`. */

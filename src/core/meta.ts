@@ -173,8 +173,6 @@ export function normalizeNodeMeta(raw: Record<string, unknown>): {
 
 export type ColourBy = 'tone' | 'status' | 'tag';
 
-export const COLOUR_BY_OPTIONS: readonly ColourBy[] = ['tone', 'status', 'tag'];
-
 export const STATUS_TONE: Readonly<Record<NonNullable<DiagramNode['status']>, StreamTone>> = {
   live: 'emerald',
   planned: 'blue',

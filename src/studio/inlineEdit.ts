@@ -76,15 +76,6 @@ interface ActiveEdit {
 
 let active: ActiveEdit | null = null;
 
-export function isInlineEditing(): boolean {
-  return active !== null;
-}
-
-/** Close the editor without changing anything. */
-export function cancelInlineEdit(): void {
-  active?.finish(false);
-}
-
 export function beginInlineEdit(options: InlineEditOptions): void {
   if (typeof document === 'undefined') return;
   // Starting a new edit while one is open (e.g. double-clicking another item) keeps what was typed.

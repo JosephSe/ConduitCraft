@@ -54,29 +54,10 @@ export function currentInsights(): InsightIssue[] {
   return allIssues().filter((issue) => !muted.has(issue.code));
 }
 
-/** Visible issues aimed at one component or wire, most severe first. */
-export function insightsFor(type: 'node' | 'edge', id: string): InsightIssue[] {
-  if (app.lens !== 'review') return [];
-  const here = app.levelPath.join('/');
-  return currentInsights().filter(
-    (issue) => issue.path.join('/') === here && issue.target.type === type && issue.target.id === id,
-  );
-}
-
 /** The visible issues in the order the panel lists them: by rule, then as found. The dock's Review face steps through this. */
 export function orderedInsights(): InsightIssue[] {
   const issues = currentInsights();
   return INSIGHT_RULES.flatMap((rule) => issues.filter((i) => i.code === rule.code));
-}
-
-const LEVEL_RANK = { error: 0, warning: 1, info: 2 } as const;
-
-/** The most severe level among issues, for the badge colour. */
-export function worstLevel(issues: readonly InsightIssue[]): InsightIssue['level'] | null {
-  return issues.reduce<InsightIssue['level'] | null>(
-    (worst, i) => (worst === null || LEVEL_RANK[i.level] < LEVEL_RANK[worst] ? i.level : worst),
-    null,
-  );
 }
 
 export function onInsightsChange(listener: () => void): void {

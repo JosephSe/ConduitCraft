@@ -6,7 +6,7 @@ const dist = path.resolve('dist/assets');
 // Budgets are raw bytes. Entry: JS ~385 kB, CSS ~102 kB, with headroom. Lazy chunks get their own limits so a
 // feature moved out of the entry cannot quietly grow without bound.
 const budgets = [
-  // Raised from 480 kB for the new components (COMPONENTS_PLAN.md); the queue (K1) added about 18 kB raw, 6 kB gzip.
+  // Raised from 480 kB for the new component kinds; the queue (K1) added about 18 kB raw, 6 kB gzip.
   // Raised from 560 kB for panel hiding (about 1.5 kB: panelVisibility, palette commands).
   // Raised from 563 kB for resizable notes, the scenario GIF crop and the right-panel fix (about 4.8 kB).
   // Raised from 570 kB for the shared front-to-back order and text label width, size and colour (about 2.3 kB).
