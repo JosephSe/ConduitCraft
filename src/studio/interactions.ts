@@ -147,11 +147,8 @@ import {
   getPortPoint,
   routeDiagramEdges,
 } from '../core/layout';
-import {
-  importMermaidOrBlueprint,
-  type ImportOptions,
-  serializeToBlueprintMarkdown,
-} from '../core/parser';
+import type { ImportOptions } from '../core/parser';
+import { loadParser } from './parserChunk';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
 import { describeDiagramBrief } from '../core/describe';
 import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
@@ -1220,12 +1217,12 @@ const firstNodeSelection = (doc: DiagramDocument): SelectionTarget =>
  * Read Blueprint JSON or Mermaid text into the open diagram, or (`asNewDiagram`, for files) into a new library entry
  * so the open diagram stays as it was.
  */
-export function applyImportedText(
+export async function applyImportedText(
   rawText: string,
   fallbackTitle?: string,
   importOptions?: ImportOptions,
   asNewDiagram = false,
-): boolean {
+): Promise<boolean> {
   const trimmed = rawText.trim();
   if (trimmed.startsWith('{')) {
     const parsed = parseBlueprintJson(trimmed);
@@ -1255,7 +1252,17 @@ export function applyImportedText(
     return true;
   }
 
-  const { doc: importedDoc, warnings, issues } = importMermaidOrBlueprint(rawText, importOptions);
+  let parser: Awaited<ReturnType<typeof loadParser>>;
+  try {
+    parser = await loadParser();
+  } catch {
+    const err = 'Could not load the Mermaid and Blueprint reader. Check the connection and try again.';
+    codeSyncDiagnostics.dataset.tone = 'warn';
+    codeSyncDiagnostics.textContent = err;
+    notify(err, { tone: 'error' });
+    return false;
+  }
+  const { doc: importedDoc, warnings, issues } = parser.importMermaidOrBlueprint(rawText, importOptions);
   const formatIssue = (idx = 0): string => {
     const issue = issues[idx];
     if (!issue) return warnings[idx] || '';
@@ -1328,7 +1335,7 @@ async function importFileText(fileName: string, text: string, title: string | un
   } catch {
     // Not available right now: fall through to the built-in formats.
   }
-  applyImportedText(text, title, undefined, true);
+  await applyImportedText(text, title, undefined, true);
 }
 
 function downloadUrl(url: string, filename: string): void {
@@ -1588,7 +1595,8 @@ export function getSubgraphMode(): 'swimlanes' | 'levels' | 'frames' {
   return checked?.value === 'levels' || checked?.value === 'frames' ? checked.value : 'swimlanes';
 }
 
-export function refreshCodeModalTextarea(): void {
+export async function refreshCodeModalTextarea(): Promise<void> {
+  const { serializeToBlueprintMarkdown } = await loadParser();
   // Applying this text replaces the whole diagram, so on a later page it shows the whole file, not just that page (D10).
   codeSyncTextarea.value = serializeToBlueprintMarkdown(app.pageIndex > 0 ? fullDocument() : app.doc);
   codeSyncDiagnostics.textContent =
@@ -1597,8 +1605,12 @@ export function refreshCodeModalTextarea(): void {
 }
 
 export function openCodeDialog(): void {
-  refreshCodeModalTextarea();
-  codeDialog.showModal();
+  void refreshCodeModalTextarea().then(
+    () => {
+      if (!codeDialog.open) codeDialog.showModal();
+    },
+    () => notify('Could not load the Blueprint file view. Check the connection and try again.', { tone: 'error' }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1886,7 +1898,7 @@ export function initEvents(): void {
     const defaultName =
       (activeName && (fromMermaid ? blueprintNameFor(activeName) : activeName)) ||
       `${getSafeFilenameSlug()}.blueprint.json`;
-    const serializer = (name: string) => serializeForFilename(fullDocument(), name).content;
+    const serializer = async (name: string) => (await serializeForFilename(fullDocument(), name)).content;
 
     const res = await saveWithNativeFileSystem(serializer, defaultName, forceSaveAs);
     if (res.success) {
@@ -1900,7 +1912,7 @@ export function initEvents(): void {
     } else if (res.refusedMermaid) {
       notify(`ConduitCraft doesn't write Mermaid files. Save as .md or .json instead.`, { tone: 'error' });
     } else if (!isFileSystemAccessSupported()) {
-      const { content, mime } = serializeForFilename(fullDocument(), defaultName);
+      const { content, mime } = await serializeForFilename(fullDocument(), defaultName);
       downloadBlob(content, defaultName, mime);
       setDiskDirty(false);
       setSaveState('saved');
@@ -2018,8 +2030,8 @@ export function initEvents(): void {
     }
   });
 
-  btnApplyCode.addEventListener('click', () => {
-    const ok = applyImportedText(codeSyncTextarea.value, undefined, { subgraphs: getSubgraphMode() });
+  btnApplyCode.addEventListener('click', async () => {
+    const ok = await applyImportedText(codeSyncTextarea.value, undefined, { subgraphs: getSubgraphMode() });
     if (ok) void closeDialogSmoothly(codeDialog);
   });
 

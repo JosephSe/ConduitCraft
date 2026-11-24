@@ -189,7 +189,7 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     assert.strictEqual(isServiceWorkerSupported(), false);
   });
 
-  it('resolves serializer and MIME type based on active file extension (suggestion 16 / item 5)', () => {
+  it('resolves serializer and MIME type based on active file extension (suggestion 16 / item 5)', async () => {
     const doc = createBlankDocument();
     doc.title = 'Payment Gateway';
     const n1 = createNodeFromStencil('service', 100, 100);
@@ -197,15 +197,15 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     doc.nodes.push(n1);
 
     // D8: Mermaid is import only, so a Mermaid name never gets a Mermaid writer
-    assert.strictEqual(serializeForFilename(doc, 'architecture.mmd').format, 'json');
-    assert.strictEqual(serializeForFilename(doc, 'cluster.mermaid').format, 'json');
+    assert.strictEqual((await serializeForFilename(doc, 'architecture.mmd')).format, 'json');
+    assert.strictEqual((await serializeForFilename(doc, 'cluster.mermaid')).format, 'json');
     assert.strictEqual(isMermaidFileName('Cluster.MERMAID'), true);
     assert.strictEqual(isMermaidFileName('notes.md'), false);
     assert.strictEqual(blueprintNameFor('topology.mmd'), 'topology.md');
     assert.strictEqual(blueprintNameFor('cluster.Mermaid'), 'cluster.md');
 
     // .md extension -> Blueprint Markdown
-    const md = serializeForFilename(doc, 'architecture.md');
+    const md = (await serializeForFilename(doc, 'architecture.md'));
     assert.strictEqual(md.format, 'blueprint-md');
     assert.strictEqual(md.mime, 'text/markdown;charset=utf-8');
     assert.ok(md.content.startsWith('---\n'), 'Blueprint Markdown must start with YAML frontmatter');
@@ -213,11 +213,11 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     assert.ok(md.content.includes('Auth Service'));
 
     // .markdown extension -> Blueprint Markdown
-    const markdown = serializeForFilename(doc, 'overview.markdown');
+    const markdown = (await serializeForFilename(doc, 'overview.markdown'));
     assert.strictEqual(markdown.format, 'blueprint-md');
 
     // .json / .blueprint.json -> Blueprint JSON
-    const json = serializeForFilename(doc, 'system.blueprint.json');
+    const json = (await serializeForFilename(doc, 'system.blueprint.json'));
     assert.strictEqual(json.format, 'json');
     assert.strictEqual(json.mime, 'application/json;charset=utf-8');
     const parsed = JSON.parse(json.content) as { document: DiagramDocument };
@@ -226,7 +226,7 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     assert.strictEqual(parsed.document.nodes[0].title, 'Auth Service');
 
     // Unknown extension defaults safely to JSON
-    const fallback = serializeForFilename(doc, 'backup.dat');
+    const fallback = (await serializeForFilename(doc, 'backup.dat'));
     assert.strictEqual(fallback.format, 'json');
   });
 
@@ -237,7 +237,7 @@ describe('PWA install, manifest, service worker and file system access (suggesti
     n1.title = 'Orders DB';
     doc.nodes.push(n1);
 
-    const serializer = (name: string) => serializeForFilename(doc, name).content;
+    const serializer = async (name: string) => (await serializeForFilename(doc, name)).content;
 
     // Test 1: Active file is .mmd -> never written (D8); without a save picker nothing is saved
     let mmdWrites = 0;
