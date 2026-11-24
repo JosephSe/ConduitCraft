@@ -320,10 +320,15 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
 
   const edgesMarkup = routedEdges
     .map((e) => {
+      // Parallel wires between the same pair are drawn apart by their lane offset; the label is already placed.
+      const lane =
+        e.laneOffset && (e.laneOffset[0] || e.laneOffset[1])
+          ? ` transform="translate(${e.laneOffset[0]}, ${e.laneOffset[1]})"`
+          : '';
       const isBoth = e.flow === 'both';
       const markerAttr = isBoth ? '' : ` marker-end="url(#arrow-${e.tone})"`;
-      const reverseStream = isBoth ? `<path class="conduit-stream-reverse" d="${e.pathD}"/>` : '';
-      const portDot = isBoth ? '' : `<circle class="port-dot" cx="${e.startPoint[0]}" cy="${e.startPoint[1]}" r="4"/>`;
+      const reverseStream = isBoth ? `<path class="conduit-stream-reverse"${lane} d="${e.pathD}"/>` : '';
+      const portDot = isBoth ? '' : `<circle class="port-dot"${lane} cx="${e.startPoint[0]}" cy="${e.startPoint[1]}" r="4"/>`;
       const badgeMarkup =
         e.label && e.badgePos && e.badgeWidth
           ? `<g transform="translate(${e.badgePos[0]}, ${e.badgePos[1]})">
@@ -346,9 +351,9 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
 
       return `
         <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-sync="${e.sync === 'async' ? 'async' : 'sync'}" data-flow="${escapeHtml(e.flow || 'forward')}" style="--flow-scale: ${flowScale(e.latencyMs)}">
-          <path class="conduit-glow" d="${e.pathD}"/>
-          <path class="conduit-rail" d="${e.pathD}"/>
-          <path class="conduit-stream" d="${e.pathD}"${markerAttr}/>
+          <path class="conduit-glow"${lane} d="${e.pathD}"/>
+          <path class="conduit-rail"${lane} d="${e.pathD}"/>
+          <path class="conduit-stream"${lane} d="${e.pathD}"${markerAttr}/>
           ${reverseStream}
           ${portDot}
           ${badgeMarkup}

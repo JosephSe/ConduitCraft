@@ -93,6 +93,7 @@ interface RawEdgeOverride {
   animated?: boolean;
   flow?: string;
   waypoint?: [number, number];
+  labelOffset?: [number, number];
   comment?: string;
   protocol?: unknown;
   sync?: unknown;
@@ -1444,6 +1445,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
       ...(ov?.comment ? { comment: String(ov.comment) } : {}),
       ...wireExtras(ov),
       ...waypointField(ov?.waypoint),
+      ...labelOffsetField(ov?.labelOffset),
     });
   });
 
@@ -1472,6 +1474,7 @@ export function importMermaidOrBlueprint(rawInput: string, options: ImportOption
       ...(ov.comment ? { comment: String(ov.comment) } : {}),
       ...wireExtras(ov),
       ...waypointField(ov.waypoint),
+      ...labelOffsetField(ov.labelOffset),
     });
   });
 
@@ -1735,6 +1738,11 @@ function waypointField(raw: unknown): { waypoint?: [number, number] } {
     if (Number.isFinite(x) && Number.isFinite(y)) return { waypoint: [Math.round(x), Math.round(y)] };
   }
   return {};
+}
+
+function labelOffsetField(raw: unknown): { labelOffset?: [number, number] } {
+  const point = waypointField(raw).waypoint;
+  return point && (point[0] !== 0 || point[1] !== 0) ? { labelOffset: point } : {};
 }
 
 /** The key a component has in the `nodes:` map of the Blueprint file (the code pane maps lines back to components with it). */
@@ -2074,6 +2082,7 @@ function buildFrontmatter(doc: DiagramDocument, shell: boolean, depth = 0): Reco
       ...(e.latencyMs !== undefined ? { latencyMs: e.latencyMs } : {}),
       ...(e.tags?.length ? { tags: e.tags } : {}),
       ...(e.waypoint ? { waypoint: [Math.round(e.waypoint[0]), Math.round(e.waypoint[1])] } : {}),
+      ...(e.labelOffset ? { labelOffset: [Math.round(e.labelOffset[0]), Math.round(e.labelOffset[1])] } : {}),
     }));
   }
 

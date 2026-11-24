@@ -743,24 +743,73 @@ function finalizeRoutes(
     return next;
   });
 
-  // 3. Nudge overlapping badges apart
+  // 3. Move each badge onto its drawn wire (the lane offset shifts the whole wire), then nudge overlapping
+  //    badges apart. A badge first slides along its own wire so it stays on it; only when the wire has no room
+  //    left does it step off sideways. badgePos ends up in drawn coordinates, so renderers place it as is.
   const placed: Array<{ x: number; y: number; w: number }> = [];
-  for (const edge of out) {
+  const clashes = (x: number, y: number, w: number) =>
+    placed.some((p) => Math.abs(p.x - x) < (p.w + w) / 2 + 6 && Math.abs(p.y - y) < 30);
+  // A label the user dragged keeps its spot, offset from where it would sit; the others make room around it.
+  const ordered = [...out.filter((e) => e.labelOffset), ...out.filter((e) => !e.labelOffset)];
+  for (const edge of ordered) {
     if (!edge.badgePos || !edge.badgeWidth) continue;
     const off = edge.laneOffset || [0, 0];
-    let bx = edge.badgePos[0] + off[0];
-    let by = edge.badgePos[1] + off[1];
+    const baseX = edge.badgePos[0] + off[0];
+    const baseY = edge.badgePos[1] + off[1];
     const w = edge.badgeWidth;
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const clash = placed.find(
-        (p) => Math.abs(p.x - bx) < (p.w + w) / 2 + 6 && Math.abs(p.y - by) < 30,
-      );
-      if (!clash) break;
-      const sign = attempt % 2 === 0 ? 1 : -1;
-      by = edge.badgePos[1] + off[1] + sign * 32 * Math.ceil((attempt + 1) / 2);
+    edge.labelAnchor = [Math.round(baseX), Math.round(baseY)];
+    if (edge.labelOffset) {
+      const pos: [number, number] = [Math.round(baseX + edge.labelOffset[0]), Math.round(baseY + edge.labelOffset[1])];
+      placed.push({ x: pos[0], y: pos[1], w });
+      edge.badgePos = pos;
+      continue;
+    }
+    let bx = baseX;
+    let by = baseY;
+    if (clashes(bx, by, w)) {
+      let found = false;
+      // Slide along the wire's main axis, keeping the badge within the wire's span.
+      const dx = edge.endPoint[0] - edge.startPoint[0];
+      const dy = edge.endPoint[1] - edge.startPoint[1];
+      const horizontal = Math.abs(dx) >= Math.abs(dy);
+      const along = horizontal ? 0 : 1;
+      const half = horizontal ? w / 2 + 8 : 21;
+      const lo = Math.min(edge.startPoint[along], edge.endPoint[along]) + off[along] + half;
+      const hi = Math.max(edge.startPoint[along], edge.endPoint[along]) + off[along] - half;
+      const step = horizontal ? 24 : 16;
+      const base = along === 0 ? baseX : baseY;
+      for (let k = 1; k <= 24 && !found; k++) {
+        for (const sign of [1, -1]) {
+          const pos = base + sign * step * k;
+          if (pos < lo || pos > hi) continue;
+          const cx = along === 0 ? pos : baseX;
+          const cy = along === 0 ? baseY : pos;
+          if (!clashes(cx, cy, w)) {
+            bx = cx;
+            by = cy;
+            found = true;
+            break;
+          }
+        }
+      }
+      // No room along the wire: step off it sideways, as little as possible and away from its lane's
+      // neighbours first, so the wire still runs through the label where it can.
+      const outward = Math.sign(off[horizontal ? 1 : 0]) || 1;
+      for (let d = 4; d <= 128 && !found; d += 4) {
+        for (const sign of [outward, -outward]) {
+          const cx = horizontal ? baseX : baseX + sign * d;
+          const cy = horizontal ? baseY + sign * d : baseY;
+          if (!clashes(cx, cy, w)) {
+            bx = cx;
+            by = cy;
+            found = true;
+            break;
+          }
+        }
+      }
     }
     placed.push({ x: bx, y: by, w });
-    edge.badgePos = [Math.round(bx - off[0]), Math.round(by - off[1])];
+    edge.badgePos = [Math.round(bx), Math.round(by)];
   }
 
   return out;

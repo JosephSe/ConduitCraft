@@ -3,7 +3,8 @@ import { describe, it } from 'node:test';
 import { routeDiagramEdges } from '../src/core/layout.ts';
 import { flowScale, hopDelayMs, isAsyncWire, latenciesBetween, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
-import { createBlankDocument } from '../src/templates/presets.ts';
+import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
+import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
 import type { DiagramDocument, DiagramEdge } from '../src/types.ts';
 
 function docWithWire(extra: Partial<DiagramEdge>): DiagramDocument {
@@ -146,5 +147,56 @@ describe('latency sets how fast the wire flows (F-17)', () => {
     }));
     const html = generateStandaloneHtml(doc);
     assert.match(html, /style="--flow-scale: 2"/);
+  });
+});
+
+describe('wire label placement', () => {
+  const twoParallel = (route: 'auto' | 'straight' | 'orthogonal') => {
+    const doc = createBlankDocument();
+    const a = createNodeFromStencil('service', 100, 100, 0);
+    const b = createNodeFromStencil('service', 600, 100, 1);
+    doc.nodes.push(a, b);
+    const base = { from: a.id, to: b.id, sourcePort: 'right', targetPort: 'left', route, animated: true } as const;
+    doc.edges.push(
+      { ...base, id: 'e1', tone: 'emerald', label: 'W/L CRUD operations' },
+      { ...base, id: 'e2', tone: 'violet', label: 'W/L Search' },
+    );
+    return doc;
+  };
+
+  it('keeps each label of parallel wires on its own drawn wire, sliding along it rather than off it', () => {
+    const routed = routeDiagramEdges(twoParallel('auto'));
+    for (const r of routed) {
+      const wireY = r.startPoint[1] + (r.laneOffset?.[1] ?? 0);
+      assert.ok(Math.abs(r.badgePos![1] - wireY) < 13, `${r.id}: its wire should run through its label`);
+    }
+    const [p, q] = routed;
+    const apart =
+      Math.abs(p.badgePos![0] - q.badgePos![0]) >= (p.badgeWidth! + q.badgeWidth!) / 2 ||
+      Math.abs(p.badgePos![1] - q.badgePos![1]) >= 26;
+    assert.ok(apart, 'labels should not overlap');
+  });
+
+  it('slides a clashing label along a long wire so it stays centred on it', () => {
+    const doc = twoParallel('auto');
+    doc.nodes[1].x = 1100;
+    for (const r of routeDiagramEdges(doc)) {
+      assert.equal(r.badgePos?.[1], r.startPoint[1] + (r.laneOffset?.[1] ?? 0), `${r.id} label centred on its wire`);
+    }
+  });
+
+  it('moves a dragged label by its offset from the automatic spot, and round-trips the offset', () => {
+    const doc = twoParallel('auto');
+    const auto = routeDiagramEdges(doc).find((r) => r.id === 'e2')!.labelAnchor!;
+    doc.edges[1].labelOffset = [40, -30];
+    const moved = routeDiagramEdges(doc).find((r) => r.id === 'e2')!.badgePos!;
+    assert.deepEqual(moved, [auto[0] + 40, auto[1] - 30]);
+
+    const md = serializeToBlueprintMarkdown(doc);
+    assert.deepEqual(importMermaidOrBlueprint(md).doc.edges.find((e) => e.id === 'e2')?.labelOffset, [40, -30]);
+    const json = parseBlueprintJson(serializeBlueprintJson(doc));
+    assert.ok(json.ok);
+    if (!json.ok) return;
+    assert.deepEqual(json.doc.edges.find((e) => e.id === 'e2')?.labelOffset, [40, -30]);
   });
 });
