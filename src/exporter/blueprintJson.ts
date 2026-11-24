@@ -150,6 +150,12 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     Array.isArray(raw.waypoint) && raw.waypoint.length >= 2 && raw.waypoint.every((n) => typeof n === 'number')
       ? ([raw.waypoint[0], raw.waypoint[1]] as [number, number])
       : undefined;
+  const labelOffset =
+    Array.isArray(raw.labelOffset) &&
+    raw.labelOffset.length >= 2 &&
+    raw.labelOffset.every((n) => typeof n === 'number' && Number.isFinite(n))
+      ? ([raw.labelOffset[0], raw.labelOffset[1]] as [number, number])
+      : undefined;
   return {
     id: str(raw.id, `edge-${index + 1}`),
     from: raw.from,
@@ -165,6 +171,7 @@ function coerceEdge(raw: unknown, index: number): DiagramEdge | null {
     ...normalizeWireFields(raw),
     ...(normalizeTags(raw.tags).length ? { tags: normalizeTags(raw.tags) } : {}),
     ...(waypoint ? { waypoint } : {}),
+    ...(labelOffset ? { labelOffset } : {}),
   };
 }
 

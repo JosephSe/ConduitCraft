@@ -806,7 +806,9 @@ function createWireGroup(edgeId: string): SVGGElement {
   portDot.setAttribute('r', '4');
   g.append(hit, casing, glow, rail, stream, streamRev, portDot);
 
+  let currentEdge: RoutedDiagramEdge | null = null;
   const ensureBadge = (edge: RoutedDiagramEdge) => {
+    currentEdge = edge;
     let badge = g.querySelector<SVGGElement>('.conduit-badge-hit');
     if (!edge.label || !edge.badgePos || !edge.badgeWidth) {
       badge?.remove();
@@ -825,6 +827,8 @@ function createWireGroup(edgeId: string): SVGGElement {
       txt.setAttribute('text-anchor', 'middle');
       txt.setAttribute('y', '4');
       badge.append(rect, txt);
+      // In Design, drag the label to place it anywhere; it keeps that offset from its automatic spot.
+      let labelDrag: { pointerId: number; x: number; y: number; from: [number, number]; moved: boolean } | null = null;
       badge.addEventListener('pointerdown', (e) => {
         if (e.button !== 0) return;
         if (isToggleWireEvent(e)) {
@@ -833,8 +837,51 @@ function createWireGroup(edgeId: string): SVGGElement {
           return;
         }
         selectWire(e);
+        if (app.workspaceMode !== 'design') return;
+        // Start from where the label is drawn now (it may have been nudged clear of another), so it never jumps.
+        const shown = currentEdge;
+        const from: [number, number] =
+          shown?.badgePos && shown.labelAnchor
+            ? [shown.badgePos[0] - shown.labelAnchor[0], shown.badgePos[1] - shown.labelAnchor[1]]
+            : [0, 0];
+        const [wx, wy] = screenToWorld(e.clientX, e.clientY);
+        labelDrag = { pointerId: e.pointerId, x: wx, y: wy, from, moved: false };
+        badge?.setPointerCapture(e.pointerId);
       });
-      badge.addEventListener('pointerup', (e) => e.stopPropagation());
+      badge.addEventListener('pointermove', (e) => {
+        if (!labelDrag || labelDrag.pointerId !== e.pointerId) return;
+        const [wx, wy] = screenToWorld(e.clientX, e.clientY);
+        const dx = wx - labelDrag.x;
+        const dy = wy - labelDrag.y;
+        if (!labelDrag.moved) {
+          if (Math.hypot(dx, dy) * app.scale < 3) return;
+          beginHistoryGesture();
+          labelDrag.moved = true;
+          badge?.classList.add('is-dragging');
+        }
+        const target = app.doc.edges.find((ed) => ed.id === edgeId);
+        if (!target) return;
+        pushHistory();
+        const nx = Math.round(labelDrag.from[0] + dx);
+        const ny = Math.round(labelDrag.from[1] + dy);
+        if (nx === 0 && ny === 0) delete target.labelOffset;
+        else target.labelOffset = [nx, ny];
+        renderWiresOnly();
+      });
+      const endLabelDrag = () => {
+        const moved = labelDrag?.moved;
+        labelDrag = null;
+        badge?.classList.remove('is-dragging');
+        if (moved) {
+          endHistoryGesture();
+          renderPropertyEditor();
+        }
+      };
+      badge.addEventListener('pointerup', (e) => {
+        e.stopPropagation();
+        endLabelDrag();
+      });
+      badge.addEventListener('lostpointercapture', endLabelDrag);
       badge.addEventListener('click', (e) => {
         if (isToggleWireEvent(e as MouseEvent)) {
           e.stopPropagation();
@@ -940,7 +987,8 @@ function createWireGroup(edgeId: string): SVGGElement {
       });
       g.appendChild(handle);
     }
-    const wpPos = edge.waypoint ?? edge.badgePos ?? [
+    // Without a bend point the handle sits on the label, or where the label was before it was dragged away.
+    const wpPos = edge.waypoint ?? (edge.labelOffset ? edge.labelAnchor : edge.badgePos) ?? [
       Math.round((edge.startPoint[0] + edge.endPoint[0]) / 2),
       Math.round((edge.startPoint[1] + edge.endPoint[1]) / 2),
     ];

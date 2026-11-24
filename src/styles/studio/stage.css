@@ -516,6 +516,9 @@
     cursor: pointer;
   }
 
+  .workspace[data-mode="design"] .conduit-badge-hit { cursor: grab; }
+  .conduit-badge-hit.is-dragging { cursor: grabbing; }
+
   .conduit-rail {
     fill: none;
     stroke: var(--cc-hair-2);

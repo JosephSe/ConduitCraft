@@ -2048,6 +2048,20 @@ export function renderPropertyEditor(): void {
       });
       body.appendChild(btnResetWp);
     }
+    if (edge.labelOffset) {
+      const btnResetLabel = document.createElement('button');
+      btnResetLabel.type = 'button';
+      btnResetLabel.className = 'prop-quiet-btn';
+      btnResetLabel.textContent = 'Reset label position';
+      btnResetLabel.title = 'Put the label back in its automatic spot on the wire';
+      btnResetLabel.addEventListener('click', () => {
+        pushHistory();
+        delete edge.labelOffset;
+        renderWiresOnly();
+        renderPropertyEditor();
+      });
+      body.appendChild(btnResetLabel);
+    }
     // Like each component tab, the wire panel ends with its "?".
     body.appendChild(helpButton('wire-fields'));
   } else if (sel.type === 'multi') {

@@ -342,6 +342,8 @@ export interface DiagramEdge {
   flow?: EdgeFlowMode;
   /** Optional manual bend point (world coordinates) the wire is nudged through. */
   waypoint?: [number, number];
+  /** Where the user dragged the label, as an offset from its automatic spot (so it follows the wire). */
+  labelOffset?: [number, number];
   comment?: string;
   /** What the wire carries, shown as a prefix on its label (F-17). */
   protocol?: WireProtocol;
@@ -357,7 +359,10 @@ export interface RoutedDiagramEdge extends DiagramEdge {
   pathD: string;
   startPoint: [number, number];
   endPoint: [number, number];
+  /** Centre of the label, in drawn coordinates (lane offset and any dragged labelOffset included). */
   badgePos?: [number, number];
+  /** The label's own spot on the drawn wire before any nudge or drag; a dragged labelOffset is measured from it. */
+  labelAnchor?: [number, number];
   badgeWidth?: number;
   /** True when the route is a U-shaped loop (lane separation is applied to loop depth instead). */
   isLoop?: boolean;

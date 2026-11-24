@@ -444,6 +444,11 @@ export function renderDiagramSvg(
 
   const wires = routed
     .map((edge) => {
+      // Parallel wires between the same pair are drawn apart by their lane offset; the label is already placed.
+      const lane =
+        edge.laneOffset && (edge.laneOffset[0] || edge.laneOffset[1])
+          ? ` transform="translate(${edge.laneOffset[0]}, ${edge.laneOffset[1]})"`
+          : '';
       const color = pal.tone[edge.tone] || pal.tone.blue;
       const touches = selectedNodes.has(edge.from) || selectedNodes.has(edge.to);
       const isExplicit = multiEdges.has(edge.id);
@@ -453,7 +458,7 @@ export function renderDiagramSvg(
       const wireOpacity = isMulti && spotlight && !active ? ' opacity="0.16"' : '';
       const strokeWidth = isSel ? '3.25' : active && isMulti ? '2.75' : '2.25';
       const glow = isSel
-        ? `<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="12" stroke-opacity="0.32"/>`
+        ? `<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="12" stroke-opacity="0.32"/>`
         : '';
 
       const label =
@@ -476,9 +481,9 @@ export function renderDiagramSvg(
             : '';
         const stream2 =
           frame && edge.animated !== false
-            ? `<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash2}/>`
+            ? `<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash2}/>`
             : '';
-        return `<g${wireOpacity}>${glow}<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash1}/>${stream2}${label}</g>`;
+        return `<g${wireOpacity}>${glow}<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash1}/>${stream2}${label}</g>`;
       }
       const dash =
         frame && edge.animated !== false
@@ -488,7 +493,7 @@ export function renderDiagramSvg(
             : edge.sync === 'async'
               ? ' stroke-dasharray="7 6"'
               : '';
-      return `<g${wireOpacity}>${glow}<path d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}</g>`;
+      return `<g${wireOpacity}>${glow}<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}</g>`;
     })
     .join('');
 
