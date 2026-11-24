@@ -314,6 +314,24 @@ function endDraw(): void {
   drawPointer = -1;
 }
 
+/** Start drawing at a screen point. Also called by `pointerTool.ts` for a press made while this chunk was loading. */
+export function beginFrameDraw(clientX: number, clientY: number, pointerId: number): void {
+  origin = screenToWorld(clientX, clientY);
+  drawPointer = pointerId;
+  draft = document.createElement('div');
+    draft.className = 'frame-draft';
+    draft.style.setProperty('--fx', String(origin[0]));
+    draft.style.setProperty('--fy', String(origin[1]));
+    draft.style.setProperty('--fw', '0');
+  draft.style.setProperty('--fh', '0');
+  stageWorld.appendChild(draft);
+  try {
+    viewport.setPointerCapture(pointerId);
+  } catch {
+    // The pointer is already up (a press made while this chunk loaded): the caller finishes the frame.
+  }
+}
+
 viewport.addEventListener(
   'pointerdown',
   (e) => {
@@ -321,16 +339,7 @@ viewport.addEventListener(
     // Capture phase, ahead of whatever is under the pointer: drawing a frame around components must not move them.
     e.stopImmediatePropagation();
     e.preventDefault();
-    origin = screenToWorld(e.clientX, e.clientY);
-    drawPointer = e.pointerId;
-    draft = document.createElement('div');
-    draft.className = 'frame-draft';
-    draft.style.setProperty('--fx', String(origin[0]));
-    draft.style.setProperty('--fy', String(origin[1]));
-    draft.style.setProperty('--fw', '0');
-    draft.style.setProperty('--fh', '0');
-    stageWorld.appendChild(draft);
-    viewport.setPointerCapture(e.pointerId);
+    beginFrameDraw(e.clientX, e.clientY, e.pointerId);
   },
   true,
 );
@@ -354,27 +363,33 @@ viewport.addEventListener(
   (e) => {
     if (!origin || e.pointerId !== drawPointer) return;
     e.stopImmediatePropagation();
-    const end = screenToWorld(e.clientX, e.clientY);
-    const dragged = draftRect(end);
-    endDraw();
-    const tiny = dragged.width < 24 && dragged.height < 24;
-    const rect = tiny ? { x: dragged.x, y: dragged.y, width: DEFAULT_FRAME_WIDTH, height: DEFAULT_FRAME_HEIGHT } : dragged;
-    pushHistory();
-    const frame = createFrame(
-      nextUid('frame'),
-      { x: Math.max(16, snap(rect.x)), y: Math.max(24, snap(rect.y)), width: snap(rect.width), height: snap(rect.height) },
-      'blue',
-    );
-    (app.doc.frames ??= []).push(frame);
-    adoptByGeometry(app.doc);
-    expandStageToFit(app.doc);
-    setSelection({ type: 'frame', id: frame.id });
-    setPointerTool('select');
-    renderAll(true);
-    announce(`Added a frame. ${app.doc.nodes.filter((n) => n.frameId === frame.id).length} components inside it.`);
+    finishFrameDraw(e.clientX, e.clientY);
   },
   true,
 );
+
+/** Finish the frame being drawn at a screen point: add it, select it, and go back to Select. */
+export function finishFrameDraw(clientX: number, clientY: number): void {
+  if (!origin) return;
+  const end = screenToWorld(clientX, clientY);
+  const dragged = draftRect(end);
+  endDraw();
+  const tiny = dragged.width < 24 && dragged.height < 24;
+  const rect = tiny ? { x: dragged.x, y: dragged.y, width: DEFAULT_FRAME_WIDTH, height: DEFAULT_FRAME_HEIGHT } : dragged;
+  pushHistory();
+  const frame = createFrame(
+    nextUid('frame'),
+    { x: Math.max(16, snap(rect.x)), y: Math.max(24, snap(rect.y)), width: snap(rect.width), height: snap(rect.height) },
+    'blue',
+  );
+  (app.doc.frames ??= []).push(frame);
+  adoptByGeometry(app.doc);
+  expandStageToFit(app.doc);
+  setSelection({ type: 'frame', id: frame.id });
+  setPointerTool('select');
+  renderAll(true);
+  announce(`Added a frame. ${app.doc.nodes.filter((n) => n.frameId === frame.id).length} components inside it.`);
+}
 
 viewport.addEventListener('lostpointercapture', (e) => {
   if (e.pointerId === drawPointer) endDraw();
