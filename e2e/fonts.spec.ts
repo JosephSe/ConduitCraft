@@ -49,6 +49,31 @@ test('Instrument Sans tabular figures are wider than proportional ones', async (
   expect(widths.tabular).toBeGreaterThan(widths.proportional + 5);
 });
 
+test('Bricolage Grotesque display face loads locally with zero external requests (GR3)', async ({ page }) => {
+  const externalFontRequests: string[] = [];
+  page.on('request', (req) => {
+    const url = req.url();
+    if (req.resourceType() === 'font' || /\.woff2?(?:$|\?)/i.test(url)) {
+      if (!url.startsWith('http://localhost:') && !url.startsWith('http://127.0.0.1:')) {
+        externalFontRequests.push(url);
+      }
+    }
+  });
+  await hideHome(page);
+  await page.goto('/');
+  const loaded = await page.evaluate(async () => {
+    await document.fonts.load('700 16px "Bricolage Grotesque"');
+    await document.fonts.ready;
+    return {
+      check700: document.fonts.check('700 16px "Bricolage Grotesque"'),
+      hasToken: getComputedStyle(document.documentElement).getPropertyValue('--cc-font-map').includes('Bricolage Grotesque'),
+    };
+  });
+  expect(loaded.check700).toBe(true);
+  expect(loaded.hasToken).toBe(true);
+  expect(externalFontRequests).toEqual([]);
+});
+
 test('view 1 does not jump when the webfonts swap in', async ({ page }) => {
   // A held font file keeps the load event pending, so wait only for the document.
   test.setTimeout(60_000);

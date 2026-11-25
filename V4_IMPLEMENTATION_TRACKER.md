@@ -14,16 +14,16 @@
 | Track | Scope | Done | Total | Status |
 |---|---|---:|---:|---|
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
-| **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 2 | 3 | In progress (`GR1`, `GR2` done; `GR3` unblocked) |
-| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 3 | 7 | In progress (`MP2`, `MP3`, `MP7` done; `MP4`/`MP5` superseded by D14) |
-| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Blocked on `GR2`/`GR3` (`DK7` superseded by D14) |
-| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `GR1`/`DK1` |
-| **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2`/`MP2` |
+| **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
+| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 3 | 7 | Ready for `MP1`, `MP6`, `MP8`, `MP9` (`MP2`/`MP3`/`MP7` done; `MP4`/`MP5` skipped per D14) |
+| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Ready for `DK1`–`DK6` (`DK7` superseded by D14) |
+| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `DK1` (`CP1` ready) |
+| **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2` |
 | **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Blocked on `DK2` |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Blocked on `MP8`/`DK4` |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **7** | **60** | **11.7%** _(3 items skipped per D14)_ |
+| **Overall** | | **8** | **60** | **13.3%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (5 / 31 active, 3 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (6 / 31 active, 3 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -73,12 +73,12 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** Contrast tests and `v4Visual.spec.ts` pass in both themes with zero pixel diff.
   - **Completed:** 2026-11-25 (PR #182 merged) · `pnpm test` 1,047/1,047 passed (exact suite/test counts verified); Entry JS `403.7 kB / 410 kB`, Entry CSS `134.9 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/v4Visual.spec.ts` 8/8 passed with zero pixel diff; prototype updated and verified (`ERRORS: []`).
 
-- [ ] **GR3. Self-hosted display face (Bricolage Grotesque)** · S · **Priority:** P0 · **Needs:** `GR1`
+- [x] **GR3. Self-hosted display face (Bricolage Grotesque)** · S · **Priority:** P0 · **Needs:** `GR1`
   - **Read:** `src/styles/fonts.css`, `tools/swPrecache.ts`, `e2e/fonts.spec.ts`, `REDESIGN_PLAN_V4.md` §5.2 & Q1.
-  - [ ] Add Latin-subsetted Bricolage Grotesque `.woff2` (wght 700–800, wdth 78–88, opsz 24) + OFL licence under `src/styles/fonts/`.
-  - [ ] Define `@font-face` (`font-display: swap` + size-adjusted fallback) and `--cc-font-map`; precache in `tools/swPrecache.ts`.
+  - [x] Add Latin-subsetted Bricolage Grotesque `.woff2` (Q1 static fallback `opsz=24, wght=700, wdth=80`, `40.4 kB`) + OFL licence under `src/styles/fonts/`.
+  - [x] Define `@font-face` (`font-display: swap` + size-adjusted fallback) and `--cc-font-map`; precached in `tools/swPrecache.ts` / `dist/sw.js`.
   - **Done when:** Total `.woff2` fonts <= `150 kB`, `fonts.spec.ts` and offline tests pass.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-25 (`v4-gr3-font`) · Fonts `119.0 kB / 150 kB` (`3 files`); `pnpm test` 1,054/1,054 passed (`211` suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `137.8 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/fonts.spec.ts` (3/3), `e2e/offline.spec.ts` (1/1), `e2e/v4Visual.spec.ts` (8/8, zero diff).
 
 ### Milestone MP: The Map
 
@@ -102,7 +102,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - [x] Extract/align pure `src/core/portSpread.ts` + `tests/portSpread.test.ts` enforcing 14 px parallel spacing on shared sides with level wires kept straight.
   - [x] Apply identically in `keyedStage.ts` and `src/exporter/diagramSvg.ts` (via shared `routeDiagramEdges()`) without mutating saved port fields.
   - **Done when:** 3-wire fixture shows parallel lines, level wire stays straight, open/save is byte-identical.
-  - **Completed:** 2026-11-25 (`v4-mp3-mp7-wires`) · `tests/portSpread.test.ts` 4/4 passed; `routeDiagramEdges()` drives both stage & SVG/HTML exports with zero mutation to persisted JSON.
+  - **Completed:** 2026-11-25 (PR #184) · `tests/portSpread.test.ts` 4/4 passed; `routeDiagramEdges()` drives both stage & SVG/HTML exports with zero mutation to persisted JSON.
 
 - [~] **MP4. Plates and bullets** *(Skipped — superseded by D14: keep V3 component cards, cut-out silhouettes, soft tinted icon tiles, `.node-status-badge` pills, and `.arch-node[data-external="true"]` dashed outline + `EXTERNAL` pill)*
 
@@ -121,7 +121,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - [x] Render 22 px label pills (`rx=7`) in `#wire-labels-svg` *above* `#nodes-layer` (`z-index: 90000`) so tight gaps never clip pill text.
   - [x] Show automatically at `high` zoom only when longest straight run >= `badgeWidth + 24 px` (`data-fits="1"`); always show on hover, selection, or highlight.
   - **Done when:** Zero label-behind-plate clipping at 100% in showcase; hover shows any wire's label.
-  - **Completed:** 2026-11-25 (`v4-mp3-mp7-wires`) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `136.7 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; 16/16 Playwright tests passed across `diagramStyle`, `wireProtocol`, `capsules`, `wireLabels`, and `map`; `v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
+  - **Completed:** 2026-11-25 (PR #184) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `136.7 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; 16/16 Playwright tests passed across `diagramStyle`, `wireProtocol`, `capsules`, `wireLabels`, and `map`; `v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
 
 - [ ] **MP8. Export parity (SVG, standalone HTML, viewer)** · M · **Priority:** P1 · **Needs:** `MP1`–`MP7`
   - **Read:** `src/exporter/diagramSvg.ts`, `src/exporter/standaloneHtml.ts`, `src/styles/viewer.css`, `e2e/exportVisual.spec.ts`.

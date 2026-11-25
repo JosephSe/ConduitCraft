@@ -113,6 +113,7 @@ export const WL_RESOLVED_TOKENS: Record<string, string> = {
   '--cc-fuchsia-soft-light': 'rgba(181, 23, 158, 0.12)',
   '--cc-fuchsia-soft-dark': 'rgba(240, 171, 252, 0.18)',
   '--cc-font-sans': "'Instrument Sans', 'Instrument Sans Fallback', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
+  '--cc-font-map': "'Bricolage Grotesque', 'Bricolage Grotesque Fallback', 'Instrument Sans', 'Instrument Sans Fallback', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif",
   '--cc-font-mono': "'Geist Mono', 'Geist Mono Fallback', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace",
 };
 

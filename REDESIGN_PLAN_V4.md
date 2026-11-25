@@ -573,9 +573,10 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Done:** every contrast pair (`on-dock` on `dock` >= 4.5:1) and `--k` assertion passes; `v4Visual.spec.ts` stays green with zero pixel diff. **Needs:** GR1.
 - **Measured (2026-11-25, PR #182, D14):** `pnpm test` 1,047/1,047 passed; Entry JS `403.7 kB / 410 kB`, Entry CSS `134.9 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/v4Visual.spec.ts` 8/8 passed with zero pixel diff.
 
-#### [ ] GR3. The display face · S
+#### [x] GR3. The display face · S
 - **Do:** add Bricolage Grotesque as a self-hosted Latin `woff2` with its licence file, instanced as Q1 says. `@font-face` with `swap` and a size-adjusted fallback as Z4 did. Precache it (`tools/swPrecache.ts`). Add `--cc-font-map`.
 - **Done:** fonts ≤ 150 kB together; `fonts.spec.ts` and the offline test pass; write the measured size here. **Needs:** GR1.
+- **Measured (2026-11-25, branch `v4-gr3-font`, Q1 static fallback):** Variable Latin instance (`opsz=24, wdth=78..88, wght=700..800`) measured `77.9 kB` (`> 60 kB` Q1 cap); per **Q1**, dropped to static Latin `opsz=24, wdth=80, wght=700` at **`40.4 kB`** (`41,348 bytes` + `OFL.txt` in `src/styles/fonts/`), with `@font-face` + fallback metrics in `src/styles/fonts.css`, `--cc-font-map` in `src/styles/studio/tokens.css` & `src/studio/stagePicture.ts`, and `tools/swPrecache.ts` verified in `dist/sw.js`. `pnpm test`: 1,054/1,054 passed (211 suites); Fonts `119.0 kB / 150 kB` (`3 files`), Entry JS `408.0 kB / 410 kB`, Entry CSS `137.8 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/fonts.spec.ts` (3/3), `e2e/offline.spec.ts` (1/1), and `e2e/v4Visual.spec.ts` (8/8, zero diff) passed.
 
 ### Milestone MP: The map
 
@@ -593,7 +594,7 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 #### [x] MP3. Shared track · S
 - **Do:** `src/core/portSpread.ts` and its test: given routed wires, return per-end offsets by the rule in 8.3. Apply in the stage and in `diagramSvg.ts`.
 - **Done:** a fixture with three wires leaving one side shows three parallel lines; a level wire stays straight; saved files are byte-identical after open and save. **Needs:** MP2.
-- **Measured (2026-11-25, branch `v4-mp3-mp7-wires`):** Extracted `src/core/portSpread.ts` (`computePortOffsets`, `SHARED_TRACK_GAP = 14`, level-anchored straight centerline) wired into `routeDiagramEdges()` in `src/core/layout.ts` (consumed by stage + exports) and added `tests/portSpread.test.ts` (`4/4` tests passing, byte-identical open/save verified).
+- **Measured (2026-11-25, PR #184):** Extracted `src/core/portSpread.ts` (`computePortOffsets`, `SHARED_TRACK_GAP = 14`, level-anchored straight centerline) wired into `routeDiagramEdges()` in `src/core/layout.ts` (consumed by stage + exports) and added `tests/portSpread.test.ts` (`4/4` tests passing, including byte-identical open/save verification).
 
 #### [~] MP4. Plates and bullets · M *(Skipped — superseded by D14: keep V3 component cards, cut-out silhouettes, and soft tinted icon tiles; only update v3.1.0 Callouts if needed for `--k`)*
 - **Read:** `renderNodes` (`keyedStage.ts:865`), `nodeStyle.ts`, `src/ui/icons.ts`, `src/ui/cutout.ts`.
@@ -608,7 +609,7 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 #### [x] MP7. Labels · S
 - **Do:** 8.4: the pill, the "fits" rule, the layer above the components, hover and selected.
 - **Done:** at 100% in the showcase no pill overlaps a plate; hovering any wire shows its label. **Needs:** MP2.
-- **Measured (2026-11-25, branch `v4-mp3-mp7-wires`):** Added `longestStraightRun()` in `src/core/wireGeom.ts` + `labelFits` (`>= badgeWidth + 24`) in `src/core/layout.ts`, `#wire-labels-svg` (`z-index: 90000`) above `#nodes-layer` in `index.html`/`dom.ts`/`render.ts`/`keyedStage.ts`, and `22 px` (`rx=7`) D10 quiet-by-default rules + Geist Mono protocol spans in `lines.css`. `pnpm test`: 1,054/1,054 passed (211 suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `136.7 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; 16/16 Playwright tests passed across `wireProtocol`, `capsules`, `wireLabels`, `map`, and `diagramStyle`; `v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
+- **Measured (2026-11-25, PR #184):** Added `longestStraightRun()` in `src/core/wireGeom.ts` + `labelFits` (`>= badgeWidth + 24`) in `src/core/layout.ts`, `#wire-labels-svg` (`z-index: 90000`) above `#nodes-layer` in `index.html`/`dom.ts`/`render.ts`/`keyedStage.ts`, and `22 px` (`rx=7`) D10 quiet-by-default rules + Geist Mono protocol spans in `lines.css`. `pnpm test`: 1,054/1,054 passed (211 suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `136.7 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; 16/16 Playwright tests passed across `wireProtocol`, `capsules`, `wireLabels`, `map`, and `diagramStyle`; `v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
 
 #### [ ] MP8. Export parity · M
 - **Read:** `diagramSvg.ts`, `standaloneHtml.ts`, `viewer.css`, `exportVisual.spec.ts`.
