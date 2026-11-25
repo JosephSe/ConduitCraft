@@ -940,6 +940,11 @@ function createWireGroup(edgeId: string): SVGGElement {
         }
         selectWire(e);
       });
+      badge.addEventListener('dblclick', (e) => {
+        if (app.workspaceMode !== 'design') return;
+        e.stopPropagation();
+        renameWireInline(edgeId, { x: e.clientX, y: e.clientY });
+      });
       (wireLabelsSvg ?? g).appendChild(badge);
     }
     badge.dataset.tone = edge.tone;
