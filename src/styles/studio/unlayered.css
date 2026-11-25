@@ -1918,10 +1918,10 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 /* MP6 (8.6): zoomed out, the diagram reads like a transit map at arm's length (>= 15 screen px). The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
 #stage-world[data-lod="low"] .node-title {
   font-family: var(--cc-font-map);
-  font-size: clamp(17px, calc(15.2px / var(--cam-scale, 1)), 35px);
+  font-size: clamp(17px, calc(15.2px / var(--cam-scale, 1)), 34.5px);
   font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.12;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   text-align: center;
   white-space: normal;
   text-wrap: balance;
@@ -1936,7 +1936,7 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .arch-node .node-select-hit { justify-content: center; }
 /* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. Cards in any failure state keep their own colours. */
 #stage-world[data-lod="low"] .arch-node:not([data-chaos]) .node-select-hit:not(:has(> svg)) {
-  padding: 4px 6px;
+  padding: 2px 3px;
   background: color-mix(in oklab, var(--t) 6%, var(--cc-sheet));
   border-color: color-mix(in oklab, var(--t) 50%, var(--cc-sheet));
 }
