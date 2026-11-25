@@ -1915,12 +1915,13 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-leave { to { opacity: 0; transform: scale(0.96); } }
 @media (prefers-reduced-motion: reduce) { .arch-node.is-attached .node-port, .arch-node.is-leaving { animation: none; } .arch-node.is-leaving { display: none; } }
 
-/* C6 (8.6): zoomed out, the diagram reads like a transit map. The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
+/* MP6 (8.6): zoomed out, the diagram reads like a transit map at arm's length (>= 15 screen px). The stage is CSS-zoomed, so a size divided by --cam-scale lands at that many screen pixels. */
 #stage-world[data-lod="low"] .node-title {
-  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 36px);   /* 36px cap: the longest ordinary word still fits a 222px box */
-  font-stretch: 75%;            /* the condensed width: about a fifth more letters per line */
-  font-weight: 800;             /* was set by the stale stage.css rule deleted in 4.3 */
-  line-height: 1.2;             /* 1.12 clipped descenders by 2px */
+  font-family: var(--cc-font-map);
+  font-size: clamp(17px, calc(15.2px / var(--cam-scale, 1)), 34.5px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   text-align: center;
   white-space: normal;
   text-wrap: balance;
@@ -1935,7 +1936,7 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .arch-node .node-select-hit { justify-content: center; }
 /* A plain card (no drawn outline: its button has no <svg> child) shows its colour as a tint and an edge, as shaped components do. Cards in any failure state keep their own colours. */
 #stage-world[data-lod="low"] .arch-node:not([data-chaos]) .node-select-hit:not(:has(> svg)) {
-  padding: 6px 10px;
+  padding: 2px 3px;
   background: color-mix(in oklab, var(--t) 6%, var(--cc-sheet));
   border-color: color-mix(in oklab, var(--t) 50%, var(--cc-sheet));
 }
@@ -1949,16 +1950,26 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .arch-node .node-icon { scale: clamp(1, calc(0.55 / var(--cam-scale, 1)), 1.9); transform-origin: center; }
 
 /* Lane headers: the number and title stay on one line; the subtitle gives way with an ellipsis in a narrow lane. */
-#stage-world[data-lod="low"] .zone-title { font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px); }
-#stage-world[data-lod="low"] .zone-num,
-#stage-world[data-lod="low"] .zone-sub { font-size: clamp(12px, calc(10.5px / var(--cam-scale, 1)), 40px); }
+#stage-world[data-lod="low"] .zone-title {
+  font-family: var(--cc-font-map);
+  font-size: clamp(17px, calc(15.2px / var(--cam-scale, 1)), 48px);
+  font-weight: 700;
+}
+#stage-world[data-lod="low"] .zone-num {
+  font-family: var(--cc-font-map);
+  font-size: clamp(15px, calc(14px / var(--cam-scale, 1)), 42px);
+  font-weight: 300;
+}
+#stage-world[data-lod="low"] .zone-sub {
+  font-size: clamp(12px, calc(11px / var(--cam-scale, 1)), 34px);
+}
 #stage-world[data-lod="low"] .zone-banner > span:first-child { white-space: nowrap; flex: none; }
 #stage-world[data-lod="low"] .zone-sub { min-width: 0; flex: 0 1 auto; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Frame titles: the tab grows with its text instead of clipping it at 24px. */
 #stage-world[data-lod="low"] .frame-title-bar {
-  font-size: clamp(15px, calc(12px / var(--cam-scale, 1)), 48px);
-  font-stretch: 75%;
+  font-family: var(--cc-font-map);
+  font-size: clamp(14px, calc(13px / var(--cam-scale, 1)), 34px);
   height: auto;
   max-inline-size: none;        /* a narrow frame's title may run past the frame's right edge rather than be cut */
   line-height: 1.3;

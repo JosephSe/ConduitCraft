@@ -44,6 +44,8 @@ export const WL_RESOLVED_TOKENS: Record<string, string> = {
   '--cc-panel-light': 'rgba(255, 255, 255, 0.84)',
   '--cc-panel-dark': 'rgba(46, 48, 51, 0.84)',
   '--cc-sheet': '#FFFFFF',
+  '--cc-band-a': '#FAFBFA',
+  '--cc-band-b': '#F3F5F4',
   '--cc-surface-light': '#FFFFFF',
   '--cc-surface-dark': '#2A2C2F',
   '--cc-well': 'rgba(21, 24, 28, 0.055)',
@@ -140,6 +142,8 @@ export function getResolvedWlVariables(): Record<string, string> {
     vars['--cc-canvas'] = vars['--cc-canvas-dark'];
     vars['--cc-island'] = vars['--cc-panel-dark'];
     vars['--cc-sheet'] = vars['--cc-surface-dark'];
+    vars['--cc-band-a'] = '#25282B';
+    vars['--cc-band-b'] = '#212326';
     vars['--cc-well'] = vars['--cc-surface-elevated-dark'];
     vars['--cc-surface-code'] = vars['--cc-surface-code-dark'];
     vars['--cc-ink'] = vars['--cc-ink-dark'];

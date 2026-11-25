@@ -681,7 +681,6 @@ export function applyTransform(): void {
   stageWorld.style.setProperty('--k', String(Math.min(1.6, Math.max(1, 0.78 / scale))));
   // Lets on-canvas grab handles keep a usable on-screen size when zoomed out (see .conduit-endpoint-handle).
   stageWorld.style.setProperty('--inv-zoom', String(Math.max(1, 1 / scale)));
-  viewport.toggleAttribute('data-faint', scale < 0.5); // the dot grid fades below 50% (8.1)
   zoomReadout.textContent = `${Math.round(scale * 100)}%`;
   minimapPainter?.();
 }

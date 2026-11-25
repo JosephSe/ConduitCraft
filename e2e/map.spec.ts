@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { captureExports, openExportDialog, runPaletteCommand } from './helpers';
+import { captureExports, clearSelection, openExportDialog, runPaletteCommand } from './helpers';
 
 /** The text of the nth export download. */
 async function exportText(page: import('@playwright/test').Page, count: number): Promise<string> {
@@ -11,17 +11,19 @@ async function exportText(page: import('@playwright/test').Page, count: number):
   }, count);
 }
 
-/** C6. At Fit the showcase reads like a map: every title is at least 11 px on screen, and exports carry the title block. */
+/** MP6. At Fit the showcase reads like a map: every title is at least 15 px on screen, and exports carry the title block. */
 test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' });
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => sessionStorage.setItem('conduitcraft-home-shown', '1'));
 });
 
-test('at Fit every component and lane title renders at 11 px or more', async ({ page }) => {
+test('every component and lane name is legible (at least 15 px on screen)', async ({ page }) => {
   await page.goto('/');
   await runPaletteCommand(page, 'Load Showcase');
   await expect(page.locator('.arch-node').first()).toBeVisible({ timeout: 20_000 });
+  await clearSelection(page);
+  await expect(page.locator('.inspector')).toBeHidden();
   await runPaletteCommand(page, 'Fit');
   const sizes = await page.evaluate(() => {
     const world = document.getElementById('stage-world') as HTMLElement;
@@ -31,7 +33,7 @@ test('at Fit every component and lane title renders at 11 px or more', async ({ 
       .map((el) => ({ text: el.textContent, px: parseFloat(getComputedStyle(el).fontSize) * zoom }));
   });
   expect(sizes.length).toBeGreaterThan(3);
-  for (const s of sizes) expect(s.px, s.text ?? '').toBeGreaterThanOrEqual(10.95);
+  for (const t of sizes) expect(t.px, `${t.text} is too small`).toBeGreaterThanOrEqual(14.95);
 });
 
 for (const size of [{ width: 1440, height: 900 }, { width: 1280, height: 720 }, { width: 1024, height: 700 }]) {

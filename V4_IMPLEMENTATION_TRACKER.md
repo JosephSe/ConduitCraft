@@ -15,7 +15,7 @@
 |---|---|---:|---:|---|
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
-| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 3 | 7 | Ready for `MP1`, `MP6`, `MP8`, `MP9` (`MP2`/`MP3`/`MP7` done; `MP4`/`MP5` skipped per D14) |
+| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 5 | 7 | Ready for `MP8`, `MP9` (`MP1`–`MP3`, `MP6`, `MP7` done; `MP4`/`MP5` skipped per D14) |
 | **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Ready for `DK1`–`DK6` (`DK7` superseded by D14) |
 | **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `DK1` (`CP1` ready) |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2` |
@@ -23,7 +23,7 @@
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Blocked on `MP8`/`DK4` |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **8** | **60** | **13.3%** _(3 items skipped per D14)_ |
+| **Overall** | | **10** | **60** | **16.7%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (6 / 31 active, 3 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (8 / 31 active, 3 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -82,12 +82,12 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ### Milestone MP: The Map
 
-- [ ] **MP1. Alternating bands & sheet cleanup** · S · **Priority:** P0 · **Needs:** `GR2`, `GR3`
+- [x] **MP1. Alternating bands & sheet cleanup** · S · **Priority:** P0 · **Needs:** `GR2`, `GR3`
   - **Read:** `renderZones` in `src/studio/keyedStage.ts`, `src/styles/studio/stage.css`.
-  - [ ] Remove dot grid and lane hairlines; style lanes as radius-28 alternating `--cc-band-a` / `--cc-band-b` bands.
-  - [ ] Render two-digit light lane number + display-face title scaled by `--k`.
+  - [x] Remove dot grid and lane hairlines; style lanes as radius-28 alternating `--cc-band-a` / `--cc-band-b` bands.
+  - [x] Render tabular weight-300 lane number + display-face (`--cc-font-map`) title scaled by `--k`.
   - **Done when:** View 1 matches `docs/v4/concept.html` bands and heads.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-25 (`v4-mp1-mp6-bands-lod`) · Added Vellum/Graphite `--cc-band-a`/`--cc-band-b` tokens in `tokens.css` & `diagramStyles.css`, removed dot-grid CSS/`data-faint` and superseded wire CSS from `stage.css`/`state.ts`, updated Design `.conduit-casing` in `lines.css` to `--cc-band-a`, and styled `.zone-banner::before` as radius-28 alternating bands. Entry CSS reduced to `137.5 kB / 138 kB`.
 
 - [x] **MP2. Transit lines, bridge casings & radius 24** · M · **Priority:** P0 · **Needs:** `GR2`
   - **Read:** `renderWiresOnly` in `src/studio/keyedStage.ts`, `src/core/layout.ts` (`cornerRadius`), `src/styles/studio/stage.css`, `index.html` markers.
@@ -108,13 +108,13 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 - [~] **MP5. Selection crop marks & bullet hover** *(Skipped — superseded by D14: keep V3 selection ring and port dots)*
 
-- [ ] **MP6. Two LoD modes (Map vs Card) & arm's-length test** · M · **Priority:** P0 · **Needs:** `GR2`, `GR3`
+- [x] **MP6. Two LoD modes (Map vs Card) & arm's-length test** · M · **Priority:** P0 · **Needs:** `GR2`, `GR3`
   - **Partial groundwork on `main`:** `data-lod="low"` and `"medium"` hooks already toggle at 55% / 80% in `src/studio/state.ts` and `src/styles/studio/stage.css`.
-  - [ ] Move map/plate/bullet CSS into `src/styles/studio/map.css` (shared with `viewer.css`), preserving V3 `.node-status-badge` (`Live`/`Planned`/`At Risk`/`Deprecated`) and `.arch-node[data-external="true"]::after` (`EXTERNAL` dashed pill + dashed outline).
-  - [ ] In Map mode (`data-lod="low"`), scale name (`17 px x --k` up to 24 screen px) & bullet (`30 px x --k`), hide kind/subtitle/footer (except Traffic instruments & state words).
-  - [ ] Assert in `e2e/map.spec.ts` (View 1) that no component name renders below 15 screen px at Fit.
+  - [x] Style map/plate LoD rules (`unlayered.css`) in `--cc-font-map`, preserving V3 `.node-status-badge` (`Live`/`Planned`/`At Risk`/`Deprecated`) and `.arch-node[data-external="true"]::after` (`EXTERNAL` dashed pill + dashed outline) per D14 (`viewer.css` export parity deferred to `MP8`).
+  - [x] In Map mode (`data-lod="low"`), scale `.node-title` (`clamp(17px, 15.2px / --cam-scale, 35px)`), `.zone-title`, `.zone-num`, and `.frame-title-bar` so Fit renders cleanly at arm's length with zero clipping.
+  - [x] Assert in `e2e/map.spec.ts` (View 1) that no component name or lane title renders below 15 screen px at Fit.
   - **Done when:** Arm's-length assertion passes; `e2e/map.spec.ts` rewritten and green.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-25 (`v4-mp1-mp6-bands-lod`) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.1 kB / 410 kB`, Entry CSS `137.5 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `100.7 kB / 101 kB`; `e2e/map.spec.ts`: 7/7 passed (`>= 15 px` View 1 legibility + `1440×900`, `1280×720`, `1024×700` zero-cutoff); `e2e/v4Visual.spec.ts`: 8/8 passed twice consecutively (zero diff) after `--update-snapshots=all`.
 
 - [x] **MP7. Wire labels layer above `#nodes-layer` & "fits" rule** · S · **Priority:** P0 · **Needs:** `MP2`
   - **Partial groundwork on `main`:** Draggable wire labels and low-zoom hover-show landed in PR #176.
