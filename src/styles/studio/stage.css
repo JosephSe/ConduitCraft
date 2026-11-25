@@ -3,16 +3,9 @@
     position: relative;
     overflow: hidden;
     background-color: var(--cc-canvas);
-    background-image: radial-gradient(var(--dot-now, var(--cc-dot)) 1.25px, transparent 1.25px);
-    background-size: 24px 24px;
     isolation: isolate;
+    transition: background-color 0.2s;
   }
-
-  /* Dots fade below 50% zoom and drop to 45% in Traffic and Review (8.1). */
-  .canvas-shell:has([data-faint]) { --dot-now: transparent; }
-  .canvas-shell:has(+ *), .canvas-shell { transition: background-color 0.2s; }
-  .workspace[data-lens="traffic"] .canvas-shell,
-  .workspace[data-lens="review"] .canvas-shell { --dot-now: color-mix(in srgb, var(--cc-dot) 45%, transparent); }
 
   .window-drop-veil {
     position: absolute;
@@ -218,15 +211,14 @@
     stroke-width: 3px;
   }
 
-  /* Swimlane Zone Banners */
-  /* Swimlane (8.1): a column. The banner is only the header; its ::before is the wash between two hairlines. */
+  /* Swimlane Zone Banners (V4 MP1: alternating rounded-28 bands, display headings) */
   .zone-banner {
     position: absolute;
     top: 0;
     left: calc(var(--zx) * 1px);
     width: calc(var(--zw) * 1px);
     box-sizing: border-box;
-    padding: 12px 16px;
+    padding: 18px 20px;
     isolation: isolate;
     background: none;
     border: 0;
@@ -234,8 +226,11 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem;
-    font-size: 15px;
-    font-weight: 600;
+    font-family: var(--cc-font-map);
+    font-size: calc(17px * var(--k, 1));
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
     color: var(--cc-ink);
     pointer-events: none;
   }
@@ -243,12 +238,17 @@
   .zone-banner::before {
     content: '';
     position: absolute;
-    inset: 0 0 auto 0;
+    inset: 0 4px auto 4px;
     block-size: calc(var(--stage-h, 0) * 1px);
     z-index: -1;
-    background: color-mix(in srgb, var(--cc-sheet) 34%, transparent);
-    border-inline: 1px solid var(--cc-hair);
+    border-radius: 28px;
+    background: var(--cc-band-a, var(--cc-sheet));
     pointer-events: none;
+    transition: background 240ms;
+  }
+
+  .zone-banner:nth-child(even)::before {
+    background: var(--cc-band-b, var(--cc-canvas));
   }
 
   .workspace[data-mode="design"] .zone-banner {
@@ -269,9 +269,17 @@
   }
 
   .zone-banner .zone-num {
-    font-family: var(--cc-font-mono);
+    font-family: var(--cc-font-map);
+    font-variant-numeric: tabular-nums;
     color: var(--cc-ink-3);
-    font-weight: 600;
+    font-weight: 300;
+  }
+
+  .zone-banner .zone-sub {
+    font-family: var(--cc-font-sans);
+    font-size: calc(12px * var(--k, 1));
+    font-weight: 400;
+    color: var(--cc-ink-3);
   }
 
   .zone-resize-handle {
@@ -501,16 +509,6 @@
     z-index: 100000;
   }
 
-  .conduit-hit {
-    fill: none;
-    stroke: transparent;
-    stroke-width: 18;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    pointer-events: stroke;
-    cursor: pointer;
-  }
-
   .conduit-badge-hit {
     pointer-events: all;
     cursor: pointer;
@@ -518,21 +516,6 @@
 
   .workspace[data-mode="design"] .conduit-badge-hit { cursor: grab; }
   .conduit-badge-hit.is-dragging { cursor: grabbing; }
-
-  .conduit-rail {
-    fill: none;
-    stroke: var(--cc-hair-2);
-    stroke-width: 2.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    opacity: 0.58;
-    pointer-events: none;
-  }
-
-  /* Async wires (F-17) draw their rail dashed, so the call style reads without animation. */
-  .conduit-group[data-sync="async"] .conduit-rail {
-    stroke-dasharray: 7 6;
-  }
 
   .conduit-glow {
     display: none;
@@ -616,19 +599,6 @@
   .conduit-group {
     transition: opacity 0.22s ease;
     outline: none;
-  }
-
-  .conduit-group:focus-visible .conduit-glow,
-  .conduit-group:hover .conduit-glow,
-  .conduit-group.is-highlighted .conduit-glow {
-    opacity: 0.42;
-    stroke-width: 11;
-  }
-
-  .conduit-group:focus-visible .conduit-rail {
-    stroke: var(--cc-blue);
-    stroke-width: 3.5;
-    opacity: 1;
   }
 
   .conduit-waypoint-handle {
@@ -793,16 +763,6 @@
     opacity: 0.95;
   }
 
-  .conduit-group.is-selected .conduit-glow {
-    opacity: 0.62;
-    stroke-width: 13;
-  }
-
-  .conduit-group.is-selected .route-pill-bg {
-    stroke: var(--cc-blue);
-    stroke-width: 2;
-  }
-
   .conduit-group.is-dimmed {
     opacity: 0.16;
   }
@@ -839,27 +799,6 @@
 
   .draft-wire[hidden] {
     display: none;
-  }
-
-  .route-pill-bg {
-    fill: var(--cc-sheet);
-    stroke: var(--cc-hair-2);
-    stroke-width: 1.25;
-  }
-
-  .route-pill-text {
-    font-family: var(--cc-font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    fill: var(--cc-ink);
-    pointer-events: none;
-  }
-
-  .port-dot {
-    fill: var(--cc-sheet);
-    stroke: var(--cc-hair-2);
-    stroke-width: 2;
-    pointer-events: none;
   }
 
   /* Architecture Node Wrapper */

@@ -8,6 +8,16 @@
     --cc-font-sans: "Instrument Sans", "Instrument Sans Fallback", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
     --cc-font-map: "Bricolage Grotesque", "Bricolage Grotesque Fallback", var(--cc-font-sans);
     --cc-font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+    /* V4 MP1: alternating vertical zone bands on Vellum sheet */
+    --cc-band-a: #FAFBFA;
+    --cc-band-b: #F3F5F4;
+  }
+
+  :root[data-theme="graphite"] {
+    /* V4 MP1: alternating vertical zone bands on Graphite sheet */
+    --cc-band-a: #25282B;
+    --cc-band-b: #212326;
   }
 
   @supports (background: linear-gradient(in oklab, white, black)) {

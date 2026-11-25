@@ -576,14 +576,15 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 #### [x] GR3. The display face · S
 - **Do:** add Bricolage Grotesque as a self-hosted Latin `woff2` with its licence file, instanced as Q1 says. `@font-face` with `swap` and a size-adjusted fallback as Z4 did. Precache it (`tools/swPrecache.ts`). Add `--cc-font-map`.
 - **Done:** fonts ≤ 150 kB together; `fonts.spec.ts` and the offline test pass; write the measured size here. **Needs:** GR1.
-- **Measured (2026-11-25, branch `v4-gr3-font`, Q1 static fallback):** Variable Latin instance (`opsz=24, wdth=78..88, wght=700..800`) measured `77.9 kB` (`> 60 kB` Q1 cap); per **Q1**, dropped to static Latin `opsz=24, wdth=80, wght=700` at **`40.4 kB`** (`41,348 bytes` + `OFL.txt` in `src/styles/fonts/`), with `@font-face` + fallback metrics in `src/styles/fonts.css`, `--cc-font-map` in `src/styles/studio/tokens.css` & `src/studio/stagePicture.ts`, and `tools/swPrecache.ts` verified in `dist/sw.js`. `pnpm test`: 1,054/1,054 passed (211 suites); Fonts `119.0 kB / 150 kB` (`3 files`), Entry JS `408.0 kB / 410 kB`, Entry CSS `137.8 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/fonts.spec.ts` (3/3), `e2e/offline.spec.ts` (1/1), and `e2e/v4Visual.spec.ts` (8/8, zero diff) passed.
+- **Measured (2026-11-25, PR #185 merged):** Variable Latin instance (`opsz=24, wdth=78..88, wght=700..800`) measured `77.9 kB` (`> 60 kB` Q1 cap); per **Q1**, dropped to static Latin `opsz=24, wdth=80, wght=700` at **`40.4 kB`** (`41,348 bytes` + `OFL.txt` in `src/styles/fonts/`), with `@font-face` + fallback metrics in `src/styles/fonts.css`, `--cc-font-map` in `src/styles/studio/tokens.css` & `src/studio/stagePicture.ts`, and `tools/swPrecache.ts` verified in `dist/sw.js`. `pnpm test`: 1,054/1,054 passed (211 suites); Fonts `119.0 kB / 150 kB` (`3 files`), Entry JS `408.0 kB / 410 kB`, Entry CSS `137.8 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/fonts.spec.ts` (3/3), `e2e/offline.spec.ts` (1/1), and `e2e/v4Visual.spec.ts` (8/8, zero diff) passed.
 
 ### Milestone MP: The map
 
-#### [ ] MP1. Bands · S
+#### [x] MP1. Bands · S
 - **Read:** `renderZones` in `keyedStage.ts`; the zone rules in `stage.css`.
 - **Do:** 8.2. Remove the dot grid and lane hairlines.
 - **Done:** view 1 matches the mockup's bands and heads. **Needs:** GR2, GR3.
+- **Measured (2026-11-25, branch `v4-mp1-mp6-bands-lod`):** Removed the dot-grid CSS & `data-faint` attribute from `stage.css` & `state.ts`, deleted superseded duplicate wire/badge rules in `stage.css` (moving base `.conduit-hit` rules into `lines.css` while retaining `.conduit-glow { display: none; }` for `tests/contrast.test.ts`), added Vellum/Graphite `--cc-band-a`/`--cc-band-b` tokens in `tokens.css` + style overrides in `diagramStyles.css`, switched `.conduit-casing` in Design to `--cc-band-a`, and styled `.zone-banner::before` as radius-28 alternating bands with `--cc-font-map` display headers (`wght=700`) and tabular `wght=300` `.zone-num`. Entry CSS dropped from `137.9 kB` to `137.5 kB / 138 kB`.
 
 #### [x] MP2. Lines · M
 - **Read:** `renderWiresOnly` and lines 600 to 860 of `keyedStage.ts`; `stage.css` 452 to 765; `layout.ts` 773 to 846.
@@ -601,10 +602,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 #### [~] MP5. Selection, hover, ports · S *(Skipped — superseded by D14: keep V3 selection ring and port styling)*
 
-#### [ ] MP6. Two modes · M
+#### [x] MP6. Two modes · M
 - **Read:** `map.spec.ts`; the `data-lod` rules in `stage.css`.
 - **Do:** 8.6 (applied to V3 component cards using `--k` so Fit names stay >= 15 screen px).
 - **Done:** the arm's-length test on view 1 (assert no component name below 15 px computed × scale); `map.spec.ts` rewritten. **Needs:** GR2, GR3.
+- **Measured (2026-11-25, branch `v4-mp1-mp6-bands-lod`, D14):** Updated `#stage-world[data-lod="low"]` rules in `src/styles/studio/unlayered.css` to render `.node-title`, `.zone-title`, `.zone-num`, and `.frame-title-bar` in `--cc-font-map` (`clamp(17px, calc(15.2px / var(--cam-scale, 1)), 35px)` for nodes) while keeping V3 component cards, cut-out silhouettes, Status badges, and `EXTERNAL` pills per D14, and updated `e2e/map.spec.ts` to assert `>= 15 px` (`>= 14.95`) at View 1 (`44%` Fit). `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.1 kB / 410 kB`, Entry CSS `137.5 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `100.7 kB / 101 kB`; `e2e/map.spec.ts`: 7/7 passed (`1440×900`, `1280×720`, `1024×700` zero-cutoff + `>= 15 px`); `e2e/v4Visual.spec.ts`: 8/8 passed twice consecutively (zero diff) after `--update-snapshots=all`.
 
 #### [x] MP7. Labels · S
 - **Do:** 8.4: the pill, the "fits" rule, the layer above the components, hover and selected.
