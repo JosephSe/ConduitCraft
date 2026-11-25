@@ -677,6 +677,8 @@ export function applyTransform(): void {
   stageWorld.style.transform = `translate(${app.panX / scale}px, ${app.panY / scale}px)`;
   stageWorld.style.setProperty('--cam-scale', String(scale));
   stageWorld.dataset.lod = scale < 0.55 ? 'low' : scale < 0.8 ? 'medium' : 'high';
+  // V4 counter-scale (8.1): keeps strokes and map-mode typography readable at Fit without changing box sizes.
+  stageWorld.style.setProperty('--k', String(Math.min(1.6, Math.max(1, 0.78 / scale))));
   // Lets on-canvas grab handles keep a usable on-screen size when zoomed out (see .conduit-endpoint-handle).
   stageWorld.style.setProperty('--inv-zoom', String(Math.max(1, 1 / scale)));
   viewport.toggleAttribute('data-faint', scale < 0.5); // the dot grid fades below 50% (8.1)
