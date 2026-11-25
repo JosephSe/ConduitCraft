@@ -561,9 +561,10 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 ### Milestone GR: Ground
 
-#### [ ] GR1. Branch and baseline · S
+#### [x] GR1. Branch and baseline · S
 - **Do:** confirm V3's R3 and inspector card Step 5 are merged. Cut `v4` from `main`. Run the four commands in section 12 and write counts and sizes into the baseline table below. Add `e2e/v4Visual.spec.ts` (10.4) and save the ten views to `docs/v4/before/`. Raise the entry CSS limit to 138 kB with a comment naming this plan.
 - **Done:** the spec passes twice in a row with no diff. **Needs:** none.
+- **Measured (2026-11-25, branch `v4` from `main@86dc5ba`):** `e2e/v4Visual.spec.ts` (8/8) captured 20 PNGs to `docs/v4/before/` and passed twice consecutively with zero diff. `pnpm test`: 1,046/1,046 (209 suites). `pnpm check:size`: Entry JS 403.6 kB / 410 kB, Entry CSS 134.7 kB / 138 kB, Fonts 78.6 kB / 150 kB (2 files). `pnpm test:e2e`: 425 passed, 1 pre-existing skip (`propertiesCard.spec.ts:40`), 8 stale `e2e/v3Visual.spec.ts` snapshot diffs on `main`.
 
 #### [ ] GR2. Tokens · M
 - **Read:** `src/styles/shared.css`, `tests/contrast.test.ts`, the mockup's `:root`.
@@ -716,11 +717,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 | Measure | Value |
 |---|---|
-| Unit tests | |
-| Playwright specs / tests | |
-| Entry JS | |
-| Entry CSS | |
-| Fonts | |
+| Unit tests | 1046 passed (209 suites) |
+| Playwright specs / tests | 75 files / 434 tests (425 passed, 1 skipped, 8 stale `v3Visual` snapshot diffs on `main`; `v4Visual` 8/8 passed twice) |
+| Entry JS | 403.6 kB / 410 kB |
+| Entry CSS | 134.7 kB / 138 kB |
+| Fonts | 78.6 kB / 150 kB (2 files) |
 
 ---
 

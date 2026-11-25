@@ -19,7 +19,8 @@ const budgets = [
   { pattern: /^index-.*\.js$/, maxBytes: 410 * 1024, label: 'entry JS' },
   // Raised from 130 kB for the floating properties card (inspector card, Steps 1–3), after reclaiming 0.9 kB of dead CSS (D3).
   // Raised from 133 kB for panel hiding and the canvas edge (about 1 kB).
-  { pattern: /^index-.*\.css$/, maxBytes: 135 * 1024, label: 'entry CSS' },
+  // Raised from 135 kB to 138 kB for REDESIGN_PLAN_V4.md (GR1 checkpoint during MP; returns to 133 kB at RL1).
+  { pattern: /^index-.*\.css$/, maxBytes: 138 * 1024, label: 'entry CSS' },
 ];
 
 // Lazy chunks: every one is checked (not just the first match). Patterns are tried in order; a chunk that matches
