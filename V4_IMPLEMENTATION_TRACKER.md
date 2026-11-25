@@ -15,15 +15,15 @@
 |---|---|---:|---:|---|
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
-| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 5 | 7 | Ready for `MP8`, `MP9` (`MP1`–`MP3`, `MP6`, `MP7` done; `MP4`/`MP5` skipped per D14) |
+| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 7 | 7 | **Complete** (`MP1`–`MP3`, `MP6`–`MP9` done; `MP4`/`MP5` skipped per D14) |
 | **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Ready for `DK1`–`DK6` (`DK7` superseded by D14) |
 | **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `DK1` (`CP1` ready) |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2` |
 | **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Blocked on `DK2` |
-| **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Blocked on `MP8`/`DK4` |
+| **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Ready for `PS1` (unblocked by `MP8`; `DK4` for Key footer) |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **10** | **60** | **16.7%** _(3 items skipped per D14)_ |
+| **Overall** | | **12** | **60** | **20.0%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (8 / 31 active, 3 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (10 / 31 active, 3 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -123,17 +123,17 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** Zero label-behind-plate clipping at 100% in showcase; hover shows any wire's label.
   - **Completed:** 2026-11-25 (PR #184) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `136.7 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; 16/16 Playwright tests passed across `diagramStyle`, `wireProtocol`, `capsules`, `wireLabels`, and `map`; `v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
 
-- [ ] **MP8. Export parity (SVG, standalone HTML, viewer)** · M · **Priority:** P1 · **Needs:** `MP1`–`MP7`
+- [x] **MP8. Export parity (SVG, standalone HTML, viewer)** · M · **Priority:** P1 · **Needs:** `MP1`–`MP7`
   - **Read:** `src/exporter/diagramSvg.ts`, `src/exporter/standaloneHtml.ts`, `src/styles/viewer.css`, `e2e/exportVisual.spec.ts`.
-  - [ ] Port bands, lines, bridges, bullets, plates, labels layer, V3 `.node-status-badge` & `EXTERNAL` dashed pill/outline, and v3.1.0 Callouts to `diagramSvg.ts`, `standaloneHtml.ts`, and `viewer.css`.
-  - [ ] Embed Bricolage Grotesque in exports per V3 Q3 rule.
-  - **Done when:** Stage and SVG export of showcase differ by < 2% pixels at Fit; `exportVisual.spec.ts` baselines re-recorded and green.
-  - **Completed:** _pending_
+  - [x] Port bands, lines, bridges, labels layer above nodes, V3 `.node-status-badge` & `EXTERNAL` dashed pill/outline, and v3.1.0 Callouts to `diagramSvg.ts`, `standaloneHtml.ts`, and `viewer.css`.
+  - [x] Verify Bricolage Grotesque embedded & loaded in SVG clone and standalone HTML exports (`e2e/exportVisual.spec.ts` asserts all 3 fonts).
+  - **Done when:** Export baselines re-recorded and green; HTML export within `<= 101 kB`.
+  - **Completed:** 2026-11-25 (`v4-mp8-mp9-exports-styles`) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.1 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `e2e/exportVisual.spec.ts` (6/6) passed twice consecutively after `--update-snapshots=all`; `e2e/v4Visual.spec.ts` (8/8) green.
 
-- [ ] **MP9. Sketch & Print styles re-derived** · S · **Priority:** P1 · **Needs:** `MP8`
-  - [ ] Re-derive Sketch (rough filter on plate edges/lines, crisp bullets) and Print (white hairline bands, 2.5 px lines mapped to text tier, dashed async) from V4 Blueprint.
-  - **Done when:** `diagramStyle.spec.ts` passes with updated baselines.
-  - **Completed:** _pending_
+- [x] **MP9. Sketch & Print styles re-derived** · S · **Priority:** P1 · **Needs:** `MP8`
+  - [x] Re-derive Print (white hairline bands, no-fill plates, 2.5 px lines, dashed async) and Sketch (rough filter on plate edges/lines, warm paper bands) across `diagramStyles.css` and `diagramSvg.ts`.
+  - **Done when:** `diagramStyle.spec.ts` and `exportVisual.spec.ts` pass with updated baselines.
+  - **Completed:** 2026-11-25 (`v4-mp8-mp9-exports-styles`) · `e2e/diagramStyle.spec.ts` (2/2), `e2e/exportVisual.spec.ts` (6/6), and `e2e/v4Visual.spec.ts` (8/8) passed.
 
 ### Milestone DK: The Dock & The Shell
 

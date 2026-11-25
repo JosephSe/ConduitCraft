@@ -215,8 +215,8 @@ test('picture exports carry the webfonts and the title weight', async ({ browser
   }).toPass();
 
   const svg = Buffer.from(await exportAs(page, '#btn-export-svg-clone'), 'base64').toString('utf8');
-  // Both font files (Instrument Sans and Geist Mono) are inline.
-  expect(svg.match(/url\("data:font\/woff2;base64,/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+  // All three webfonts (Instrument Sans, Geist Mono, and Bricolage Grotesque) are inline.
+  expect(svg.match(/url\("data:font\/woff2;base64,/g)?.length ?? 0).toBeGreaterThanOrEqual(3);
 
   const view = await context.newPage();
   await view.setContent(`<!doctype html><body style="margin:0">${svg.replace(/^<\?xml[^>]*\?>\s*/, '')}</body>`);
@@ -228,6 +228,16 @@ test('picture exports carry the webfonts and the title weight', async ({ browser
   const html = Buffer.from(await exportAs(page, '#btn-export-html'), 'base64').toString('utf8');
   expect(html).toContain('window.__ccFonts');
   await view.setContent(html);
-  await expect.poll(() => view.evaluate(() => document.fonts.check('600 16px "Instrument Sans"') && [...document.fonts].some((f) => f.family === 'Instrument Sans' && f.status === 'loaded'))).toBe(true);
+  await expect
+    .poll(() =>
+      view.evaluate(
+        () =>
+          document.fonts.check('600 16px "Instrument Sans"') &&
+          [...document.fonts].some((f) => f.family === 'Instrument Sans' && f.status === 'loaded') &&
+          document.fonts.check('700 17px "Bricolage Grotesque"') &&
+          [...document.fonts].some((f) => f.family === 'Bricolage Grotesque' && f.status === 'loaded'),
+      ),
+    )
+    .toBe(true);
   await context.close();
 });
