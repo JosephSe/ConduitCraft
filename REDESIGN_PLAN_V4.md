@@ -132,6 +132,7 @@ All are the plan author's calls unless marked. Change one by editing this table 
 | D11 | **States are a mark and a word, never colour alone** (kept from V3 8.5), and they appear only in Traffic. | Accessibility, and the squint test in Design. |
 | D12 | **Redesign by replacement** (V3's D13). Entry CSS ends 4.0 at or below 133 kB; entry JS at or below 560 kB. | The budgets are already at their limits. |
 | D13 | **The three diagram styles survive.** Blueprint becomes the look in section 8. Sketch and Print are re-derived from it in MP9, not redesigned. | They are in the file format (`style`). |
+| D14 | **Hybrid V3 Components + V4 Fluid Wires (2026-11-25 pivot).** Keep V3's component look, feel, cut-out silhouettes (`src/ui/cutout.ts`), Vellum/Graphite colour palette (`--cc-*`), floating **Status badge pills** (`.node-status-badge`: `● Live`, `● Planned`, `● At Risk`, `● Deprecated`, static dot ring per A15), and **External ("Run by someone else")** styling (dashed component outline + floating dashed `EXTERNAL` pill via `.arch-node[data-external="true"]::after`). Adopt V4's fluid wires (`MP2`, `MP3`, `MP7`), counter-scale (`--k`), shell/key/composer (`DK`, `CP`), live run (`RN`), on-map Review callout (`RV1`), poster exports (`PS`), and Next-Gen UX. | Owner feedback after reviewing `docs/v4/prototype.html`: V3's soft tinted components, colours, status badges & `EXTERNAL` styling read best; V4's fluid wire behaviour & ergonomics carry the upgrade. |
 
 ---
 
@@ -566,10 +567,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Done:** the spec passes twice in a row with no diff. **Needs:** none.
 - **Measured (2026-11-25, branch `v4` from `main@86dc5ba`):** `e2e/v4Visual.spec.ts` (8/8) captured 20 PNGs to `docs/v4/before/` and passed twice consecutively with zero diff. `pnpm test`: 1,046/1,046 (209 suites). `pnpm check:size`: Entry JS 403.6 kB / 410 kB, Entry CSS 134.7 kB / 138 kB, Fonts 78.6 kB / 150 kB (2 files). `pnpm test:e2e`: 425 passed, 1 pre-existing skip (`propertiesCard.spec.ts:40`), 8 stale `e2e/v3Visual.spec.ts` snapshot diffs on `main`.
 
-#### [ ] GR2. Tokens · M
-- **Read:** `src/styles/shared.css`, `tests/contrast.test.ts`, the mockup's `:root`.
-- **Do:** 5.1. Change the values of the surviving tokens, add `--cc-canvas*`, `--cc-band-*`, `--cc-plate*`, `--cc-dock`, `--cc-on-dock`, `--cc-on-bullet` and the seven `--cc-line-*`. Make `[data-tone]` and `[data-accent]` set `--tl` beside `--t`. Add `--k` beside `data-lod` in `state.ts`.
-- **Done:** every pair named in 5.1 and 10.5 is asserted in the contrast test; no visual change yet except colour values. **Needs:** GR1.
+#### [x] GR2. Tokens · M (revised by D14)
+- **Read:** `src/styles/shared.css`, `tests/contrast.test.ts`.
+- **Do (revised by D14):** Preserve 100% of V3's Vellum & Graphite colours (`--cc-canvas*`, `--cc-sheet`, `--cc-ink*`, `--cc-blue..fuchsia`, `--cc-*-soft`). Add non-breaking V4 chrome tokens (`--cc-dock`, `--cc-on-dock`, `--cc-lift-2`) and write `--k` beside `data-lod` in `src/studio/state.ts`.
+- **Done:** every contrast pair (`on-dock` on `dock` >= 4.5:1) and `--k` assertion passes; `v4Visual.spec.ts` stays green with zero pixel diff. **Needs:** GR1.
+- **Measured (2026-11-25, branch `v4-gr2-tokens`, D14):** `pnpm test` 1,047/1,047 passed; Entry JS `403.7 kB / 410 kB`, Entry CSS `134.9 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/v4Visual.spec.ts` 8/8 passed with zero pixel diff.
 
 #### [ ] GR3. The display face · S
 - **Do:** add Bricolage Grotesque as a self-hosted Latin `woff2` with its licence file, instanced as Q1 says. `@font-face` with `swap` and a size-adjusted fallback as Z4 did. Precache it (`tools/swPrecache.ts`). Add `--cc-font-map`.
@@ -591,19 +593,15 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Do:** `src/core/portSpread.ts` and its test: given routed wires, return per-end offsets by the rule in 8.3. Apply in the stage and in `diagramSvg.ts`.
 - **Done:** a fixture with three wires leaving one side shows three parallel lines; a level wire stays straight; saved files are byte-identical after open and save. **Needs:** MP2.
 
-#### [ ] MP4. Plates and bullets · M
+#### [~] MP4. Plates and bullets · M *(Skipped — superseded by D14: keep V3 component cards, cut-out silhouettes, and soft tinted icon tiles; only update v3.1.0 Callouts if needed for `--k`)*
 - **Read:** `renderNodes` (`keyedStage.ts:865`), `nodeStyle.ts`, `src/ui/icons.ts`, `src/ui/cutout.ts`.
-- **Do:** `src/ui/bullet.ts`; the card anatomy in 8.5; every shaped kind; the actor; external; where `eyebrow`, `chip`, `footerLeft`, `status` and the status badge go (write the mapping here).
-- **Done:** all 14 catalog entries match the mockup at 100%; a name of 28 characters wraps to two lines and does not touch the edge in any shape. **Needs:** GR2, GR3.
 
-#### [ ] MP5. Selection, hover, ports · S
-- **Do:** crop marks and the heavier edge; bullet hover; restyle `.node-port` and the wire-draft line to the line tier.
-- **Done:** view 2; `interactions.spec.ts`, `roving.spec.ts` pass. **Needs:** MP4.
+#### [~] MP5. Selection, hover, ports · S *(Skipped — superseded by D14: keep V3 selection ring and port styling)*
 
 #### [ ] MP6. Two modes · M
 - **Read:** `map.spec.ts`; the `data-lod` rules in `stage.css`.
-- **Do:** 8.6.
-- **Done:** the arm's-length test on view 1 (assert no component name below 15 px computed × scale); `map.spec.ts` rewritten. **Needs:** MP4.
+- **Do:** 8.6 (applied to V3 component cards using `--k` so Fit names stay >= 15 screen px).
+- **Done:** the arm's-length test on view 1 (assert no component name below 15 px computed × scale); `map.spec.ts` rewritten. **Needs:** GR2, GR3.
 
 #### [ ] MP7. Labels · S
 - **Do:** 8.4: the pill, the "fits" rule, the layer above the components, hover and selected.
@@ -621,8 +619,8 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 #### [ ] DK1. The inverted dock, Design face · M
 - **Read:** `dock.ts`, `dockFavourites.ts`, the dock rules in `layout.css`, `toolRail.spec.ts`.
-- **Do:** 6.5: the surface, tools, favourites as bullets, the "Add or find anything" field (still opening the tray until CP2), Run.
-- **Done:** views 1 and 2; dragging a favourite to the sheet still places it; roving focus works. **Needs:** MP4.
+- **Do:** 6.5: the surface, tools, favourites as V3 cut-outs (per D14), the "Add or find anything" field (still opening the tray until CP2), Run.
+- **Done:** views 1 and 2; dragging a favourite to the sheet still places it; roving focus works. **Needs:** GR2.
 
 #### [ ] DK2. Lens switch and dock morph · S
 - **Do:** 6.3 and the width spring in 6.5. **Done:** `lensKeys.spec.ts` passes; no layout shift in any other slot during the morph. **Needs:** DK1.
@@ -639,10 +637,9 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Do:** 6.5's hint line and 6.7. **Done:** `tooltips.spec.ts`, `camera.spec.ts` pass. **Needs:** DK1.
 
 #### [ ] DK6. Properties card and the rest · S
-- **Do:** 6.6 and 6.8. **Done:** `propertiesCard.spec.ts` passes; view 10. **Needs:** MP4.
+- **Do:** 6.8 (display headings in Home/dialogs; keep V3 properties card styling & cut-out header per D14). **Done:** `propertiesCard.spec.ts` passes; view 10. **Needs:** GR3.
 
-#### [ ] DK7. Retire the cut-out · S
-- **Do:** replace every `renderCutoutMarkup` call with the bullet; delete `src/ui/cutout.ts` and `tests/cutout.test.ts`. **Done:** `grep cutout src` is empty. **Needs:** DK1, DK6, CP2.
+#### [~] DK7. Retire the cut-out · S *(Skipped — superseded by D14: `src/ui/cutout.ts` is kept)*
 
 #### [ ] DK8. Narrow and touch · M
 - **Do:** 6.9. **Done:** `touch.spec.ts` passes; at 375 × 812 nothing scrolls sideways except the dock and every dock target is at least 44 px. **Needs:** DK1 to DK5, CP2.

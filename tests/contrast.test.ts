@@ -61,7 +61,14 @@ describe('5.1 colour pairs', () => {
       }
       const onInk = contrast(token(theme, 'on-ink'), token(theme, 'ink'));
       assert.ok(onInk >= 4.5, `on-ink on ink (${theme}) is ${onInk.toFixed(2)}:1`);
+      const onDock = contrast(token(theme, 'on-dock'), token(theme, 'dock'));
+      assert.ok(onDock >= 4.5, `on-dock on dock (${theme}) is ${onDock.toFixed(2)}:1`);
     }
+  });
+
+  it('writes --k counter-scale beside data-lod in state.ts', () => {
+    const stateSrc = readFileSync(resolve(root, 'src/studio/state.ts'), 'utf8');
+    assert.match(stateSrc, /stageWorld\.dataset\.lod[\s\S]*?stageWorld\.style\.setProperty\('--k'/);
   });
 
   it('keeps wires at 3:1 on the sheet, the canvas and the Traffic canvas', () => {

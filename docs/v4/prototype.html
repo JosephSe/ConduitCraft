@@ -30,36 +30,36 @@ try {
   --cc-base: 200ms;
   --cc-slow: 340ms;
 
-  /* Surface & chrome tokens via light-dark() */
-  --cc-canvas: light-dark(#ECEEF1, #0E1013);
-  --cc-canvas-run: light-dark(#E2E5E9, #08090B);
-  --cc-band-a: light-dark(#FFFFFF, #16181C);
-  --cc-band-b: light-dark(#F6F7F9, #121417);
-  --cc-plate: light-dark(#FFFFFF, #1C1F24);
-  --cc-plate-edge: light-dark(#16181D, #DDE0E5);
-  --cc-ink: light-dark(#16181D, #F1F2F4);
-  --cc-ink-2: light-dark(#4F5560, #B6BBC2);
-  --cc-ink-3: light-dark(#5C626A, #8E949D);
-  --cc-on-ink: light-dark(#FFFFFF, #16181D);
-  --cc-hair: light-dark(rgba(22, 24, 29, .10), rgba(255, 255, 255, .10));
-  --cc-hair-2: light-dark(rgba(22, 24, 29, .18), rgba(255, 255, 255, .20));
-  --cc-well: light-dark(rgba(22, 24, 29, .06), rgba(255, 255, 255, .07));
-  --cc-well-2: light-dark(rgba(22, 24, 29, .13), rgba(255, 255, 255, .15));
-  --cc-island: light-dark(rgba(255, 255, 255, .90), rgba(30, 33, 38, .90));
-  --cc-solid: light-dark(#FFFFFF, #1E2126);
+  /* V3 Vellum / Graphite colour style + V4 dock tokens */
+  --cc-canvas: light-dark(#ECEFEE, #1D1F21);
+  --cc-canvas-run: light-dark(#E0E5E4, #151617);
+  --cc-band-a: light-dark(#FFFFFF, #2A2C2F);
+  --cc-band-b: light-dark(#F6F7F7, #232528);
+  --cc-plate: light-dark(#FFFFFF, #2A2C2F);
+  --cc-plate-edge: light-dark(rgba(21, 24, 28, .22), rgba(255, 255, 255, .20));
+  --cc-ink: light-dark(#15181C, #F2F3F1);
+  --cc-ink-2: light-dark(#565C64, #B7BBBF);
+  --cc-ink-3: light-dark(#5C626A, #92979C);
+  --cc-on-ink: light-dark(#FFFFFF, #1D1F21);
+  --cc-hair: light-dark(rgba(21, 24, 28, .11), rgba(255, 255, 255, .10));
+  --cc-hair-2: light-dark(rgba(21, 24, 28, .20), rgba(255, 255, 255, .20));
+  --cc-well: light-dark(rgba(21, 24, 28, .055), rgba(255, 255, 255, .07));
+  --cc-well-2: light-dark(rgba(21, 24, 28, .10), rgba(255, 255, 255, .13));
+  --cc-island: light-dark(rgba(255, 255, 255, .86), rgba(46, 48, 51, .86));
+  --cc-solid: light-dark(#FFFFFF, #2A2C2F);
 
   /* Inverted focal dock */
-  --cc-dock: light-dark(#16181D, #F1F2F4);
-  --cc-on-dock: light-dark(#FFFFFF, #16181D);
-  --cc-on-dock-2: light-dark(rgba(255, 255, 255, .72), rgba(22, 24, 29, .70));
-  --cc-dock-well: light-dark(rgba(255, 255, 255, .14), rgba(22, 24, 29, .09));
-  --cc-dock-hair: light-dark(rgba(255, 255, 255, .22), rgba(22, 24, 29, .18));
+  --cc-dock: light-dark(#15181C, #F2F3F1);
+  --cc-on-dock: light-dark(#FFFFFF, #1D1F21);
+  --cc-on-dock-2: light-dark(rgba(255, 255, 255, .72), rgba(29, 31, 33, .70));
+  --cc-dock-well: light-dark(rgba(255, 255, 255, .14), rgba(29, 31, 33, .09));
+  --cc-dock-hair: light-dark(rgba(255, 255, 255, .22), rgba(29, 31, 33, .18));
   --cc-fail-on-dock: light-dark(#FF8FA3, #BE123C);
 
   --cc-redline: light-dark(#C42316, #FF6B5E);
-  --cc-on-bullet: light-dark(#FFFFFF, #0E1013);
+  --cc-on-bullet: light-dark(#FFFFFF, #1D1F21);
 
-  /* Two-tier palette: text tones (4.5:1) & line tones (3:1+) */
+  /* V3 Vellum / Graphite tone palette */
   --cc-text-blue: light-dark(#1D4ED8, #60A5FA);
   --cc-text-emerald: light-dark(#047857, #34D399);
   --cc-text-rose: light-dark(#BE123C, #FB7185);
@@ -68,13 +68,13 @@ try {
   --cc-text-cyan: light-dark(#0B7C9E, #22D3EE);
   --cc-text-fuchsia: light-dark(#B5179E, #F0ABFC);
 
-  --cc-line-blue: light-dark(#2563EB, #60A5FA);
-  --cc-line-emerald: light-dark(#059669, #34D399);
-  --cc-line-rose: light-dark(#E11D48, #FB7185);
-  --cc-line-violet: light-dark(#7C3AED, #A78BFA);
-  --cc-line-amber: light-dark(#C96A04, #FBBF24);
-  --cc-line-cyan: light-dark(#0891B2, #22D3EE);
-  --cc-line-fuchsia: light-dark(#C026D3, #F0ABFC);
+  --cc-line-blue: light-dark(#1D4ED8, #60A5FA);
+  --cc-line-emerald: light-dark(#047857, #34D399);
+  --cc-line-rose: light-dark(#BE123C, #FB7185);
+  --cc-line-violet: light-dark(#5B21B6, #A78BFA);
+  --cc-line-amber: light-dark(#B45309, #FBBF24);
+  --cc-line-cyan: light-dark(#0B7C9E, #22D3EE);
+  --cc-line-fuchsia: light-dark(#B5179E, #F0ABFC);
 
   --cc-lift: light-dark(
     0 1px 1px rgba(22, 24, 29, .05), 0 10px 30px -12px rgba(22, 24, 29, .24),
@@ -286,17 +286,83 @@ kbd {
   cursor: grab; user-select: none; -webkit-user-select: none;
   transition: opacity var(--cc-base);
 }
-.node .plate { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.node .plate {
+  position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible;
+  filter: drop-shadow(0 1px 2px rgba(21, 24, 28, .08));
+}
 .plate .fill {
-  fill: var(--cc-plate);
-  stroke: var(--cc-plate-edge);
-  stroke-width: calc(1.5px * var(--k));
+  fill: color-mix(in srgb, var(--t) 6%, var(--cc-plate));
+  stroke: color-mix(in srgb, var(--t) 44%, transparent);
+  stroke-width: calc(1.4px * var(--k));
   stroke-linejoin: round;
   transition: stroke var(--cc-base), fill var(--cc-slow);
 }
-.plate .rim { fill: none; stroke: var(--cc-plate-edge); stroke-width: calc(1.5px * var(--k)); }
+.plate .rim { fill: none; stroke: color-mix(in srgb, var(--t) 44%, transparent); stroke-width: calc(1.4px * var(--k)); }
 .plate .hatch { fill: url(#hatch); opacity: 0; transition: opacity var(--cc-slow); }
-.node[data-external] .fill { stroke-dasharray: calc(7px * var(--k)) calc(5px * var(--k)); }
+.node[data-external] .fill { stroke-dasharray: calc(6px * var(--k)) calc(4px * var(--k)); }
+.node[data-external]::after {
+  content: "EXTERNAL";
+  position: absolute;
+  top: calc(-12px * var(--k));
+  right: calc(12px * var(--k));
+  padding: calc(1px * var(--k)) calc(6.5px * var(--k));
+  border-radius: 999px;
+  font: 600 calc(9.5px * var(--k))/1.25 var(--cc-font-mono);
+  letter-spacing: 0.06em;
+  background: var(--cc-plate);
+  color: var(--cc-ink-2);
+  border: calc(1px * var(--k)) dashed currentColor;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* V3 Floating Status Badges (still ring per A15) */
+.node-status-badge {
+  position: absolute;
+  top: calc(-9px * var(--k));
+  left: calc(10px * var(--k));
+  display: inline-flex;
+  align-items: center;
+  gap: calc(4.5px * var(--k));
+  padding: calc(1.5px * var(--k)) calc(7px * var(--k));
+  border-radius: 999px;
+  font: 600 calc(10.5px * var(--k))/1.2 var(--cc-font-ui);
+  border: calc(1px * var(--k)) solid var(--cc-hair);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  z-index: 10;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.node-status-badge .status-dot {
+  width: calc(6px * var(--k));
+  height: calc(6px * var(--k));
+  border-radius: 999px;
+  background: currentColor;
+  flex: none;
+}
+.node-status-badge[data-status="live"] {
+  background: color-mix(in srgb, var(--cc-text-emerald) 14%, var(--cc-plate));
+  color: var(--cc-text-emerald);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+.node-status-badge[data-status="live"] .status-dot {
+  box-shadow: 0 0 0 calc(2px * var(--k)) color-mix(in srgb, var(--cc-text-emerald) 22%, transparent);
+}
+.node-status-badge[data-status="planned"] {
+  background: color-mix(in srgb, var(--cc-text-blue) 14%, var(--cc-plate));
+  color: var(--cc-text-blue);
+  border-color: rgba(59, 130, 246, 0.45);
+}
+.node-status-badge[data-status="at-risk"] {
+  background: color-mix(in srgb, var(--cc-text-rose) 14%, var(--cc-plate));
+  color: var(--cc-text-rose);
+  border-color: rgba(244, 63, 94, 0.45);
+}
+.node-status-badge[data-status="deprecated"] {
+  background: color-mix(in srgb, var(--cc-ink-3) 14%, var(--cc-plate));
+  color: var(--cc-ink-3);
+  border-color: rgba(100, 116, 139, 0.4);
+}
 .node[data-shape="hex"] { --pl: 46px; --pr: 46px; }
 .node[data-shape="pill"] { --pl: 26px; --pr: 26px; }
 .node[data-shape="pipe"] { --pl: 22px; --pr: 38px; }
@@ -309,22 +375,30 @@ kbd {
   display: flex; flex-direction: column;
 }
 .body { display: flex; align-items: center; gap: calc(9px * var(--k)); min-width: 0; }
+/* V3 soft-tinted icon tile instead of solid circle bullet */
 .bullet {
   position: relative; flex: none;
   width: calc(30px * var(--k)); height: calc(30px * var(--k));
-  border-radius: 50%;
-  background: var(--tl); color: var(--cc-on-bullet);
+  border-radius: calc(9px * var(--k));
+  background: color-mix(in srgb, var(--t) 14%, var(--cc-plate));
+  color: var(--t);
+  box-shadow: inset 0 0 0 calc(1px * var(--k)) color-mix(in srgb, var(--t) 22%, transparent);
   display: grid; place-items: center;
   transition: background var(--cc-base), transform var(--cc-slow) var(--cc-spring);
 }
-.bullet svg { width: 58%; height: 58%; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.dock .bullet, .composer .bullet, .ghost .bullet {
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--t) 18%, var(--cc-solid));
+  color: var(--t);
+}
+.bullet svg { width: 58%; height: 58%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .bullet .g-x { display: none; }
 @media (prefers-reduced-motion: no-preference) {
-  .node:hover .bullet { transform: scale(1.08); }
+  .node:hover .bullet { transform: scale(1.06); }
 }
 .lamp {
-  position: absolute; right: -6%; top: -6%;
-  width: 30%; height: 30%; border-radius: 50%;
+  position: absolute; right: -5%; top: -5%;
+  width: 28%; height: 28%; border-radius: 50%;
   background: var(--cc-line-emerald);
   box-shadow: 0 0 0 calc(2px * var(--k)) var(--cc-plate);
   display: none;
@@ -396,29 +470,21 @@ kbd {
 :root[data-lens="design"] [data-lod="low"] .foot,
 :root[data-lens="review"] [data-lod="low"] .foot { display: none; }
 
-/* Actor terminus */
+/* Actor terminus (V3 soft-tinted round badge) */
 .node[data-shape="figure"] .inner { align-items: center; justify-content: center; padding: 0; }
 .node[data-shape="figure"] .body { flex-direction: column; text-align: center; gap: calc(7px * var(--k)); }
 .node[data-shape="figure"] .names { align-items: center; }
 .node[data-shape="figure"] .bullet {
-  width: calc(48px * var(--k)); height: calc(48px * var(--k));
-  box-shadow: 0 0 0 calc(1.5px * var(--k)) var(--cc-plate-edge), 0 0 0 calc(5px * var(--k)) var(--cc-plate);
+  width: calc(46px * var(--k)); height: calc(46px * var(--k)); border-radius: 50%;
+  background: color-mix(in srgb, var(--t) 12%, var(--cc-plate));
+  color: var(--t);
+  box-shadow: 0 0 0 calc(1.5px * var(--k)) color-mix(in srgb, var(--t) 45%, transparent), 0 0 0 calc(5px * var(--k)) var(--cc-plate);
 }
 .node[data-shape="figure"] .sub, .node[data-shape="figure"] .foot { display: none; }
 
-/* Selected: heavier edge + 4 ink crop marks */
-.node.is-selected .fill, .node.is-selected .rim { stroke-width: calc(3px * var(--k)); }
-.node.is-selected::after {
-  content: ""; position: absolute; inset: calc(-10px * var(--k)); pointer-events: none;
-  --b: calc(2.5px * var(--k)); --l: calc(15px * var(--k));
-  --g: linear-gradient(var(--cc-ink) 0 0);
-  background:
-    var(--g) 0 0 / var(--l) var(--b), var(--g) 0 0 / var(--b) var(--l),
-    var(--g) 100% 0 / var(--l) var(--b), var(--g) 100% 0 / var(--b) var(--l),
-    var(--g) 0 100% / var(--l) var(--b), var(--g) 0 100% / var(--b) var(--l),
-    var(--g) 100% 100% / var(--l) var(--b), var(--g) 100% 100% / var(--b) var(--l);
-  background-repeat: no-repeat;
-}
+/* Selected: V3 crisp tone-accented edge & soft outer halo */
+.node.is-selected .fill, .node.is-selected .rim { stroke: var(--t); stroke-width: calc(2.4px * var(--k)); }
+.node.is-selected .plate { filter: drop-shadow(0 0 calc(6px * var(--k)) color-mix(in srgb, var(--t) 28%, transparent)); }
 .node.is-dragging { cursor: grabbing; z-index: 5; }
 @media (prefers-reduced-motion: no-preference) {
   .node.drop { animation: drop var(--cc-slow) var(--cc-spring); }
@@ -430,18 +496,25 @@ kbd {
   100% { box-shadow: 0 0 0 calc(14px * var(--k)) transparent; }
 }
 
-/* Traffic States + Geiger Hover Preview */
-:root[data-lens="traffic"] .node[data-state="failed"] .fill { stroke: var(--cc-line-rose); }
+/* Traffic States + Geiger Hover Preview (V3 soft-tinted readability) */
+:root[data-lens="traffic"] .node[data-state="failed"] .fill {
+  fill: color-mix(in srgb, var(--cc-line-rose) 10%, var(--cc-plate));
+  stroke: var(--cc-line-rose);
+}
 :root[data-lens="traffic"] .node[data-state="failed"] .hatch { opacity: 1; }
-:root[data-lens="traffic"] .node[data-state="failed"] .bullet { background: var(--cc-line-rose); }
+:root[data-lens="traffic"] .node[data-state="failed"] .bullet {
+  background: color-mix(in srgb, var(--cc-line-rose) 18%, var(--cc-plate));
+  color: var(--cc-line-rose);
+}
 :root[data-lens="traffic"] .node[data-state="failed"] .bullet .g-k { display: none; }
 :root[data-lens="traffic"] .node[data-state="failed"] .bullet .g-x { display: block; }
 :root[data-lens="traffic"] .node[data-state="failed"] .lamp { display: none; }
 :root[data-lens="traffic"] .node[data-state="failed"] .kind { color: var(--cc-text-rose); font-weight: 600; }
 :root[data-lens="traffic"] .node[data-state="unreachable"] .fill {
+  fill: var(--cc-plate);
   stroke: var(--cc-ink-3); stroke-dasharray: calc(5px * var(--k)) calc(5px * var(--k));
 }
-:root[data-lens="traffic"] .node[data-state="unreachable"] .bullet { background: var(--cc-ink-3); }
+:root[data-lens="traffic"] .node[data-state="unreachable"] .bullet { background: var(--cc-well); color: var(--cc-ink-3); }
 :root[data-lens="traffic"] .node[data-state="unreachable"] .lamp { background: var(--cc-ink-3); }
 :root[data-lens="traffic"] .node[data-state="unreachable"] .name { color: var(--cc-ink-3); }
 :root[data-lens="traffic"] .node[data-state="buffering"] .fill { stroke: var(--cc-line-amber); }
@@ -950,6 +1023,14 @@ kbd {
 }
 .dots button:hover { transform: scale(1.12); }
 .dots button[aria-checked="true"] { border-color: var(--cc-ink); }
+.status-pills { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 6px; }
+.status-pills button {
+  height: 24px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 500;
+  background: var(--cc-well); color: var(--cc-ink-2);
+  border: 1px solid transparent; transition: background var(--cc-fast), color var(--cc-fast);
+}
+.status-pills button:hover { background: var(--cc-well-2); color: var(--cc-ink); }
+.status-pills button[aria-checked="true"] { background: var(--cc-ink); color: var(--cc-on-ink); }
 .rowf { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; }
 .stepper { display: inline-flex; align-items: center; background: var(--cc-well); border-radius: 9px; }
 .stepper button { width: 30px; height: 30px; border-radius: 9px; font-size: 16px; }
@@ -1433,14 +1514,14 @@ const INITIAL_NODES = [
   { id: 'fans', cat: 'actor', title: 'Fans', tech: '1.8M browsers & mobile', sub: '1.8M at 10:00', tone: 'blue', x: 96, y: 150, zId: 'z1' },
   { id: 'app', cat: 'client', title: 'Marquee app', tech: 'iOS / Android / Web', sub: 'iOS, Android and web', tone: 'blue', x: 74, y: 395, zId: 'z1' },
   { id: 'cdn', cat: 'gate', title: 'Edge CDN + WAF', tech: 'Cloudflare', sub: '40 PoPs, bot rules', tone: 'violet', x: 349, y: 365, zId: 'z2' },
-  { id: 'wait', cat: 'limiter', title: 'Virtual waiting room', tech: 'Token queue', sub: 'Admits fans at a rate the core can take', tone: 'amber', x: 349, y: 600, admit: 4, per: 5, zId: 'z2' },
+  { id: 'wait', cat: 'limiter', title: 'Virtual waiting room', tech: 'Token queue', sub: 'Admits fans at a rate the core can take', tone: 'amber', status: 'planned', x: 349, y: 600, admit: 4, per: 5, zId: 'z2' },
   { id: 'idp', cat: 'service', title: 'Identity', tech: 'Go + JWT', sub: 'Sessions and tokens', tone: 'violet', x: 680, y: 375, copies: 2, zId: 'z3' },
   { id: 'gw', cat: 'service', title: 'API gateway', tech: 'Envoy', sub: 'Routes every call', tone: 'blue', x: 680, y: 615, copies: 3, zId: 'z3' },
   { id: 'lb', cat: 'balancer', title: 'Load balancer', tech: 'Round robin', sub: 'Spreads core traffic', tone: 'blue', x: 980, y: 626, zId: 'z3' },
   { id: 'cache', cat: 'cache', title: 'Seat map cache', tech: 'Redis cluster', sub: 'Sub-ms seat availability', tone: 'emerald', x: 1311, y: 399, hit: 80, zId: 'z4' },
-  { id: 'seats', cat: 'service', title: 'Seat inventory', tech: 'Rust + gRPC', sub: 'Holds and releases seats', tone: 'blue', x: 1300, y: 615, copies: 4, zId: 'z4', childLevel: 'lvl-seats' },
-  { id: 'db', cat: 'store', title: 'Ticket database', tech: 'Postgres primary', sub: 'Postgres, one writer', tone: 'emerald', x: 1603, y: 380, copies: 1, zId: 'z4' },
-  { id: 'checkout', cat: 'service', title: 'Checkout and orders', tech: 'TypeScript Saga', sub: 'Takes and tracks orders', tone: 'blue', x: 1600, y: 615, copies: 3, zId: 'z4' },
+  { id: 'seats', cat: 'service', title: 'Seat inventory', tech: 'Rust + gRPC', sub: 'Holds and releases seats', tone: 'blue', status: 'live', x: 1300, y: 615, copies: 4, zId: 'z4', childLevel: 'lvl-seats' },
+  { id: 'db', cat: 'store', title: 'Ticket database', tech: 'Postgres primary', sub: 'Postgres, one writer', tone: 'emerald', status: 'at-risk', x: 1603, y: 380, copies: 1, zId: 'z4' },
+  { id: 'checkout', cat: 'service', title: 'Checkout and orders', tech: 'TypeScript Saga', sub: 'Takes and tracks orders', tone: 'blue', status: 'live', x: 1600, y: 615, copies: 3, zId: 'z4' },
   { id: 'pay', cat: 'service', title: 'Card processor', tech: 'Stripe / Adyen', sub: 'Authorizes payments', tone: 'rose', x: 1920, y: 615, external: true, zId: 'z5', childLevel: 'lvl-pay' },
   { id: 'events', cat: 'stream', title: 'Order events', tech: 'Kafka (12 parts)', sub: 'Durable event log', tone: 'amber', x: 1911, y: 860, zId: 'z5' },
   { id: 'dlq', cat: 'queue', title: 'Ticket jobs', tech: 'SQS + backoff', sub: 'Retries failed mints', tone: 'amber', x: 2230, y: 860, zId: 'z5' },
@@ -1661,6 +1742,7 @@ function instrument(n) {
   return ['', ''];
 }
 const STATE_WORD = { failed: 'Failed', unreachable: 'Unreachable', buffering: 'Buffering' };
+const STATUS_LABEL = { live: 'Live', planned: 'Planned', 'at-risk': 'At Risk', deprecated: 'Deprecated' };
 
 function computeTraceSets() {
   if (!traceState) return null;
@@ -1725,8 +1807,12 @@ function nodeHTML(n, ez, traceSets, geigerSet) {
   }
   const lvlInfo = n.childLevel ? CHILD_LEVELS[n.childLevel] : null;
   const lvlBtn = lvlInfo ? `<button type="button" class="lvl-pill" data-lvl="${n.childLevel}" data-node="${n.id}" title="Hover to peek inside · Click to drill in">↓ ${lvlInfo.nodes.length}</button>` : '';
+  const statusPill = n.status && STATUS_LABEL[n.status]
+    ? `<span class="node-status-badge" data-status="${n.status}" aria-label="Component status: ${STATUS_LABEL[n.status]}"><span class="status-dot"></span><span>${STATUS_LABEL[n.status]}</span></span>`
+    : '';
 
-  return `<div class="${cls}" data-id="${n.id}" data-shape="${c.shape}" data-tone="${n.tone}"${n.external ? ' data-external' : ''}${n._state ? ` data-state="${n._state}"` : ''}${n._fresh ? ` data-fresh style="--d:${n._dist * 70}ms;` : ' style="'}left:${box.x}px;top:${box.y}px;width:${n.w}px;height:${n.h}px">
+  return `<div class="${cls}" data-id="${n.id}" data-shape="${c.shape}" data-tone="${n.tone}"${n.external ? ' data-external' : ''}${n.status ? ` data-status="${n.status}"` : ''}${n._state ? ` data-state="${n._state}"` : ''}${n._fresh ? ` data-fresh style="--d:${n._dist * 70}ms;` : ' style="'}left:${box.x}px;top:${box.y}px;width:${n.w}px;height:${n.h}px">
+    ${statusPill}
     ${plate(n)}
     <div class="inner">
       <div class="body">${bullet(n.cat, 1)}<span class="names"><b class="name">${esc(n.title)}</b><span class="kind">${esc(kind)}</span></span></div>
@@ -1990,10 +2076,12 @@ function updateCard() {
     h = `<div class="card-head" data-tone="${n.tone}">${bullet(n.cat)}<div><b>${esc(n.title)}</b><small>${c.name}</small></div><button type="button" class="card-close" data-close-card aria-label="Close properties">✕</button></div>
     <div class="tabs" role="tablist">${['look', 'behaviour', 'notes'].map(t => `<button type="button" role="tab" data-tab="${t}" aria-selected="${t === tab}">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</div>`;
     if (tab === 'look') {
+      const stOpts = [['', 'None'], ['live', 'Live'], ['planned', 'Planned'], ['at-risk', 'At Risk'], ['deprecated', 'Deprecated']];
       h += `<label class="field"><span>Name</span><input type="text" data-f="title" value="${esc(n.title)}"></label>
       <label class="field"><span>Technology</span><input type="text" data-f="tech" value="${esc(n.tech || '')}" placeholder="e.g. Postgres, Go, Kafka"></label>
       <label class="field"><span>Description</span><input type="text" data-f="sub" value="${esc(n.sub || '')}"></label>
-      <div class="field"><span>Colour</span>${dots(n.tone)}</div>`;
+      <div class="field"><span>Colour</span>${dots(n.tone)}</div>
+      <div class="field"><span>Status</span><div class="status-pills" role="radiogroup" aria-label="Status">${stOpts.map(([k, lbl]) => `<button type="button" data-status-pick="${k}" role="radio" aria-checked="${(n.status || '') === k}">${lbl}</button>`).join('')}</div></div>`;
     } else if (tab === 'behaviour') {
       h += `<div class="rowf"><span>Copies</span><span class="stepper"><button type="button" data-step="-1" aria-label="One fewer">−</button><output>${n.copies || 1}</output><button type="button" data-step="1" aria-label="One more">+</button></span></div>
       ${n.cat === 'cache' ? `<div class="rowf"><span>Cache hit rate</span><span class="stepper"><button type="button" data-hit="-5" aria-label="Lower hit rate">−</button><output>${n.hit || 80}%</output><button type="button" data-hit="5" aria-label="Higher hit rate">+</button></span></div>` : ''}
@@ -2029,6 +2117,7 @@ card.addEventListener('click', ev => {
   const o = sel.type === 'node' ? N(sel.id) : E(sel.id); if (!o) return;
   snap();
   if (b.dataset.tone) o.tone = b.dataset.tone;
+  if ('statusPick' in b.dataset) o.status = b.dataset.statusPick || undefined;
   if (b.dataset.step) o.copies = Math.min(8, Math.max(1, (o.copies || 1) + +b.dataset.step));
   if (b.dataset.hit) o.hit = Math.min(99, Math.max(10, (o.hit || 80) + +b.dataset.hit));
   if (b.dataset.sw === 'external') o.external = !o.external;

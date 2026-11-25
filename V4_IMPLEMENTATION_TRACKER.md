@@ -14,16 +14,16 @@
 | Track | Scope | Done | Total | Status |
 |---|---|---:|---:|---|
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
-| **Track 1: V4 Ground (`GR`)** | Baseline, V4 two-tier tokens, Bricolage Grotesque (`GR1`–`GR3`) | 1 | 3 | In progress (`GR1` done; `GR2`/`GR3` unblocked) |
-| **Track 1: V4 The Map (`MP`)** | Bands, lines, shared track, plates/bullets, LoD, labels, exports (`MP1`–`MP9`) | 0 | 9 | Blocked on `GR` (partial groundwork on `main`) |
-| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK1`–`DK8`) | 0 | 8 | Blocked on `GR2`/`MP4` |
+| **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 2 | 3 | In progress (`GR1`, `GR2` done; `GR3` unblocked) |
+| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 0 | 7 | Ready for `MP1`/`MP2` (`MP4`/`MP5` superseded by D14) |
+| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Blocked on `GR2`/`GR3` (`DK7` superseded by D14) |
 | **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `GR1`/`DK1` |
-| **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2`/`MP2`/`MP4` |
-| **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Blocked on `DK2`/`MP4` |
+| **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2`/`MP2` |
+| **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Blocked on `DK2` |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Blocked on `MP8`/`DK4` |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **3** | **63** | **4.8%** |
+| **Overall** | | **4** | **60** | **6.7%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -64,14 +64,14 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** `v4Visual.spec.ts` passes twice consecutively with zero diff.
   - **Completed:** 2026-11-25 · `v4Visual.spec.ts` (8/8) passed twice with zero diff (`20` PNGs in `docs/v4/before/`). `pnpm test`: 1,046/1,046 (209 suites); Entry JS `403.6 kB`, Entry CSS `134.7 kB`, Fonts `78.6 kB`; `pnpm test:e2e`: 425 passed, 1 skipped (`propertiesCard.spec.ts:40`), 8 stale `v3Visual.spec.ts` snapshot diffs on `main`.
 
-- [ ] **GR2. Two-tier colour tokens & `--k` counter-scale** · M · **Priority:** P0 · **Needs:** `GR1`
+- [x] **GR2. V3-preserving tokens & `--k` counter-scale (revised per D14)** · M · **Priority:** P0 · **Needs:** `GR1`
   - **Read:** `src/styles/shared.css`, `src/studio/state.ts`, `tests/contrast.test.ts`.
-  - [ ] Update surviving `--cc-*` values and add `--cc-canvas*`, `--cc-band-*`, `--cc-plate*`, `--cc-dock`, `--cc-on-dock`, `--cc-on-bullet`, and 7 `--cc-line-*` tokens for Day & Night (`graphite`).
-  - [ ] Make `[data-tone]` and `[data-accent]` set `--tl` beside `--t`.
-  - [ ] Write `--k = clamp(1, 0.78 / scale, 1.6)` (or `0.89 / scale` if needed for >= 15 px Fit test) beside `data-lod` in `src/studio/state.ts`.
-  - [ ] Assert all line tones at 3:1 against bands, canvases, and `--cc-on-bullet` (both themes) in `tests/contrast.test.ts`.
-  - **Done when:** Contrast tests pass in both themes with no unintended layout shifts.
-  - **Completed:** _pending_
+  - [x] Preserve 100% of V3's Vellum & Graphite colours (`--cc-canvas*`, `--cc-sheet`, `--cc-ink*`, `--cc-blue..fuchsia`, `--cc-*-soft`).
+  - [x] Add additive V4 chrome tokens (`--cc-dock`, `--cc-on-dock`, `--cc-lift-2`) in both Vellum and Graphite.
+  - [x] Write `--k = clamp(1, 0.78 / scale, 1.6)` beside `data-lod` in `src/studio/state.ts`.
+  - [x] Assert `on-dock` on `dock` >= 4.5:1 (both themes) and `--k` in `tests/contrast.test.ts`.
+  - **Done when:** Contrast tests and `v4Visual.spec.ts` pass in both themes with zero pixel diff.
+  - **Completed:** 2026-11-25 · `pnpm test` 1,047/1,047 passed (exact suite/test counts verified); Entry JS `403.7 kB / 410 kB`, Entry CSS `134.9 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/v4Visual.spec.ts` 8/8 passed with zero pixel diff; prototype updated and verified (`ERRORS: []`).
 
 - [ ] **GR3. Self-hosted display face (Bricolage Grotesque)** · S · **Priority:** P0 · **Needs:** `GR1`
   - **Read:** `src/styles/fonts.css`, `tools/swPrecache.ts`, `e2e/fonts.spec.ts`, `REDESIGN_PLAN_V4.md` §5.2 & Q1.
@@ -104,23 +104,13 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** 3-wire fixture shows parallel lines, level wire stays straight, open/save is byte-identical.
   - **Completed:** _pending_
 
-- [ ] **MP4. Plates, bullets (`src/ui/bullet.ts`) & 3.1 Callout styling** · M · **Priority:** P0 · **Needs:** `GR2`, `GR3`
-  - **Read:** `renderNodes` in `src/studio/keyedStage.ts`, `src/core/nodeStyle.ts`, `src/ui/icons.ts`, `src/ui/cutout.ts`, `src/styles/studio/callouts.css`.
-  - [ ] Create `src/ui/bullet.ts` (`renderBulletMarkup(stencilId, { size, tone })`) with 24-grid crisp glyphs.
-  - [ ] Implement card anatomy (`--cc-plate`, 1.5 px `--cc-plate-edge`, radius 18, no shadow), shaped silhouettes (cylinder, pipe, hex, mux, pill), ring-only Actor terminus, dashed External edge.
-  - [ ] Map `eyebrow`, `chip`, `footerLeft`, `status`, status badge to footer row; update v3.1.0 Callouts (`callouts.css`) to V4 tokens and edge language.
-  - **Done when:** All 14 catalog entries match mockup at 100%; 28-char titles wrap cleanly inside every shape.
-  - **Completed:** _pending_
+- [~] **MP4. Plates and bullets** *(Skipped — superseded by D14: keep V3 component cards, cut-out silhouettes, soft tinted icon tiles, `.node-status-badge` pills, and `.arch-node[data-external="true"]` dashed outline + `EXTERNAL` pill)*
 
-- [ ] **MP5. Selection crop marks, bullet hover & draft ports** · S · **Priority:** P0 · **Needs:** `MP4`
-  - [ ] Selected plate gets 3 px edge + 4 outer ink crop marks 10 px outside box corners (no rounded outer box).
-  - [ ] Bullet scales to 108% with `--cc-spring` on hover; restyle `.node-port` and draft wire to `--tl`.
-  - **Done when:** View 2 matches; `interactions.spec.ts` and `roving.spec.ts` pass.
-  - **Completed:** _pending_
+- [~] **MP5. Selection crop marks & bullet hover** *(Skipped — superseded by D14: keep V3 selection ring and port dots)*
 
-- [ ] **MP6. Two LoD modes (Map vs Card) & arm's-length test** · M · **Priority:** P0 · **Needs:** `MP4`
+- [ ] **MP6. Two LoD modes (Map vs Card) & arm's-length test** · M · **Priority:** P0 · **Needs:** `GR2`, `GR3`
   - **Partial groundwork on `main`:** `data-lod="low"` and `"medium"` hooks already toggle at 55% / 80% in `src/studio/state.ts` and `src/styles/studio/stage.css`.
-  - [ ] Move map/plate/bullet CSS into `src/styles/studio/map.css` (shared with `viewer.css`).
+  - [ ] Move map/plate/bullet CSS into `src/styles/studio/map.css` (shared with `viewer.css`), preserving V3 `.node-status-badge` (`Live`/`Planned`/`At Risk`/`Deprecated`) and `.arch-node[data-external="true"]::after` (`EXTERNAL` dashed pill + dashed outline).
   - [ ] In Map mode (`data-lod="low"`), scale name (`17 px x --k` up to 24 screen px) & bullet (`30 px x --k`), hide kind/subtitle/footer (except Traffic instruments & state words).
   - [ ] Assert in `e2e/map.spec.ts` (View 1) that no component name renders below 15 screen px at Fit.
   - **Done when:** Arm's-length assertion passes; `e2e/map.spec.ts` rewritten and green.
@@ -135,7 +125,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 - [ ] **MP8. Export parity (SVG, standalone HTML, viewer)** · M · **Priority:** P1 · **Needs:** `MP1`–`MP7`
   - **Read:** `src/exporter/diagramSvg.ts`, `src/exporter/standaloneHtml.ts`, `src/styles/viewer.css`, `e2e/exportVisual.spec.ts`.
-  - [ ] Port bands, lines, bridges, bullets, plates, labels layer, and v3.1.0 Callouts to `diagramSvg.ts`, `standaloneHtml.ts`, and `viewer.css`.
+  - [ ] Port bands, lines, bridges, bullets, plates, labels layer, V3 `.node-status-badge` & `EXTERNAL` dashed pill/outline, and v3.1.0 Callouts to `diagramSvg.ts`, `standaloneHtml.ts`, and `viewer.css`.
   - [ ] Embed Bricolage Grotesque in exports per V3 Q3 rule.
   - **Done when:** Stage and SVG export of showcase differ by < 2% pixels at Fit; `exportVisual.spec.ts` baselines re-recorded and green.
   - **Completed:** _pending_
@@ -183,10 +173,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** `propertiesCard.spec.ts` passes and View 10 (Home) matches.
   - **Completed:** _pending_
 
-- [ ] **DK7. Retire the cut-out (`src/ui/cutout.ts`)** · S · **Priority:** P1 · **Needs:** `DK1`, `DK6`, `CP2`
-  - [ ] Replace any remaining `renderCutoutMarkup` call with `renderBulletMarkup`; delete `src/ui/cutout.ts` and `tests/cutout.test.ts`.
-  - **Done when:** `grep -rn cutout src/` returns empty.
-  - **Completed:** _pending_
+- [~] **DK7. Retire the cut-out (`src/ui/cutout.ts`)** *(Skipped — superseded by D14: `src/ui/cutout.ts` is kept)*
 
 - [ ] **DK8. Narrow & touch layout (< 900 px)** · M · **Priority:** P1 · **Needs:** `DK1`–`DK5`, `CP2`
   - [ ] Stack NW+NE over N, fold Key into SE button, hide favourites, allow horizontal dock scroll without clipping, full-width composer without side panel.
