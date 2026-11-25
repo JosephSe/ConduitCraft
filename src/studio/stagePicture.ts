@@ -5,9 +5,10 @@ import { describeDiagram } from '../core/describe';
 import { renderDiagramSvg, ROUGH_FILTER } from '../exporter/diagramSvg';
 import { notesRect, type WorldRect } from './viewportFrame';
 import { titleBlockFor, titleBlockSvg } from '../exporter/titleBlock';
-import { pageCount } from '../core/pages';
-import { app } from './state';
+import { app, pageInfo } from './state';
 import { stageWorld, viewport, workspace } from './dom';
+
+export { pageInfo };
 
 function escapeXmlText(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -28,11 +29,6 @@ export interface StagePictureOptions {
   preserveSelection?: boolean;
   /** Add the title block strip (8.7). Exports pass `titleBlockOn()`; thumbnails leave it off. */
   titleBlock?: boolean;
-}
-
-/** Which page of how many is open, for the title block. */
-export function pageInfo(): { index: number; count: number } {
-  return { index: app.pageIndex, count: pageCount(app.pageRoot ?? app.doc) };
 }
 
 /**

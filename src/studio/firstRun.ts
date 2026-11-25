@@ -12,7 +12,7 @@ import { setFailures } from './chaos';
 import { app, onHistoryCommit, setSelection } from './state';
 import { AUTOSAVE_ID, RECOVERY_ID, hasRecord } from './storage';
 import { onPlaybackChange, simulationPlayback } from './simulationPlayback';
-import { getStarterTemplateById, loadTemplateRaw } from './templatesGallery';
+import { getStarterTemplateById, loadTemplateRaw } from './templatesCatalog';
 import { renderAll } from './render';
 
 export interface FirstRunDeps {

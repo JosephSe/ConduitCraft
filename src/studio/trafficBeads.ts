@@ -39,6 +39,8 @@ interface WireBeads {
 const wires = new Map<SVGGElement, WireBeads>();
 let frame = 0;
 let last = 0;
+let wireObserver: MutationObserver | null = null;
+let dirty = true;
 
 const reducedMotion = (): boolean => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
@@ -131,26 +133,59 @@ function sync(root: ParentNode): void {
   for (const g of [...wires.keys()]) if (!seen.has(g)) drop(g);
 }
 
+function isBeadMutation(m: MutationRecord): boolean {
+  if (m.target instanceof Element && m.target.closest('.cc-beads')) return true;
+  if (m.type === 'attributes' && m.attributeName === 'data-beads') return true;
+  if (m.type === 'childList') {
+    const ownLayerOnly = (nodes: NodeList) =>
+      nodes.length > 0 && Array.from(nodes).every((n) => n instanceof Element && n.classList.contains('cc-beads'));
+    if (ownLayerOnly(m.addedNodes) && m.removedNodes.length === 0) return true;
+    if (ownLayerOnly(m.removedNodes) && m.addedNodes.length === 0) return true;
+  }
+  return false;
+}
+
 function stop(): void {
   if (frame) cancelAnimationFrame(frame);
   frame = 0;
+  wireObserver?.disconnect();
+  wireObserver = null;
   for (const g of [...wires.keys()]) drop(g);
 }
 
 function start(workspace: HTMLElement): void {
   if (frame || reducedMotion()) return;
+  dirty = true;
+  const target = workspace.querySelector('#wires-group') ?? workspace;
+  wireObserver?.disconnect();
+  wireObserver = new MutationObserver((records) => {
+    if (records.some((r) => !isBeadMutation(r))) dirty = true;
+  });
+  wireObserver.observe(target, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['d', 'transform', 'class', 'style', 'data-animated', 'data-flow', 'data-sync', 'data-traffic'],
+  });
   last = performance.now();
   const tick = (now: number) => {
     const dt = Math.min(50, now - last);
     last = now;
-    sync(workspace);
+    let didSync = false;
+    if (dirty) {
+      dirty = false;
+      didSync = true;
+      sync(workspace);
+    }
     const paused = document.body.classList.contains('motion-paused');
-    for (const wire of wires.values()) {
-      // A wire into or out of a degraded or slowed component runs slower (set by the wire painter under a failure).
-      const factor = wire.group.dataset.traffic === 'slow' ? BEAD_SLOW_FACTOR : 1;
-      for (const bead of wire.beads) {
-        if (!paused) bead.pos = advanceBead(bead.pos, bead.speed * factor, dt, wire.length);
-        place(wire, bead);
+    if (!paused || didSync) {
+      for (const wire of wires.values()) {
+        // A wire into or out of a degraded or slowed component runs slower (set by the wire painter under a failure).
+        const factor = wire.group.dataset.traffic === 'slow' ? BEAD_SLOW_FACTOR : 1;
+        for (const bead of wire.beads) {
+          if (!paused) bead.pos = advanceBead(bead.pos, bead.speed * factor, dt, wire.length);
+          place(wire, bead);
+        }
       }
     }
     frame = requestAnimationFrame(tick);

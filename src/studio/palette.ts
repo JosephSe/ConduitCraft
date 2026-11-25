@@ -1,5 +1,4 @@
 /** Command Palette (Cmd/Ctrl+K) controller. */
-import { describeDiagram } from '../core/describe';
 import { app, fullDocument, goUpLevel, openComponentLevel, fitSelection, fitToViewport, performRedo, performUndo, pushHistory, setSelection, stepPage, zoomAround } from './state';
 import { autoLayoutDocument, expandStageToFit } from '../core/layout';
 import { createNodeFromStencil, createSwimlaneZone, createNotesCard } from '../templates/presets';
@@ -7,7 +6,7 @@ import { applySelection, renderAll, renderMatrixTable } from './render';
 import { isMac, platformShortcut } from './commands';
 import { notify } from './toast';
 import { closeDialogSmoothly } from './dom';
-import { STARTER_TEMPLATES } from './templatesGallery';
+import { STARTER_TEMPLATES } from './templatesCatalog';
 import { createShareUrl } from './shareLink';
 import { togglePresentation } from './presentationTrigger';
 import { setPointerTool } from './pointerTool';
@@ -85,6 +84,15 @@ function addStencilFromPalette(stencilId: string, name: string): void {
   notify(`Added ${name} stencil`);
 }
 
+function runAutoLayout(options: Parameters<typeof autoLayoutDocument>[1], message: string): void {
+  if (app.doc.nodes.length === 0) return;
+  pushHistory();
+  autoLayoutDocument(app.doc, options);
+  renderAll(true);
+  fitToViewport();
+  notify(message, { action: { label: 'Undo', onClick: () => performUndo() } });
+}
+
 export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
   const mod = isMac() ? '⌘' : 'Ctrl+';
   const commands: PaletteCommand[] = [
@@ -95,15 +103,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Human role or user initiator',
       category: 'Components',
       keywords: ['actor', 'human', 'user', 'session'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('actor', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Actor stencil');
-      },
+      run: () => addStencilFromPalette('actor', 'Actor'),
     },
     {
       id: 'add-core',
@@ -111,15 +111,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Primary application card',
       category: 'Components',
       keywords: ['core', 'system', 'platform', 'app'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('core', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Core System stencil');
-      },
+      run: () => addStencilFromPalette('core', 'Core System'),
     },
     {
       id: 'add-service',
@@ -127,15 +119,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Microservice, endpoint or worker',
       category: 'Components',
       keywords: ['service', 'api', 'microservice', 'rest', 'grpc', 'worker'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('service', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Service stencil');
-      },
+      run: () => addStencilFromPalette('service', 'Service'),
     },
     {
       id: 'add-queue',
@@ -143,15 +127,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Buffers work between services',
       category: 'Components',
       keywords: ['queue', 'sqs', 'rabbitmq', 'mq', 'buffer', 'backlog', 'dead letter', 'dlq', 'pipe'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('queue', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Message Queue stencil');
-      },
+      run: () => addStencilFromPalette('queue', 'Message Queue'),
     },
     {
       id: 'add-balancer',
@@ -159,15 +135,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Spreads traffic over instances',
       category: 'Components',
       keywords: ['load balancer', 'balancer', 'lb', 'haproxy', 'round robin', 'spread', 'instances'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('balancer', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Load Balancer stencil');
-      },
+      run: () => addStencilFromPalette('balancer', 'Load Balancer'),
     },
     {
       id: 'add-cache',
@@ -215,15 +183,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Pub/sub event bus',
       category: 'Components',
       keywords: ['broker', 'event', 'kafka', 'bus', 'pubsub'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('bus', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Event Broker stencil');
-      },
+      run: () => addStencilFromPalette('bus', 'Event Broker'),
     },
     {
       id: 'add-gate',
@@ -231,15 +191,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Policy, security or decision gate',
       category: 'Components',
       keywords: ['gate', 'policy', 'decision', 'guard', 'firewall'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('gate', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Control Gate stencil');
-      },
+      run: () => addStencilFromPalette('gate', 'Control Gate'),
     },
     {
       id: 'add-store',
@@ -247,15 +199,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Database, cache or ledger',
       category: 'Components',
       keywords: ['database', 'store', 'db', 'sql', 'cache', 'redis', 'ledger'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('store', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Data Store stencil');
-      },
+      run: () => addStencilFromPalette('store', 'Data Store'),
     },
     {
       id: 'add-client',
@@ -263,15 +207,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Mobile, browser, or edge client',
       category: 'Components',
       keywords: ['client', 'mobile', 'browser', 'frontend', 'edge'],
-      run: () => {
-        pushHistory();
-        const node = createNodeFromStencil('client', 200, 200, app.doc.nodes.length);
-        app.doc.nodes.push(node);
-        expandStageToFit(app.doc);
-        setSelection({ type: 'node', id: node.id });
-        renderAll(true);
-        notify('Added Client stencil');
-      },
+      run: () => addStencilFromPalette('client', 'Client'),
     },
     {
       id: 'add-zone',
@@ -317,14 +253,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Cleanly order components with crossing minimization',
       category: 'Canvas & Layout',
       keywords: ['arrange', 'layout', 'tidy', 'format', 'organise', 'organize'],
-      run: () => {
-        if (app.doc.nodes.length === 0) return;
-        pushHistory();
-        autoLayoutDocument(app.doc);
-        renderAll(true);
-        fitToViewport();
-        notify('Applied auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
-      },
+      run: () => runAutoLayout(undefined, 'Applied auto-layout'),
     },
     {
       id: 'auto-layout-lr',
@@ -332,14 +261,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Flow diagram horizontally from left to right',
       category: 'Canvas & Layout',
       keywords: ['lr', 'horizontal', 'layout', 'direction'],
-      run: () => {
-        if (app.doc.nodes.length === 0) return;
-        pushHistory();
-        autoLayoutDocument(app.doc, { direction: 'LR' });
-        renderAll(true);
-        fitToViewport();
-        notify('Applied auto-layout (LR)', { action: { label: 'Undo', onClick: () => performUndo() } });
-      },
+      run: () => runAutoLayout({ direction: 'LR' }, 'Applied auto-layout (LR)'),
     },
     {
       id: 'auto-layout-td',
@@ -347,14 +269,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Flow diagram vertically from top to bottom',
       category: 'Canvas & Layout',
       keywords: ['td', 'vertical', 'layout', 'direction'],
-      run: () => {
-        if (app.doc.nodes.length === 0) return;
-        pushHistory();
-        autoLayoutDocument(app.doc, { direction: 'TD' });
-        renderAll(true);
-        fitToViewport();
-        notify('Applied auto-layout (TD)', { action: { label: 'Undo', onClick: () => performUndo() } });
-      },
+      run: () => runAutoLayout({ direction: 'TD' }, 'Applied auto-layout (TD)'),
     },
     {
       id: 'auto-layout-compact',
@@ -362,14 +277,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Tightly packed layout for dense architectures',
       category: 'Canvas & Layout',
       keywords: ['compact', 'dense', 'spacing', 'tight', 'layout'],
-      run: () => {
-        if (app.doc.nodes.length === 0) return;
-        pushHistory();
-        autoLayoutDocument(app.doc, { spacing: 'compact' });
-        renderAll(true);
-        fitToViewport();
-        notify('Applied compact auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
-      },
+      run: () => runAutoLayout({ spacing: 'compact' }, 'Applied compact auto-layout'),
     },
     {
       id: 'auto-layout-spacious',
@@ -377,14 +285,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
       subtitle: 'Generous breathing room between tiers and components',
       category: 'Canvas & Layout',
       keywords: ['spacious', 'wide', 'roomy', 'spacing', 'layout'],
-      run: () => {
-        if (app.doc.nodes.length === 0) return;
-        pushHistory();
-        autoLayoutDocument(app.doc, { spacing: 'spacious' });
-        renderAll(true);
-        fitToViewport();
-        notify('Applied spacious auto-layout', { action: { label: 'Undo', onClick: () => performUndo() } });
-      },
+      run: () => runAutoLayout({ spacing: 'spacious' }, 'Applied spacious auto-layout'),
     },
     {
       id: 'auto-layout-elk',
@@ -1036,6 +937,7 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
           return;
         }
         try {
+          const { describeDiagram } = await import('../core/describe');
           await navigator.clipboard.writeText(describeDiagram(fullDocument()));
           notify('Copied the description as text');
         } catch {

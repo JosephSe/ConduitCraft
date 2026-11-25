@@ -4,8 +4,8 @@ export const SVG_NS = 'http://www.w3.org/2000/svg';
 // ---------------------------------------------------------------------------
 // Top-Layer Exit Animation Helper (`animate-to-from-top-layer` fallback)
 // ---------------------------------------------------------------------------
-export let cachedDisplayTransitionSupport: boolean | undefined;
-export function canTransitionDisplay(): boolean {
+let cachedDisplayTransitionSupport: boolean | undefined;
+function canTransitionDisplay(): boolean {
   if (cachedDisplayTransitionSupport !== undefined) return cachedDisplayTransitionSupport;
   if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) {
     return false;
@@ -20,7 +20,7 @@ export function canTransitionDisplay(): boolean {
   return cachedDisplayTransitionSupport;
 }
 
-export function supportsTopLayerExit(): boolean {
+function supportsTopLayerExit(): boolean {
   return Boolean(window.CSS?.supports?.('overlay', 'auto')) && canTransitionDisplay();
 }
 
@@ -46,7 +46,6 @@ export async function closeDialogSmoothly(dialog: HTMLDialogElement): Promise<vo
 export const workspace = document.getElementById('workspace') as HTMLElement;
 export const docTitleHeadingEl = document.getElementById('doc-title-heading') as HTMLElement;
 export const docBrandCluster = document.getElementById('doc-brand-cluster') as HTMLElement;
-export const docBrandMark = document.getElementById('doc-brand-mark') as HTMLElement;
 export const docBrandGlyph = document.getElementById('doc-brand-glyph') as unknown as SVGSVGElement;
 export const docBrandLogo = document.getElementById('doc-brand-logo') as HTMLImageElement;
 export const btnFocusDocTitle = document.getElementById('btn-focus-doc-title') as HTMLButtonElement;
@@ -58,7 +57,6 @@ export const btnRestoreDiscard = document.getElementById('btn-restore-discard') 
 
 
 export const fileUploadInput = document.getElementById('file-upload') as HTMLInputElement;
-export const inspectorPanel = document.getElementById('inspector-panel') as HTMLElement | null;
 
 export const canvasStatsPill = document.getElementById('canvas-stats-pill') as HTMLElement;
 
@@ -153,7 +151,6 @@ export const exportPngEstimate = document.getElementById('export-png-estimate') 
 export const exportPngButtonEstimate = document.getElementById('export-png-button-estimate') as HTMLElement | null;
 export const exportDialogTitle = document.getElementById('export-dialog-title') as HTMLElement;
 export const exportCards = document.getElementById('export-cards') as HTMLElement;
-export const shareLinkBox = document.getElementById('share-link-box') as HTMLElement | null;
 export const shareLinkInput = document.getElementById('share-link-input') as HTMLInputElement | null;
 export const btnCopyShareLink = document.getElementById('btn-copy-share-link') as HTMLButtonElement | null;
 export const shareLinkSize = document.getElementById('share-link-size') as HTMLElement | null;

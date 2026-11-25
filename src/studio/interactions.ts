@@ -96,6 +96,7 @@ import {
   goToLevel,
   goUpLevel,
   openPageDocument,
+  pageInfo,
   loadSavedSessionDoc,
   panToNodeIfNeeded,
   performUndo,
@@ -126,7 +127,6 @@ import type {
   DiagramZone,
   NodeKind,
   PortSide,
-  StreamTone,
 } from '../types';
 import {
   createBlankDocument,
@@ -147,8 +147,6 @@ import {
 import type { ImportOptions } from '../core/parser';
 import { loadParser } from './parserChunk';
 import { parseBlueprintJson, serializeBlueprintJson } from '../exporter/blueprintJson';
-import { describeDiagramBrief } from '../core/describe';
-import { renderDiagramSvg, estimatePngExport } from '../exporter/diagramSvg';
 import { pageCount } from '../core/pages';
 import { pinchBaseline, pinchTransform, type PinchSample } from './pinch';
 import { FIT_SCALE_MIN, diagramPictureBounds, scenarioPictureBounds, type WorldRect } from './viewportFrame';
@@ -164,7 +162,7 @@ import {
 } from './libraryUi';
 import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
-import { currentScheme, embeddedFontFaceCss, loadPictureFonts, pageInfo, renderStagePictureSvg, type StagePictureOptions } from './stagePicture';
+import type { StagePictureOptions } from './stagePicture';
 import { TITLE_BLOCK_HEIGHT, setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
 import { TONE_CSS, TONE_META } from '../shared/tones';
 import { allTags, colourKey, normalizeStyle } from '../core/meta';
@@ -225,7 +223,7 @@ import {
   renderBlankCanvasCardHtml,
   type TemplateCategory,
   type TemplateDefinition,
-} from './templatesGallery';
+} from './templatesCatalog';
 
 export function attachStencilDragAndDrop(
   btn: HTMLElement,
@@ -802,32 +800,6 @@ export function clearSimulation(): void {
     app.simTimer = null;
   }
   simulationPlayback.clear();
-}
-
-export function appendTraceEntry(stepLabel: string, message: string, tone: StreamTone): void {
-  const li = document.createElement('li');
-  li.className = 'trace-item';
-  li.dataset.tone = tone;
-
-  const meta = document.createElement('div');
-  meta.className = 'trace-meta';
-  const s1 = document.createElement('span');
-  s1.textContent = stepLabel;
-  const s2 = document.createElement('span');
-  s2.textContent = new Date().toLocaleTimeString([], {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  });
-  meta.append(s1, s2);
-
-  const body = document.createElement('p');
-  body.className = 'trace-body';
-  body.textContent = message;
-
-  li.append(meta, body);
-  traceList.prepend(li);
 }
 
 export function switchDataViewTab(tab: 'inspector' | 'trace' | 'simulations'): void {
@@ -1477,10 +1449,14 @@ async function downloadDiagramGif(target: GifExport): Promise<void> {
   const doc = app.doc;
   hudStatusTip.textContent = 'Rendering a short animation…';
   try {
-    // Loaded on demand so the encoder stays out of the initial bundle.
-    const { GIF_MAX_EDGE, encodeGifAsync, gifFrameCount, gifFrameDashOffset, gifPixelSize } = await import(
-      '../exporter/gif'
-    );
+    // Loaded on demand so the encoder and picture renderer stay out of the initial bundle.
+    const [
+      { GIF_MAX_EDGE, encodeGifAsync, gifFrameCount, gifFrameDashOffset, gifPixelSize },
+      { loadPictureFonts, renderStagePictureSvg },
+    ] = await Promise.all([
+      import('../exporter/gif'),
+      import('./stagePicture'),
+    ]);
     await loadPictureFonts();
     if (target.kind === 'scenario') {
       const scenario = getEffectiveSimulations(doc).find((item) => item.id === target.id);
@@ -2118,12 +2094,13 @@ export function initEvents(): void {
     return num === 1 || num === 2 || num === 4 ? num : 2;
   };
 
-  const updatePngExportEstimate = (): void => {
+  const updatePngExportEstimate = async (): Promise<void> => {
     const scale = getSelectedPngScale();
     // The picture is cropped to the diagram, so estimate from that, not the padded stage.
     const crop = diagramPictureBounds(app.doc, routeDiagramEdges(app.doc));
     const baseW = crop?.width ?? app.doc.stageWidth;
     const baseH = crop?.height ?? app.doc.stageHeight;
+    const { estimatePngExport } = await import('../exporter/diagramSvg');
     const estimate = estimatePngExport(baseW, baseH, scale);
     if (exportPngEstimate) {
       exportPngEstimate.textContent = estimate.summary;
@@ -2144,16 +2121,19 @@ export function initEvents(): void {
     }
   };
 
-  exportPngScale?.addEventListener('change', updatePngExportEstimate);
-  exportPngScale?.addEventListener('input', updatePngExportEstimate);
-  updatePngExportEstimate();
+  exportPngScale?.addEventListener('change', () => { void updatePngExportEstimate(); });
+  exportPngScale?.addEventListener('input', () => { void updatePngExportEstimate(); });
 
   const openExportDialog = (): void => {
     expandStageToFit(app.doc);
     renderAll(false);
     resetGifChoices();
-    updatePngExportEstimate();
-    if (exportAltText) exportAltText.value = describeDiagramBrief(app.doc);
+    void updatePngExportEstimate();
+    if (exportAltText) {
+      void import('../core/describe').then(({ describeDiagramBrief }) => {
+        if (exportAltText) exportAltText.value = describeDiagramBrief(app.doc);
+      });
+    }
     void updateShareLinkPreview();
     const allPages = document.getElementById('btn-export-svg-pages');
     if (allPages) allPages.hidden = pageCount(app.pageRoot ?? app.levelRoot ?? app.doc) < 2;
@@ -2168,10 +2148,11 @@ export function initEvents(): void {
   btnExportHtml.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
-    const [{ generateStandaloneHtmlWithLevels }] = await Promise.all([
+    const [{ generateStandaloneHtmlWithLevels }, { embeddedFontFaceCss, loadPictureFonts }] = await Promise.all([
       import('../exporter/standaloneHtml'),
-      loadPictureFonts(),
+      import('./stagePicture'),
     ]);
+    await loadPictureFonts();
     const fontFaceCss = embeddedFontFaceCss();
     // The whole tree, so the page keeps the drill-down. At the root this is `app.doc` itself.
     const html = generateStandaloneHtmlWithLevels(fullDocument(), {
@@ -2186,9 +2167,13 @@ export function initEvents(): void {
   document.getElementById('chk-export-title-block')?.addEventListener('change', (event) => {
     setTitleBlockEnabled((event.target as HTMLInputElement).checked);
   });
-  btnExportSvg.addEventListener('click', () => {
+  btnExportSvg.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
+    const [{ renderDiagramSvg }, { currentScheme }] = await Promise.all([
+      import('../exporter/diagramSvg'),
+      import('./stagePicture'),
+    ]);
     const filename = `${getSafeFilenameSlug()}.svg`;
     downloadBlob(
       renderDiagramSvg(
@@ -2214,6 +2199,7 @@ export function initEvents(): void {
   btnExportSvgClone?.addEventListener('click', async () => {
     expandStageToFit(app.doc);
     renderAll(false);
+    const { loadPictureFonts, renderStagePictureSvg } = await import('./stagePicture');
     await loadPictureFonts();
     const filename = `${getSafeFilenameSlug()}-dom.svg`;
     downloadBlob(
@@ -2228,6 +2214,7 @@ export function initEvents(): void {
     expandStageToFit(app.doc);
     renderAll(false);
     hudStatusTip.textContent = 'Rendering the canvas…';
+    const { loadPictureFonts, renderStagePictureSvg } = await import('./stagePicture');
     await loadPictureFonts();
     const scale = getSelectedPngScale();
     // Keep the diagram and a small margin, not the empty stage padding to its right and below.

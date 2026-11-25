@@ -267,7 +267,7 @@ function paintZone(banner: HTMLElement, zone: DiagramZone): void {
   if (sub) sub.textContent = zone.subtitle;
 }
 
-export function renderNotesCards(): void {
+export function renderNotesCards(paintOrder = true): void {
   // Callouts follow their component, and go with it (move, layout, delete, undo): place them before drawing.
   syncCallouts(app.doc);
   reconcileKeyed(
@@ -279,7 +279,7 @@ export function renderNotesCards(): void {
     createNotesCard,
     (el, card) => paintNotesCard(el as HTMLElement, card),
   );
-  paintStackOrder();
+  if (paintOrder) paintStackOrder();
   scheduleMinimapPaint();
 }
 
@@ -609,6 +609,9 @@ function paintNotesCard(aside: HTMLElement, card: DiagramNotesCard): void {
 export function renderWiresOnly(): void {
   repaintCallouts();
   const routed = routeDiagramEdges(app.doc);
+  const nodeById = new Map(app.doc.nodes.map((n) => [n.id, n]));
+  const chaosActive = chaosLensActive();
+  const changedStreams: SVGPathElement[] = [];
   reconcileKeyed(
     wiresGroup,
     routed,
@@ -616,8 +619,14 @@ export function renderWiresOnly(): void {
     (el) => (el as SVGElement).dataset.edgeId,
     () => 'wire',
     (edge) => createWireGroup(edge.id),
-    (el, edge) => paintWire(el as SVGGElement, edge),
+    (el, edge) => paintWire(el as SVGGElement, edge, nodeById, chaosActive, changedStreams),
   );
+  if (changedStreams.length > 0) {
+    const lengths = changedStreams.map((s) => Math.round(s.getTotalLength?.() ?? 0));
+    for (let i = 0; i < changedStreams.length; i += 1) {
+      changedStreams[i].style.setProperty('--cc-len', String(lengths[i]));
+    }
+  }
   pruneEndpointHandles();
   scheduleMinimapPaint();
 }
@@ -632,7 +641,15 @@ function pruneEndpointHandles(): void {
   }
 }
 
-const wirePainters = new WeakMap<SVGGElement, (edge: RoutedDiagramEdge) => void>();
+const wirePainters = new WeakMap<
+  SVGGElement,
+  (
+    edge: RoutedDiagramEdge,
+    nodeById: Map<string, DiagramNode>,
+    chaosActive: boolean,
+    changedStreams: SVGPathElement[],
+  ) => void
+>();
 
 /** A smooth curve between two world points, matching the preview drawn while creating a wire. */
 function draftCurve(a: [number, number], b: [number, number]): string {
@@ -804,29 +821,35 @@ function createWireGroup(edgeId: string): SVGGElement {
   const portDot = document.createElementNS(SVG_NS, 'circle');
   portDot.setAttribute('class', 'port-dot');
   portDot.setAttribute('r', '4');
+  const paths = [hit, casing, glow, rail, stream, streamRev];
   g.append(hit, casing, glow, rail, stream, streamRev, portDot);
 
   let currentEdge: RoutedDiagramEdge | null = null;
+  let badge: SVGGElement | null = null;
+  let badgeRect: SVGRectElement | null = null;
+  let badgeText: SVGTextElement | null = null;
   const ensureBadge = (edge: RoutedDiagramEdge) => {
     currentEdge = edge;
-    let badge = g.querySelector<SVGGElement>('.conduit-badge-hit');
     if (!edge.label || !edge.badgePos || !edge.badgeWidth) {
       badge?.remove();
+      badge = null;
+      badgeRect = null;
+      badgeText = null;
       return;
     }
     if (!badge) {
       badge = document.createElementNS(SVG_NS, 'g');
       badge.setAttribute('class', 'conduit-badge-hit');
-      const rect = document.createElementNS(SVG_NS, 'rect');
-      rect.setAttribute('class', 'route-pill-bg');
-      rect.setAttribute('y', '-13');
-      rect.setAttribute('height', '26');
-      rect.setAttribute('rx', '13');
-      const txt = document.createElementNS(SVG_NS, 'text');
-      txt.setAttribute('class', 'route-pill-text');
-      txt.setAttribute('text-anchor', 'middle');
-      txt.setAttribute('y', '4');
-      badge.append(rect, txt);
+      badgeRect = document.createElementNS(SVG_NS, 'rect');
+      badgeRect.setAttribute('class', 'route-pill-bg');
+      badgeRect.setAttribute('y', '-13');
+      badgeRect.setAttribute('height', '26');
+      badgeRect.setAttribute('rx', '13');
+      badgeText = document.createElementNS(SVG_NS, 'text');
+      badgeText.setAttribute('class', 'route-pill-text');
+      badgeText.setAttribute('text-anchor', 'middle');
+      badgeText.setAttribute('y', '4');
+      badge.append(badgeRect, badgeText);
       // In Design, drag the label to place it anywhere; it keeps that offset from its automatic spot.
       let labelDrag: { pointerId: number; x: number; y: number; from: [number, number]; moved: boolean } | null = null;
       badge.addEventListener('pointerdown', (e) => {
@@ -892,18 +915,17 @@ function createWireGroup(edgeId: string): SVGGElement {
       g.appendChild(badge);
     }
     const bw = Math.round(edge.badgeWidth);
-    const rect = badge.querySelector('rect');
-    rect?.setAttribute('x', String(-Math.round(bw / 2)));
-    rect?.setAttribute('width', String(bw));
-    const txt = badge.querySelector('text');
-    if (txt) txt.textContent = edge.label;
+    badgeRect?.setAttribute('x', String(-Math.round(bw / 2)));
+    badgeRect?.setAttribute('width', String(bw));
+    if (badgeText && badgeText.textContent !== edge.label) badgeText.textContent = edge.label;
     badge.setAttribute('transform', `translate(${edge.badgePos[0]}, ${edge.badgePos[1]})`);
   };
 
+  let commentG: SVGGElement | null = null;
   const ensureComment = (edge: RoutedDiagramEdge) => {
-    let commentG = g.querySelector<SVGGElement>('.conduit-comment-badge');
     if (!edge.comment) {
       commentG?.remove();
+      commentG = null;
       return;
     }
     if (!commentG) {
@@ -928,15 +950,17 @@ function createWireGroup(edgeId: string): SVGGElement {
     commentG.setAttribute('aria-label', `Review comment: ${edge.comment}`);
   };
 
+  let waypointHandle: SVGCircleElement | null = null;
   const ensureWaypoint = (edge: RoutedDiagramEdge) => {
     const selected = app.workspaceMode === 'design' && app.selection.type === 'edge' && app.selection.id === edge.id;
-    let handle = g.querySelector<SVGCircleElement>('.conduit-waypoint-handle');
     if (!selected) {
-      handle?.remove();
+      waypointHandle?.remove();
+      waypointHandle = null;
       return;
     }
-    if (!handle) {
-      handle = document.createElementNS(SVG_NS, 'circle');
+    if (!waypointHandle) {
+      const handle = document.createElementNS(SVG_NS, 'circle');
+      waypointHandle = handle;
       handle.setAttribute('class', 'conduit-waypoint-handle');
       handle.setAttribute('r', '5.5');
       handle.setAttribute('aria-label', 'Drag to bend wire path, double-click to reset');
@@ -946,11 +970,11 @@ function createWireGroup(edgeId: string): SVGGElement {
         e.stopPropagation();
         beginHistoryGesture();
         wpDragging = true;
-        handle?.classList.add('is-dragging');
-        handle?.setPointerCapture(e.pointerId);
+        handle.classList.add('is-dragging');
+        handle.setPointerCapture(e.pointerId);
       });
       handle.addEventListener('pointermove', (e) => {
-        if (!wpDragging || !handle?.hasPointerCapture(e.pointerId)) return;
+        if (!wpDragging || !handle.hasPointerCapture(e.pointerId)) return;
         const [wx, wy] = screenToWorld(e.clientX, e.clientY);
         const targetEdge = app.doc.edges.find((ed) => ed.id === g.dataset.edgeId);
         if (!targetEdge) return;
@@ -965,7 +989,7 @@ function createWireGroup(edgeId: string): SVGGElement {
         e.stopPropagation();
         if (!wpDragging) return;
         wpDragging = false;
-        handle?.classList.remove('is-dragging');
+        handle.classList.remove('is-dragging');
         endHistoryGesture();
         renderPropertyEditor();
       };
@@ -973,7 +997,7 @@ function createWireGroup(edgeId: string): SVGGElement {
       handle.addEventListener('lostpointercapture', () => {
         if (!wpDragging) return;
         wpDragging = false;
-        handle?.classList.remove('is-dragging');
+        handle.classList.remove('is-dragging');
         endHistoryGesture();
       });
       handle.addEventListener('dblclick', (e) => {
@@ -992,8 +1016,8 @@ function createWireGroup(edgeId: string): SVGGElement {
       Math.round((edge.startPoint[0] + edge.endPoint[0]) / 2),
       Math.round((edge.startPoint[1] + edge.endPoint[1]) / 2),
     ];
-    handle.setAttribute('cx', String(wpPos[0]));
-    handle.setAttribute('cy', String(wpPos[1]));
+    waypointHandle.setAttribute('cx', String(wpPos[0]));
+    waypointHandle.setAttribute('cy', String(wpPos[1]));
   };
 
   const ensureEndpoints = (edge: RoutedDiagramEdge) => {
@@ -1019,10 +1043,14 @@ function createWireGroup(edgeId: string): SVGGElement {
     }
   };
 
-  wirePainters.set(g, (edge) => {
-    const titles = new Map(app.doc.nodes.map((n) => [n.id, n.title]));
-    const fromName = titles.get(edge.from) || edge.from;
-    const toName = titles.get(edge.to) || edge.to;
+  let lastPathD = '';
+  let lastLaneTx: string | null | undefined = undefined;
+
+  wirePainters.set(g, (edge, nodeById, chaosActive, changedStreams) => {
+    const fromNode = nodeById.get(edge.from);
+    const toNode = nodeById.get(edge.to);
+    const fromName = fromNode?.title || edge.from;
+    const toName = toNode?.title || edge.to;
     g.dataset.tone = edge.tone;
     g.dataset.from = edge.from;
     g.dataset.to = edge.to;
@@ -1031,11 +1059,10 @@ function createWireGroup(edgeId: string): SVGGElement {
     // A slower call makes the dashes flow more slowly (and a faster one more quickly), from the latency.
     g.style.setProperty('--flow-scale', String(flowScale(edge.latencyMs)));
     // With a tag filter on, a wire stays bright when it has the tag or both of the components it joins do.
-    const byId = new Map(app.doc.nodes.map((n) => [n.id, n]));
-    const endsMatch = [byId.get(edge.from), byId.get(edge.to)].every((n) => n && matchesTag(n, app.tagFilter));
+    const endsMatch = Boolean(fromNode && toNode && matchesTag(fromNode, app.tagFilter) && matchesTag(toNode, app.tagFilter));
     g.classList.toggle('is-tag-dimmed', !(matchesTag(edge, app.tagFilter) || endsMatch));
     // Under a failure a wire carries nothing when either end is down or cut off, and runs slower at a degraded end.
-    const traffic = chaosLensActive() ? wireTraffic(chaosStatusOf(edge.from), chaosStatusOf(edge.to)) : 'live';
+    const traffic = chaosActive ? wireTraffic(chaosStatusOf(edge.from), chaosStatusOf(edge.to)) : 'live';
     g.classList.toggle('is-chaos-cut', traffic === 'cut');
     if (traffic === 'slow') g.dataset.traffic = 'slow';
     else delete g.dataset.traffic;
@@ -1050,24 +1077,32 @@ function createWireGroup(edgeId: string): SVGGElement {
       edge.laneOffset && (edge.laneOffset[0] !== 0 || edge.laneOffset[1] !== 0)
         ? `translate(${edge.laneOffset[0]}, ${edge.laneOffset[1]})`
         : null;
-    for (const path of g.querySelectorAll<SVGPathElement>('.conduit-hit, .conduit-casing, .conduit-glow, .conduit-rail, .conduit-stream, .conduit-stream-reverse')) {
-      path.setAttribute('d', edge.pathD);
-      if (laneTx) path.setAttribute('transform', laneTx);
-      else path.removeAttribute('transform');
+    const pathChanged = edge.pathD !== lastPathD;
+    const txChanged = laneTx !== lastLaneTx;
+    if (pathChanged || txChanged) {
+      for (const path of paths) {
+        if (pathChanged) path.setAttribute('d', edge.pathD);
+        if (txChanged) {
+          if (laneTx) path.setAttribute('transform', laneTx);
+          else path.removeAttribute('transform');
+        }
+      }
+      if (pathChanged) {
+        lastPathD = edge.pathD;
+        changedStreams.push(stream);
+      }
     }
-    // M1: Traffic sends one capsule down the wire from its source, so it needs the wire's length.
-    const stream = g.querySelector<SVGPathElement>('.conduit-stream');
-    if (stream) stream.style.setProperty('--cc-len', String(Math.round(stream.getTotalLength?.() ?? 0)));
     // The arrowhead sits on the rail, which is always drawn, so it survives the still Design lens (D8). Sync is a
     // filled head, async an open chevron, and a two-way wire has none.
-    const rail = g.querySelector('.conduit-rail');
-    if (edge.flow === 'both') rail?.removeAttribute('marker-end');
-    else rail?.setAttribute('marker-end', `url(#${edge.sync === 'async' ? 'chevron' : 'arrow'}-${edge.tone})`);
-    const dot = g.querySelector('.port-dot');
-    dot?.setAttribute('cx', String(edge.startPoint[0]));
-    dot?.setAttribute('cy', String(edge.startPoint[1]));
-    if (laneTx) dot?.setAttribute('transform', laneTx);
-    else dot?.removeAttribute('transform');
+    if (edge.flow === 'both') rail.removeAttribute('marker-end');
+    else rail.setAttribute('marker-end', `url(#${edge.sync === 'async' ? 'chevron' : 'arrow'}-${edge.tone})`);
+    portDot.setAttribute('cx', String(edge.startPoint[0]));
+    portDot.setAttribute('cy', String(edge.startPoint[1]));
+    if (txChanged) {
+      if (laneTx) portDot.setAttribute('transform', laneTx);
+      else portDot.removeAttribute('transform');
+      lastLaneTx = laneTx;
+    }
     ensureBadge(edge);
     ensureComment(edge);
     ensureWaypoint(edge);
@@ -1077,11 +1112,17 @@ function createWireGroup(edgeId: string): SVGGElement {
   return g;
 }
 
-function paintWire(g: SVGGElement, edge: RoutedDiagramEdge): void {
-  wirePainters.get(g)?.(edge);
+function paintWire(
+  g: SVGGElement,
+  edge: RoutedDiagramEdge,
+  nodeById: Map<string, DiagramNode>,
+  chaosActive: boolean,
+  changedStreams: SVGPathElement[],
+): void {
+  wirePainters.get(g)?.(edge, nodeById, chaosActive, changedStreams);
 }
 
-export function renderNodes(): void {
+export function renderNodes(paintOrder = true): void {
   reconcileKeyed(
     nodesLayer,
     app.doc.nodes,
@@ -1091,7 +1132,7 @@ export function renderNodes(): void {
     createNodeElement,
     (el, node) => paintNode(el as HTMLElement, node),
   );
-  paintStackOrder();
+  if (paintOrder) paintStackOrder();
   scheduleMinimapPaint();
 }
 
@@ -1182,6 +1223,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
     let groupStartPositions: Map<string, [number, number]> | null = null;
     let groupZonePositions: Map<string, number> | null = null;
     let groupNotesPositions: Map<string, [number, number]> | null = null;
+    let groupNodeEls: Map<string, HTMLElement> | null = null;
+    let groupZoneEls: Map<string, HTMLElement> | null = null;
+    let groupNotesEls: Map<string, HTMLElement> | null = null;
     let hasMoved = false;
 
     triggerEl.addEventListener('pointerdown', (e) => {
@@ -1235,10 +1279,26 @@ function createNodeElement(node: DiagramNode): HTMLElement {
         groupStartPositions = new Map(
           app.doc.nodes.filter((n) => ids.includes(n.id)).map((n) => [n.id, [n.x, n.y] as [number, number]]),
         );
+        groupNodeEls = new Map();
+        for (const child of nodesLayer.children) {
+          if (child instanceof HTMLElement && child.dataset.node && groupStartPositions.has(child.dataset.node)) {
+            groupNodeEls.set(child.dataset.node, child);
+          }
+        }
         const zoneIds = app.selection.zoneIds ?? [];
         groupZonePositions = zoneIds.length
           ? new Map(app.doc.zones.filter((zone) => zoneIds.includes(zone.id)).map((zone) => [zone.id, zone.x]))
           : null;
+        if (groupZonePositions) {
+          groupZoneEls = new Map();
+          for (const child of zonesLayer.children) {
+            if (child instanceof HTMLElement && child.dataset.zoneId && groupZonePositions.has(child.dataset.zoneId)) {
+              groupZoneEls.set(child.dataset.zoneId, child);
+            }
+          }
+        } else {
+          groupZoneEls = null;
+        }
         const notesIds = app.selection.notesIds ?? [];
         groupNotesPositions = notesIds.length
           ? new Map(
@@ -1247,10 +1307,23 @@ function createNodeElement(node: DiagramNode): HTMLElement {
                 .map((card) => [card.id, [card.x, card.y] as [number, number]]),
             )
           : null;
+        if (groupNotesPositions) {
+          groupNotesEls = new Map();
+          for (const child of notesLayer.children) {
+            if (child instanceof HTMLElement && child.dataset.notesId && groupNotesPositions.has(child.dataset.notesId)) {
+              groupNotesEls.set(child.dataset.notesId, child);
+            }
+          }
+        } else {
+          groupNotesEls = null;
+        }
       } else {
         groupStartPositions = null;
         groupZonePositions = null;
         groupNotesPositions = null;
+        groupNodeEls = null;
+        groupZoneEls = null;
+        groupNotesEls = null;
       }
       hasMoved = false;
       triggerEl.setPointerCapture(e.pointerId);
@@ -1296,10 +1369,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
           if (!member) continue;
           member.x = Math.max(16, sx + stepDx);
           member.y = Math.max(24, sy + stepDy);
-          const el = Array.from(nodesLayer.children).find(
-            (child): child is HTMLElement =>
-              child instanceof HTMLElement && child.dataset.node === id,
-          );
+          const el = groupNodeEls?.get(id);
           if (el) {
             el.style.setProperty('--nx', String(member.x));
             el.style.setProperty('--ny', String(member.y));
@@ -1310,11 +1380,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
             const zone = liveZone(id);
             if (!zone) continue;
             zone.x = Math.max(16, sx + stepDx);
-            const banner = Array.from(zonesLayer.children).find(
-              (child): child is HTMLElement =>
-                child instanceof HTMLElement && child.dataset.zoneId === id,
-            );
-            banner?.style.setProperty('--zx', String(zone.x));
+            groupZoneEls?.get(id)?.style.setProperty('--zx', String(zone.x));
           }
         }
         if (groupNotesPositions) {
@@ -1323,10 +1389,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
             if (!card) continue;
             card.x = Math.max(16, sx + stepDx);
             card.y = Math.max(16, sy + stepDy);
-            const el = Array.from(notesLayer.children).find(
-              (child): child is HTMLElement =>
-                child instanceof HTMLElement && child.dataset.notesId === id,
-            );
+            const el = groupNotesEls?.get(id);
             if (el) {
               el.style.setProperty('--bx', String(card.x));
               el.style.setProperty('--by', String(card.y));
@@ -1345,7 +1408,7 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       }
       expandStageToFit(app.doc);
       renderWiresOnly();
-      updateVisualSelectionHighlights();
+      paintDlqLinks();
       scheduleMinimapPaint();
     });
 
@@ -1355,6 +1418,9 @@ function createNodeElement(node: DiagramNode): HTMLElement {
       groupStartPositions = null;
       groupZonePositions = null;
       groupNotesPositions = null;
+      groupNodeEls = null;
+      groupZoneEls = null;
+      groupNotesEls = null;
       clearGuides();
       wrapper.classList.remove('is-dragging-node');
       dragHandle.classList.remove('dragging');
@@ -1579,8 +1645,9 @@ function paintCustomImage(slot: HTMLElement, image: string): void {
   slot.replaceChildren(img);
 }
 
-/** Last content painted into each node element, so unchanged nodes can skip the text/badge/icon work. */
+/** Last content and shape plate painted into each node element, so unchanged nodes skip DOM work. */
 const paintedNodeContent = new WeakMap<HTMLElement, { sig: string; image: string | undefined }>();
+const paintedNodePlate = new WeakMap<HTMLElement, string>();
 
 const CHAOS_BADGES: Record<string, string> = {
   failed: 'Failed',
@@ -1645,7 +1712,13 @@ function paintNode(wrapper: HTMLElement, node: DiagramNode): void {
   wrapper.style.setProperty('--nw', String(node.width));
   wrapper.style.setProperty('--nh', String(node.height));
   const hit = wrapper.querySelector<HTMLElement>('.node-select-hit');
-  if (hit) paintShapePlate(hit, node);
+  if (hit) {
+    const plateSig = `${node.kind}|${node.shape ?? ''}|${node.width}|${node.height}|${node.queue?.partitions ?? ''}`;
+    if (paintedNodePlate.get(wrapper) !== plateSig) {
+      paintedNodePlate.set(wrapper, plateSig);
+      paintShapePlate(hit, node);
+    }
+  }
 
   const isLocked = Boolean(node.locked);
   wrapper.dataset.locked = String(isLocked);
