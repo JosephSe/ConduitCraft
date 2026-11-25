@@ -62,21 +62,22 @@ test('zoomed out, a wire label shows only on the wire you point at, at 10 px or 
   // Click the middle of a labelled wire that nothing covers (the way selectWire does in e2e/interactions.spec.ts).
   const hit = await page.evaluate(() => {
     for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
-      if (!group.querySelector('.conduit-badge-hit')) continue;
+      const id = group.dataset.edgeId;
+      if (!id || !document.querySelector(`#wire-labels-svg .conduit-badge-hit[data-edge-id="${id}"]`)) continue;
       const path = group.querySelector<SVGPathElement>('.conduit-hit');
       const ctm = path?.getScreenCTM();
       if (!path || !ctm) continue;
       const mid = path.getPointAtLength(path.getTotalLength() / 2);
       const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
       if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
-        return { id: group.dataset.edgeId!, x: pt.x, y: pt.y };
+        return { id, x: pt.x, y: pt.y };
       }
     }
     return null;
   });
   expect(hit, 'a labelled wire with a clear midpoint').not.toBeNull();
   await page.mouse.click(hit!.x, hit!.y);
-  const label = page.locator(`.conduit-group[data-edge-id="${hit!.id}"] .route-pill-text`);
+  const label = page.locator(`#wire-labels-svg .conduit-badge-hit[data-edge-id="${hit!.id}"] .route-pill-text`);
   await expect(label).toBeVisible();
   const height = await label.evaluate((el) => el.getBoundingClientRect().height);
   expect(height).toBeGreaterThanOrEqual(10);

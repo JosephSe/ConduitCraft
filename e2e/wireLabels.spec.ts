@@ -44,7 +44,7 @@ const parallelWires = {
 async function labelAndWire(page: Page, edgeId: string) {
   return page.evaluate((id) => {
     const g = document.querySelector<SVGGElement>(`.conduit-group[data-edge-id="${id}"]`)!;
-    const pill = g.querySelector('.route-pill-bg')!.getBoundingClientRect();
+    const pill = document.querySelector(`#wire-labels-svg .conduit-badge-hit[data-edge-id="${id}"] .route-pill-bg`)!.getBoundingClientRect();
     const rail = g.querySelector<SVGPathElement>('.conduit-rail')!;
     const box = rail.getBoundingClientRect();
     return { x: pill.x + pill.width / 2, y: pill.y + pill.height / 2, h: pill.height, wireY: box.y + box.height / 2 };
@@ -57,7 +57,7 @@ test('labels of parallel wires sit on their own wires, and a label can be dragge
   await page.goto('/');
   await page.locator('[data-home-open]', { hasText: 'Parallel wires' }).click();
   await expect(page.locator('#home-dialog')).toBeHidden();
-  await expect(page.locator('.conduit-group[data-edge-id="e2"] .route-pill-bg')).toBeVisible();
+  await expect(page.locator('#wire-labels-svg .conduit-badge-hit[data-edge-id="e2"] .route-pill-bg')).toBeVisible();
 
   // Each wire passes through its own label (not beside it, as when the lane offset was left off the label).
   for (const id of ['e1', 'e2']) {
@@ -82,4 +82,47 @@ test('labels of parallel wires sit on their own wires, and a label can be dragge
   const reset = await labelAndWire(page, 'e2');
   expect(Math.abs(reset.y - reset.wireY)).toBeLessThan(reset.h / 2);
   await expect(page.getByRole('button', { name: 'Reset label position' })).toHaveCount(0);
+});
+
+test('wire labels sit above components and short-gap labels stay quiet until hovered (V4 MP7)', async ({ page }) => {
+  const tightDoc = {
+    ...parallelWires,
+    title: 'Tight gap labels',
+    nodes: [node('a', 'Service A', 120), node('b', 'Service B', 392)],
+    edges: [
+      { id: 'e1', from: 'a', to: 'b', sourcePort: 'right', targetPort: 'left', tone: 'blue', route: 'auto', label: 'A very descriptive pill label', animated: true },
+    ],
+  };
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await seedAutosave(page, tightDoc);
+  await page.goto('/');
+  await page.locator('[data-home-open]', { hasText: 'Tight gap labels' }).click();
+  await expect(page.locator('#home-dialog')).toBeHidden();
+
+  const stack = await page.evaluate(() => {
+    const labels = document.getElementById('wire-labels-svg')!;
+    const nodes = document.getElementById('nodes-layer')!;
+    const rawNodesZ = getComputedStyle(nodes).zIndex;
+    return {
+      labelsAfterNodes: Boolean(nodes.compareDocumentPosition(labels) & Node.DOCUMENT_POSITION_FOLLOWING),
+      labelsZ: Number(getComputedStyle(labels).zIndex || 0),
+      nodesZ: rawNodesZ === 'auto' ? 0 : Number(rawNodesZ),
+    };
+  });
+  expect(stack.labelsAfterNodes).toBe(true);
+  expect(stack.labelsZ).toBeGreaterThan(stack.nodesZ);
+
+  const badge = page.locator('#wire-labels-svg .conduit-badge-hit[data-edge-id="e1"]');
+  await expect(badge).toHaveAttribute('data-fits', '0');
+  await expect(badge).toBeHidden();
+
+  // Hovering the wire midpoint reveals the label above the adjacent cards without clipping.
+  const pt = await page.evaluate(() => {
+    const path = document.querySelector<SVGPathElement>('.conduit-group[data-edge-id="e1"] .conduit-hit')!;
+    const m = path.getPointAtLength(path.getTotalLength() / 2);
+    const p = new DOMPoint(m.x, m.y).matrixTransform(path.getScreenCTM()!);
+    return { x: p.x, y: p.y };
+  });
+  await page.mouse.move(pt.x, pt.y);
+  await expect(badge).toBeVisible();
 });

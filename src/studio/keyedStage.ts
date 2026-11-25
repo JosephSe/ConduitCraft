@@ -24,6 +24,7 @@ import {
   notesLayer,
   propPanelHeading,
   wireHandlesSvg,
+  wireLabelsSvg,
   wiresGroup,
   workspace,
   framesLayer,
@@ -628,6 +629,10 @@ export function renderWiresOnly(): void {
       changedStreams[i].style.setProperty('--cc-len', String(lengths[i]));
     }
   }
+  const activeLabelIds = new Set(routed.filter((e) => e.label && e.badgePos && e.badgeWidth).map((e) => e.id));
+  for (const badge of wireLabelsSvg?.querySelectorAll<SVGGElement>('.conduit-badge-hit') ?? []) {
+    if (!activeLabelIds.has(badge.dataset.edgeId || '')) badge.remove();
+  }
   pruneEndpointHandles();
   scheduleMinimapPaint();
 }
@@ -842,6 +847,12 @@ function createWireGroup(edgeId: string): SVGGElement {
   let badge: SVGGElement | null = null;
   let badgeRect: SVGRectElement | null = null;
   let badgeText: SVGTextElement | null = null;
+  const setHover = (on: boolean) => {
+    g.classList.toggle('is-hovered', on);
+    badge?.classList.toggle('is-hovered', on);
+  };
+  g.addEventListener('pointerenter', () => setHover(true));
+  g.addEventListener('pointerleave', () => setHover(false));
   const ensureBadge = (edge: RoutedDiagramEdge) => {
     currentEdge = edge;
     if (!edge.label || !edge.badgePos || !edge.badgeWidth) {
@@ -854,16 +865,19 @@ function createWireGroup(edgeId: string): SVGGElement {
     if (!badge) {
       badge = document.createElementNS(SVG_NS, 'g');
       badge.setAttribute('class', 'conduit-badge-hit');
+      badge.dataset.edgeId = edgeId;
       badgeRect = document.createElementNS(SVG_NS, 'rect');
       badgeRect.setAttribute('class', 'route-pill-bg');
-      badgeRect.setAttribute('y', '-13');
-      badgeRect.setAttribute('height', '26');
-      badgeRect.setAttribute('rx', '13');
+      badgeRect.setAttribute('y', '-11');
+      badgeRect.setAttribute('height', '22');
+      badgeRect.setAttribute('rx', '7');
       badgeText = document.createElementNS(SVG_NS, 'text');
       badgeText.setAttribute('class', 'route-pill-text');
       badgeText.setAttribute('text-anchor', 'middle');
       badgeText.setAttribute('y', '4');
       badge.append(badgeRect, badgeText);
+      badge.addEventListener('pointerenter', () => setHover(true));
+      badge.addEventListener('pointerleave', () => setHover(false));
       // In Design, drag the label to place it anywhere; it keeps that offset from its automatic spot.
       let labelDrag: { pointerId: number; x: number; y: number; from: [number, number]; moved: boolean } | null = null;
       badge.addEventListener('pointerdown', (e) => {
@@ -926,12 +940,35 @@ function createWireGroup(edgeId: string): SVGGElement {
         }
         selectWire(e);
       });
-      g.appendChild(badge);
+      (wireLabelsSvg ?? g).appendChild(badge);
     }
+    badge.dataset.tone = edge.tone;
+    badge.dataset.fits = edge.labelFits ? '1' : '0';
+    badge.classList.toggle('is-selected', g.classList.contains('is-selected'));
+    badge.classList.toggle('is-highlighted', g.classList.contains('is-highlighted'));
+    badge.classList.toggle('is-dimmed', g.classList.contains('is-dimmed'));
+    badge.classList.toggle('is-tag-dimmed', g.classList.contains('is-tag-dimmed'));
+    badge.classList.toggle('is-hovered', g.classList.contains('is-hovered'));
     const bw = Math.round(edge.badgeWidth);
     badgeRect?.setAttribute('x', String(-Math.round(bw / 2)));
     badgeRect?.setAttribute('width', String(bw));
-    if (badgeText && badgeText.textContent !== edge.label) badgeText.textContent = edge.label;
+    const protoSig = `${edge.protocol ?? ''}|${edge.label}`;
+    if (badgeText && badgeText.dataset.sig !== protoSig) {
+      badgeText.dataset.sig = protoSig;
+      const sepIdx = edge.protocol ? edge.label.indexOf(' · ') : -1;
+      if (edge.protocol && edge.label.length > 0) {
+        const protoPart = sepIdx > 0 ? edge.label.slice(0, sepIdx) : edge.label;
+        const restPart = sepIdx > 0 ? edge.label.slice(sepIdx) : '';
+        badgeText.replaceChildren();
+        const tProto = document.createElementNS(SVG_NS, 'tspan');
+        tProto.setAttribute('class', 'route-pill-proto');
+        tProto.textContent = protoPart;
+        badgeText.append(tProto);
+        if (restPart) badgeText.append(document.createTextNode(restPart));
+      } else {
+        badgeText.textContent = edge.label;
+      }
+    }
     badge.setAttribute('transform', `translate(${edge.badgePos[0]}, ${edge.badgePos[1]})`);
   };
 
@@ -1977,6 +2014,12 @@ export function updateVisualSelectionHighlights(): void {
       g.classList.toggle('is-highlighted', active);
       g.classList.toggle('is-dimmed', !active);
       g.classList.toggle('is-selected', isExplicit && !isExcluded);
+      const badgeEl = wireLabelsSvg?.querySelector<SVGElement>(`.conduit-badge-hit[data-edge-id="${edgeId}"]`);
+      if (badgeEl) {
+        badgeEl.classList.toggle('is-highlighted', active);
+        badgeEl.classList.toggle('is-dimmed', !active);
+        badgeEl.classList.toggle('is-selected', isExplicit && !isExcluded);
+      }
     }
     return;
   }
@@ -1988,12 +2031,19 @@ export function updateVisualSelectionHighlights(): void {
     w.classList.remove('is-dimmed', 'is-related');
   }
   for (const g of conduitGroups) {
-    const isSel = app.selection.type === 'edge' && g.dataset.edgeId === app.selection.id;
+    const edgeId = g.dataset.edgeId || '';
+    const isSel = app.selection.type === 'edge' && edgeId === app.selection.id;
     const fromId = g.dataset.from || '';
     const toId = g.dataset.to || '';
     const touchesNode = isSelectedNode(fromId) || isSelectedNode(toId);
     g.classList.toggle('is-selected', isSel);
     g.classList.toggle('is-highlighted', touchesNode || isSel);
     g.classList.remove('is-dimmed');
+    const badgeEl = wireLabelsSvg?.querySelector<SVGElement>(`.conduit-badge-hit[data-edge-id="${edgeId}"]`);
+    if (badgeEl) {
+      badgeEl.classList.toggle('is-selected', isSel);
+      badgeEl.classList.toggle('is-highlighted', touchesNode || isSel);
+      badgeEl.classList.remove('is-dimmed');
+    }
   }
 }

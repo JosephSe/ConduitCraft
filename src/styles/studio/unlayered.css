@@ -1878,9 +1878,6 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 @keyframes cc-arrive { 50% { transform: scale(1.14); } }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }
 .workspace[data-lens="traffic"] .canvas-shell { background-color: var(--cc-canvas-run); transition: background-color 320ms; }
-/* Print keeps wire labels on in every lens (Y1: labels always shown). */
-.workspace:not([data-style="print"])[data-lens="traffic"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit,
-.workspace:not([data-style="print"])[data-lens="review"] .conduit-badge-hit { display: none; }
 .workspace[data-lens="review"] :is(.arch-node, .conduit-group) { filter: grayscale(1); opacity: 0.62; }
 /* The redline: hand-drawn ellipses and numbers, drawn once in 700 ms when the lens opens. */
 #redline-layer { pointer-events: none; }
@@ -1971,13 +1968,6 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
   border-radius: calc(5px / var(--cam-scale, 1));
 }
 
-/* Wire labels (plan 8.3): zoomed out they are noise, so they wait for the wire you point at, select, or that a run lights up, and then show at a readable size. */
-#stage-world[data-lod="low"] .conduit-group:not(:hover, .is-selected, .is-highlighted) .conduit-badge-hit { display: none; }
-/* The pill's parts scale, not the group: `scale` on the group would also multiply its translate() and carry the label off its wire.
-   The pill is centred on the group's origin, so scaling each part about 0 0 keeps it in place. */
-#stage-world[data-lod="low"] .conduit-badge-hit > :is(.route-pill-bg, .route-pill-text) { scale: calc(0.92 / var(--cam-scale, 1)); transform-box: view-box; transform-origin: 0 0; }
-body[data-wire-labels="always"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit,
-.workspace[data-style="print"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit { display: revert; }
 /* Medium: tile, title, subtitle and the status light; the rest waits for high. */
 #stage-world[data-lod="medium"] .node-footer,
 #stage-world[data-lod="medium"] .node-eyebrow { display: none; }

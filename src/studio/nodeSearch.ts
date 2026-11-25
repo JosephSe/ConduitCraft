@@ -78,6 +78,9 @@ export function applySearchHighlightsToStage(
     for (const wire of wireEls) {
       wire.classList.remove('is-dimmed');
     }
+    for (const badge of document.querySelectorAll<SVGElement>('#wire-labels-svg .conduit-badge-hit')) {
+      badge.classList.remove('is-dimmed');
+    }
     return;
   }
 
@@ -95,8 +98,12 @@ export function applySearchHighlightsToStage(
   for (const wire of wireEls) {
     const fromId = wire.getAttribute('data-from');
     const toId = wire.getAttribute('data-to');
+    const edgeId = wire.getAttribute('data-edge-id');
     const touchesMatch = (fromId && matchedNodeIds.has(fromId)) || (toId && matchedNodeIds.has(toId));
     wire.classList.toggle('is-dimmed', !touchesMatch);
+    if (edgeId) {
+      document.querySelector(`#wire-labels-svg .conduit-badge-hit[data-edge-id="${edgeId}"]`)?.classList.toggle('is-dimmed', !touchesMatch);
+    }
   }
 }
 
@@ -112,6 +119,9 @@ export function clearSearchHighlightsFromStage(): void {
   }
   for (const wire of wireEls) {
     wire.classList.remove('is-dimmed');
+  }
+  for (const badge of document.querySelectorAll<SVGElement>('#wire-labels-svg .conduit-badge-hit')) {
+    badge.classList.remove('is-dimmed');
   }
 }
 

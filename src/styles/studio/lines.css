@@ -52,7 +52,7 @@
   opacity: 0.15;
 }
 
-.conduit-group:is(:hover, .is-highlighted, .is-selected) .conduit-glow,
+.conduit-group:is(:hover, .is-hovered, .is-highlighted, .is-selected) .conduit-glow,
 .conduit-group:focus-visible .conduit-glow {
   opacity: 0.30;
   stroke-width: calc(11px * var(--k, 1));
@@ -126,9 +126,59 @@
   display: none;
 }
 
+/* V4 MP7: Wire labels live in #wire-labels-svg above #nodes-layer and follow D10 quiet-by-default rules. */
+.wire-labels-layer {
+  z-index: 90000;
+  pointer-events: none;
+}
+
+#wire-labels-svg .conduit-badge-hit {
+  display: none;
+  pointer-events: all;
+}
+
+#workspace[data-lens="design"] #stage-world[data-lod="high"] #wire-labels-svg .conduit-badge-hit[data-fits="1"],
+#wire-labels-svg .conduit-badge-hit:is(.is-hovered, .is-selected, .is-highlighted),
+body[data-wire-labels="always"] #wire-labels-svg .conduit-badge-hit,
+.workspace[data-style="print"] #wire-labels-svg .conduit-badge-hit {
+  display: inline;
+}
+
+.workspace[data-lens="review"]:not([data-style="print"]) #wire-labels-svg .conduit-badge-hit {
+  display: none;
+}
+
+#stage-world[data-lod="low"] #wire-labels-svg .conduit-badge-hit > :is(.route-pill-bg, .route-pill-text) {
+  scale: calc(0.92 / var(--cam-scale, 1));
+  transform-box: view-box;
+  transform-origin: 0 0;
+}
+
+#wire-labels-svg .conduit-badge-hit.is-dimmed,
+#wire-labels-svg .conduit-badge-hit.is-tag-dimmed {
+  opacity: 0.15;
+}
+
 .route-pill-bg {
   fill: var(--cc-sheet);
   rx: 7px;
   stroke: var(--cc-hair-2);
   stroke-width: 1;
+}
+
+#wire-labels-svg .conduit-badge-hit.is-selected .route-pill-bg {
+  stroke: var(--cc-ink);
+  stroke-width: 1.5;
+}
+
+#wire-labels-svg .route-pill-text {
+  font: 500 11px/1 var(--cc-font-ui, sans-serif);
+  fill: var(--cc-ink);
+  pointer-events: none;
+}
+
+#wire-labels-svg .route-pill-proto {
+  font-family: var(--cc-font-mono, monospace);
+  font-weight: 500;
+  fill: var(--t, var(--cc-blue));
 }

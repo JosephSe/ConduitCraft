@@ -79,6 +79,7 @@ export const framesLayer = document.getElementById('frames-layer') as HTMLElemen
 export const zonesLayer = document.getElementById('zones-layer') as HTMLElement;
 export const notesLayer = document.getElementById('notes-layer') as HTMLElement;
 export const wiresSvg = document.getElementById('wires-svg') as unknown as SVGSVGElement;
+export const wireLabelsSvg = document.getElementById('wire-labels-svg') as unknown as SVGSVGElement;
 export const wireHandlesSvg = document.getElementById('wire-handles-svg') as unknown as SVGSVGElement;
 export const wiresGroup = document.getElementById('wires-group') as unknown as SVGGElement;
 export const draftWire = document.getElementById('draft-wire') as unknown as SVGPathElement;

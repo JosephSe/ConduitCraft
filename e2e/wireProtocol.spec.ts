@@ -3,24 +3,25 @@ import type { Page } from '@playwright/test';
 import { openLumenRelay } from './helpers';
 
 /** Select the first labelled wire by clicking the middle of its line. Zoomed out its label is hidden until the wire is pointed at, so the label cannot be the click target. */
-async function selectLabelledWire(page: Page): Promise<{ from: string; to: string }> {
+async function selectLabelledWire(page: Page): Promise<{ edgeId: string; from: string; to: string }> {
   const hit = await page.evaluate(() => {
     for (const group of document.querySelectorAll<SVGGElement>('.conduit-group')) {
-      if (!group.querySelector('.conduit-badge-hit')) continue;
+      const edgeId = group.dataset.edgeId;
+      if (!edgeId || !document.querySelector(`#wire-labels-svg .conduit-badge-hit[data-edge-id="${edgeId}"]`)) continue;
       const path = group.querySelector<SVGPathElement>('.conduit-hit');
       const ctm = path?.getScreenCTM();
       if (!path || !ctm) continue;
       const mid = path.getPointAtLength(path.getTotalLength() / 2);
       const pt = new DOMPoint(mid.x, mid.y).matrixTransform(ctm);
       if (document.elementFromPoint(pt.x, pt.y)?.closest('.conduit-group') === group) {
-        return { from: group.dataset.from!, to: group.dataset.to!, x: pt.x, y: pt.y };
+        return { edgeId, from: group.dataset.from!, to: group.dataset.to!, x: pt.x, y: pt.y };
       }
     }
     return null;
   });
   expect(hit, 'a labelled wire with a clear midpoint').not.toBeNull();
   await page.mouse.click(hit!.x, hit!.y);
-  return { from: hit!.from, to: hit!.to };
+  return { edgeId: hit!.edgeId, from: hit!.from, to: hit!.to };
 }
 
 test('a wire takes a protocol and a call style from the inspector, and shows them on the canvas', { tag: '@quick' }, async ({ page }) => {
@@ -30,18 +31,19 @@ test('a wire takes a protocol and a call style from the inspector, and shows the
   await expect(page.locator('.arch-node').first()).toBeVisible();
 
   // Select the first labelled wire by its line (zoomed out its label waits for the pointer).
-  const { from: id, to } = await selectLabelledWire(page);
+  const { edgeId, from: id, to } = await selectLabelledWire(page);
   const wire = page.locator(`.conduit-group[data-from="${id}"][data-to="${to}"]`).first();
+  const badge = page.locator(`#wire-labels-svg .conduit-badge-hit[data-edge-id="${edgeId}"]`);
 
   await page.locator('#prop-edge-protocol').selectOption('grpc');
-  await expect(wire.locator('.route-pill-text').first()).toContainText('gRPC · ');
+  await expect(badge.locator('.route-pill-text')).toContainText('gRPC · ');
 
   await expect(wire).toHaveAttribute('data-sync', 'sync');
   await page.locator('#prop-edge-sync').selectOption('async');
   await expect(wire).toHaveAttribute('data-sync', 'async');
 
   await page.locator('#prop-edge-protocol').selectOption('');
-  await expect(wire.locator('.route-pill-text').first()).not.toContainText('gRPC');
+  await expect(badge.locator('.route-pill-text')).not.toContainText('gRPC');
 });
 
 test('a wire\'s latency changes how fast its dashes flow', async ({ page }) => {
@@ -50,8 +52,8 @@ test('a wire\'s latency changes how fast its dashes flow', async ({ page }) => {
   await openLumenRelay(page);
   await expect(page.locator('.arch-node').first()).toBeVisible();
 
-  const { from: id, to } = await selectLabelledWire(page);
-  const wire = page.locator(`.conduit-group[data-from="${id}"][data-to="${to}"]`).first();
+  const { edgeId } = await selectLabelledWire(page);
+  const wire = page.locator(`.conduit-group[data-edge-id="${edgeId}"]`);
   const duration = () =>
     wire.locator('.conduit-stream').first().evaluate((el) => getComputedStyle(el).animationDuration);
 

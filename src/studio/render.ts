@@ -20,6 +20,7 @@ import {
   restoreSessionBanner,
   stageWorld,
   wireHandlesSvg,
+  wireLabelsSvg,
   wiresSvg,
 } from './dom';
 import { app, getPendingRestoreOffer, setSelection, updateDocumentTitle } from './state';
@@ -158,6 +159,9 @@ export function renderAll(rebuildInspector = true): void {
   wiresSvg.setAttribute('viewBox', `0 0 ${app.doc.stageWidth} ${app.doc.stageHeight}`);
   wiresSvg.setAttribute('width', String(app.doc.stageWidth));
   wiresSvg.setAttribute('height', String(app.doc.stageHeight));
+  wireLabelsSvg?.setAttribute('viewBox', `0 0 ${app.doc.stageWidth} ${app.doc.stageHeight}`);
+  wireLabelsSvg?.setAttribute('width', String(app.doc.stageWidth));
+  wireLabelsSvg?.setAttribute('height', String(app.doc.stageHeight));
   wireHandlesSvg.setAttribute('viewBox', `0 0 ${app.doc.stageWidth} ${app.doc.stageHeight}`);
   wireHandlesSvg.setAttribute('width', String(app.doc.stageWidth));
   wireHandlesSvg.setAttribute('height', String(app.doc.stageHeight));
