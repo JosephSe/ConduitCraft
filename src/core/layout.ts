@@ -525,7 +525,7 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
           );
           const { pathD, midPoint } = buildOrthogonalPathFromPoints(
             waypoints,
-            e.route === 'orthogonal' ? 14 : 0,
+            e.route === 'orthogonal' ? 24 : 0,
           );
           return {
             ...e,

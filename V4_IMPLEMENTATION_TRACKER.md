@@ -15,7 +15,7 @@
 |---|---|---:|---:|---|
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 2 | 3 | In progress (`GR1`, `GR2` done; `GR3` unblocked) |
-| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 0 | 7 | Ready for `MP1`/`MP2` (`MP4`/`MP5` superseded by D14) |
+| **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 1 | 7 | In progress (`MP2` done; `MP4`/`MP5` superseded by D14) |
 | **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Blocked on `GR2`/`GR3` (`DK7` superseded by D14) |
 | **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `GR1`/`DK1` |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2`/`MP2` |
@@ -23,7 +23,7 @@
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Blocked on `MP8`/`DK4` |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **4** | **60** | **6.7%** _(3 items skipped per D14)_ |
+| **Overall** | | **5** | **60** | **8.3%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (0 / 34)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (3 / 31 active, 3 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -89,13 +89,13 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** View 1 matches `docs/v4/concept.html` bands and heads.
   - **Completed:** _pending_
 
-- [ ] **MP2. Transit lines, bridge casings & radius 24** · M · **Priority:** P0 · **Needs:** `GR2`
+- [x] **MP2. Transit lines, bridge casings & radius 24** · M · **Priority:** P0 · **Needs:** `GR2`
   - **Read:** `renderWiresOnly` in `src/studio/keyedStage.ts`, `src/core/layout.ts` (`cornerRadius`), `src/styles/studio/stage.css`, `index.html` markers.
-  - [ ] Extract `src/styles/studio/lines.css`; implement 3 px × `--k` `--tl` rails, `--cc-band-a` casing (`+5 px`) for bridges, round caps/joins, corner radius 24.
-  - [ ] Add filled arrowhead (`10 x 11 px x --k`, rail trimmed 9 px) + 3.6 px source stop; round async dashes (`2w 2.3w`); 4.5 px wider ink selection underlay.
-  - [ ] Remove unused `arrow-*` / `chevron-*` SVG `<defs>` from `index.html`.
+  - [x] Extract `src/styles/studio/lines.css`; implement 3 px × `--k` `--t` rails (per D14), `--cc-canvas`/`--cc-canvas-run` casing (`+5 px`) for bridges, round caps/joins, corner radius 24.
+  - [x] Add filled arrowhead (`10 x 11 px x --k` rotated via `wireEndAngle`) + `3.6 px` source stop; round async dashes (`6px * --k`, `6.9px * --k`); `4.5 px` wider ink selection underlay.
+  - [x] Remove unused `arrow-emerald..fuchsia` / `chevron-*` SVG `<defs>` from `index.html` (keeping `arrow-blue` for `#draft-wire`).
   - **Done when:** Crossings read as bridges in both themes; `wireProtocol.spec.ts` and `capsules.spec.ts` pass/rewritten.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-25 · `pnpm test`: 1,049/1,049 passed (210 suites); Entry JS `404.6 kB / 410 kB`, Entry CSS `136.2 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/wireProtocol.spec.ts` + `e2e/capsules.spec.ts` 5/5 passed; `e2e/v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
 
 - [ ] **MP3. Pure shared-track port spreading (`src/core/portSpread.ts`)** · S · **Priority:** P0 · **Needs:** `MP2`
   - **Partial groundwork on `main`:** `spreadPorts()` already exists in `src/core/layout.ts` (PRs #162/#163).

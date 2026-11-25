@@ -584,10 +584,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Do:** 8.2. Remove the dot grid and lane hairlines.
 - **Done:** view 1 matches the mockup's bands and heads. **Needs:** GR2, GR3.
 
-#### [ ] MP2. Lines · M
+#### [x] MP2. Lines · M
 - **Read:** `renderWiresOnly` and lines 600 to 860 of `keyedStage.ts`; `stage.css` 452 to 765; `layout.ts` 773 to 846.
 - **Do:** 8.3 except shared track: widths, casing, round joins, radius 24, the arrowhead, the stop, async dashes, selection underlay, counter-scale. Remove the seven `arrow-*` and `chevron-*` markers from `index.html` if nothing else uses them.
 - **Done:** views 1 and 2; `wireProtocol.spec.ts`, `capsules.spec.ts` pass or are rewritten; a crossing in the showcase reads as a bridge in both themes. **Needs:** GR2.
+- **Measured (2026-11-25, branch `v4-mp2-wires`):** Added `src/core/wireGeom.ts` (`wireEndAngle`), orthogonal corner radius `24` in `src/core/layout.ts`, `src/styles/studio/lines.css`, SVG underlay/arrowhead/stop anatomy in `src/studio/keyedStage.ts`, and removed 13 unused markers from `index.html`. `pnpm test`: 1,049/1,049 (210 suites); Entry JS `404.6 kB / 410 kB`, Entry CSS `136.2 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; `e2e/wireProtocol.spec.ts` + `e2e/capsules.spec.ts`: 5/5 passed; `e2e/v4Visual.spec.ts` re-recorded & passed twice consecutively (8/8, zero diff).
 
 #### [ ] MP3. Shared track · S
 - **Do:** `src/core/portSpread.ts` and its test: given routed wires, return per-end offsets by the rule in 8.3. Apply in the stage and in `diagramSvg.ts`.

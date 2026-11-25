@@ -1,0 +1,134 @@
+/* V4 MP2: Fluid transit wires (REDESIGN_PLAN_V4.md §8.3, D14).
+   Uses V3 tone variables (--t) and Vellum/Graphite canvas tokens while adopting V4 fluid geometry & bridges. */
+
+.conduit-hit {
+  stroke-width: 22;
+}
+
+.conduit-casing {
+  fill: none;
+  stroke: var(--cc-canvas);
+  stroke-width: calc(3px * var(--k, 1) + 5px);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+  transition: stroke 320ms;
+}
+
+.workspace[data-lens="traffic"] .conduit-casing,
+.workspace[data-lens="review"] .conduit-casing {
+  stroke: var(--cc-canvas-run);
+}
+
+.conduit-sel {
+  fill: none;
+  stroke: var(--cc-ink);
+  stroke-width: calc(3px * var(--k, 1) + 4.5px);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+
+.conduit-group:is(.is-selected, :focus-visible) .conduit-sel {
+  opacity: 1;
+}
+
+/* Override stage.css `display: none` so the Traffic tube can cross-fade in smoothly. */
+.conduit-glow {
+  display: inline;
+  fill: none;
+  stroke: var(--t, var(--cc-hair-2));
+  stroke-width: calc(11px * var(--k, 1));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms;
+}
+
+.workspace[data-lens="traffic"] .conduit-group:not(.is-chaos-cut) .conduit-glow {
+  opacity: 0.15;
+}
+
+.conduit-group:is(:hover, .is-highlighted, .is-selected) .conduit-glow,
+.conduit-group:focus-visible .conduit-glow {
+  opacity: 0.30;
+  stroke-width: calc(11px * var(--k, 1));
+}
+
+.conduit-group .conduit-rail {
+  fill: none;
+  stroke: var(--t, var(--cc-hair-2));
+  stroke-width: calc(3px * var(--k, 1));
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 1;
+  pointer-events: none;
+  transition: stroke 200ms, opacity 200ms;
+}
+
+.conduit-group[data-sync="async"] .conduit-rail {
+  stroke-dasharray: calc(6px * var(--k, 1)) calc(6.9px * var(--k, 1));
+}
+
+.conduit-group:focus-visible .conduit-rail {
+  stroke: var(--t, var(--cc-blue));
+  stroke-width: calc(3px * var(--k, 1));
+  opacity: 1;
+}
+
+.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-rail {
+  stroke: var(--cc-ink-3);
+  stroke-dasharray: calc(2px * var(--k, 1)) calc(5px * var(--k, 1));
+  stroke-linecap: round;
+  opacity: 0.7;
+}
+
+.conduit-arrow-wrap[hidden] {
+  display: none;
+}
+
+.conduit-arrow {
+  fill: var(--t, var(--cc-hair-2));
+  stroke: var(--t, var(--cc-hair-2));
+  stroke-width: 1;
+  stroke-linejoin: round;
+  transform: scale(var(--k, 1));
+  transform-origin: 0 0;
+  pointer-events: none;
+  transition: fill 200ms, stroke 200ms, opacity 200ms;
+}
+
+.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-arrow {
+  fill: var(--cc-ink-3);
+  stroke: var(--cc-ink-3);
+  opacity: 0.7;
+}
+
+.conduit-group .port-dot {
+  fill: var(--cc-sheet);
+  stroke: var(--t, var(--cc-hair-2));
+  stroke-width: 1.8;
+  transform: scale(var(--k, 1));
+  transform-origin: 0 0;
+  pointer-events: none;
+  transition: stroke 200ms, opacity 200ms;
+}
+
+.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .port-dot {
+  stroke: var(--cc-ink-3);
+}
+
+.conduit-group[data-flow="both"] .conduit-stop,
+.conduit-group[data-flow="both"] .port-dot {
+  display: none;
+}
+
+.route-pill-bg {
+  fill: var(--cc-sheet);
+  rx: 7px;
+  stroke: var(--cc-hair-2);
+  stroke-width: 1;
+}

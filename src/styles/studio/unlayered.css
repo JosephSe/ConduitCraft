@@ -1856,18 +1856,9 @@ body[data-presenting="true"] .page-strip { display: none; }
 .arch-node[data-shape="rounded"]:not([data-chaos]) .node-select-hit, .arch-node[data-shape="pill"]:not([data-chaos]) .node-select-hit { background: color-mix(in oklab, var(--node-accent) 5%, var(--cc-sheet)); border: 1.25px solid color-mix(in oklab, var(--node-accent) 58%, var(--cc-sheet)); box-shadow: var(--cc-shadow-1); }
 .arch-node[data-shape="rounded"] .node-select-hit[aria-pressed="true"], .arch-node[data-shape="pill"] .node-select-hit[aria-pressed="true"] { border-color: var(--cc-ink); outline: 2px solid var(--cc-ink); outline-offset: 3px; box-shadow: var(--cc-shadow-1); }
 
-/* C4 wires (8.3). The casing makes a crossing read as over and under; the line is thin in the wire's colour. */
-.conduit-casing { fill: none; stroke: var(--cc-canvas); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; transition: stroke 320ms; }
-.workspace[data-lens="traffic"] .conduit-casing, .workspace[data-lens="review"] .conduit-casing { stroke: var(--cc-canvas-run); }
-.conduit-group .conduit-rail { stroke: var(--t, var(--cc-hair-2)); stroke-width: 1.75; opacity: 1; transition: stroke-width 320ms, opacity 320ms; }
-.conduit-group[data-sync="async"] .conduit-rail { stroke-dasharray: 6 5; }
-.conduit-group:focus-visible .conduit-rail, .conduit-group.is-selected .conduit-rail { stroke-width: 2.5; }
-.route-pill-bg { fill: var(--cc-sheet); rx: 5px; stroke: var(--cc-hair-2); stroke-width: 1; }
+/* Fluid wire geometry, bridge casings, arrowheads, and stops live in studio/lines.css (V4 MP2). */
 /* D8: Design is still. The flow only moves on hover, selection or a highlighted path, or with the preference on. */
 body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not(:hover, .is-selected, .is-highlighted) :is(.conduit-stream, .conduit-stream-reverse) { opacity: 0; animation-play-state: paused; }
-/* C5 lens lighting (8.4). Traffic dims the sheet, thins the line and fades in a 10 px tube; Review greys everything. */
-.conduit-glow { display: inline; fill: none; stroke: var(--t, var(--cc-hair-2)); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity 320ms; }
-.workspace[data-lens="traffic"] .conduit-rail { stroke-width: 1; opacity: 0.55; }
 /* M1 (9.2): in Traffic the flow is capsules, 14 x 7 (a 7 px dash with round caps), in the wire's tone. A component that a run reaches springs 1 -> 1.14 -> 1. */
 .workspace[data-lens="traffic"] .conduit-stream { stroke-width: 7; stroke-dasharray: 7 29; }
 /* One capsule per wire: it leaves the source and runs to the target, at a steady speed (about 120 px a second, scaled by the wire's latency). */
@@ -1883,8 +1874,6 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .workspace[data-lens="traffic"] .conduit-stream-reverse { stroke-width: 7; stroke-dasharray: 7 37; }
 /* A wire marked not animated carries no flow in Traffic either: the capsule rules above would otherwise move it. */
 .workspace[data-lens="traffic"] .conduit-group[data-animated="false"] :is(.conduit-stream, .conduit-stream-reverse) { animation: none; stroke-dasharray: none; opacity: 0; }
-/* A cut wire reads as dead, as in the v4 concept: a grey dotted line with no glow, so it is not mistaken for an idle one. */
-.workspace[data-lens="traffic"] .conduit-group.is-chaos-cut .conduit-rail { stroke: var(--cc-ink-3); stroke-dasharray: 1.5 5; stroke-linecap: round; opacity: 0.8; }
 .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: cc-arrive 320ms var(--cc-spring) 1; transform-origin: center; transform-box: fill-box; }
 @keyframes cc-arrive { 50% { transform: scale(1.14); } }
 @media (prefers-reduced-motion: reduce) { .workspace[data-lens="traffic"] .arch-node[data-sim-active="true"] :is(.node-shape-plate, .actor-figure) { animation: none; } }
@@ -1989,9 +1978,6 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 #stage-world[data-lod="low"] .conduit-badge-hit > :is(.route-pill-bg, .route-pill-text) { scale: calc(0.92 / var(--cam-scale, 1)); transform-box: view-box; transform-origin: 0 0; }
 body[data-wire-labels="always"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit,
 .workspace[data-style="print"] #stage-world[data-lod="low"] .conduit-group .conduit-badge-hit { display: revert; }
-
-#stage-world[data-lod="low"] .conduit-rail { stroke-width: min(5px, calc(1.75px / var(--cam-scale, 1))); }
-#stage-world[data-lod="low"] .conduit-casing { stroke-width: min(9px, calc(6px / var(--cam-scale, 1))); }
 /* Medium: tile, title, subtitle and the status light; the rest waits for high. */
 #stage-world[data-lod="medium"] .node-footer,
 #stage-world[data-lod="medium"] .node-eyebrow { display: none; }
