@@ -1,6 +1,8 @@
 import { nodeShapeFrame, storeDrawsCylinder } from './nodeStyle';
 import { notesCardHeight, notesCardWidth } from './notesSize';
+import { computePortOffsets, type PortSpreadEnd } from './portSpread';
 import { wireLabelText } from './wire';
+import { longestStraightRun } from './wireGeom';
 import type {
   DiagramDocument,
   DiagramEdge,
@@ -194,8 +196,7 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
   /** Spread the ends that share a side. True when a wire with 'auto' ports shares a side with another end. */
   const spreadPorts = (): boolean => {
     portOffsets.clear();
-    let autoShares = false;
-    const sideGroups = new Map<string, Array<{ key: string; order: number }>>();
+    const spreadEnds: PortSpreadEnd[] = [];
     const sidesOf = (id: string) => resolvedSides.get(id) ?? loopSides.get(id) ?? autoSides.get(id);
     /** The side the wire meets `nodeId` on, or undefined when that is not known. */
     const sideAt = (edge: DiagramEdge, nodeId: string): Side | undefined => {
@@ -222,29 +223,25 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
       ];
       for (const [node, side, other, key] of ends) {
         if (sharesSideWithTwin(e, node.id, side)) continue;
+        const [nx, ny] = getNodeCenter(node);
         const [ox, oy] = getNodeCenter(other);
-        const groupKey = `${node.id}|${side}`;
-        const group = sideGroups.get(groupKey) || [];
-        // Order along the side by where the far end sits, so neighbouring wires don't cross.
-        group.push({ key, order: side === 'top' || side === 'bottom' ? ox : oy });
-        sideGroups.set(groupKey, group);
+        const span = side === 'top' || side === 'bottom' ? node.width : node.height;
+        spreadEnds.push({
+          key,
+          nodeId: node.id,
+          side,
+          span,
+          delta: side === 'top' || side === 'bottom' ? ox - nx : oy - ny,
+          actorSpread: node.kind === 'actor' ? ACTOR_PORT_SPREAD[side] : null,
+        });
       }
     }
-    for (const [groupKey, group] of sideGroups) {
-      if (group.length < 2) continue;
-      const [nodeId, side] = groupKey.split('|') as [string, Side];
-      const node = nodeMap.get(nodeId)!;
-      const span = side === 'top' || side === 'bottom' ? node.width : node.height;
-      // Keep ports inside the middle 60% of the side, at most 40px apart. An actor's ports are points on the figure,
-      // so its wires spread over the little room around each one instead.
-      const actor = node.kind === 'actor' ? ACTOR_PORT_SPREAD[side] : null;
-      const gap = actor
-        ? Math.min(actor.gap, actor.room / (group.length - 1))
-        : Math.min(40, (span * 0.6) / (group.length - 1));
-      group
-        .sort((a, b) => a.order - b.order)
-        .forEach((entry, i) => portOffsets.set(entry.key, ((i - (group.length - 1) / 2) * gap) / span));
-      if (group.some((entry) => autoSides.has(entry.key.slice(0, entry.key.lastIndexOf('|'))))) autoShares = true;
+    const computed = computePortOffsets(spreadEnds);
+    let autoShares = false;
+    for (const [key, ratio] of computed) {
+      portOffsets.set(key, ratio);
+      const edgeId = key.slice(0, key.lastIndexOf('|'));
+      if (autoSides.has(edgeId)) autoShares = true;
     }
     return autoShares;
   };
@@ -291,7 +288,7 @@ export function routeDiagramEdges(doc: DiagramDocument): RoutedDiagramEdge[] {
 
         const [scx, scy] = getNodeCenter(src);
         const [dcx, dcy] = getNodeCenter(dst);
-        const badgeWidth = e.label ? Math.max(104, e.label.length * 8.2 + 34) : undefined;
+        const badgeWidth = e.label ? Math.max(88, Math.round(e.label.length * 7.6 + 26)) : undefined;
         const lane = laneInfo.get(e.id) || { index: 0, count: 1 };
 
         // Helper for bottom U-channel ("Under U-Loop")
@@ -753,6 +750,7 @@ function finalizeRoutes(
   const ordered = [...out.filter((e) => e.labelOffset), ...out.filter((e) => !e.labelOffset)];
   for (const edge of ordered) {
     if (!edge.badgePos || !edge.badgeWidth) continue;
+    edge.labelFits = Boolean(edge.labelOffset) || longestStraightRun(edge.pathD) >= edge.badgeWidth + 24;
     const off = edge.laneOffset || [0, 0];
     const baseX = edge.badgePos[0] + off[0];
     const baseY = edge.badgePos[1] + off[1];

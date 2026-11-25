@@ -232,7 +232,7 @@ export function cleanClonedStage(clone: HTMLElement, options?: { preserveSelecti
   if (!preserveSelection) {
     // 3. Strip selection, dimming, related, and ghost states from all elements
     const stateful = clone.querySelectorAll(
-      '.is-selected, .is-dimmed, .is-related, .is-highlighted, .is-entering, .is-dragging, .is-drag-ghost'
+      '.is-selected, .is-dimmed, .is-related, .is-highlighted, .is-hovered, .is-entering, .is-dragging, .is-drag-ghost'
     );
     stateful.forEach((el) => {
       el.classList.remove(
@@ -240,6 +240,7 @@ export function cleanClonedStage(clone: HTMLElement, options?: { preserveSelecti
         'is-dimmed',
         'is-related',
         'is-highlighted',
+        'is-hovered',
         'is-entering',
         'is-dragging',
         'is-drag-ghost'

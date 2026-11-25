@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { routeDiagramEdges } from '../src/core/layout.ts';
 import { flowScale, hopDelayMs, isAsyncWire, latenciesBetween, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
-import { wireEndAngle } from '../src/core/wireGeom.ts';
+import { wireEndAngle, longestStraightRun } from '../src/core/wireGeom.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
@@ -217,5 +217,11 @@ describe('wireEndAngle (V4 MP2)', () => {
     assert.equal(wireEndAngle('M 100 100 L 300 100', [300, 100]), 0);
     assert.equal(wireEndAngle('M 100 100 C 180 100, 220 200, 300 200', [300, 200]), 0);
     assert.equal(wireEndAngle('M 100 100 C 100 180, 200 220, 200 300', [200, 300]), 90);
+  });
+
+  it('computes longestStraightRun for orthogonal, straight, and fallback curved paths', () => {
+    assert.equal(longestStraightRun('M 0 0 L 200 0'), 200);
+    assert.equal(Math.round(longestStraightRun('M 0 0 L 80 0 Q 100 0 100 20 L 100 260')), 240);
+    assert.equal(longestStraightRun('M 0 0 C 80 0, 120 100, 200 100'), Math.hypot(200, 100));
   });
 });

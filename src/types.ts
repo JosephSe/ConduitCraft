@@ -364,6 +364,8 @@ export interface RoutedDiagramEdge extends DiagramEdge {
   /** The label's own spot on the drawn wire before any nudge or drag; a dragged labelOffset is measured from it. */
   labelAnchor?: [number, number];
   badgeWidth?: number;
+  /** True when the wire's longest straight run fits the label pill + 24 px margin (V4 MP7). */
+  labelFits?: boolean;
   /** True when the route is a U-shaped loop (lane separation is applied to loop depth instead). */
   isLoop?: boolean;
   /** Translation applied to separate parallel wires between the same pair of components. */
