@@ -12,12 +12,26 @@
     /* V4 MP1: alternating vertical zone bands on Vellum sheet */
     --cc-band-a: #FAFBFA;
     --cc-band-b: #F3F5F4;
+
+    /* V4 DK1: inverted dock tokens (kept in studio tokens.css, not shared.css) */
+    --cc-on-dock-2: rgba(255, 255, 255, 0.72);
+    --cc-dock-well: rgba(255, 255, 255, 0.11);
+    --cc-dock-hair: rgba(255, 255, 255, 0.16);
+    --cc-dock-rose: #FB7185;
+    --cc-dock-shadow: 0 2px 6px rgba(21, 24, 28, 0.22), 0 18px 42px -12px rgba(21, 24, 28, 0.52);
   }
 
   :root[data-theme="graphite"] {
     /* V4 MP1: alternating vertical zone bands on Graphite sheet */
     --cc-band-a: #25282B;
     --cc-band-b: #212326;
+
+    /* V4 DK1: inverted dock tokens (Graphite) */
+    --cc-on-dock-2: rgba(29, 31, 33, 0.74);
+    --cc-dock-well: rgba(29, 31, 33, 0.10);
+    --cc-dock-hair: rgba(29, 31, 33, 0.16);
+    --cc-dock-rose: #BE123C;
+    --cc-dock-shadow: 0 2px 6px rgba(0, 0, 0, 0.35), 0 18px 42px -12px rgba(0, 0, 0, 0.78);
   }
 
   @supports (background: linear-gradient(in oklab, white, black)) {

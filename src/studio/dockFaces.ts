@@ -33,6 +33,7 @@ function fixesFor(issue: Issue): Array<{ label: string; apply: () => void }> {
 
 export function initDockFaces(): void {
   const workspace = document.getElementById('workspace');
+  const dock = document.getElementById('dock');
   const faces = Array.from(document.querySelectorAll<HTMLElement>('#dock [data-face]'));
   const failBtn = document.getElementById('run-bar-fail');
   const prev = document.getElementById('review-prev');
@@ -41,12 +42,10 @@ export function initDockFaces(): void {
   const sentence = document.getElementById('review-sentence');
   const fixes = document.getElementById('review-fixes');
   const ignore = document.getElementById('review-ignore') as HTMLButtonElement | null;
-  if (!workspace || !failBtn || !prev || !next || !count || !sentence || !fixes || !ignore) return;
+  if (!workspace || !dock || !failBtn || !prev || !next || !count || !sentence || !fixes || !ignore) return;
 
-  // Which face shows. The run bar keeps its own `hidden` in step with the lens; the others follow here.
-  const showFace = () => {
+  const setHiddenFaces = () => {
     for (const face of faces) {
-      if (face.dataset.face === 'traffic') continue;
       face.hidden = face.dataset.face !== app.lens;
     }
   };
@@ -136,14 +135,68 @@ export function initDockFaces(): void {
     if (code && !mutedRules(app.doc).has(code)) toggleMute(code);
   });
 
+  let lastLens = app.lens;
+  let morphTimer = 0;
+  let morphEnd: ((e: TransitionEvent) => void) | null = null;
+  const clearMorph = () => {
+    if (morphTimer) {
+      clearTimeout(morphTimer);
+      morphTimer = 0;
+    }
+    if (morphEnd) {
+      dock.removeEventListener('transitionend', morphEnd);
+      morphEnd = null;
+    }
+    dock.style.transition = '';
+    dock.style.width = '';
+  };
+
+  const applyLensFace = (animate: boolean) => {
+    const lensChanged = app.lens !== lastLens;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shouldMorph = animate && lensChanged && !reduceMotion && dock.offsetWidth > 0;
+    lastLens = app.lens;
+
+    if (!shouldMorph) {
+      clearMorph();
+      setHiddenFaces();
+      if (app.lens === 'review') paintReview();
+      return;
+    }
+
+    clearMorph();
+    const fromW = dock.getBoundingClientRect().width;
+    setHiddenFaces();
+    if (app.lens === 'review') paintReview();
+    dock.style.transition = 'none';
+    dock.style.width = 'auto';
+    const toW = dock.getBoundingClientRect().width;
+    if (morphEnd || morphTimer) clearMorph();
+    if (morphEnd === null && morphTimer === 0 && Math.abs(toW - fromW) < 1) {
+      dock.style.transition = '';
+      dock.style.width = '';
+      return;
+    }
+    dock.style.width = `${fromW}px`;
+    void dock.offsetWidth;
+    dock.style.transition = '';
+    dock.style.width = `${toW}px`;
+
+    const finish = () => clearMorph();
+    morphEnd = (e: TransitionEvent) => {
+      if (e.target === dock && e.propertyName === 'width') finish();
+    };
+    dock.addEventListener('transitionend', morphEnd);
+    morphTimer = window.setTimeout(finish, 420);
+  };
+
   onInsightsChange(() => {
-    showFace();
+    setHiddenFaces();
     if (app.lens === 'review') paintReview();
   });
   new MutationObserver(() => {
-    showFace();
     if (app.lens !== 'traffic') setArmed(false);
-    if (app.lens === 'review') paintReview();
+    applyLensFace(true);
   }).observe(workspace, { attributes: true, attributeFilter: ['data-lens'] });
-  showFace();
+  applyLensFace(false);
 }

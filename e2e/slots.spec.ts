@@ -216,7 +216,7 @@ test('only one corner popover is open at a time', { tag: '@quick' }, async ({ pa
   await expect(page.locator('#view-popover')).toBeHidden();
 });
 
-test('island buttons are not boxed, and Run is the one filled button', async ({ page }) => {
+test('Search is unboxed on NE, Share is the sole filled top-bar button, and Run is filled in the dock', async ({ page }) => {
   await page.goto('/');
   await page.locator('#stage-world').waitFor({ state: 'attached' });
   const style = (id: string) =>
@@ -225,11 +225,10 @@ test('island buttons are not boxed, and Run is the one filled button', async ({ 
       return { border: c.borderTopColor, fill: c.backgroundColor };
     });
   const clear = /rgba\(0, 0, 0, 0\)|transparent/;
-  for (const id of ['#btn-share', '#btn-open-palette']) {
-    const s = await style(id);
-    expect(s.border, id).toMatch(clear);
-    expect(s.fill, id).toMatch(clear);
-  }
+  const search = await style('#btn-open-palette');
+  expect(search.border, '#btn-open-palette').toMatch(clear);
+  expect(search.fill, '#btn-open-palette').toMatch(clear);
+  expect((await style('#btn-share')).fill).not.toMatch(clear);
   expect((await style('#btn-run')).fill).not.toMatch(clear);
 });
 

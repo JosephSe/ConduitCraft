@@ -33,15 +33,6 @@
   will-change: transform, opacity;
 }
 
-.toast-item.toast-error {
-  border-color: var(--cc-rose);
-  color: var(--cc-rose);
-}
-
-.toast-item.toast-success {
-  border-color: var(--cc-emerald);
-}
-
 .toast-item.is-dismissing {
   animation: toast-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
@@ -1030,57 +1021,88 @@ kbd {
    Top bar: logo + title with undo/redo, mode switch, search, save status, Share. Everything else that used to
    live here is a command-palette action (see "Header controls that the redesigned top bar no longer shows").
    --------------------------------------------------------------------------------------------- */
-/* The dock (6.4): one island in slot S. Tools, six favourite cut-outs, "All components". Three faces: Design, Traffic (the run bar) and Review. */
+/* The dock (V4 DK1/DK2): 60 px inverted pill with three faces (Design, Traffic, Review). */
 .dock {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 4px;
+  block-size: 60px;
   max-inline-size: 100%;
-  padding: 0.4rem;
+  box-sizing: border-box;
+  padding: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none;
-  background: var(--cc-island);
-  border: 1px solid var(--cc-hair);
-  border-radius: 1.125rem;
-  box-shadow: var(--cc-shadow-card);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  backdrop-filter: blur(18px) saturate(1.4);
+  background: var(--cc-dock);
+  color: var(--cc-on-dock);
+  border: 0;
+  border-radius: 30px;
+  box-shadow: var(--cc-dock-shadow);
 }
+.dock :focus-visible { outline: 2px solid var(--cc-on-dock); outline-offset: -2px; }
 /* One island, three faces (6.4): the lens picks which one shows. */
-.dock-face { display: flex; align-items: center; gap: 0.25rem; min-inline-size: 0; }
+.dock-face { display: flex; align-items: center; gap: 2px; min-inline-size: 0; }
 .dock-face[hidden] { display: none; }
-.dock-fail { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2rem; padding-inline: 0.7rem; border: 1px solid transparent; border-radius: 0.6rem; background: none; color: var(--cc-rose); font: var(--cc-font-small); font-weight: 600; cursor: pointer; white-space: nowrap; }
-.dock-fail:hover { background: var(--cc-well); }
-.dock-fail kbd { font: 0.7rem var(--cc-font-mono); opacity: 0.7; }
-.dock-fail[aria-pressed="true"] { background: var(--cc-rose); color: var(--cc-sheet); }
+.dock-fail { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 36px; padding-inline: 12px; border: 0; border-radius: 18px; background: none; color: var(--cc-dock-rose); font: var(--cc-font-small); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.dock-fail kbd { font: 0.7rem var(--cc-font-mono); color: inherit; background: var(--cc-dock-well); border: 0; box-shadow: none; padding: 1px 5px; border-radius: 5px; opacity: 0.85; }
+.dock-fail[aria-pressed="true"] { background: var(--cc-dock-rose); color: var(--cc-dock); }
 .workspace[data-fail-armed] .arch-node { cursor: crosshair; }
-.review-count { flex: none; font: var(--cc-font-small); font-variant-numeric: tabular-nums; color: var(--cc-ink-2); white-space: nowrap; }
-.review-sentence { flex: 1 1 14rem; min-inline-size: 8rem; max-inline-size: 28rem; font: var(--cc-font-small); color: var(--cc-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-count { flex: none; padding-inline: 4px; font: var(--cc-font-small); font-variant-numeric: tabular-nums; color: var(--cc-on-dock-2); white-space: nowrap; }
+.review-sentence { flex: 1 1 14rem; min-inline-size: 8rem; max-inline-size: 28rem; font: var(--cc-font-small); color: var(--cc-on-dock); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .review-fixes { display: contents; }
 .dock-btn, .dock-fav {
   position: relative;
   flex: none;
   display: grid;
   place-items: center;
-  inline-size: 2.75rem;
-  block-size: 2.75rem;
+  inline-size: 44px;
+  block-size: 44px;
   padding: 0;
   border: 0;
-  border-radius: 0.7rem;
+  border-radius: 22px;
   background: none;
-  color: var(--cc-ink-2);
+  color: var(--cc-on-dock-2);
   font: inherit;
   cursor: pointer;
 }
-.dock-btn:hover, .dock-fav:hover { background: var(--cc-well); color: var(--cc-ink); }
-.dock-btn:focus-visible, .dock-fav:focus-visible, .dock-all:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
-.dock-btn[aria-pressed="true"] { background: var(--cc-ink); color: var(--cc-sheet); }
-.dock-fav[aria-pressed="true"] { background: var(--cc-well); }
+.dock-fav { inline-size: 34px; border-radius: 17px; }
+@media (pointer: coarse) { .dock-fav { inline-size: 44px; border-radius: 22px; } }
+.dock-btn:hover,
+.dock-fav:hover,
+.dock .btn:not(.solid):hover:not(:disabled),
+.dock-fail:hover {
+  background: var(--cc-dock-well);
+  color: var(--cc-on-dock);
+}
+.dock-btn[aria-pressed="true"],
+.dock-run,
+.dock .btn:not(.solid)[aria-pressed="true"] {
+  background: var(--cc-on-dock);
+  color: var(--cc-dock);
+}
+.dock-fav[aria-pressed="true"] { background: var(--cc-dock-well); }
 .dock-fav .cutout { inline-size: 30px; block-size: 24px; }
-.dock-sep { flex: none; inline-size: 1px; block-size: 1.5rem; margin-inline: 0.25rem; background: var(--cc-hair); }
-.dock-all { flex: none; display: flex; align-items: center; gap: 0.5rem; block-size: 2.75rem; padding-inline: 0.75rem; border: 0; border-radius: 0.7rem; background: none; color: var(--cc-ink-2); font: var(--cc-font-small); cursor: pointer; white-space: nowrap; }
-.dock-all:hover, .dock-all[aria-expanded="true"] { background: var(--cc-well); color: var(--cc-ink); }
-.dock-all kbd { font: 0.7rem var(--cc-font-mono); color: var(--cc-ink-3); }
+.dock-fav .cutout :is(path, rect, ellipse, circle, polygon) { stroke: var(--cc-on-dock-2); }
+.dock-fav:is(:hover, :focus-visible, .is-on, [aria-pressed="true"]) .cutout :is(path, rect, ellipse, circle, polygon) {
+  fill: color-mix(in oklab, var(--t, var(--cc-on-dock)) 24%, var(--cc-dock));
+  stroke: color-mix(in oklab, var(--t, var(--cc-on-dock)) 65%, var(--cc-on-dock));
+}
+.dock-fav .cutout .cutout-mark { fill: none; }
+.dock-fav.cut:is(:hover, :focus-visible, .is-on) { transform: translateY(-2px) scale(1.08); }
+.dock-sep { flex: none; inline-size: 1px; block-size: 24px; margin-inline: 2px; background: var(--cc-dock-hair); }
+.dock-all { flex: none; display: flex; align-items: center; gap: 5px; block-size: 44px; padding: 0 8px 0 10px; border: 0; border-radius: 22px; background: var(--cc-dock-well); color: var(--cc-on-dock-2); font: 500 12px/1 var(--cc-font-sans); cursor: pointer; white-space: nowrap; }
+.dock-all:hover, .dock-all[aria-expanded="true"] { background: color-mix(in oklab, var(--cc-on-dock) 18%, transparent); color: var(--cc-on-dock); }
+.dock-all kbd { font: 0.7rem var(--cc-font-mono); color: var(--cc-on-dock-2); padding: 2px 6px; border-radius: 6px; background: var(--cc-dock-well); border: 0; box-shadow: none; }
+.dock-run { flex: none; display: inline-flex; align-items: center; gap: 5px; block-size: 44px; padding: 0 13px 0 11px; border: 0; border-radius: 22px; font: var(--cc-font-small); font-weight: 600; cursor: pointer; white-space: nowrap; }
+.dock-run:active { transform: scale(0.98); }
+.dock .btn:not(.solid) { color: var(--cc-on-dock-2); border-radius: 22px; min-block-size: 36px; }
+#dock #run-bar-play,
+#dock .btn.review-fix { background: var(--cc-on-dock); color: var(--cc-dock); }
+#dock #run-bar-play { inline-size: 40px; block-size: 40px; min-inline-size: 40px; padding: 0; border-radius: 20px; }
+#dock .btn.review-fix { border-radius: 20px; padding-inline: 12px; }
+.dock-run:hover,
+#dock #run-bar-play:hover:not(:disabled),
+#dock .btn.review-fix:hover:not(:disabled) { background: var(--cc-on-dock); color: var(--cc-dock); opacity: 0.92; }
 /* The tray (7.3): opens above the dock. Six groups, each a quiet label over a list of cut-outs. Not modal. */
 .tray {
   position: absolute;
@@ -1142,7 +1164,15 @@ kbd {
 .workspace[data-tray] .hint-line, .workspace[data-mode="data"] .tray { display: none; }
 /* The selection's toolbar floats over the tray's search box, so it waits while the tray is open. */
 body:has(.workspace[data-tray]) .context-toolbar { display: none; }
-@media (max-width: 56rem) { .dock-fav:nth-of-type(n+4) { display: none; } .tray { grid-template-columns: minmax(0, 1fr); } .tray-demo { display: none; } }
+@media (max-width: 82rem) {
+  .dock-all { padding-inline: 10px; }
+  .dock-all-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+}
+@media (max-width: 56rem) {
+  .dock-fav:nth-of-type(n+4) { display: none; }
+  .tray { grid-template-columns: minmax(0, 1fr); }
+  .tray-demo { display: none; }
+}
 /* Click to arm (7.1): the ghost follows the pointer until the next click on the sheet. */
 .workspace[data-armed] .canvas-viewport { cursor: copy; }
 .dock-fav, .dock-btn { touch-action: manipulation; }
@@ -1258,21 +1288,30 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   min-inline-size: 6rem;
   max-inline-size: 11rem;
   flex: 0 1 11rem;
+  block-size: 36px;
+  padding-inline: 10px;
+  border: 1px solid var(--cc-dock-hair);
+  border-radius: 18px;
+  background: var(--cc-dock-well);
+  color: var(--cc-on-dock);
+  font: var(--cc-font-small);
+}
+.run-bar-scenario option {
+  background: var(--cc-dock);
+  color: var(--cc-on-dock);
 }
 .run-bar-scrubber {
   flex: 1 1 5rem;
   min-inline-size: 3rem;
+  accent-color: var(--cc-on-dock);
 }
 .run-bar-step {
   flex: 0 0 auto;
   font-family: var(--cc-font-sans);
   font-variant-numeric: tabular-nums;
   font-size: 0.72rem;
-  color: var(--cc-ink-3);
+  color: var(--cc-on-dock-2);
   white-space: nowrap;
-}
-.run-bar [aria-pressed="true"] {
-  color: var(--cc-accent);
 }
 /* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
 .legend-card {
@@ -1294,62 +1333,19 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   opacity: 0.18;
 }
 
-.run-bar .js-colour-by { min-inline-size: 9.5rem; }
-.run-bar .js-tag-filter { min-inline-size: 7rem; }
 
-/* Chaos simulation (F-01): failed components turn rose and shake once; what they cut off dims. */
-.arch-node[data-chaos="failed"] .node-select-hit {
-  border-color: var(--cc-rose);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-rose) 40%, transparent);
-  animation: chaos-shake 320ms ease-in-out 1;
-}
-.arch-node[data-chaos="degraded"] .node-select-hit {
-  border-color: var(--cc-amber, #d97706);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-amber, #d97706) 40%, transparent);
-}
-.arch-node[data-chaos="unreachable"] .node-select-hit {
-  outline: 2px dashed color-mix(in srgb, var(--cc-rose) 55%, transparent);
-  outline-offset: 3px;
-}
-.arch-node[data-chaos="rerouted"] .node-select-hit {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-blue) 35%, transparent);
-}
-/* Callers of a failed component: still up, but their requests may fail. A slow orange pulse. */
+/* Chaos simulation (F-01): base state styles in section 8.5 below override colour/border/outline; keep pulse/pipe/badge geometry here. */
 .arch-node[data-chaos="at-risk"] .node-select-hit {
-  border-color: #f97316;
   animation: chaos-pulse 2.4s ease-in-out infinite;
 }
 @keyframes chaos-pulse {
   0%, 100% { box-shadow: 0 0 0 1px rgb(249 115 22 / 0.35); }
   50% { box-shadow: 0 0 0 2px rgb(249 115 22 / 0.55); }
 }
-.arch-node[data-chaos="at-risk"] .chaos-badge { background: #f97316; color: #fff; border-color: #f97316; }
 .chaos-item[data-status="at-risk"] { color: #c2410c; }
-/* Queues (K1): a queue that holds work is up, so it gets a violet ring; what waits behind it gets a dotted one. */
-.arch-node[data-chaos="buffering"] .node-select-hit {
-  border-color: var(--cc-violet);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cc-violet) 40%, transparent);
-}
-.arch-node[data-chaos="delayed"] .node-select-hit {
-  outline: 2px dotted color-mix(in srgb, var(--cc-violet) 65%, transparent);
-  outline-offset: 3px;
-}
-.arch-node[data-chaos="buffering"] .chaos-badge,
-.arch-node[data-chaos="delayed"] .chaos-badge { border-color: var(--cc-violet); }
 .arch-node[data-shape="pipe"][data-chaos="failed"] .node-shape-plate { color: var(--cc-rose); }
 .arch-node[data-shape="pipe"][data-chaos="buffering"] .node-shape-plate { color: var(--cc-violet); }
-/* Caches and limiters (K3, K4): slowed callers get an amber dashed ring; a bypassed limiter keeps a violet dashed one. */
-.arch-node[data-chaos="slowed"] .node-select-hit {
-  outline: 2px dashed color-mix(in srgb, var(--cc-amber) 75%, transparent);
-  outline-offset: 3px;
-}
-.arch-node[data-chaos="bypassed"] .node-select-hit {
-  outline: 2px dashed color-mix(in srgb, var(--cc-violet) 75%, transparent);
-  outline-offset: 3px;
-}
-.arch-node[data-chaos="slowed"] .chaos-badge { border-color: var(--cc-amber); }
-.arch-node[data-chaos="bypassed"] .chaos-badge { border-color: var(--cc-violet); }
-.chaos-item[data-status="buffering"], .chaos-item[data-status="delayed"], .chaos-item[data-status="slowed"], .chaos-item[data-status="bypassed"] { font-weight: 600; }
+.chaos-item:is([data-status="buffering"], [data-status="delayed"], [data-status="slowed"], [data-status="bypassed"]) { font-weight: 600; }
 .chaos-badge {
   position: absolute;
   inset-block-start: -0.7rem;
@@ -1360,11 +1356,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   font: 600 0.65rem/1.3 var(--cc-font-mono);
   white-space: nowrap;
   pointer-events: none;
-  background: var(--cc-sheet);
-  color: var(--cc-ink);
-  border: 1px solid var(--cc-border);
 }
-.arch-node[data-chaos="failed"] .chaos-badge { background: var(--cc-rose); color: #fff; border-color: var(--cc-rose); }
 @keyframes chaos-shake {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-4px); }
@@ -1373,7 +1365,6 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   80% { transform: translateX(3px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .arch-node[data-chaos="failed"] .node-select-hit { animation: none; }
   .arch-node[data-chaos="at-risk"] .node-select-hit { animation: none; box-shadow: 0 0 0 2px rgb(249 115 22 / 0.5); }
 }
 
@@ -1990,9 +1981,10 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 .title-block > span:first-child { flex: 1; border-inline-start: 0; color: var(--cc-ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
 
 /* M3 (9.2): the dock changes face with a cross-fade, and the tray and popovers rise 14 px on the spring when they open. */
-@keyframes cc-face-in { from { opacity: 0; } }
+@keyframes cc-face-in { from { opacity: 0; transform: translateY(6px); } }
 @keyframes cc-rise { from { opacity: 0; transform: translateY(14px); } }
 @media (prefers-reduced-motion: no-preference) {
+  .dock { transition: width 340ms var(--cc-spring); }
   .dock-face:not([hidden]) { animation: cc-face-in var(--cc-dur-base, 200ms) var(--cc-ease-out) 1; }
   .tray:not([hidden]), .slot-popover:not([hidden]) { animation: cc-rise var(--cc-dur-base, 200ms) var(--cc-spring) 1 both; }
 }

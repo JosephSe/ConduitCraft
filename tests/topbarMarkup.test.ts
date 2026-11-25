@@ -4,16 +4,19 @@ import { describe, it } from 'node:test';
 
 const html = readFileSync('index.html', 'utf8');
 const header = html.slice(html.indexOf('<header class="topbar">'), html.indexOf('</header>'));
+const dock = html.slice(html.indexOf('<div class="dock"'), html.indexOf('<!-- Chaos summary'));
 const ids = [...header.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
 
 describe('B1b: the header holds only what the top bar shows', () => {
-  it('keeps the menu mark, title, save state, lens switch, Search, Share and Run (6.2)', () => {
-    for (const id of ['btn-app-menu', 'btn-focus-doc-title', 'btn-share', 'btn-open-palette', 'btn-run', 'save-status-pill']) {
+  it('keeps the menu mark, title, save state, lens switch, Search and Share, with Run in the dock', () => {
+    for (const id of ['btn-app-menu', 'btn-focus-doc-title', 'btn-share', 'btn-open-palette', 'save-status-pill']) {
       assert.ok(ids.includes(id), `#${id} is in the header`);
     }
+    assert.ok(!ids.includes('btn-run'), '#btn-run has moved into the dock');
+    assert.ok(dock.includes('id="btn-run"'), '#btn-run lives in #dock');
     assert.equal((header.match(/name="workspace-mode"/g) ?? []).length, 3, 'three lenses');
     for (const id of ['btn-undo', 'btn-redo']) assert.ok(!ids.includes(id), `#${id} lives in the menu and on its shortcut`);
-    assert.equal((header.match(/class="btn solid"/g) ?? []).length, 1, 'Run is the only filled button');
+    assert.equal((header.match(/class="btn solid"/g) ?? []).length, 1, 'Share is the only filled button in the top bar');
   });
 
   it('has none of the old hidden click targets', () => {

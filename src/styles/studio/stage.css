@@ -767,24 +767,12 @@
     opacity: 0.16;
   }
 
-  .workspace[data-flow="blue"] .conduit-group:not([data-tone="blue"]) {
-    opacity: 0.13;
-  }
-  .workspace[data-flow="emerald"] .conduit-group:not([data-tone="emerald"]) {
-    opacity: 0.13;
-  }
-  .workspace[data-flow="rose"] .conduit-group:not([data-tone="rose"]) {
-    opacity: 0.13;
-  }
-  .workspace[data-flow="violet"] .conduit-group:not([data-tone="violet"]) {
-    opacity: 0.13;
-  }
-  .workspace[data-flow="amber"] .conduit-group:not([data-tone="amber"]) {
-    opacity: 0.13;
-  }
-  .workspace[data-flow="cyan"] .conduit-group:not([data-tone="cyan"]) {
-    opacity: 0.13;
-  }
+  .workspace[data-flow="blue"] .conduit-group:not([data-tone="blue"]),
+  .workspace[data-flow="emerald"] .conduit-group:not([data-tone="emerald"]),
+  .workspace[data-flow="rose"] .conduit-group:not([data-tone="rose"]),
+  .workspace[data-flow="violet"] .conduit-group:not([data-tone="violet"]),
+  .workspace[data-flow="amber"] .conduit-group:not([data-tone="amber"]),
+  .workspace[data-flow="cyan"] .conduit-group:not([data-tone="cyan"]),
   .workspace[data-flow="fuchsia"] .conduit-group:not([data-tone="fuchsia"]) {
     opacity: 0.13;
   }
@@ -1142,12 +1130,6 @@
   }
 
   /* Component Kind Variations */
-  .arch-node[data-kind="core"] .node-select-hit,
-  .arch-node[data-kind="gate"] .node-select-hit,
-  .arch-node[data-kind="store"] .node-select-hit {
-    background: var(--cc-sheet);
-  }
-
   .arch-node[data-kind="client"] .node-select-hit {
     padding: 0.55rem 0.85rem;
   }
@@ -1291,6 +1273,8 @@
     background: transparent;
     border-color: transparent;
     box-shadow: none;
+    justify-content: center;
+    gap: 0.28rem;
   }
 
   .node-shape-plate {
@@ -1310,13 +1294,6 @@
     stroke-linejoin: round;
   }
 
-  .arch-node[data-kind="core"] .node-shape-geom,
-  .arch-node[data-kind="gate"] .node-shape-geom,
-  .arch-node[data-kind="balancer"] .node-shape-geom,
-  .arch-node[data-kind="store"] .node-shape-geom {
-    fill: color-mix(in srgb, var(--node-accent-soft) 72%, var(--cc-sheet));
-  }
-
   .arch-node.is-related .node-shape-plate {
     color: var(--node-accent);
   }
@@ -1334,14 +1311,6 @@
     position: relative;
     z-index: 1;
     min-inline-size: 0;
-  }
-
-  .arch-node[data-shape="circle"] .node-select-hit,
-  .arch-node[data-shape="diamond"] .node-select-hit,
-  .arch-node[data-shape="hexagon"] .node-select-hit,
-  .arch-node[data-shape="trapezoid"] .node-select-hit {
-    justify-content: center;
-    gap: 0.28rem;
   }
 
   .arch-node[data-shape] .node-top,
@@ -1445,21 +1414,23 @@
     flex-shrink: 0;
   }
 
-  /* Data stores draw a drum. The hit stays clear so the plate is the silhouette. */
-  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit,
-  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit:hover,
-  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit[aria-pressed="true"],
-  .arch-node.is-related[data-kind="store"][data-shape="cylinder"] .node-select-hit,
-  .arch-node[data-kind="store"][data-shape="cylinder"][data-sim-active="true"] .node-select-hit {
+  /* Data stores draw a drum, message queues draw a pipe. The hit stays clear so the plate is the silhouette. */
+  :is(.arch-node[data-kind="store"][data-shape="cylinder"], .arch-node[data-shape="pipe"]) :is(
+    .node-select-hit,
+    .node-select-hit:hover,
+    .node-select-hit[aria-pressed="true"]
+  ),
+  :is(.arch-node.is-related[data-kind="store"][data-shape="cylinder"], .arch-node.is-related[data-shape="pipe"]) .node-select-hit,
+  :is(.arch-node[data-kind="store"][data-shape="cylinder"], .arch-node[data-shape="pipe"])[data-sim-active="true"] .node-select-hit {
     overflow: visible;
     background: transparent;
     border-color: transparent;
     box-shadow: none;
-    text-align: center;
   }
+  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit { text-align: center; }
 
-  .arch-node[data-kind="store"][data-shape="cylinder"] .node-select-hit[aria-pressed="true"],
-  .arch-node.is-related[data-kind="store"][data-shape="cylinder"] .node-select-hit {
+  :is(.arch-node[data-kind="store"][data-shape="cylinder"], .arch-node[data-shape="pipe"]) .node-select-hit[aria-pressed="true"],
+  :is(.arch-node.is-related[data-kind="store"][data-shape="cylinder"], .arch-node.is-related[data-shape="pipe"]) .node-select-hit {
     outline-color: transparent;
   }
 
@@ -1497,22 +1468,7 @@
     top: 2.45rem;
   }
 
-  /* Message queues draw a horizontal pipe (K1). The hit stays clear so the plate is the silhouette. */
-  .arch-node[data-shape="pipe"] .node-select-hit,
-  .arch-node[data-shape="pipe"] .node-select-hit:hover,
-  .arch-node[data-shape="pipe"] .node-select-hit[aria-pressed="true"],
-  .arch-node.is-related[data-shape="pipe"] .node-select-hit,
-  .arch-node[data-shape="pipe"][data-sim-active="true"] .node-select-hit {
-    overflow: visible;
-    background: transparent;
-    border-color: transparent;
-    box-shadow: none;
-  }
-
-  .arch-node[data-shape="pipe"] .node-select-hit[aria-pressed="true"],
-  .arch-node.is-related[data-shape="pipe"] .node-select-hit {
-    outline-color: transparent;
-  }
+  /* Message queues draw a horizontal pipe (K1). */
 
   .arch-node[data-shape="pipe"] .pipe-body {
     fill: color-mix(in srgb, var(--node-accent) 10%, var(--cc-sheet));

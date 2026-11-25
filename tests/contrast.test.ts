@@ -6,6 +6,7 @@ import { readStudioCss } from './studioCss.ts';
 
 const root = process.cwd();
 const shared = readFileSync(resolve(root, 'src/styles/shared.css'), 'utf8');
+const tokens = readFileSync(resolve(root, 'src/styles/studio/tokens.css'), 'utf8');
 const studio = readStudioCss();
 const layout = readFileSync(resolve(root, 'src/styles/studio/layout.css'), 'utf8');
 const stage = readFileSync(resolve(root, 'src/styles/studio/stage.css'), 'utf8');
@@ -63,6 +64,27 @@ describe('5.1 colour pairs', () => {
       assert.ok(onInk >= 4.5, `on-ink on ink (${theme}) is ${onInk.toFixed(2)}:1`);
       const onDock = contrast(token(theme, 'on-dock'), token(theme, 'dock'));
       assert.ok(onDock >= 4.5, `on-dock on dock (${theme}) is ${onDock.toFixed(2)}:1`);
+
+      const tokSel = theme === 'vellum' ? ':root {' : ':root[data-theme="graphite"] {';
+      const start = tokens.indexOf(tokSel);
+      const tokBlock = tokens.slice(start, tokens.indexOf('}', start));
+      const roseMatch = /--cc-dock-rose:\s*(#[0-9A-Fa-f]{6})/.exec(tokBlock);
+      assert.ok(roseMatch, `${theme} --cc-dock-rose missing`);
+      const roseContrast = contrast(roseMatch[1], token(theme, 'dock'));
+      assert.ok(roseContrast >= 4.5, `dock-rose on dock (${theme}) is ${roseContrast.toFixed(2)}:1`);
+
+      const secondaryMatch = /--cc-on-dock-2:\s*rgba\(\s*(\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\s*\)/.exec(tokBlock);
+      assert.ok(secondaryMatch, `${theme} --cc-on-dock-2 missing`);
+      const dockHex = token(theme, 'dock').replace('#', '');
+      const [bgR, bgG, bgB] = [0, 2, 4].map((i) => parseInt(dockHex.slice(i, i + 2), 16));
+      const a = Number(secondaryMatch[4]);
+      const blend = [bgR, bgG, bgB].map((bg, i) =>
+        Math.round(Number(secondaryMatch[i + 1]) * a + bg * (1 - a))
+          .toString(16)
+          .padStart(2, '0'),
+      );
+      const onDock2Contrast = contrast(`#${blend.join('')}`, token(theme, 'dock'));
+      assert.ok(onDock2Contrast >= 4.5, `on-dock-2 on dock (${theme}) is ${onDock2Contrast.toFixed(2)}:1`);
     }
   });
 

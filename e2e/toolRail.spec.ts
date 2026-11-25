@@ -92,15 +92,15 @@ test('tool letters do nothing while typing', async ({ page }) => {
   await expect(field).toHaveValue(/wvz$/);
 });
 
-test('every tool, favourite and the All components button can be reached with Tab', async ({ page }) => {
+test('every tool, favourite, Add or find anything and Run can be reached with Tab', async ({ page }) => {
   await open(page);
   await tool(page, 'select').focus();
   const seen: string[] = [];
-  for (let i = 0; i < 12; i += 1) {
+  for (let i = 0; i < 13; i += 1) {
     seen.push(await page.evaluate(() => (document.activeElement as HTMLElement).dataset.railTool ?? (document.activeElement as HTMLElement).dataset.stencilId ?? document.activeElement!.id));
     await page.keyboard.press('Tab');
   }
-  expect(seen).toEqual(['select', 'connect', 'hand', 'text', 'frame', 'service', 'store', 'queue', 'balancer', 'gate', 'actor', 'btn-all-components']);
+  expect(seen).toEqual(['select', 'connect', 'hand', 'text', 'frame', 'service', 'store', 'queue', 'balancer', 'gate', 'actor', 'btn-all-components', 'btn-run']);
 });
 
 test('Enter on a favourite places exactly one at the centre of the view', async ({ page }) => {
@@ -196,6 +196,43 @@ test('the dock is one island with three faces: the lens picks which one shows', 
   await page.keyboard.press('1');
   await expect(face('design')).toBeVisible();
   await expect(face('review')).toBeHidden();
+});
+
+test('the dock uses inverted V4 geometry, fits unclipped at 1440px, and morphs without shifting SW/SE slots', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await openLumenRelay(page);
+  await expect(page.locator('.arch-node').first()).toBeVisible();
+  const dock = page.locator('#dock');
+  const geom = await dock.evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return {
+      bg: cs.backgroundColor,
+      h: el.getBoundingClientRect().height,
+      r: cs.borderTopLeftRadius,
+      scrollW: el.scrollWidth,
+      clientW: el.clientWidth,
+    };
+  });
+  expect(geom.bg).toBe('rgb(21, 24, 28)');
+  expect(Math.round(geom.h)).toBe(60);
+  expect(geom.r).toBe('30px');
+  expect(geom.scrollW).toBeLessThanOrEqual(geom.clientW + 1);
+
+  await page.evaluate(() => { document.documentElement.dataset.theme = 'graphite'; });
+  await expect.poll(() => dock.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(242, 243, 241)');
+  await page.evaluate(() => { delete document.documentElement.dataset.theme; });
+
+  const swBefore = (await page.locator('#slot-sw').boundingBox())!;
+  const seBefore = (await page.locator('#slot-se').boundingBox())!;
+  for (const key of ['2', '3', '1']) {
+    await page.keyboard.press(key);
+    await expect.poll(() => dock.evaluate((el) => el.style.width)).toBe('');
+  }
+  const swAfter = (await page.locator('#slot-sw').boundingBox())!;
+  const seAfter = (await page.locator('#slot-se').boundingBox())!;
+  expect(Math.abs(swAfter.x - swBefore.x)).toBeLessThan(1);
+  expect(Math.abs(seAfter.x - seBefore.x)).toBeLessThan(1);
 });
 
 
