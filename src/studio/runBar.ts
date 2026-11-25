@@ -77,7 +77,7 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
   speedBtn.addEventListener('click', () => simulationPlayback.toggleSpeed());
   loopBtn.addEventListener('click', () => simulationPlayback.toggleLoop());
 
-  // The Run button in NE: go to Traffic, then play the chosen scenario (or the first one).
+  // The Run button in the dock: go to Traffic, then play the chosen scenario (or the first one).
   document.getElementById('btn-run')?.addEventListener('click', () => {
     const radio = document.querySelector<HTMLInputElement>('input[name="workspace-mode"][value="data"]');
     if (radio && !radio.checked) {
@@ -93,7 +93,6 @@ export function initRunBar(deps: { run: (scenarioId: string) => void }): void {
     syncScenarios();
     syncTransport(state);
   });
-  new MutationObserver(syncVisibility).observe(workspace, { attributes: true, attributeFilter: ['data-mode', 'data-lens'] });
 
   const refresh = () => {
     syncVisibility();

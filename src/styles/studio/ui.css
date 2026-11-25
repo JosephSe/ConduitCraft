@@ -199,9 +199,9 @@
     position: absolute;
     inset-block: 0;
     inline-size: 33.34%;
-    border-radius: 0.45rem;
+    border-radius: 11px;
     background: var(--cc-ink);
-    transition: transform var(--cc-dur-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 340ms var(--cc-spring);
   }
 
   .mode-switcher:has(label:nth-of-type(2) input:checked)::before { transform: translateX(100%); }
@@ -407,7 +407,8 @@
   @media (prefers-reduced-motion: reduce) {
     .cut,
     .cutout :is(path, rect, ellipse, circle, polygon),
-    .stencil-drag-ghost.cutout-carry {
+    .stencil-drag-ghost.cutout-carry,
+    .mode-switcher::before {
       transition: none;
     }
   }

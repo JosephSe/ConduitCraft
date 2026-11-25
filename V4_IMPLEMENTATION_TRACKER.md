@@ -16,14 +16,14 @@
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
 | **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 7 | 7 | **Complete** (`MP1`–`MP3`, `MP6`–`MP9` done; `MP4`/`MP5` skipped per D14) |
-| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 0 | 7 | Ready for `DK1`–`DK6` (`DK7` superseded by D14) |
-| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Blocked on `DK1` (`CP1` ready) |
-| **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Blocked on `DK2` |
-| **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Blocked on `DK2` |
+| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 2 | 7 | In progress (`DK1`–`DK2` done; ready for `DK3`, `DK5`, `CP1`, `RN1`, `RV1`) |
+| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Ready for `CP1` |
+| **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Unblocked (`DK2` done) |
+| **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Unblocked (`DK2` done) |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Ready for `PS1` (unblocked by `MP8`; `DK4` for Key footer) |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **12** | **60** | **20.0%** _(3 items skipped per D14)_ |
+| **Overall** | | **14** | **60** | **23.3%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (10 / 31 active, 3 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (12 / 31 active, 3 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -137,17 +137,17 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ### Milestone DK: The Dock & The Shell
 
-- [ ] **DK1. Inverted dock — Design face** · M · **Priority:** P0 · **Needs:** `MP4`
+- [x] **DK1. Inverted dock — Design face** · M · **Priority:** P0 · **Needs:** `MP4`
   - **Read:** `src/studio/dock.ts`, `src/studio/dockFavourites.ts`, `src/styles/studio/layout.css`, `e2e/toolRail.spec.ts`.
-  - [ ] Style `--cc-dock` 60 px pill (radius 30, `--cc-on-dock`) as the sole inverted surface on screen.
-  - [ ] Render 5 tools (`V/W/H/T/F`), 6 favourite bullets (drag or click-arm), "Add or find anything `/`" trigger (`#btn-all-components`), and Run (`#btn-run`).
+  - [x] Style `--cc-dock` 60 px pill (radius 30, `--cc-on-dock`) as the sole inverted surface on screen (`tokens.css`, `unlayered.css`).
+  - [x] Render 5 tools (`V/W/H/T/F`), 6 favourite V3 cut-outs (per D14, crisp on inverted dock in Vellum & Graphite), "Add or find anything `C`" trigger (`#btn-all-components`), and Run (`#btn-run`) moved into dock while making Share (`#btn-share`) the sole `.solid` button in NE.
   - **Done when:** Views 1 & 2 match; favourite drag-to-sheet and roving focus pass.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-25 (`v4-dk1-dk2-inverted-dock`) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.8 kB / 410 kB`, Entry CSS `137.2 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `tests/contrast.test.ts` asserts `>= 4.5:1` for `--cc-dock-rose` & `--cc-on-dock-2` on `--cc-dock`; `e2e/toolRail.spec.ts`, `e2e/topbar.spec.ts`, `e2e/slots.spec.ts`, `e2e/touch.spec.ts`, `e2e/a11y.spec.ts`, and `e2e/v4Visual.spec.ts` (8/8 zero-diff) passed.
 
-- [ ] **DK2. Sliding lens switch & dock width morph** · S · **Priority:** P0 · **Needs:** `DK1`
-  - [ ] Add `--cc-spring` (340 ms) sliding ink thumb to N lens switch and animated width morph + 6 px face cross-fade to dock (`src/styles/studio/dockFaces.css`).
+- [x] **DK2. Sliding lens switch & dock width morph** · S · **Priority:** P0 · **Needs:** `DK1`
+  - [x] Add `--cc-spring` (340 ms) sliding ink thumb (`radius 11px`) to N lens switch (`ui.css`) and animated width morph + 6 px face cross-fade (`@keyframes cc-face-in`) to dock (`dockFaces.ts`, `runBar.ts`, `unlayered.css`), respecting `prefers-reduced-motion`.
   - **Done when:** `lensKeys.spec.ts` passes with zero layout shift in sibling slots.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-25 (`v4-dk1-dk2-inverted-dock`) · `dockFaces.ts` owns all `[data-face]` transitions with zero lingering inline `width`; `e2e/lensKeys.spec.ts` & `e2e/toolRail.spec.ts` verify inverted Vellum/Graphite geometry, zero horizontal clipping at `1440×900`, and zero shift in `#slot-sw` / `#slot-se`.
 
 - [ ] **DK3. Title island & page/level breadcrumb (`src/studio/breadcrumb.ts`)** · M · **Priority:** P0 · **Needs:** `GR2`
   - **Read:** `src/studio/pageTabs.ts`, `src/studio/pageMenu.ts`, `src/studio/levels.ts`.

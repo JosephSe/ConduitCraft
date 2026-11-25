@@ -26,10 +26,11 @@ test('each top island shows at most 8 controls, and holds what 6.2 says', async 
   for (const [name, list] of [['NW', nw], ['N', n], ['NE', ne]] as const) expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(8);
   expect(nw).toEqual(['btn-app-menu', 'btn-focus-doc-title']);
   expect(n).toEqual(['workspace-mode', 'workspace-mode', 'workspace-mode']);
-  expect(ne).toEqual(['btn-open-palette', 'btn-share', 'btn-run']);
+  expect(ne).toEqual(['btn-open-palette', 'btn-share']);
   await expect(page.locator('#btn-open-export')).toHaveCount(0);
-  // Run is the only filled button on the screen's top edge, and undo and redo are not buttons.
+  // Share is the only filled button on the screen's top edge (Run lives in the dock), and undo and redo are not buttons.
   await expect(page.locator('.topbar .btn.solid')).toHaveCount(1);
+  await expect(page.locator('#dock #btn-run')).toHaveCount(1);
   await expect(page.locator('#btn-undo, #btn-redo')).toHaveCount(0);
 });
 

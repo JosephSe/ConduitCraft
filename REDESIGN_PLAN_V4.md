@@ -625,12 +625,12 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 ### Milestone DK: The dock and the shell
 
-#### [ ] DK1. The inverted dock, Design face · M
+#### [x] DK1. The inverted dock, Design face · M
 - **Read:** `dock.ts`, `dockFavourites.ts`, the dock rules in `layout.css`, `toolRail.spec.ts`.
 - **Do:** 6.5: the surface, tools, favourites as V3 cut-outs (per D14), the "Add or find anything" field (still opening the tray until CP2), Run.
 - **Done:** views 1 and 2; dragging a favourite to the sheet still places it; roving focus works. **Needs:** GR2.
 
-#### [ ] DK2. Lens switch and dock morph · S
+#### [x] DK2. Lens switch and dock morph · S
 - **Do:** 6.3 and the width spring in 6.5. **Done:** `lensKeys.spec.ts` passes; no layout shift in any other slot during the morph. **Needs:** DK1.
 
 #### [ ] DK3. Title island and breadcrumb · M
