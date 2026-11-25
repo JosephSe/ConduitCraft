@@ -246,8 +246,8 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       const selCls = isSel ? ' is-selected' : '';
       return `
       <div class="zone-banner${selCls}" data-zone-id="${escapeHtml(z.id)}" style="--zx: ${z.x}; --zw: ${z.width};" aria-hidden="true">
-        <span><span class="zone-num">${escapeHtml(z.number)}</span> ${escapeHtml(z.title)}</span>
-        <span>${escapeHtml(z.subtitle)}</span>
+        <span class="zone-title"><span class="zone-num">${escapeHtml(z.number)}</span> ${escapeHtml(z.title)}</span>
+        <span class="zone-sub">${escapeHtml(z.subtitle)}</span>
       </div>`;
     })
     .join('\n');
@@ -318,6 +318,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
     })
     .join('\n');
 
+  const edgeLabels: string[] = [];
   const edgesMarkup = routedEdges
     .map((e) => {
       // Parallel wires between the same pair are drawn apart by their lane offset; the label is already placed.
@@ -328,14 +329,7 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
       const isBoth = e.flow === 'both';
       const markerAttr = isBoth ? '' : ` marker-end="url(#arrow-${e.tone})"`;
       const reverseStream = isBoth ? `<path class="conduit-stream-reverse"${lane} d="${e.pathD}"/>` : '';
-      const portDot = isBoth ? '' : `<circle class="port-dot"${lane} cx="${e.startPoint[0]}" cy="${e.startPoint[1]}" r="4"/>`;
-      const badgeMarkup =
-        e.label && e.badgePos && e.badgeWidth
-          ? `<g transform="translate(${e.badgePos[0]}, ${e.badgePos[1]})">
-              <rect class="route-pill-bg" x="${-Math.round(e.badgeWidth / 2)}" y="-13" width="${Math.round(e.badgeWidth)}" height="26" rx="13"/>
-              <text class="route-pill-text" text-anchor="middle" y="4">${escapeHtml(e.label)}</text>
-            </g>`
-          : '';
+      const portDot = isBoth ? '' : `<circle class="port-dot"${lane} cx="${e.startPoint[0]}" cy="${e.startPoint[1]}" r="3.6"/>`;
 
       const touches = selectedNodes.has(e.from) || selectedNodes.has(e.to);
       const isExplicit = multiEdges.has(e.id);
@@ -349,17 +343,25 @@ export function generateStandaloneHtml(doc: DiagramDocument, options?: Standalon
         if (isSelectedEdge) edgeCls += ' is-selected';
       }
 
+      if (e.label && e.badgePos && e.badgeWidth) {
+        const labelContent = e.protocol
+          ? `<tspan class="route-pill-proto">${escapeHtml(e.protocol)}</tspan> · ${escapeHtml(e.label)}`
+          : escapeHtml(e.label);
+        edgeLabels.push(`<g data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" transform="translate(${e.badgePos[0]}, ${e.badgePos[1]})"><rect class="route-pill-bg" x="${-Math.round(e.badgeWidth / 2)}" y="-11" width="${Math.round(e.badgeWidth)}" height="22" rx="7"/><text class="route-pill-text" text-anchor="middle" y="4">${labelContent}</text></g>`);
+      }
+
       return `
         <g class="${edgeCls}" data-edge="${escapeHtml(e.id)}" data-tone="${escapeHtml(e.tone)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}" data-animated="${e.animated ? 'true' : 'false'}" data-sync="${e.sync === 'async' ? 'async' : 'sync'}" data-flow="${escapeHtml(e.flow || 'forward')}" style="--flow-scale: ${flowScale(e.latencyMs)}">
+          <path class="conduit-casing"${lane} d="${e.pathD}"/>
           <path class="conduit-glow"${lane} d="${e.pathD}"/>
           <path class="conduit-rail"${lane} d="${e.pathD}"/>
           <path class="conduit-stream"${lane} d="${e.pathD}"${markerAttr}/>
           ${reverseStream}
           ${portDot}
-          ${badgeMarkup}
         </g>`;
     })
     .join('\n');
+  const edgeLabelsMarkup = edgeLabels.join('\n');
 
   const crumbs = options?.levels?.crumbs ?? [];
   const levelCrumbsMarkup =
@@ -548,6 +550,7 @@ ${colorSchemeBoot}
             <span id="sim-packet-label">PACKET</span>
           </div>
           ${nodesMarkup}
+          <svg class="wire-labels-layer" viewBox="0 0 ${doc.stageWidth} ${doc.stageHeight}" width="${doc.stageWidth}" height="${doc.stageHeight}" aria-hidden="true">${edgeLabelsMarkup}</svg>
         </div>
       </div>
 
@@ -727,6 +730,7 @@ ${colorSchemeBoot}
         var safe = scale || 1;
         stageWorld.style.zoom = safe;
         stageWorld.style.transform = 'translate(' + (panX / safe) + 'px, ' + (panY / safe) + 'px)';
+        stageWorld.style.setProperty('--k', String(Math.min(1.6, Math.max(1, 0.78 / safe))));
         zoomReadout.textContent = Math.round(safe * 100) + '%';
       }
       function fitToViewport() {

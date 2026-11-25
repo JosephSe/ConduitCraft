@@ -584,7 +584,7 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Read:** `renderZones` in `keyedStage.ts`; the zone rules in `stage.css`.
 - **Do:** 8.2. Remove the dot grid and lane hairlines.
 - **Done:** view 1 matches the mockup's bands and heads. **Needs:** GR2, GR3.
-- **Measured (2026-11-25, branch `v4-mp1-mp6-bands-lod`):** Removed the dot-grid CSS & `data-faint` attribute from `stage.css` & `state.ts`, deleted superseded duplicate wire/badge rules in `stage.css` (moving base `.conduit-hit` rules into `lines.css` while retaining `.conduit-glow { display: none; }` for `tests/contrast.test.ts`), added Vellum/Graphite `--cc-band-a`/`--cc-band-b` tokens in `tokens.css` + style overrides in `diagramStyles.css`, switched `.conduit-casing` in Design to `--cc-band-a`, and styled `.zone-banner::before` as radius-28 alternating bands with `--cc-font-map` display headers (`wght=700`) and tabular `wght=300` `.zone-num`. Entry CSS dropped from `137.9 kB` to `137.5 kB / 138 kB`.
+- **Measured (2026-11-25, PR #186 merged):** Removed the dot-grid CSS & `data-faint` attribute from `stage.css` & `state.ts`, deleted superseded duplicate wire/badge rules in `stage.css` (moving base `.conduit-hit` rules into `lines.css` while retaining `.conduit-glow { display: none; }` for `tests/contrast.test.ts`), added Vellum/Graphite `--cc-band-a`/`--cc-band-b` tokens in `tokens.css` + style overrides in `diagramStyles.css`, switched `.conduit-casing` in Design to `--cc-band-a`, resolved `--cc-band-a`/`--cc-band-b` in `stagePicture.ts`, and styled `.zone-banner::before` as radius-28 alternating bands with `--cc-font-map` display headers (`wght=700`) and tabular `wght=300` `.zone-num`. Entry CSS `137.5 kB / 138 kB`.
 
 #### [x] MP2. Lines · M
 - **Read:** `renderWiresOnly` and lines 600 to 860 of `keyedStage.ts`; `stage.css` 452 to 765; `layout.ts` 773 to 846.
@@ -606,20 +606,22 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Read:** `map.spec.ts`; the `data-lod` rules in `stage.css`.
 - **Do:** 8.6 (applied to V3 component cards using `--k` so Fit names stay >= 15 screen px).
 - **Done:** the arm's-length test on view 1 (assert no component name below 15 px computed × scale); `map.spec.ts` rewritten. **Needs:** GR2, GR3.
-- **Measured (2026-11-25, branch `v4-mp1-mp6-bands-lod`, D14):** Updated `#stage-world[data-lod="low"]` rules in `src/styles/studio/unlayered.css` to render `.node-title`, `.zone-title`, `.zone-num`, and `.frame-title-bar` in `--cc-font-map` (`clamp(17px, calc(15.2px / var(--cam-scale, 1)), 35px)` for nodes) while keeping V3 component cards, cut-out silhouettes, Status badges, and `EXTERNAL` pills per D14, and updated `e2e/map.spec.ts` to assert `>= 15 px` (`>= 14.95`) at View 1 (`44%` Fit). `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.1 kB / 410 kB`, Entry CSS `137.5 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `100.7 kB / 101 kB`; `e2e/map.spec.ts`: 7/7 passed (`1440×900`, `1280×720`, `1024×700` zero-cutoff + `>= 15 px`); `e2e/v4Visual.spec.ts`: 8/8 passed twice consecutively (zero diff) after `--update-snapshots=all`.
+- **Measured (2026-11-25, PR #186 merged, D14):** Updated `#stage-world[data-lod="low"]` rules in `src/styles/studio/unlayered.css` to render `.node-title`, `.zone-title`, `.zone-num`, and `.frame-title-bar` in `--cc-font-map` (`clamp(17px, calc(15.2px / var(--cam-scale, 1)), 34.5px)`, `-0.03em` tracking, `2px 3px` low-zoom plain-card padding) while keeping V3 component cards, cut-out silhouettes, Status badges, and `EXTERNAL` pills per D14, and updated `e2e/map.spec.ts` to assert `>= 15 px` (`>= 14.95`) at View 1 (`44%` Fit). `pnpm test`: 1,054/1,054 (211 suites); CI `verify` (`51s`) & `e2e` (`9m1s`) green.
 
 #### [x] MP7. Labels · S
 - **Do:** 8.4: the pill, the "fits" rule, the layer above the components, hover and selected.
 - **Done:** at 100% in the showcase no pill overlaps a plate; hovering any wire shows its label. **Needs:** MP2.
 - **Measured (2026-11-25, PR #184):** Added `longestStraightRun()` in `src/core/wireGeom.ts` + `labelFits` (`>= badgeWidth + 24`) in `src/core/layout.ts`, `#wire-labels-svg` (`z-index: 90000`) above `#nodes-layer` in `index.html`/`dom.ts`/`render.ts`/`keyedStage.ts`, and `22 px` (`rx=7`) D10 quiet-by-default rules + Geist Mono protocol spans in `lines.css`. `pnpm test`: 1,054/1,054 passed (211 suites); Entry JS `408.0 kB / 410 kB`, Entry CSS `136.7 kB / 138 kB`, HTML export `100.5 kB / 101 kB`; 16/16 Playwright tests passed across `wireProtocol`, `capsules`, `wireLabels`, `map`, and `diagramStyle`; `v4Visual.spec.ts` 8/8 passed twice consecutively (zero diff).
 
-#### [ ] MP8. Export parity · M
+#### [x] MP8. Export parity · M
 - **Read:** `diagramSvg.ts`, `standaloneHtml.ts`, `viewer.css`, `exportVisual.spec.ts`.
 - **Do:** everything in MP1 to MP7 in the SVG and HTML exports and the viewer. Embed the display face under V3's Q3 rule.
 - **Done:** export baselines re-recorded; the stage and the SVG of the showcase differ by less than 2% of pixels at Fit. **Needs:** MP1 to MP7.
+- **Measured (2026-11-25, branch `v4-mp8-mp9-exports-styles`, D14):** Ported radius-28 alternating bands, fluid wires + bridge casings + `3.6 px` source stops, `6 6.9` async dashes, `--cc-font-map` band headings, V3/D14 `.node-status-badge` + `External` pills, and `#wire-labels` / `.wire-labels-layer` above components to `src/exporter/diagramSvg.ts`, `src/exporter/standaloneHtml.ts`, and `src/styles/viewer.css` (`--k` computed on transform in viewer); updated `e2e/exportVisual.spec.ts` to assert all 3 inline webfonts (`Instrument Sans`, `Geist Mono`, `Bricolage Grotesque`) in SVG clones and both UI + display faces loaded in standalone HTML. `pnpm test`: 1,054/1,054 (211 suites); Entry JS `408.1 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `e2e/exportVisual.spec.ts` re-recorded (`--update-snapshots=all`) and passed 6/6 twice consecutively.
 
-#### [ ] MP9. Sketch and Print · S
+#### [x] MP9. Sketch and Print · S
 - **Do:** 8.11. **Done:** `diagramStyle.spec.ts` passes with re-recorded pictures. **Needs:** MP8.
+- **Measured (2026-11-25, branch `v4-mp8-mp9-exports-styles`):** Re-derived `[data-style="print"]` in `src/styles/studio/diagramStyles.css` and `src/exporter/diagramSvg.ts` (white bands with hairline outlines, transparent/no-fill component plates, `2.5 px` wires, dashed async) alongside `[data-style="sketch"]` (`#cc-rough` on strokes, warm paper bands). `e2e/diagramStyle.spec.ts` (2/2), `e2e/exportVisual.spec.ts` (6/6), and `e2e/v4Visual.spec.ts` (8/8) passed.
 
 ### Milestone DK: The dock and the shell
 

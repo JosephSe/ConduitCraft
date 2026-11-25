@@ -25,6 +25,8 @@ export type SvgScheme = 'light' | 'dark';
 interface Palette {
   canvas: string;
   surface: string;
+  bandA: string;
+  bandB: string;
   elevated: string;
   ink: string;
   secondary: string;
@@ -38,6 +40,8 @@ const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
   light: {
     canvas: '#ECEFEE',
     surface: '#FFFFFF',
+    bandA: '#FAFBFA',
+    bandB: '#F3F5F4',
     elevated: '#F2F3F2',
     ink: '#15181C',
     secondary: '#565C64',
@@ -48,20 +52,22 @@ const PALETTES: Record<SvgScheme | DiagramStyle, Palette> = {
   },
   // Diagram styles (Y1, 8.8). Blueprint is one ink on a cyanotype sheet; Print is black on white with colour on wires.
   blueprint: {
-    canvas: '#0b3a6b', surface: '#0b3a6b', elevated: '#134a82', ink: '#f4f8ff', secondary: '#d3e2f6', muted: '#b3cbea', border: '#f4f8ff', subtle: '#2a5a92',
+    canvas: '#0b3a6b', surface: '#0b3a6b', bandA: 'rgba(255,255,255,0.05)', bandB: 'rgba(255,255,255,0.09)', elevated: '#134a82', ink: '#f4f8ff', secondary: '#d3e2f6', muted: '#b3cbea', border: '#f4f8ff', subtle: '#2a5a92',
     tone: { blue: '#f4f8ff', emerald: '#f4f8ff', rose: '#f4f8ff', violet: '#f4f8ff', amber: '#f4f8ff', cyan: '#f4f8ff', fuchsia: '#f4f8ff' },
   },
   print: {
-    canvas: '#ffffff', surface: '#ffffff', elevated: '#f3f3f3', ink: '#000000', secondary: '#222222', muted: '#444444', border: '#555555', subtle: '#dddddd',
+    canvas: '#ffffff', surface: '#ffffff', bandA: '#ffffff', bandB: '#ffffff', elevated: '#f3f3f3', ink: '#000000', secondary: '#222222', muted: '#444444', border: '#555555', subtle: '#dddddd',
     tone: { blue: '#1d4ed8', emerald: '#047857', rose: '#be123c', violet: '#5b21b6', amber: '#b45309', cyan: '#0b7c9e', fuchsia: '#b5179e' },
   },
   sketch: {
-    canvas: '#fbf8f1', surface: '#fffdf8', elevated: '#f3efe4', ink: '#2b2a28', secondary: '#4a4843', muted: '#625f58', border: '#3d3b37', subtle: '#d9d4c6',
+    canvas: '#fbf8f1', surface: '#fffdf8', bandA: '#fffdf8', bandB: '#f4efe3', elevated: '#f3efe4', ink: '#2b2a28', secondary: '#4a4843', muted: '#625f58', border: '#3d3b37', subtle: '#d9d4c6',
     tone: { blue: '#2f5fb3', emerald: '#2c7a58', rose: '#b23a4a', violet: '#6a4aa8', amber: '#a8651a', cyan: '#237f96', fuchsia: '#a4338f' },
   },
   dark: {
     canvas: '#1D1F21',
     surface: '#2A2C2F',
+    bandA: '#25282B',
+    bandB: '#212326',
     elevated: '#393B3E',
     ink: '#F2F3F1',
     secondary: '#B7BBBF',
@@ -81,6 +87,7 @@ const BLUEPRINT_DASH: Partial<Record<StreamTone, string>> = {
 };
 
 const SANS = 'ui-sans-serif, system-ui, sans-serif';
+const MAP_FONT = "'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif";
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 
 /** `amount` (0 to 1) of colour `a` over colour `b`, both as #rrggbb. */
@@ -101,26 +108,43 @@ function escapeXml(value: unknown): string {
 }
 
 /** The outline of a node. Something someone else runs gets a dashed stroke and a small EXTERNAL label (K7). */
-function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR'): string {
-  const outline = nodeOutlineBase(node, pal, isSelected, direction);
+function nodeOutline(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR', isPrint = false): string {
+  const outline = nodeOutlineBase(node, pal, isSelected, direction, isPrint);
   if (!node.external) return outline;
   const dashed = outline.replace(/ stroke-width="/g, ' stroke-dasharray="6 4" stroke-width="');
   const label = `<text x="${node.x + node.width - 14}" y="${node.y - 6}" text-anchor="end" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.muted}">External</text>`;
   return dashed + label;
 }
 
-function nodeOutlineBase(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR'): string {
+function statusBadgeSvg(node: DiagramNode, pal: Palette): string {
+  if (!node.status) return '';
+  const label = node.status === 'at-risk' ? 'At Risk' : node.status.charAt(0).toUpperCase() + node.status.slice(1);
+  const dotColor =
+    node.status === 'live'
+      ? pal.tone.emerald
+      : node.status === 'planned'
+        ? pal.tone.blue
+        : node.status === 'at-risk'
+          ? pal.tone.amber
+          : pal.muted;
+  const w = Math.round(label.length * 6.5 + 22);
+  const bx = node.external ? node.x + 12 : node.x + node.width - w - 12;
+  const by = node.y - 9;
+  return `<g><rect x="${bx}" y="${by}" width="${w}" height="18" rx="9" fill="${pal.surface}" stroke="${pal.border}" stroke-width="1"/><circle cx="${bx + 9}" cy="${by + 9}" r="3" fill="${dotColor}"/><text x="${bx + 16}" y="${by + 12.5}" font-family="${SANS}" font-size="10" font-weight="600" fill="${pal.ink}">${escapeXml(label)}</text></g>`;
+}
+
+function nodeOutlineBase(node: DiagramNode, pal: Palette, isSelected = false, direction: 'LR' | 'TD' = 'LR', isPrint = false): string {
   const { x, y, width, height } = node;
   const shape = drawnShape(node.kind, node.shape) || 'card';
   const accent = pal.tone[node.accent] || pal.tone.blue;
   const strokeColor = isSelected ? accent : pal.border;
   const strokeWidth = isSelected ? '2.75' : '1.75';
   const tinted = node.kind === 'core' || node.kind === 'gate' || node.kind === 'store';
-  const fill = tinted ? mix(accent, pal.surface, 0.09) : pal.surface;
+  const fill = isPrint ? 'none' : tinted ? mix(accent, pal.surface, 0.09) : pal.surface;
   if (storeDrawsCylinder(node.kind, node.shape)) {
     const c = cylinderPlate(width, height, storeDrawsBucket(node.kind, node.shape));
-    const body = mix(accent, pal.surface, 0.16);
-    const lid = mix(accent, pal.surface, 0.07);
+    const body = isPrint ? 'none' : mix(accent, pal.surface, 0.16);
+    const lid = isPrint ? 'none' : mix(accent, pal.surface, 0.07);
     return (
       `<g transform="translate(${x} ${y})"><path d="${c.body}" fill="${body}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>` +
       `<ellipse cx="${c.cx}" cy="${c.cy}" rx="${c.rx}" ry="${c.ry}" fill="${lid}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/></g>`
@@ -128,8 +152,8 @@ function nodeOutlineBase(node: DiagramNode, pal: Palette, isSelected = false, di
   }
   if (queueDrawsPipe(node.kind, node.shape)) {
     const p = pipePlate(width, height, streamLanes(node));
-    const body = mix(accent, pal.surface, 0.1);
-    const cap = mix(accent, pal.surface, 0.2);
+    const body = isPrint ? 'none' : mix(accent, pal.surface, 0.1);
+    const cap = isPrint ? 'none' : mix(accent, pal.surface, 0.2);
     return (
       `<g transform="translate(${x} ${y})"><path d="${p.body}" fill="${body}" stroke="${strokeColor}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>` +
       (p.lanes ? `<path d="${p.lanes}" fill="none" stroke="${strokeColor}" stroke-width="1" opacity="0.4"/>` : '') +
@@ -267,20 +291,22 @@ function nodeMarkup(
   related?: Set<string>,
   spotlight = false,
   direction: 'LR' | 'TD' = 'LR',
+  isPrint = false,
 ): string {
   const isSelected = selection?.type === 'multi' && selection.ids.includes(node.id);
   const isRelated = Boolean(related?.has(node.id));
   const isDimmed = spotlight && !isSelected && !isRelated;
   const opacityAttr = isDimmed ? ' opacity="0.28"' : '';
+  const statusBadge = statusBadgeSvg(node, pal);
 
   if (node.kind === 'actor') {
-    return `<g${opacityAttr}>${actorMarkup(node, pal)}</g>`;
+    return `<g${opacityAttr}>${actorMarkup(node, pal)}${statusBadge}</g>`;
   }
   const cylinder = storeDrawsCylinder(node.kind, node.shape);
   if (cylinder || CENTERED.has(drawnShape(node.kind, node.shape) ?? '')) {
     // The canvas hides a drum's eyebrow and icon, so its text is just the title, subtitle and footer.
     const text = cylinder ? { ...node, eyebrow: '', y: node.y + 10, height: node.height - 10 } : node;
-    return `<g${opacityAttr}>${nodeOutline(node, pal, isSelected, direction)}${centeredText(text, pal)}</g>`;
+    return `<g${opacityAttr}>${nodeOutline(node, pal, isSelected, direction, isPrint)}${centeredText(text, pal)}${statusBadge}</g>`;
   }
 
   // A pipe keeps its text clear of the rounded ends and the outlet cap.
@@ -323,12 +349,13 @@ function nodeMarkup(
 
   return [
     `<g${opacityAttr}>`,
-    nodeOutline(outlineNode, pal, isSelected, direction),
+    nodeOutline(outlineNode, pal, isSelected, direction, isPrint),
     iconMarkup(node, x + 14, y + 14, iconSize, pal),
     corner,
     `<text x="${x + 16}" y="${titleY}" font-family="${SANS}" font-size="${titleSize}" font-weight="700" fill="${pal.ink}">${escapeXml(node.title)}</text>`,
     sub,
     footer,
+    statusBadge,
     `</g>`,
   ].join('');
 }
@@ -394,13 +421,17 @@ export function renderDiagramSvg(
     .join('');
 
   const zones = doc.zones
-    .map((zone) => {
+    .map((zone, i) => {
       const isSel = isMulti && selectedZones.has(zone.id);
-      // A column: a wash between two hairlines, with the number in muted grey and the title at 15/600 (8.1).
-      const x2 = zone.x + zone.width;
-      const edge = isSel ? pal.tone.blue : pal.border;
-      const edgeWidth = isSel ? 2 : 1;
-      return `<g><rect x="${zone.x}" y="0" width="${zone.width}" height="${height}" fill="${pal.surface}" fill-opacity="0.34"/><path d="M${zone.x} 0V${height}M${x2} 0V${height}" stroke="${edge}" stroke-width="${edgeWidth}" fill="none"/><text x="${zone.x + 16}" y="30" font-family="${SANS}" font-size="15" font-weight="600" fill="${pal.ink}"><tspan font-family="${MONO}" fill="${pal.muted}">${escapeXml(zone.number)}</tspan> ${escapeXml(zone.title)}</text></g>`;
+      const strokeAttr = isSel
+        ? ` stroke="${pal.tone.blue}" stroke-width="2.5"`
+        : doc.style === 'print'
+          ? ` stroke="${pal.subtle}" stroke-width="1"`
+          : '';
+      const sub = zone.subtitle
+        ? `<text x="${zone.x + zone.width - 20}" y="34" text-anchor="end" font-family="${SANS}" font-size="12" fill="${pal.muted}">${escapeXml(zone.subtitle)}</text>`
+        : '';
+      return `<g><rect x="${zone.x + 4}" y="0" width="${Math.max(0, zone.width - 8)}" height="${height}" rx="28" fill="${i % 2 === 0 ? pal.bandA : pal.bandB}"${strokeAttr}/><text x="${zone.x + 20}" y="34" font-family="${MAP_FONT}" font-size="17" font-weight="700" fill="${pal.ink}"><tspan font-weight="300" fill="${pal.muted}">${escapeXml(zone.number)}</tspan> ${escapeXml(zone.title)}</text>${sub}</g>`;
     })
     .join('');
 
@@ -442,6 +473,9 @@ export function renderDiagramSvg(
     return `<g><path d="${outline}" fill="${pal.surface}"${stroke}/>${fold}<text x="${x + 18}" y="${y + 28}" font-family="${SANS}" font-size="13" font-weight="600" fill="${pal.ink}">${escapeXml(card.title)}</text>${items}</g>`;
   };
 
+  const isPrint = doc.style === 'print';
+  const casingStroke = doc.style === 'blueprint' || isPrint ? pal.canvas : pal.bandA;
+  const edgeLabels: string[] = [];
   const wires = routed
     .map((edge) => {
       // Parallel wires between the same pair are drawn apart by their lane offset; the label is already placed.
@@ -456,19 +490,24 @@ export function renderDiagramSvg(
       const active = isMulti ? (touches || isExplicit) && !isExcluded : true;
       const isSel = isMulti && isExplicit && !isExcluded;
       const wireOpacity = isMulti && spotlight && !active ? ' opacity="0.16"' : '';
-      const strokeWidth = isSel ? '3.25' : active && isMulti ? '2.75' : '2.25';
+      const strokeWidth = isSel ? '3.5' : isPrint ? '2.5' : active && isMulti ? '3.25' : '3';
+      const roundCaps = ' stroke-linecap="round" stroke-linejoin="round"';
+      const casing = `<path${lane} d="${edge.pathD}" fill="none" stroke="${casingStroke}" stroke-width="${Number(strokeWidth) + 5}"${roundCaps}/>`;
       const glow = isSel
-        ? `<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="12" stroke-opacity="0.32"/>`
+        ? `<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="12" stroke-opacity="0.32"${roundCaps}/>`
         : '';
 
-      const label =
-        edge.label && edge.badgePos
-          ? (() => {
-              const w = monoWidth(edge.label, 11) + 20;
-              const [bx, by] = edge.badgePos;
-              return `<rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="11" fill="${pal.surface}" stroke="${pal.subtle}"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="600" fill="${pal.ink}">${escapeXml(edge.label)}</text>`;
-            })()
-          : '';
+      if (edge.label && edge.badgePos) {
+        const [bx, by] = edge.badgePos;
+        const fullText = edge.protocol ? `${edge.protocol} · ${edge.label}` : edge.label;
+        const w = edge.badgeWidth ?? monoWidth(fullText, 11) + 20;
+        const textContent = edge.protocol
+          ? `<tspan font-family="${MONO}" font-weight="500" fill="${color}">${escapeXml(edge.protocol)}</tspan> · ${escapeXml(edge.label)}`
+          : escapeXml(edge.label);
+        edgeLabels.push(
+          `<g${wireOpacity}><rect x="${bx - w / 2}" y="${by - 11}" width="${w}" height="22" rx="7" fill="${pal.surface}" stroke="${pal.border}" stroke-width="1"/><text x="${bx}" y="${by + 4}" text-anchor="middle" font-family="${SANS}" font-size="11" font-weight="500" fill="${pal.ink}">${textContent}</text></g>`,
+        );
+      }
       const isBoth = edge.flow === 'both';
       if (isBoth) {
         const dash1 =
@@ -481,9 +520,9 @@ export function renderDiagramSvg(
             : '';
         const stream2 =
           frame && edge.animated !== false
-            ? `<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash2}/>`
+            ? `<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${roundCaps}${dash2}/>`
             : '';
-        return `<g${wireOpacity}>${glow}<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash1}/>${stream2}${label}</g>`;
+        return `<g${wireOpacity}>${casing}${glow}<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${roundCaps}${dash1}/>${stream2}</g>`;
       }
       const dash =
         frame && edge.animated !== false
@@ -491,9 +530,10 @@ export function renderDiagramSvg(
           : doc.style === 'blueprint' && BLUEPRINT_DASH[edge.tone]
             ? ` stroke-dasharray="${BLUEPRINT_DASH[edge.tone]}"`
             : edge.sync === 'async'
-              ? ' stroke-dasharray="7 6"'
+              ? ' stroke-dasharray="6 6.9"'
               : '';
-      return `<g${wireOpacity}>${glow}<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${dash} marker-end="url(#arrow-${edge.tone})"/>${label}</g>`;
+      const stop = `<circle${lane} cx="${edge.startPoint[0]}" cy="${edge.startPoint[1]}" r="3.6" fill="${pal.surface}" stroke="${color}" stroke-width="1.8"/>`;
+      return `<g${wireOpacity}>${casing}${glow}<path${lane} d="${edge.pathD}" fill="none" stroke="${color}" stroke-width="${strokeWidth}"${roundCaps}${dash} marker-end="url(#arrow-${edge.tone})"/>${stop}</g>`;
     })
     .join('');
 
@@ -501,10 +541,11 @@ export function renderDiagramSvg(
   // under the wires; from the lowest component up, everything is drawn in stack order above them.
   const zIndex = stackZIndices(doc);
   const drawn = (s: StackItem) =>
-    s.kind === 'node' ? nodeMarkup(s.item, pal, selection, related, spotlight, doc.direction) : noteMarkup(s.item);
+    s.kind === 'node' ? nodeMarkup(s.item, pal, selection, related, spotlight, doc.direction, isPrint) : noteMarkup(s.item);
   const stack = stackOrder(doc);
   const notes = stack.filter((s) => zIndex.get(s.item.id) === undefined).map(drawn).join('');
   const nodes = stack.filter((s) => zIndex.get(s.item.id) !== undefined).map(drawn).join('');
+  const wireLabels = edgeLabels.length ? `<g id="wire-labels">${edgeLabels.join('')}</g>` : '';
 
   const legend = legendMarkup(doc, height, pal);
 
@@ -521,8 +562,9 @@ export function renderDiagramSvg(
   ${notes}
   ${wires}
   ${nodes}`)}
+  ${wireLabels}
   ${legend}
-  ${block ? titleBlockSvg(block, width, height, doc.style === 'blueprint' ? 'dark' : doc.style === 'print' || doc.style === 'sketch' ? 'light' : scheme) : ''}
+  ${block ? titleBlockSvg(block, width, height, doc.style === 'blueprint' ? 'dark' : isPrint || doc.style === 'sketch' ? 'light' : scheme) : ''}
 </svg>`;
 }
 
