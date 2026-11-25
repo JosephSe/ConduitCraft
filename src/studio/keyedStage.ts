@@ -3,6 +3,7 @@ import type { DiagramNode, DiagramNotesCard, DiagramZone, PortSide, RoutedDiagra
 import { getNotesItemIconMeta } from '../types';
 import { NOTES_CARD_WIDTH, clampNotesWidth, clampTextWidth, notesCardWidth, textFontSize } from '../core/notesSize';
 import { expandStageToFit, relatedNodeIds, routeDiagramEdges } from '../core/layout';
+import { wireEndAngle } from '../core/wireGeom';
 import { createHumanOutlineSvg, createNodeIconSvg } from '../ui/icons';
 import {
   cylinderPlate,
@@ -810,6 +811,8 @@ function createWireGroup(edgeId: string): SVGGElement {
 
   const casing = document.createElementNS(SVG_NS, 'path');
   casing.setAttribute('class', 'conduit-casing');
+  const sel = document.createElementNS(SVG_NS, 'path');
+  sel.setAttribute('class', 'conduit-sel');
   const glow = document.createElementNS(SVG_NS, 'path');
   glow.setAttribute('class', 'conduit-glow');
   const rail = document.createElementNS(SVG_NS, 'path');
@@ -818,11 +821,22 @@ function createWireGroup(edgeId: string): SVGGElement {
   stream.setAttribute('class', 'conduit-stream');
   const streamRev = document.createElementNS(SVG_NS, 'path');
   streamRev.setAttribute('class', 'conduit-stream-reverse');
+  const arrowWrap = document.createElementNS(SVG_NS, 'g');
+  arrowWrap.setAttribute('class', 'conduit-arrow-wrap');
+  const arrow = document.createElementNS(SVG_NS, 'path');
+  arrow.setAttribute('class', 'conduit-arrow');
+  arrow.setAttribute('d', 'M 0 0 L -10 -5.5 L -10 5.5 Z');
+  arrowWrap.appendChild(arrow);
+  const stopWrap = document.createElementNS(SVG_NS, 'g');
+  stopWrap.setAttribute('class', 'conduit-stop');
   const portDot = document.createElementNS(SVG_NS, 'circle');
   portDot.setAttribute('class', 'port-dot');
-  portDot.setAttribute('r', '4');
-  const paths = [hit, casing, glow, rail, stream, streamRev];
-  g.append(hit, casing, glow, rail, stream, streamRev, portDot);
+  portDot.setAttribute('cx', '0');
+  portDot.setAttribute('cy', '0');
+  portDot.setAttribute('r', '3.6');
+  stopWrap.appendChild(portDot);
+  const paths = [hit, casing, sel, glow, rail, stream, streamRev];
+  g.append(hit, casing, sel, glow, rail, stream, streamRev, arrowWrap, stopWrap);
 
   let currentEdge: RoutedDiagramEdge | null = null;
   let badge: SVGGElement | null = null;
@@ -1092,15 +1106,19 @@ function createWireGroup(edgeId: string): SVGGElement {
         changedStreams.push(stream);
       }
     }
-    // The arrowhead sits on the rail, which is always drawn, so it survives the still Design lens (D8). Sync is a
-    // filled head, async an open chevron, and a two-way wire has none.
-    if (edge.flow === 'both') rail.removeAttribute('marker-end');
-    else rail.setAttribute('marker-end', `url(#${edge.sync === 'async' ? 'chevron' : 'arrow'}-${edge.tone})`);
-    portDot.setAttribute('cx', String(edge.startPoint[0]));
-    portDot.setAttribute('cy', String(edge.startPoint[1]));
+    const txPrefix = laneTx ? `${laneTx} ` : '';
+    if (edge.flow === 'both') {
+      arrowWrap.setAttribute('hidden', '');
+    } else {
+      arrowWrap.removeAttribute('hidden');
+      const angle = wireEndAngle(edge.pathD, edge.endPoint);
+      arrowWrap.setAttribute(
+        'transform',
+        `${txPrefix}translate(${edge.endPoint[0]}, ${edge.endPoint[1]}) rotate(${angle.toFixed(1)})`,
+      );
+    }
+    stopWrap.setAttribute('transform', `${txPrefix}translate(${edge.startPoint[0]}, ${edge.startPoint[1]})`);
     if (txChanged) {
-      if (laneTx) portDot.setAttribute('transform', laneTx);
-      else portDot.removeAttribute('transform');
       lastLaneTx = laneTx;
     }
     ensureBadge(edge);

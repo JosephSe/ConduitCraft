@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { routeDiagramEdges } from '../src/core/layout.ts';
 import { flowScale, hopDelayMs, isAsyncWire, latenciesBetween, normalizeWireFields, wireLabelText } from '../src/core/wire.ts';
+import { wireEndAngle } from '../src/core/wireGeom.ts';
 import { parseBlueprintJson, serializeBlueprintJson } from '../src/exporter/blueprintJson.ts';
 import { createBlankDocument, createNodeFromStencil } from '../src/templates/presets.ts';
 import { importMermaidOrBlueprint, serializeToBlueprintMarkdown } from '../src/core/parser.ts';
@@ -198,5 +199,23 @@ describe('wire label placement', () => {
     assert.ok(json.ok);
     if (!json.ok) return;
     assert.deepEqual(json.doc.edges.find((e) => e.id === 'e2')?.labelOffset, [40, -30]);
+  });
+});
+
+describe('wireEndAngle (V4 MP2)', () => {
+  it('computes incoming angles from trimmed endpoints across horizontal, vertical, orthogonal, and curved paths', () => {
+    assert.equal(wireEndAngle('M 100 100 L 294 100', [300, 100]), 0);
+    assert.equal(wireEndAngle('M 300 100 L 106 100', [100, 100]), 180);
+    assert.equal(wireEndAngle('M 100 100 L 100 294', [100, 300]), 90);
+    assert.equal(wireEndAngle('M 100 300 L 100 106', [100, 100]), -90);
+    assert.equal(wireEndAngle('M 100 100 L 176 100 Q 200 100 200 124 L 200 294', [200, 300]), 90);
+    const arcAngle = wireEndAngle('M 100 200 Q 200 80 295 196', [300, 200]);
+    assert.ok(arcAngle > 20 && arcAngle < 60, `expected downward-right angle, got ${arcAngle}`);
+  });
+
+  it('falls back to the last control or segment vector when path ends directly at endPoint', () => {
+    assert.equal(wireEndAngle('M 100 100 L 300 100', [300, 100]), 0);
+    assert.equal(wireEndAngle('M 100 100 C 180 100, 220 200, 300 200', [300, 200]), 0);
+    assert.equal(wireEndAngle('M 100 100 C 100 180, 200 220, 200 300', [200, 300]), 90);
   });
 });
