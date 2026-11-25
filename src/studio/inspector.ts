@@ -13,7 +13,6 @@ import {
   inspMetrics,
   inspSummary,
   inspTitle,
-  inspectorScope,
   panelSimulations,
   propFormContainer,
   simEditorHint,
@@ -135,21 +134,7 @@ import { ICON_LIST, createNodeIconSvg, createUiIconSvg } from '../ui/icons';
 import { notify } from './toast';
 import { CALLOUT_ICONS } from '../core/callouts';
 
-// Element-scoped View Transitions (`scoped-component-transitions`)
-export const supportsScopedVT =
-  typeof Element !== 'undefined' && 'startViewTransition' in Element.prototype;
-export function withInspectorTransition(updateFn: () => void): void {
-  if (!supportsScopedVT) {
-    updateFn();
-    return;
-  }
-  const vt = (
-    inspectorScope as unknown as {
-      startViewTransition: (cb: () => void) => { ready: Promise<void> };
-    }
-  ).startViewTransition(updateFn);
-  vt.ready.catch(() => {});
-}
+import { withInspectorTransition } from './inspectorTransition';
 
 // ---------------------------------------------------------------------------
 // Design Mode: Right Contextual Property Editor

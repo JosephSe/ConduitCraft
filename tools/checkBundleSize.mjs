@@ -14,7 +14,8 @@ const budgets = [
   // Raised from 580 kB for the callout tail lining up with its component (owner's choice).
   // Raised from 581 kB for wire labels kept on their wires and dragged anywhere (about 2.4 kB).
   // Lowered from 584 kB: the Markdown and Mermaid parser and js-yaml now load on demand (about 79 kB less).
-  { pattern: /^index-.*\.js$/, maxBytes: 510 * 1024, label: 'entry JS' },
+  // Lowered from 510 kB: the properties panel loads as boot paints, not before it (about 64 kB less).
+  { pattern: /^index-.*\.js$/, maxBytes: 446 * 1024, label: 'entry JS' },
   // Raised from 130 kB for the floating properties card (inspector card, Steps 1–3), after reclaiming 0.9 kB of dead CSS (D3).
   // Raised from 133 kB for panel hiding and the canvas edge (about 1 kB).
   { pattern: /^index-.*\.css$/, maxBytes: 135 * 1024, label: 'entry CSS' },
@@ -25,6 +26,8 @@ const budgets = [
 const lazyBudgets = [
   // Raised from 100 kB for callouts in the standalone HTML, with their tail lined up (owner's choice).
   { pattern: /^standaloneHtml-.*\.js$/, maxBytes: 101 * 1024, label: 'HTML export chunk' },
+  // The properties panel: every form for every kind of selection. Fetched as boot paints the canvas.
+  { pattern: /^inspector-.*\.js$/, maxBytes: 72 * 1024, label: 'properties panel chunk' },
   { pattern: /^gifWorker-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF worker' },
   { pattern: /^gif-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF exporter chunk' },
   // The showcase uses every feature (levels, pages, code samples), so it is several templates' worth of JSON.

@@ -23,7 +23,7 @@ import {
 } from './dom';
 import { app, getPendingRestoreOffer, setSelection, updateDocumentTitle } from './state';
 import type { SelectionTarget } from '../types';
-import { renderPropertyEditor, syncDataViewInspector } from './inspector';
+import { renderPropertyEditor, syncDataViewInspector } from './inspectorChunk';
 import { renderSimButtons } from './interactions';
 import { normalizeBrandAccent } from '../core/brand';
 import { sanitizeIconImage } from '../core/nodeStyle';
