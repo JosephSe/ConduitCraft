@@ -13,6 +13,7 @@ import {
   docTitleHeadingEl,
   emptyStageOverlay,
   framesLayer,
+  matrixDialog,
   matrixTbody,
   propPanelHeading,
   restoreBannerText,
@@ -27,7 +28,6 @@ import { renderPropertyEditor, syncDataViewInspector } from './inspectorChunk';
 import { renderSimButtons } from './interactions';
 import { normalizeBrandAccent } from '../core/brand';
 import { sanitizeIconImage } from '../core/nodeStyle';
-import { getAdjacencyLists } from '../core/layout';
 import {
   renderNodes,
   renderNotesCards,
@@ -164,14 +164,14 @@ export function renderAll(rebuildInspector = true): void {
 
   paintFrames();
   renderZones();
-  renderNotesCards();
+  renderNotesCards(false);
   renderWiresOnly();
-  renderNodes();
+  renderNodes(true);
   paintDlqLinks();
   paintRedline();
   paintTitleBlockStrip();
   renderSimButtons();
-  renderMatrixTable();
+  if (matrixDialog?.open) renderMatrixTable();
   updateVisualSelectionHighlights();
   paintGroupOutlines();
   paintLevels();
@@ -204,6 +204,28 @@ export function renderMatrixTable(): void {
     return;
   }
 
+  const titleById = new Map(app.doc.nodes.map((n) => [n.id, n.title]));
+  const upstreamById = new Map<string, string[]>();
+  const downstreamById = new Map<string, string[]>();
+  for (const edge of app.doc.edges) {
+    const fromTitle = titleById.get(edge.from);
+    const toTitle = titleById.get(edge.to);
+    if (fromTitle !== undefined && toTitle !== undefined) {
+      let down = downstreamById.get(edge.from);
+      if (!down) {
+        down = [];
+        downstreamById.set(edge.from, down);
+      }
+      down.push(toTitle);
+      let up = upstreamById.get(edge.to);
+      if (!up) {
+        up = [];
+        upstreamById.set(edge.to, up);
+      }
+      up.push(fromTitle);
+    }
+  }
+
   reconcileKeyed(
     matrixTbody,
     app.doc.nodes,
@@ -218,15 +240,16 @@ export function renderMatrixTable(): void {
     },
     (el, node) => {
       const tr = el as HTMLTableRowElement;
-      const adj = getAdjacencyLists(app.doc, node.id);
+      const upstream = upstreamById.get(node.id) ?? [];
+      const downstream = downstreamById.get(node.id) ?? [];
       // Rows are only ever written here, so an unchanged signature means the cells are current.
       const signature = JSON.stringify([
         node.title,
         node.subtitle,
         node.kind,
         node.interfaceLabel,
-        adj.upstream.map((u) => u.title),
-        adj.downstream.map((d) => d.title),
+        upstream,
+        downstream,
       ]);
       if (tr.dataset.sig === signature) return;
       tr.dataset.sig = signature;
@@ -247,10 +270,8 @@ export function renderMatrixTable(): void {
       const code = document.createElement('code');
       code.textContent = node.kind.toUpperCase();
       cells[1].appendChild(code);
-      cells[2].textContent =
-        adj.upstream.length > 0 ? adj.upstream.map((u) => u.title).join(', ') : 'Entry Point';
-      cells[3].textContent =
-        adj.downstream.length > 0 ? adj.downstream.map((d) => d.title).join(', ') : 'Terminal Sink';
+      cells[2].textContent = upstream.length > 0 ? upstream.join(', ') : 'Entry Point';
+      cells[3].textContent = downstream.length > 0 ? downstream.join(', ') : 'Terminal Sink';
       cells[4].textContent = node.interfaceLabel;
     },
   );

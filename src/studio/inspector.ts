@@ -13,6 +13,7 @@ import {
   inspMetrics,
   inspSummary,
   inspTitle,
+  matrixDialog,
   panelSimulations,
   propFormContainer,
   simEditorHint,
@@ -1444,7 +1445,7 @@ export function renderPropertyEditor(): void {
         'Interface',
         makeTextInput(node.interfaceLabel, (v) => {
           node.interfaceLabel = v;
-          renderMatrixTable();
+          if (matrixDialog?.open) renderMatrixTable();
         }),
       ),
     );

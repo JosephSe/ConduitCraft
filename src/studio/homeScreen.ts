@@ -16,7 +16,7 @@ import {
   renderBlankCanvasCardHtml,
   renderTemplateCardHtml,
   type TemplateCategory,
-} from './templatesGallery';
+} from './templatesCatalog';
 import { notify } from './toast';
 
 export interface HomeDeps {

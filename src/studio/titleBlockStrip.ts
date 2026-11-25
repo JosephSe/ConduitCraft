@@ -1,7 +1,6 @@
 /** The title block on the sheet itself, in the Present lens (C6, 8.7). Exports draw the same fields in `exporter/titleBlock.ts`. */
-import { app } from './state';
+import { app, pageInfo } from './state';
 import { titleBlockFor } from '../exporter/titleBlock';
-import { pageInfo } from './stagePicture';
 
 export function paintTitleBlockStrip(): void {
   const strip = document.getElementById('title-block');

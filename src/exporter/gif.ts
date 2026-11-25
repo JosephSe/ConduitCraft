@@ -3,7 +3,6 @@
 /** Longest edge. Diagrams smaller than this export at their stage size. */
 export const GIF_MAX_EDGE = 2048;
 export const GIF_FRAME_COUNT = 8;
-export const GIF_FRAME_DELAY_CS = 12;
 export const GIF_DASH_PERIOD = 18;
 export const GIF_MAX_COLORS = 256;
 

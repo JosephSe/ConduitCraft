@@ -345,23 +345,6 @@ export function isSelectedEdge(edgeId: string): boolean {
   return false;
 }
 
-export function getSelectedEdgeIds(): string[] {
-  if (app.selection.type === 'edge') return [app.selection.id];
-  if (app.selection.type === 'multi') {
-    const selectedNodes = new Set(app.selection.ids);
-    const explicitEdges = new Set(app.selection.edgeIds ?? []);
-    const excludedEdges = new Set(app.selection.excludedEdgeIds ?? []);
-    return app.doc.edges
-      .filter((e) => {
-        const touches = selectedNodes.has(e.from) || selectedNodes.has(e.to);
-        const explicit = explicitEdges.has(e.id);
-        return (touches || explicit) && !excludedEdges.has(e.id);
-      })
-      .map((e) => e.id);
-  }
-  return [];
-}
-
 // ---------------------------------------------------------------------------
 // Undo / Redo History
 // ---------------------------------------------------------------------------
@@ -394,6 +377,11 @@ export function fullDocument(): DiagramDocument {
 /** Id of the open page. */
 export function currentPageId(): string {
   return pageIdAt(app.pageRoot ?? app.doc, app.pageIndex);
+}
+
+/** Which page of how many is open, for the title block. */
+export function pageInfo(): { index: number; count: number } {
+  return { index: app.pageIndex, count: pageCount(app.pageRoot ?? app.doc) };
 }
 
 function takeSnapshot(place?: { path: string[]; pageId: string }): DiagramDocument {
@@ -604,12 +592,6 @@ function restorePageCamera(): void {
   } else {
     fitToViewport();
   }
-}
-
-/** Open the page with this id. */
-export function goToPageId(id: string): boolean {
-  const index = indexOfPage(fullDocument(), id);
-  return index >= 0 && goToPage(index);
 }
 
 /** Open the next (or previous) page, wrapping around. */

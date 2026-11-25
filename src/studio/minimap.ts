@@ -23,6 +23,39 @@ let bound = false;
 let paintQueued = false;
 let lastMap: MinimapMap | null = null;
 
+interface MinimapPalette {
+  ink: string;
+  border: string;
+  blue: string;
+  canvasTone: string;
+  tones: Record<StreamTone, string>;
+}
+
+let cachedPalette: MinimapPalette | null = null;
+
+function getMinimapPalette(): MinimapPalette {
+  if (cachedPalette) return cachedPalette;
+  const styles = getComputedStyle(document.documentElement);
+  const color = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
+  const blue = color('--cc-blue', '#1d4ed8');
+  cachedPalette = {
+    ink: color('--cc-ink-3', '#596b87'),
+    border: color('--cc-hair-2', '#b6c5db'),
+    blue,
+    canvasTone: color('--cc-canvas', '#f8fafc'),
+    tones: {
+      blue,
+      emerald: color('--cc-emerald', '#047857'),
+      rose: color('--cc-rose', '#be123c'),
+      violet: color('--cc-violet', '#5b21b6'),
+      amber: color('--cc-amber', '#b45309'),
+      cyan: color('--cc-cyan', '#0b7c9e'),
+      fuchsia: color('--cc-fuchsia', '#b5179e'),
+    },
+  };
+  return cachedPalette;
+}
+
 export function scheduleMinimapPaint(): void {
   if (paintQueued) return;
   paintQueued = true;
@@ -47,21 +80,7 @@ export function renderMinimap(): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const styles = getComputedStyle(document.documentElement);
-  const color = (name: string, fallback: string) => styles.getPropertyValue(name).trim() || fallback;
-  const ink = color('--cc-ink-3', '#596b87');
-  const border = color('--cc-hair-2', '#b6c5db');
-  const blue = color('--cc-blue', '#1d4ed8');
-  const canvasTone = color('--cc-canvas', '#f8fafc');
-  const tones: Record<StreamTone, string> = {
-    blue,
-    emerald: color('--cc-emerald', '#047857'),
-    rose: color('--cc-rose', '#be123c'),
-    violet: color('--cc-violet', '#5b21b6'),
-    amber: color('--cc-amber', '#b45309'),
-    cyan: color('--cc-cyan', '#0b7c9e'),
-    fuchsia: color('--cc-fuchsia', '#b5179e'),
-  };
+  const { ink, border, blue, canvasTone, tones } = getMinimapPalette();
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
@@ -175,8 +194,18 @@ export function bindMinimap(): void {
     panMinimapPoint(event.clientX, event.clientY);
   });
 
+  const invalidateTheme = () => {
+    cachedPalette = null;
+    scheduleMinimapPaint();
+  };
   for (const radio of document.querySelectorAll<HTMLInputElement>('input[name="theme-choice"]')) {
-    radio.addEventListener('change', () => scheduleMinimapPaint());
+    radio.addEventListener('change', invalidateTheme);
   }
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => scheduleMinimapPaint());
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', invalidateTheme);
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(invalidateTheme).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+  }
 }
