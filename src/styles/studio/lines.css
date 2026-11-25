@@ -148,6 +148,10 @@ body[data-wire-labels="always"] #wire-labels-svg .conduit-badge-hit,
   display: none;
 }
 
+#stage-world[data-lod="low"] #wire-labels-svg .conduit-badge-hit {
+  pointer-events: none;
+}
+
 #stage-world[data-lod="low"] #wire-labels-svg .conduit-badge-hit > :is(.route-pill-bg, .route-pill-text) {
   scale: calc(0.92 / var(--cam-scale, 1));
   transform-box: view-box;
