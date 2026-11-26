@@ -61,6 +61,8 @@ describe('keymap', () => {
     assert.equal(matchBinding(ev('z'), v2), 'add-zone');
     assert.equal(matchBinding(ev('n'), v2), 'add-notes');
     assert.equal(matchBinding(ev('c'), v2), 'open-insert');
+    assert.equal(matchBinding(ev('/'), v2), 'open-insert');
+    assert.equal(matchBinding(ev('/', { metaKey: true }), v2), 'toggle-code-pane');
     assert.equal(matchBinding(ev('v'), { mode: 'data', hasSelection: false }), null);
     assert.equal(matchBinding(ev('c', { ctrlKey: true }), v2), null, 'Cmd/Ctrl+C is copy, not Insert');
   });

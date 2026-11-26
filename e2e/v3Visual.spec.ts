@@ -192,8 +192,9 @@ for (const theme of THEMES) {
 
       await fit(page);
       await page.locator('#btn-all-components').click();
-      await expect(page.locator('#tray')).toBeVisible();
-      const queue = page.locator('#tray .tray-item[data-stencil-id="queue"]');
+      await expect(page.locator('#composer')).toBeVisible();
+      const queue = page.locator('#composer .composer-item[data-stencil-id="queue"]');
+      await queue.scrollIntoViewIfNeeded();
       await expect(queue).toBeVisible();
       let last = -1;
       await expect
@@ -210,7 +211,7 @@ for (const theme of THEMES) {
       await queue.hover();
       await shoot(page, `03-component-tray-${theme}.png`);
       await page.keyboard.press('Escape');
-      await expect(page.locator('#tray')).toBeHidden();
+      await expect(page.locator('#composer')).toBeHidden();
 
       await pauseMidScenario(page);
       await shoot(page, `04-traffic-paused-${theme}.png`);

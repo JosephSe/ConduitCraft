@@ -14,7 +14,7 @@ body[data-presenting="true"] .workspace {
   overflow: hidden !important;
 }
 
-body[data-presenting="true"] .tray,
+body[data-presenting="true"] .composer,
 body[data-presenting="true"] .dock,
 body[data-presenting="true"] .inspector,
 body[data-presenting="true"] .hud-search-card {

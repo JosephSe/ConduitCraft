@@ -150,26 +150,26 @@ test('tap places a component from the command palette', async ({ page }) => {
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
-test('tap a component in the tray, then tap the sheet to place it', async ({ page }) => {
+test('tap a component in the composer, then tap the sheet to place it', async ({ page }) => {
   await open(page);
   const before = await page.locator('.arch-node').count();
-  await expect(page.locator('#tray')).toHaveCount(0);
+  await expect(page.locator('#composer')).toHaveCount(0);
   await page.locator('#btn-all-components').tap();
-  await expect(page.locator('#tray')).toBeVisible();
-  await page.locator('#tray .tray-item[data-stencil-id="service"]').tap();
-  await expect(page.locator('#tray')).toBeHidden();
+  await expect(page.locator('#composer')).toBeVisible();
+  await page.locator('#composer .composer-item[data-stencil-id="service"]').tap();
+  await expect(page.locator('#composer')).toBeHidden();
   await expect(page.locator('#workspace')).toHaveAttribute('data-armed', 'service');
   const box = (await page.locator('#canvas-viewport').boundingBox())!;
   await page.touchscreen.tap(box.x + box.width / 2, box.y + 120);
   await expect(page.locator('.arch-node')).toHaveCount(before + 1);
 });
 
-test('Frame in the tray picks the Frame tool and puts the tray away', async ({ page }) => {
+test('Frame in the composer picks the Frame tool and puts the composer away', async ({ page }) => {
   await open(page);
   await page.locator('#btn-all-components').tap();
-  await page.locator('#tray .tray-item[data-structure="frame"]').tap();
+  await page.locator('#composer .composer-item[data-structure="frame"]').tap();
   await expect(page.locator('#workspace')).toHaveAttribute('data-tool', 'frame');
-  await expect(page.locator('#tray')).toBeHidden();
+  await expect(page.locator('#composer')).toBeHidden();
 });
 
 test('tap a favourite on the dock to carry it, then tap the sheet to place it', async ({ page }) => {

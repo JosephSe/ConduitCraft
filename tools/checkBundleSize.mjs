@@ -30,6 +30,7 @@ const lazyBudgets = [
   { pattern: /^standaloneHtml-.*\.js$/, maxBytes: 101 * 1024, label: 'HTML export chunk' },
   // The properties panel: every form for every kind of selection. Fetched as boot paints the canvas.
   { pattern: /^inspector-.*\.js$/, maxBytes: 72 * 1024, label: 'properties panel chunk' },
+  { pattern: /^composer-.*\.js$/, maxBytes: 36 * 1024, label: 'composer chunk' },
   { pattern: /^gifWorker-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF worker' },
   { pattern: /^gif-.*\.js$/, maxBytes: 12 * 1024, label: 'GIF exporter chunk' },
   // The showcase uses every feature (levels, pages, code samples), so it is several templates' worth of JSON.

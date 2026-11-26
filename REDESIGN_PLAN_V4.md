@@ -661,10 +661,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 - **Done:** tests pass with no DOM. **Needs:** GR1.
 - **Measured (2026-11-26, branch `v4-cp1-quick-build`):** Added pure `src/core/quickBuild.ts` (`planBuild`, `applyBuild`), extracted shared `createWireEdge` into `src/templates/presets.ts` (used by both `src/studio/interactions.ts` and `applyBuild`), added `gateway: 'gate'` to `src/studio/trayWords.ts`, and added `tests/quickBuild.test.ts` (11 DOM-free unit tests covering empty/single-node, canonical multi-chain, reuse/anchoring, catalog/`WORDS`/case rules, longest-path DAG, cycles, duplicate/self-loop filtering, Unicode/astral names, 24-node/40-wire limits, and atomic snapshot rollback). `pnpm test`: `1,072/1,072` (`214` suites); `pnpm build` + `pnpm check:size`: Entry JS `409.6 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `e2e/tray.spec.ts` + `e2e/wireProtocol.spec.ts`: `26/26` passed.
 
-#### [ ] CP2. The composer surface · M
+#### [x] CP2. The composer surface · M
 - **Read:** `tray.ts`, `trayDemo.ts`, `tray.spec.ts`.
 - **Do:** 7.1 and the Components section, with `C`, `/` and the dock field. Delete `tray.ts` and its CSS.
 - **Done:** view 3; `tray.spec.ts` rewritten as `composer.spec.ts`; chunk ≤ 36 kB. **Needs:** DK1, MP4.
+- **Measured (2026-11-26, branch `v4-cp2-composer-surface`):** Created lazy-loaded `src/studio/composer.ts` (`role="dialog"`, `combobox` + `listbox`, `aria-activedescendant`, grouped stencils with D14 V3 cut-outs + `trayDemo` side pane, `trayWords` word match & `Service, named <X>` fallback) and `src/styles/composer.css`, deleted `src/studio/tray.ts` & removed tray CSS rules from `unlayered.css`/`ui.css`, wired `#btn-all-components` (`<kbd>/</kbd>`), `/` & `C` key bindings, `dock.ts`, `interactions.ts`, and `palette.ts`, added `<= 36 kB` composer chunk check in `tools/checkBundleSize.mjs`, and replaced `e2e/tray.spec.ts` with `e2e/composer.spec.ts`. `pnpm test`: `1,072/1,072` (`214` suites); `pnpm build` + `pnpm check:size`: composer chunk `13.9 kB / 36 kB`, Entry JS `409.7 kB / 410 kB`, Entry CSS `133.3 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `99/99` targeted Playwright tests (`composer`, `toolRail`, `touch`, `topbar`, `a11y`, `slots`, `queue`) and `e2e/v4Visual.spec.ts` (`8/8` zero-diff x2 on updated View 3 composer baselines) passed.
 
 #### [ ] CP3. Chains in the composer · S
 - **Do:** the "Build this chain" row, the preview strip, `applyBuild`, the camera flight, the toast line.

@@ -1,0 +1,239 @@
+/* Unified Composer surface (REDESIGN_PLAN_V4.md §7.1–§7.3). Lazy-loaded via src/studio/composer.ts. */
+#slot-s { position: relative; }
+
+.composer {
+  position: absolute;
+  inset-inline-start: 50%;
+  inset-block-end: calc(100% + 10px);
+  translate: -50% 0;
+  inline-size: min(720px, calc(100vw - 28px));
+  max-block-size: calc(100dvh - 11.5rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--cc-sheet);
+  border: 1px solid var(--cc-hair);
+  border-radius: 24px;
+  box-shadow: var(--cc-lift-2);
+  overflow: hidden;
+  transform-origin: 50% 100%;
+  pointer-events: auto;
+  z-index: 3;
+}
+
+.composer [hidden] { display: none !important; }
+
+.composer-input-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 18px;
+  border-block-end: 1px solid var(--cc-hair);
+  color: var(--cc-ink-3);
+  flex: none;
+}
+
+.composer-search-icon { flex: none; }
+
+.composer-input {
+  flex: 1;
+  min-inline-size: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font-size: 16px;
+  line-height: 22px;
+  color: var(--cc-ink);
+}
+
+.composer-input::placeholder { color: var(--cc-ink-3); }
+
+.composer-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 232px;
+  block-size: min(348px, calc(100dvh - 18.5rem));
+  min-block-size: 0;
+  flex: 1 1 auto;
+}
+
+.composer-list {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px 8px 10px;
+  min-block-size: 0;
+}
+
+.composer-group-label {
+  padding: 10px 10px 4px;
+  font: var(--cc-font-small);
+  font-weight: 500;
+  color: var(--cc-ink-3);
+}
+
+.composer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.composer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  color: var(--cc-ink);
+  font: var(--cc-font-body, inherit);
+  text-align: start;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.composer-item:hover,
+.composer-item.is-active { background: var(--cc-well); }
+
+.composer-item:focus-visible {
+  outline: 2px solid var(--cc-ink);
+  outline-offset: -2px;
+}
+
+.composer-item .cut {
+  flex: none;
+  display: grid;
+  inline-size: 38px;
+  block-size: 30px;
+}
+
+.composer-item:hover .cut,
+.composer-item.is-active .cut,
+.composer-item:focus-visible .cut {
+  transform: translateY(-4px) scale(1.12);
+}
+
+.composer-item:hover .cut .cutout :is(path, rect, ellipse, circle, polygon),
+.composer-item.is-active .cut .cutout :is(path, rect, ellipse, circle, polygon),
+.composer-item:focus-visible .cut .cutout :is(path, rect, ellipse, circle, polygon) {
+  fill: color-mix(in oklab, var(--t, var(--cc-blue)) 13%, var(--cc-sheet));
+  stroke: var(--t, var(--cc-blue));
+}
+
+.composer-item:hover .cut .cutout .cutout-mark,
+.composer-item.is-active .cut .cutout .cutout-mark,
+.composer-item:focus-visible .cut .cutout .cutout-mark {
+  fill: none;
+}
+
+.composer-item:hover .cut.is-empty,
+.composer-item.is-active .cut.is-empty {
+  transform: none;
+}
+
+.composer-item:hover .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon),
+.composer-item.is-active .cut.is-empty .cutout :is(path, rect, ellipse, circle, polygon) {
+  fill: transparent;
+  stroke: var(--cc-ink-3);
+}
+
+.composer-name {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composer-note {
+  display: block;
+  font: var(--cc-font-small);
+  font-size: 11.5px;
+  line-height: 14px;
+  color: var(--cc-ink-3);
+}
+
+.composer-side {
+  border-inline-start: 1px solid var(--cc-hair);
+  padding: 14px;
+  background: var(--cc-band-b);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  min-inline-size: 0;
+}
+
+/* The demo (trayDemo.ts): the highlighted component on a panel tinted with its colour. Capsules run a three-second loop. */
+.tray-demo {
+  padding: 12px;
+  border-radius: 16px;
+  background: color-mix(in oklab, var(--t, var(--cc-ink-3)) 9%, var(--cc-sheet));
+}
+.tray-stage { position: relative; block-size: 6.5rem; margin-block-end: 0.75rem; }
+.demo-lead { position: absolute; inset-inline: 0; inset-block-start: 50%; block-size: 1px; background: color-mix(in oklab, var(--t) 30%, transparent); }
+.demo-cut { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; }
+.demo-cut .cutout { inline-size: 5.5rem; block-size: auto; stroke: var(--t); }
+.demo-cut .cutout :is(path, rect, ellipse, circle, polygon) { fill: color-mix(in oklab, var(--t) 13%, var(--cc-sheet)); stroke: var(--t); }
+.demo-cut .cutout .cutout-mark { fill: none; }
+.tray-stage.is-over .demo-cut { z-index: 0; }
+.cap { position: absolute; inset-block-start: 50%; inset-inline-start: 0; inline-size: 0.9rem; block-size: 0.5rem; margin-block-start: -0.25rem; border-radius: 99px; background: var(--t); translate: -50% 0; opacity: 0; z-index: 2; animation: var(--a) 3s linear infinite; animation-delay: var(--d, 0s); }
+.tray-demo-name { margin: 0; font: var(--cc-font-panel); color: var(--cc-ink); }
+.tray-demo-text { margin: 0.25rem 0 0; font: var(--cc-font-small); color: var(--cc-ink-2); }
+/* Still pictures of each loop's end state, for reduced motion. */
+.tray-demo.is-still .cap { animation: none; inset-inline-start: var(--el); top: calc(50% + var(--et)); opacity: var(--eo); background: var(--ec, var(--t)); }
+.composer-demo-named { margin: 0; padding-inline: 4px; font: var(--cc-font-small); color: var(--cc-ink-2); }
+
+@keyframes k-lead { 0% { left: 50%; opacity: 0; } 8% { opacity: 1; } 55% { left: 100%; opacity: 1; } 60%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-through { 0% { left: 0; opacity: 1; } 55% { left: 100%; opacity: 1; } 60%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-in { 0% { left: 0; opacity: 1; } 30% { left: 45%; opacity: 1; } 34%, 100% { left: 45%; opacity: 0; } }
+@keyframes k-fan { 0%, 30% { left: 50%; top: 50%; opacity: 0; } 34% { left: 50%; top: 50%; opacity: 1; } 80% { left: 100%; top: calc(50% + var(--dy)); opacity: 1; } 85%, 100% { left: 100%; top: calc(50% + var(--dy)); opacity: 0; } }
+@keyframes k-turn { 0% { left: 0; top: 50%; opacity: 1; } 35% { left: 44%; top: 50%; opacity: 1; background: var(--t); } 38% { background: var(--c); } 75% { left: 10%; top: calc(50% + 1.5rem); opacity: 0; background: var(--c); } 100% { left: 10%; top: calc(50% + 1.5rem); opacity: 0; } }
+@keyframes k-hold-0 { 0% { left: 0; opacity: 1; } 12% { left: 40%; } 40% { left: 40%; } 70% { left: 100%; opacity: 1; } 75%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-hold-1 { 0% { left: 0; opacity: 1; } 12% { left: 46%; } 58% { left: 46%; } 88% { left: 100%; opacity: 1; } 92%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-hold-2 { 0% { left: 0; opacity: 1; } 12% { left: 52%; } 70% { left: 52%; } 94% { left: 100%; opacity: 1; } 97%, 100% { left: 100%; opacity: 0; } }
+@keyframes k-keep { 0% { left: 0; opacity: 1; } 25% { left: var(--x); opacity: 1; } 90% { left: var(--x); opacity: 1; } 100% { left: var(--x); opacity: 0; } }
+
+.composer-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 18px;
+  border-block-start: 1px solid var(--cc-hair);
+  color: var(--cc-ink-3);
+  font: var(--cc-font-small);
+  flex: none;
+}
+
+.composer-foot span { display: inline-flex; align-items: center; gap: 6px; }
+.composer-foot-esc { margin-inline-start: auto; }
+
+.composer-foot kbd {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 18px;
+  block-size: 18px;
+  padding-inline: 5px;
+  border-radius: 5px;
+  background: var(--cc-well);
+  color: var(--cc-ink-2);
+  font: 500 10.5px/1 var(--cc-font-mono);
+}
+
+.workspace[data-composer] .hint-line,
+.workspace[data-mode="data"] .composer { display: none; }
+/* The selection's toolbar floats over the composer input, so it waits while the composer is open. */
+body:has(.workspace[data-composer]) .context-toolbar { display: none; }
+
+@media (max-width: 56rem) {
+  .composer { max-block-size: calc(100dvh - 15.5rem); }
+  .composer-body { grid-template-columns: minmax(0, 1fr); }
+  .composer-side { display: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .composer:not([hidden]) { animation: cc-rise var(--cc-dur-base, 200ms) var(--cc-spring) 1 both; }
+}

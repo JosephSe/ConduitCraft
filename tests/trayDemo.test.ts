@@ -32,7 +32,7 @@ describe('tray demo pane (7.3)', () => {
   });
 
   it('is still under reduced motion: the end states are drawn, and the loop is not', () => {
-    const css = readFileSync(new URL('../src/styles/studio/unlayered.css', import.meta.url), 'utf8');
+    const css = readFileSync(new URL('../src/styles/composer.css', import.meta.url), 'utf8');
     assert.match(css, /\.tray-demo\.is-still \.cap \{ animation: none;/);
     for (const name of ['lead', 'through', 'in', 'fan', 'turn', 'hold-0', 'hold-1', 'hold-2', 'keep']) {
       assert.match(css, new RegExp(`@keyframes k-${name} `), `k-${name} exists`);

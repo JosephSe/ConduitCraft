@@ -425,12 +425,12 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'toggle-palette',
       title: 'Toggle Component Tray',
-      subtitle: 'Open or close the list of all components',
+      subtitle: 'Open or close the unified composer',
       category: 'Mode & View',
       shortcut: '[',
-      keywords: ['tray', 'palette', 'stencils', 'components', 'hide', 'show'],
+      keywords: ['tray', 'composer', 'palette', 'stencils', 'components', 'hide', 'show'],
       run: () => {
-        void import('./tray').then((m) => m.toggleTray());
+        void import('./composer').then((m) => m.toggleComposer());
       },
     },
     {
@@ -1027,12 +1027,12 @@ export function getPaletteCommands(deps: PaletteDeps): PaletteCommand[] {
     {
       id: 'open-insert',
       title: 'Insert Component…',
-      subtitle: 'Open the component list',
+      subtitle: 'Open the component composer',
       category: 'Components',
-      shortcut: 'C',
-      keywords: ['insert', 'add', 'component', 'stencil'],
+      shortcut: '/',
+      keywords: ['insert', 'add', 'component', 'stencil', 'composer'],
       run: () => {
-        void import('./tray').then((m) => m.openTray());
+        void import('./composer').then((m) => m.openComposer());
       },
     },
     {

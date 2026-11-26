@@ -125,8 +125,9 @@ describe('accessibility audit and live region announcements (suggestion 17)', ()
 
   it('verifies consistent focus-visible outline in studio.css', () => {
     const studioCss = readStudioCss();
+    const composerCss = fs.readFileSync(path.resolve('src/styles/composer.css'), 'utf8');
     assert.ok(studioCss.includes(':focus-visible {'), 'must declare universal focus-visible outline');
-    assert.ok(studioCss.includes('.tray-item:focus-visible'), 'must declare tray item focus ring');
+    assert.ok(composerCss.includes('.composer-item:focus-visible'), 'must declare composer item focus ring');
   });
 
   it('verifies global [hidden] rule inside earliest @layer reset in shared.css and studio.css', () => {
