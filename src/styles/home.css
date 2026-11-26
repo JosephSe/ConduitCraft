@@ -51,7 +51,7 @@
 }
 .home-section h3 {
   margin: 0 0 0.5rem;
-  font-size: 1rem;
+  font: var(--cc-font-panel);
 }
 .home-grid {
   list-style: none;
@@ -95,7 +95,9 @@
   border: 1px dashed var(--cc-hair);
 }
 .home-card-title {
+  font-family: var(--cc-font-map);
   font-weight: 700;
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 .home-card-when {

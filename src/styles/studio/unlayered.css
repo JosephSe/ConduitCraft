@@ -476,8 +476,7 @@ kbd {
 }
 
 .template-card-title {
-  font-size: 1rem;
-  font-weight: 600;
+  font: var(--cc-font-panel);
   color: var(--cc-ink);
   margin: 0;
 }

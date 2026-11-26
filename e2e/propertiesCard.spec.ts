@@ -99,3 +99,15 @@ test('the More popover opens, closes on Escape, and returns focus', { tag: '@qui
   await expect(page.locator('#btn-prop-delete')).toBeHidden();
   await expect(page.locator('#btn-prop-more')).toBeFocused();
 });
+
+test('uses the display face for the header name and preserves the V3 cut-out tile (DK6)', { tag: '@quick' }, async ({ page }) => {
+  await open(page);
+  await selectNode(page);
+  await expect(page.locator('.prop-head-art svg')).toBeVisible();
+  const styles = await page.locator('.prop-head-name').evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { fontFamily: cs.fontFamily, fontWeight: cs.fontWeight };
+  });
+  expect(styles.fontFamily).toContain('Bricolage Grotesque');
+  expect(styles.fontWeight).toBe('700');
+});

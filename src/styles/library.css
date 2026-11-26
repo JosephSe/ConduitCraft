@@ -50,7 +50,9 @@
   min-inline-size: 0;
 }
 .library-name {
+  font-family: var(--cc-font-map);
   font-weight: 700;
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
 .library-when {

@@ -224,3 +224,18 @@ test('Import infrastructure… opens the file picker and imports a Compose file'
   await expect(page.locator('.arch-node')).toHaveCount(2);
   await expect(home(page)).toBeHidden();
 });
+
+test('Home headings use the display face (DK6)', { tag: '@quick' }, async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await seedAutosave(page, 'Payments', 1);
+  await page.goto('/');
+  await expect(home(page)).toBeVisible();
+  for (const selector of ['#home-dialog .dialog-header h2', '#home-recent-title', '.home-card-title']) {
+    const styles = await page.locator(selector).first().evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { fontFamily: cs.fontFamily, fontWeight: cs.fontWeight };
+    });
+    expect(styles.fontFamily, selector).toContain('Bricolage Grotesque');
+    expect(styles.fontWeight, selector).toBe('700');
+  }
+});

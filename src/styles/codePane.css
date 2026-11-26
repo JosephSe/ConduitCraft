@@ -32,7 +32,7 @@
 .code-pane-resize:hover, .code-pane-resize:focus-visible { background: var(--cc-accent-soft); outline: none; }
 
 .code-pane-head { display: flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.6rem; border-block-end: 1px solid var(--cc-hair); }
-.code-pane-title { flex: 1; margin: 0; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.02em; }
+.code-pane-title { flex: 1; margin: 0; font-family: var(--cc-font-map); font-size: 0.85rem; font-weight: 700; letter-spacing: -0.01em; }
 
 .code-pane-body { display: grid; grid-template-columns: auto minmax(0, 1fr); min-block-size: 0; background: var(--cc-canvas); }
 .code-gutter, .code-area {

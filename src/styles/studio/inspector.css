@@ -59,7 +59,7 @@
   .prop-head-art svg { inline-size: 30px; block-size: 24px; overflow: visible; stroke: var(--cc-ink-2); }
   .prop-head[style*="--t"] .prop-head-art svg { stroke: var(--t); }
   .prop-head-text { min-inline-size: 0; display: grid; }
-  .prop-head-name { inline-size: 100%; min-inline-size: 0; border: 0; background: none; padding: 1px 4px; margin-inline-start: -4px;
+  .inspector .prop-head .prop-head-name { inline-size: 100%; min-inline-size: 0; border: 0; background: none; padding: 1px 4px; margin-inline-start: -4px;
     border-radius: 6px; font: var(--cc-font-panel); color: var(--cc-ink); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; box-shadow: none; block-size: auto; }
   input.prop-head-name:hover { background: var(--cc-well); }
   input.prop-head-name:focus { background: var(--cc-well); outline: none; box-shadow: inset 0 0 0 1.5px var(--cc-ink); }
