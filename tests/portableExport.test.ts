@@ -448,17 +448,25 @@ describe('portable export', () => {
       .accent { stroke: var(--cc-blue); fill: var(--cc-emerald); }
       .fallback { border: 1px solid var(--cc-hair-2, #b6c5db); }
       .custom-fallback { color: var(--cc-unknown-token, #123456); }
+      .band-a { background: var(--cc-band-a, var(--cc-sheet)); }
+      .band-b { background: var(--cc-band-b, var(--cc-canvas)); }
+      .nested-fallback { background: var(--cc-missing-token, var(--cc-sheet)); }
+      .nested-color-mix { background: var(--cc-missing-token, color-mix(in srgb, var(--cc-ink) 7%, transparent)); }
     `;
 
     const resolved = resolveCssVariables(sampleCss, WL_RESOLVED_TOKENS);
 
     // Verified that CSS variables are substituted with concrete values
-    assert.ok(resolved.includes('background: #ECEFEE'));
-    assert.ok(resolved.includes('color: #15181C'));
-    assert.ok(resolved.includes('stroke: #1d4ed8'));
-    assert.ok(resolved.includes('fill: #047857'));
-    assert.ok(resolved.includes('border: 1px solid rgba(21, 24, 28, 0.2)'));
-    assert.ok(resolved.includes('color: #123456'));
+    assert.ok(resolved.includes('background: #ECEFEE;'));
+    assert.ok(resolved.includes('color: #15181C;'));
+    assert.ok(resolved.includes('stroke: #1d4ed8;'));
+    assert.ok(resolved.includes('fill: #047857;'));
+    assert.ok(resolved.includes('border: 1px solid rgba(21, 24, 28, 0.2);'));
+    assert.ok(resolved.includes('color: #123456;'));
+    assert.ok(resolved.includes('.band-a { background: #FAFBFA; }'));
+    assert.ok(resolved.includes('.band-b { background: #F3F5F4; }'));
+    assert.ok(resolved.includes('.nested-fallback { background: #FFFFFF; }'));
+    assert.ok(resolved.includes('.nested-color-mix { background: color-mix(in srgb, #15181C 7%, transparent); }'));
 
     // Verified no leftover --cc- variables for known keys
     assert.doesNotMatch(resolved, /var\(--cc-canvas\)/);
