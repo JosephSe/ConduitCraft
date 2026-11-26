@@ -1,7 +1,8 @@
 /** Studio entry. Runtime lives in `src/studio/*`. */
 import { app, onSelectionChange, setHistoryApplied } from './studio/state';
 import { renderAll, renderWiresOnly, requestInspectorRefresh, updateVisualSelectionHighlights } from './studio/render';
-import { bindAlwaysWireLabelsPreference, bindAnimateWiresPreference, bindLegendPreference, bindViewFilters, bootStudio } from './studio/interactions';
+import { bindAlwaysWireLabelsPreference, bindAnimateWiresPreference, bindViewFilters, bootStudio } from './studio/interactions';
+import { bindLegendPreference } from './studio/mapKeyChunk';
 import { bindMinimap, scheduleMinimapPaint } from './studio/minimap';
 import { initSlotPopovers } from './studio/slotPopovers';
 import { bootTrafficBeads } from './studio/trafficBeadsBoot';

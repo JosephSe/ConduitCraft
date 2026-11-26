@@ -65,13 +65,15 @@ test('the view options colour by tag and filter by tag, and the Key opens the le
   await expect(page.locator('.arch-node.is-tag-dimmed')).toHaveCount(0);
 
   await colourBy.selectOption('tag');
-  await expect(page.locator('#legend-card')).toBeHidden();
-  await page.locator('#btn-legend-key').click();
   await expect(page.locator('#legend-card')).toBeVisible();
   await expect(page.locator('#legend-card-list')).toContainText('pii');
-  await page.keyboard.press('Escape');
+  await page.locator('#btn-key-collapse').click();
   await expect(page.locator('#legend-card')).toBeHidden();
+  await expect(page.locator('#btn-legend-key')).toBeVisible();
+  await page.locator('#btn-legend-key').click();
+  await expect(page.locator('#legend-card')).toBeVisible();
   await page.locator('#zoom-readout').click();
   await colourBy.selectOption('tone');
+  await expect(page.locator('#legend-card')).toBeVisible();
   await expect(page.locator('#btn-legend-key')).toBeHidden();
 });

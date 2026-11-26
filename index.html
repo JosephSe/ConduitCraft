@@ -188,19 +188,24 @@
       <div class="slots" id="slots">
         <div class="slots-grid">
           <div class="slot slot-sw" id="slot-sw">
+            <!-- Always-visible Key (DK4), stacked above the page strip and collapsible to #btn-legend-key. -->
+            <aside class="map-key" id="legend-card" data-island aria-label="Colour key" hidden>
+              <div class="map-key-head">
+                <h2 class="map-key-title">Key</h2>
+                <button type="button" class="map-key-collapse" id="btn-key-collapse" aria-label="Collapse key" aria-expanded="true" aria-controls="legend-card" data-tip="Collapse key" data-tip-pos="top">
+                  <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+              <ul class="map-key-list" id="legend-card-list"></ul>
+            </aside>
       <!-- Page tabs (D10): one tab per diagram in the file -->
       <div class="page-strip" id="page-strip" data-island>
         <div class="page-tabs" id="page-tabs" role="tablist" aria-label="Pages"></div>
         <button type="button" class="page-add" id="page-add" aria-label="Add page" data-tip="Add page" data-tip-pos="top">
           <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
-        <button type="button" class="page-tab" id="btn-legend-key" aria-haspopup="dialog" aria-expanded="false" aria-controls="legend-card" data-tip="What the colours mean" data-tip-pos="top" hidden>Key</button>
+        <button type="button" class="sw-key-btn" id="btn-legend-key" aria-expanded="false" aria-controls="legend-card" data-tip="What the colours mean" data-tip-pos="top" hidden>Key</button>
       </div>
-            <!-- The legend: a popover over SW, opened by the Key button. -->
-            <aside class="hud-card slot-popover legend-card" id="legend-card" aria-label="Colour legend" hidden>
-              <h2 class="legend-card-title">Legend</h2>
-              <ul class="legend-card-list" id="legend-card-list"></ul>
-            </aside>
           </div>
           <div class="slot slot-s" id="slot-s">
             <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</p>

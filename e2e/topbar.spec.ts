@@ -103,6 +103,7 @@ const REGIONS: Array<[name: string, selector: string]> = [
   ['review panel', '#insights-panel'],
   ['text outline', '#outline-panel'],
   ['page strip', '#page-strip'],
+  ['map key', '#legend-card'],
 ];
 // List content, one entry per issue or related component, is not chrome: the issue rows and the inspector's lineage chips.
 const NOT_COUNTED = '.dock-fav, .insight-item, .lineage-chip, #toast-container, #canvas-stage, .arch-node';

@@ -635,9 +635,10 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 #### [~] DK3. Title island and breadcrumb · M *(Skipped — reverted PR #189 per user preference to keep visible SW page tabs)*
 
-#### [ ] DK4. The key · M
+#### [x] DK4. The key · M
 - **Read:** `slotPopovers.ts`, `slots.spec.ts`.
-- **Do:** 6.4, `mapKey.ts`. **Done:** the stranger test on view 1; hover and focus both filter; renaming a row is one undo step. **Needs:** MP2 *(SW retains visible `#page-strip` page tabs; DK4 to co-exist cleanly with them)*.
+- **Do:** 6.4, `mapKey.ts`. **Done:** the stranger test on view 1; hover and focus both filter; renaming a row is one undo step. **Needs:** MP2 *(SW retains visible `#page-strip` page tabs; DK4 co-exists cleanly above them)*.
+- **Measured (2026-11-26, branch `v4-dk4-map-key`):** Added `src/core/mapKey.ts`, lazy `src/studio/mapKeyChunk.ts` + `src/studio/mapKey.ts` (`6.1 kB` chunk), and `src/styles/mapKey.css`; always-visible SW `#legend-card` stacks above `#page-strip` (open by default on wide screens, collapsed `<= 900 px`, `conduitcraft:key-collapsed` persisted), dims non-matching wires/labels to `0.13` via `#stage-world[data-key]` on hover/focus, and renames labels in place as one undo step. `pnpm test`: 1,061/1,061 (213 suites); Entry JS `408.2 kB / 410 kB`, Entry CSS `137.6 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `e2e/mapKey.spec.ts`, `slots.spec.ts`, `tagsLinks.spec.ts`, `topbar.spec.ts`, `toolRail.spec.ts`, `touch.spec.ts`, `a11y.spec.ts` (77/77), and `e2e/v4Visual.spec.ts` (8/8 zero-diff x2) passed.
 
 #### [ ] DK5. NE, SE, hint · S
 - **Do:** 6.5's hint line and 6.7. **Done:** `tooltips.spec.ts`, `camera.spec.ts` pass. **Needs:** DK1.
