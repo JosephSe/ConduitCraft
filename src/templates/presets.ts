@@ -1,5 +1,6 @@
 import type {
   DiagramDocument,
+  DiagramEdge,
   DiagramNode,
   DiagramNotesCard,
   DiagramZone,
@@ -320,6 +321,25 @@ export function kindStencils(): StencilDefinition[] {
 export function likelyNext(kindOrStencilId: string): StencilDefinition[] {
   const ids = findStencil(kindOrStencilId)?.next ?? ['service', 'store', 'queue', 'cache'];
   return ids.map((id) => findStencil(id)).filter((s): s is StencilDefinition => Boolean(s));
+}
+
+export function createWireEdge(
+  from: string,
+  to: string,
+  extra: Partial<Omit<DiagramEdge, 'id' | 'from' | 'to'>> = {},
+): DiagramEdge {
+  return {
+    id: nextUid('edge'),
+    from,
+    to,
+    sourcePort: 'auto',
+    targetPort: 'auto',
+    tone: 'blue',
+    route: 'auto',
+    label: '',
+    animated: true,
+    ...extra,
+  };
 }
 
 export function createNodeFromStencil(

@@ -23,6 +23,7 @@ const COMMON_WORDS: Record<string, string> = {
   user: 'actor',
   alb: 'balancer',
   elb: 'balancer',
+  gateway: 'gate',
   waf: 'gate',
   firewall: 'gate',
   throttle: 'limiter',

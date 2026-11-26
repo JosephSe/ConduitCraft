@@ -17,13 +17,13 @@
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
 | **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 7 | 7 | **Complete** (`MP1`–`MP3`, `MP6`–`MP9` done; `MP4`/`MP5` skipped per D14) |
 | **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14, `DK3` skipped per user preference) | 5 | 6 | In progress (`DK1`–`DK2`, `DK4`–`DK6` done; `DK3` skipped per user preference; `DK7` skipped per D14; ready for `CP1`, `RN1`, `RV1`, `PS1`) |
-| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Ready for `CP1` |
+| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 1 | 4 | In progress (`CP1` done; ready for `CP2`) |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Unblocked (`DK2` done) |
 | **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Unblocked (`DK2` done) |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Ready for `PS1` (unblocked by `MP8` & `DK4`) |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **17** | **59** | **28.8%** _(4 items skipped: `MP4`/`MP5`/`DK7` per D14, `DK3` per user preference)_ |
+| **Overall** | | **18** | **59** | **30.5%** _(4 items skipped: `MP4`/`MP5`/`DK7` per D14, `DK3` per user preference)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (15 / 30 active, 4 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (16 / 30 active, 4 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -177,11 +177,11 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ### Milestone CP: The Composer
 
-- [ ] **CP1. Pure chain grammar (`src/core/quickBuild.ts`)** · M · **Priority:** P0 · **Needs:** `GR1`
+- [x] **CP1. Pure chain grammar (`src/core/quickBuild.ts`)** · M · **Priority:** P0 · **Needs:** `GR1`
   - **Read:** `src/studio/trayWords.ts`, `src/templates/presets.ts`, wire creation in `src/studio/interactions.ts`.
-  - [ ] Implement pure `planBuild` and `applyBuild` (`>` sync, `~>` async, `,` branch, reuse by title, `WORDS` kind inference, longest-path DAG column/row layout, 24-node / 40-wire limits, one undo step).
+  - [x] Implement pure `planBuild` and `applyBuild` (`>` sync, `~>` async, `,` branch, reuse by title, `WORDS` kind inference, longest-path DAG column/row layout, 24-node / 40-wire limits, one undo step).
   - **Done when:** `tests/quickBuild.test.ts` passes with zero DOM (including cycles, unicode names, duplicates, limits).
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-26 (`v4-cp1-quick-build`) · Added pure `src/core/quickBuild.ts` (`planBuild`, `applyBuild`), extracted shared `createWireEdge` into `src/templates/presets.ts` (reused by `src/studio/interactions.ts` and `applyBuild`), added `gateway: 'gate'` to `src/studio/trayWords.ts`, and added 11 DOM-free unit tests in `tests/quickBuild.test.ts`. `pnpm test`: `1,072/1,072` (`214` suites); `pnpm build` + `pnpm check:size`: Entry JS `409.6 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; targeted Playwright specs (`e2e/tray.spec.ts` + `e2e/wireProtocol.spec.ts`): `26/26` passed.
 
 - [ ] **CP2. Unified Composer surface (`src/studio/composer.ts`)** · M · **Priority:** P0 · **Needs:** `DK1`, `MP4`
   - **Read:** `src/studio/tray.ts`, `src/studio/trayDemo.ts`, `e2e/tray.spec.ts`.

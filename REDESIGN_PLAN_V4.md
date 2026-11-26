@@ -655,10 +655,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 
 ### Milestone CP: The composer
 
-#### [ ] CP1. `quickBuild` · M
+#### [x] CP1. `quickBuild` · M
 - **Read:** `trayWords.ts`, `src/templates/presets.ts`, how the Wire tool makes a wire in `interactions.ts`.
 - **Do:** 7.4 and its tests: every rule, the limits, reuse by title, duplicate wires, a cycle (`a > b > a`), unicode names.
 - **Done:** tests pass with no DOM. **Needs:** GR1.
+- **Measured (2026-11-26, branch `v4-cp1-quick-build`):** Added pure `src/core/quickBuild.ts` (`planBuild`, `applyBuild`), extracted shared `createWireEdge` into `src/templates/presets.ts` (used by both `src/studio/interactions.ts` and `applyBuild`), added `gateway: 'gate'` to `src/studio/trayWords.ts`, and added `tests/quickBuild.test.ts` (11 DOM-free unit tests covering empty/single-node, canonical multi-chain, reuse/anchoring, catalog/`WORDS`/case rules, longest-path DAG, cycles, duplicate/self-loop filtering, Unicode/astral names, 24-node/40-wire limits, and atomic snapshot rollback). `pnpm test`: `1,072/1,072` (`214` suites); `pnpm build` + `pnpm check:size`: Entry JS `409.6 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `e2e/tray.spec.ts` + `e2e/wireProtocol.spec.ts`: `26/26` passed.
 
 #### [ ] CP2. The composer surface · M
 - **Read:** `tray.ts`, `trayDemo.ts`, `tray.spec.ts`.
