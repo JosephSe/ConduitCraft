@@ -61,8 +61,8 @@ describe('cut-outs', () => {
     const carried = renderCutoutMarkup({ kind: 'service' }, { carried: true });
     assert.match(carried, /class="cutout is-carried"/);
     assert.match(carried, /viewBox="0 0 222 142"/);
-    const tray = readFileSync(new URL('../src/studio/tray.ts', import.meta.url), 'utf8');
-    assert.match(tray, /renderCutoutMarkup\(stencil\)/);
+    const composer = readFileSync(new URL('../src/studio/composer.ts', import.meta.url), 'utf8');
+    assert.match(composer, /renderCutoutMarkup\(stencil\)/);
     const css = readFileSync(new URL('../src/styles/studio/ui.css', import.meta.url), 'utf8');
     assert.match(css, /translateY\(-4px\) scale\(1\.12\)/);
     assert.match(css, /\.cut\.is-empty/);

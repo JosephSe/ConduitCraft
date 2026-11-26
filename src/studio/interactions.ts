@@ -2731,7 +2731,7 @@ export function initEvents(): void {
     if (!inEditable) {
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
         e.preventDefault();
-        void import('./tray').then((m) => m.toggleTray());
+        void import('./composer').then((m) => m.toggleComposer());
         return;
       }
     }
@@ -2751,7 +2751,7 @@ export function initEvents(): void {
         if (app.selection.type !== 'none') {
           applyZOrder('back');
         } else {
-          void import('./tray').then((m) => m.toggleTray());
+          void import('./composer').then((m) => m.toggleComposer());
         }
         return;
       }

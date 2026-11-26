@@ -29,8 +29,8 @@ test('the dock holds five tools, six favourites and All components, and the old 
   await expect(page.locator('#btn-all-components')).toBeVisible();
   await expect(page.locator('.rail-stencil-btn, #btn-rail-expand-palette')).toHaveCount(0);
   await expect(tool(page, 'select')).toHaveAttribute('aria-pressed', 'true');
-  // The tray is not built until it is asked for.
-  await expect(page.locator('#tray')).toHaveCount(0);
+  // The composer is not built until it is asked for.
+  await expect(page.locator('#composer')).toHaveCount(0);
   await expect(page.locator('#palette-sidebar')).toHaveCount(0);
 });
 
@@ -77,7 +77,7 @@ test('V and W switch tools, Z and N add a swimlane and a note, C opens the compo
   await expect(page.locator('.blueprint-spec')).toHaveCount(notes + 1);
 
   await page.keyboard.press('c');
-  await expect(page.locator('#tray')).toBeVisible();
+  await expect(page.locator('#composer')).toBeVisible();
   await expect(page.locator('#btn-all-components')).toHaveAttribute('aria-expanded', 'true');
 });
 

@@ -17,13 +17,13 @@
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
 | **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 7 | 7 | **Complete** (`MP1`–`MP3`, `MP6`–`MP9` done; `MP4`/`MP5` skipped per D14) |
 | **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14, `DK3` skipped per user preference) | 5 | 6 | In progress (`DK1`–`DK2`, `DK4`–`DK6` done; `DK3` skipped per user preference; `DK7` skipped per D14; ready for `CP1`, `RN1`, `RV1`, `PS1`) |
-| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 1 | 4 | In progress (`CP1` done; ready for `CP2`) |
+| **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 2 | 4 | In progress (`CP1`–`CP2` done; ready for `CP3`, `CP4`, `DK8`) |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Unblocked (`DK2` done) |
 | **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Unblocked (`DK2` done) |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Ready for `PS1` (unblocked by `MP8` & `DK4`) |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **18** | **59** | **30.5%** _(4 items skipped: `MP4`/`MP5`/`DK7` per D14, `DK3` per user preference)_ |
+| **Overall** | | **19** | **59** | **32.2%** _(4 items skipped: `MP4`/`MP5`/`DK7` per D14, `DK3` per user preference)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (16 / 30 active, 4 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (17 / 30 active, 4 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -183,12 +183,12 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** `tests/quickBuild.test.ts` passes with zero DOM (including cycles, unicode names, duplicates, limits).
   - **Completed:** 2026-11-26 (`v4-cp1-quick-build`) · Added pure `src/core/quickBuild.ts` (`planBuild`, `applyBuild`), extracted shared `createWireEdge` into `src/templates/presets.ts` (reused by `src/studio/interactions.ts` and `applyBuild`), added `gateway: 'gate'` to `src/studio/trayWords.ts`, and added 11 DOM-free unit tests in `tests/quickBuild.test.ts`. `pnpm test`: `1,072/1,072` (`214` suites); `pnpm build` + `pnpm check:size`: Entry JS `409.6 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; targeted Playwright specs (`e2e/tray.spec.ts` + `e2e/wireProtocol.spec.ts`): `26/26` passed.
 
-- [ ] **CP2. Unified Composer surface (`src/studio/composer.ts`)** · M · **Priority:** P0 · **Needs:** `DK1`, `MP4`
+- [x] **CP2. Unified Composer surface (`src/studio/composer.ts`)** · M · **Priority:** P0 · **Needs:** `DK1`, `MP4`
   - **Read:** `src/studio/tray.ts`, `src/studio/trayDemo.ts`, `e2e/tray.spec.ts`.
-  - [ ] Lazy-loaded 720 px rising composer (`combobox` + `listbox` + 62% live plate preview & tray demos), opened via `/`, `C`, and dock field.
-  - [ ] Delete `src/studio/tray.ts` and its CSS; enforce `<= 36 kB` composer chunk budget in `tools/checkBundleSize.mjs`.
+  - [x] Lazy-loaded 720 px rising composer (`combobox` + `listbox` + D14 V3 cut-outs & `trayDemo` side pane), opened via `/`, `C`, and dock field.
+  - [x] Delete `src/studio/tray.ts` and its CSS; enforce `<= 36 kB` composer chunk budget in `tools/checkBundleSize.mjs`.
   - **Done when:** View 3 matches; `composer.spec.ts` passes; chunk `<= 36 kB`.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-26 (`v4-cp2-composer-surface`) · Created lazy `src/studio/composer.ts` + `src/styles/composer.css`, deleted `src/studio/tray.ts` & removed tray CSS from `unlayered.css`/`ui.css`, wired `#btn-all-components` (`<kbd>/</kbd>`), `/` & `C`, `dock.ts`, `interactions.ts`, and `palette.ts`, and replaced `e2e/tray.spec.ts` with `e2e/composer.spec.ts`. `pnpm test`: `1,072/1,072` (`214` suites); `pnpm build` + `pnpm check:size`: composer chunk `13.9 kB / 36 kB`, Entry JS `409.7 kB / 410 kB`, Entry CSS `133.3 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `99/99` targeted Playwright tests (`composer`, `toolRail`, `touch`, `topbar`, `a11y`, `slots`, `queue`) and `e2e/v4Visual.spec.ts` (`8/8` zero-diff x2 on updated View 3 composer baselines) passed.
 
 - [ ] **CP3. Chains in the Composer** · S · **Priority:** P0 · **Needs:** `CP1`, `CP2`
   - [ ] Render "Build this chain" row + horizontal strip-map preview when input contains `>`, execute `applyBuild` in one undo step, fly camera, announce toast.

@@ -147,8 +147,8 @@ function initDockTools(): void {
     btn.addEventListener('click', () => {
       const id = TOOL_ACTION[btn.dataset.railTool ?? ''];
       if (id) findPaletteCommand(id)?.run();
-      // The tray is not over the sheet the tool is about to be used on.
-      void import('./tray').then((m) => m.closeTray());
+      // Keep the sheet unobstructed when switching to a tool.
+      void import('./composer').then((m) => m.closeComposer());
     });
   }
   new MutationObserver(sync).observe(workspace, { attributes: true, attributeFilter: ['data-tool'] });
@@ -189,8 +189,8 @@ export function initDock(): void {
     if (armedId && (app.pointerTool !== 'select' || app.workspaceMode !== 'design')) disarm();
   }).observe(document.getElementById('workspace')!, { attributes: true, attributeFilter: ['data-tool', 'data-mode'] });
 
-  // "All components" opens the tray (7.3). It loads the first time it is asked for.
+  // "Add or find anything" opens the unified composer (§7). Lazy-loaded on first use.
   document.getElementById('btn-all-components')?.addEventListener('click', (e) => {
-    void import('./tray').then((m) => m.toggleTray(e.currentTarget as HTMLElement));
+    void import('./composer').then((m) => m.toggleComposer(e.currentTarget as HTMLElement));
   });
 }

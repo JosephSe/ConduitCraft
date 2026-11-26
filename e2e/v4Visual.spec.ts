@@ -206,21 +206,21 @@ for (const theme of THEMES) {
       await expect(page.locator('#inspector-panel')).toBeVisible();
       await shoot(page, `02-design-100-selected-${theme}.png`);
 
-      // View 3: Component surface open on "redis" (pre-4.0 tray baseline; CP2 switches to composer)
+      // View 3: Composer open on "redis"
       await clearSelection(page);
       await fit(page);
       await page.locator('#btn-all-components').click();
-      await expect(page.locator('#tray')).toBeVisible();
-      const traySearch = page.locator('#tray .tray-search');
-      await expect(traySearch).toBeVisible();
-      await traySearch.fill('redis');
-      const firstMatch = page.locator('#tray .tray-item:not([hidden])').first();
+      await expect(page.locator('#composer')).toBeVisible();
+      const composerInput = page.locator('#composer-input');
+      await expect(composerInput).toBeVisible();
+      await composerInput.fill('redis');
+      const firstMatch = page.locator('#composer .composer-item:not([hidden])').first();
       await expect(firstMatch).toBeVisible();
       await settleBox(firstMatch);
       await firstMatch.hover();
       await shoot(page, `03-composer-component-${theme}.png`);
       await page.keyboard.press('Escape');
-      await expect(page.locator('#tray')).toBeHidden();
+      await expect(page.locator('#composer')).toBeHidden();
 
       // View 4: Command surface open on "gateway" (pre-4.0 palette baseline; CP3 switches to composer chain)
       await page.keyboard.press('ControlOrMeta+k');

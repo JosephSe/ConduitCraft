@@ -39,6 +39,7 @@ export const KEY_BINDINGS: KeyBinding[] = [
   { actionId: 'tool-frame', key: 'f', designOnly: true },
   { actionId: 'add-zone', key: 'z', designOnly: true },
   { actionId: 'add-notes', key: 'n', designOnly: true },
+  { actionId: 'open-insert', key: '/', designOnly: true },
   { actionId: 'open-insert', key: 'c', designOnly: true },
   // Lenses.
   { actionId: 'mode-design', key: '1' },
