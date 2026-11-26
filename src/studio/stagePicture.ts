@@ -189,22 +189,59 @@ export function getResolvedWlVariables(): Record<string, string> {
 
 /**
  * Resolves references to `var(--cc-*)` in CSS or SVG content into concrete, standalone color/font values.
+ * Uses balanced-parenthesis scanning so nested fallbacks (e.g. `var(--cc-band-a, var(--cc-sheet))` or `color-mix(...)`)
+ * never leave a stray `)` that invalidates the CSS declaration.
  */
 export function resolveCssVariables(
   content: string,
   vars: Record<string, string> = getResolvedWlVariables()
 ): string {
-  const replacePass = (text: string): string =>
-    text.replace(/var\((--cc-[a-zA-Z0-9_-]+)(?:,\s*([^)]+))?\)/g, (fullMatch, varName, fallback) => {
-      const val = vars[varName];
-      if (val && !val.startsWith('var(--')) return val;
-      return fallback?.trim() || val || fullMatch;
-    });
-
-  let resolved = replacePass(content);
-  // Perform a second pass in case of nested fallback variables
-  resolved = replacePass(resolved);
-  return resolved;
+  let out = '';
+  let i = 0;
+  const n = content.length;
+  while (i < n) {
+    const start = content.indexOf('var(--cc-', i);
+    if (start === -1) {
+      out += content.slice(i);
+      break;
+    }
+    out += content.slice(i, start);
+    let depth = 0;
+    let comma = -1;
+    let j = start + 3; // index of '('
+    for (; j < n; j += 1) {
+      const ch = content[j];
+      if (ch === '(') depth += 1;
+      else if (ch === ')') {
+        depth -= 1;
+        if (depth === 0) break;
+      } else if (ch === ',' && depth === 1 && comma === -1) {
+        comma = j;
+      }
+    }
+    if (depth !== 0 || j >= n) {
+      out += content.slice(start);
+      break;
+    }
+    const rawName = content.slice(start + 4, comma === -1 ? j : comma).trim();
+    const rawFallback = comma === -1 ? '' : content.slice(comma + 1, j).trim();
+    if (/^--cc-[a-zA-Z0-9_-]+$/.test(rawName)) {
+      const val = vars[rawName];
+      if (val && !val.startsWith('var(--')) {
+        out += val;
+      } else if (rawFallback) {
+        out += resolveCssVariables(rawFallback, vars);
+      } else if (val) {
+        out += val;
+      } else {
+        out += content.slice(start, j + 1);
+      }
+    } else {
+      out += content.slice(start, j + 1);
+    }
+    i = j + 1;
+  }
+  return out;
 }
 
 /**
@@ -628,6 +665,7 @@ export function renderStagePictureSvg(
   }
   clone.style.width = `${stageWidth}px`;
   clone.style.height = `${stageHeight}px`;
+  clone.style.setProperty('--stage-h', String(stageHeight));
   clone.style.maxWidth = 'none';
   clone.style.maxInlineSize = 'none';
 

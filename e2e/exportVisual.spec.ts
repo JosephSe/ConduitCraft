@@ -241,3 +241,62 @@ test('picture exports carry the webfonts and the title weight', async ({ browser
     .toBe(true);
   await context.close();
 });
+
+test('PNG export renders alternating swimlane bands', async ({ browser }) => {
+  const context = await browser.newContext({
+    colorScheme: 'light',
+    reducedMotion: 'reduce',
+    viewport: { width: 1600, height: 900 },
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: 'http://localhost:4281',
+          localStorage: [
+            { name: 'conduitcraft-ui', value: '2' },
+            { name: 'conduitcraft-first-run-seen', value: '1' },
+          ],
+        },
+      ],
+    },
+    acceptDownloads: true,
+  });
+  const page = await context.newPage();
+  exported = 0;
+  await captureExports(page);
+  await page.goto('http://localhost:4281/');
+  await openLumenRelay(page);
+  await expect(page.locator('.arch-node').first()).toBeVisible();
+
+  const pngBase64 = await exportAs(page, '#btn-export-png');
+  const view = await context.newPage();
+  await view.setContent('<!doctype html><body style="margin:0"><canvas id="png"></canvas></body>');
+  const stats = await view.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const bitmap = await createImageBitmap(new Blob([bytes], { type: 'image/png' }));
+    const canvas = document.getElementById('png') as HTMLCanvasElement;
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(bitmap, 0, 0);
+    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const near = (r: number, g: number, b: number, tr: number, tg: number, tb: number) =>
+      Math.abs(r - tr) <= 2 && Math.abs(g - tg) <= 2 && Math.abs(b - tb) <= 2;
+    let bandA = 0;
+    let bandB = 0;
+    let canvasBg = 0;
+    const total = data.length / 4;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      if (near(r, g, b, 250, 251, 250)) bandA += 1; // #FAFBFA (--cc-band-a)
+      else if (near(r, g, b, 243, 245, 244)) bandB += 1; // #F3F5F4 (--cc-band-b)
+      else if (near(r, g, b, 236, 239, 238)) canvasBg += 1; // #ECEFEE (--cc-canvas)
+    }
+    return { width: canvas.width, height: canvas.height, total, bandA, bandB, canvasBg };
+  }, pngBase64);
+
+  expect(stats.bandA / stats.total, JSON.stringify(stats)).toBeGreaterThan(0.1);
+  expect(stats.bandB / stats.total, JSON.stringify(stats)).toBeGreaterThan(0.1);
+  expect(stats.canvasBg / stats.total, JSON.stringify(stats)).toBeGreaterThan(0.01);
+  await context.close();
+});
