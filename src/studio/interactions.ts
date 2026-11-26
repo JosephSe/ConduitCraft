@@ -79,6 +79,7 @@ import {
   viewport,
   windowDropVeil,
   workspace,
+  zoomReadout,
 } from './dom';
 import {
   app,
@@ -189,8 +190,8 @@ import { initRunBar, refreshRunBar } from './runBar';
 import { initChaosPanel } from './chaosPanel';
 import { initQueueBacklog } from './queueBacklog';
 import { queueWireDefaults } from '../core/appearance';
-import { initInsightsPanel } from './insights';
-import { initDockFaces } from './dockFaces';
+import { initInsightsPanel, orderedInsights } from './insights';
+import { initDockFaces, reviewHintText, TRAFFIC_HINT } from './dockFaces';
 import { initHelp } from './helpPopover';
 import { nodesLayer as chaosNodesLayer } from './dom';
 import { initChaosPreview, setFailures } from './chaos';
@@ -1592,8 +1593,8 @@ export function initEvents(): void {
           app.workspaceMode === 'design'
             ? TOOL_TIPS[app.pointerTool]
             : app.lens === 'review'
-              ? 'Click an issue to jump to it.'
-              : 'Select a component and press X to fail it.';
+              ? reviewHintText(orderedInsights().length)
+              : TRAFFIC_HINT;
 
         // Traffic and Review open with nothing selected, so no component is focused until the user picks one.
         if (app.workspaceMode === 'data' && app.selection.type !== 'none') setSelection({ type: 'none' });
@@ -2665,7 +2666,18 @@ export function initEvents(): void {
     const rect = viewport.getBoundingClientRect();
     zoomAround(app.scale / 1.16, rect.width / 2, rect.height / 2);
   });
+  const resetZoomTo100 = () => {
+    const rect = viewport.getBoundingClientRect();
+    zoomAround(1, rect.width / 2, rect.height / 2);
+    const popover = document.getElementById('view-popover');
+    if (popover && !popover.hidden) {
+      popover.hidden = true;
+      zoomReadout.setAttribute('aria-expanded', 'false');
+    }
+  };
   btnZoomFit.addEventListener('click', fitToViewport);
+  document.getElementById('btn-zoom-100')?.addEventListener('click', resetZoomTo100);
+  zoomReadout?.addEventListener('dblclick', resetZoomTo100);
   document.getElementById('view-fit')?.addEventListener('click', fitToViewport);
   trackViewportResize();
 

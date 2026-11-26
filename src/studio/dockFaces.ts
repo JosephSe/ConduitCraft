@@ -7,9 +7,19 @@ import { insightRule, mutedRules } from '../core/insights';
 import { announce } from './a11y';
 import { chaosLensActive, toggleFailure } from './chaos';
 import { notify } from './toast';
+import { hudStatusTip } from './dom';
 import { onInsightsChange, orderedInsights, selectIssue, toggleMute } from './insights';
 import { renderAll } from './render';
 import { app, onSelectionChange, pushHistory } from './state';
+
+export const TRAFFIC_HINT = 'Press play to follow a request. Fail a component to see what it takes down.';
+export const TRAFFIC_FAIL_HINT = 'Click a component to fail it. Click it again to restore it.';
+
+/** Concise one-line Review hint for the status bar above the dock. */
+export function reviewHintText(count: number): string {
+  if (count === 0) return 'Nothing left to flag on this page.';
+  return count === 1 ? '1 thing to look at on this page.' : `${count} things to look at on this page.`;
+}
 
 type Issue = ReturnType<typeof orderedInsights>[number];
 
@@ -57,6 +67,7 @@ export function initDockFaces(): void {
     failBtn.setAttribute('aria-pressed', String(on));
     if (on) workspace.dataset.failArmed = '';
     else delete workspace.dataset.failArmed;
+    if (app.lens === 'traffic') hudStatusTip.textContent = on ? TRAFFIC_FAIL_HINT : TRAFFIC_HINT;
   };
   failBtn.addEventListener('click', () => {
     if (armed) return setArmed(false);
@@ -90,6 +101,7 @@ export function initDockFaces(): void {
     prev.toggleAttribute('disabled', !hasAny);
     next.toggleAttribute('disabled', !hasAny);
     fixes.replaceChildren();
+    if (app.lens === 'review') hudStatusTip.textContent = reviewHintText(list.length);
     if (!hasAny) {
       count.textContent = 'No issues';
       sentence.textContent = 'Nothing to flag. The rules found no problems.';

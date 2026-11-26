@@ -46,7 +46,7 @@ if (typeof window !== 'undefined' && viewport) {
 export type PointerTool = 'select' | 'connect' | 'hand' | 'text' | 'frame';
 
 export const TOOL_TIPS: Record<PointerTool, string> = {
-  select: 'Drag a shape onto the sheet, or drag from a port to connect.',
+  select: 'Drag a component onto the map, or press / and type what you run.',
   connect: 'Drag from one component to another to connect them.',
   hand: 'Drag anywhere to move around the sheet.',
   text: 'Click the sheet to add a label.',

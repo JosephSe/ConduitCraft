@@ -239,11 +239,27 @@ test('the hint line speaks in plain sentences, per lens and per tool', async ({ 
   await page.keyboard.press('w');
   await expect(hint).toHaveText('Drag from one component to another to connect them.');
   await page.keyboard.press('2');
-  await expect(hint).toHaveText('Select a component and press X to fail it.');
+  await expect(hint).toHaveText('Press play to follow a request. Fail a component to see what it takes down.');
+  await page.locator('#run-bar-fail').click();
+  await expect(hint).toHaveText('Click a component to fail it. Click it again to restore it.');
+  await page.keyboard.press('Escape');
+  await expect(hint).toHaveText('Press play to follow a request. Fail a component to see what it takes down.');
   await page.keyboard.press('3');
-  await expect(hint).toHaveText('Click an issue to jump to it.');
+  await expect(hint).toHaveText('Nothing left to flag on this page.');
   await page.keyboard.press('1');
   await expect(hint).toHaveText('Drag from one component to another to connect them.');
   await page.keyboard.press('v');
-  await expect(hint).toHaveText('Drag a shape onto the sheet, or drag from a port to connect.');
+  await expect(hint).toHaveText('Drag a component onto the map, or press / and type what you run.');
+});
+
+test('the NE theme button toggles Vellum and Graphite and persists across reload', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#stage-world').waitFor({ state: 'attached' });
+  const root = page.locator('html');
+  const before = await root.getAttribute('data-theme');
+  const expectedAfter = before === 'graphite' ? 'vellum' : 'graphite';
+  await page.locator('#btn-theme-toggle').click();
+  await expect(root).toHaveAttribute('data-theme', expectedAfter);
+  await page.reload();
+  await expect(root).toHaveAttribute('data-theme', expectedAfter);
 });

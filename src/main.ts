@@ -66,6 +66,26 @@ initContextToolbar();
 initRovingFocus();
 initContextMenu();
 initGroupOutlines();
+const themeBtn = document.getElementById('btn-theme-toggle');
+const syncThemeButton = () => {
+  if (!themeBtn) return;
+  const dark = document.documentElement.getAttribute('data-theme') === 'graphite';
+  themeBtn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+};
+syncThemeButton();
+themeBtn?.addEventListener('click', () => {
+  const next = document.documentElement.getAttribute('data-theme') === 'graphite' ? 'light' : 'dark';
+  try {
+    localStorage.setItem('blueprint-studio-color-scheme', next);
+  } catch {
+    // Storage unavailable: apply for the current session only.
+  }
+  const meta = document.querySelector<HTMLMetaElement>('meta[name="color-scheme"]');
+  if (meta) meta.content = next;
+  document.documentElement.setAttribute('data-theme', next === 'dark' ? 'graphite' : 'vellum');
+  for (const r of document.querySelectorAll<HTMLInputElement>('input[name="theme-choice"]')) r.checked = r.value === next;
+  syncThemeButton();
+});
 document.getElementById('btn-share')?.addEventListener('click', () => findPaletteCommand('copy-share-link')?.run());
 bindMinimap();
 initSlotPopovers();
