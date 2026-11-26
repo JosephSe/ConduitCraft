@@ -122,7 +122,6 @@ import { withInspectorTransition } from './inspectorTransition';
 import type {
   DiagramDocument,
   SelectionTarget,
-  DiagramEdge,
   DiagramNode,
   DiagramNotesCard,
   DiagramZone,
@@ -132,6 +131,7 @@ import type {
 import {
   createBlankDocument,
   createNodeFromStencil,
+  createWireEdge,
   findStencil,
   likelyNext,
   createTextCard,
@@ -584,18 +584,13 @@ export function createNodeFromWireDrop(
     node.x = Math.max(24, snap(worldX - node.width / 2));
     node.y = Math.max(32, snap(worldY - node.height / 2));
     app.doc.nodes.push(node);
-    app.doc.edges.push({
-      id: nextUid('edge'),
-      from: sourceId,
-      to: node.id,
-      sourcePort,
-      targetPort: 'auto',
-      tone: 'blue',
-      route: 'auto',
-      label: '',
-      animated: true,
-      ...queueWireDefaults(app.doc.nodes, sourceId, node.id),
-    });
+    app.doc.edges.push(
+      createWireEdge(sourceId, node.id, {
+        sourcePort,
+        targetPort: 'auto',
+        ...queueWireDefaults(app.doc.nodes, sourceId, node.id),
+      }),
+    );
     expandStageToFit(app.doc);
     created = node;
     return true;
@@ -617,18 +612,11 @@ export function createEdgeConnection(
 ): void {
   if (fromId === toId) return;
   pushHistory();
-  const newEdge: DiagramEdge = {
-    id: nextUid('edge'),
-    from: fromId,
-    to: toId,
+  const newEdge = createWireEdge(fromId, toId, {
     sourcePort,
     targetPort,
-    tone: 'blue',
-    route: 'auto',
-    label: '',
-    animated: true,
     ...queueWireDefaults(app.doc.nodes, fromId, toId),
-  };
+  });
   app.doc.edges.push(newEdge);
   setSelection({ type: 'edge', id: newEdge.id });
   app.connectSourceNodeId = null;
