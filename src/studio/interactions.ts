@@ -164,8 +164,9 @@ import { initHome, openHome, openHomeAtBootIfReturning } from './homeScreen';
 import { restoreDiagram } from './library';
 import type { StagePictureOptions } from './stagePicture';
 import { TITLE_BLOCK_HEIGHT, setTitleBlockEnabled, titleBlockEnabled, titleBlockFor } from '../exporter/titleBlock';
-import { TONE_CSS, TONE_META } from '../shared/tones';
-import { allTags, colourKey, normalizeStyle } from '../core/meta';
+import { TONE_CSS } from '../shared/tones';
+import { allTags, normalizeStyle } from '../core/meta';
+import { syncMapKey } from './mapKeyChunk';
 import { cutoutDrawing, renderCutoutMarkup } from '../ui/cutout';
 import { notify } from './toast';
 import { localizeStaticShortcuts, renderShortcutsHtml } from './commands';
@@ -638,59 +639,6 @@ export function createEdgeConnection(
   }
 }
 
-const SHOW_LEGEND_KEY = 'conduitcraft:show-legend';
-
-function legendCardWanted(): boolean {
-  try {
-    return localStorage.getItem(SHOW_LEGEND_KEY) !== 'false';
-  } catch {
-    return true;
-  }
-}
-
-/** Fills the canvas legend card from the document's legend; hidden when there is none or the preference is off. */
-function syncLegendCard(): void {
-  const card = document.getElementById('legend-card');
-  const list = document.getElementById('legend-card-list');
-  const key = document.getElementById('btn-legend-key');
-  if (!card || !list || !key) return;
-  // Under "Colour by status" or "tag" the card explains those colours; otherwise it shows the document's own legend.
-  const colours = colourKey(app.doc, app.colourBy);
-  const entries = colours.length ? colours : (app.doc.legend ?? []);
-  // The Key button is there when there is something to explain; the card opens from it (6.3).
-  key.hidden = entries.length === 0 || !legendCardWanted();
-  if (key.hidden) {
-    card.hidden = true;
-    key.setAttribute('aria-expanded', 'false');
-  }
-  list.replaceChildren();
-  for (const entry of entries) {
-    const li = document.createElement('li');
-    const dot = document.createElement('span');
-    dot.className = 'pill-swatch';
-    dot.style.background = TONE_META[entry.tone].cssVar;
-    const text = document.createElement('span');
-    text.textContent = 'description' in entry && entry.description ? `${entry.label} — ${entry.description}` : entry.label;
-    li.append(dot, text);
-    list.appendChild(li);
-  }
-}
-
-/** The "show legend" preference in settings. */
-export function bindLegendPreference(): void {
-  const box = document.getElementById('chk-show-legend') as HTMLInputElement | null;
-  if (!box) return;
-  box.checked = legendCardWanted();
-  box.addEventListener('change', () => {
-    try {
-      localStorage.setItem(SHOW_LEGEND_KEY, String(box.checked));
-    } catch {
-      // Storage unavailable: the preference lasts until the page reloads.
-    }
-    syncLegendCard();
-  });
-}
-
 /** "Animate wires while designing" (D8): off by default; the flag on the body lets the Design lens move its flow. */
 export function bindAnimateWiresPreference(): void {
   const box = document.getElementById('chk-animate-wires') as HTMLInputElement | null;
@@ -783,9 +731,9 @@ export function bindViewFilters(): void {
   }
 }
 
-/** Shows the document's legend names on the colour filter chips and the legend card. */
+/** Shows the document's legend names on the colour filter chips and the SW Key. */
 function syncToneLabels(): void {
-  syncLegendCard();
+  syncMapKey();
   syncTagFilter();
 }
 

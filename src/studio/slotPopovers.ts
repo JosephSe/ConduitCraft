@@ -1,7 +1,7 @@
 /**
- * The popovers that open from the corner islands (6.3): the legend from the Key button in SW, and the view options
- * (minimap, "Colour by", tag filter) from the zoom readout in SE. They are not islands: each is anchored to its slot,
- * only one is open at a time, and Escape or a press anywhere else puts it away.
+ * The popovers that open from the corner islands (6.3): the view options (minimap, "Colour by", tag filter)
+ * from the zoom readout in SE. They are not islands: each is anchored to its slot, only one is open at a time,
+ * and Escape or a press anywhere else puts it away.
  */
 import { scheduleMinimapPaint } from './minimap';
 
@@ -18,7 +18,6 @@ export function initSlotPopovers(): void {
     const popover = document.getElementById(popoverId);
     if (button && popover) pairs.push({ button, popover, onOpen });
   };
-  add('btn-legend-key', 'legend-card');
   add('zoom-readout', 'view-popover', scheduleMinimapPaint);
 
   const close = (pair: Pair) => {

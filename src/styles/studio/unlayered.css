@@ -1313,20 +1313,6 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   color: var(--cc-on-dock-2);
   white-space: nowrap;
 }
-/* Colour legend card (F-26): top-right of the canvas, only when the document has a legend. */
-.legend-card {
-  display: block;
-  max-inline-size: min(18rem, 80cqi);
-}
-.legend-card-title {
-  margin: 0 0 0.25rem;
-  font: var(--cc-font-meta);
-  font-weight: 600;
-  color: var(--cc-ink-3);
-}
-.legend-card-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
-.legend-card-list li { display: flex; align-items: center; gap: 0.5rem; }
-
 /* Tag filter (F-26): what does not carry the chosen tag steps back. */
 .arch-node.is-tag-dimmed,
 .conduit-group.is-tag-dimmed {
@@ -1726,7 +1712,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   overflow-x: auto;
   scrollbar-width: thin;
 }
-.page-tab {
+.page-tab, .sw-key-btn {
   flex: 0 0 auto;
   max-inline-size: 14rem;
   padding: 0 0.75rem;
@@ -1739,7 +1725,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   font-size: 0.8rem;
   cursor: pointer;
 }
-.page-tab:hover { color: var(--cc-ink); background: var(--cc-hover, rgba(127, 127, 127, 0.1)); }
+.page-tab:hover, .sw-key-btn:hover { color: var(--cc-ink); background: var(--cc-hover, rgba(127, 127, 127, 0.1)); }
 .page-tab[aria-selected="true"] { color: var(--cc-ink); font-weight: 600; background: var(--cc-well); }
 .page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--cc-accent); }
 .page-tab-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1757,11 +1743,11 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   cursor: pointer;
 }
 .page-add:hover { color: var(--cc-ink); border-color: var(--cc-border); }
-.page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+.page-tab:focus-visible, .sw-key-btn:focus-visible, .page-add:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
 body[data-presenting="true"] .page-strip { display: none; }
-/* Touch (A12): the strip's tabs and + button are full-size targets. */
+/* Touch (A12): the strip's tabs, + button, and key controls are full-size targets. */
 @media (pointer: coarse) {
-  .page-tab, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
+  .page-tab, .sw-key-btn, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
 }
 
 /* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */

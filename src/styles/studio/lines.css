@@ -141,6 +141,21 @@
 #wire-labels-svg .conduit-badge-hit {
   display: none;
   pointer-events: all;
+  transition: opacity 0.22s ease;
+}
+
+#stage-world[data-key] :is(.conduit-group, .conduit-badge-hit) {
+  opacity: 0.13;
+}
+
+#stage-world[data-key="blue"] :is(.conduit-group, .conduit-badge-hit)[data-tone="blue"],
+#stage-world[data-key="emerald"] :is(.conduit-group, .conduit-badge-hit)[data-tone="emerald"],
+#stage-world[data-key="rose"] :is(.conduit-group, .conduit-badge-hit)[data-tone="rose"],
+#stage-world[data-key="violet"] :is(.conduit-group, .conduit-badge-hit)[data-tone="violet"],
+#stage-world[data-key="amber"] :is(.conduit-group, .conduit-badge-hit)[data-tone="amber"],
+#stage-world[data-key="cyan"] :is(.conduit-group, .conduit-badge-hit)[data-tone="cyan"],
+#stage-world[data-key="fuchsia"] :is(.conduit-group, .conduit-badge-hit)[data-tone="fuchsia"] {
+  opacity: 1;
 }
 
 #workspace[data-lens="design"] #stage-world[data-lod="high"] #wire-labels-svg .conduit-badge-hit[data-fits="1"],

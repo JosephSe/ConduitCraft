@@ -32,10 +32,10 @@ export function toastBottomOffset(viewportHeight: number, hudTop: number | null)
 
 let hudTracked = false;
 
-/** Keep `--toast-bottom` in step with the top of the bottom slots (SW, S, SE) so toasts always sit just above them. */
+/** Keep `--toast-bottom` in step with the intrinsic bottom chrome (excluding `.slot-sw` Key and stretched grid tracks) so centered toasts sit just above `#dock` / `#hud-status-tip` / `#chaos-panel`. */
 function trackHudClearance(container: HTMLElement): void {
   if (hudTracked || typeof ResizeObserver === 'undefined') return;
-  const slots = [...document.querySelectorAll<HTMLElement>('.slot-sw, .slot-s, .slot-se')];
+  const slots = [...document.querySelectorAll<HTMLElement>('#page-strip, #dock, #hud-status-tip, #chaos-panel, .hud-zoom-card')];
   if (!slots.length) return;
   hudTracked = true;
   const update = () => {
