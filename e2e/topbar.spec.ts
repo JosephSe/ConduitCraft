@@ -24,7 +24,7 @@ test('each top island shows at most 8 controls, and holds what 6.2 says', async 
   const n = await visibleControls(page, '.slot-n');
   const ne = await visibleControls(page, '.slot-ne');
   for (const [name, list] of [['NW', nw], ['N', n], ['NE', ne]] as const) expect(list.length, `${name}: ${list.join(', ')}`).toBeLessThanOrEqual(8);
-  expect(nw).toEqual(['btn-app-menu', 'btn-focus-doc-title']);
+  expect(nw).toEqual(['btn-app-menu', 'btn-focus-doc-title', 'btn-page-menu']);
   expect(n).toEqual(['workspace-mode', 'workspace-mode', 'workspace-mode']);
   expect(ne).toEqual(['btn-open-palette', 'btn-share']);
   await expect(page.locator('#btn-open-export')).toHaveCount(0);
@@ -102,7 +102,7 @@ const REGIONS: Array<[name: string, selector: string]> = [
   ['failure summary', '#chaos-panel'],
   ['review panel', '#insights-panel'],
   ['text outline', '#outline-panel'],
-  ['page strip', '#page-strip'],
+  ['key (SW)', '#btn-legend-key'],
 ];
 // List content, one entry per issue or related component, is not chrome: the issue rows and the inspector's lineage chips.
 const NOT_COUNTED = '.dock-fav, .insight-item, .lineage-chip, #toast-container, #canvas-stage, .arch-node';

@@ -1,29 +1,17 @@
 /**
- * Nested levels in the studio (F-03): the breadcrumb in the top bar, the boundary ports drawn on the open level,
- * and the fade when a level opens. The tree logic lives in `core/levels.ts` and the navigation in `state.ts`.
+ * Nested levels in the studio (F-03): boundary ports drawn on the open level and the fade when
+ * a level opens. The NW breadcrumb lives in `breadcrumb.ts`; tree logic is in `core/levels.ts`.
  */
 import { boundaryPorts, breadcrumb } from '../core/levels';
 import { chaosLensActive, isFailedAt, levelOpened } from './chaos';
 import { stageWorld } from './dom';
 import { app, goToLevel, openPageDocument, setSelection } from './state';
 
-let crumbNav: HTMLElement | null = null;
 let portLayer: HTMLElement | null = null;
 let paintedKey = '';
 let paintedPath = '';
 
-function ensureElements(): void {
-  if (!crumbNav) {
-    const row = document.querySelector('.title-row');
-    if (row) {
-      crumbNav = document.createElement('nav');
-      crumbNav.className = 'level-breadcrumb';
-      crumbNav.id = 'level-breadcrumb';
-      crumbNav.setAttribute('aria-label', 'Levels');
-      crumbNav.hidden = true;
-      row.parentElement?.insertBefore(crumbNav, row);
-    }
-  }
+function ensurePortLayer(): void {
   if (!portLayer) {
     portLayer = document.createElement('div');
     portLayer.className = 'level-ports';
@@ -33,10 +21,10 @@ function ensureElements(): void {
   }
 }
 
-/** Repaint the breadcrumb and boundary ports for the open level. Cheap when nothing about them changed. */
+/** Repaint the boundary ports for the open level. Cheap when nothing about them changed. */
 export function paintLevels(): void {
   if (typeof document === 'undefined') return;
-  ensureElements();
+  ensurePortLayer();
   const path = app.levelPath;
   const root = path.length > 0 ? openPageDocument() : app.doc;
   const crumbs = breadcrumb(root, path);
@@ -56,28 +44,6 @@ export function paintLevels(): void {
   }
   if (key === paintedKey) return;
   paintedKey = key;
-
-  if (crumbNav) {
-    crumbNav.hidden = path.length === 0;
-    crumbNav.replaceChildren();
-    crumbs.forEach((crumb, index) => {
-      if (index > 0) {
-        const sep = document.createElement('span');
-        sep.className = 'level-crumb-sep';
-        sep.setAttribute('aria-hidden', 'true');
-        sep.textContent = '▸';
-        crumbNav!.appendChild(sep);
-      }
-      const last = index === crumbs.length - 1;
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'level-crumb';
-      button.textContent = crumb.title;
-      if (last) button.setAttribute('aria-current', 'page');
-      else button.addEventListener('click', () => goToLevel(crumb.path));
-      crumbNav!.appendChild(button);
-    });
-  }
 
   if (portLayer) {
     portLayer.hidden = ports.length === 0;

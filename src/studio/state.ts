@@ -717,7 +717,7 @@ function inspectorInset(): number {
 function bottomChromeInset(): number {
   const view = viewport.getBoundingClientRect();
   let top = view.bottom;
-  for (const el of document.querySelectorAll<HTMLElement>('#dock, .hud-zoom-card, #page-strip')) {
+  for (const el of document.querySelectorAll<HTMLElement>('#dock, .hud-zoom-card, #slot-sw > [data-island]')) {
     if (el.offsetParent === null) continue;
     const r = el.getBoundingClientRect();
     if (r.height === 0 || r.top <= view.top + view.height / 2 || r.top >= view.bottom) continue;
