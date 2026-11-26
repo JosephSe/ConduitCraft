@@ -79,7 +79,10 @@
         <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span class="btn-text-responsive">Search</span>
       </button>
-
+      <button type="button" class="btn btn-icon-only" id="btn-theme-toggle" aria-label="Switch to dark theme" data-tip="Light or dark theme">
+        <svg class="ui-icon theme-icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="ui-icon theme-icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
       <button type="button" class="btn solid" id="btn-share" data-tip="Copy a link to this diagram">Share</button>
     </div>
   </header>
@@ -208,7 +211,7 @@
       </div>
           </div>
           <div class="slot slot-s" id="slot-s">
-            <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag stencils onto the grid · Drag from any port dot to draw an animated wire</p>
+            <p class="hint-line" id="hud-status-tip" role="status" aria-live="polite">Drag a component onto the map, or press / and type what you run.</p>
 
           <div class="dock" id="dock" data-island role="toolbar" aria-label="Tools and components">
           <div class="dock-face" data-face="design" role="group" aria-label="Tools and components">
@@ -318,6 +321,7 @@
           <select class="field js-tag-filter" id="view-tag-filter">
             <option value="">All tags</option>
           </select>
+          <button type="button" class="btn" id="btn-zoom-100" data-tip="Reset zoom to 100%" data-tip-pos="top">Actual size (100%)</button>
           <button type="button" class="btn view-fit" id="view-fit">Fit diagram to view</button>
           <span class="compile-pill" id="canvas-stats-pill" role="status">0 NODES</span>
         </div>
@@ -349,7 +353,7 @@
           <button type="button" class="btn btn-icon-only" id="btn-zoom-out" aria-label="Zoom out" data-tip="Zoom out (−)" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>
-          <button type="button" class="zoom-readout" id="zoom-readout" aria-haspopup="dialog" aria-expanded="false" aria-controls="view-popover" data-tip="View options" data-tip-pos="top">100%</button>
+          <button type="button" class="zoom-readout" id="zoom-readout" aria-haspopup="dialog" aria-expanded="false" aria-controls="view-popover" data-tip="View options · Double-click for 100%" data-tip-pos="top">100%</button>
           <button type="button" class="btn btn-icon-only" id="btn-zoom-in" aria-label="Zoom in" data-tip="Zoom in (+)" data-tip-pos="top">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           </button>

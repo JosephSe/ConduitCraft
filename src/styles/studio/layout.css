@@ -68,11 +68,16 @@
     margin: 0;
     max-inline-size: 100%;
     font: var(--cc-font-small);
-    color: var(--cc-ink-3);
+    color: var(--cc-ink-2);
     text-align: center;
+    text-shadow: 0 0 8px var(--cc-canvas), 0 0 2px var(--cc-canvas);
     text-wrap: balance;
     pointer-events: none;
   }
+
+  .theme-icon-sun { display: none; }
+  :root[data-theme="graphite"] .theme-icon-sun { display: block; }
+  :root[data-theme="graphite"] .theme-icon-moon { display: none; }
 
   /* Popovers (the legend, the view options, the find box) hang above their corner island; they are not islands. */
   .slot-popover {

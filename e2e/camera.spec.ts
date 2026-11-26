@@ -215,3 +215,20 @@ test('typing a space in a text field types a space and does not start panning', 
   await expect(page.locator('#canvas-viewport')).not.toHaveClass(/is-space-pan/);
   await page.keyboard.press('Escape');
 });
+
+test('double-clicking the zoom percentage and clicking Actual size (100%) reset zoom to 100%', async ({ page }) => {
+  await loadShowcase(page);
+  await zoomInTo(page, 60);
+  expect(await zoomPercent(page)).not.toBe(100);
+
+  await page.locator('#zoom-readout').dblclick();
+  await expect(page.locator('#zoom-readout')).toHaveText('100%');
+
+  await page.locator('#btn-zoom-in').click();
+  expect(await zoomPercent(page)).toBeGreaterThan(100);
+  await page.locator('#zoom-readout').click();
+  await expect(page.locator('#btn-zoom-100')).toBeVisible();
+  await page.locator('#btn-zoom-100').click();
+  await expect(page.locator('#zoom-readout')).toHaveText('100%');
+  await expect(page.locator('#view-popover')).toBeHidden();
+});
