@@ -22,7 +22,7 @@ let editingTone: StreamTone | null = null;
 
 function narrowMedia(): MediaQueryList | null {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return null;
-  return window.matchMedia('(max-width: 900px)');
+  return window.matchMedia('(max-width: 900px), (max-height: 640px)');
 }
 
 function legendCardWanted(): boolean {
