@@ -59,7 +59,7 @@ test('a level row opens that level with Enter', async ({ page }) => {
   await nodes.first().locator('.node-level-badge').click();
   await runPaletteCommand(page, 'Add Service / API Stencil');
   await page.keyboard.press('ControlOrMeta+ArrowUp');
-  await expect(page.locator('#nw-breadcrumb')).not.toHaveAttribute('data-nested', 'true');
+  await expect(page.locator('#level-breadcrumb')).toBeHidden();
 
   await runPaletteCommand(page, 'Toggle Text Outline');
   const tree = page.locator('#outline-tree');
@@ -70,5 +70,5 @@ test('a level row opens that level with Enter', async ({ page }) => {
   await expect(level).toHaveCount(1);
   await level.focus();
   await page.keyboard.press('Enter');
-  await expect(page.locator('#nw-breadcrumb')).toHaveAttribute('data-nested', 'true');
+  await expect(page.locator('#level-breadcrumb')).toBeVisible();
 });

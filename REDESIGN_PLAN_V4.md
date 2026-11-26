@@ -633,13 +633,11 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 #### [x] DK2. Lens switch and dock morph · S
 - **Do:** 6.3 and the width spring in 6.5. **Done:** `lensKeys.spec.ts` passes; no layout shift in any other slot during the morph. **Needs:** DK1.
 
-#### [x] DK3. Title island and breadcrumb · M
-- **Read:** `pageTabs.ts`, `pageMenu.ts`, `levels.ts`, `pages.spec.ts`, `levels.spec.ts`, `topbar.spec.ts`.
-- **Do:** 6.2. **Done:** pages and levels specs pass, rewritten where they named tabs. **Needs:** GR2.
+#### [~] DK3. Title island and breadcrumb · M *(Skipped — reverted PR #189 per user preference to keep visible SW page tabs)*
 
 #### [ ] DK4. The key · M
 - **Read:** `slotPopovers.ts`, `slots.spec.ts`.
-- **Do:** 6.4, `mapKey.ts`. **Done:** the stranger test on view 1; hover and focus both filter; renaming a row is one undo step. **Needs:** DK3 (the slot must be empty), MP2.
+- **Do:** 6.4, `mapKey.ts`. **Done:** the stranger test on view 1; hover and focus both filter; renaming a row is one undo step. **Needs:** MP2 *(SW retains visible `#page-strip` page tabs; DK4 to co-exist cleanly with them)*.
 
 #### [ ] DK5. NE, SE, hint · S
 - **Do:** 6.5's hint line and 6.7. **Done:** `tooltips.spec.ts`, `camera.spec.ts` pass. **Needs:** DK1.

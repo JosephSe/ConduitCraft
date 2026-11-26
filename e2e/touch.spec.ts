@@ -197,8 +197,7 @@ test('on a phone SW and SE are one button each, and Fit moves into the view popo
   await expect(page.locator('#btn-zoom-in')).toBeHidden();
   await expect(page.locator('#btn-zoom-fit')).toBeHidden();
   await expect(page.locator('#zoom-readout')).toBeVisible();
-  await expect(page.locator('#btn-page-menu')).toBeVisible();
-  await expect(page.locator('#page-strip')).toHaveCount(0);
+  await expect(page.locator('.page-tab:visible')).toHaveCount(1);
   await page.locator('#zoom-readout').tap();
   await expect(page.locator('#view-fit')).toBeVisible();
   await page.locator('#view-fit').tap();
