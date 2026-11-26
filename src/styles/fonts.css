@@ -241,9 +241,9 @@
   font-family: "Bricolage Grotesque Fallback";
   src: local("LiberationSans-Bold");
   font-weight: 700 800;
-  size-adjust: 88%;
-  ascent-override: 96%;
-  descent-override: 24%;
+  size-adjust: 89.2%;
+  ascent-override: 94.7%;
+  descent-override: 23.7%;
   line-gap-override: 0%;
 }
 
@@ -251,9 +251,9 @@
   font-family: "Bricolage Grotesque Fallback";
   src: local("Liberation Sans Bold");
   font-weight: 700 800;
-  size-adjust: 88%;
-  ascent-override: 96%;
-  descent-override: 24%;
+  size-adjust: 89.2%;
+  ascent-override: 94.7%;
+  descent-override: 23.7%;
   line-gap-override: 0%;
 }
 
@@ -261,9 +261,9 @@
   font-family: "Bricolage Grotesque Fallback";
   src: local("Arial-BoldMT");
   font-weight: 700 800;
-  size-adjust: 88%;
-  ascent-override: 96%;
-  descent-override: 24%;
+  size-adjust: 89.2%;
+  ascent-override: 94.7%;
+  descent-override: 23.7%;
   line-gap-override: 0%;
 }
 
@@ -271,8 +271,8 @@
   font-family: "Bricolage Grotesque Fallback";
   src: local("Arial Bold");
   font-weight: 700 800;
-  size-adjust: 88%;
-  ascent-override: 96%;
-  descent-override: 24%;
+  size-adjust: 89.2%;
+  ascent-override: 94.7%;
+  descent-override: 23.7%;
   line-gap-override: 0%;
 }

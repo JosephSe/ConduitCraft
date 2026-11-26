@@ -13,16 +13,16 @@ test('a component opens as a level, edits stay inside it, and undo returns to it
   // Open the first component from its badge: an empty level, with a breadcrumb and no root components.
   await nodes.first().hover();
   await nodes.first().locator('.node-level-badge').click();
-  await expect(page.locator('#level-breadcrumb')).toBeVisible();
-  await expect(page.locator('#level-breadcrumb .level-crumb')).toHaveCount(2);
-  await expect(page.locator('#level-breadcrumb .level-crumb').last()).toHaveText(rootTitle);
+  await expect(page.locator('#nw-breadcrumb')).toHaveAttribute('data-nested', 'true');
+  await expect(page.locator('#nw-breadcrumb .level-crumb')).toHaveCount(2);
+  await expect(page.locator('#nw-breadcrumb .level-crumb').last()).toHaveText(rootTitle);
   await expect(nodes).toHaveCount(0);
 
   // Add a component inside, then go up with the keyboard.
   await runPaletteCommand(page, 'Add Service / API Stencil');
   await expect(nodes).toHaveCount(1);
   await page.keyboard.press('ControlOrMeta+ArrowUp');
-  await expect(page.locator('#level-breadcrumb')).toBeHidden();
+  await expect(page.locator('#nw-breadcrumb')).not.toHaveAttribute('data-nested', 'true');
   await expect(nodes).toHaveCount(rootCount);
   await expect(nodes.first().locator('.node-level-badge')).toHaveAttribute('data-has-child', 'true');
 
@@ -30,15 +30,15 @@ test('a component opens as a level, edits stay inside it, and undo returns to it
   // Reopen with the shortcut, and Escape (nothing selected) goes back up.
   await nodes.first().locator('.node-select-hit').click();
   await page.keyboard.press('ControlOrMeta+Enter');
-  await expect(page.locator('#level-breadcrumb')).toBeVisible();
+  await expect(page.locator('#nw-breadcrumb')).toHaveAttribute('data-nested', 'true');
   await expect(nodes).toHaveCount(1);
   await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
-  await expect(page.locator('#level-breadcrumb')).toBeHidden();
+  await expect(page.locator('#nw-breadcrumb')).not.toHaveAttribute('data-nested', 'true');
 
   // Undo returns to the level the edit was made in.
   await page.keyboard.press('ControlOrMeta+z');
-  await expect(page.locator('#level-breadcrumb')).toBeVisible();
+  await expect(page.locator('#nw-breadcrumb')).toHaveAttribute('data-nested', 'true');
   await expect(nodes).toHaveCount(0);
 });
 
@@ -95,9 +95,9 @@ test('search finds components in other levels and opens the level that holds the
   await page.locator('#hud-search-input').fill('ledger');
   await expect(page.locator('#hud-search-count')).toContainText('in Payments');
   // Typing alone stays put; Enter opens the level and selects the match.
-  await expect(page.locator('#level-breadcrumb')).toBeHidden();
+  await expect(page.locator('#nw-breadcrumb')).not.toHaveAttribute('data-nested', 'true');
   await page.locator('#hud-search-input').press('Enter');
-  await expect(page.locator('#level-breadcrumb .level-crumb').last()).toHaveText('Payments');
+  await expect(page.locator('#nw-breadcrumb .level-crumb').last()).toHaveText('Payments');
   await expect(page.locator('.arch-node .node-select-hit[aria-pressed="true"]')).toHaveCount(1);
   // Both ports of the wire from Web show on the level.
   await expect(page.locator('.level-port')).toHaveCount(1);
@@ -110,7 +110,7 @@ test('the Review lens covers nested levels and shows the path', async ({ page })
   const nested = page.locator('.insight-item', { hasText: 'Payments:' });
   await expect(nested.first()).toBeVisible();
   await nested.first().click();
-  await expect(page.locator('#level-breadcrumb .level-crumb').last()).toHaveText('Payments');
+  await expect(page.locator('#nw-breadcrumb .level-crumb').last()).toHaveText('Payments');
 });
 
 test('the HTML export keeps the drill-down', async ({ page, context }) => {
@@ -147,7 +147,7 @@ test('failing a component fails everything inside it, announces it once, and not
   await expect(node(page, 'Payments')).toHaveAttribute('data-chaos', 'failed');
 
   await page.keyboard.press('ControlOrMeta+Enter');
-  await expect(page.locator('#level-breadcrumb .level-crumb').last()).toHaveText('Payments');
+  await expect(page.locator('#nw-breadcrumb .level-crumb').last()).toHaveText('Payments');
   await expect(page.locator('.arch-node')).toHaveCount(3);
   await expect(page.locator('.arch-node[data-chaos="failed"]')).toHaveCount(3);
   await expect(page.locator('#a11y-live-announcer')).toContainText('Inside Payments, which has failed');
@@ -225,7 +225,7 @@ test('"Subgraphs as: Levels" imports a subgraph as a component that opens into a
   await expect(group.locator('.node-level-badge')).toHaveAttribute('data-has-child', 'true');
   await group.locator('.node-select-hit').click();
   await page.keyboard.press('ControlOrMeta+Enter');
-  await expect(page.locator('#level-breadcrumb')).toBeVisible();
+  await expect(page.locator('#nw-breadcrumb')).toHaveAttribute('data-nested', 'true');
   await expect(page.locator('.arch-node')).toHaveCount(2);
   await expect(node(page, 'Charge')).toBeVisible();
   await expect(page.locator('.level-port')).toHaveCount(1);

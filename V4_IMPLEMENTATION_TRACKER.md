@@ -16,14 +16,14 @@
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
 | **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 7 | 7 | **Complete** (`MP1`–`MP3`, `MP6`–`MP9` done; `MP4`/`MP5` skipped per D14) |
-| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 2 | 7 | In progress (`DK1`–`DK2` done; ready for `DK3`, `DK5`, `CP1`, `RN1`, `RV1`) |
+| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14) | 3 | 7 | In progress (`DK1`–`DK3` done; ready for `DK4`, `DK5`, `CP1`, `RN1`, `RV1`) |
 | **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Ready for `CP1` |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Unblocked (`DK2` done) |
 | **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Unblocked (`DK2` done) |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Ready for `PS1` (unblocked by `MP8`; `DK4` for Key footer) |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **14** | **60** | **23.3%** _(3 items skipped per D14)_ |
+| **Overall** | | **15** | **60** | **25.0%** _(3 items skipped per D14)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (12 / 31 active, 3 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (13 / 31 active, 3 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -149,12 +149,12 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** `lensKeys.spec.ts` passes with zero layout shift in sibling slots.
   - **Completed:** 2026-11-25 (`v4-dk1-dk2-inverted-dock`) · `dockFaces.ts` owns all `[data-face]` transitions with zero lingering inline `width`; `e2e/lensKeys.spec.ts` & `e2e/toolRail.spec.ts` verify inverted Vellum/Graphite geometry, zero horizontal clipping at `1440×900`, and zero shift in `#slot-sw` / `#slot-se`.
 
-- [ ] **DK3. Title island & page/level breadcrumb (`src/studio/breadcrumb.ts`)** · M · **Priority:** P0 · **Needs:** `GR2`
+- [x] **DK3. Title island & page/level breadcrumb (`src/studio/breadcrumb.ts`)** · M · **Priority:** P0 · **Needs:** `GR2`
   - **Read:** `src/studio/pageTabs.ts`, `src/studio/pageMenu.ts`, `src/studio/levels.ts`.
-  - [ ] Replace `paintPageTabs` with `paintBreadcrumb` inside NW island (`Mark`, title, page + open level trail + chevron opening `pageMenu.ts`, quiet save state).
-  - [ ] Remove `#page-strip` / `#page-tabs` from SW slot; preserve `Alt+PageUp/PageDown` and `⌘↑`.
+  - [x] Replaced `pageTabs.ts` (`paintPageTabs`) with [`src/studio/breadcrumb.ts`](src/studio/breadcrumb.ts) (`paintBreadcrumb`) inside NW island (`#btn-app-menu`, `#doc-title-heading` in `--cc-font-map`, `/` separator, page + open level trail + `#btn-page-menu` chevron opening [`src/studio/pageMenu.ts`](src/studio/pageMenu.ts), quiet save state).
+  - [x] Removed `#page-strip` / `#page-tabs` / `#page-add` from SW slot (keeping `.sw-key-btn` `#btn-legend-key` until `DK4`) and removed duplicate `#level-breadcrumb` from `levels.ts`; preserved `Alt+PageUp/PageDown`, `⌘↑`, double-click & `F2` rename, and drag-to-reorder inside `#page-menu`.
   - **Done when:** Rewritten `pages.spec.ts`, `levels.spec.ts`, `topbar.spec.ts` pass.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-26 (`v4-dk3-title-breadcrumb`) · `pnpm test`: 1,054/1,054 (211 suites); Entry JS `409.6 kB / 410 kB`, Entry CSS `136.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; `e2e/pages.spec.ts` (17/17), `e2e/levels.spec.ts`, `e2e/topbar.spec.ts`, `e2e/outline.spec.ts`, `e2e/codePane.spec.ts`, `e2e/drawio.spec.ts`, `e2e/tagsLinks.spec.ts`, `e2e/slots.spec.ts`, `e2e/touch.spec.ts`, `e2e/toolRail.spec.ts`, `e2e/a11y.spec.ts`, and `e2e/v4Visual.spec.ts` (8/8 zero-diff) passed.
 
 - [ ] **DK4. Always-visible Key (`src/studio/mapKey.ts`)** · M · **Priority:** P0 · **Needs:** `DK3`, `MP2`
   - **Read:** `src/studio/slotPopovers.ts`, `e2e/slots.spec.ts`.

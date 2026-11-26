@@ -46,6 +46,7 @@
             <h1 id="doc-title-heading">Untitled Architecture</h1>
             <span class="visually-hidden">, edit title and document properties</span>
           </button>
+          <nav class="nw-breadcrumb" id="nw-breadcrumb" aria-label="Page and level"></nav>
           <span class="save-state" id="save-status-pill" data-status="saved" aria-live="polite">Saved</span>
         </div>
       </div>
@@ -188,14 +189,7 @@
       <div class="slots" id="slots">
         <div class="slots-grid">
           <div class="slot slot-sw" id="slot-sw">
-      <!-- Page tabs (D10): one tab per diagram in the file -->
-      <div class="page-strip" id="page-strip" data-island>
-        <div class="page-tabs" id="page-tabs" role="tablist" aria-label="Pages"></div>
-        <button type="button" class="page-add" id="page-add" aria-label="Add page" data-tip="Add page" data-tip-pos="top">
-          <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </button>
-        <button type="button" class="page-tab" id="btn-legend-key" aria-haspopup="dialog" aria-expanded="false" aria-controls="legend-card" data-tip="What the colours mean" data-tip-pos="top" hidden>Key</button>
-      </div>
+            <button type="button" class="sw-key-btn" id="btn-legend-key" data-island aria-haspopup="dialog" aria-expanded="false" aria-controls="legend-card" data-tip="What the colours mean" data-tip-pos="top" hidden>Key</button>
             <!-- The legend: a popover over SW, opened by the Key button. -->
             <aside class="hud-card slot-popover legend-card" id="legend-card" aria-label="Colour legend" hidden>
               <h2 class="legend-card-title">Legend</h2>

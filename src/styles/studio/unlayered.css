@@ -1164,11 +1164,9 @@ kbd {
 .workspace[data-tray] .hint-line, .workspace[data-mode="data"] .tray { display: none; }
 /* The selection's toolbar floats over the tray's search box, so it waits while the tray is open. */
 body:has(.workspace[data-tray]) .context-toolbar { display: none; }
-@media (max-width: 82rem) {
+@media (max-width: 56rem) {
   .dock-all { padding-inline: 10px; }
   .dock-all-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-}
-@media (max-width: 56rem) {
   .dock-fav:nth-of-type(n+4) { display: none; }
   .tray { grid-template-columns: minmax(0, 1fr); }
   .tray-demo { display: none; }
@@ -1478,40 +1476,6 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
   display: none;
 }
 
-.level-breadcrumb {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 2px;
-  font-size: 0.78rem;
-}
-.level-breadcrumb[hidden] {
-  display: none;
-}
-.level-crumb {
-  background: none;
-  border: 0;
-  padding: 1px 4px;
-  border-radius: 4px;
-  color: var(--cc-ink-3);
-  font: inherit;
-  cursor: pointer;
-}
-.level-crumb:hover,
-.level-crumb:focus-visible {
-  color: var(--cc-ink);
-  background: var(--cc-well);
-}
-.level-crumb[aria-current='page'] {
-  color: var(--cc-ink);
-  font-weight: 600;
-  cursor: default;
-}
-.level-crumb-sep {
-  color: var(--cc-ink-3);
-}
-
 .level-ports {
   position: absolute;
   inset: 0;
@@ -1645,7 +1609,7 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 /* Touch (A12): later layers set smaller minimums on some controls, so the 44px floor is restated here, last. */
 @media (pointer: coarse) {
   .btn, .btn-icon-only, .context-toolbar-btn, .toast-action-btn, .toast-dismiss-btn,
-  .title-edit-trigger, .context-menu-item, .help-popover-link {
+  .title-edit-trigger, .nw-crumb, .sw-key-btn, .context-menu-item, .help-popover-link {
     min-inline-size: 2.75rem;
     min-block-size: 2.75rem;
   }
@@ -1704,65 +1668,28 @@ body:has(.workspace[data-tray]) .context-toolbar { display: none; }
 .bulk-tag-row .field { flex: 1; min-inline-size: 0; }
 .bulk-tag-buttons { display: inline-flex; gap: 0.25rem; }
 
-/* Page tabs (D10): the SW island, under the minimap. It scrolls sideways when the pages outgrow its slot. */
-.page-strip {
-  display: flex;
-  align-items: stretch;
-  gap: 0.25rem;
-  max-inline-size: 100%;
-  padding: 0.2rem 0.35rem;
+/* SW Key button & NW Page menu (DK3: pages live in #nw-breadcrumb until DK4 promotes Key). */
+.sw-key-btn {
+  padding: 0.32rem 0.75rem;
+  border: 1px solid var(--cc-hair);
+  border-radius: 0.75rem;
   background: var(--cc-island);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--cc-hair);
-  border-radius: 0.75rem;
   box-shadow: var(--cc-shadow-card);
-}
-.page-tabs {
-  display: flex;
-  align-items: stretch;
-  gap: 0.125rem;
-  min-inline-size: 0;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-.page-tab {
-  flex: 0 0 auto;
-  max-inline-size: 14rem;
-  padding: 0 0.75rem;
-  border: 0;
-  border-radius: 0.5rem;
-  border-block-start: 0;
-  background: none;
-  color: var(--cc-ink-3);
-  font: inherit;
-  font-size: 0.8rem;
+  color: var(--cc-ink-2);
+  font: var(--cc-font-small);
+  font-weight: 600;
   cursor: pointer;
 }
-.page-tab:hover { color: var(--cc-ink); background: var(--cc-hover, rgba(127, 127, 127, 0.1)); }
-.page-tab[aria-selected="true"] { color: var(--cc-ink); font-weight: 600; background: var(--cc-well); }
-.page-tab.is-drop-target { box-shadow: inset 2px 0 0 var(--cc-accent); }
-.page-tab-label { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.page-add {
-  flex: 0 0 auto;
-  align-self: center;
-  inline-size: 1.75rem;
-  block-size: 1.75rem;
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 0.4rem;
-  background: none;
-  color: var(--cc-ink-3);
-  cursor: pointer;
-}
-.page-add:hover { color: var(--cc-ink); border-color: var(--cc-border); }
-.page-tab:focus-visible, .page-add:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
-body[data-presenting="true"] .page-strip { display: none; }
-/* Touch (A12): the strip's tabs and + button are full-size targets. */
-@media (pointer: coarse) {
-  .page-tab, .page-add { min-inline-size: 2.75rem; min-block-size: 2.75rem; }
-}
+.sw-key-btn:hover,
+.sw-key-btn:focus-visible,
+.sw-key-btn[aria-expanded="true"] { color: var(--cc-ink); background: var(--cc-sheet); }
+.sw-key-btn:focus-visible { outline: 2px solid var(--cc-ink); outline-offset: -2px; }
+body[data-presenting="true"] .sw-key-btn { display: none; }
+.page-menu-page[aria-current="true"] { font-weight: 600; }
+.page-menu-page.is-drop-target { box-shadow: inset 0 2px 0 var(--cc-accent); }
+.page-menu-check { color: var(--cc-ink-3); font-size: 0.75rem; }
 
 /* Cache and scheduler cards are 112 high: the subtitle makes way for the footer chip (K3, K5). */
 .arch-node[data-kind="cache"] .node-sub,
@@ -2033,11 +1960,9 @@ body:not([data-animate-wires]) .workspace[data-lens="design"] .conduit-group:not
 /* Dark themes darken the outside instead, so it still reads as recessed. */
 :root[data-theme="graphite"] #canvas-viewport > .stage-world { --cc-off-sheet: rgba(0, 0, 0, 0.3); }
 
-/* S10 (6.6): below 56rem SW and SE collapse to one button each. SW shows the open page (tap for the next); SE shows the zoom readout, and Fit moves into the view popover. */
+/* S10 (6.6): below 56rem SE shows the zoom readout, and Fit moves into the view popover. */
 .view-fit { display: none; }
 @media (max-width: 56rem) {
-  .page-tab[aria-selected="false"] { display: none; }
-  .page-strip:has(.page-tab:nth-child(2)) .page-add { display: none; }
   .hud-zoom-card #btn-zoom-out, .hud-zoom-card #btn-zoom-in, .hud-zoom-card #btn-zoom-fit { display: none; }
   .view-fit { display: inline-flex; justify-content: center; }
 }

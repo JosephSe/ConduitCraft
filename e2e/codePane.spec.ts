@@ -108,13 +108,16 @@ test('Mermaid typed into the pane is converted once to the Blueprint file', asyn
 
 test('typing on the second page leaves you on the second page', async ({ page }) => {
   await openSmall(page);
-  await page.locator('#page-add').click();
-  await expect(page.locator('#page-tabs [role="tab"]')).toHaveCount(2);
+  await page.locator('#btn-page-menu').click();
+  await page.locator('#page-menu').getByRole('menuitem', { name: 'Add page' }).click();
+  await expect(page.locator('#btn-page-menu .nw-crumb-label')).toHaveText('Page 2');
   await expect(area(page)).toHaveValue(/pages:/);
   const text = await area(page).inputValue();
   await area(page).fill(retitle(text, 'Page Two'));
   await expect(page.locator('#doc-title-heading')).toHaveText('Page Two');
-  await expect(page.locator('#page-tabs [role="tab"]').nth(1)).toHaveAttribute('aria-selected', 'true');
+  await page.locator('#btn-page-menu').click();
+  await expect(page.locator('#page-menu .page-menu-page')).toHaveCount(2);
+  await expect(page.locator('#page-menu .page-menu-page').nth(1)).toHaveAttribute('aria-current', 'true');
 });
 
 test('selecting on the canvas highlights its lines, and the cursor in a block selects that component', async ({ page }) => {
