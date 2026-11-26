@@ -8,13 +8,12 @@ const dock = html.slice(html.indexOf('<div class="dock"'), html.indexOf('<!-- Ch
 const ids = [...header.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]);
 
 describe('B1b: the header holds only what the top bar shows', () => {
-  it('keeps the menu mark, title, breadcrumb, save state, lens switch, Search and Share, with Run in the dock', () => {
-    for (const id of ['btn-app-menu', 'btn-focus-doc-title', 'nw-breadcrumb', 'btn-share', 'btn-open-palette', 'save-status-pill']) {
+  it('keeps the menu mark, title, save state, lens switch, Search and Share, with Run in the dock', () => {
+    for (const id of ['btn-app-menu', 'btn-focus-doc-title', 'btn-share', 'btn-open-palette', 'save-status-pill']) {
       assert.ok(ids.includes(id), `#${id} is in the header`);
     }
     assert.ok(!ids.includes('btn-run'), '#btn-run has moved into the dock');
     assert.ok(dock.includes('id="btn-run"'), '#btn-run lives in #dock');
-    assert.ok(!html.includes('id="page-strip"') && !html.includes('id="page-tabs"'), 'page tabs left the SW slot');
     assert.equal((header.match(/name="workspace-mode"/g) ?? []).length, 3, 'three lenses');
     for (const id of ['btn-undo', 'btn-redo']) assert.ok(!ids.includes(id), `#${id} lives in the menu and on its shortcut`);
     assert.equal((header.match(/class="btn solid"/g) ?? []).length, 1, 'Share is the only filled button in the top bar');

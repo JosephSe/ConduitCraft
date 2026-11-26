@@ -39,7 +39,7 @@ import {
 import { reconcileKeyed } from './reconcile';
 import { scheduleMinimapPaint } from './minimap';
 import { paintLevels } from './levels';
-import { paintBreadcrumb } from './breadcrumb';
+import { paintPageTabs } from './pageTabs';
 import { paintOutline } from './outlineTrigger';
 
 export {
@@ -179,7 +179,7 @@ export function renderAll(rebuildInspector = true): void {
   updateVisualSelectionHighlights();
   paintGroupOutlines();
   paintLevels();
-  paintBreadcrumb();
+  paintPageTabs();
   paintOutline();
 
   if (rebuildInspector) {

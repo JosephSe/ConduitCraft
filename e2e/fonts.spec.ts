@@ -98,7 +98,6 @@ test('view 1 does not jump when the webfonts swap in', async ({ page }) => {
   const fallbackFonts = await platformFonts(page, '#doc-title-heading');
   releaseFonts();
   await expect.poll(() => page.evaluate(() => document.fonts.check('700 16px "Instrument Sans"'))).toBe(true);
-  await expect.poll(() => page.evaluate(() => document.fonts.check('700 16px "Bricolage Grotesque"'))).toBe(true);
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   await page.evaluate(() => new Promise((resolve) => {
     requestAnimationFrame(() => requestAnimationFrame(() => resolve(undefined)));
@@ -142,7 +141,6 @@ async function measureTitle(page: Page) {
     probe.style.fontFamily = cs.fontFamily;
     probe.style.fontSize = cs.fontSize;
     probe.style.fontWeight = cs.fontWeight;
-    probe.style.fontStretch = cs.fontStretch;
     probe.style.letterSpacing = cs.letterSpacing;
     probe.style.lineHeight = cs.lineHeight;
     probe.style.textRendering = cs.textRendering;

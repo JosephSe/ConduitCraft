@@ -42,13 +42,12 @@ test('a file with several pages asks, and "pages as tabs" opens one diagram with
   await expect(ask.getByRole('button', { name: 'One diagram, pages as tabs' })).toBeFocused();
   await ask.getByRole('button', { name: 'One diagram, pages as tabs' }).click();
   await expect(ask).toBeHidden();
-  await page.locator('#btn-page-menu').click();
-  const rows = page.locator('#page-menu .page-menu-page');
-  await expect(rows).toHaveCount(2);
-  await expect(rows.nth(0)).toContainText('Overview');
-  await expect(rows.nth(1)).toContainText('Billing');
+  const tabs = page.locator('#page-tabs [role="tab"]');
+  await expect(tabs).toHaveCount(2);
+  await expect(tabs.nth(0)).toHaveText('Overview');
+  await expect(tabs.nth(1)).toHaveText('Billing');
   await expect(page.locator('.arch-node')).toHaveCount(2);
-  await rows.nth(1).click();
+  await tabs.nth(1).click();
   await expect(page.locator('.arch-node')).toHaveCount(3);
   await expect(page.locator('.arch-node', { hasText: /Invoices|Billing/ }).first()).toBeVisible();
 });

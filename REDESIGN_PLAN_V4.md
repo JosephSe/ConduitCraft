@@ -633,7 +633,7 @@ All of V1 section 10 and V3 10.5 apply. Specific to 4.0:
 #### [x] DK2. Lens switch and dock morph · S
 - **Do:** 6.3 and the width spring in 6.5. **Done:** `lensKeys.spec.ts` passes; no layout shift in any other slot during the morph. **Needs:** DK1.
 
-#### [x] DK3. Title island and breadcrumb · M
+#### [ ] DK3. Title island and breadcrumb · M
 - **Read:** `pageTabs.ts`, `pageMenu.ts`, `levels.ts`, `pages.spec.ts`, `levels.spec.ts`, `topbar.spec.ts`.
 - **Do:** 6.2. **Done:** pages and levels specs pass, rewritten where they named tabs. **Needs:** GR2.
 
