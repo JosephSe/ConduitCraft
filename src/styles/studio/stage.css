@@ -121,8 +121,7 @@
   }
 
   .first-run-line {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font: var(--cc-font-panel);
     text-align: center;
   }
 

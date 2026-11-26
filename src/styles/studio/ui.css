@@ -309,8 +309,7 @@
   }
 
   .dialog-header h2 {
-    font-size: 1rem;
-    font-weight: 600;
+    font: var(--cc-font-panel);
   }
 
   .dialog-header-actions {

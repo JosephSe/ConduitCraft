@@ -16,14 +16,14 @@
 | **Track 0: Pre-Flight** | Branch + interactive V4/UX prototype (`PRE-1`–`PRE-2`) | 2 | 2 | Complete |
 | **Track 1: V4 Ground (`GR`)** | Baseline, V3-preserving tokens + `--k`, Bricolage Grotesque (`GR1`–`GR3`) | 3 | 3 | Complete (`GR1`–`GR3` done) |
 | **Track 1: V4 The Map (`MP`)** | Bands, fluid wires, shared track, LoD, labels, exports (`MP4`/`MP5` skipped per D14) | 7 | 7 | **Complete** (`MP1`–`MP3`, `MP6`–`MP9` done; `MP4`/`MP5` skipped per D14) |
-| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14, `DK3` skipped per user preference) | 4 | 6 | In progress (`DK1`–`DK2`, `DK4`–`DK5` done; `DK3` skipped per user preference; `DK7` skipped per D14; ready for `CP1`, `RN1`, `RV1`) |
+| **Track 1: V4 Dock & Shell (`DK`)** | Inverted dock, morph, breadcrumb, always-on Key, card, narrow (`DK7` skipped per D14, `DK3` skipped per user preference) | 5 | 6 | In progress (`DK1`–`DK2`, `DK4`–`DK6` done; `DK3` skipped per user preference; `DK7` skipped per D14; ready for `CP1`, `RN1`, `RV1`, `PS1`) |
 | **Track 1: V4 Composer (`CP`)** | Pure `quickBuild`, unified `/` composer, chains, find/commands (`CP1`–`CP4`) | 0 | 4 | Ready for `CP1` |
 | **Track 1: V4 Live Run (`RN`)** | Strip map, beads/train/caption, instruments, states/board (`RN1`–`RN4`) | 0 | 4 | Unblocked (`DK2` done) |
 | **Track 1: V4 Review (`RV`)** | On-map 288 px callout + redline numbers (`RV1`) | 0 | 1 | Unblocked (`DK2` done) |
 | **Track 1: V4 Poster & Release (`PS`, `RL`)** | Poster exports, 2-col Share sheet, draw-in, final audit, ship (`PS1`–`RL3`) | 0 | 5 | Ready for `PS1` (unblocked by `MP8` & `DK4`) |
 | **Track 2: Next-Gen UX (`UX`)** | Splice, Cone/Path, Geiger, `@Patterns`, Fold, Loupe, Wipe, RFC, Tidy (`UX-1`–`UX-9`) | 0 | 9 | Prototype-verified; phased with V4 & Post-V4 |
 | **Track 3: After V3 (`3.1`–`3.4`)** | Scenarios, 3 fields + 40 marks, Load, `conduitcraft mcp`, Compare (`3.1-a`–`3.4-d`) | 0 | 18 | Sequenced post-V4 (except `3.2-c`) |
-| **Overall** | | **16** | **59** | **27.1%** _(4 items skipped: `MP4`/`MP5`/`DK7` per D14, `DK3` per user preference)_ |
+| **Overall** | | **17** | **59** | **28.8%** _(4 items skipped: `MP4`/`MP5`/`DK7` per D14, `DK3` per user preference)_ |
 
 ---
 
@@ -50,7 +50,7 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
 
 ---
 
-## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (14 / 30 active, 4 skipped)
+## Track 1: `REDESIGN_PLAN_V4.md` Core Milestones (15 / 30 active, 4 skipped)
 
 > **Key Gap Note vs. `REDESIGN_PLAN_V4.md`:** v3.1.0 shipped **Callouts** (`variant: 'callout'`, schema v15) after the V4 plan was drafted. Callout styling, counter-scaling, and export parity must be carried into `MP4`, `MP8`, and `PS1`.
 
@@ -163,10 +163,10 @@ Current `main` (`86dc5ba`) limits after PRs #178–#180 lazy-loading work:
   - **Done when:** `tooltips.spec.ts` and `camera.spec.ts` pass.
   - **Completed:** 2026-11-26 (`v4-dk5-ne-se-hint`) · Added `#btn-theme-toggle` in NE (`index.html`, `src/main.ts`, `layout.css`), `#btn-zoom-100` + `#zoom-readout` double-click reset in SE (`src/studio/interactions.ts`), and V4 plain-sentence `#hud-status-tip` hints across Design/Traffic/Review (`pointerTool.ts`, `dockFaces.ts`, `interactions.ts`, `layout.css`); `pnpm test`: `1,061/1,061` (`213` suites), Entry JS `409.6 kB / 410 kB`, Entry CSS `137.8 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`, `tooltips.spec.ts` + `camera.spec.ts` + `slots.spec.ts` + `topbar.spec.ts` + `touch.spec.ts` + `a11y.spec.ts` (`70/70`), and `e2e/v4Visual.spec.ts` (`8/8` zero-diff x2) passed.
 
-- [ ] **DK6. Properties card & remaining chrome re-styled** · S · **Priority:** P0 · **Needs:** `MP4`
-  - [ ] Update `src/studio/inspector.ts` header to 36 px bullet + display title + 26 px line-tier colour dots; apply V4 tokens & display headings to Home, Templates, Snapshots, Code pane, First run, Dialogs.
+- [x] **DK6. Properties card & remaining chrome re-styled (D14)** · S · **Priority:** P0 · **Needs:** `GR3`
+  - [x] Preserve V3 properties card styling, `.prop-head-art` cut-out tile, and colour swatches per D14 while overriding `--cc-font-panel` (`700 16px/20px var(--cc-font-map)`) and `.inspector .prop-head .prop-head-name` specificity; apply display headings to `.dialog-header h2`, `.first-run-line`, `.template-card-title`, and lazy chrome CSS (`home.css`, `codePane.css`, `library.css`, `presentation.css`, `snapshots.css` + `--cc-amber`/`--cc-amber-soft` diff tokens).
   - **Done when:** `propertiesCard.spec.ts` passes and View 10 (Home) matches.
-  - **Completed:** _pending_
+  - **Completed:** 2026-11-26 (`v4-dk6-chrome-headings`) · `pnpm test`: `1,061/1,061` (`213` suites); Entry JS `409.6 kB / 410 kB`, Entry CSS `137.9 kB / 138 kB`, Fonts `119.0 kB / 150 kB`, HTML export `101.0 kB / 101 kB`; targeted Playwright specs (`propertiesCard`, `home`, `inspectorAutoShow`, `appearancePickers`, `a11y`: `40` passed, `1` pre-existing fixme; plus `firstRun`, `codePane`, `library`, `presentation`, `fonts`) and `e2e/v4Visual.spec.ts` (`8/8` zero-diff x2 on updated heading views `02`/`03`/`08`/`09`/`10`) passed.
 
 - [~] **DK7. Retire the cut-out (`src/ui/cutout.ts`)** *(Skipped — superseded by D14: `src/ui/cutout.ts` is kept)*
 
